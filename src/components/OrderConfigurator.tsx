@@ -127,12 +127,12 @@ export const OrderConfigurator: React.FC<OrderConfiguratorProps> = ({
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Main Panel Box */}
-        <div className="bg-gradient-to-br from-stone-50 via-white to-orange-50/40 rounded-2xl border border-orange-200/80 shadow-md p-6 sm:p-8 lg:p-10">
+        <div className="bg-gradient-to-br from-stone-50 via-white to-[var(--accent-bg)]/40 rounded-2xl border border-[var(--accent-border)]/80 shadow-md p-6 sm:p-8 lg:p-10">
           
           {/* Header Row */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-6 mb-6">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-[#E85D04] text-xs font-extrabold uppercase tracking-wider mb-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent)] text-xs font-extrabold uppercase tracking-wider mb-2">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Instant Online Ordering</span>
               </div>
@@ -153,7 +153,7 @@ export const OrderConfigurator: React.FC<OrderConfiguratorProps> = ({
                 <select
                   value={productType}
                   onChange={(e) => setProductType(e.target.value)}
-                  className="w-full appearance-none h-11 px-4 pr-10 rounded-lg bg-white border border-stone-300 text-stone-900 font-bold text-sm focus:outline-hidden focus:ring-2 focus:ring-[#E85D04] shadow-xs cursor-pointer"
+                  className="w-full appearance-none h-11 px-4 pr-10 rounded-lg bg-white border border-stone-300 text-stone-900 font-bold text-sm focus:outline-hidden focus:ring-2 focus:ring-[var(--accent)] shadow-xs cursor-pointer"
                 >
                   <option value="Canvas Prints">Canvas Prints (Cotton Gallery Wrap)</option>
                   <option value="Acrylic Prints">Acrylic Prints (Diamond Polished)</option>
@@ -172,7 +172,7 @@ export const OrderConfigurator: React.FC<OrderConfiguratorProps> = ({
               <span className="text-xs font-bold text-stone-700 uppercase tracking-wider">
                 2. Select Popular Size or Enter Custom Dimensions
               </span>
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+              <span className="text-xs font-bold text-[var(--accent-hover)] bg-[var(--accent-bg)] border border-[var(--accent-border)] px-2.5 py-0.5 rounded-full">
                 ⚡ Flat 50% Off Auto-Applied
               </span>
             </div>
@@ -190,13 +190,13 @@ export const OrderConfigurator: React.FC<OrderConfiguratorProps> = ({
                     onClick={() => setSelectedSizeIndex(index)}
                     className={`relative p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                       isSelected
-                        ? 'bg-orange-50/80 border-[#E85D04] ring-2 ring-[#E85D04] shadow-md'
-                        : 'bg-white border-stone-200 hover:border-orange-300 hover:bg-stone-50/70 shadow-xs'
+                        ? 'bg-[var(--accent-bg)]/80 border-[var(--accent)] ring-2 ring-[var(--accent)] shadow-md'
+                        : 'bg-white border-stone-200 hover:border-[var(--accent-border)] hover:bg-stone-50/70 shadow-xs'
                     }`}
                   >
                     {/* Bestseller Badge */}
                     {item.popular && (
-                      <span className="absolute -top-2.5 right-2 bg-[#E85D04] text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full shadow-xs">
+                      <span className="absolute -top-2.5 right-2 bg-[var(--accent)] text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full shadow-xs">
                         Bestseller
                       </span>
                     )}
@@ -213,7 +213,7 @@ export const OrderConfigurator: React.FC<OrderConfiguratorProps> = ({
                     <div className="mt-3 pt-2 border-t border-stone-200/80">
                       {isCustom ? (
                         <div>
-                          <span className="text-xs font-extrabold text-[#E85D04] block">
+                          <span className="text-xs font-extrabold text-[var(--accent)] block">
                             ₹{customCalculatedPrice}
                           </span>
                           <span className="text-[10px] text-stone-400 line-through">
@@ -223,14 +223,14 @@ export const OrderConfigurator: React.FC<OrderConfiguratorProps> = ({
                       ) : (
                         <div>
                           <div className="flex items-baseline gap-1.5">
-                            <span className="text-sm font-extrabold text-[#E85D04]">
+                            <span className="text-sm font-extrabold text-[var(--accent)]">
                               ₹{item.price}
                             </span>
                             <span className="text-[10px] text-stone-400 line-through">
                               ₹{item.originalPrice}
                             </span>
                           </div>
-                          <span className="inline-block text-[9px] font-bold text-emerald-600 mt-0.5">
+                          <span className="inline-block text-[9px] font-bold text-[var(--accent)] mt-0.5">
                             {item.discount}
                           </span>
                         </div>
@@ -243,9 +243,9 @@ export const OrderConfigurator: React.FC<OrderConfiguratorProps> = ({
 
             {/* Custom Size Dimension Inputs (Shown when Custom Size is selected) */}
             {isCustomSize && (
-              <div className="p-4 bg-orange-50/60 rounded-xl border border-orange-200 mt-3 flex flex-wrap items-center gap-4 animate-in fade-in duration-200">
+              <div className="p-4 bg-[var(--accent-bg)]/60 rounded-xl border border-[var(--accent-border)] mt-3 flex flex-wrap items-center gap-4 animate-in fade-in duration-200">
                 <div className="flex items-center gap-2">
-                  <Maximize2 className="w-4 h-4 text-[#E85D04]" />
+                  <Maximize2 className="w-4 h-4 text-[var(--accent)]" />
                   <span className="text-xs font-bold text-stone-800">Custom Dimensions (Inches):</span>
                 </div>
 
@@ -257,7 +257,7 @@ export const OrderConfigurator: React.FC<OrderConfiguratorProps> = ({
                     max="120"
                     value={customWidth}
                     onChange={(e) => setCustomWidth(Math.max(6, Number(e.target.value)))}
-                    className="w-20 h-9 px-2 text-center text-sm font-bold bg-white border border-stone-300 rounded focus:ring-2 focus:ring-[#E85D04] focus:outline-hidden"
+                    className="w-20 h-9 px-2 text-center text-sm font-bold bg-white border border-stone-300 rounded focus:ring-2 focus:ring-[var(--accent)] focus:outline-hidden"
                   />
                   <span className="text-xs text-stone-400">in</span>
                 </div>
@@ -272,7 +272,7 @@ export const OrderConfigurator: React.FC<OrderConfiguratorProps> = ({
                     max="120"
                     value={customHeight}
                     onChange={(e) => setCustomHeight(Math.max(6, Number(e.target.value)))}
-                    className="w-20 h-9 px-2 text-center text-sm font-bold bg-white border border-stone-300 rounded focus:ring-2 focus:ring-[#E85D04] focus:outline-hidden"
+                    className="w-20 h-9 px-2 text-center text-sm font-bold bg-white border border-stone-300 rounded focus:ring-2 focus:ring-[var(--accent)] focus:outline-hidden"
                   />
                   <span className="text-xs text-stone-400">in</span>
                 </div>
@@ -304,7 +304,7 @@ export const OrderConfigurator: React.FC<OrderConfiguratorProps> = ({
                     onClick={() => setWrapStyle(wrap.name)}
                     className={`p-2.5 text-left rounded-lg border text-xs cursor-pointer transition-all ${
                       wrapStyle === wrap.name
-                        ? 'bg-white border-[#E85D04] text-[#E85D04] font-bold shadow-xs ring-1 ring-[#E85D04]'
+                        ? 'bg-white border-[var(--accent)] text-[var(--accent)] font-bold shadow-xs ring-1 ring-[var(--accent)]'
                         : 'bg-white/60 border-stone-200 text-stone-600 hover:border-stone-300'
                     }`}
                   >
@@ -356,7 +356,7 @@ export const OrderConfigurator: React.FC<OrderConfiguratorProps> = ({
                   Total Offer Price
                 </span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl sm:text-3xl font-black text-[#E85D04]">
+                  <span className="text-2xl sm:text-3xl font-black text-[var(--accent)]">
                     ₹{totalPrice.toLocaleString('en-IN')}
                   </span>
                   <span className="text-sm text-stone-400 line-through">
@@ -364,7 +364,7 @@ export const OrderConfigurator: React.FC<OrderConfiguratorProps> = ({
                   </span>
                 </div>
               </div>
-              <span className="text-xs font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+              <span className="text-xs font-extrabold text-[var(--accent-hover)] bg-[var(--accent-bg)] px-2 py-0.5 rounded">
                 You Save ₹{totalSavings.toLocaleString('en-IN')}
               </span>
             </div>
@@ -373,7 +373,7 @@ export const OrderConfigurator: React.FC<OrderConfiguratorProps> = ({
             <button
               type="button"
               onClick={handleStartOrder}
-              className="w-full sm:w-auto px-8 py-4 rounded-lg bg-[#E85D04] hover:bg-[#ff6f0e] active:bg-[#c94e03] text-white font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-orange-600/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-8 py-4 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-light)] active:bg-[var(--accent-hover)] text-white font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-[var(--accent)]/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
             >
               <Upload className="w-4 h-4" />
               <span>START ORDER / UPLOAD PHOTO</span>
@@ -385,17 +385,17 @@ export const OrderConfigurator: React.FC<OrderConfiguratorProps> = ({
           {/* Below Badges */}
           <div className="mt-4 flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs font-semibold text-stone-600">
             <div className="flex items-center gap-1.5">
-              <Truck className="w-4 h-4 text-[#E85D04]" />
+              <Truck className="w-4 h-4 text-[var(--accent)]" />
               <span>🚚 Ready to ship in 48-72 hours</span>
             </div>
             <span className="text-stone-300 hidden sm:inline">•</span>
             <div className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-[#E85D04]" />
+              <ShieldCheck className="w-4 h-4 text-[var(--accent)]" />
               <span>🇮🇳 Delivered across 19,000+ Pin Codes in India</span>
             </div>
             <span className="text-stone-300 hidden sm:inline">•</span>
             <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <CheckCircle2 className="w-4 h-4 text-[var(--accent)]" />
               <span>100% Zero-Fade & Damage-Free Guarantee</span>
             </div>
           </div>

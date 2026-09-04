@@ -37,7 +37,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="bg-[#0F243E] text-white p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-[#E85D04]" />
+            <Building2 className="w-5 h-5 text-[var(--accent)]" />
             <h3 className="font-bold text-base">Request a Corporate / Bulk Quote</h3>
           </div>
           <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-md">
@@ -48,7 +48,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose }) => {
         {/* Content */}
         {submitted ? (
           <div className="p-8 text-center space-y-3">
-            <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 bg-[var(--accent-bg)] text-[var(--accent)] rounded-full flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <h4 className="text-lg font-bold text-stone-900">Quote Request Received!</h4>
@@ -71,7 +71,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose }) => {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g. Rahul Sharma"
-                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#E85D04] outline-none"
+                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:ring-2 focus:ring-[var(--accent)] outline-none"
                 />
               </div>
 
@@ -82,7 +82,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose }) => {
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                   placeholder="e.g. Acme Tech India"
-                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#E85D04] outline-none"
+                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:ring-2 focus:ring-[var(--accent)] outline-none"
                 />
               </div>
             </div>
@@ -96,7 +96,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose }) => {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="rahul@company.com"
-                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#E85D04] outline-none"
+                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:ring-2 focus:ring-[var(--accent)] outline-none"
                 />
               </div>
 
@@ -108,7 +108,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose }) => {
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="+91 98765 43210"
-                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#E85D04] outline-none"
+                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:ring-2 focus:ring-[var(--accent)] outline-none"
                 />
               </div>
             </div>
@@ -119,7 +119,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose }) => {
                 <select
                   value={formData.material}
                   onChange={(e) => setFormData({ ...formData, material: e.target.value })}
-                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#E85D04] outline-none bg-white"
+                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:ring-2 focus:ring-[var(--accent)] outline-none bg-white"
                 >
                   <option>Stretched Canvas Prints</option>
                   <option>Cast Acrylic Glass Signs</option>
@@ -134,7 +134,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose }) => {
                 <select
                   value={formData.quantity}
                   onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#E85D04] outline-none bg-white"
+                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:ring-2 focus:ring-[var(--accent)] outline-none bg-white"
                 >
                   <option>10 - 25 units</option>
                   <option>25 - 50 units</option>
@@ -151,13 +151,13 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose }) => {
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 placeholder="Mention sizes, locations for delivery, timeline or design requirements..."
-                className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#E85D04] outline-none"
+                className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:ring-2 focus:ring-[var(--accent)] outline-none"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-2.5 bg-[#E85D04] hover:bg-[#D44E00] text-white font-bold text-sm rounded-lg shadow transition-all flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold text-sm rounded-lg shadow transition-all flex items-center justify-center gap-2"
             >
               <Send className="w-4 h-4" />
               <span>Submit Quote Request</span>

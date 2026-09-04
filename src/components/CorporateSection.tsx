@@ -23,7 +23,7 @@ export const CorporateSection: React.FC<CorporateSectionProps> = ({ onOpenQuote 
           {/* Left: Content and Checklist */}
           <div className="lg:col-span-6 space-y-5">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-800 border border-slate-200">
-              <Building2 className="w-3.5 h-3.5 text-[#E85D04]" />
+              <Building2 className="w-3.5 h-3.5 text-[var(--accent)]" />
               <span>Commercial &amp; Enterprise Services</span>
             </div>
 
@@ -40,7 +40,7 @@ export const CorporateSection: React.FC<CorporateSectionProps> = ({ onOpenQuote 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               {applications.map((app, idx) => (
                 <div key={idx} className="flex items-start gap-2.5 p-2.5 bg-stone-50 rounded-lg border border-stone-200">
-                  <CheckCircle2 className="w-4 h-4 text-[#E85D04] mt-0.5 flex-shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[var(--accent)] mt-0.5 flex-shrink-0" />
                   <div>
                     <h3 className="font-bold text-xs sm:text-sm text-stone-900">{app.title}</h3>
                     <p className="text-[11px] text-stone-500 leading-tight mt-0.5">{app.desc}</p>
@@ -61,7 +61,7 @@ export const CorporateSection: React.FC<CorporateSectionProps> = ({ onOpenQuote 
 
               <div className="text-xs text-stone-500 flex items-center gap-2">
                 <span>Direct Desk:</span>
-                <a href="tel:+919845012345" className="font-bold text-stone-800 hover:text-[#E85D04]">
+                <a href="tel:+919845012345" className="font-bold text-stone-800 hover:text-[var(--accent)]">
                   +91 98450 12345
                 </a>
               </div>
@@ -81,7 +81,7 @@ export const CorporateSection: React.FC<CorporateSectionProps> = ({ onOpenQuote 
               {/* Stats Strip */}
               <div className="absolute bottom-4 left-4 right-4 grid grid-cols-3 gap-2 bg-white/95 backdrop-blur-sm p-3 rounded-xl border border-white/60 shadow text-center">
                 <div>
-                  <div className="text-base sm:text-lg font-black text-[#E85D04]">500+</div>
+                  <div className="text-base sm:text-lg font-black text-[var(--accent)]">500+</div>
                   <div className="text-[10px] text-stone-500 font-semibold">Offices Fitted</div>
                 </div>
                 <div className="border-x border-stone-200">

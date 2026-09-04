@@ -16,8 +16,8 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ onOpenQuote })
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wider mb-2 border border-orange-200">
-              <Sparkles className="w-3.5 h-3.5 text-orange-600" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent-hover)] text-xs font-bold uppercase tracking-wider mb-2 border border-[var(--accent-border)]">
+              <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
               <span>Architectural Portfolio</span>
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-stone-900 tracking-tight">
@@ -30,7 +30,7 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ onOpenQuote })
 
           <button
             onClick={onOpenQuote}
-            className="inline-flex items-center gap-2 text-sm font-bold text-orange-600 hover:text-orange-700 transition-colors group self-start sm:self-auto"
+            className="inline-flex items-center gap-2 text-sm font-bold text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors group self-start sm:self-auto"
           >
             <span>View All Projects</span>
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -66,20 +66,20 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ onOpenQuote })
                     <span className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-black/50 backdrop-blur-md text-white border border-white/20">
                       {project.category}
                     </span>
-                    <span className="w-9 h-9 rounded-full bg-white/20 group-hover:bg-orange-500 text-white flex items-center justify-center transition-colors">
+                    <span className="w-9 h-9 rounded-full bg-white/20 group-hover:bg-[var(--accent)] text-white flex items-center justify-center transition-colors">
                       <ExternalLink className="w-4 h-4" />
                     </span>
                   </div>
 
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-orange-400 text-xs font-semibold">
+                    <div className="flex items-center gap-2 text-[var(--accent-light)] text-xs font-semibold">
                       <MapPin className="w-3.5 h-3.5" />
                       <span>{project.location}</span>
                       <span className="text-stone-500">•</span>
                       <span>{project.client}</span>
                     </div>
 
-                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight group-hover:text-orange-300 transition-colors">
+                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight group-hover:text-[var(--accent-border)] transition-colors">
                       {project.title}
                     </h3>
 
@@ -128,7 +128,7 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ onOpenQuote })
               />
               <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-transparent to-transparent" />
               <div className="absolute bottom-4 left-6 right-6 text-white">
-                <span className="text-xs font-bold uppercase tracking-wider text-orange-400">
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--accent-light)]">
                   {selectedProject.category}
                 </span>
                 <h3 className="text-2xl font-bold">{selectedProject.title}</h3>
@@ -143,7 +143,7 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ onOpenQuote })
                 {selectedProject.description}
               </p>
               {selectedProject.outcome && (
-                <div className="p-4 rounded-xl bg-orange-50 border border-orange-200 text-xs text-orange-900">
+                <div className="p-4 rounded-xl bg-[var(--accent-bg)] border border-[var(--accent-border)] text-xs text-[var(--accent-hover)]">
                   <strong>Outcome & Performance:</strong> {selectedProject.outcome}
                 </div>
               )}
@@ -153,7 +153,7 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ onOpenQuote })
                     setSelectedProject(null);
                     onOpenQuote();
                   }}
-                  className="px-6 py-2.5 rounded-full bg-orange-500 text-white font-bold text-xs shadow-md"
+                  className="px-6 py-2.5 rounded-full bg-[var(--accent)] text-white font-bold text-xs shadow-md"
                 >
                   Inquire Similar Custom Fabrication
                 </button>

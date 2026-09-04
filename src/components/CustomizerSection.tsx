@@ -86,7 +86,7 @@ export const CustomizerSection: React.FC<CustomizerSectionProps> = ({
         
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-100 text-[#E85D04] border border-orange-200 mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent-border)] mb-2">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Interactive Customization</span>
           </div>
@@ -145,7 +145,7 @@ export const CustomizerSection: React.FC<CustomizerSectionProps> = ({
                       onClick={() => setUploadedImage(s.url)}
                       className={`px-2 py-1 rounded text-[11px] border font-medium ${
                         uploadedImage === s.url 
-                          ? 'bg-[#E85D04] text-white border-[#E85D04]' 
+                          ? 'bg-[var(--accent)] text-white border-[var(--accent)]' 
                           : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
                       }`}
                     >
@@ -163,7 +163,7 @@ export const CustomizerSection: React.FC<CustomizerSectionProps> = ({
                 </div>
                 <button
                   onClick={handleAddPreviewToCart}
-                  className="px-4 py-2 bg-[#E85D04] hover:bg-[#D44E00] text-white text-xs font-bold rounded-lg shadow transition-all flex items-center gap-1.5"
+                  className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold rounded-lg shadow transition-all flex items-center gap-1.5"
                 >
                   <Check className="w-4 h-4" />
                   <span>Add to Cart</span>
@@ -192,7 +192,7 @@ export const CustomizerSection: React.FC<CustomizerSectionProps> = ({
                     onClick={() => setMaterial(m.id as any)}
                     className={`p-3 rounded-xl border text-left transition-all ${
                       material === m.id
-                        ? 'border-[#E85D04] bg-orange-50/50 text-[#E85D04] shadow-sm'
+                        ? 'border-[var(--accent)] bg-[var(--accent-bg)]/50 text-[var(--accent)] shadow-sm'
                         : 'border-stone-200 bg-stone-50 hover:bg-white text-stone-700'
                     }`}
                   >
@@ -209,8 +209,8 @@ export const CustomizerSection: React.FC<CustomizerSectionProps> = ({
                 2. Upload Your Photo
               </label>
               <div className="flex items-center gap-3">
-                <label className="flex-1 border-2 border-dashed border-stone-300 hover:border-orange-400 rounded-xl p-3 text-center cursor-pointer bg-stone-50 hover:bg-orange-50/30 transition-colors flex items-center justify-center gap-2">
-                  <UploadCloud className="w-5 h-5 text-[#E85D04]" />
+                <label className="flex-1 border-2 border-dashed border-stone-300 hover:border-[var(--accent-light)] rounded-xl p-3 text-center cursor-pointer bg-stone-50 hover:bg-[var(--accent-bg)]/30 transition-colors flex items-center justify-center gap-2">
+                  <UploadCloud className="w-5 h-5 text-[var(--accent)]" />
                   <span className="text-xs font-bold text-stone-700">Click to upload image file</span>
                   <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
                 </label>
@@ -228,7 +228,7 @@ export const CustomizerSection: React.FC<CustomizerSectionProps> = ({
                   value={customText}
                   onChange={(e) => setCustomText(e.target.value)}
                   placeholder="e.g. Family Name, Date, or Quote"
-                  className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-[var(--accent-border)]"
                 />
                 <Type className="w-4 h-4 text-stone-400 absolute right-3 top-3" />
               </div>
@@ -246,7 +246,7 @@ export const CustomizerSection: React.FC<CustomizerSectionProps> = ({
                     onClick={() => setSize(s)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
                       size === s
-                        ? 'bg-[#E85D04] text-white border-[#E85D04] shadow-sm'
+                        ? 'bg-[var(--accent)] text-white border-[var(--accent)] shadow-sm'
                         : 'bg-white text-stone-700 border-stone-300 hover:bg-stone-50'
                     }`}
                   >
@@ -282,7 +282,7 @@ export const CustomizerSection: React.FC<CustomizerSectionProps> = ({
             <div className="pt-2">
               <button
                 onClick={onStartCreating}
-                className="w-full py-3 bg-[#E85D04] hover:bg-[#D44E00] text-white font-bold text-sm rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold text-sm rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
               >
                 <span>Open Full Customizer Studio</span>
                 <ArrowRight className="w-4 h-4" />

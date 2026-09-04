@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+:root {
+  --accent: #166534;
+  --accent-hover: #14532D;
+  --accent-light: #16A34A;
+  --accent-bg: #F0FDF4;
+  --accent-border: #86EFAC;
+}
+
 @font-face {
   font-family: 'Bodoni Moda';
   font-style: normal;

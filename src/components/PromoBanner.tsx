@@ -31,7 +31,7 @@ export const PromoBanner: React.FC<PromoBannerProps> = ({
           <div className="relative z-10 p-6 sm:p-10 lg:p-14 max-w-2xl space-y-4">
             
             {/* Promo Tag */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E85D04] text-white text-xs font-black uppercase tracking-wider shadow-sm">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent)] text-white text-xs font-black uppercase tracking-wider shadow-sm">
               <Tag className="w-3.5 h-3.5" />
               <span>FESTIVE GALLERY SALE • LIMITED TIME</span>
             </div>
@@ -43,7 +43,7 @@ export const PromoBanner: React.FC<PromoBannerProps> = ({
 
             {/* Sub-headline */}
             <p className="text-stone-200 text-base sm:text-lg font-medium">
-              Up to <span className="text-[#E85D04] font-black text-xl sm:text-2xl">40% OFF</span> on Custom Wall Art, Multi-Panel Canvas Sets & Floating Acrylic Frames.
+              Up to <span className="text-[var(--accent)] font-black text-xl sm:text-2xl">40% OFF</span> on Custom Wall Art, Multi-Panel Canvas Sets & Floating Acrylic Frames.
             </p>
 
             <p className="text-xs text-stone-300 max-w-lg">
@@ -55,7 +55,7 @@ export const PromoBanner: React.FC<PromoBannerProps> = ({
               <button
                 type="button"
                 onClick={onShopNow}
-                className="px-7 py-3.5 rounded-lg bg-[#E85D04] hover:bg-[#ff6f0e] active:bg-[#c94e03] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-orange-900/40 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 cursor-pointer"
+                className="px-7 py-3.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-light)] active:bg-[var(--accent-hover)] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-[var(--accent-hover)]/40 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 cursor-pointer"
               >
                 <span>SHOP NOW</span>
                 <ArrowRight className="w-4 h-4" />
@@ -74,7 +74,7 @@ export const PromoBanner: React.FC<PromoBannerProps> = ({
 
             {/* Small note */}
             <div className="pt-2 flex items-center gap-2 text-[11px] text-stone-300">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <ShieldCheck className="w-4 h-4 text-[var(--accent-light)]" />
               <span>Use Code: <strong className="text-white bg-white/10 px-1.5 py-0.5 rounded border border-white/20 font-mono">CANVAS40</strong> at checkout</span>
             </div>
 

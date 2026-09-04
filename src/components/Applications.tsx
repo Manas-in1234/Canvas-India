@@ -30,8 +30,8 @@ export const Applications: React.FC<ApplicationsProps> = ({
         {/* Section Header with Horizontal Scroll Arrows */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wider mb-2 border border-orange-200">
-              <Sparkles className="w-3.5 h-3.5 text-orange-600" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent-hover)] text-xs font-bold uppercase tracking-wider mb-2 border border-[var(--accent-border)]">
+              <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
               <span>Spatial Versatility</span>
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-stone-900 tracking-tight">
@@ -73,7 +73,7 @@ export const Applications: React.FC<ApplicationsProps> = ({
                 if (onSelectApplication) onSelectApplication(app.name);
                 else if (onOpenQuote) onOpenQuote();
               }}
-              className="snap-start shrink-0 w-[290px] sm:w-[350px] md:w-[390px] rounded-3xl overflow-hidden bg-white border border-stone-200 hover:border-orange-400 shadow-xs hover:shadow-xl transition-all duration-300 group cursor-pointer flex flex-col justify-between"
+              className="snap-start shrink-0 w-[290px] sm:w-[350px] md:w-[390px] rounded-3xl overflow-hidden bg-white border border-stone-200 hover:border-[var(--accent-light)] shadow-xs hover:shadow-xl transition-all duration-300 group cursor-pointer flex flex-col justify-between"
             >
               {/* Large Image with Dark Gradient & Title Overlay */}
               <div className="relative aspect-4/3 w-full overflow-hidden bg-stone-100">
@@ -114,7 +114,7 @@ export const Applications: React.FC<ApplicationsProps> = ({
                       {app.suitableMaterials?.map((mat) => (
                         <span
                           key={mat}
-                          className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-orange-50 text-orange-700 border border-orange-200/60"
+                          className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[var(--accent-bg)] text-[var(--accent-hover)] border border-[var(--accent-border)]/60"
                         >
                           {mat}
                         </span>
@@ -128,7 +128,7 @@ export const Applications: React.FC<ApplicationsProps> = ({
                       if (onSelectApplication) onSelectApplication(app.name);
                       else if (onOpenQuote) onOpenQuote();
                     }}
-                    className="w-full py-2.5 px-4 rounded-xl bg-stone-100 hover:bg-orange-500 text-stone-800 hover:text-white font-bold text-xs transition-all flex items-center justify-center gap-2 group/btn cursor-pointer"
+                    className="w-full py-2.5 px-4 rounded-xl bg-stone-100 hover:bg-[var(--accent)] text-stone-800 hover:text-white font-bold text-xs transition-all flex items-center justify-center gap-2 group/btn cursor-pointer"
                   >
                     <span>View Products for this Space</span>
                     <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-1" />

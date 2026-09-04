@@ -40,13 +40,13 @@ export const MadePersonal: React.FC<MadePersonalProps> = ({ onStartCreating }) =
           
           {/* Left: Storytelling Content */}
           <div className="lg:col-span-5 space-y-5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-100 text-[#E85D04] border border-orange-200">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent-border)]">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Personalized Product Story</span>
             </div>
 
             <h2 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight leading-tight">
-              Made <span className="text-[#E85D04]">Personal.</span>
+              Made <span className="text-[var(--accent)]">Personal.</span>
             </h2>
 
             <p className="text-sm sm:text-base text-stone-600 leading-relaxed">
@@ -61,12 +61,12 @@ export const MadePersonal: React.FC<MadePersonalProps> = ({ onStartCreating }) =
                 const Icon = item.icon;
                 return (
                   <div key={idx} className="bg-white p-3.5 rounded-xl border border-stone-200 shadow-sm">
-                    <div className="w-8 h-8 rounded-lg bg-orange-50 text-[#E85D04] flex items-center justify-center mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--accent-bg)] text-[var(--accent)] flex items-center justify-center mb-2">
                       <Icon className="w-4 h-4" />
                     </div>
                     <h3 className="font-bold text-xs sm:text-sm text-stone-900">{item.title}</h3>
                     <p className="text-[11px] text-stone-500 mt-1 leading-snug">{item.desc}</p>
-                    <div className="mt-2 text-[10px] font-semibold text-[#E85D04]">
+                    <div className="mt-2 text-[10px] font-semibold text-[var(--accent)]">
                       {item.material}
                     </div>
                   </div>
@@ -77,7 +77,7 @@ export const MadePersonal: React.FC<MadePersonalProps> = ({ onStartCreating }) =
             <div className="pt-2">
               <button
                 onClick={onStartCreating}
-                className="px-6 py-3 bg-[#E85D04] hover:bg-[#D44E00] text-white font-bold text-sm rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2 transform active:scale-95"
+                className="px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold text-sm rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2 transform active:scale-95"
               >
                 <span>Create Yours</span>
                 <ArrowRight className="w-4 h-4" />
@@ -109,7 +109,7 @@ export const MadePersonal: React.FC<MadePersonalProps> = ({ onStartCreating }) =
                     <span className="font-bold text-stone-800">Photo Quality Check:</span>
                     <span className="text-stone-500 ml-1">Free automated resolution verification</span>
                   </div>
-                  <span className="text-[#E85D04] font-black text-xs">Included</span>
+                  <span className="text-[var(--accent)] font-black text-xs">Included</span>
                 </div>
               </div>
 

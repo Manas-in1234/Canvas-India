@@ -101,8 +101,8 @@ export const QuickOrder: React.FC<QuickOrderProps> = ({ onAddToCart, onOpenQuote
         
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wider mb-2 border border-orange-200">
-            <Calculator className="w-3.5 h-3.5 text-orange-600" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent-hover)] text-xs font-bold uppercase tracking-wider mb-2 border border-[var(--accent-border)]">
+            <Calculator className="w-3.5 h-3.5 text-[var(--accent)]" />
             <span>Interactive Order Matrix</span>
           </div>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-stone-900 tracking-tight">
@@ -132,7 +132,7 @@ export const QuickOrder: React.FC<QuickOrderProps> = ({ onAddToCart, onOpenQuote
                       onClick={() => setSelectedProduct(p.id)}
                       className={`p-3 rounded-xl border text-left transition-all ${
                         selectedProduct === p.id
-                          ? 'bg-white border-orange-500 ring-2 ring-orange-500/20 shadow-sm text-stone-900 font-bold'
+                          ? 'bg-white border-[var(--accent)] ring-2 ring-[var(--accent)]/20 shadow-sm text-stone-900 font-bold'
                           : 'bg-white/80 border-stone-200 hover:border-stone-300 text-stone-700 font-medium'
                       }`}
                     >
@@ -152,7 +152,7 @@ export const QuickOrder: React.FC<QuickOrderProps> = ({ onAddToCart, onOpenQuote
                     2. Select Size (Inches)
                   </label>
                   <span className="text-[11px] text-stone-500 flex items-center gap-1">
-                    <Ruler className="w-3 h-3 text-orange-600" />
+                    <Ruler className="w-3 h-3 text-[var(--accent)]" />
                     <span>Custom dimensions up to 120"</span>
                   </span>
                 </div>
@@ -164,14 +164,14 @@ export const QuickOrder: React.FC<QuickOrderProps> = ({ onAddToCart, onOpenQuote
                       onClick={() => setSelectedSize(s.id)}
                       className={`p-2.5 rounded-xl border text-center transition-all relative ${
                         selectedSize === s.id
-                          ? 'bg-orange-500 text-white border-orange-500 shadow-md font-bold'
+                          ? 'bg-[var(--accent)] text-white border-[var(--accent)] shadow-md font-bold'
                           : 'bg-white border-stone-200 hover:border-stone-300 text-stone-800 font-medium'
                       }`}
                     >
                       <span className="block text-xs sm:text-sm">{s.label}</span>
                       {s.popular && (
                         <span className={`absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] px-1.5 py-0.2 rounded-full font-bold uppercase ${
-                          selectedSize === s.id ? 'bg-white text-orange-600' : 'bg-orange-100 text-orange-700'
+                          selectedSize === s.id ? 'bg-white text-[var(--accent)]' : 'bg-[var(--accent-bg)] text-[var(--accent-hover)]'
                         }`}>
                           Popular
                         </span>
@@ -193,7 +193,7 @@ export const QuickOrder: React.FC<QuickOrderProps> = ({ onAddToCart, onOpenQuote
                       onClick={() => setSelectedFinish(f.id)}
                       className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${
                         selectedFinish === f.id
-                          ? 'bg-white border-orange-500 ring-2 ring-orange-500/20 shadow-sm'
+                          ? 'bg-white border-[var(--accent)] ring-2 ring-[var(--accent)]/20 shadow-sm'
                           : 'bg-white/80 border-stone-200 hover:border-stone-300'
                       }`}
                     >
@@ -201,7 +201,7 @@ export const QuickOrder: React.FC<QuickOrderProps> = ({ onAddToCart, onOpenQuote
                         <span className="block text-xs sm:text-sm font-semibold text-stone-900">{f.name}</span>
                         <span className="block text-[11px] text-stone-500">{f.tag}</span>
                       </div>
-                      <span className="text-xs font-bold text-orange-600">
+                      <span className="text-xs font-bold text-[var(--accent)]">
                         {f.extra === 0 ? 'Included' : `+₹${f.extra}`}
                       </span>
                     </button>
@@ -240,7 +240,7 @@ export const QuickOrder: React.FC<QuickOrderProps> = ({ onAddToCart, onOpenQuote
                 <div className="flex items-center justify-between border-b border-stone-100 pb-3 mb-4">
                   <h3 className="font-bold text-stone-900 text-sm">Order Summary</h3>
                   <span className="text-[11px] text-stone-500 flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-orange-600" />
+                    <Clock className="w-3 h-3 text-[var(--accent)]" />
                     <span>48h Dispatch</span>
                   </span>
                 </div>
@@ -263,7 +263,7 @@ export const QuickOrder: React.FC<QuickOrderProps> = ({ onAddToCart, onOpenQuote
                     <span className="font-semibold text-stone-900">{selectedQuantity}</span>
                   </div>
                   {bulkDiscountPct > 0 && (
-                    <div className="flex justify-between text-emerald-600 font-bold">
+                    <div className="flex justify-between text-[var(--accent)] font-bold">
                       <span>Volume Savings:</span>
                       <span>-{bulkDiscountPct * 100}% Applied</span>
                     </div>
@@ -288,7 +288,7 @@ export const QuickOrder: React.FC<QuickOrderProps> = ({ onAddToCart, onOpenQuote
               <div className="space-y-2.5 pt-4">
                 <button
                   onClick={handleStartOrder}
-                  className="w-full py-3.5 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold text-sm tracking-wide shadow-md shadow-orange-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:bg-[var(--accent-hover)] text-white font-bold text-sm tracking-wide shadow-md shadow-[var(--accent)]/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {addedSuccess ? (
                     <>
@@ -311,7 +311,7 @@ export const QuickOrder: React.FC<QuickOrderProps> = ({ onAddToCart, onOpenQuote
                 </button>
 
                 <div className="flex items-center justify-center gap-2 text-[11px] text-stone-500 pt-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
                   <span>Free digital proof before printing</span>
                 </div>
               </div>

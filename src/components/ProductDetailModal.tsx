@@ -92,7 +92,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <h2 className="text-xl sm:text-2xl font-extrabold text-stone-900">
                 {product.name}
               </h2>
-              <p className="text-xs text-orange-600 font-semibold mt-1">
+              <p className="text-xs text-[var(--accent)] font-semibold mt-1">
                 {product.tagline}
               </p>
             </div>
@@ -109,7 +109,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <div className="grid grid-cols-2 gap-1.5">
                 {product.specs.map((spec, i) => (
                   <div key={i} className="flex items-center gap-1.5 text-xs text-stone-700">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
                     <span className="truncate">{spec}</span>
                   </div>
                 ))}
@@ -131,7 +131,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     onClick={() => setSelectedSize(size)}
                     className={`py-1.5 px-2 rounded-lg text-xs font-semibold border transition-all ${
                       selectedSize === size
-                        ? 'bg-orange-500 text-white border-orange-500 shadow-xs'
+                        ? 'bg-[var(--accent)] text-white border-[var(--accent)] shadow-xs'
                         : 'bg-stone-50 text-stone-700 border-stone-200 hover:border-stone-300'
                     }`}
                   >
@@ -182,7 +182,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div className="flex items-center gap-3">
               <button
                 onClick={handleAdd}
-                className="flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold text-sm shadow-md shadow-orange-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="flex-1 py-3 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:bg-[var(--accent-hover)] text-white font-bold text-sm shadow-md shadow-[var(--accent)]/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isAdded ? (
                   <>

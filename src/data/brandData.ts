@@ -89,8 +89,8 @@ export const MATERIALS_DATA: Record<'canvas' | 'acrylic' | 'cork', MaterialDetai
     ],
     heroImage: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1400&q=85',
     detailImage: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1000&q=80',
-    accentColor: '#E85D04',
-    bgAtmosphere: 'from-orange-50 to-stone-100',
+    accentColor: '#166534',
+    bgAtmosphere: 'from-emerald-50 to-stone-100',
   },
   acrylic: {
     id: 'acrylic',

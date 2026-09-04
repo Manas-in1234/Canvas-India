@@ -13,7 +13,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ onSelectCategory }) 
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-8">
           <div>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-[#E85D04] uppercase tracking-wider mb-1">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-1">
               <Layers className="w-3.5 h-3.5" />
               <span>Explore Materials &amp; Products</span>
             </div>
@@ -42,7 +42,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ onSelectCategory }) 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm text-stone-800 text-[11px] font-bold px-2.5 py-1 rounded shadow-sm border border-stone-200">
-                  from <span className="text-[#E85D04]">₹{cat.startingPrice}</span>
+                  from <span className="text-[var(--accent)]">₹{cat.startingPrice}</span>
                 </div>
                 <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm text-white text-[10px] font-medium px-2 py-0.5 rounded">
                   {cat.popularItem}
@@ -52,7 +52,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ onSelectCategory }) 
               {/* Card Body */}
               <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-stone-900 group-hover:text-[#E85D04] transition-colors">
+                  <h3 className="text-base sm:text-lg font-bold text-stone-900 group-hover:text-[var(--accent)] transition-colors">
                     {cat.name}
                   </h3>
                   <p className="text-xs sm:text-sm text-stone-500 mt-1.5 leading-relaxed">
@@ -65,7 +65,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ onSelectCategory }) 
                   <span className="text-xs font-semibold text-stone-600">
                     High-definition print
                   </span>
-                  <button className="px-3 py-1.5 bg-stone-100 group-hover:bg-[#E85D04] text-stone-800 group-hover:text-white rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors">
+                  <button className="px-3 py-1.5 bg-stone-100 group-hover:bg-[var(--accent)] text-stone-800 group-hover:text-white rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors">
                     <span>Shop Now</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>

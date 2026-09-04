@@ -86,14 +86,14 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   const slide = slides[currentSlide];
 
   return (
-    <section className="relative bg-gradient-to-b from-orange-50/50 via-white to-stone-50 border-b border-stone-200 overflow-hidden">
+    <section className="relative bg-gradient-to-b from-[var(--accent-bg)]/50 via-white to-stone-50 border-b border-stone-200 overflow-hidden">
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         
         {/* Promotional Banner Box (430 - 520px height) */}
         <div className="relative rounded-2xl bg-gradient-to-r from-[#0F243E] via-[#16385d] to-[#1e4976] text-white shadow-xl overflow-hidden min-h-[430px] lg:min-h-[480px] flex flex-col justify-between">
           
           {/* Subtle decorative background glow */}
-          <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#E85D04]/30 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-32 -left-32 w-96 h-96 bg-[var(--accent)]/30 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
 
           {/* Main Grid: Left Copy & Right Product Visual Composition */}
@@ -103,7 +103,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
             <div className="lg:col-span-7 space-y-4 sm:space-y-5">
               
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E85D04] text-white text-xs font-extrabold uppercase tracking-wider shadow-sm">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent)] text-white text-xs font-extrabold uppercase tracking-wider shadow-sm">
                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                 <span>{slide.badge}</span>
               </div>
@@ -123,7 +123,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 <button
                   type="button"
                   onClick={onShopCanvas}
-                  className="px-6 sm:px-8 py-3.5 rounded-lg bg-[#E85D04] hover:bg-[#ff6f0e] active:bg-[#c94e03] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-orange-900/40 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 cursor-pointer"
+                  className="px-6 sm:px-8 py-3.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-light)] active:bg-[var(--accent-hover)] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-[var(--accent-hover)]/40 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 cursor-pointer"
                 >
                   <span>{slide.ctaPrimaryText}</span>
                   <ArrowRight className="w-4 h-4" />
@@ -142,19 +142,19 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
               {/* Promotional Highlights Checkmarks */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-white/15 text-xs text-stone-200 font-medium">
                 <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#E85D04] shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[var(--accent)] shrink-0" />
                   <span>Premium Printing</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#E85D04] shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[var(--accent)] shrink-0" />
                   <span>Made in India</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#E85D04] shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[var(--accent)] shrink-0" />
                   <span>Custom Sizes</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#E85D04] shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[var(--accent)] shrink-0" />
                   <span>Pan-India Delivery</span>
                 </div>
               </div>
@@ -173,7 +173,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 />
 
                 {/* Overlaid Price & Offer Floating Badge */}
-                <div className="absolute top-4 right-4 bg-[#E85D04] text-white px-3 py-1.5 rounded-lg shadow-lg font-black text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <div className="absolute top-4 right-4 bg-[var(--accent)] text-white px-3 py-1.5 rounded-lg shadow-lg font-black text-xs uppercase tracking-wider flex items-center gap-1.5">
                   <Percent className="w-3.5 h-3.5 text-white" />
                   <span>{slide.discountBadge}</span>
                 </div>
@@ -181,7 +181,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 {/* Overlaid Bottom Starting Price Label */}
                 <div className="absolute bottom-3 left-3 right-3 bg-black/75 backdrop-blur-md px-3.5 py-2 rounded-lg text-white flex items-center justify-between border border-white/15">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    <span className="w-2 h-2 rounded-full bg-[var(--accent-light)] animate-ping" />
                     <span className="text-xs font-bold text-stone-100">{slide.priceNote}</span>
                   </div>
                   <div className="flex items-center gap-1 text-amber-400 text-xs font-bold">
@@ -203,7 +203,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                   key={s.id}
                   onClick={() => setCurrentSlide(idx)}
                   className={`h-2 rounded-full transition-all cursor-pointer ${
-                    currentSlide === idx ? 'w-8 bg-[#E85D04]' : 'w-2 bg-white/40 hover:bg-white/70'
+                    currentSlide === idx ? 'w-8 bg-[var(--accent)]' : 'w-2 bg-white/40 hover:bg-white/70'
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />

@@ -32,14 +32,14 @@ export const CanvasIndiaLogo: React.FC<CanvasIndiaLogoProps> = ({
         <defs>
           <linearGradient id="ciSaffronGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#FF7700" />
-            <stop offset="100%" stopColor="#E85D04" />
+            <stop offset="100%" stopColor="var(--accent)" />
           </linearGradient>
           <linearGradient id="ciGreenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#22C55E" />
             <stop offset="100%" stopColor="#15803D" />
           </linearGradient>
           <linearGradient id="ciBrushPaintGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#E85D04" />
+            <stop offset="0%" stopColor="var(--accent)" />
             <stop offset="60%" stopColor="#FF7700" />
             <stop offset="100%" stopColor="#FFAA00" />
           </linearGradient>
@@ -78,7 +78,7 @@ export const CanvasIndiaLogo: React.FC<CanvasIndiaLogoProps> = ({
           <g clipPath="url(#ciCanvasClip)">
             {/* Saffron Top Diagonal */}
             <path d="M 160 120 L 280 130 L 280 205 C 255 198, 225 180, 200 200 C 185 210, 175 195, 160 185 Z" fill="url(#ciSaffronGrad)" />
-            <path d="M 160 185 Q 190 205 210 188 Q 235 212 280 202 L 280 195 Q 240 185 220 178 Q 185 190 160 175 Z" fill="#E85D04" opacity="0.65" />
+            <path d="M 160 185 Q 190 205 210 188 Q 235 212 280 202 L 280 195 Q 240 185 220 178 Q 185 190 160 175 Z" fill="var(--accent)" opacity="0.65" />
             
             {/* Green Bottom Diagonal */}
             <path d="M 160 215 C 185 225, 215 210, 240 235 C 255 245, 270 240, 280 248 L 280 280 L 160 280 Z" fill="url(#ciGreenGrad)" />
@@ -106,7 +106,7 @@ export const CanvasIndiaLogo: React.FC<CanvasIndiaLogoProps> = ({
         {/* Paintbrush with Orange Drip and Ferrule */}
         <g id="artist-brush-head">
           <path d="M 750 190 C 770 188, 790 192, 805 170 C 818 152, 825 125, 830 102 C 824 115, 815 130, 800 140 C 782 152, 765 158, 745 160 C 725 162, 732 178, 750 190 Z" fill="url(#ciBrushPaintGrad)" />
-          <path d="M 816 138 C 828 116, 840 92, 844 76 C 840 85, 832 102, 822 118 C 812 134, 800 148, 785 156 C 798 152, 810 145, 816 138 Z" fill="#E85D04" />
+          <path d="M 816 138 C 828 116, 840 92, 844 76 C 840 85, 832 102, 822 118 C 812 134, 800 148, 785 156 C 798 152, 810 145, 816 138 Z" fill="var(--accent)" />
           <path d="M 844 76 C 848 85, 842 108, 835 125 C 828 140, 818 155, 804 165 C 818 152, 832 135, 838 118 C 844 102, 846 88, 844 76 Z" fill="#FF9E00" />
           <path d="M 842 78 C 852 90, 840 115, 828 135 C 816 150, 802 162, 788 168 C 778 172, 768 174, 755 174 C 768 170, 780 164, 792 155 C 810 140, 826 118, 834 98 C 838 88, 840 82, 842 78 Z" fill="#FF6B00" />
 
@@ -122,7 +122,7 @@ export const CanvasIndiaLogo: React.FC<CanvasIndiaLogoProps> = ({
 
         {/* Divider: Orange Bar - INDIA - Green Bar */}
         <g id="ci-india-baseline">
-          <line x1="285" y1="332" x2="375" y2="332" stroke="#E85D04" strokeWidth="4.5" strokeLinecap="round" />
+          <line x1="285" y1="332" x2="375" y2="332" stroke="var(--accent)" strokeWidth="4.5" strokeLinecap="round" />
           <text
             x="500"
             y="342"
@@ -142,7 +142,7 @@ export const CanvasIndiaLogo: React.FC<CanvasIndiaLogoProps> = ({
         <g id="ci-tagline" fontFamily="'Cinzel', 'Times New Roman', 'Georgia', serif" fontSize="25" fontWeight="600">
           <text x="260" y="380" fill={primaryNavy} letterSpacing="4">Canvas</text>
           <text x="375" y="380" fill={dividerMuted} fontWeight="300">|</text>
-          <text x="415" y="380" fill="#E85D04" letterSpacing="4">Acrylic</text>
+          <text x="415" y="380" fill="var(--accent)" letterSpacing="4">Acrylic</text>
           <text x="560" y="380" fill={dividerMuted} fontWeight="300">|</text>
           <text x="600" y="380" fill="#15803D" letterSpacing="4">Corks</text>
         </g>

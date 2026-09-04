@@ -43,16 +43,16 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote })
               custom cork boards and photo frames.
             </p>
             <div className="flex items-center gap-3 text-stone-400 pt-1">
-              <a href="#" className="hover:text-[#E85D04] transition-colors" title="Global Community">
+              <a href="#" className="hover:text-[var(--accent)] transition-colors" title="Global Community">
                 <Globe className="w-4 h-4" />
               </a>
-              <a href="#" className="hover:text-[#E85D04] transition-colors" title="Chat Support">
+              <a href="#" className="hover:text-[var(--accent)] transition-colors" title="Chat Support">
                 <MessageCircle className="w-4 h-4" />
               </a>
-              <a href="#" className="hover:text-[#E85D04] transition-colors" title="Telegram">
+              <a href="#" className="hover:text-[var(--accent)] transition-colors" title="Telegram">
                 <Send className="w-4 h-4" />
               </a>
-              <a href="#" className="hover:text-[#E85D04] transition-colors" title="Share">
+              <a href="#" className="hover:text-[var(--accent)] transition-colors" title="Share">
                 <Share2 className="w-4 h-4" />
               </a>
             </div>
@@ -127,7 +127,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote })
                 </button>
               </li>
               <li>
-                <button onClick={onOpenQuote} className="text-[#E85D04] font-bold hover:underline transition-colors text-left">
+                <button onClick={onOpenQuote} className="text-[var(--accent)] font-bold hover:underline transition-colors text-left">
                   Get a Quote
                 </button>
               </li>
@@ -150,7 +150,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote })
 
             <div className="pt-2 text-[11px] text-stone-400 space-y-1">
               <div className="flex items-center gap-1 text-white font-semibold">
-                <Phone className="w-3.5 h-3.5 text-[#E85D04]" />
+                <Phone className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>+91 98450 12345</span>
               </div>
               <div className="flex items-center gap-1">

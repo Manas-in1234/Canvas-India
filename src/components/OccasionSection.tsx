@@ -13,7 +13,7 @@ export const OccasionSection: React.FC<OccasionSectionProps> = ({ onSelectOccasi
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-8">
           <div>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-[#E85D04] uppercase tracking-wider mb-1">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-1">
               <Gift className="w-3.5 h-3.5" />
               <span>Memorable Moments</span>
             </div>
@@ -32,7 +32,7 @@ export const OccasionSection: React.FC<OccasionSectionProps> = ({ onSelectOccasi
             <div
               key={occ.id}
               onClick={() => onSelectOccasion(occ.slug)}
-              className="group bg-stone-50 hover:bg-white rounded-xl border border-stone-200 hover:border-orange-300 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+              className="group bg-stone-50 hover:bg-white rounded-xl border border-stone-200 hover:border-[var(--accent-border)] overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
             >
               {/* Image with offer tag */}
               <div className="relative aspect-[4/3] overflow-hidden bg-stone-200">
@@ -41,7 +41,7 @@ export const OccasionSection: React.FC<OccasionSectionProps> = ({ onSelectOccasi
                   alt={occ.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute top-2 left-2 bg-[#E85D04] text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
+                <div className="absolute top-2 left-2 bg-[var(--accent)] text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
                   {occ.offerText}
                 </div>
               </div>
@@ -49,7 +49,7 @@ export const OccasionSection: React.FC<OccasionSectionProps> = ({ onSelectOccasi
               {/* Body */}
               <div className="p-3 sm:p-3.5 flex-1 flex flex-col justify-between">
                 <div>
-                  <h3 className="font-bold text-sm sm:text-base text-stone-900 group-hover:text-[#E85D04] transition-colors">
+                  <h3 className="font-bold text-sm sm:text-base text-stone-900 group-hover:text-[var(--accent)] transition-colors">
                     {occ.name}
                   </h3>
                   <p className="text-[11px] text-stone-500 line-clamp-2 mt-1 leading-snug">
@@ -57,7 +57,7 @@ export const OccasionSection: React.FC<OccasionSectionProps> = ({ onSelectOccasi
                   </p>
                 </div>
 
-                <div className="mt-3 pt-2 border-t border-stone-200/60 flex items-center justify-between text-xs font-bold text-[#E85D04]">
+                <div className="mt-3 pt-2 border-t border-stone-200/60 flex items-center justify-between text-xs font-bold text-[var(--accent)]">
                   <span>Explore Gifts</span>
                   <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
                 </div>

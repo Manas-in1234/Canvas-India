@@ -46,7 +46,7 @@ export const SampleSwatchModal: React.FC<SampleSwatchModalProps> = ({ isOpen, on
 
         {submitted ? (
           <div className="p-8 text-center space-y-4">
-            <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-[var(--accent)]/20 text-[var(--accent-light)] mx-auto flex items-center justify-center">
               <Check className="w-6 h-6" />
             </div>
             <h4 className="text-xl font-bold text-white">Sample Box Dispatched Soon!</h4>
@@ -55,7 +55,7 @@ export const SampleSwatchModal: React.FC<SampleSwatchModalProps> = ({ isOpen, on
             </p>
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold uppercase tracking-wider rounded-xl"
+              className="px-6 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold uppercase tracking-wider rounded-xl"
             >
               Done
             </button>
@@ -69,7 +69,7 @@ export const SampleSwatchModal: React.FC<SampleSwatchModalProps> = ({ isOpen, on
               </div>
               <ul className="text-stone-400 space-y-1 text-[11px]">
                 <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
                   <strong>Canvas:</strong> 420 GSM 100% Cotton & Linen Swatches (Matte + Satin)
                 </li>
                 <li className="flex items-center gap-1.5">
@@ -92,7 +92,7 @@ export const SampleSwatchModal: React.FC<SampleSwatchModalProps> = ({ isOpen, on
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Studio Vista Architects"
-                  className="w-full bg-stone-800 border border-stone-700 rounded-lg p-2 text-white focus:outline-hidden focus:border-orange-500"
+                  className="w-full bg-stone-800 border border-stone-700 rounded-lg p-2 text-white focus:outline-hidden focus:border-[var(--accent)]"
                 />
               </div>
               <div>
@@ -100,7 +100,7 @@ export const SampleSwatchModal: React.FC<SampleSwatchModalProps> = ({ isOpen, on
                 <select
                   value={firmType}
                   onChange={(e) => setFirmType(e.target.value)}
-                  className="w-full bg-stone-800 border border-stone-700 rounded-lg p-2 text-white focus:outline-hidden focus:border-orange-500 cursor-pointer"
+                  className="w-full bg-stone-800 border border-stone-700 rounded-lg p-2 text-white focus:outline-hidden focus:border-[var(--accent)] cursor-pointer"
                 >
                   <option value="Interior Designer">Interior Designer</option>
                   <option value="Architect">Architect</option>
@@ -120,7 +120,7 @@ export const SampleSwatchModal: React.FC<SampleSwatchModalProps> = ({ isOpen, on
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="Street address, building, floor..."
-                className="w-full bg-stone-800 border border-stone-700 rounded-lg p-2 text-white focus:outline-hidden focus:border-orange-500"
+                className="w-full bg-stone-800 border border-stone-700 rounded-lg p-2 text-white focus:outline-hidden focus:border-[var(--accent)]"
               />
             </div>
 
@@ -133,7 +133,7 @@ export const SampleSwatchModal: React.FC<SampleSwatchModalProps> = ({ isOpen, on
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="Mumbai"
-                  className="w-full bg-stone-800 border border-stone-700 rounded-lg p-2 text-white focus:outline-hidden focus:border-orange-500"
+                  className="w-full bg-stone-800 border border-stone-700 rounded-lg p-2 text-white focus:outline-hidden focus:border-[var(--accent)]"
                 />
               </div>
               <div>
@@ -144,7 +144,7 @@ export const SampleSwatchModal: React.FC<SampleSwatchModalProps> = ({ isOpen, on
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value)}
                   placeholder="400001"
-                  className="w-full bg-stone-800 border border-stone-700 rounded-lg p-2 text-white focus:outline-hidden focus:border-orange-500"
+                  className="w-full bg-stone-800 border border-stone-700 rounded-lg p-2 text-white focus:outline-hidden focus:border-[var(--accent)]"
                 />
               </div>
               <div>
@@ -155,14 +155,14 @@ export const SampleSwatchModal: React.FC<SampleSwatchModalProps> = ({ isOpen, on
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="9876543210"
-                  className="w-full bg-stone-800 border border-stone-700 rounded-lg p-2 text-white focus:outline-hidden focus:border-orange-500"
+                  className="w-full bg-stone-800 border border-stone-700 rounded-lg p-2 text-white focus:outline-hidden focus:border-[var(--accent)]"
                 />
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full mt-2 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-600/20"
+              className="w-full mt-2 py-3 bg-gradient-to-r from-[var(--accent)] to-amber-600 hover:from-[var(--accent)] hover:to-amber-500 text-white font-bold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-[var(--accent)]/20"
             >
               <span>Dispatch Swatch Kit (Free Delivery)</span>
               <ArrowRight className="w-4 h-4" />

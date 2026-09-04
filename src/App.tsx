@@ -22,6 +22,7 @@ import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
 import { CustomizeModal } from './components/CustomizeModal';
 import { QuoteModal } from './components/QuoteModal';
+import { AccentColorPicker } from './components/AccentColorPicker';
 
 // Data and Types
 import { TRENDING_PRODUCTS } from './data/storeData';
@@ -178,7 +179,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFDF9] text-stone-900 flex flex-col font-sans selection:bg-orange-100 selection:text-[#E85D04]">
+    <div className="min-h-screen bg-[#FFFDF9] text-stone-900 flex flex-col font-sans selection:bg-[var(--accent-bg)] selection:text-[var(--accent)]">
       {/* 3-Layer E-commerce Header */}
       <Header
         cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
@@ -300,6 +301,9 @@ export function App() {
         isOpen={quoteModalOpen}
         onClose={() => setQuoteModalOpen(false)}
       />
+
+      {/* Live Accent Color Picker (client demo tool) */}
+      <AccentColorPicker />
     </div>
   );
 }

@@ -33,8 +33,8 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
       ],
       imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=85',
       badge: 'Archival Canvas Art',
-      accentColor: 'text-orange-600',
-      tagColor: 'bg-orange-100 text-orange-700 border-orange-200',
+      accentColor: 'text-[var(--accent)]',
+      tagColor: 'bg-[var(--accent-bg)] text-[var(--accent-hover)] border-[var(--accent-border)]',
     },
     {
       id: 'acrylic',
@@ -121,7 +121,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
             {/* Top Eyebrow Chip with Carousel Indicator */}
             <div className="flex items-center gap-2">
               <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border ${slide.tagColor} flex items-center gap-1.5`}>
-                <Sparkles className="w-3.5 h-3.5 text-orange-500" />
+                <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>{slide.eyebrow}</span>
               </span>
               <span className="text-stone-400 text-xs font-mono">
@@ -133,14 +133,14 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
             <div className="space-y-3">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold text-stone-900 tracking-tight leading-[1.08]">
                 BRING YOUR <br />
-                <span className="text-orange-500 underline decoration-orange-300 decoration-wavy decoration-2 underline-offset-8">
+                <span className="text-[var(--accent)] underline decoration-[var(--accent-border)] decoration-wavy decoration-2 underline-offset-8">
                   IDEAS TO LIFE.
                 </span>
               </h1>
 
               {/* Dynamic Slide Sub-headline */}
               <div className="flex items-center gap-2 pt-1">
-                <span className="w-2 h-2 rounded-full bg-orange-500" />
+                <span className="w-2 h-2 rounded-full bg-[var(--accent)]" />
                 <h2 className="text-lg sm:text-xl font-bold text-stone-800 tracking-wide">
                   {slide.slideHeadline}
                 </h2>
@@ -162,7 +162,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
                   }
                   onExploreProducts();
                 }}
-                className="px-6 sm:px-8 py-3.5 rounded-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/35 transition-all flex items-center gap-2 group cursor-pointer"
+                className="px-6 sm:px-8 py-3.5 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:bg-[var(--accent-hover)] text-white font-bold text-sm sm:text-base shadow-lg shadow-[var(--accent)]/25 hover:shadow-xl hover:shadow-[var(--accent)]/35 transition-all flex items-center gap-2 group cursor-pointer"
               >
                 <span>Explore Products</span>
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -201,7 +201,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
                       setCurrentSlide(idx);
                     }}
                     className={`h-2 transition-all rounded-full ${
-                      idx === currentSlide ? 'w-8 bg-orange-500' : 'w-2 bg-stone-300 hover:bg-stone-400'
+                      idx === currentSlide ? 'w-8 bg-[var(--accent)]' : 'w-2 bg-stone-300 hover:bg-stone-400'
                     }`}
                     aria-label={`Go to slide ${idx + 1}: ${s.id}`}
                   />
@@ -242,14 +242,14 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
 
               {/* Floating Verified Quality Tag */}
               <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-stone-200 shadow-md flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
                 <span className="text-xs font-bold text-stone-800">{slide.badge}</span>
               </div>
 
               {/* Interactive Material Pin Overlays */}
               <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md rounded-2xl p-3 border border-stone-200/80 shadow-lg flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xs shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-[var(--accent-bg)] flex items-center justify-center text-[var(--accent)] font-bold text-xs shrink-0">
                     CI
                   </div>
                   <div>
@@ -260,7 +260,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
 
                 <button
                   onClick={() => onOpenQuote(slide.materialKey)}
-                  className="px-3 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs transition-colors shrink-0 flex items-center gap-1 shadow-xs"
+                  className="px-3 py-1.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold text-xs transition-colors shrink-0 flex items-center gap-1 shadow-xs"
                 >
                   <span>Order Now</span>
                   <ArrowRight className="w-3 h-3" />
@@ -279,14 +279,14 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
                   }}
                   className={`p-2.5 rounded-2xl border text-left transition-all ${
                     idx === currentSlide
-                      ? 'bg-orange-50 border-orange-400 ring-2 ring-orange-500/20 shadow-xs'
+                      ? 'bg-[var(--accent-bg)] border-[var(--accent-light)] ring-2 ring-[var(--accent)]/20 shadow-xs'
                       : 'bg-white border-stone-200 hover:border-stone-300'
                   }`}
                 >
                   <span className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider">
                     Material 0{idx + 1}
                   </span>
-                  <span className={`text-xs font-bold capitalize ${idx === currentSlide ? 'text-orange-600' : 'text-stone-800'}`}>
+                  <span className={`text-xs font-bold capitalize ${idx === currentSlide ? 'text-[var(--accent)]' : 'text-stone-800'}`}>
                     {s.id}
                   </span>
                 </button>

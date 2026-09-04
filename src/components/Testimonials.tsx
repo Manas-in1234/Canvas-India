@@ -9,7 +9,7 @@ export const Testimonials: React.FC = () => {
         
         {/* Header */}
         <div className="text-center max-w-xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#E85D04] uppercase tracking-wider mb-1">
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-1">
             <MessageSquare className="w-3.5 h-3.5" />
             <span>Verified Feedback</span>
           </div>
@@ -37,7 +37,7 @@ export const Testimonials: React.FC = () => {
                     ))}
                   </div>
                   {rev.verified && (
-                    <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    <span className="flex items-center gap-1 text-[11px] font-semibold text-[var(--accent-hover)] bg-[var(--accent-bg)] px-2 py-0.5 rounded-full">
                       <CheckCircle className="w-3 h-3" />
                       <span>Verified Buyer</span>
                     </span>
@@ -62,7 +62,7 @@ export const Testimonials: React.FC = () => {
                 </div>
 
                 <div className="text-right max-w-[150px]">
-                  <div className="text-[10px] font-semibold text-[#E85D04] truncate">
+                  <div className="text-[10px] font-semibold text-[var(--accent)] truncate">
                     {rev.product}
                   </div>
                   <div className="text-[10px] text-stone-400">

@@ -16,12 +16,12 @@ export const CTASection: React.FC<CTASectionProps> = ({
         
         <div className="relative rounded-3xl bg-stone-900 text-white p-8 sm:p-14 lg:p-20 text-center overflow-hidden shadow-2xl border border-stone-800">
           {/* Subtle Background Rings & Orange Warmth */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[var(--accent)]/15 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -top-12 -right-12 w-64 h-64 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
 
           <div className="relative z-10 max-w-3xl mx-auto space-y-6">
             
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 text-xs font-bold uppercase tracking-wider border border-orange-500/30">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent)]/20 text-[var(--accent-light)] text-xs font-bold uppercase tracking-wider border border-[var(--accent)]/30">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Bring Your Vision To Reality</span>
             </div>
@@ -45,7 +45,7 @@ export const CTASection: React.FC<CTASectionProps> = ({
 
               <button
                 onClick={onOpenQuote}
-                className="px-8 py-4 rounded-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-orange-500/30 transition-all flex items-center gap-2 cursor-pointer group"
+                className="px-8 py-4 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:bg-[var(--accent-hover)] text-white font-bold text-sm sm:text-base shadow-lg shadow-[var(--accent)]/30 transition-all flex items-center gap-2 cursor-pointer group"
               >
                 <span>Get a Quote</span>
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -55,17 +55,17 @@ export const CTASection: React.FC<CTASectionProps> = ({
             {/* Direct Connect Footnote */}
             <div className="pt-8 border-t border-stone-800/80 flex flex-wrap items-center justify-center gap-6 text-xs text-stone-400">
               <span className="flex items-center gap-1.5 text-stone-300">
-                <Phone className="w-3.5 h-3.5 text-orange-400" />
+                <Phone className="w-3.5 h-3.5 text-[var(--accent-light)]" />
                 <span>Trade Concierge: <strong>+91 (080) 4122-8900</strong></span>
               </span>
               <span className="hidden sm:inline text-stone-600">•</span>
               <span className="flex items-center gap-1.5 text-stone-300">
-                <Mail className="w-3.5 h-3.5 text-orange-400" />
+                <Mail className="w-3.5 h-3.5 text-[var(--accent-light)]" />
                 <span>Direct Drawings / RFQ: <strong>studio@canvasindia.in</strong></span>
               </span>
               <span className="hidden sm:inline text-stone-600">•</span>
               <span className="flex items-center gap-1.5 text-stone-300">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent-light)]" />
                 <span>Pan-India Safe Crate Freight Guarantee</span>
               </span>
             </div>

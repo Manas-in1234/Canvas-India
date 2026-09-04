@@ -17,7 +17,7 @@ export const PromoStrip: React.FC<PromoStripProps> = ({
           
           {/* Main Headline */}
           <div className="md:col-span-4">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-orange-50 text-[#E85D04] border border-orange-200/70 mb-1.5">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent-border)]/70 mb-1.5">
               <Sparkles className="w-3 h-3" />
               <span>Limited Season Offer</span>
             </div>
@@ -33,13 +33,13 @@ export const PromoStrip: React.FC<PromoStripProps> = ({
           <div className="md:col-span-5 grid grid-cols-2 gap-3 text-xs">
             <div className="bg-white border border-stone-200/80 rounded-xl p-3 shadow-xs">
               <div className="text-stone-500 text-[11px] font-semibold">Personalized Products</div>
-              <div className="text-lg font-black text-[#0F243E]">Starting at <span className="text-[#E85D04]">₹299</span></div>
+              <div className="text-lg font-black text-[#0F243E]">Starting at <span className="text-[var(--accent)]">₹299</span></div>
               <div className="text-[11px] text-stone-500">Matte posters &amp; mini blocks</div>
             </div>
 
             <div className="bg-white border border-stone-200/80 rounded-xl p-3 shadow-xs">
               <div className="text-stone-500 text-[11px] font-semibold">Volume Discount</div>
-              <div className="text-lg font-black text-[#0F243E]">Extra <span className="text-emerald-600">15% OFF</span></div>
+              <div className="text-lg font-black text-[#0F243E]">Extra <span className="text-[var(--accent)]">15% OFF</span></div>
               <div className="text-[11px] text-stone-500">On cart value above ₹1,999</div>
             </div>
           </div>
@@ -48,7 +48,7 @@ export const PromoStrip: React.FC<PromoStripProps> = ({
           <div className="md:col-span-3 flex flex-row md:flex-col items-center md:items-end justify-start md:justify-center gap-2">
             <button
               onClick={onShopDeals}
-              className="w-full sm:w-auto px-5 py-2.5 bg-[#E85D04] hover:bg-[#D44E00] text-white text-xs sm:text-sm font-bold rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-5 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs sm:text-sm font-bold rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center gap-2"
             >
               <span>View Offers</span>
               <ArrowRight className="w-3.5 h-3.5" />

@@ -89,7 +89,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span>🚚 Free Delivery on orders above ₹999 across India</span>
             <span className="text-stone-500">|</span>
             <span className="text-stone-300">
-              Use Code: <strong className="text-white font-bold bg-[#E85D04] px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] uppercase tracking-wide">CANVAS10</strong> for 10% OFF
+              Use Code: <strong className="text-white font-bold bg-[var(--accent)] px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] uppercase tracking-wide">CANVAS10</strong> for 10% OFF
             </span>
           </div>
           <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs text-stone-300">
@@ -97,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onOpenQuote} 
               className="hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
             >
-              <PhoneCall className="w-3 h-3 text-[#E85D04]" />
+              <PhoneCall className="w-3 h-3 text-[var(--accent)]" />
               <span>Customer Support: +91 90765 43510</span>
             </button>
             <span className="hidden sm:inline text-stone-500">|</span>
@@ -189,7 +189,7 @@ export const Header: React.FC<HeaderProps> = ({
                             onOpenCustomize(product);
                             setSearchOpen(false);
                           }}
-                          className="p-2.5 flex items-center gap-3 hover:bg-orange-50 cursor-pointer transition-colors"
+                          className="p-2.5 flex items-center gap-3 hover:bg-[var(--accent-bg)] cursor-pointer transition-colors"
                         >
                           <img
                             src={product.image}
@@ -201,10 +201,10 @@ export const Header: React.FC<HeaderProps> = ({
                               {product.name}
                             </div>
                             <div className="text-[11px] text-stone-500">
-                              {product.category} • <span className="font-bold text-[#E85D04]">₹{product.price}</span>
+                              {product.category} • <span className="font-bold text-[var(--accent)]">₹{product.price}</span>
                             </div>
                           </div>
-                          <span className="text-xs text-[#E85D04] font-semibold">View</span>
+                          <span className="text-xs text-[var(--accent)] font-semibold">View</span>
                         </div>
                       ))}
                     </div>
@@ -216,7 +216,7 @@ export const Header: React.FC<HeaderProps> = ({
                   {/* Account */}
                   <button 
                     onClick={() => alert('Customer portal: Login or Sign Up to view your personalized orders and saved designs.')}
-                    className="flex items-center gap-1.5 px-2.5 py-2 text-[#0F243E] hover:text-[#E85D04] hover:bg-stone-100/60 rounded-lg text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 px-2.5 py-2 text-[#0F243E] hover:text-[var(--accent)] hover:bg-stone-100/60 rounded-lg text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
                     title="My Account"
                   >
                     <User className="w-4 h-4 text-[#0F243E]" strokeWidth={2} />
@@ -226,12 +226,12 @@ export const Header: React.FC<HeaderProps> = ({
                   {/* Wishlist */}
                   <button
                     onClick={onOpenWishlist}
-                    className="relative flex items-center gap-1.5 px-2.5 py-2 text-[#0F243E] hover:text-[#E85D04] hover:bg-stone-100/60 rounded-lg text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+                    className="relative flex items-center gap-1.5 px-2.5 py-2 text-[#0F243E] hover:text-[var(--accent)] hover:bg-stone-100/60 rounded-lg text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
                     title="Saved Wishlist"
                   >
                     <Heart className="w-4 h-4 text-[#0F243E]" strokeWidth={2} />
                     <span>Wishlist</span>
-                    <span className="bg-[#E85D04] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none shadow-xs">
+                    <span className="bg-[var(--accent)] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none shadow-xs">
                       {wishlistCount > 0 ? wishlistCount : 2}
                     </span>
                   </button>
@@ -239,12 +239,12 @@ export const Header: React.FC<HeaderProps> = ({
                   {/* Cart */}
                   <button
                     onClick={onOpenCart}
-                    className="relative flex items-center gap-1.5 px-2.5 py-2 text-[#0F243E] hover:text-[#E85D04] hover:bg-stone-100/60 rounded-lg text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+                    className="relative flex items-center gap-1.5 px-2.5 py-2 text-[#0F243E] hover:text-[var(--accent)] hover:bg-stone-100/60 rounded-lg text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
                     title="Shopping Cart"
                   >
                     <ShoppingCart className="w-4 h-4 text-[#0F243E]" strokeWidth={2} />
                     <span>Cart</span>
-                    <span className="bg-[#E85D04] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none shadow-xs">
+                    <span className="bg-[var(--accent)] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none shadow-xs">
                       {cartCount > 0 ? cartCount : 1}
                     </span>
                   </button>
@@ -266,11 +266,11 @@ export const Header: React.FC<HeaderProps> = ({
                         onClick={() => handleNavClick(cat.slug, cat.name)}
                         className={`px-2.5 xl:px-3 py-1 rounded-lg text-xs xl:text-sm transition-all flex items-center gap-1.5 xl:gap-2 shrink-0 cursor-pointer ${
                           isActive 
-                            ? 'text-[#E85D04] bg-orange-50/90 border border-orange-200/90 font-bold' 
-                            : 'text-[#0F243E] hover:text-[#E85D04] hover:bg-stone-50 font-semibold border border-transparent'
+                            ? 'text-[var(--accent)] bg-[var(--accent-bg)]/90 border border-[var(--accent-border)]/90 font-bold' 
+                            : 'text-[#0F243E] hover:text-[var(--accent)] hover:bg-stone-50 font-semibold border border-transparent'
                         }`}
                       >
-                        <Icon className={`w-3.5 h-3.5 xl:w-4 xl:h-4 ${isActive ? 'text-[#E85D04]' : 'text-[#0F243E]'}`} strokeWidth={1.8} />
+                        <Icon className={`w-3.5 h-3.5 xl:w-4 xl:h-4 ${isActive ? 'text-[var(--accent)]' : 'text-[#0F243E]'}`} strokeWidth={1.8} />
                         <span>{cat.name}</span>
                       </button>
                     </React.Fragment>
@@ -324,7 +324,7 @@ export const Header: React.FC<HeaderProps> = ({
                   aria-label="Cart"
                 >
                   <ShoppingCart className="w-5 h-5 text-[#0F243E]" strokeWidth={2} />
-                  <span className="absolute top-1 right-1 bg-[#E85D04] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">
+                  <span className="absolute top-1 right-1 bg-[var(--accent)] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">
                     {cartCount > 0 ? cartCount : 1}
                   </span>
                 </button>
@@ -363,10 +363,10 @@ export const Header: React.FC<HeaderProps> = ({
                     <button
                       onClick={() => handleNavClick(cat.slug, cat.name)}
                       className={`px-2.5 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 shrink-0 ${
-                        isActive ? 'text-[#E85D04] bg-orange-50 font-bold' : 'text-[#0F243E]'
+                        isActive ? 'text-[var(--accent)] bg-[var(--accent-bg)] font-bold' : 'text-[#0F243E]'
                       }`}
                     >
-                      <Icon className="w-3.5 h-3.5 text-[#E85D04]" strokeWidth={1.8} />
+                      <Icon className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={1.8} />
                       <span>{cat.name}</span>
                     </button>
                   </React.Fragment>
@@ -394,7 +394,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="p-4 border-b border-stone-100">
               <button
                 onClick={() => { onOpenQuote(); setMobileMenuOpen(false); }}
-                className="w-full py-2.5 bg-[#E85D04] text-white font-bold rounded-lg text-sm text-center flex items-center justify-center gap-2 shadow-sm"
+                className="w-full py-2.5 bg-[var(--accent)] text-white font-bold rounded-lg text-sm text-center flex items-center justify-center gap-2 shadow-sm"
               >
                 <span>Get a Bulk Quote</span>
                 <ArrowRight className="w-4 h-4" />
@@ -414,12 +414,12 @@ export const Header: React.FC<HeaderProps> = ({
                     onClick={() => handleNavClick(cat.slug, cat.name)}
                     className={`w-full text-left py-2 px-2.5 text-sm font-medium rounded-lg flex items-center justify-between transition-colors ${
                       isActive 
-                        ? 'text-[#E85D04] font-bold bg-orange-50/80' 
-                        : 'text-[#0F243E] hover:bg-orange-50 hover:text-[#E85D04]'
+                        ? 'text-[var(--accent)] font-bold bg-[var(--accent-bg)]/80' 
+                        : 'text-[#0F243E] hover:bg-[var(--accent-bg)] hover:text-[var(--accent)]'
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <Icon className="w-4 h-4 text-[#E85D04]" strokeWidth={1.8} />
+                      <Icon className="w-4 h-4 text-[var(--accent)]" strokeWidth={1.8} />
                       <span className={isActive ? 'font-bold' : ''}>{cat.name}</span>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 text-stone-400" />

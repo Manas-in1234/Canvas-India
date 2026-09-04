@@ -30,8 +30,8 @@ export const Hero: React.FC<HeroProps> = ({
           <div className="lg:col-span-6 xl:col-span-6 pt-0">
             {/* Promotional Taglines & Badges */}
             <div className="flex flex-wrap items-center gap-2 mb-1.5 sm:mb-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#FFF4ED] text-[#E85D04] border border-[#FDBA74] shadow-2xs">
-                <Sparkles className="w-3.5 h-3.5 text-[#E85D04]" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent-border)] shadow-2xs">
+                <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
                 CUSTOM PRINTING &amp; PERSONALIZED PRODUCTS
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-stone-700 bg-white border border-stone-200/90 shadow-2xs">
@@ -43,14 +43,14 @@ export const Hero: React.FC<HeroProps> = ({
             <h1 
               className="text-5xl sm:text-6xl md:text-7xl lg:text-[84px] xl:text-[92px] 2xl:text-[96px] font-bold italic text-[#0F243E] tracking-tight leading-[0.94] lg:whitespace-nowrap select-none mt-2 mb-3 sm:mb-3.5"
               style={{
-                fontFamily: '"Bodoni Moda", "Bodoni 72", Didot, "Bodoni MT", "Cormorant Garamond", serif',
+                fontFamily: '"Playfair Display", "Bodoni Moda", "Bodoni 72", Didot, "Cormorant Garamond", serif',
                 fontStyle: 'italic',
                 fontWeight: 700,
                 fontOpticalSizing: 'auto',
                 letterSpacing: '-0.02em',
               }}
             >
-              Make It <span className="text-[#E85D04] italic">Yours.</span>
+              Make It <span className="text-[var(--accent)] italic">Yours.</span>
             </h1>
 
             {/* Description */}
@@ -63,7 +63,7 @@ export const Hero: React.FC<HeroProps> = ({
             <div className="flex flex-wrap items-center gap-3 mb-4 sm:mb-5">
               <button
                 onClick={onStartCreating}
-                className="px-5 sm:px-6 py-2.5 sm:py-3 bg-[#E85D04] hover:bg-[#D44E00] text-white text-sm sm:text-base font-bold rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer transform active:scale-98 select-none"
+                className="px-5 sm:px-6 py-2.5 sm:py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm sm:text-base font-bold rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer transform active:scale-98 select-none"
               >
                 <span>Start Creating</span>
                 <ArrowRight className="w-4 h-4" />
@@ -73,7 +73,7 @@ export const Hero: React.FC<HeroProps> = ({
               <div className="bg-white border border-stone-200/90 rounded-lg shadow-2xs flex items-center px-3.5 sm:px-4 py-2 sm:py-2.5 gap-3 select-none">
                 <button
                   onClick={onExploreProducts}
-                  className="text-[#0F243E] hover:text-[#E85D04] text-sm sm:text-base font-bold transition-colors cursor-pointer whitespace-nowrap"
+                  className="text-[#0F243E] hover:text-[var(--accent)] text-sm sm:text-base font-bold transition-colors cursor-pointer whitespace-nowrap"
                 >
                   Explore Products
                 </button>
@@ -90,7 +90,7 @@ export const Hero: React.FC<HeroProps> = ({
                         style={{ backgroundColor: swatch.hex }}
                         className={`w-5 h-5 rounded-full cursor-pointer transition-all border ${
                           isSelected 
-                            ? 'scale-115 ring-2 ring-orange-500 ring-offset-1 border-white shadow-xs' 
+                            ? 'scale-115 ring-2 ring-[var(--accent)] ring-offset-1 border-white shadow-xs' 
                             : 'border-black/15 hover:scale-110'
                         }`}
                         aria-label={swatch.name}
@@ -112,11 +112,11 @@ export const Hero: React.FC<HeroProps> = ({
             {/* Trust Badges Strip */}
             <div className="flex items-center gap-5 sm:gap-7 text-xs sm:text-[13px] font-semibold text-stone-700 mb-4 sm:mb-5 select-none">
               <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-[var(--accent)] flex-shrink-0" />
                 <span>100% Quality Check</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Truck className="w-4 h-4 text-[#E85D04] flex-shrink-0" />
+                <Truck className="w-4 h-4 text-[var(--accent)] flex-shrink-0" />
                 <span>Free Shipping &gt; ₹999</span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -140,7 +140,7 @@ export const Hero: React.FC<HeroProps> = ({
                 <button
                   key={item.slug}
                   onClick={() => onSelectCategory(item.slug)}
-                  className="px-3 py-1 bg-white hover:bg-orange-50 text-stone-700 hover:text-[#E85D04] border border-stone-200 hover:border-orange-200 rounded-full text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+                  className="px-3 py-1 bg-white hover:bg-[var(--accent-bg)] text-stone-700 hover:text-[var(--accent)] border border-stone-200 hover:border-[var(--accent-border)] rounded-full text-xs font-semibold shadow-2xs transition-all cursor-pointer"
                 >
                   {item.name}
                 </button>
@@ -160,7 +160,7 @@ export const Hero: React.FC<HeroProps> = ({
                 />
 
                 {/* Overlaid Promotional Tag */}
-                <div className="absolute top-2.5 left-2.5 bg-[#E85D04] text-white text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-md shadow-md flex items-center gap-1.5 select-none">
+                <div className="absolute top-2.5 left-2.5 bg-[var(--accent)] text-white text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-md shadow-md flex items-center gap-1.5 select-none">
                   <Zap className="w-3.5 h-3.5 fill-white" />
                   <span>Custom Canvas from ₹599</span>
                 </div>

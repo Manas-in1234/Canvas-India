@@ -18,7 +18,7 @@ export const DealsSection: React.FC<DealsSectionProps> = ({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-8">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-50 text-[#E85D04] border border-orange-200/70 mb-1.5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent-border)]/70 mb-1.5">
               <Tag className="w-3.5 h-3.5" />
               <span>Great Value Prints</span>
             </div>
@@ -50,7 +50,7 @@ export const DealsSection: React.FC<DealsSectionProps> = ({
                     {prod.badge}
                   </div>
                 )}
-                <div className="absolute bottom-2.5 left-2.5 bg-emerald-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                <div className="absolute bottom-2.5 left-2.5 bg-[var(--accent)] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                   {prod.discountPercent}% OFF
                 </div>
               </div>
@@ -61,7 +61,7 @@ export const DealsSection: React.FC<DealsSectionProps> = ({
                   <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider">
                     {prod.category}
                   </div>
-                  <h3 className="font-bold text-sm sm:text-base text-stone-900 mt-0.5 line-clamp-1 group-hover:text-[#E85D04] transition-colors">
+                  <h3 className="font-bold text-sm sm:text-base text-stone-900 mt-0.5 line-clamp-1 group-hover:text-[var(--accent)] transition-colors">
                     {prod.name}
                   </h3>
                   <div className="flex items-baseline gap-2 mt-2">
@@ -78,7 +78,7 @@ export const DealsSection: React.FC<DealsSectionProps> = ({
                 <div className="mt-4 pt-3 border-t border-stone-100 flex items-center gap-2">
                   <button
                     onClick={() => onAddToCart(prod)}
-                    className="flex-1 py-2 px-3 bg-[#E85D04] hover:bg-[#D44E00] text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                    className="flex-1 py-2 px-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-sm"
                   >
                     <ShoppingCart className="w-3.5 h-3.5" />
                     <span>Add to Cart</span>

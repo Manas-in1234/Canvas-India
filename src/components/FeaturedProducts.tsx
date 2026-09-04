@@ -40,8 +40,8 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wider mb-2 border border-orange-200">
-              <Sparkles className="w-3.5 h-3.5 text-orange-600" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent-hover)] text-xs font-bold uppercase tracking-wider mb-2 border border-[var(--accent-border)]">
+              <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
               <span>Curated Catalogue</span>
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-stone-900 tracking-tight">
@@ -76,7 +76,7 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
             <div
               key={prod.id}
               onClick={() => onViewProduct(prod)}
-              className="bg-white rounded-2xl border border-stone-200 hover:border-orange-400 shadow-xs hover:shadow-xl transition-all duration-300 group flex flex-col justify-between overflow-hidden cursor-pointer"
+              className="bg-white rounded-2xl border border-stone-200 hover:border-[var(--accent-light)] shadow-xs hover:shadow-xl transition-all duration-300 group flex flex-col justify-between overflow-hidden cursor-pointer"
             >
               {/* Product Image & Badges */}
               <div className="relative aspect-4/3 w-full bg-stone-100 overflow-hidden">
@@ -92,7 +92,7 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                     {prod.category}
                   </span>
                   {prod.badge && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-500 text-white shadow-xs">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--accent)] text-white shadow-xs">
                       {prod.badge}
                     </span>
                   )}
@@ -105,7 +105,7 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                       e.stopPropagation();
                       onViewProduct(prod);
                     }}
-                    className="px-4 py-2 rounded-full bg-white text-stone-900 text-xs font-bold shadow-lg flex items-center gap-1.5 hover:bg-orange-500 hover:text-white transition-colors"
+                    className="px-4 py-2 rounded-full bg-white text-stone-900 text-xs font-bold shadow-lg flex items-center gap-1.5 hover:bg-[var(--accent)] hover:text-white transition-colors"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>View Details</span>
@@ -127,7 +127,7 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                   </div>
 
                   {/* Name */}
-                  <h3 className="font-bold text-base text-stone-900 group-hover:text-orange-600 transition-colors line-clamp-1">
+                  <h3 className="font-bold text-base text-stone-900 group-hover:text-[var(--accent)] transition-colors line-clamp-1">
                     {prod.name}
                   </h3>
 
@@ -151,7 +151,7 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                   {/* Add to Cart Button: Prominent Orange */}
                   <button
                     onClick={(e) => handleAdd(prod, e)}
-                    className="px-3.5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold text-xs shadow-md shadow-orange-500/20 hover:shadow-orange-500/30 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:bg-[var(--accent-hover)] text-white font-bold text-xs shadow-md shadow-[var(--accent)]/20 hover:shadow-[var(--accent)]/30 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
                   >
                     {addedId === prod.id ? (
                       <>
@@ -174,7 +174,7 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
         {/* Bottom Banner for Custom Orders */}
         <div className="mt-12 p-6 rounded-2xl bg-white border border-stone-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
           <div className="flex items-center gap-3 text-center sm:text-left">
-            <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 font-bold shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-[var(--accent-bg)] flex items-center justify-center text-[var(--accent)] font-bold shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>

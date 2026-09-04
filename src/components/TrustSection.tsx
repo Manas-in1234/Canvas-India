@@ -49,7 +49,7 @@ export const TrustSection: React.FC = () => {
         
         {/* Header */}
         <div className="text-center max-w-xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#E85D04] uppercase tracking-wider mb-1">
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-1">
             <CheckCircle className="w-3.5 h-3.5" />
             <span>Built for Trust</span>
           </div>
@@ -68,9 +68,9 @@ export const TrustSection: React.FC = () => {
             return (
               <div
                 key={idx}
-                className="bg-white rounded-xl p-5 border border-stone-200 shadow-sm hover:border-orange-300 hover:shadow-md transition-all flex items-start gap-4"
+                className="bg-white rounded-xl p-5 border border-stone-200 shadow-sm hover:border-[var(--accent-border)] hover:shadow-md transition-all flex items-start gap-4"
               >
-                <div className="w-10 h-10 rounded-lg bg-orange-50 text-[#E85D04] flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-[var(--accent-bg)] text-[var(--accent)] flex items-center justify-center flex-shrink-0">
                   <Icon className="w-5 h-5" />
                 </div>
                 <div>

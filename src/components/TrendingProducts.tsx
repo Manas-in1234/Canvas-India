@@ -40,8 +40,8 @@ export const TrendingProducts: React.FC<TrendingProductsProps> = ({
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
           <div>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-[#E85D04] uppercase tracking-wider mb-1">
-              <Flame className="w-3.5 h-3.5 fill-[#E85D04]" />
+            <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-1">
+              <Flame className="w-3.5 h-3.5 fill-[var(--accent)]" />
               <span>Customer Favorites</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">
@@ -57,7 +57,7 @@ export const TrendingProducts: React.FC<TrendingProductsProps> = ({
                 onClick={() => setActiveTab(tab.slug)}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
                   activeTab === tab.slug
-                    ? 'bg-[#E85D04] text-white shadow-sm'
+                    ? 'bg-[var(--accent)] text-white shadow-sm'
                     : 'bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-stone-900'
                 }`}
               >

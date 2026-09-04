@@ -108,7 +108,7 @@ export const OrderCustomizerModal: React.FC<OrderCustomizerModalProps> = ({
         {/* Modal Header */}
         <div className="px-6 py-4 bg-[#0F243E] text-white flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#E85D04] flex items-center justify-center text-white font-bold">
+            <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-white font-bold">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
@@ -153,7 +153,7 @@ export const OrderCustomizerModal: React.FC<OrderCustomizerModalProps> = ({
             </div>
 
             <div className="mt-4 flex items-center gap-2 text-xs text-stone-500 font-medium">
-              <Check className="w-4 h-4 text-emerald-600" />
+              <Check className="w-4 h-4 text-[var(--accent)]" />
               <span>Fine Art Archival 12-Color Pigment Rendering Preview</span>
             </div>
           </div>
@@ -167,8 +167,8 @@ export const OrderCustomizerModal: React.FC<OrderCustomizerModalProps> = ({
                 1. Upload Your Image
               </label>
 
-              <label className="border-2 border-dashed border-[#E85D04]/60 hover:border-[#E85D04] bg-orange-50/40 hover:bg-orange-50 rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-colors">
-                <Upload className="w-8 h-8 text-[#E85D04] mb-1.5" />
+              <label className="border-2 border-dashed border-[var(--accent)]/60 hover:border-[var(--accent)] bg-[var(--accent-bg)]/40 hover:bg-[var(--accent-bg)] rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-colors">
+                <Upload className="w-8 h-8 text-[var(--accent)] mb-1.5" />
                 <span className="text-xs font-bold text-stone-800">
                   {isUploading ? 'Uploading...' : 'Click to Upload Photo'}
                 </span>
@@ -184,7 +184,7 @@ export const OrderCustomizerModal: React.FC<OrderCustomizerModalProps> = ({
               </label>
 
               {uploadSuccess && (
-                <div className="mt-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 p-2 rounded flex items-center gap-1.5 font-bold">
+                <div className="mt-2 text-xs text-[var(--accent-hover)] bg-[var(--accent-bg)] border border-[var(--accent-border)] p-2 rounded flex items-center gap-1.5 font-bold">
                   <Check className="w-3.5 h-3.5" />
                   <span>Photo uploaded successfully!</span>
                 </div>
@@ -204,7 +204,7 @@ export const OrderCustomizerModal: React.FC<OrderCustomizerModalProps> = ({
                     onClick={() => setSelectedPhoto(photo.url)}
                     className={`relative aspect-square rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${
                       selectedPhoto === photo.url
-                        ? 'border-[#E85D04] ring-2 ring-[#E85D04]'
+                        ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]'
                         : 'border-stone-200 hover:border-stone-400'
                     }`}
                   >
@@ -236,7 +236,7 @@ export const OrderCustomizerModal: React.FC<OrderCustomizerModalProps> = ({
                     onClick={() => setActiveWrapEffect(wrap.id as any)}
                     className={`py-1.5 text-center rounded border transition-colors cursor-pointer ${
                       activeWrapEffect === wrap.id
-                        ? 'bg-[#E85D04] text-white border-[#E85D04]'
+                        ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
                         : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
                     }`}
                   >
@@ -251,7 +251,7 @@ export const OrderCustomizerModal: React.FC<OrderCustomizerModalProps> = ({
               <div className="flex items-baseline justify-between mb-3">
                 <span className="text-xs text-stone-500 font-semibold">Configured Total:</span>
                 <div className="text-right">
-                  <span className="text-xl font-black text-[#E85D04]">
+                  <span className="text-xl font-black text-[var(--accent)]">
                     ₹{config.price.toLocaleString('en-IN')}
                   </span>
                   <span className="text-xs text-stone-400 line-through ml-2">
@@ -263,7 +263,7 @@ export const OrderCustomizerModal: React.FC<OrderCustomizerModalProps> = ({
               <button
                 type="button"
                 onClick={handleCompleteOrder}
-                className="w-full py-3.5 px-4 rounded-lg bg-[#E85D04] hover:bg-[#ff6f0e] active:bg-[#c94e03] text-white font-extrabold text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-3.5 px-4 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-light)] active:bg-[var(--accent-hover)] text-white font-extrabold text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>ADD CUSTOM ITEM TO CART</span>
                 <ArrowRight className="w-4 h-4" />
@@ -277,11 +277,11 @@ export const OrderCustomizerModal: React.FC<OrderCustomizerModalProps> = ({
         {/* Modal Footer Trust Badges */}
         <div className="px-6 py-3 bg-stone-50 border-t border-stone-200 flex flex-wrap items-center justify-between text-[11px] text-stone-500">
           <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <ShieldCheck className="w-4 h-4 text-[var(--accent)]" />
             <span>High-DPI resolution check will be performed before printing</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Truck className="w-4 h-4 text-[#E85D04]" />
+            <Truck className="w-4 h-4 text-[var(--accent)]" />
             <span>Dispatched within 48-72 hours across India</span>
           </div>
         </div>

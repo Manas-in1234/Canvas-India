@@ -34,7 +34,7 @@ export const HowItWorks: React.FC = () => {
       <div className="w-full max-w-[1600px] mx-auto px-[clamp(20px,4vw,64px)]">
         {/* Section Header */}
         <div className="text-center max-w-xl mx-auto mb-8">
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#E85D04] uppercase tracking-wider mb-1">
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-1">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Simple 4-Step Process</span>
           </div>
@@ -53,10 +53,10 @@ export const HowItWorks: React.FC = () => {
             return (
               <div
                 key={step.number}
-                className="bg-stone-50 rounded-xl p-4 sm:p-5 border border-stone-200 relative flex flex-col items-center text-center shadow-sm hover:border-orange-300 transition-colors"
+                className="bg-stone-50 rounded-xl p-4 sm:p-5 border border-stone-200 relative flex flex-col items-center text-center shadow-sm hover:border-[var(--accent-border)] transition-colors"
               >
                 {/* Step badge */}
-                <div className="w-12 h-12 rounded-full bg-orange-100 text-[#E85D04] flex items-center justify-center font-black text-lg mb-3 shadow-inner">
+                <div className="w-12 h-12 rounded-full bg-[var(--accent-bg)] text-[var(--accent)] flex items-center justify-center font-black text-lg mb-3 shadow-inner">
                   <Icon className="w-6 h-6" />
                 </div>
 

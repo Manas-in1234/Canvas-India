@@ -17,7 +17,7 @@ export const StartOrder: React.FC<StartOrderProps> = ({
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-6">
           <div>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-[#E85D04] uppercase tracking-wider mb-1">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-1">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Quick Shopping</span>
             </div>
@@ -39,7 +39,7 @@ export const StartOrder: React.FC<StartOrderProps> = ({
                 onSelectCategory(choice.slug);
                 onOpenCustomizer(choice.slug);
               }}
-              className="group bg-stone-50 hover:bg-white border border-stone-200 hover:border-orange-400 rounded-xl p-2.5 sm:p-3 transition-all duration-200 hover:shadow-md cursor-pointer flex flex-col justify-between"
+              className="group bg-stone-50 hover:bg-white border border-stone-200 hover:border-[var(--accent-light)] rounded-xl p-2.5 sm:p-3 transition-all duration-200 hover:shadow-md cursor-pointer flex flex-col justify-between"
             >
               {/* Product Thumbnail */}
               <div className="aspect-square rounded-lg overflow-hidden bg-stone-200 mb-2.5 relative">
@@ -55,7 +55,7 @@ export const StartOrder: React.FC<StartOrderProps> = ({
 
               {/* Text Info */}
               <div>
-                <h3 className="font-bold text-sm text-stone-900 group-hover:text-[#E85D04] transition-colors">
+                <h3 className="font-bold text-sm text-stone-900 group-hover:text-[var(--accent)] transition-colors">
                   {choice.name}
                 </h3>
                 <p className="text-[11px] text-stone-500 line-clamp-2 mt-0.5 leading-snug">
@@ -64,7 +64,7 @@ export const StartOrder: React.FC<StartOrderProps> = ({
               </div>
 
               {/* Arrow CTA */}
-              <div className="mt-3 pt-2 border-t border-stone-200/70 flex items-center justify-between text-xs font-bold text-[#E85D04]">
+              <div className="mt-3 pt-2 border-t border-stone-200/70 flex items-center justify-between text-xs font-bold text-[var(--accent)]">
                 <span>Order Now</span>
                 <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
               </div>

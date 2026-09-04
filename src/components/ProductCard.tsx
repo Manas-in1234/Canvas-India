@@ -22,7 +22,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       case 'Best Seller':
         return 'bg-amber-500 text-white';
       case 'Sale':
-        return 'bg-[#E85D04] text-white';
+        return 'bg-[var(--accent)] text-white';
       case 'Trending':
         return 'bg-[#0F243E] text-white';
       case 'Hot':
@@ -68,7 +68,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </button>
 
         {/* Discount Tag on bottom edge */}
-        <div className="absolute bottom-2 left-2 bg-emerald-700 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+        <div className="absolute bottom-2 left-2 bg-[var(--accent-hover)] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
           {product.discountPercent}% OFF
         </div>
       </div>
@@ -82,7 +82,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
 
           {/* Product Name */}
-          <h3 className="font-bold text-xs sm:text-sm text-stone-900 line-clamp-1 group-hover:text-[#E85D04] transition-colors mt-0.5">
+          <h3 className="font-bold text-xs sm:text-sm text-stone-900 line-clamp-1 group-hover:text-[var(--accent)] transition-colors mt-0.5">
             {product.name}
           </h3>
 
@@ -120,7 +120,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
           <button
             onClick={() => onCustomize(product)}
-            className="w-full py-1.5 px-2 bg-[#E85D04] hover:bg-[#D44E00] text-white text-xs font-bold rounded-md flex items-center justify-center gap-1 transition-colors shadow-sm"
+            className="w-full py-1.5 px-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold rounded-md flex items-center justify-center gap-1 transition-colors shadow-sm"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
             <span className="truncate">Customize</span>

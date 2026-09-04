@@ -55,7 +55,7 @@ export const VersionSwitcher: React.FC<VersionSwitcherProps> = ({
           
           {/* Brand badge */}
           <div className="hidden lg:flex items-center gap-2 pl-3 pr-2 border-r border-stone-800 text-xs">
-            <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
+            <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-ping" />
             <span className="font-bold text-white uppercase tracking-wider text-[11px]">Design Editions</span>
           </div>
 
@@ -69,12 +69,12 @@ export const VersionSwitcher: React.FC<VersionSwitcherProps> = ({
                   onClick={() => onSelectVersion(v.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
                     isActive
-                      ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md shadow-orange-600/25 ring-1 ring-orange-400'
+                      ? 'bg-gradient-to-r from-[var(--accent)] to-amber-600 text-white shadow-md shadow-[var(--accent)]/25 ring-1 ring-[var(--accent-light)]'
                       : 'text-stone-300 hover:text-white hover:bg-stone-800/80'
                   }`}
                 >
                   <span className={`text-[10px] font-mono px-1 py-0.2 rounded-md ${
-                    isActive ? 'bg-black/30 text-orange-200' : 'bg-stone-800 text-stone-400'
+                    isActive ? 'bg-black/30 text-[var(--accent-border)]' : 'bg-stone-800 text-stone-400'
                   }`}>
                     {v.number}
                   </span>
@@ -110,7 +110,7 @@ export const VersionSwitcher: React.FC<VersionSwitcherProps> = ({
           <div className="relative bg-stone-900 border border-stone-700 text-stone-100 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl z-10 space-y-6 my-auto">
             <div className="flex items-center justify-between border-b border-stone-800 pb-4">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-xs">
+                <div className="w-8 h-8 rounded-xl bg-[var(--accent)]/20 text-[var(--accent-light)] flex items-center justify-center font-bold text-xs">
                   CI
                 </div>
                 <div>
@@ -136,20 +136,20 @@ export const VersionSwitcher: React.FC<VersionSwitcherProps> = ({
                   }}
                   className={`p-4 rounded-2xl border transition-all cursor-pointer ${
                     currentVersion === v.id
-                      ? 'bg-orange-950/30 border-orange-500/80 ring-1 ring-orange-500/40'
+                      ? 'bg-[var(--accent-hover)]/30 border-[var(--accent)]/80 ring-1 ring-[var(--accent)]/40'
                       : 'bg-stone-800/50 border-stone-700/60 hover:bg-stone-800 hover:border-stone-600'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-orange-400">{v.number}</span>
+                      <span className="font-mono text-xs font-bold text-[var(--accent-light)]">{v.number}</span>
                       <h4 className="font-bold text-white text-sm">{v.title}</h4>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-stone-700 text-stone-300">
                         {v.badge}
                       </span>
                     </div>
                     {currentVersion === v.id && (
-                      <span className="text-xs font-semibold text-orange-400 flex items-center gap-1">
+                      <span className="text-xs font-semibold text-[var(--accent-light)] flex items-center gap-1">
                         <Check className="w-3.5 h-3.5" /> Active
                       </span>
                     )}
@@ -159,7 +159,7 @@ export const VersionSwitcher: React.FC<VersionSwitcherProps> = ({
                     <div><strong className="text-stone-300">Palette:</strong> {v.palette}</div>
                     <div><strong className="text-stone-300">Typography:</strong> {v.typography}</div>
                   </div>
-                  <div className="text-[11px] text-orange-300/80 mt-1.5">
+                  <div className="text-[11px] text-[var(--accent-border)]/80 mt-1.5">
                     <strong className="text-stone-300">Focus:</strong> {v.archetype}
                   </div>
                 </div>
@@ -167,7 +167,7 @@ export const VersionSwitcher: React.FC<VersionSwitcherProps> = ({
             </div>
 
             <div className="p-3.5 rounded-xl bg-stone-800/80 border border-stone-700 text-xs text-stone-300 flex items-center gap-3">
-              <Sparkles className="w-4 h-4 text-orange-400 shrink-0" />
+              <Sparkles className="w-4 h-4 text-[var(--accent-light)] shrink-0" />
               <span>
                 All 3 versions use the official <strong>Canvas India</strong> vector logo, verified product data, and transparent material specifications.
               </span>

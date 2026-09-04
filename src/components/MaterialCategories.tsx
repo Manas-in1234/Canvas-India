@@ -52,8 +52,8 @@ export const MaterialCategories: React.FC<MaterialCategoriesProps> = ({
         
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wider mb-3 border border-orange-200">
-            <Layers className="w-3.5 h-3.5 text-orange-600" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent-hover)] text-xs font-bold uppercase tracking-wider mb-3 border border-[var(--accent-border)]">
+            <Layers className="w-3.5 h-3.5 text-[var(--accent)]" />
             <span>Core Mediums</span>
           </div>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-stone-900 tracking-tight">
@@ -70,7 +70,7 @@ export const MaterialCategories: React.FC<MaterialCategoriesProps> = ({
             <div
               key={mat.id}
               onClick={() => onSelectCategory(mat.id)}
-              className="group cursor-pointer rounded-3xl overflow-hidden bg-stone-50 border border-stone-200 hover:border-orange-500 hover:shadow-2xl transition-all duration-300 flex flex-col justify-between hover:-translate-y-1.5"
+              className="group cursor-pointer rounded-3xl overflow-hidden bg-stone-50 border border-stone-200 hover:border-[var(--accent)] hover:shadow-2xl transition-all duration-300 flex flex-col justify-between hover:-translate-y-1.5"
             >
               {/* Image Container with Zoom & Badge */}
               <div className="relative aspect-4/3 w-full overflow-hidden bg-stone-100">
@@ -83,13 +83,13 @@ export const MaterialCategories: React.FC<MaterialCategoriesProps> = ({
                 
                 {/* Badge */}
                 <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-stone-900 border border-white/50 shadow-xs flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-orange-500" />
+                  <span className="w-2 h-2 rounded-full bg-[var(--accent)]" />
                   <span>{mat.badge}</span>
                 </div>
 
                 {/* Material Title Overlay */}
                 <div className="absolute bottom-4 left-4 right-4">
-                  <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest block">
+                  <span className="text-[10px] font-bold text-[var(--accent-light)] uppercase tracking-widest block">
                     Collection
                   </span>
                   <h3 className="text-2xl font-black text-white tracking-wide">
@@ -101,7 +101,7 @@ export const MaterialCategories: React.FC<MaterialCategoriesProps> = ({
               {/* Content Body */}
               <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-6">
                 <div className="space-y-3">
-                  <p className="font-semibold text-stone-900 text-base group-hover:text-orange-600 transition-colors">
+                  <p className="font-semibold text-stone-900 text-base group-hover:text-[var(--accent)] transition-colors">
                     {mat.tagline}
                   </p>
                   <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
@@ -123,10 +123,10 @@ export const MaterialCategories: React.FC<MaterialCategoriesProps> = ({
 
                 {/* Bottom CTA Button */}
                 <div className="pt-4 border-t border-stone-200/80 flex items-center justify-between">
-                  <span className="font-bold text-sm text-stone-900 group-hover:text-orange-600 transition-colors inline-flex items-center gap-1.5">
+                  <span className="font-bold text-sm text-stone-900 group-hover:text-[var(--accent)] transition-colors inline-flex items-center gap-1.5">
                     <span>{mat.cta}</span>
                   </span>
-                  <span className="w-8 h-8 rounded-full bg-stone-200 group-hover:bg-orange-500 text-stone-700 group-hover:text-white transition-all flex items-center justify-center">
+                  <span className="w-8 h-8 rounded-full bg-stone-200 group-hover:bg-[var(--accent)] text-stone-700 group-hover:text-white transition-all flex items-center justify-center">
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                   </span>
                 </div>

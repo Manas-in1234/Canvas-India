@@ -15,7 +15,7 @@ export const FeaturedCollections: React.FC<FeaturedCollectionsProps> = ({
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-6">
           <div>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-[#E85D04] uppercase tracking-wider mb-1">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-1">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Curated Sets</span>
             </div>
@@ -49,7 +49,7 @@ export const FeaturedCollections: React.FC<FeaturedCollectionsProps> = ({
 
               <div className="p-3.5 flex-1 flex flex-col justify-between">
                 <div>
-                  <h3 className="font-bold text-sm sm:text-base text-stone-900 group-hover:text-[#E85D04] transition-colors">
+                  <h3 className="font-bold text-sm sm:text-base text-stone-900 group-hover:text-[var(--accent)] transition-colors">
                     {col.name}
                   </h3>
                   <p className="text-[11px] text-stone-500 mt-1 leading-snug">
@@ -59,9 +59,9 @@ export const FeaturedCollections: React.FC<FeaturedCollectionsProps> = ({
 
                 <div className="mt-3 pt-2.5 border-t border-stone-100 flex items-center justify-between text-xs font-bold text-stone-800">
                   <span className="text-stone-500 font-normal text-[11px]">
-                    from <strong className="text-[#E85D04] font-extrabold text-xs">₹{col.startingPrice}</strong>
+                    from <strong className="text-[var(--accent)] font-extrabold text-xs">₹{col.startingPrice}</strong>
                   </span>
-                  <div className="flex items-center gap-1 text-[#E85D04] group-hover:underline">
+                  <div className="flex items-center gap-1 text-[var(--accent)] group-hover:underline">
                     <span>View Collection</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </div>
@@ -85,15 +85,15 @@ export const FeaturedCollections: React.FC<FeaturedCollectionsProps> = ({
                 className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
               />
               <div className="flex-1 min-w-0">
-                <h4 className="font-bold text-xs sm:text-sm text-stone-900 group-hover:text-[#E85D04] truncate">
+                <h4 className="font-bold text-xs sm:text-sm text-stone-900 group-hover:text-[var(--accent)] truncate">
                   {col.name}
                 </h4>
                 <p className="text-[11px] text-stone-500 truncate mt-0.5">{col.highlight}</p>
-                <div className="text-[11px] font-bold text-[#E85D04] mt-1">
+                <div className="text-[11px] font-bold text-[var(--accent)] mt-1">
                   Starting at ₹{col.startingPrice}
                 </div>
               </div>
-              <ArrowRight className="w-4 h-4 text-stone-400 group-hover:text-[#E85D04] transform group-hover:translate-x-0.5 transition-all" />
+              <ArrowRight className="w-4 h-4 text-stone-400 group-hover:text-[var(--accent)] transform group-hover:translate-x-0.5 transition-all" />
             </div>
           ))}
         </div>

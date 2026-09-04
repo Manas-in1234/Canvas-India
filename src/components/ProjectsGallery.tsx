@@ -80,7 +80,7 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({ onViewProjectQ
         {/* Section Heading & Filter Tabs */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-[#E85D04] text-xs font-extrabold uppercase tracking-wider mb-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent)] text-xs font-extrabold uppercase tracking-wider mb-2">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Real Installations Across India</span>
             </div>
@@ -101,7 +101,7 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({ onViewProjectQ
                 onClick={() => setActiveFilter(filter)}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
                   activeFilter === filter
-                    ? 'bg-[#E85D04] text-white shadow-xs'
+                    ? 'bg-[var(--accent)] text-white shadow-xs'
                     : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                 }`}
               >
@@ -116,7 +116,7 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({ onViewProjectQ
           {filteredProjects.map((project) => (
             <div
               key={project.id}
-              className="group bg-white rounded-xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-xl hover:border-orange-300 transition-all duration-300 flex flex-col justify-between"
+              className="group bg-white rounded-xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-xl hover:border-[var(--accent-border)] transition-all duration-300 flex flex-col justify-between"
             >
               <div>
                 {/* Project Image */}
@@ -133,12 +133,12 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({ onViewProjectQ
 
                 {/* Content */}
                 <div className="p-5">
-                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#E85D04] mb-1">
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--accent)] mb-1">
                     <MapPin className="w-3.5 h-3.5" />
                     <span>{project.location}</span>
                   </div>
 
-                  <h3 className="text-base font-black text-[#0F243E] group-hover:text-[#E85D04] transition-colors leading-snug">
+                  <h3 className="text-base font-black text-[#0F243E] group-hover:text-[var(--accent)] transition-colors leading-snug">
                     {project.title}
                   </h3>
 
@@ -158,7 +158,7 @@ export const ProjectsGallery: React.FC<ProjectsGalleryProps> = ({ onViewProjectQ
                 <button
                   type="button"
                   onClick={() => onViewProjectQuote && onViewProjectQuote(project.title)}
-                  className="w-full py-2 bg-stone-50 hover:bg-orange-50 border border-stone-200 text-[#E85D04] hover:text-[#c94e03] rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="w-full py-2 bg-stone-50 hover:bg-[var(--accent-bg)] border border-stone-200 text-[var(--accent)] hover:text-[var(--accent-hover)] rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <span>Request Similar Custom Spec</span>
                   <ArrowRight className="w-3.5 h-3.5" />

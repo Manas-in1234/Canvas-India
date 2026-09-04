@@ -18,7 +18,7 @@ export const RealSpaces: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#E85D04] uppercase tracking-wider mb-1">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-1">
               <Building className="w-3.5 h-3.5" />
               <span>Real Customer Applications</span>
             </div>
@@ -65,10 +65,10 @@ export const RealSpaces: React.FC = () => {
 
               <div className="p-4 flex-1 flex flex-col justify-between">
                 <div>
-                  <h3 className="font-bold text-sm sm:text-base text-stone-900 group-hover:text-[#E85D04] transition-colors">
+                  <h3 className="font-bold text-sm sm:text-base text-stone-900 group-hover:text-[var(--accent)] transition-colors">
                     {space.title}
                   </h3>
-                  <div className="mt-1 text-xs font-semibold text-[#E85D04]">
+                  <div className="mt-1 text-xs font-semibold text-[var(--accent)]">
                     {space.productUsed}
                   </div>
                   <p className="text-xs text-stone-500 mt-1.5 leading-relaxed">

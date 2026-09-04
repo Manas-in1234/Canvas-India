@@ -69,7 +69,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
 
       <div className="relative bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden z-10 my-8">
         {/* Header */}
-        <div className="bg-[#E85D04] text-white p-4 flex items-center justify-between">
+        <div className="bg-[var(--accent)] text-white p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="w-5 h-5" />
             <h3 className="font-bold text-base">Customize: {product.name}</h3>
@@ -106,8 +106,8 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
               <label className="block text-xs font-bold text-stone-700 uppercase">
                 Upload Your Own Photo
               </label>
-              <label className="border-2 border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 rounded-xl p-4 text-center cursor-pointer flex flex-col items-center justify-center gap-2 transition-colors">
-                <UploadCloud className="w-6 h-6 text-[#E85D04]" />
+              <label className="border-2 border-dashed border-stone-300 hover:border-[var(--accent-light)] bg-stone-50 rounded-xl p-4 text-center cursor-pointer flex flex-col items-center justify-center gap-2 transition-colors">
+                <UploadCloud className="w-6 h-6 text-[var(--accent)]" />
                 <span className="text-xs font-semibold text-stone-700">Click to upload from device</span>
                 <span className="text-[10px] text-stone-400">JPG, PNG, WEBP (Min 1000px recommended)</span>
                 <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
@@ -127,7 +127,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                   onClick={() => setSelectedSize(s)}
                   className={`py-2 px-2.5 rounded-lg text-xs font-bold border transition-all text-center ${
                     selectedSize === s
-                      ? 'bg-[#E85D04] text-white border-[#E85D04] shadow-sm'
+                      ? 'bg-[var(--accent)] text-white border-[var(--accent)] shadow-sm'
                       : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
                   }`}
                 >
@@ -169,7 +169,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
               value={customText}
               onChange={(e) => setCustomText(e.target.value)}
               placeholder="e.g. Wedding Date, Names, Family Quote"
-              className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-[var(--accent-border)]"
             />
           </div>
 
@@ -184,7 +184,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
 
             <button
               onClick={handleConfirm}
-              className="px-6 py-2.5 bg-[#E85D04] hover:bg-[#D44E00] text-white font-bold text-sm rounded-lg shadow-md flex items-center gap-2 transition-all transform active:scale-95"
+              className="px-6 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold text-sm rounded-lg shadow-md flex items-center gap-2 transition-all transform active:scale-95"
             >
               <ShoppingCart className="w-4 h-4" />
               <span>Confirm &amp; Add to Cart</span>

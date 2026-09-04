@@ -182,8 +182,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               ? 'bg-white/95 backdrop-blur-md py-2 shadow-md border-b border-stone-200 text-stone-900'
               : 'bg-white py-3 border-b border-stone-200 text-stone-900 shadow-xs'
             : isScrolled
-            ? 'bg-[#E8751A] py-2 shadow-md text-white'
-            : 'bg-[#E8751A] py-3 text-white shadow-sm'
+            ? 'bg-[var(--accent)] py-2 shadow-md text-white'
+            : 'bg-[var(--accent)] py-3 text-white shadow-sm'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 sm:gap-6 min-h-[64px] sm:min-h-[72px] md:min-h-[76px]">
@@ -195,7 +195,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className={`p-2 -ml-2 lg:hidden rounded-lg transition-colors ${
                 themeVariant === 'editorial'
                   ? 'text-stone-700 hover:text-stone-900 hover:bg-stone-100'
-                  : 'text-white hover:text-orange-100 hover:bg-white/10'
+                  : 'text-white hover:text-[var(--accent-bg)] hover:bg-white/10'
               }`}
               aria-label="Open mobile menu"
             >
@@ -234,7 +234,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 placeholder="Search Canvas, Acrylic, Cork & more..."
                 className={`w-full pl-5 pr-12 py-2.5 sm:py-3 text-sm rounded-full outline-none transition-all placeholder:text-stone-400 ${
                   themeVariant === 'editorial'
-                    ? 'bg-stone-100 hover:bg-stone-100/90 focus:bg-white text-stone-900 border border-stone-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 shadow-xs'
+                    ? 'bg-stone-100 hover:bg-stone-100/90 focus:bg-white text-stone-900 border border-stone-300 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 shadow-xs'
                     : 'bg-white text-stone-900 shadow-md focus:ring-2 focus:ring-stone-900/40 border-0'
                 }`}
               />
@@ -242,8 +242,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 type="button"
                 className={`absolute right-1.5 p-2 sm:p-2.5 rounded-full text-white transition-colors shadow-xs ${
                   themeVariant === 'editorial'
-                    ? 'bg-stone-900 hover:bg-orange-600'
-                    : 'bg-[#E8751A] hover:bg-[#d66512]'
+                    ? 'bg-stone-900 hover:bg-[var(--accent)]'
+                    : 'bg-[var(--accent)] hover:bg-[var(--accent-hover)]'
                 }`}
                 aria-label="Search"
               >
@@ -265,7 +265,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                           <button
                             key={tag}
                             onClick={() => setSearchQuery(tag)}
-                            className="px-3 py-1 rounded-full text-xs bg-stone-100 hover:bg-orange-50 hover:text-orange-600 text-stone-700 transition-colors cursor-pointer"
+                            className="px-3 py-1 rounded-full text-xs bg-stone-100 hover:bg-[var(--accent-bg)] hover:text-[var(--accent)] text-stone-700 transition-colors cursor-pointer"
                           >
                             {tag}
                           </button>
@@ -274,7 +274,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </div>
                     <div className="pt-3 border-t border-stone-100 flex items-center justify-between text-xs text-stone-500">
                       <span>Custom dimensions &amp; bespoke orders</span>
-                      <span className="text-[#E8751A] font-semibold cursor-pointer" onClick={onOpenQuote}>
+                      <span className="text-[var(--accent)] font-semibold cursor-pointer" onClick={onOpenQuote}>
                         Request Custom Quote →
                       </span>
                     </div>
@@ -301,13 +301,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                               className="w-12 h-12 rounded-lg object-cover border border-stone-200"
                             />
                             <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-stone-900 text-sm group-hover:text-orange-600 truncate">
+                              <div className="font-semibold text-stone-900 text-sm group-hover:text-[var(--accent)] truncate">
                                 {prod.name}
                               </div>
                               <div className="text-xs text-stone-500 truncate">{prod.tagline}</div>
                             </div>
                             <div className="text-right">
-                              <span className="text-xs font-bold text-orange-600">{prod.startingPrice}</span>
+                              <span className="text-xs font-bold text-[var(--accent)]">{prod.startingPrice}</span>
                               <span className="block text-[10px] text-stone-400">Starting</span>
                             </div>
                           </button>
@@ -331,8 +331,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={onOpenQuote}
               className={`hidden sm:flex flex-col items-center p-1.5 rounded-xl transition-colors ${
                 themeVariant === 'editorial'
-                  ? 'text-stone-700 hover:text-orange-600 hover:bg-stone-50'
-                  : 'text-white hover:text-orange-100 hover:bg-white/10'
+                  ? 'text-stone-700 hover:text-[var(--accent)] hover:bg-stone-50'
+                  : 'text-white hover:text-[var(--accent-bg)] hover:bg-white/10'
               }`}
               title="Account"
             >
@@ -345,8 +345,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => handleNavClick('#featured-products')}
               className={`relative hidden sm:flex flex-col items-center p-1.5 rounded-xl transition-colors ${
                 themeVariant === 'editorial'
-                  ? 'text-stone-700 hover:text-orange-600 hover:bg-stone-50'
-                  : 'text-white hover:text-orange-100 hover:bg-white/10'
+                  ? 'text-stone-700 hover:text-[var(--accent)] hover:bg-stone-50'
+                  : 'text-white hover:text-[var(--accent-bg)] hover:bg-white/10'
               }`}
               title="Wishlist"
             >
@@ -355,8 +355,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               {wishlistCount > 0 && (
                 <span className={`absolute top-1 right-2 w-4 h-4 rounded-full font-bold text-[10px] flex items-center justify-center ${
                   themeVariant === 'editorial'
-                    ? 'bg-orange-600 text-white'
-                    : 'bg-white text-[#E8751A]'
+                    ? 'bg-[var(--accent)] text-white'
+                    : 'bg-white text-[var(--accent)]'
                 }`}>
                   {wishlistCount}
                 </span>
@@ -368,8 +368,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={onOpenCart}
               className={`relative flex flex-col items-center p-1.5 rounded-xl transition-colors cursor-pointer ${
                 themeVariant === 'editorial'
-                  ? 'text-stone-700 hover:text-orange-600 hover:bg-stone-50'
-                  : 'text-white hover:text-orange-100 hover:bg-white/10'
+                  ? 'text-stone-700 hover:text-[var(--accent)] hover:bg-stone-50'
+                  : 'text-white hover:text-[var(--accent-bg)] hover:bg-white/10'
               }`}
               title="Open Cart"
             >
@@ -378,8 +378,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               {cartCount > 0 && (
                 <span className={`absolute top-0.5 right-1 w-4 h-4 rounded-full font-bold text-[10px] flex items-center justify-center shadow-xs ${
                   themeVariant === 'editorial'
-                    ? 'bg-orange-600 text-white'
-                    : 'bg-white text-[#E8751A]'
+                    ? 'bg-[var(--accent)] text-white'
+                    : 'bg-white text-[var(--accent)]'
                 }`}>
                   {cartCount}
                 </span>
@@ -391,8 +391,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={onOpenQuote}
               className={`ml-1 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all flex items-center gap-1.5 group cursor-pointer ${
                 themeVariant === 'editorial'
-                  ? 'bg-[#E8751A] hover:bg-[#d66512] text-white shadow-orange-500/20'
-                  : 'bg-white hover:bg-stone-50 active:bg-stone-100 text-[#E8751A] hover:shadow-lg'
+                  ? 'bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white shadow-[var(--accent)]/20'
+                  : 'bg-white hover:bg-stone-50 active:bg-stone-100 text-[var(--accent)] hover:shadow-lg'
               }`}
             >
               <span>Get a Quote</span>
@@ -409,7 +409,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {categories.map((cat) => (
               <div
                 key={cat.id}
-                className="relative py-2.5 px-2.5 xl:px-3 font-medium transition-colors hover:text-orange-600 flex items-center gap-1 cursor-pointer group"
+                className="relative py-2.5 px-2.5 xl:px-3 font-medium transition-colors hover:text-[var(--accent)] flex items-center gap-1 cursor-pointer group"
                 onMouseEnter={() => cat.hasDropdown && setActiveDropdown(cat.id)}
                 onMouseLeave={() => cat.hasDropdown && setActiveDropdown(null)}
               >
@@ -422,7 +422,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className="flex items-center gap-1"
                 >
                   <span className="tracking-wide">{cat.label}</span>
-                  {cat.hasDropdown && <ChevronDown className="w-3.5 h-3.5 text-stone-400 group-hover:text-orange-600 transition-transform group-hover:rotate-180" />}
+                  {cat.hasDropdown && <ChevronDown className="w-3.5 h-3.5 text-stone-400 group-hover:text-[var(--accent)] transition-transform group-hover:rotate-180" />}
                 </a>
 
                 {/* Dropdown Menu */}
@@ -436,15 +436,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                           e.preventDefault();
                           handleNavClick(cat.href, cat.id);
                         }}
-                        className="block p-2.5 rounded-lg hover:bg-orange-50/70 transition-colors group/sub"
+                        className="block p-2.5 rounded-lg hover:bg-[var(--accent-bg)]/70 transition-colors group/sub"
                       >
-                        <div className="font-semibold text-stone-900 group-hover/sub:text-orange-600 text-xs">
+                        <div className="font-semibold text-stone-900 group-hover/sub:text-[var(--accent)] text-xs">
                           {item.name}
                         </div>
                         <div className="text-[11px] text-stone-500 line-clamp-1">{item.desc}</div>
                       </a>
                     ))}
-                    <div className="p-2 border-t border-stone-100 mt-1 flex items-center justify-between text-[11px] text-orange-600 font-bold">
+                    <div className="p-2 border-t border-stone-100 mt-1 flex items-center justify-between text-[11px] text-[var(--accent)] font-bold">
                       <span>Explore all {cat.label}</span>
                       <ArrowRight className="w-3 h-3" />
                     </div>
@@ -462,17 +462,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 e.preventDefault();
                 handleNavClick('#featured-products', 'offers');
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-orange-700 font-bold text-xs tracking-wide hover:bg-orange-200 transition-colors border border-orange-200 shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent-hover)] font-bold text-xs tracking-wide hover:bg-[var(--accent-border)] transition-colors border border-[var(--accent-border)] shadow-xs"
             >
-              <Tag className="w-3.5 h-3.5 text-orange-600" />
+              <Tag className="w-3.5 h-3.5 text-[var(--accent)]" />
               <span>Offers</span>
-              <span className="px-1.5 py-0.2 rounded-full bg-[#E8751A] text-white text-[9px]">20% OFF</span>
+              <span className="px-1.5 py-0.2 rounded-full bg-[var(--accent)] text-white text-[9px]">20% OFF</span>
             </a>
 
             {onOpenSwatch && (
               <button
                 onClick={onOpenSwatch}
-                className="hidden xl:inline-flex items-center gap-1 text-[11px] text-stone-500 hover:text-orange-600 font-medium transition-colors cursor-pointer"
+                className="hidden xl:inline-flex items-center gap-1 text-[11px] text-stone-500 hover:text-[var(--accent)] font-medium transition-colors cursor-pointer"
               >
                 <Layers className="w-3 h-3" />
                 <span>Swatch Box</span>
@@ -526,7 +526,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     e.preventDefault();
                     handleNavClick(cat.href, cat.id);
                   }}
-                  className="flex items-center justify-between p-2.5 rounded-lg text-sm font-medium text-stone-800 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                  className="flex items-center justify-between p-2.5 rounded-lg text-sm font-medium text-stone-800 hover:bg-[var(--accent-bg)] hover:text-[var(--accent)] transition-colors"
                 >
                   <span>{cat.label}</span>
                   {cat.hasDropdown && <ChevronDown className="w-4 h-4 text-stone-400" />}
@@ -540,7 +540,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     e.preventDefault();
                     handleNavClick('#featured-products');
                   }}
-                  className="flex items-center justify-between p-2.5 rounded-lg text-sm font-bold text-orange-600 bg-orange-50"
+                  className="flex items-center justify-between p-2.5 rounded-lg text-sm font-bold text-[var(--accent)] bg-[var(--accent-bg)]"
                 >
                   <span className="flex items-center gap-2">
                     <Tag className="w-4 h-4" />
@@ -558,7 +558,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setMobileMenuOpen(false);
                   onOpenQuote();
                 }}
-                className="w-full py-3 rounded-xl bg-orange-500 text-white font-bold text-sm shadow-md flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl bg-[var(--accent)] text-white font-bold text-sm shadow-md flex items-center justify-center gap-2"
               >
                 <span>Request Custom Quote</span>
                 <ArrowRight className="w-4 h-4" />

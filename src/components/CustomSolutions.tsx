@@ -67,7 +67,7 @@ export const CustomSolutions: React.FC<CustomSolutionsProps> = ({ onGetQuote }) 
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-[#E85D04] text-xs font-extrabold uppercase tracking-wider mb-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent)] text-xs font-extrabold uppercase tracking-wider mb-2">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Bespoke & Enterprise Atelier</span>
             </div>
@@ -83,7 +83,7 @@ export const CustomSolutions: React.FC<CustomSolutionsProps> = ({ onGetQuote }) 
           <button
             type="button"
             onClick={() => onGetQuote()}
-            className="px-6 py-3 rounded-lg bg-[#E85D04] hover:bg-[#ff6f0e] active:bg-[#c94e03] text-white font-extrabold text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-2 cursor-pointer self-start md:self-auto"
+            className="px-6 py-3 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-light)] active:bg-[var(--accent-hover)] text-white font-extrabold text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-2 cursor-pointer self-start md:self-auto"
           >
             <span>GET A CUSTOM QUOTE</span>
             <ArrowRight className="w-4 h-4" />
@@ -97,19 +97,19 @@ export const CustomSolutions: React.FC<CustomSolutionsProps> = ({ onGetQuote }) 
             return (
               <div
                 key={item.id}
-                className="group bg-stone-50/70 hover:bg-white rounded-xl p-6 border border-stone-200 hover:border-[#E85D04] shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
+                className="group bg-stone-50/70 hover:bg-white rounded-xl p-6 border border-stone-200 hover:border-[var(--accent)] shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-lg bg-orange-100/60 text-[#E85D04] flex items-center justify-center group-hover:bg-[#E85D04] group-hover:text-white transition-colors">
+                    <div className="w-12 h-12 rounded-lg bg-[var(--accent-bg)]/60 text-[var(--accent)] flex items-center justify-center group-hover:bg-[var(--accent)] group-hover:text-white transition-colors">
                       <Icon className="w-6 h-6" />
                     </div>
-                    <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-white text-stone-600 border border-stone-200 group-hover:border-orange-200 group-hover:text-[#E85D04] transition-colors">
+                    <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-white text-stone-600 border border-stone-200 group-hover:border-[var(--accent-border)] group-hover:text-[var(--accent)] transition-colors">
                       {item.badge}
                     </span>
                   </div>
 
-                  <h3 className="text-lg font-black text-[#0F243E] mb-2 group-hover:text-[#E85D04] transition-colors">
+                  <h3 className="text-lg font-black text-[#0F243E] mb-2 group-hover:text-[var(--accent)] transition-colors">
                     {item.title}
                   </h3>
                   <p className="text-xs sm:text-sm text-stone-600 leading-relaxed font-normal">
@@ -121,7 +121,7 @@ export const CustomSolutions: React.FC<CustomSolutionsProps> = ({ onGetQuote }) 
                   <button
                     type="button"
                     onClick={() => onGetQuote(item.title)}
-                    className="text-xs font-extrabold text-[#E85D04] hover:text-[#0F243E] flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="text-xs font-extrabold text-[var(--accent)] hover:text-[#0F243E] flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <span>Request Spec & Quote</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />

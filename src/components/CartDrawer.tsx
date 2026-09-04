@@ -40,7 +40,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           {/* Header */}
           <div className="p-4 bg-[#0F243E] text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-[#E85D04]" />
+              <ShoppingBag className="w-5 h-5 text-[var(--accent)]" />
               <h2 className="font-bold text-base">Your Shopping Cart</h2>
               <span className="text-xs bg-white/15 text-white px-2 py-0.5 rounded-full font-bold">
                 {cartItems.reduce((sum, item) => sum + item.quantity, 0)} items
@@ -55,7 +55,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           </div>
 
           {/* Free Shipping Progress Bar */}
-          <div className="p-3 bg-orange-50 border-b border-orange-100 text-xs text-stone-700">
+          <div className="p-3 bg-[var(--accent-bg)] border-b border-[var(--accent-bg)] text-xs text-stone-700">
             {remainingForFreeDelivery > 0 ? (
               <div className="space-y-1.5">
                 <div className="flex justify-between font-semibold">
@@ -64,13 +64,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
                 <div className="w-full h-2 bg-stone-200 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-[#E85D04] transition-all duration-300 rounded-full" 
+                    className="h-full bg-[var(--accent)] transition-all duration-300 rounded-full" 
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
+              <div className="flex items-center gap-1.5 text-[var(--accent-hover)] font-bold">
                 <Truck className="w-4 h-4" />
                 <span>Congratulations! You qualify for FREE Delivery across India</span>
               </div>
@@ -88,7 +88,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </p>
                 <button
                   onClick={onClose}
-                  className="px-5 py-2 bg-[#E85D04] text-white text-xs font-bold rounded-lg mt-2"
+                  className="px-5 py-2 bg-[var(--accent)] text-white text-xs font-bold rounded-lg mt-2"
                 >
                   Start Shopping
                 </button>
@@ -109,7 +109,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       {item.size || 'Standard Size'} {item.finish && `• ${item.finish}`}
                     </div>
                     {item.customText && (
-                      <div className="text-[10px] text-orange-600 italic truncate">
+                      <div className="text-[10px] text-[var(--accent)] italic truncate">
                         "{item.customText}"
                       </div>
                     )}
@@ -161,13 +161,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
                 <div className="flex justify-between text-stone-600">
                   <span>Delivery Charges</span>
-                  <span className="font-bold text-emerald-700">
+                  <span className="font-bold text-[var(--accent-hover)]">
                     {subtotal >= freeDeliveryThreshold ? 'FREE' : '₹99'}
                   </span>
                 </div>
                 <div className="pt-2 border-t border-stone-200 flex justify-between text-sm font-black text-stone-900">
                   <span>Total Amount</span>
-                  <span className="text-[#E85D04]">
+                  <span className="text-[var(--accent)]">
                     ₹{(subtotal + (subtotal >= freeDeliveryThreshold ? 0 : 99)).toLocaleString('en-IN')}
                   </span>
                 </div>
@@ -175,14 +175,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
               <button
                 onClick={onCheckout}
-                className="w-full py-3 bg-[#E85D04] hover:bg-[#D44E00] text-white font-bold text-sm rounded-lg shadow-md flex items-center justify-center gap-2 transition-all transform active:scale-95"
+                className="w-full py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold text-sm rounded-lg shadow-md flex items-center justify-center gap-2 transition-all transform active:scale-95"
               >
                 <span>Proceed to Checkout</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
               <div className="flex items-center justify-center gap-1.5 text-[11px] text-stone-400">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>Safe 256-Bit SSL Encrypted Checkout</span>
               </div>
             </div>
