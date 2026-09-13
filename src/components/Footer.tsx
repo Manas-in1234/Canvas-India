@@ -61,7 +61,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote })
             </div>
             <div>
               <div className="font-bold text-white text-xs sm:text-sm">Instant WhatsApp Support</div>
-              <div className="text-[11px] text-stone-400">+91 90765 43510 (Mon-Sat 9am - 8pm)</div>
+              <div className="text-[11px] text-stone-400">+91 78930 51555 (Mon-Sat 9am - 8pm)</div>
             </div>
           </div>
         </div>
@@ -88,26 +88,32 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote })
             <div className="pt-1 space-y-1.5 text-[11px]">
               <div className="flex items-center gap-2 text-white font-medium">
                 <Phone className="w-3.5 h-3.5 text-[#E8752A]" />
-                <a href="tel:+919076543510" className="hover:text-[#E8752A] transition-colors">
-                  +91 90765 43510
+                <a href="tel:+917893051555" className="hover:text-[#E8752A] transition-colors">
+                  +91 78930 51555
                 </a>
               </div>
               <div className="flex items-center gap-2 text-stone-300">
                 <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
-                <a 
-                  href="https://wa.me/919076543510" 
-                  target="_blank" 
+                <a
+                  href="https://wa.me/917893051555"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-emerald-400 transition-colors"
                 >
-                  WhatsApp: +91 90765 43510
+                  WhatsApp: +91 78930 51555
                 </a>
               </div>
               <div className="flex items-center gap-2 text-stone-400">
                 <Mail className="w-3.5 h-3.5 text-stone-400" />
-                <a href="mailto:support@canvasindia.in" className="hover:text-white transition-colors">
-                  support@canvasindia.in
+                <a href="mailto:info@canvassindia.com" className="hover:text-white transition-colors">
+                  info@canvassindia.com
                 </a>
+              </div>
+              <div className="flex items-start gap-2 text-stone-400">
+                <MapPin className="w-3.5 h-3.5 text-stone-400 mt-0.5 shrink-0" />
+                <span>
+                  H NO 4-9-197/8184, HMT Nagar, HMT Nagar Main Road, Nacharam, Hyderabad, Telangana &ndash; 500076
+                </span>
               </div>
             </div>
           </div>
@@ -166,13 +172,10 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote })
           <div className="space-y-2.5">
             <h4 className="font-bold text-xs uppercase tracking-wider text-white">Customer Support</h4>
             <ul className="space-y-2 text-stone-400 text-xs">
-              <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Track Your Order</a></li>
+              <li><Link to="/about-us" className="hover:text-white transition-colors">About Us</Link></li>
               <li><Link to="/shipping-policy" className="hover:text-white transition-colors">Shipping &amp; Delivery Timelines</Link></li>
               <li><Link to="/refund-policy" className="hover:text-white transition-colors">Returns &amp; Replacement Policy</Link></li>
               <li><Link to="/cancellation-policy" className="hover:text-white transition-colors">Cancellation Policy</Link></li>
-              <li><a href="#" className="hover:text-white transition-colors">Image Quality &amp; Upload Guide</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Frequently Asked Questions (FAQs)</a></li>
               <li><Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               <li><Link to="/terms-and-conditions" className="hover:text-white transition-colors">Terms of Service</Link></li>
             </ul>
