@@ -11,6 +11,7 @@ import { ShippingDeliveryPage } from './pages/ShippingDeliveryPage';
 import { CancellationPolicyPage } from './pages/CancellationPolicyPage';
 import { RefundReturnPage } from './pages/RefundReturnPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { CanvasCategoryPage } from './pages/CanvasCategoryPage';
 
 export function App() {
   return (
@@ -19,6 +20,7 @@ export function App() {
         <Route element={<RootLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/products/:productId" element={<ProductDetailPage />} />
+          <Route path="/canvas" element={<CanvasCategoryPage />} />
           <Route path="/about-us" element={<AboutUsPage />} />
           <Route path="/about" element={<AboutUsPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />

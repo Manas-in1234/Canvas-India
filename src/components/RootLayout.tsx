@@ -37,6 +37,11 @@ export const RootLayout: React.FC = () => {
   }, [pathname]);
 
   const handleSelectCategory = (slug: string) => {
+    // Canvas category navigates to the dedicated Canvas product listing page
+    if (slug === 'canvas-prints' || slug === 'canvas') {
+      navigate('/canvas');
+      return;
+    }
     if (pathname !== '/') {
       navigate('/');
       setTimeout(() => {

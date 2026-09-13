@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, CartItem } from '../types';
-import { TRENDING_PRODUCTS, DEALS_PRODUCTS } from '../data/storeData';
+import { TRENDING_PRODUCTS, DEALS_PRODUCTS, CANVAS_PRODUCTS } from '../data/storeData';
 
 interface ShopContextType {
   cartItems: CartItem[];
@@ -48,7 +48,10 @@ const ShopContext = createContext<ShopContextType | undefined>(undefined);
 // Combined product catalog
 const ALL_CATALOG_PRODUCTS: Product[] = [
   ...TRENDING_PRODUCTS,
-  ...DEALS_PRODUCTS.filter(dp => !TRENDING_PRODUCTS.some(tp => tp.id === dp.id)),
+  ...CANVAS_PRODUCTS.filter((cp) => !TRENDING_PRODUCTS.some((tp) => tp.id === cp.id)),
+  ...DEALS_PRODUCTS.filter(
+    (dp) => !TRENDING_PRODUCTS.some((tp) => tp.id === dp.id) && !CANVAS_PRODUCTS.some((cp) => cp.id === dp.id)
+  ),
 ];
 
 export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

@@ -12,6 +12,7 @@ export interface Product {
   badge?: 'Best Seller' | 'Sale' | 'Trending' | 'Popular' | 'Hot' | 'New' | 'Custom';
   description: string;
   tags?: string[];
+  occasions?: string[];
   sizes: string[];
   finishes: string[];
 }
