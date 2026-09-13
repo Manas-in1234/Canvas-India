@@ -131,5 +131,6 @@ export interface CartItem {
   customText?: string;
   uploadedPhotoUrl?: string;
   photoUrl?: string;
+  customizationDetails?: any;
 }
 

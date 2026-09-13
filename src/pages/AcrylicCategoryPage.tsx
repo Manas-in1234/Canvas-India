@@ -76,7 +76,6 @@ export const AcrylicCategoryPage: React.FC = () => {
     allProducts, 
     wishlistIds, 
     onToggleWishlist, 
-    onOpenCustomize,
     onAddToCart 
   } = useShop();
 
@@ -321,8 +320,8 @@ export const AcrylicCategoryPage: React.FC = () => {
     e.preventDefault();
     e.stopPropagation();
     if (product.uploadRequired) {
-      // Personalized / photo upload item -> opens customization studio
-      onOpenCustomize(product);
+      // Personalized / photo upload item -> opens dedicated customization page
+      navigate(`/customize/acrylic/${product.slug || product.id}`);
     } else {
       // Standard item -> add directly to cart with immediate drawer feedback
       onAddToCart(product);

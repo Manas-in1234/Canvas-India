@@ -18,11 +18,15 @@ import { CancellationPolicyPage } from './pages/CancellationPolicyPage';
 import { RefundReturnPage } from './pages/RefundReturnPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { CanvasCategoryPage } from './pages/CanvasCategoryPage';
+import { AcrylicCustomizerPage } from './pages/AcrylicCustomizerPage';
 
 export function App() {
   return (
     <ShopProvider>
       <Routes>
+        {/* Dedicated Full-Screen Acrylic Customizer */}
+        <Route path="/customize/acrylic/:productId" element={<AcrylicCustomizerPage />} />
+
         <Route element={<RootLayout />}>
           {/* Home */}
           <Route path="/" element={<HomePage />} />

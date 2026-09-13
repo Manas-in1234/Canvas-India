@@ -25,6 +25,7 @@ import { ProductCard } from '../components/ProductCard';
 import { ProductImage } from '../components/ProductImage';
 import { CUSTOMER_REVIEWS } from '../data/storeData';
 import { Product } from '../types';
+import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
 
 export const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -224,6 +225,11 @@ export const ProductDetailPage: React.FC = () => {
         </div>
       </div>
     );
+  }
+ 
+  // Dedicated Acrylic Product Detail Page with Reference 1 layout & customizer drawer
+  if (product.categorySlug === 'acrylic') {
+    return <AcrylicProductDetailPage product={product} />;
   }
 
   const categoryName = product.category || 'Prints';

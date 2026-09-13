@@ -22,7 +22,12 @@ interface ShopContextType {
     quantity?: number,
     customText?: string,
     photoUrl?: string,
-    material?: string
+    material?: string,
+    thickness?: string,
+    style?: string,
+    base?: string,
+    paper?: string,
+    customizationDetails?: any
   ) => void;
   onUpdateCartQuantity: (itemId: string, newQty: number) => void;
   onRemoveCartItem: (itemId: string) => void;
@@ -41,11 +46,16 @@ interface ShopContextType {
     product: Product;
     quantity: number;
     size: string;
-    finish: string;
-    customText: string;
-    photoUrl: string;
+    finish?: string;
+    customText?: string;
+    photoUrl?: string;
     calculatedPrice: number;
     material?: string;
+    thickness?: string;
+    style?: string;
+    base?: string;
+    paper?: string;
+    customizationDetails?: any;
   }) => void;
   onAddToCartFromWorkbench: (customItem: {
     name: string;
@@ -144,18 +154,27 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     quantity: number = 1,
     customText?: string,
     photoUrl?: string,
-    material?: string
+    material?: string,
+    thickness?: string,
+    style?: string,
+    base?: string,
+    paper?: string,
+    customizationDetails?: any
   ) => {
     setCartItems((prev) => {
       const selectedSize = size || product.sizes?.[0] || 'Standard Size';
       const selectedFinish = finish || product.finishes?.[0] || 'Standard Finish';
-      const itemKey = `${product.id}-${selectedSize}-${selectedFinish}-${customText || ''}`;
+      const itemKey = `${product.id}-${selectedSize}-${selectedFinish}-${thickness || ''}-${style || ''}-${base || ''}-${paper || ''}-${customText || ''}-${Date.now()}`;
 
       const existingIndex = prev.findIndex(
         (item) => (item.id === itemKey) || (
           item.product.id === product.id &&
           item.size === selectedSize &&
           item.finish === selectedFinish &&
+          item.thickness === thickness &&
+          item.style === style &&
+          item.base === base &&
+          item.paper === paper &&
           item.customText === customText
         )
       );
@@ -178,8 +197,13 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
           size: selectedSize,
           finish: selectedFinish,
           material: material || (product as any).material,
+          thickness,
+          style,
+          base,
+          paper,
           customText,
           photoUrl: photoUrl || product.image,
+          customizationDetails,
         },
       ];
     });
@@ -219,13 +243,18 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     product: Product;
     quantity: number;
     size: string;
-    finish: string;
-    customText: string;
-    photoUrl: string;
+    finish?: string;
+    customText?: string;
+    photoUrl?: string;
     calculatedPrice: number;
     material?: string;
+    thickness?: string;
+    style?: string;
+    base?: string;
+    paper?: string;
+    customizationDetails?: any;
   }) => {
-    const itemKey = `custom-${item.product.id}-${item.size}-${item.finish}-${Date.now()}`;
+    const itemKey = `custom-${item.product.id}-${item.size}-${item.thickness || ''}-${item.base || ''}-${Date.now()}`;
     setCartItems((prev) => [
       ...prev,
       {
@@ -236,10 +265,15 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
         quantity: item.quantity,
         size: item.size,
-        finish: item.finish,
-        material: item.material,
+        finish: item.finish || 'Standard Finish',
+        material: item.material || item.product.material,
+        thickness: item.thickness,
+        style: item.style,
+        base: item.base,
+        paper: item.paper,
         customText: item.customText,
-        photoUrl: item.photoUrl,
+        photoUrl: item.photoUrl || item.product.image,
+        customizationDetails: item.customizationDetails,
       },
     ]);
     setCartDrawerOpen(true);
