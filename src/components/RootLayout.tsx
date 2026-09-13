@@ -3,8 +3,10 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { CartDrawer } from './CartDrawer';
+import { WishlistDrawer } from './WishlistDrawer';
 import { CustomizeModal } from './CustomizeModal';
 import { QuoteModal } from './QuoteModal';
+import { AccountModal } from './AccountModal';
 import { AccentColorPicker } from './AccentColorPicker';
 import { useShop } from '../context/ShopContext';
 import { Home, Layers, Sparkles, Heart, ShoppingBag } from 'lucide-react';
@@ -17,14 +19,20 @@ export const RootLayout: React.FC = () => {
     cartItems,
     wishlistIds,
     cartDrawerOpen,
+    wishlistDrawerOpen,
     customizeModalOpen,
     quoteModalOpen,
+    accountModalOpen,
     selectedProductForCustomize,
     allProducts,
     totalCartCount,
     setCartDrawerOpen,
+    setWishlistDrawerOpen,
     setCustomizeModalOpen,
     setQuoteModalOpen,
+    setAccountModalOpen,
+    onAddToCart,
+    onToggleWishlist,
     onUpdateCartQuantity,
     onRemoveCartItem,
     onAddToCartCustomized,
@@ -37,6 +45,35 @@ export const RootLayout: React.FC = () => {
   }, [pathname]);
 
   const handleSelectCategory = (slug: string) => {
+    const categoryRoutes = [
+      'canvas', 'acrylic', 'posters', 'cork', 'yoga-fitness', 
+      'home-decor', 'custom-prints', 'gifts', 'bulk-order', 'corporate-orders', 'designers-architects'
+    ];
+    if (categoryRoutes.includes(slug)) {
+      navigate(`/${slug}`);
+      return;
+    }
+    if (slug === 'canvas-prints') {
+      navigate('/canvas');
+      return;
+    }
+    if (slug === 'acrylic-prints') {
+      navigate('/acrylic');
+      return;
+    }
+    if (slug === 'cork-prints') {
+      navigate('/cork');
+      return;
+    }
+    if (slug === 'corporate') {
+      navigate('/corporate-orders');
+      return;
+    }
+    if (slug === 'bulk-orders') {
+      navigate('/bulk-order');
+      return;
+    }
+
     if (pathname !== '/') {
       navigate('/');
       setTimeout(() => {
@@ -67,15 +104,10 @@ export const RootLayout: React.FC = () => {
   };
 
   const handleSearch = (query: string) => {
-    if (pathname !== '/') {
-      navigate('/');
-      setTimeout(() => {
-        const el = document.getElementById('shop-categories');
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+    if (query && query.trim()) {
+      navigate(`/search?q=${encodeURIComponent(query.trim())}`);
     } else {
-      const el = document.getElementById('shop-categories');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      navigate('/search');
     }
   };
 
@@ -87,12 +119,13 @@ export const RootLayout: React.FC = () => {
         cartCount={totalCartCount}
         wishlistCount={wishlistIds.length}
         onOpenCart={() => setCartDrawerOpen(true)}
-        onOpenWishlist={() => setCartDrawerOpen(true)}
+        onOpenWishlist={() => setWishlistDrawerOpen(true)}
         onOpenQuote={() => setQuoteModalOpen(true)}
         onSelectCategory={handleSelectCategory}
         onSearch={handleSearch}
         allProducts={allProducts}
         onOpenCustomize={onOpenCustomize}
+        onOpenAccount={() => setAccountModalOpen(true)}
       />
 
       {/* Main Routed Page Content */}
@@ -104,6 +137,7 @@ export const RootLayout: React.FC = () => {
       <Footer
         onSelectCategory={handleSelectCategory}
         onOpenQuote={() => setQuoteModalOpen(true)}
+        onOpenAccount={() => setAccountModalOpen(true)}
       />
 
       {/* MOBILE BOTTOM NAVIGATION BAR */}
@@ -143,7 +177,7 @@ export const RootLayout: React.FC = () => {
 
         <button
           type="button"
-          onClick={() => setCartDrawerOpen(true)}
+          onClick={() => setWishlistDrawerOpen(true)}
           className="flex flex-col items-center gap-0.5 text-stone-600 hover:text-[#0E4A93] text-[10px] font-semibold py-1 px-2 relative cursor-pointer"
         >
           <Heart className="w-5 h-5 text-stone-700" />
@@ -178,9 +212,25 @@ export const RootLayout: React.FC = () => {
         onUpdateQuantity={onUpdateCartQuantity}
         onRemoveItem={onRemoveCartItem}
         onCheckout={() => {
-          alert('Thank you for shopping with Canvas India! Checkout gateway initiated.');
+          navigate('/cart');
           setCartDrawerOpen(false);
         }}
+      />
+
+      {/* Wishlist Drawer */}
+      <WishlistDrawer
+        isOpen={wishlistDrawerOpen}
+        onClose={() => setWishlistDrawerOpen(false)}
+        wishlistIds={wishlistIds}
+        allProducts={allProducts}
+        onToggleWishlist={onToggleWishlist}
+        onAddToCart={(product) => onAddToCart(product)}
+      />
+
+      {/* Account / Track Shipment Portal Modal */}
+      <AccountModal
+        isOpen={accountModalOpen}
+        onClose={() => setAccountModalOpen(false)}
       />
 
       {/* Customize Product Modal */}

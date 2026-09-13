@@ -1,28 +1,42 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, CartItem } from '../types';
-import { TRENDING_PRODUCTS, DEALS_PRODUCTS } from '../data/storeData';
+import { ALL_PRODUCTS } from '../data/productsData';
 
 interface ShopContextType {
   cartItems: CartItem[];
   wishlistIds: string[];
   cartDrawerOpen: boolean;
+  wishlistDrawerOpen: boolean;
   customizeModalOpen: boolean;
   quoteModalOpen: boolean;
+  accountModalOpen: boolean;
   selectedProductForCustomize: Product | null;
   allProducts: Product[];
   totalCartCount: number;
   
   // Actions
-  onAddToCart: (product: Product, size?: string, finish?: string, quantity?: number) => void;
-  onUpdateCartQuantity: (productId: string, newQty: number) => void;
-  onRemoveCartItem: (productId: string) => void;
+  onAddToCart: (
+    product: Product, 
+    size?: string, 
+    finish?: string, 
+    quantity?: number, 
+    customText?: string, 
+    photoUrl?: string,
+    material?: string
+  ) => void;
+  onUpdateCartQuantity: (itemId: string, newQty: number) => void;
+  onRemoveCartItem: (itemId: string) => void;
   onToggleWishlist: (productId: string) => void;
   onOpenCustomize: (product?: Product) => void;
   onOpenQuote: () => void;
   onOpenCart: () => void;
+  onOpenWishlist: () => void;
+  onOpenAccount: () => void;
   setCartDrawerOpen: (open: boolean) => void;
+  setWishlistDrawerOpen: (open: boolean) => void;
   setCustomizeModalOpen: (open: boolean) => void;
   setQuoteModalOpen: (open: boolean) => void;
+  setAccountModalOpen: (open: boolean) => void;
   onAddToCartCustomized: (item: {
     product: Product;
     quantity: number;
@@ -31,6 +45,7 @@ interface ShopContextType {
     customText: string;
     photoUrl: string;
     calculatedPrice: number;
+    material?: string;
   }) => void;
   onAddToCartFromWorkbench: (customItem: {
     name: string;
@@ -45,17 +60,13 @@ interface ShopContextType {
 
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
 
-// Combined product catalog
-const ALL_CATALOG_PRODUCTS: Product[] = [
-  ...TRENDING_PRODUCTS,
-  ...DEALS_PRODUCTS.filter(dp => !TRENDING_PRODUCTS.some(tp => tp.id === dp.id)),
-];
-
 export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // State management
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
+  const [wishlistDrawerOpen, setWishlistDrawerOpen] = useState(false);
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [customizeModalOpen, setCustomizeModalOpen] = useState(false);
+  const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [selectedProductForCustomize, setSelectedProductForCustomize] = useState<Product | null>(null);
 
   // Wishlist persisted in localStorage
@@ -66,20 +77,43 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       // fallback
     }
-    return ['prod-1', 'prod-2'];
+    return ['cnv-1', 'acr-1'];
   });
 
   // Cart persisted in localStorage
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     try {
       const saved = localStorage.getItem('ci_cart');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed: CartItem[] = JSON.parse(saved);
+        // Ensure every item has an id
+        return parsed.map((item) => ({
+          ...item,
+          id: item.id || `${item.product.id}-${item.size || 'std'}-${item.finish || 'std'}`
+        }));
+      }
     } catch {
       // fallback
     }
+    const firstProd = ALL_PRODUCTS[0] || {
+      id: 'cnv-1',
+      name: 'Classic Family Photo Canvas',
+      category: 'Canvas',
+      categorySlug: 'canvas',
+      price: 1499,
+      originalPrice: 1999,
+      discountPercent: 25,
+      rating: null,
+      badge: 'New',
+      image: '/products/placeholders/canvas-placeholder.svg',
+      description: 'Stretched 380 GSM matte cotton canvas on solid pine frame.',
+      sizes: ['12x18 inch'],
+      finishes: ['Matte Gallery Wrap']
+    };
     return [
       {
-        product: TRENDING_PRODUCTS[0],
+        id: `${firstProd.id}-12x18-matte`,
+        product: firstProd,
         quantity: 1,
         size: '12x18 inch',
         finish: 'Matte Gallery Wrap',
@@ -103,13 +137,27 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [wishlistIds]);
 
-  const handleAddToCart = (product: Product, size?: string, finish?: string, quantity: number = 1) => {
+  const handleAddToCart = (
+    product: Product, 
+    size?: string, 
+    finish?: string, 
+    quantity: number = 1,
+    customText?: string,
+    photoUrl?: string,
+    material?: string
+  ) => {
     setCartItems((prev) => {
-      const selectedSize = size || product.sizes?.[0] || 'Standard';
-      const selectedFinish = finish || product.finishes?.[0] || 'Standard';
+      const selectedSize = size || product.sizes?.[0] || 'Standard Size';
+      const selectedFinish = finish || product.finishes?.[0] || 'Standard Finish';
+      const itemKey = `${product.id}-${selectedSize}-${selectedFinish}-${customText || ''}`;
       
       const existingIndex = prev.findIndex(
-        (item) => item.product.id === product.id && item.size === selectedSize && item.finish === selectedFinish
+        (item) => (item.id === itemKey) || (
+          item.product.id === product.id && 
+          item.size === selectedSize && 
+          item.finish === selectedFinish &&
+          item.customText === customText
+        )
       );
 
       if (existingIndex > -1) {
@@ -124,28 +172,36 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return [
         ...prev,
         {
+          id: itemKey,
           product,
           quantity,
           size: selectedSize,
           finish: selectedFinish,
+          material: material || product.material,
+          customText,
+          photoUrl: photoUrl || product.image,
         },
       ];
     });
     setCartDrawerOpen(true);
   };
 
-  const handleUpdateCartQuantity = (productId: string, newQty: number) => {
+  const handleUpdateCartQuantity = (itemId: string, newQty: number) => {
     if (newQty <= 0) {
-      handleRemoveCartItem(productId);
+      handleRemoveCartItem(itemId);
       return;
     }
     setCartItems((prev) =>
-      prev.map((item) => (item.product.id === productId ? { ...item, quantity: newQty } : item))
+      prev.map((item) => (
+        item.id === itemId || item.product.id === itemId
+          ? { ...item, quantity: newQty } 
+          : item
+      ))
     );
   };
 
-  const handleRemoveCartItem = (productId: string) => {
-    setCartItems((prev) => prev.filter((item) => item.product.id !== productId));
+  const handleRemoveCartItem = (itemId: string) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== itemId && item.product.id !== itemId));
   };
 
   const handleToggleWishlist = (productId: string) => {
@@ -155,7 +211,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleOpenCustomize = (product?: Product) => {
-    setSelectedProductForCustomize(product || TRENDING_PRODUCTS[0]);
+    setSelectedProductForCustomize(product || ALL_PRODUCTS[0]);
     setCustomizeModalOpen(true);
   };
 
@@ -167,14 +223,21 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     customText: string;
     photoUrl: string;
     calculatedPrice: number;
+    material?: string;
   }) => {
+    const itemKey = `custom-${item.product.id}-${item.size}-${item.finish}-${Date.now()}`;
     setCartItems((prev) => [
       ...prev,
       {
-        product: item.product,
+        id: itemKey,
+        product: {
+          ...item.product,
+          price: item.calculatedPrice || item.product.price,
+        },
         quantity: item.quantity,
         size: item.size,
         finish: item.finish,
+        material: item.material,
         customText: item.customText,
         photoUrl: item.photoUrl,
       },
@@ -195,12 +258,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       id: `custom-${Date.now()}`,
       name: customItem.name,
       category: customItem.material.toUpperCase(),
-      categorySlug: customItem.material,
+      categorySlug: customItem.material.toLowerCase().replace(/\s+/g, '-'),
       price: customItem.price,
       originalPrice: Math.round(customItem.price * 1.3),
       discountPercent: 25,
-      rating: 5.0,
-      reviewsCount: 1,
+      rating: null,
+      reviewsCount: 0,
       image: customItem.image,
       sizes: [customItem.size],
       finishes: [customItem.finish],
@@ -208,9 +271,11 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       description: 'Custom personalized print with customized dimensions, finish and text.',
     };
 
+    const itemKey = `bench-${Date.now()}`;
     setCartItems((prev) => [
       ...prev,
       {
+        id: itemKey,
         product: virtualProduct,
         quantity: 1,
         size: customItem.size,
@@ -230,10 +295,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         cartItems,
         wishlistIds,
         cartDrawerOpen,
+        wishlistDrawerOpen,
         customizeModalOpen,
         quoteModalOpen,
+        accountModalOpen,
         selectedProductForCustomize,
-        allProducts: ALL_CATALOG_PRODUCTS,
+        allProducts: ALL_PRODUCTS,
         totalCartCount,
         onAddToCart: handleAddToCart,
         onUpdateCartQuantity: handleUpdateCartQuantity,
@@ -242,9 +309,13 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         onOpenCustomize: handleOpenCustomize,
         onOpenQuote: () => setQuoteModalOpen(true),
         onOpenCart: () => setCartDrawerOpen(true),
+        onOpenWishlist: () => setWishlistDrawerOpen(true),
+        onOpenAccount: () => setAccountModalOpen(true),
         setCartDrawerOpen,
+        setWishlistDrawerOpen,
         setCustomizeModalOpen,
         setQuoteModalOpen,
+        setAccountModalOpen,
         onAddToCartCustomized: handleAddToCartCustomized,
         onAddToCartFromWorkbench: handleAddToCartFromWorkbench,
       }}
@@ -261,3 +332,5 @@ export const useShop = () => {
   }
   return context;
 };
+
+export default ShopProvider;

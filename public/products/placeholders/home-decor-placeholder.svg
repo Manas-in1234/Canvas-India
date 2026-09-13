@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#EFF3F8"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="115%" height="115%">
+      <feDropShadow dx="0" dy="10" stdDeviation="15" flood-color="#0E4A93" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="800" height="800" fill="url(#bg)"/>
+  <rect x="120" y="90" width="560" height="520" rx="20" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="3" filter="url(#shadow)"/>
+  <g transform="translate(400, 310)">
+    <circle r="90" fill="#E8752A" opacity="0.12"/>
+    <rect x="-45" y="-45" width="90" height="90" rx="8" fill="#FFFFFF" stroke="#0E4A93" stroke-width="5"/>
+           <path d="M-25 25 L 0 -10 L 25 25 Z" fill="#E8752A" opacity="0.6"/>
+           <circle cx="15" cy="-15" r="8" fill="#F59E0B"/>
+  </g>
+  <g transform="translate(400, 480)">
+    <text y="0" fill="#0E4A93" font-family="Georgia, serif" font-size="28" font-weight="bold" font-style="italic" text-anchor="middle">Designer Home Décor</text>
+    <text y="32" fill="#64748B" font-family="system-ui, -apple-system, sans-serif" font-size="15" text-anchor="middle" font-weight="500">Cohesive Framed Wall Art & Modern Accent Pieces</text>
+  </g>
+  <rect x="270" y="650" width="260" height="48" rx="24" fill="#0E4A93"/>
+  <text x="400" y="681" fill="#FFFFFF" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" letter-spacing="1">CANVAS INDIA</text>
+</svg>

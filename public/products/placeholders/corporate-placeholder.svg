@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#EFF3F8"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="115%" height="115%">
+      <feDropShadow dx="0" dy="10" stdDeviation="15" flood-color="#0E4A93" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="800" height="800" fill="url(#bg)"/>
+  <rect x="120" y="90" width="560" height="520" rx="20" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="3" filter="url(#shadow)"/>
+  <g transform="translate(400, 310)">
+    <circle r="90" fill="#0E4A93" opacity="0.12"/>
+    <rect x="-45" y="-50" width="90" height="100" rx="6" fill="#FFFFFF" stroke="#0E4A93" stroke-width="5"/>
+           <line x1="-30" y1="-30" x2="30" y2="-30" stroke="#0E4A93" stroke-width="4"/>
+           <line x1="-30" y1="-10" x2="30" y2="-10" stroke="#0E4A93" stroke-width="4"/>
+           <line x1="-30" y1="10" x2="30" y2="10" stroke="#0E4A93" stroke-width="4"/>
+           <rect x="-15" y="25" width="30" height="25" fill="#0E4A93"/>
+  </g>
+  <g transform="translate(400, 480)">
+    <text y="0" fill="#0E4A93" font-family="Georgia, serif" font-size="28" font-weight="bold" font-style="italic" text-anchor="middle">Corporate Workplace Branding</text>
+    <text y="32" fill="#64748B" font-family="system-ui, -apple-system, sans-serif" font-size="15" text-anchor="middle" font-weight="500">Architectural Reception Logos & Pantone Matched Displays</text>
+  </g>
+  <rect x="270" y="650" width="260" height="48" rx="24" fill="#0E4A93"/>
+  <text x="400" y="681" fill="#FFFFFF" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" letter-spacing="1">CANVAS INDIA</text>
+</svg>

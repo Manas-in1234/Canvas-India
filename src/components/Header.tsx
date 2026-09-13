@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Search, 
   ShoppingCart, 
@@ -23,6 +23,7 @@ import {
   Flame
 } from 'lucide-react';
 import { Product } from '../types';
+import { ProductImage } from './ProductImage';
 import { 
   MEGA_MENUS_DATA, 
   SEARCH_SUGGESTIONS, 
@@ -40,6 +41,7 @@ interface HeaderProps {
   onSearch: (query: string) => void;
   allProducts: Product[];
   onOpenCustomize: (product?: Product) => void;
+  onOpenAccount?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -52,7 +54,9 @@ export const Header: React.FC<HeaderProps> = ({
   onSearch,
   allProducts,
   onOpenCustomize,
+  onOpenAccount,
 }) => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -204,18 +208,18 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Right: Phone support + Track order + Login */}
           <div className="flex items-center gap-2 sm:gap-4 text-[11px] sm:text-xs text-stone-200">
             <a 
-              href="tel:+919076543510" 
+              href="tel:+917893051555" 
               className="hidden lg:flex items-center gap-1 text-stone-200 hover:text-white transition-colors"
             >
               <Phone className="w-3 h-3 text-stone-300" />
               <span>Support:</span>
-              <span className="font-bold text-white">+91 90765 43510</span>
+              <span className="font-bold text-white">+91 78930 51555</span>
             </a>
             <span className="text-blue-300/40 hidden lg:inline">|</span>
             
             <button 
               type="button"
-              onClick={() => alert('Order Tracker: Enter your Order ID & Mobile Number.')}
+              onClick={() => onOpenAccount && onOpenAccount()}
               className="hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
             >
               <span>Track Order</span>
@@ -224,7 +228,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button 
               type="button"
-              onClick={() => alert('Customer portal: Login or Sign Up with mobile OTP.')}
+              onClick={() => onOpenAccount && onOpenAccount()}
               className="hover:text-white flex items-center gap-1 font-semibold text-white transition-colors cursor-pointer"
             >
               <span>Login / Sign Up</span>
@@ -334,7 +338,7 @@ export const Header: React.FC<HeaderProps> = ({
                               {product.category} • <span className="font-bold text-[#0E4A93]">₹{product.price}</span>
                             </div>
                           </div>
-                          <span className="text-xs text-[#0E4A93] font-semibold">Customize →</span>
+                          <span className="text-xs text-[#0E4A93] font-semibold">View →</span>
                         </div>
                       ))}
                     </div>
@@ -349,7 +353,7 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Account */}
               <button 
                 type="button"
-                onClick={() => alert('Customer portal: Login or Sign Up')}
+                onClick={() => onOpenAccount && onOpenAccount()}
                 className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors cursor-pointer py-1"
               >
                 <User className="w-4 h-4 text-white/90" strokeWidth={2} />
@@ -494,7 +498,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10">
           <nav className="flex items-center justify-between h-[54px] w-full text-xs font-semibold text-[#111827]">
             
-            <div className="flex items-center gap-2 xl:gap-3">
+            <div className="flex items-center gap-1 xl:gap-2 overflow-x-auto scrollbar-none py-1">
               
               {/* 1. "ALL CATEGORIES ↓" DROPDOWN BUTTON (Far Left) */}
               <div 
@@ -583,7 +587,7 @@ export const Header: React.FC<HeaderProps> = ({
                             setActiveMegaMenu(cat.slug);
                           }
                         }}
-                        className={`px-2.5 xl:px-3 py-1.5 rounded-lg text-xs xl:text-[13px] transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                        className={`px-2 xl:px-2.5 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                           isActive
                             ? 'text-[#0E4A93] font-bold bg-blue-50/70 border border-blue-200/60'
                             : isMenuOpen
@@ -845,7 +849,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <div className="p-3 bg-stone-50 border-t border-stone-200 text-xs text-stone-600 space-y-1">
               <div className="font-semibold text-stone-900">Need Help?</div>
-              <div>WhatsApp: +91 90765 43510</div>
+              <div>WhatsApp: +91 78930 51555</div>
               <div className="text-[11px] text-stone-500">Pan-India delivery with live tracking</div>
             </div>
           </div>

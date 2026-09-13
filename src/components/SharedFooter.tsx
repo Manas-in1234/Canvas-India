@@ -143,27 +143,27 @@ export const SharedFooter: React.FC<SharedFooterProps> = ({
             <div className="space-y-2.5 text-stone-400">
               <div className="flex items-start gap-2">
                 <MapPin className="w-3.5 h-3.5 text-[var(--accent)] shrink-0 mt-0.5" />
-                <span>Unit 14, Marol Industrial Estate, Andheri East, Mumbai, MH 400059</span>
+                <span>H NO 4-9-197/8184, HMT Nagar, HMT Nagar Main Road, Nacharam, Hyderabad, Telangana – 500076</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
-                <span>support@canvasindia.com</span>
+                <span>info@canvassindia.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
-                <span>+91 98200 12345 / 022 2850 6789</span>
+                <span>+91 78930 51555</span>
               </div>
               
               {/* WhatsApp Quick Chat */}
               <div className="pt-2">
                 <a
-                  href="https://wa.me/919820012345?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20enquire%20about%20custom%20displays"
+                  href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20enquire%20about%20custom%20displays"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--accent)]/20 hover:bg-[var(--accent)]/30 text-[var(--accent-light)] border border-[var(--accent)]/40 text-xs font-semibold transition-colors"
                 >
                   <span className="w-2 h-2 rounded-full bg-[var(--accent-light)] animate-pulse" />
-                  <span>WhatsApp: +91 98200 12345</span>
+                  <span>WhatsApp: +91 78930 51555</span>
                 </a>
               </div>
 

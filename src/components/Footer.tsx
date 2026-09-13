@@ -1,12 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Phone,
-  Mail,
-  MapPin,
-  ShieldCheck,
-  Truck,
-  CreditCard,
+import { 
+  Phone, 
+  Mail, 
+  MapPin, 
+  ShieldCheck, 
+  Truck, 
   MessageCircle, 
   Receipt,
   ArrowRight
@@ -15,10 +14,11 @@ import {
 interface FooterProps {
   onSelectCategory: (slug: string) => void;
   onOpenQuote: () => void;
+  onOpenAccount?: () => void;
   variant?: string;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote }) => {
+export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, onOpenAccount }) => {
   return (
     <footer className="bg-[#0B1727] text-stone-300 pt-12 pb-8 text-xs font-manrope">
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
@@ -61,7 +61,16 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote })
             </div>
             <div>
               <div className="font-bold text-white text-xs sm:text-sm">Instant WhatsApp Support</div>
-              <div className="text-[11px] text-stone-400">+91 90765 43510 (Mon-Sat 9am - 8pm)</div>
+              <div className="text-[11px] text-stone-400">
+                <a 
+                  href="https://wa.me/917893051555" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-emerald-400 transition-colors"
+                >
+                  +91 78930 51555 (Mon-Sat 9am - 8pm)
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -79,35 +88,55 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote })
               />
             </div>
             <p className="text-stone-400 text-[11px] leading-relaxed">
-              India's preferred personalized art & printing studio. Handcrafted custom canvas, museum-grade acrylics, eco-cork, and premium photo frames.
+              India&apos;s preferred personalized art &amp; printing studio. Handcrafted custom canvas, museum-grade acrylics, eco-cork, and premium photo frames.
             </p>
-            <Link to="/about-us" className="inline-block text-[11px] font-semibold text-[#E8752A] hover:text-white transition-colors">
-              About Us &rarr;
-            </Link>
+            <div>
+              <Link to="/about-us" className="inline-block text-[11px] font-semibold text-[#E8752A] hover:text-white transition-colors">
+                About Us &rarr;
+              </Link>
+            </div>
 
-            <div className="pt-1 space-y-1.5 text-[11px]">
-              <div className="flex items-center gap-2 text-white font-medium">
-                <Phone className="w-3.5 h-3.5 text-[#E8752A]" />
-                <a href="tel:+919076543510" className="hover:text-[#E8752A] transition-colors">
-                  +91 90765 43510
+            {/* Contact Us */}
+            <div className="pt-2 text-stone-400 text-[11px] leading-relaxed space-y-1.5 border-t border-stone-800/80">
+              <div className="font-bold text-xs uppercase tracking-wider text-white mb-2">
+                Contact Us
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Mail className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                <span className="text-stone-400">Email:</span>
+                <a href="mailto:info@canvassindia.com" className="text-stone-200 hover:text-white transition-colors">
+                  info@canvassindia.com
                 </a>
               </div>
-              <div className="flex items-center gap-2 text-stone-300">
-                <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
+
+              <div className="flex items-center gap-2">
+                <Phone className="w-3.5 h-3.5 text-[#E8752A] shrink-0" />
+                <span className="text-stone-400">Contact Number:</span>
+                <a href="tel:+917893051555" className="text-stone-200 hover:text-white transition-colors">
+                  78930 51555
+                </a>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="text-stone-400">WhatsApp:</span>
                 <a 
-                  href="https://wa.me/919076543510" 
+                  href="https://wa.me/917893051555" 
                   target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:text-emerald-400 transition-colors"
+                  rel="noopener noreferrer" 
+                  className="text-stone-200 hover:text-emerald-400 transition-colors"
                 >
-                  WhatsApp: +91 90765 43510
+                  78930 51555
                 </a>
               </div>
-              <div className="flex items-center gap-2 text-stone-400">
-                <Mail className="w-3.5 h-3.5 text-stone-400" />
-                <a href="mailto:support@canvasindia.in" className="hover:text-white transition-colors">
-                  support@canvasindia.in
-                </a>
+
+              <div className="flex items-start gap-2 pt-0.5">
+                <MapPin className="w-3.5 h-3.5 text-[#E8752A] shrink-0 mt-0.5" />
+                <div className="leading-snug text-stone-300">
+                  <span className="text-stone-400 mr-1">Address:</span>
+                  H NO 4-9-197/8184, HMT Nagar, HMT Nagar Main Road, Nacharam, Hyderabad, Hyderabad District, Telangana – 500076
+                </div>
               </div>
             </div>
           </div>
@@ -116,36 +145,16 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote })
           <div className="space-y-2.5">
             <h4 className="font-bold text-xs uppercase tracking-wider text-white">Shop Categories</h4>
             <ul className="space-y-2 text-stone-400 text-xs">
-              <li>
-                <button onClick={() => onSelectCategory('canvas-prints')} className="hover:text-white transition-colors cursor-pointer">
-                  Canvas Prints
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onSelectCategory('acrylic-prints')} className="hover:text-white transition-colors cursor-pointer">
-                  Acrylic Photo Prints
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onSelectCategory('cork-prints')} className="hover:text-white transition-colors cursor-pointer">
-                  Custom Cork Boards
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onSelectCategory('custom-prints')} className="hover:text-white transition-colors cursor-pointer">
-                  Custom Prints & Collages
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onSelectCategory('photo-frames')} className="hover:text-white transition-colors cursor-pointer">
-                  Solid Wood Photo Frames
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onSelectCategory('wall-decor')} className="hover:text-white transition-colors cursor-pointer">
-                  Living Room Wall Art
-                </button>
-              </li>
+              <li><Link to="/canvas" className="hover:text-white transition-colors">Canvas Frames</Link></li>
+              <li><Link to="/acrylic" className="hover:text-white transition-colors">Acrylic Wall Art</Link></li>
+              <li><Link to="/posters" className="hover:text-white transition-colors">Posters &amp; Wall Graphics</Link></li>
+              <li><Link to="/cork" className="hover:text-white transition-colors">Natural Cork Prints</Link></li>
+              <li><Link to="/yoga-fitness" className="hover:text-white transition-colors">Custom Yoga Mats</Link></li>
+              <li><Link to="/home-decor" className="hover:text-white transition-colors">Designer Home Décor</Link></li>
+              <li><Link to="/custom-prints" className="hover:text-white transition-colors">Custom Photo Prints</Link></li>
+              <li><Link to="/gifts" className="hover:text-white transition-colors">Gifts &amp; Celebrations</Link></li>
+              <li><Link to="/bulk-order" className="hover:text-white transition-colors">Bulk Orders &amp; Wholesale</Link></li>
+              <li><Link to="/corporate-orders" className="hover:text-white transition-colors">Corporate Branding</Link></li>
             </ul>
           </div>
 
@@ -153,12 +162,14 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote })
           <div className="space-y-2.5">
             <h4 className="font-bold text-xs uppercase tracking-wider text-white">Occasions & Gifting</h4>
             <ul className="space-y-2 text-stone-400 text-xs">
-              <li><button onClick={() => onSelectCategory('gifts')} className="hover:text-white transition-colors cursor-pointer">Birthday Gifts</button></li>
-              <li><button onClick={() => onSelectCategory('gifts')} className="hover:text-white transition-colors cursor-pointer">Anniversary Frames</button></li>
-              <li><button onClick={() => onSelectCategory('gifts')} className="hover:text-white transition-colors cursor-pointer">Wedding Keepsakes</button></li>
-              <li><button onClick={() => onSelectCategory('gifts')} className="hover:text-white transition-colors cursor-pointer">Couple Photo Displays</button></li>
-              <li><button onClick={() => onSelectCategory('gifts')} className="hover:text-white transition-colors cursor-pointer">Festive & Diwali Specials</button></li>
-              <li><button onClick={() => onSelectCategory('gifts')} className="hover:text-white transition-colors cursor-pointer">Housewarming Art</button></li>
+              <li><Link to="/gifts?sub=Birthday" className="hover:text-white transition-colors">Birthday Gifts</Link></li>
+              <li><Link to="/gifts?sub=Anniversary" className="hover:text-white transition-colors">Anniversary Frames</Link></li>
+              <li><Link to="/gifts?sub=Wedding" className="hover:text-white transition-colors">Wedding Keepsakes</Link></li>
+              <li><Link to="/gifts?sub=Valentine's%20Day" className="hover:text-white transition-colors">Valentine's Day Gifts</Link></li>
+              <li><Link to="/gifts?sub=Housewarming" className="hover:text-white transition-colors">Housewarming Art</Link></li>
+              <li><Link to="/gifts?sub=Festivals" className="hover:text-white transition-colors">Festive &amp; Diwali Specials</Link></li>
+              <li><Link to="/gifts?sub=Mother's%20Day" className="hover:text-white transition-colors">Mother's &amp; Father's Day</Link></li>
+              <li><Link to="/gifts?sub=Corporate%20Gifts" className="hover:text-white transition-colors">Corporate Hampers</Link></li>
             </ul>
           </div>
 
@@ -166,13 +177,13 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote })
           <div className="space-y-2.5">
             <h4 className="font-bold text-xs uppercase tracking-wider text-white">Customer Support</h4>
             <ul className="space-y-2 text-stone-400 text-xs">
-              <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Track Your Order</a></li>
+              <li><a href="mailto:info@canvassindia.com" className="hover:text-white transition-colors">Help Center &amp; Support</a></li>
+              <li><button onClick={() => onOpenAccount && onOpenAccount()} className="hover:text-white transition-colors cursor-pointer text-left">Track Your Order</button></li>
               <li><Link to="/shipping-policy" className="hover:text-white transition-colors">Shipping &amp; Delivery Timelines</Link></li>
               <li><Link to="/refund-policy" className="hover:text-white transition-colors">Returns &amp; Replacement Policy</Link></li>
               <li><Link to="/cancellation-policy" className="hover:text-white transition-colors">Cancellation Policy</Link></li>
-              <li><a href="#" className="hover:text-white transition-colors">Image Quality &amp; Upload Guide</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Frequently Asked Questions (FAQs)</a></li>
+              <li><Link to="/custom-prints" className="hover:text-white transition-colors">Image Quality &amp; Upload Guide</Link></li>
+              <li><Link to="/about-us" className="hover:text-white transition-colors">Frequently Asked Questions (FAQs)</Link></li>
               <li><Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               <li><Link to="/terms-and-conditions" className="hover:text-white transition-colors">Terms of Service</Link></li>
             </ul>
@@ -204,6 +215,11 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote })
                 <button onClick={onOpenQuote} className="hover:text-white transition-colors text-left cursor-pointer">
                   Artist & Creator Program
                 </button>
+              </li>
+              <li>
+                <Link to="/designers-architects" className="hover:text-white transition-colors">
+                  Designers &amp; Architects Solutions
+                </Link>
               </li>
             </ul>
             <div className="pt-2">
@@ -240,3 +256,5 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote })
     </footer>
   );
 };
+
+export default Footer;
