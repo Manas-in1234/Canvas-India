@@ -18,6 +18,7 @@ export const getCategoryPlaceholder = (categorySlug?: string): string => {
 
 interface ProductImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   categorySlug?: string;
+  category?: string;
   fallbackSrc?: string;
 }
 
@@ -25,11 +26,12 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   src,
   alt,
   categorySlug,
+  category,
   fallbackSrc,
   className = '',
   ...props
 }) => {
-  const defaultPlaceholder = fallbackSrc || getCategoryPlaceholder(categorySlug);
+  const defaultPlaceholder = fallbackSrc || getCategoryPlaceholder(categorySlug || category);
   const [imgSrc, setImgSrc] = useState<string>(src || defaultPlaceholder);
   const [hasError, setHasError] = useState<boolean>(!src);
 

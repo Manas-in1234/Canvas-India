@@ -4,6 +4,7 @@ import { ShopProvider } from './context/ShopContext';
 import { RootLayout } from './components/RootLayout';
 import { HomePage } from './pages/HomePage';
 import { CategoryPage } from './pages/CategoryPage';
+import { AcrylicCategoryPage } from './pages/AcrylicCategoryPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { DesignersArchitectsPage } from './pages/DesignersArchitectsPage';
 import { CartPage } from './pages/CartPage';
@@ -30,11 +31,9 @@ export function App() {
           <Route path="/canvas" element={<CanvasCategoryPage />} />
           {/* /canvas-prints is an alias that uses the generic CategoryPage for SEO parity */}
           <Route path="/canvas-prints" element={<CategoryPage categorySlug="canvas" />} />
-
-          {/* Other Primary Category Routes */}
-          <Route path="/acrylic" element={<CategoryPage categorySlug="acrylic" />} />
-          <Route path="/acrylic-prints" element={<CategoryPage categorySlug="acrylic" />} />
-
+          {/* Acrylic — dedicated category page */}
+          <Route path="/acrylic" element={<AcrylicCategoryPage />} />
+          <Route path="/acrylic-prints" element={<AcrylicCategoryPage />} />
           <Route path="/posters" element={<CategoryPage categorySlug="posters" />} />
 
           <Route path="/cork" element={<CategoryPage categorySlug="cork" />} />
