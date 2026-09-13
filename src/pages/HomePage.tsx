@@ -1,8 +1,10 @@
 import React from 'react';
 import { Homepage } from '../components/Homepage';
 import { useShop } from '../context/ShopContext';
+import { useNavigate } from 'react-router-dom';
 
 export const HomePage: React.FC = () => {
+  const navigate = useNavigate();
   const {
     allProducts,
     wishlistIds,
@@ -14,6 +16,11 @@ export const HomePage: React.FC = () => {
   } = useShop();
 
   const handleSelectCategory = (slug: string) => {
+    // Canvas category navigates to the dedicated Canvas page
+    if (slug === 'canvas-prints' || slug === 'canvas') {
+      navigate('/canvas');
+      return;
+    }
     if (slug === 'corporate' || slug === 'corporate-printing' || slug === 'bulk-order' || slug === 'corporate-orders' || slug === 'bulk-orders') {
       const el = document.getElementById('corporate-section');
       if (el) el.scrollIntoView({ behavior: 'smooth' });
