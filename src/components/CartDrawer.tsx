@@ -1,13 +1,15 @@
 import React from 'react';
-import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Truck } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Truck, ExternalLink } from 'lucide-react';
 import { CartItem } from '../types';
+import { ProductImage } from './ProductImage';
 
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   cartItems: CartItem[];
-  onUpdateQuantity: (productId: string, newQty: number) => void;
-  onRemoveItem: (productId: string) => void;
+  onUpdateQuantity: (itemId: string, newQty: number) => void;
+  onRemoveItem: (itemId: string) => void;
   onCheckout: () => void;
 }
 
@@ -27,7 +29,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const remainingForFreeDelivery = Math.max(0, freeDeliveryThreshold - subtotal);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <div className="fixed inset-0 z-50 overflow-hidden font-manrope">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-xs transition-opacity" 
@@ -38,24 +40,25 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
           
           {/* Header */}
-          <div className="p-4 bg-[#0F243E] text-white flex items-center justify-between">
+          <div className="p-4 bg-[#0E4A93] text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-[var(--accent)]" />
+              <ShoppingBag className="w-5 h-5 text-[#E8752A]" />
               <h2 className="font-bold text-base">Your Shopping Cart</h2>
-              <span className="text-xs bg-white/15 text-white px-2 py-0.5 rounded-full font-bold">
+              <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full font-bold">
                 {cartItems.reduce((sum, item) => sum + item.quantity, 0)} items
               </span>
             </div>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-black/10 rounded-md transition-colors"
+              className="p-1 hover:bg-white/10 rounded-md transition-colors text-white"
+              aria-label="Close cart"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Free Shipping Progress Bar */}
-          <div className="p-3 bg-[var(--accent-bg)] border-b border-[var(--accent-bg)] text-xs text-stone-700">
+          <div className="p-3 bg-orange-50 border-b border-orange-100 text-xs text-stone-700">
             {remainingForFreeDelivery > 0 ? (
               <div className="space-y-1.5">
                 <div className="flex justify-between font-semibold">
@@ -64,14 +67,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
                 <div className="w-full h-2 bg-stone-200 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-[var(--accent)] transition-all duration-300 rounded-full" 
+                    className="h-full bg-[#E8752A] transition-all duration-300 rounded-full" 
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 text-[var(--accent-hover)] font-bold">
-                <Truck className="w-4 h-4" />
+              <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
+                <Truck className="w-4 h-4 text-emerald-600" />
                 <span>Congratulations! You qualify for FREE Delivery across India</span>
               </div>
             )}
@@ -88,66 +91,74 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </p>
                 <button
                   onClick={onClose}
-                  className="px-5 py-2 bg-[var(--accent)] text-white text-xs font-bold rounded-lg mt-2"
+                  className="px-5 py-2 bg-[#E8752A] text-white text-xs font-bold rounded-lg mt-2 cursor-pointer shadow-sm hover:bg-[#d0641e] transition-colors"
                 >
                   Start Shopping
                 </button>
               </div>
             ) : (
-              cartItems.map((item) => (
-                <div key={item.product.id} className="py-3 flex gap-3 items-start">
-                  <img
-                    src={item.product.image}
-                    alt={item.product.name}
-                    className="w-16 h-16 object-cover rounded-lg border border-stone-200 flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-xs text-stone-900 truncate">
-                      {item.product.name}
-                    </h4>
-                    <div className="text-[11px] text-stone-500 mt-0.5">
-                      {item.size || 'Standard Size'} {item.finish && `• ${item.finish}`}
+              cartItems.map((item, idx) => {
+                const itemIdentifier = item.id || `${item.product.id}-${idx}`;
+                return (
+                  <div key={itemIdentifier} className="py-3 flex gap-3 items-start">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden border border-stone-200 shrink-0 bg-stone-50">
+                      <ProductImage
+                        src={item.photoUrl || item.uploadedPhotoUrl || item.product.image}
+                        alt={item.product.name}
+                        categorySlug={item.product.categorySlug}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    {item.customText && (
-                      <div className="text-[10px] text-[var(--accent)] italic truncate">
-                        "{item.customText}"
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-xs text-stone-900 truncate">
+                        {item.product.name}
+                      </h4>
+                      <div className="text-[11px] text-stone-500 mt-0.5">
+                        {item.size || 'Standard Size'} {item.finish && `• ${item.finish}`}
                       </div>
-                    )}
-                    <div className="font-black text-xs text-stone-900 mt-1">
-                      ₹{item.product.price}
-                    </div>
-
-                    {/* Quantity Selector */}
-                    <div className="flex items-center gap-2 mt-2">
-                      <div className="flex items-center border border-stone-200 rounded-md bg-stone-50">
-                        <button
-                          onClick={() => onUpdateQuantity(item.product.id, Math.max(1, item.quantity - 1))}
-                          className="p-1 text-stone-500 hover:text-stone-800"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="px-2 text-xs font-bold text-stone-800">
-                          {item.quantity}
-                        </span>
-                        <button
-                          onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
-                          className="p-1 text-stone-500 hover:text-stone-800"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
+                      {item.customText && (
+                        <div className="text-[10px] text-[#E8752A] italic truncate">
+                          "{item.customText}"
+                        </div>
+                      )}
+                      <div className="font-black text-xs text-stone-900 mt-1">
+                        ₹{item.product.price.toLocaleString('en-IN')}
                       </div>
 
-                      <button
-                        onClick={() => onRemoveItem(item.product.id)}
-                        className="p-1 text-stone-400 hover:text-rose-600 transition-colors"
-                        title="Remove item"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {/* Quantity Selector */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center border border-stone-200 rounded-md bg-stone-50">
+                          <button
+                            onClick={() => onUpdateQuantity(itemIdentifier, Math.max(1, item.quantity - 1))}
+                            className="p-1 text-stone-500 hover:text-stone-800 cursor-pointer"
+                            aria-label="Decrease quantity"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="px-2 text-xs font-bold text-stone-800">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => onUpdateQuantity(itemIdentifier, item.quantity + 1)}
+                            className="p-1 text-stone-500 hover:text-stone-800 cursor-pointer"
+                            aria-label="Increase quantity"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => onRemoveItem(itemIdentifier)}
+                          className="p-1 text-stone-400 hover:text-rose-600 transition-colors cursor-pointer"
+                          title="Remove item"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
@@ -161,28 +172,39 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
                 <div className="flex justify-between text-stone-600">
                   <span>Delivery Charges</span>
-                  <span className="font-bold text-[var(--accent-hover)]">
+                  <span className="font-bold text-emerald-700">
                     {subtotal >= freeDeliveryThreshold ? 'FREE' : '₹99'}
                   </span>
                 </div>
                 <div className="pt-2 border-t border-stone-200 flex justify-between text-sm font-black text-stone-900">
                   <span>Total Amount</span>
-                  <span className="text-[var(--accent)]">
+                  <span className="text-[#0E4A93]">
                     ₹{(subtotal + (subtotal >= freeDeliveryThreshold ? 0 : 99)).toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>
 
-              <button
-                onClick={onCheckout}
-                className="w-full py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold text-sm rounded-lg shadow-md flex items-center justify-center gap-2 transition-all transform active:scale-95"
-              >
-                <span>Proceed to Checkout</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  to="/cart"
+                  onClick={onClose}
+                  className="py-2.5 px-3 border border-stone-300 hover:border-[#0E4A93] bg-white text-stone-800 text-xs font-bold rounded-lg text-center flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <span>View Full Cart</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </Link>
 
-              <div className="flex items-center justify-center gap-1.5 text-[11px] text-stone-400">
-                <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
+                <button
+                  onClick={onCheckout}
+                  className="py-2.5 px-3 bg-[#E8752A] hover:bg-[#d0641e] text-white font-bold text-xs rounded-lg shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <span>Checkout</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-center gap-1.5 text-[11px] text-stone-400 pt-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#0E4A93]" />
                 <span>Safe 256-Bit SSL Encrypted Checkout</span>
               </div>
             </div>
@@ -193,3 +215,5 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     </div>
   );
 };
+
+export default CartDrawer;

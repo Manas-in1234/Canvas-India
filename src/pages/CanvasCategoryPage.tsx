@@ -109,7 +109,7 @@ export const CanvasCategoryPage: React.FC = () => {
         result = [...result].sort((a, b) => b.price - a.price);
         break;
       case 'rating':
-        result = [...result].sort((a, b) => b.rating - a.rating);
+        result = [...result].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
         break;
       case 'discount':
         result = [...result].sort((a, b) => b.discountPercent - a.discountPercent);

@@ -430,7 +430,7 @@ export const Homepage: React.FC<HomepageProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    window.open('https://wa.me/919076543510?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20talk%20about%20a%20corporate%20order', '_blank');
+                    window.open('https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20talk%20about%20a%20corporate%20order', '_blank');
                   }}
                   className="px-6 py-3 border border-stone-300 text-[#111827] hover:border-[#0E4A93] hover:text-[#0E4A93] text-xs sm:text-sm font-bold rounded-lg transition-colors cursor-pointer"
                 >
