@@ -19,6 +19,7 @@ export interface Product {
   shortDescription?: string;
   material?: string;
   tags?: string[];
+  occasions?: string[];
   sizes: string[];
   availableSizes?: string[];
   finishes: string[];

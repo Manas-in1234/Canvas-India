@@ -13,14 +13,14 @@ interface ShopContextType {
   selectedProductForCustomize: Product | null;
   allProducts: Product[];
   totalCartCount: number;
-  
+
   // Actions
   onAddToCart: (
-    product: Product, 
-    size?: string, 
-    finish?: string, 
-    quantity?: number, 
-    customText?: string, 
+    product: Product,
+    size?: string,
+    finish?: string,
+    quantity?: number,
+    customText?: string,
     photoUrl?: string,
     material?: string
   ) => void;
@@ -138,9 +138,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [wishlistIds]);
 
   const handleAddToCart = (
-    product: Product, 
-    size?: string, 
-    finish?: string, 
+    product: Product,
+    size?: string,
+    finish?: string,
     quantity: number = 1,
     customText?: string,
     photoUrl?: string,
@@ -150,11 +150,11 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const selectedSize = size || product.sizes?.[0] || 'Standard Size';
       const selectedFinish = finish || product.finishes?.[0] || 'Standard Finish';
       const itemKey = `${product.id}-${selectedSize}-${selectedFinish}-${customText || ''}`;
-      
+
       const existingIndex = prev.findIndex(
         (item) => (item.id === itemKey) || (
-          item.product.id === product.id && 
-          item.size === selectedSize && 
+          item.product.id === product.id &&
+          item.size === selectedSize &&
           item.finish === selectedFinish &&
           item.customText === customText
         )
@@ -177,7 +177,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
           quantity,
           size: selectedSize,
           finish: selectedFinish,
-          material: material || product.material,
+          material: material || (product as any).material,
           customText,
           photoUrl: photoUrl || product.image,
         },
@@ -194,7 +194,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCartItems((prev) =>
       prev.map((item) => (
         item.id === itemId || item.product.id === itemId
-          ? { ...item, quantity: newQty } 
+          ? { ...item, quantity: newQty }
           : item
       ))
     );

@@ -18,13 +18,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   isWishlisted,
   onToggleWishlist,
   onAddToCart,
+  onCustomize,
+  variant,
 }) => {
   return (
-    <div className="group flex flex-col justify-between text-left select-none">
+    <div className={`group flex flex-col justify-between text-left select-none ${variant === 'listing' ? 'p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-stone-200/70 hover:border-[#0E4A93]/40 hover:shadow-md transition-all duration-300' : ''}`}>
       <div>
-        {/* Compact Product Image linked to /products/:id */}
-        <div className="relative aspect-square max-h-[170px] w-full rounded-lg overflow-hidden bg-stone-100">
-          <Link 
+        {/* Product Image linked to /products/:id */}
+        <div className={`relative aspect-square ${variant === 'listing' ? 'w-full rounded-lg sm:rounded-xl' : 'max-h-[170px] w-full rounded-lg'} overflow-hidden bg-stone-100`}>
+          <Link
             to={`/products/${product.id}`}
             className="block w-full h-full cursor-pointer"
             title={`View ${product.name}`}
@@ -63,11 +65,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Short category / subcategory */}
         <div className="text-[10px] text-stone-500 font-medium uppercase tracking-wider line-clamp-1 mt-2">
-          {product.subcategory || product.category}
+          {(product as any).subcategory || product.category}
         </div>
 
         {/* Title linked to /products/:id */}
-        <Link 
+        <Link
           to={`/products/${product.id}`}
           className="block font-semibold text-xs sm:text-[13px] text-stone-900 line-clamp-1 group-hover:text-[#0E4A93] transition-colors mt-0.5 cursor-pointer"
           title={product.name}
@@ -81,7 +83,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             ₹{product.price.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-stone-400 line-through">
-            ₹{(product.compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)).toLocaleString('en-IN')}
+            ₹{((product as any).compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)).toLocaleString('en-IN')}
           </span>
           {product.discountPercent > 0 && (
             <span className="text-[10px] font-bold text-emerald-700 hidden sm:inline">
@@ -92,7 +94,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Rating or New badge */}
         <div className="flex items-center gap-1.5 mt-1">
-          {product.rating !== null && product.rating > 0 ? (
+          {product.rating !== null && product.rating !== undefined && product.rating > 0 ? (
             <div className="flex items-center gap-1 text-[11px] text-stone-500">
               <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
               <span className="font-bold text-stone-800">{product.rating}</span>
@@ -106,7 +108,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
 
           {/* Customizable Indicator */}
-          {product.customizationAvailable && (
+          {(product as any).customizationAvailable && (
             <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-[#E8752A] bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200/60 leading-none ml-auto">
               <Sparkles className="w-2.5 h-2.5" />
               <span>Customizable</span>

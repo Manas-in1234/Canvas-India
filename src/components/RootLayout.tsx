@@ -14,7 +14,7 @@ import { Home, Layers, Sparkles, Heart, ShoppingBag } from 'lucide-react';
 export const RootLayout: React.FC = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  
+
   const {
     cartItems,
     wishlistIds,
@@ -45,18 +45,24 @@ export const RootLayout: React.FC = () => {
   }, [pathname]);
 
   const handleSelectCategory = (slug: string) => {
+    // Canvas category navigates to the dedicated Canvas product listing page
+    // This takes explicit precedence before the generic categoryRoutes map
+    if (slug === 'canvas-prints' || slug === 'canvas') {
+      navigate('/canvas');
+      return;
+    }
+
+    // Generic category page routes (from origin/main)
     const categoryRoutes = [
-      'canvas', 'acrylic', 'posters', 'cork', 'yoga-fitness', 
+      'acrylic', 'posters', 'cork', 'yoga-fitness',
       'home-decor', 'custom-prints', 'gifts', 'bulk-order', 'corporate-orders', 'designers-architects'
     ];
     if (categoryRoutes.includes(slug)) {
       navigate(`/${slug}`);
       return;
     }
-    if (slug === 'canvas-prints') {
-      navigate('/canvas');
-      return;
-    }
+
+    // Slug aliases → canonical routes
     if (slug === 'acrylic-prints') {
       navigate('/acrylic');
       return;
@@ -74,6 +80,7 @@ export const RootLayout: React.FC = () => {
       return;
     }
 
+    // Remaining slugs: scroll to the relevant homepage section
     if (pathname !== '/') {
       navigate('/');
       setTimeout(() => {
@@ -113,7 +120,7 @@ export const RootLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#FFFDF9] text-stone-900 flex flex-col font-manrope selection:bg-[var(--accent-bg)] selection:text-[var(--accent)] pb-14 sm:pb-0">
-      
+
       {/* Royal Blue Header + White Category Nav */}
       <Header
         cartCount={totalCartCount}

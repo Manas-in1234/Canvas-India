@@ -16,6 +16,7 @@ import { ShippingDeliveryPage } from './pages/ShippingDeliveryPage';
 import { CancellationPolicyPage } from './pages/CancellationPolicyPage';
 import { RefundReturnPage } from './pages/RefundReturnPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { CanvasCategoryPage } from './pages/CanvasCategoryPage';
 
 export function App() {
   return (
@@ -25,29 +26,31 @@ export function App() {
           {/* Home */}
           <Route path="/" element={<HomePage />} />
 
-          {/* 10 Primary Category Routes + Aliases */}
-          <Route path="/canvas" element={<CategoryPage categorySlug="canvas" />} />
+          {/* Canvas — dedicated product listing page (feature/canvas-category-page) */}
+          <Route path="/canvas" element={<CanvasCategoryPage />} />
+          {/* /canvas-prints is an alias that uses the generic CategoryPage for SEO parity */}
           <Route path="/canvas-prints" element={<CategoryPage categorySlug="canvas" />} />
-          
+
+          {/* Other Primary Category Routes */}
           <Route path="/acrylic" element={<CategoryPage categorySlug="acrylic" />} />
           <Route path="/acrylic-prints" element={<CategoryPage categorySlug="acrylic" />} />
-          
+
           <Route path="/posters" element={<CategoryPage categorySlug="posters" />} />
-          
+
           <Route path="/cork" element={<CategoryPage categorySlug="cork" />} />
           <Route path="/cork-prints" element={<CategoryPage categorySlug="cork" />} />
-          
+
           <Route path="/yoga-fitness" element={<CategoryPage categorySlug="yoga-fitness" />} />
           <Route path="/home-decor" element={<CategoryPage categorySlug="home-decor" />} />
           <Route path="/custom-prints" element={<CategoryPage categorySlug="custom-prints" />} />
           <Route path="/gifts" element={<CategoryPage categorySlug="gifts" />} />
-          
+
           <Route path="/bulk-order" element={<CategoryPage categorySlug="bulk-order" />} />
           <Route path="/bulk-orders" element={<CategoryPage categorySlug="bulk-order" />} />
-          
+
           <Route path="/corporate-orders" element={<CategoryPage categorySlug="corporate-orders" />} />
           <Route path="/corporate" element={<CategoryPage categorySlug="corporate-orders" />} />
-          
+
           {/* Solutions for Designers & Architects */}
           <Route path="/designers-architects" element={<DesignersArchitectsPage />} />
 
