@@ -332,64 +332,129 @@ export const AcrylicCategoryPage: React.FC = () => {
     <div className="w-full bg-[#FFFDF9] text-stone-900 font-manrope min-h-screen">
       
       {/* ========================================================================= */}
-      {/* 1. ACRYLIC PAGE HEADER                                                    */}
+      {/* 1. PROFESSIONAL ACRYLIC HERO SECTION                                      */}
       {/* ========================================================================= */}
-      <div className="w-full border-b border-stone-200 bg-white">
-        <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 pt-4 pb-8 sm:pb-10">
+      <section className="w-full bg-gradient-to-b from-[#FFFDF9] via-[#F8F9FA] to-white border-b border-stone-200/80 overflow-hidden">
+        <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-8 sm:py-12 lg:py-14">
           
           {/* Breadcrumb: Home > Acrylic */}
-          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-stone-500 mb-5">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-stone-500 mb-6">
             <Link to="/" className="hover:text-[#0E4A93] transition-colors">Home</Link>
             <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
             <span className="font-semibold text-stone-900">Acrylic</span>
           </nav>
 
-          {/* Heading & Subtitle */}
-          <div className="max-w-4xl space-y-2.5">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200/70 text-[#0E4A93] text-[11px] font-bold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 text-[#0E4A93]" />
-              <span>Crystal Optical Acrylic Glass</span>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            
+            {/* LEFT COLUMN: Heading, Description, and CTAs */}
+            <div className="lg:col-span-7 space-y-6">
+              
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-[#0E4A93] text-xs font-black tracking-wide uppercase">
+                <Sparkles className="w-3.5 h-3.5 text-[#0E4A93]" />
+                <span>Premium Optical Acrylic Glass</span>
+              </div>
+
+              {/* Heading & Subtitle */}
+              <div className="space-y-3">
+                <h1 
+                  className="text-3xl sm:text-4xl lg:text-5xl font-black text-stone-950 tracking-tight leading-tight"
+                  style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
+                >
+                  Acrylic Prints &amp; Acrylic Wall Art
+                </h1>
+                <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-2xl">
+                  Turn your photographs, artwork and ideas into vibrant acrylic pieces made for modern homes, offices and commercial spaces.
+                </p>
+              </div>
+
+              {/* Primary Action Buttons: [ SHOP ACRYLIC ] & [ CUSTOMIZE YOUR ACRYLIC ] */}
+              <div className="flex flex-wrap items-center gap-3.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const catalogEl = document.getElementById('acrylic-catalog');
+                    if (catalogEl) {
+                      catalogEl.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="px-6 py-3.5 bg-[#0E4A93] hover:bg-[#09356A] active:scale-[0.99] text-white text-xs sm:text-sm font-black rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center gap-2"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  <span>SHOP ACRYLIC</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/customize/acrylic/acrylic-wall-display')}
+                  className="px-6 py-3.5 bg-[#E8752A] hover:bg-[#d6651d] active:scale-[0.99] text-white text-xs sm:text-sm font-black rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-200" />
+                  <span>CUSTOMIZE YOUR ACRYLIC</span>
+                </button>
+              </div>
+
+              {/* Key Trust Badges */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-stone-200/70 text-xs text-stone-600">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="font-semibold">Sub-Surface UV Inks</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="font-semibold">Diamond Polished</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="font-semibold">100% Moisture Proof</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="font-semibold">Pan-India Delivery</span>
+                </div>
+              </div>
+
             </div>
 
-            <h1 
-              className="text-2xl sm:text-4xl lg:text-5xl font-black text-stone-950 tracking-tight leading-tight"
-              style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
-            >
-              Acrylic Prints &amp; Acrylic Wall Art
-            </h1>
+            {/* RIGHT COLUMN: Acrylic Lifestyle Visual */}
+            <div className="lg:col-span-5 relative">
+              <div className="relative rounded-3xl overflow-hidden border border-stone-200 shadow-xl bg-stone-100 group aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3]">
+                <img
+                  src="/assets/acrylic/acrylic-panel-living.jpg"
+                  alt="Acrylic Prints and Wall Art in Living Room"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (target.src !== '/assets/acrylic/acrylic-custom-wall-art.jpg') {
+                      target.src = '/assets/acrylic/acrylic-custom-wall-art.jpg';
+                    }
+                  }}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                
+                {/* Acrylic Gloss Glass Sheen Layer */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/20 pointer-events-none" />
 
-            <p className="text-sm sm:text-base text-stone-600 leading-relaxed font-normal">
-              For a modern, elegant and premium appearance, acrylic prints provide sharp imagery and vibrant visual impact.
-            </p>
-          </div>
+                {/* Floating Highlight Badge */}
+                <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-md border border-stone-200/80 flex items-center gap-2.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <div>
+                    <div className="text-[11px] font-black text-stone-900 leading-tight">Crystal Clear Optical Acrylic</div>
+                    <div className="text-[10px] text-stone-500">Starting from ₹355 | Up to 60% OFF</div>
+                  </div>
+                </div>
 
-          {/* Value Highlights */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-stone-100 mt-6 text-xs text-stone-600">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-medium">Direct Sub-Surface UV Inks</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-medium">Diamond-Polished Bevels</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-medium">100% Moisture &amp; UV Proof</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-medium">Floating Wall Studs Included</span>
-            </div>
+
           </div>
 
         </div>
-      </div>
+      </section>
 
       {/* ========================================================================= */}
       {/* 2. SUBCATEGORY PILLS / TABS                                               */}
       {/* ========================================================================= */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-2xs">
+      <div id="acrylic-catalog" className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-2xs">
         <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-3">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5">
             {ACRYLIC_CHIPS.map((chip) => {

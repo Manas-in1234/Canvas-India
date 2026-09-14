@@ -242,7 +242,7 @@ export const Header: React.FC<HeaderProps> = ({
       {/* LAYER 2: ROYAL BLUE MAIN HEADER ROW (#0E4A93)                             */}
       {/* ========================================================================= */}
       <div className="w-full bg-[#0E4A93] text-white py-2.5 sm:py-3 shadow-md">
-        <div className="w-full pl-6 sm:pl-7 lg:pl-8 xl:pl-9 pr-4 sm:pr-6 lg:pr-8 xl:pr-10">
+        <div className="w-full px-2.5 sm:px-4 lg:pl-8 xl:pl-9 lg:pr-8 xl:pr-10">
           
           {/* DESKTOP HEADER ROW */}
           <div className="hidden lg:flex items-center justify-between gap-4 xl:gap-6 w-full">
@@ -404,33 +404,40 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* MOBILE MAIN HEADER ROW */}
-          <div className="flex lg:hidden items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
+          <div className="relative flex lg:hidden items-center justify-between w-full min-h-[44px]">
+            {/* 1. MOBILE CATEGORY MENU (Far Left Corner) */}
+            <div className="flex items-center shrink-0 z-10">
               <button 
                 type="button" 
                 onClick={() => setMobileMenuOpen(true)} 
-                className="p-1.5 text-white hover:bg-white/10 rounded-lg cursor-pointer"
-                aria-label="Open menu"
+                className="p-2 -ml-1 text-white hover:bg-white/10 active:bg-white/20 rounded-lg cursor-pointer flex items-center justify-center min-w-[40px] min-h-[40px]"
+                aria-label="Open navigation menu"
               >
                 <Menu className="w-6 h-6" />
               </button>
+            </div>
+
+            {/* 2. MOBILE CANVAS INDIA LOGO (Centered) */}
+            <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-auto">
               <Link 
                 to="/" 
-                className="flex items-center shrink-0"
+                className="flex items-center justify-center transition-opacity hover:opacity-95 focus:outline-none"
+                title="Canvas India"
               >
                 <img
                   src="/canvas-india-official-logo.png"
-                  alt="Canvas India"
-                  className="w-[115px] sm:w-[125px] h-auto object-contain block select-none"
+                  alt="Canvass India"
+                  className="h-7 sm:h-8 md:h-9 w-auto object-contain block select-none"
                 />
               </Link>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            {/* 3. RIGHT ACTIONS (Search, Wishlist, Cart) */}
+            <div className="flex items-center gap-0.5 sm:gap-1.5 shrink-0 z-10">
               <button
                 type="button"
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="p-2 text-white hover:bg-white/10 rounded-lg cursor-pointer"
+                className="p-2 text-white hover:bg-white/10 active:bg-white/20 rounded-lg cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px]"
                 aria-label="Search"
               >
                 <Search className="w-5 h-5" />
@@ -438,7 +445,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={onOpenWishlist}
-                className="p-2 text-white hover:bg-white/10 rounded-lg relative cursor-pointer"
+                className="p-2 text-white hover:bg-white/10 active:bg-white/20 rounded-lg relative cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px]"
                 aria-label="Wishlist"
               >
                 <Heart className="w-5 h-5" />
@@ -451,7 +458,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={onOpenCart}
-                className="relative p-2 text-white hover:bg-white/10 rounded-lg cursor-pointer"
+                className="relative p-2 text-white hover:bg-white/10 active:bg-white/20 rounded-lg cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px]"
                 aria-label="Cart"
               >
                 <ShoppingCart className="w-5 h-5" />
