@@ -21,7 +21,12 @@ import {
 import { Product } from '../types';
 import { useShop } from '../context/ShopContext';
 import { ProductImage } from '../components/ProductImage';
-import { CUSTOMER_REVIEWS } from '../data/storeData';
+import { 
+  AcrylicProductReview, 
+  getProductReviews, 
+  saveProductReview, 
+  getRelatedAcrylicProducts 
+} from '../data/acrylicReviews';
 
 export interface AcrylicProductDetailPageProps {
   product: Product;
@@ -29,7 +34,7 @@ export interface AcrylicProductDetailPageProps {
 
 export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> = ({ product }) => {
   const navigate = useNavigate();
-  const { wishlistIds, onToggleWishlist, onAddToCart } = useShop();
+  const { allProducts, wishlistIds, onToggleWishlist, onAddToCart } = useShop();
 
   const isWishlisted = wishlistIds.includes(product.id);
 
@@ -92,6 +97,77 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   const handleNextImage = () => {
     setActiveImageIndex((prev) => (prev === galleryImages.length - 1 ? 0 : prev + 1));
   };
+
+
+  // Product Reviews State for this specific product
+  const [reviews, setReviews] = useState<AcrylicProductReview[]>(() => {
+    return getProductReviews(product.id);
+  });
+
+  useEffect(() => {
+    setReviews(getProductReviews(product.id));
+  }, [product.id]);
+
+  const averageRating = useMemo(() => {
+    if (!reviews.length) return Number(product.rating || 4.8);
+    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+    return Number((sum / reviews.length).toFixed(1));
+  }, [reviews, product.rating]);
+
+  const totalReviewsCount = useMemo(() => {
+    return (product.reviewsCount || 48) + Math.max(0, reviews.length - 2);
+  }, [reviews.length, product.reviewsCount]);
+
+  // Review Modal State
+  const [reviewModalOpen, setReviewModalOpen] = useState<boolean>(false);
+  const [reviewRating, setReviewRating] = useState<number>(5);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [reviewText, setReviewText] = useState<string>('');
+  const [reviewerName, setReviewerName] = useState<string>('');
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [reviewSuccessMessage, setReviewSuccessMessage] = useState<string | null>(null);
+
+  const handleOpenReviewModal = () => {
+    setReviewRating(5);
+    setHoverRating(0);
+    setReviewText('');
+    setReviewerName('');
+    setReviewError(null);
+    setReviewModalOpen(true);
+  };
+
+  const handleCloseReviewModal = () => {
+    setReviewModalOpen(false);
+    setReviewError(null);
+  };
+
+  const handleSubmitReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewRating || reviewRating < 1 || reviewRating > 5) {
+      setReviewError('Please select a rating between 1 and 5 stars.');
+      return;
+    }
+    if (!reviewText.trim() || reviewText.trim().length < 5) {
+      setReviewError('Please write at least a few words describing your experience (minimum 5 characters).');
+      return;
+    }
+
+    const created = saveProductReview(product.id, {
+      author: reviewerName.trim() || 'Verified Customer',
+      rating: reviewRating,
+      comment: reviewText.trim(),
+    });
+
+    setReviews(prev => [created, ...prev]);
+    setReviewSuccessMessage('Thank you! Your review for "' + product.name + '" has been added.');
+    setTimeout(() => setReviewSuccessMessage(null), 4000);
+    handleCloseReviewModal();
+  };
+
+  // Related Acrylic Products (Product-specific, excluding current product)
+  const relatedAcrylics = useMemo(() => {
+    return getRelatedAcrylicProducts(product.id, allProducts, 4);
+  }, [product.id, allProducts]);
 
   // Dynamic Price Calculation
   const unitPrice = useMemo(() => {
@@ -566,7 +642,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
               { id: 'description', label: 'Description' },
               { id: 'specifications', label: 'Specifications' },
               { id: 'shipping', label: 'Shipping & Delivery' },
-              { id: 'reviews', label: `Reviews (${product.reviewsCount || 48})` },
+              { id: 'reviews', label: `Reviews (${totalReviewsCount})` },
             ].map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -662,30 +738,59 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
             )}
 
             {activeTab === 'reviews' && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1 text-amber-500">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    ))}
+              <div className="space-y-6 text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-stone-50 rounded-2xl border border-stone-200">
+                  <div className="flex items-center gap-3">
+                    <div className="flex text-amber-500">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star key={s} className={`w-4 h-4 ${s <= Math.round(averageRating) ? 'fill-amber-400 text-amber-400' : 'text-stone-300'}`} />
+                      ))}
+                    </div>
+                    <span className="font-extrabold text-stone-900 text-sm">{averageRating} out of 5</span>
+                    <span className="text-xs text-stone-500">({totalReviewsCount} Customer Reviews)</span>
                   </div>
-                  <span className="font-bold text-stone-900 text-sm">{product.rating || '4.8'} out of 5</span>
-                  <span className="text-xs text-stone-500">Based on verified customer orders</span>
+
+                  <button
+                    type="button"
+                    onClick={handleOpenReviewModal}
+                    className="px-4 py-2 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer self-start sm:self-auto"
+                  >
+                    <Star className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
+                    <span>+ Add Review</span>
+                  </button>
                 </div>
 
                 <div className="space-y-3 pt-2">
-                  {CUSTOMER_REVIEWS.slice(0, 3).map((rev) => (
-                    <div key={rev.id} className="p-4 bg-stone-50 rounded-xl border border-stone-200 space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-stone-900">{rev.name} ({rev.city})</span>
-                        <span className="text-stone-400">{rev.date}</span>
+                  {reviews.length > 0 ? (
+                    reviews.map((rev) => (
+                      <div key={rev.id} className="p-4 bg-stone-50 rounded-xl border border-stone-200 space-y-1.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-stone-900">{rev.author}</span>
+                            {rev.verified && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">
+                                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                                <span>Verified Buyer</span>
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-stone-400 text-[11px]">{rev.date}</span>
+                        </div>
+                        <div className="flex text-amber-400 text-xs">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <span key={s} className={s <= rev.rating ? 'text-amber-400' : 'text-stone-300'}>
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-xs text-stone-600 italic leading-relaxed">&ldquo;{rev.comment}&rdquo;</p>
                       </div>
-                      <div className="flex text-amber-400 text-xs">
-                        {'★'.repeat(rev.rating)}
-                      </div>
-                      <p className="text-xs text-stone-600">{rev.review}</p>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center text-xs text-stone-500 bg-stone-50 rounded-xl border border-stone-200">
+                      No customer reviews yet for {product.name}. Be the first to add your review!
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             )}
@@ -744,6 +849,298 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
           </div>
         </div>
       </section>
+
+
+      {/* ========================================================================= */}
+      {/* 6. DEDICATED CUSTOMER REVIEWS SECTION                                      */}
+      {/* ========================================================================= */}
+      <section className="w-full bg-white border-t border-stone-200 py-12 sm:py-16 text-left">
+        <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-stone-200">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#0E4A93] mb-1">
+                Verified Customer Feedback
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">
+                CUSTOMER REVIEWS
+              </h2>
+              <div className="flex items-center gap-2 mt-2">
+                <div className="flex text-amber-500">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star 
+                      key={s} 
+                      className={`w-4 h-4 ${s <= Math.round(averageRating) ? 'fill-amber-400 text-amber-400' : 'text-stone-300'}`} 
+                    />
+                  ))}
+                </div>
+                <span className="font-extrabold text-stone-900 text-sm">
+                  {averageRating}
+                </span>
+                <span className="text-xs text-stone-500">
+                  • {totalReviewsCount} Customer Reviews
+                </span>
+              </div>
+            </div>
+
+            {/* + Add Review Button */}
+            <div>
+              <button
+                type="button"
+                onClick={handleOpenReviewModal}
+                className="px-5 py-2.5 bg-[#0E4A93] hover:bg-[#09356A] active:scale-[0.99] text-white text-xs font-bold rounded-xl shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center gap-2"
+              >
+                <Star className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
+                <span>+ Add Review</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Product-Specific Reviews List */}
+          <div className="py-6 divide-y divide-stone-200 max-w-4xl space-y-6">
+            {reviews.length > 0 ? (
+              reviews.map((rev) => (
+                <div key={rev.id} className="pt-6 first:pt-0 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex text-amber-500 text-xs">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star 
+                            key={s} 
+                            className={`w-3.5 h-3.5 ${s <= rev.rating ? 'fill-amber-400 text-amber-400' : 'text-stone-300'}`} 
+                          />
+                        ))}
+                      </div>
+                      <span className="font-bold text-xs sm:text-sm text-stone-900">
+                        {rev.author}
+                      </span>
+                      {rev.verified && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
+                          <CheckCircle2 className="w-2.5 h-2.5" />
+                          <span>Verified Purchase</span>
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[11px] text-stone-400 font-medium">
+                      {rev.date}
+                    </span>
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-stone-700 leading-relaxed italic">
+                    &ldquo;{rev.comment}&rdquo;
+                  </p>
+                </div>
+              ))
+            ) : (
+              <div className="py-8 text-center text-xs text-stone-500 bg-stone-50 rounded-xl border border-stone-200">
+                No customer reviews yet for {product.name}. Be the first to share your experience!
+              </div>
+            )}
+          </div>
+
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 7. MORE LIKE THIS (Related Acrylic Products, Product-Specific)            */}
+      {/* ========================================================================= */}
+      {relatedAcrylics.length > 0 && (
+        <section className="w-full bg-stone-50 border-t border-stone-200 py-12 sm:py-16 text-left">
+          <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
+            
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#0E4A93] mb-1">
+                  Explore Similar Formats
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">
+                  MORE LIKE THIS
+                </h2>
+              </div>
+              <Link 
+                to="/acrylic" 
+                className="text-xs font-bold text-[#0E4A93] hover:underline flex items-center gap-1"
+              >
+                <span>View All Acrylics</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            {/* Related Acrylic Products Grid (Compact Cards, Non-nested) */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+              {relatedAcrylics.map((rel) => (
+                <div 
+                  key={rel.id}
+                  className="group bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
+                >
+                  <div>
+                    {/* Image */}
+                    <Link to={`/products/${rel.id}`} className="block relative aspect-square overflow-hidden bg-stone-100">
+                      <img 
+                        src={rel.image} 
+                        alt={rel.name}
+                        onError={(e) => {
+                          e.currentTarget.src = '/assets/acrylic/acrylic-fallback.jpg';
+                        }}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-2.5 left-2.5 bg-[#0E4A93] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs">
+                        Acrylic
+                      </div>
+                    </Link>
+
+                    {/* Content */}
+                    <div className="p-3.5 space-y-1 text-left">
+                      <div className="flex items-center gap-1 text-amber-500 text-[11px] font-bold">
+                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                        <span>{rel.rating || '4.8'}</span>
+                        <span className="text-stone-400 font-normal">({rel.reviewsCount || 48})</span>
+                      </div>
+
+                      <Link to={`/products/${rel.id}`} className="block">
+                        <h3 className="text-xs sm:text-sm font-bold text-stone-900 group-hover:text-[#0E4A93] transition-colors truncate">
+                          {rel.name}
+                        </h3>
+                      </Link>
+
+                      <div className="text-xs sm:text-sm font-extrabold text-stone-900 pt-0.5">
+                        ₹{rel.price.toLocaleString('en-IN')}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* View Product CTA */}
+                  <div className="p-3.5 pt-0">
+                    <Link 
+                      to={`/products/${rel.id}`}
+                      className="w-full py-2 px-3 bg-stone-100 hover:bg-[#0E4A93] text-stone-800 hover:text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                    >
+                      <span>View Product</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </section>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 8. ADD REVIEW MODAL                                                       */}
+      {/* ========================================================================= */}
+      {reviewModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in select-none">
+          <div className="bg-white rounded-2xl shadow-2xl border border-stone-200 max-w-lg w-full p-6 text-left space-y-4">
+            <div className="flex items-start justify-between border-b border-stone-100 pb-3">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#0E4A93]">Customer Review</span>
+                <h3 className="text-base font-extrabold text-stone-900">
+                  Write a Review for {product.name}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={handleCloseReviewModal}
+                className="p-1 text-stone-400 hover:text-stone-700 rounded-lg cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitReview} className="space-y-4">
+              {/* Star Rating */}
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">
+                  Overall Rating:
+                </label>
+                <div className="flex items-center gap-1.5">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className="p-1 text-xl cursor-pointer transition-transform hover:scale-110 focus:outline-none"
+                    >
+                      <span className={(hoverRating || reviewRating) >= star ? 'text-amber-400' : 'text-stone-300'}>
+                        ★
+                      </span>
+                    </button>
+                  ))}
+                  <span className="text-xs font-bold text-stone-600 ml-2">
+                    {(hoverRating || reviewRating)} / 5 Stars
+                  </span>
+                </div>
+              </div>
+
+              {/* Review Text */}
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">
+                  Review:
+                </label>
+                <textarea
+                  value={reviewText}
+                  onChange={(e) => {
+                    setReviewText(e.target.value);
+                    if (reviewError) setReviewError(null);
+                  }}
+                  rows={4}
+                  placeholder="Write your review about print clarity, glass thickness, beveling, packaging..."
+                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl focus:outline-none focus:border-[#0E4A93] focus:ring-1 focus:ring-[#0E4A93]"
+                  required
+                />
+              </div>
+
+              {/* Reviewer Name */}
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">
+                  Name:
+                </label>
+                <input
+                  type="text"
+                  value={reviewerName}
+                  onChange={(e) => setReviewerName(e.target.value)}
+                  placeholder="Your name (e.g. Priya Sharma)"
+                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl focus:outline-none focus:border-[#0E4A93] focus:ring-1 focus:ring-[#0E4A93]"
+                />
+              </div>
+
+              {reviewError && (
+                <div className="text-xs font-bold text-rose-600 bg-rose-50 p-2.5 rounded-lg border border-rose-200">
+                  {reviewError}
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-stone-100">
+                <button
+                  type="button"
+                  onClick={handleCloseReviewModal}
+                  className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-xl shadow-xs hover:shadow-md transition-all cursor-pointer"
+                >
+                  Submit Review
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Success Notification Toast */}
+      {reviewSuccessMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-emerald-600 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 animate-in slide-in-from-bottom-2">
+          <CheckCircle2 className="w-4 h-4 text-white" />
+          <span>{reviewSuccessMessage}</span>
+        </div>
+      )}
 
     </div>
   );

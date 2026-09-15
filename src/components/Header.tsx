@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Search, 
   ShoppingCart, 
@@ -21,7 +21,10 @@ import {
   Sliders,
   Grid,
   Phone,
-  Flame
+  Flame,
+  Image as ImageIcon,
+  Activity,
+  Home as HomeIcon
 } from 'lucide-react';
 import { Product } from '../types';
 import { ProductImage } from './ProductImage';
@@ -45,6 +48,94 @@ interface HeaderProps {
   onOpenAccount?: () => void;
 }
 
+export interface AllCategoryMenuItem {
+  name: string;
+  slug: string;
+  route: string;
+  image: string;
+  description: string;
+}
+
+export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
+  {
+    name: 'Canvas',
+    slug: 'canvas',
+    route: '/canvas',
+    image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=400&auto=format&fit=crop&q=80',
+    description: 'Museum-grade 380 GSM cotton canvas prints',
+  },
+  {
+    name: 'Acrylic',
+    slug: 'acrylic',
+    route: '/acrylic',
+    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=400&auto=format&fit=crop&q=80',
+    description: 'High-gloss 5mm crystal clear acrylic glass prints',
+  },
+  {
+    name: 'Posters & Custom Wall Graphics',
+    slug: 'posters',
+    route: '/posters',
+    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    description: 'Custom posters and commercial wall graphics',
+  },
+  {
+    name: 'Cork',
+    slug: 'cork',
+    route: '/cork',
+    image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=400&auto=format&fit=crop&q=80',
+    description: 'Natural 8mm eco-friendly cork pinboards',
+  },
+  {
+    name: 'Yoga & Fitness',
+    slug: 'yoga-fitness',
+    route: '/yoga-fitness',
+    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&auto=format&fit=crop&q=80',
+    description: 'Customized yoga mats and wellness gear',
+  },
+  {
+    name: 'Home Décor',
+    slug: 'home-decor',
+    route: '/home-decor',
+    image: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=400&auto=format&fit=crop&q=80',
+    description: 'Curated decorative and interior wall collections',
+  },
+  {
+    name: 'Custom Prints',
+    slug: 'custom-prints',
+    route: '/custom-prints',
+    image: 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=400&auto=format&fit=crop&q=80',
+    description: 'Personalized prints with custom sizes & photos',
+  },
+  {
+    name: 'Gifts & Occasions',
+    slug: 'gifts',
+    route: '/gifts',
+    image: 'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?w=400&auto=format&fit=crop&q=80',
+    description: 'Special photo gifts for birthdays & celebrations',
+  },
+  {
+    name: 'Bulk Order',
+    slug: 'bulk-order',
+    route: '/bulk-order',
+    image: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?w=400&auto=format&fit=crop&q=80',
+    description: 'Volume discounts for events, schools & resellers',
+  },
+  {
+    name: 'Corporate Orders',
+    slug: 'corporate-orders',
+    route: '/corporate-orders',
+    image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80',
+    description: 'Office branding, corporate kits & GST billing',
+  },
+  {
+    name: 'Designers & Architects',
+    slug: 'designers-architects',
+    route: '/designers-architects',
+    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&auto=format&fit=crop&q=80',
+    description: 'Turnkey interior wall solutions for trade professionals',
+  },
+];
+
 export const Header: React.FC<HeaderProps> = ({
   cartCount,
   wishlistCount,
@@ -58,15 +149,35 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAccount,
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [allCategoriesOpen, setAllCategoriesOpen] = useState(false);
-  const [activeNav, setActiveNav] = useState('canvas-prints');
+
+  // Dynamic active category state derived from current pathname
+  const activeNav = useMemo(() => {
+    const path = location.pathname.toLowerCase();
+    if (path === '/canvas' || path === '/canvas-prints' || path.startsWith('/customize/canvas')) return 'canvas';
+    if (path === '/acrylic' || path === '/acrylic-prints' || path.startsWith('/customize/acrylic')) return 'acrylic';
+    if (path === '/posters') return 'posters';
+    if (path === '/cork' || path === '/cork-prints') return 'cork';
+    if (path === '/yoga-fitness') return 'yoga-fitness';
+    if (path === '/home-decor') return 'home-decor';
+    if (path === '/custom-prints') return 'custom-prints';
+    if (path === '/gifts') return 'gifts';
+    if (path === '/corporate-orders' || path === '/corporate') return 'corporate-orders';
+    if (path === '/bulk-order' || path === '/bulk-orders') return 'bulk-order';
+    if (path === '/designers-architects') return 'designers-architects';
+    return '';
+  }, [location.pathname]);
   const [activeMegaMenu, setActiveMegaMenu] = useState<string | null>(null);
   const [expandedMobileCategory, setExpandedMobileCategory] = useState<string | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const allCatRef = useRef<HTMLDivElement>(null);
+  const allCatDropdownRef = useRef<HTMLDivElement>(null);
+  const megaMenuDropdownRef = useRef<HTMLDivElement>(null);
+  const megaMenuTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Dropdown panels are rendered via a portal (see below) so the horizontally
   // scrollable category nav row (overflow-x-auto) doesn't clip them — per the
@@ -74,6 +185,26 @@ export const Header: React.FC<HeaderProps> = ({
   // silently clips any absolutely-positioned dropdown nested inside that row.
   const [allCatMenuPos, setAllCatMenuPos] = useState<{ top: number; left: number } | null>(null);
   const [megaMenuPos, setMegaMenuPos] = useState<{ top: number; left: number } | null>(null);
+
+  // Category bar shopping categories (Excludes Bulk Order, which sits in the main header after Cart)
+  const CATEGORY_BAR_ITEMS = useMemo(() => {
+    return PRIMARY_CATEGORIES.filter((cat) => cat.slug !== 'bulk-order');
+  }, []);
+
+  // Close open dropdown menus on scroll or resize to prevent detached floating elements
+  useEffect(() => {
+    const handleScrollOrResize = () => {
+      setActiveMegaMenu(null);
+      setAllCategoriesOpen(false);
+      setSearchOpen(false);
+    };
+    window.addEventListener('scroll', handleScrollOrResize, { passive: true });
+    window.addEventListener('resize', handleScrollOrResize, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScrollOrResize);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, []);
 
   // Helper to resolve icon from primary category data
   const getCategoryIcon = (iconName: string) => {
@@ -85,29 +216,49 @@ export const Header: React.FC<HeaderProps> = ({
       case 'Gift': return Gift;
       case 'Package': return Package;
       case 'Building2': return Building2;
+      case 'Image': return ImageIcon;
+      case 'Activity': return Activity;
+      case 'Home': return HomeIcon;
       default: return Sliders;
     }
   };
 
-  // Close mega-menu or search dropdown on outside click. The mega-menu and
-  // "All Categories" dropdowns are portaled to <body> (so the scrollable nav
-  // row can't clip them), so they live outside <header> and outside their
-  // trigger's ref in the DOM tree — treat clicks inside those portals as
-  // "inside" too, or every click on a dropdown link would close the menu on
-  // mousedown before its own click handler ever fires.
+  // Close menus on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveMegaMenu(null);
+        setAllCategoriesOpen(false);
+        setSearchOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Close mega-menu or search dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const insidePortal = !!target.closest('[data-header-portal]');
-      if (!target.closest('header') && !insidePortal) {
-        setActiveMegaMenu(null);
+
+      // Handle All Categories dropdown outside click
+      const clickedInsideAllCatTrigger = allCatRef.current && allCatRef.current.contains(target);
+      const clickedInsideAllCatMenu = (allCatDropdownRef.current && allCatDropdownRef.current.contains(target)) || target.closest('[data-header-portal="all-categories"]');
+      if (!clickedInsideAllCatTrigger && !clickedInsideAllCatMenu) {
         setAllCategoriesOpen(false);
       }
+
+      // Handle Mega Menu outside click
+      const clickedInsideMegaTrigger = target.closest('[data-mega-menu-trigger]');
+      const clickedInsideMegaMenu = (megaMenuDropdownRef.current && megaMenuDropdownRef.current.contains(target)) || target.closest('[data-header-portal="mega-menu"]');
+      if (!clickedInsideMegaTrigger && !clickedInsideMegaMenu) {
+        setActiveMegaMenu(null);
+      }
+
+      // Handle Search dropdown outside click
       if (searchRef.current && !searchRef.current.contains(target)) {
         setSearchOpen(false);
-      }
-      if (allCatRef.current && !allCatRef.current.contains(target) && !insidePortal) {
-        setAllCategoriesOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -137,11 +288,40 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const handleNavClick = (slug: string) => {
-    setActiveNav(slug);
     onSelectCategory(slug);
     setActiveMegaMenu(null);
     setAllCategoriesOpen(false);
     setMobileMenuOpen(false);
+  };
+
+  const handleToggleAllCategories = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!allCategoriesOpen && allCatRef.current) {
+      const r = allCatRef.current.getBoundingClientRect();
+      setAllCatMenuPos({ top: r.bottom + 6, left: Math.max(16, r.left) });
+      setAllCategoriesOpen(true);
+      setActiveMegaMenu(null);
+    } else {
+      setAllCategoriesOpen(false);
+    }
+  };
+
+  const handleMegaMenuEnter = (slug: string, rect: DOMRect) => {
+    if (megaMenuTimeoutRef.current) {
+      clearTimeout(megaMenuTimeoutRef.current);
+      megaMenuTimeoutRef.current = null;
+    }
+    const estWidth = Math.min(850, window.innerWidth * 0.9);
+    const left = Math.min(Math.max(rect.left, 16), window.innerWidth - estWidth - 16);
+    setMegaMenuPos({ top: rect.bottom + 2, left });
+    setActiveMegaMenu(slug);
+    setAllCategoriesOpen(false);
+  };
+
+  const handleMegaMenuLeave = () => {
+    megaMenuTimeoutRef.current = setTimeout(() => {
+      setActiveMegaMenu(null);
+    }, 120);
   };
 
   const handleItemClick = (slug: string, actionType?: 'category' | 'quote' | 'customize') => {
@@ -336,8 +516,8 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            {/* 3. HEADER ACTIONS: Account, Wishlist, Cart + "Get a Quote →" Button */}
-            <div className="flex items-center gap-4 xl:gap-6 shrink-0 text-xs sm:text-sm font-semibold">
+            {/* 3. HEADER ACTIONS: Account, Wishlist, Cart, Bulk Order, Get a Quote */}
+            <div className="flex items-center gap-3 lg:gap-3.5 xl:gap-5 shrink-0 text-xs sm:text-sm font-semibold">
               
               {/* Account */}
               <button 
@@ -379,7 +559,17 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </button>
 
-            </div>
+              {/* Bulk Order */}
+              <Link
+                to="/bulk-order"
+                className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors cursor-pointer py-1 whitespace-nowrap"
+                title="Bulk & Corporate Orders"
+              >
+                <Package className="w-4 h-4 text-white/90" strokeWidth={2} />
+                <span>Bulk Order</span>
+              </Link>
+
+              </div>
 
           </div>
 
@@ -487,68 +677,84 @@ export const Header: React.FC<HeaderProps> = ({
             
             <div className="flex items-center gap-1 xl:gap-2 overflow-x-auto scrollbar-none py-1">
               
-              {/* 1. "ALL CATEGORIES ↓" DROPDOWN BUTTON (Far Left) */}
+              {/* 1. "ALL CATEGORIES" DROPDOWN BUTTON (Far Left) */}
               <div
                 ref={allCatRef}
-                className="relative"
-                onMouseEnter={(e) => {
-                  const r = e.currentTarget.getBoundingClientRect();
-                  setAllCatMenuPos({ top: r.bottom + 4, left: r.left });
-                  setAllCategoriesOpen(true);
-                }}
-                onMouseLeave={() => setAllCategoriesOpen(false)}
+                className="relative shrink-0"
               >
                 <button
                   type="button"
-                  onClick={(e) => {
-                    const r = e.currentTarget.getBoundingClientRect();
-                    setAllCatMenuPos({ top: r.bottom + 4, left: r.left });
-                    setAllCategoriesOpen(!allCategoriesOpen);
-                  }}
-                  className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200/90 text-[#0E4A93] font-bold rounded-lg transition-colors flex items-center gap-2 cursor-pointer whitespace-nowrap shadow-2xs border border-stone-200/80"
+                  onClick={handleToggleAllCategories}
+                  className={`px-3.5 py-2 font-bold rounded-lg transition-colors flex items-center gap-2 cursor-pointer whitespace-nowrap shadow-2xs border ${
+                    allCategoriesOpen 
+                      ? 'bg-stone-200 text-[#0E4A93] border-blue-300/70' 
+                      : 'bg-stone-100 hover:bg-stone-200/90 text-[#0E4A93] border-stone-200/80'
+                  }`}
+                  aria-expanded={allCategoriesOpen}
+                  aria-haspopup="true"
                 >
                   <Grid className="w-4 h-4 text-[#0E4A93]" />
                   <span>All Categories</span>
                   <ChevronDown className={`w-3.5 h-3.5 text-[#0E4A93] transition-transform duration-200 ${allCategoriesOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* All Categories Dropdown Menu — portaled to <body> so the
-                    scrollable nav row above can't clip it (see megaMenuPos comment) */}
+                {/* All Categories Dropdown Menu */}
                 {allCategoriesOpen && allCatMenuPos && createPortal(
                   <div
+                    ref={allCatDropdownRef}
                     data-header-portal="all-categories"
-                    className="fixed w-72 bg-white rounded-xl shadow-2xl border border-stone-200 z-50 p-2 text-left animate-in fade-in slide-in-from-top-2 select-none"
+                    className="fixed w-[340px] sm:w-[360px] bg-white rounded-2xl shadow-2xl border border-stone-200/90 z-50 p-2 text-left animate-in fade-in slide-in-from-top-2 select-none"
                     style={{ top: allCatMenuPos.top, left: allCatMenuPos.left }}
-                    onMouseEnter={() => setAllCategoriesOpen(true)}
-                    onMouseLeave={() => setAllCategoriesOpen(false)}
                   >
-                    <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-stone-400 border-b border-stone-100">
-                      Browse All Categories
+                    <div className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-stone-500 border-b border-stone-100 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-[#0E4A93]">
+                        <Grid className="w-3.5 h-3.5 text-[#0E4A93]" />
+                        <span>All Categories</span>
+                      </span>
+                      <span className="text-[10px] font-semibold text-stone-400">11 Categories</span>
                     </div>
-                    <div className="py-1 space-y-0.5 max-h-[380px] overflow-y-auto scrollbar-none">
-                      {CATEGORIES.map((cat) => (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => handleItemClick(cat.slug, 'category')}
-                          className="w-full text-left px-3 py-2 text-xs text-stone-700 hover:text-[#0E4A93] hover:bg-blue-50/60 rounded-lg transition-colors font-medium flex items-center justify-between group cursor-pointer"
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <img src={cat.image} alt={cat.name} className="w-7 h-7 rounded-md object-cover border border-stone-200" />
-                            <span>{cat.name}</span>
-                          </div>
-                          <ArrowRight className="w-3.5 h-3.5 text-stone-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-                        </button>
-                      ))}
-                    </div>
-                    <div className="p-2 border-t border-stone-100 bg-stone-50 rounded-b-lg">
-                      <button
-                        type="button"
-                        onClick={onOpenQuote}
-                        className="w-full py-1.5 bg-[#E8752A] hover:bg-[#D3631A] text-white text-[11px] font-bold rounded-md transition-colors flex items-center justify-center gap-1 shadow-2xs"
-                      >
-                        <span>Need Custom Dimensions? Request Quote →</span>
-                      </button>
+                    
+                    <div className="py-1 space-y-0.5 max-h-[420px] overflow-y-auto scrollbar-none">
+                      {ALL_CATEGORIES_MENU_ITEMS.map((cat) => {
+                        const isCatActive = activeNav === cat.slug;
+                        return (
+                          <button
+                            key={cat.slug}
+                            type="button"
+                            onClick={() => {
+                              setAllCategoriesOpen(false);
+                              setActiveMegaMenu(null);
+                              onSelectCategory(cat.slug);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-xl transition-all flex items-center justify-between group cursor-pointer ${
+                              isCatActive 
+                                ? 'bg-blue-50/80 text-[#0E4A93] font-semibold' 
+                                : 'text-stone-700 hover:text-[#0E4A93] hover:bg-stone-50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                              <img 
+                                src={cat.image} 
+                                alt={cat.name} 
+                                className="w-8 h-8 rounded-lg object-cover border border-stone-200/80 shrink-0" 
+                              />
+                              <div className="min-w-0">
+                                <div className={`text-xs truncate ${isCatActive ? 'font-bold text-[#0E4A93]' : 'font-semibold text-stone-800 group-hover:text-[#0E4A93]'}`}>
+                                  {cat.name}
+                                </div>
+                                <div className="text-[10px] text-stone-400 truncate">
+                                  {cat.description}
+                                </div>
+                              </div>
+                            </div>
+                            <ArrowRight className={`w-3.5 h-3.5 shrink-0 transition-all ${
+                              isCatActive 
+                                ? 'text-[#0E4A93] opacity-100 translate-x-0.5' 
+                                : 'text-stone-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:text-[#0E4A93]'
+                            }`} />
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>,
                   document.body
@@ -558,8 +764,8 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Separator */}
               <div className="h-5 w-[1px] bg-stone-200 mx-1" />
 
-              {/* 2. EXACT 7 PRIMARY CATEGORIES IN EXACT ORDER */}
-              {PRIMARY_CATEGORIES.map((cat, idx) => {
+              {/* 2. SHOPPING CATEGORIES (Exact 9 Categories, Bulk Order moved to main header) */}
+              {CATEGORY_BAR_ITEMS.map((cat, idx) => {
                 const Icon = getCategoryIcon(cat.iconName);
                 const isActive = activeNav === cat.slug;
                 const isMenuOpen = activeMegaMenu === cat.slug;
@@ -567,41 +773,28 @@ export const Header: React.FC<HeaderProps> = ({
 
                 return (
                   <React.Fragment key={cat.slug}>
-                    {/* Subtle separator between items */}
                     {idx > 0 && (
                       <div className="hidden xl:block h-4 w-[1px] bg-stone-200/80 shrink-0" />
                     )}
 
                     <div
+                      data-mega-menu-trigger={cat.slug}
                       className="relative"
                       onMouseEnter={(e) => {
                         const r = e.currentTarget.getBoundingClientRect();
-                        const estWidth = Math.min(850, window.innerWidth * 0.9);
-                        const left = Math.min(Math.max(r.left, 16), window.innerWidth - estWidth - 16);
-                        setMegaMenuPos({ top: r.bottom + 4, left });
-                        setActiveMegaMenu(cat.slug);
+                        handleMegaMenuEnter(cat.slug, r);
                       }}
-                      onMouseLeave={() => setActiveMegaMenu(null)}
+                      onMouseLeave={handleMegaMenuLeave}
                     >
                       <button
                         type="button"
-                        onClick={(e) => {
-                          if (activeMegaMenu === cat.slug) {
-                            handleItemClick(cat.slug, 'category');
-                          } else {
-                            const r = e.currentTarget.getBoundingClientRect();
-                            const estWidth = Math.min(850, window.innerWidth * 0.9);
-                            const left = Math.min(Math.max(r.left, 16), window.innerWidth - estWidth - 16);
-                            setMegaMenuPos({ top: r.bottom + 4, left });
-                            setActiveMegaMenu(cat.slug);
-                          }
-                        }}
-                        className={`px-2 xl:px-2.5 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                        onClick={() => handleNavClick(cat.slug)}
+                        className={`px-2 xl:px-2.5 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap border ${
                           isActive
-                            ? 'text-[#0E4A93] font-bold bg-blue-50/70 border border-blue-200/60'
+                            ? 'text-[#0E4A93] font-bold bg-blue-50/70 border-blue-200/60 shadow-2xs'
                             : isMenuOpen
-                              ? 'text-[#0E4A93] font-bold bg-stone-100'
-                              : 'text-[#111827] hover:text-[#0E4A93] hover:bg-stone-50 font-semibold'
+                              ? 'text-[#0E4A93] font-bold bg-stone-100 border-transparent'
+                              : 'text-[#111827] hover:text-[#0E4A93] hover:bg-stone-50 font-semibold border-transparent'
                         }`}
                       >
                         <Icon className={`w-3.5 h-3.5 ${
@@ -613,18 +806,21 @@ export const Header: React.FC<HeaderProps> = ({
                         }`} />
                       </button>
 
-                      {/* Mega-Menu Dropdown Panel — portaled to <body> so the horizontally
-                          scrollable nav row (overflow-x-auto) can't clip it. Per the CSS
-                          overflow spec, overflow-x: auto forces overflow-y to auto too,
-                          which silently clips an absolutely-positioned dropdown nested
-                          inside that row instead of showing it below the nav bar. */}
+                      {/* Mega-Menu Dropdown Panel */}
                       {isMenuOpen && menuData && megaMenuPos && createPortal(
                         <div
+                          ref={megaMenuDropdownRef}
                           data-header-portal="mega-menu"
                           className="fixed w-[850px] max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-stone-200 z-50 p-5 lg:p-6 transition-all duration-200 animate-in fade-in slide-in-from-top-2 text-left select-none whitespace-normal"
                           style={{ top: megaMenuPos.top, left: megaMenuPos.left }}
-                          onMouseEnter={() => setActiveMegaMenu(cat.slug)}
-                          onMouseLeave={() => setActiveMegaMenu(null)}
+                          onMouseEnter={() => {
+                            if (megaMenuTimeoutRef.current) {
+                              clearTimeout(megaMenuTimeoutRef.current);
+                              megaMenuTimeoutRef.current = null;
+                            }
+                            setActiveMegaMenu(cat.slug);
+                          }}
+                          onMouseLeave={handleMegaMenuLeave}
                         >
                           <div className="grid grid-cols-12 gap-5 items-start">
                             {/* Column 1: Group 1 (4 cols) */}
@@ -724,12 +920,6 @@ export const Header: React.FC<HeaderProps> = ({
               })}
             </div>
 
-            {/* Right Side: Quick Deal Indicator */}
-            <div className="hidden 2xl:flex items-center gap-2 text-xs font-bold text-[#E8752A]">
-              <Flame className="w-4 h-4 fill-orange-500 text-orange-500" />
-              <span>Great Indian Print Sale Live</span>
-            </div>
-
           </nav>
         </div>
       </div>
@@ -748,7 +938,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span>All</span>
         </button>
 
-        {PRIMARY_CATEGORIES.map((cat) => {
+        {CATEGORY_BAR_ITEMS.map((cat) => {
           const Icon = getCategoryIcon(cat.iconName);
           const isActive = activeNav === cat.slug;
           return (
@@ -784,21 +974,21 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             </div>
             
-            <div className="p-3 border-b border-stone-100">
-              <button
-                type="button"
-                onClick={() => { onOpenQuote(); setMobileMenuOpen(false); }}
-                className="w-full py-2.5 bg-[#E8752A] hover:bg-[#D3631A] text-white font-bold rounded-xl text-xs text-center flex items-center justify-center gap-2 shadow-sm"
-              >
-                <span>Request Bulk / Corporate Quote →</span>
-              </button>
-            </div>
+            
 
             <div className="flex-1 overflow-y-auto p-3 space-y-1">
               <div className="text-[11px] uppercase tracking-wider font-bold text-stone-400 mb-2 px-1">
                 Explore Categories &amp; Products
               </div>
-              {PRIMARY_CATEGORIES.map((cat) => {
+              {[...PRIMARY_CATEGORIES, {
+                id: 'cat-designers-architects',
+                name: 'Designers & Architects',
+                slug: 'designers-architects',
+                iconName: 'Building2' as const,
+                startingPrice: 0,
+                image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&auto=format&fit=crop&q=80',
+                description: 'Interior trade professional solutions',
+              }].map((cat) => {
                 const Icon = getCategoryIcon(cat.iconName);
                 const isActive = activeNav === cat.slug;
                 const isExpanded = expandedMobileCategory === cat.slug;
@@ -808,7 +998,13 @@ export const Header: React.FC<HeaderProps> = ({
                   <div key={cat.slug} className="rounded-xl overflow-hidden border border-stone-200/60 bg-stone-50/50 my-1">
                     <button
                       type="button"
-                      onClick={() => setExpandedMobileCategory(isExpanded ? null : cat.slug)}
+                      onClick={() => {
+                        if (menuData) {
+                          setExpandedMobileCategory(isExpanded ? null : cat.slug);
+                        } else {
+                          handleNavClick(cat.slug);
+                        }
+                      }}
                       className={`w-full text-left py-2.5 px-3 text-xs font-semibold rounded-xl flex items-center justify-between transition-colors ${
                         isActive || isExpanded
                           ? 'text-[#0E4A93] font-bold bg-blue-50' 
@@ -819,7 +1015,11 @@ export const Header: React.FC<HeaderProps> = ({
                         <Icon className="w-3.5 h-3.5 text-[#0E4A93]" strokeWidth={1.8} />
                         <span>{cat.name}</span>
                       </div>
-                      <ChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-[#0E4A93]' : ''}`} />
+                      {menuData ? (
+                        <ChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-[#0E4A93]' : ''}`} />
+                      ) : (
+                        <ArrowRight className="w-3.5 h-3.5 text-stone-400" />
+                      )}
                     </button>
 
                     {isExpanded && menuData && (

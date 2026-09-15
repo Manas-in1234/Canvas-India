@@ -20,6 +20,7 @@ import {
 import { useShop } from '../context/ShopContext';
 import { ProductImage } from '../components/ProductImage';
 import { Product } from '../types';
+import { loadAllStoredReviews, AcrylicProductReview } from '../data/acrylicReviews';
 
 const ACRYLIC_CHIPS = [
   'All Acrylic Products',
@@ -69,6 +70,8 @@ const SORT_OPTIONS: SortOption[] = [
   'Customer Rating'
 ];
 
+
+
 export const AcrylicCategoryPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -102,6 +105,11 @@ export const AcrylicCategoryPage: React.FC = () => {
 
   // Sorting state (Default: 'Price: Low to High')
   const [sortBy, setSortBy] = useState<SortOption>('Price: Low to High');
+
+  // Product reviews state persisted in localStorage
+  const [productReviewsMap] = useState<Record<string, AcrylicProductReview[]>>(() => {
+    return loadAllStoredReviews();
+  });
 
   // Ref for panels outside click detection
   const sortRef = useRef<HTMLDivElement>(null);
@@ -360,7 +368,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                   className="text-3xl sm:text-4xl lg:text-5xl font-black text-stone-950 tracking-tight leading-tight"
                   style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
                 >
-                  Acrylic Prints &amp; Acrylic Wall Art
+                  Arcylic prints and wall Arts
                 </h1>
                 <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-2xl">
                   Turn your photographs, artwork and ideas into vibrant acrylic pieces made for modern homes, offices and commercial spaces.
@@ -937,6 +945,13 @@ export const AcrylicCategoryPage: React.FC = () => {
               const discount = product.discount || product.discountPercent || 25;
               const originalPrice = product.originalPrice || product.compareAtPrice || Math.round(product.price * 1.3);
 
+              // Reviews calculations for this specific product
+              const reviewsForProduct = productReviewsMap[product.id] || [];
+              const totalReviewsCount = (product.reviewsCount || 24) + reviewsForProduct.filter(r => r.id.startsWith('rev-')).length;
+              const averageRating = reviewsForProduct.length > 0
+                ? Number((reviewsForProduct.reduce((acc, r) => acc + r.rating, 0) / reviewsForProduct.length).toFixed(1))
+                : (product.rating || 4.8);
+
               return (
                 <div
                   key={product.id}
@@ -990,7 +1005,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                   </div>
 
                   {/* Card Content */}
-                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4">
+                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
                     <div className="space-y-1.5">
                       {/* Category Tag */}
                       <div className="text-[11px] font-bold uppercase tracking-wider text-[#0E4A93]">
@@ -1010,21 +1025,17 @@ export const AcrylicCategoryPage: React.FC = () => {
                       </p>
                     </div>
 
-                    {/* Rating & Sizes Row */}
-                    <div className="flex items-center justify-between text-xs pt-1">
-                      <div className="flex items-center gap-1 text-amber-500 font-bold">
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        <span>{product.rating || '4.9'}</span>
-                        <span className="text-stone-400 font-normal">({product.reviewsCount || 48})</span>
-                      </div>
-
-                      <div className="text-[11px] text-stone-500">
-                        <span className="font-semibold text-stone-700">Sizes:</span> {product.availableSizes?.slice(0, 2).join(', ')}...
-                      </div>
+                    {/* Rating Summary Row (Clean, NO Add Review button) */}
+                    <div className="pt-2 border-t border-stone-100 flex items-center gap-1.5 text-xs text-amber-500 font-bold">
+                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                      <span>{averageRating}</span>
+                      <span className="text-stone-400 font-normal">
+                        ({totalReviewsCount} reviews)
+                      </span>
                     </div>
 
                     {/* Price & Primary Purchase CTA Row */}
-                    <div className="pt-3 border-t border-stone-100 space-y-3">
+                    <div className="pt-2 border-t border-stone-100 space-y-2.5">
                       <div className="flex items-baseline justify-between">
                         <div className="flex items-baseline gap-2">
                           <span className="text-lg sm:text-xl font-extrabold text-stone-950">
@@ -1039,7 +1050,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                         </span>
                       </div>
 
-                      {/* CRITICAL RULE: EXACTLY ONE PRIMARY PURCHASE CTA BUTTON PER CARD */}
+                      {/* Single Primary Purchase CTA Button per Card */}
                       <button
                         type="button"
                         onClick={(e) => handleCardCta(e, product)}
@@ -1053,8 +1064,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                   </div>
                 </div>
               );
-            })}
-          </div>
+            })}          </div>
         ) : (
           /* Empty State */
           <div className="py-20 text-center space-y-4 max-w-md mx-auto">
