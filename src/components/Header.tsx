@@ -89,18 +89,24 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  // Close mega-menu or search dropdown on outside click
+  // Close mega-menu or search dropdown on outside click. The mega-menu and
+  // "All Categories" dropdowns are portaled to <body> (so the scrollable nav
+  // row can't clip them), so they live outside <header> and outside their
+  // trigger's ref in the DOM tree — treat clicks inside those portals as
+  // "inside" too, or every click on a dropdown link would close the menu on
+  // mousedown before its own click handler ever fires.
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (!target.closest('header')) {
+      const insidePortal = !!target.closest('[data-header-portal]');
+      if (!target.closest('header') && !insidePortal) {
         setActiveMegaMenu(null);
         setAllCategoriesOpen(false);
       }
       if (searchRef.current && !searchRef.current.contains(target)) {
         setSearchOpen(false);
       }
-      if (allCatRef.current && !allCatRef.current.contains(target)) {
+      if (allCatRef.current && !allCatRef.current.contains(target) && !insidePortal) {
         setAllCategoriesOpen(false);
       }
     };
@@ -510,6 +516,7 @@ export const Header: React.FC<HeaderProps> = ({
                     scrollable nav row above can't clip it (see megaMenuPos comment) */}
                 {allCategoriesOpen && allCatMenuPos && createPortal(
                   <div
+                    data-header-portal="all-categories"
                     className="fixed w-72 bg-white rounded-xl shadow-2xl border border-stone-200 z-50 p-2 text-left animate-in fade-in slide-in-from-top-2 select-none"
                     style={{ top: allCatMenuPos.top, left: allCatMenuPos.left }}
                     onMouseEnter={() => setAllCategoriesOpen(true)}
@@ -613,6 +620,7 @@ export const Header: React.FC<HeaderProps> = ({
                           inside that row instead of showing it below the nav bar. */}
                       {isMenuOpen && menuData && megaMenuPos && createPortal(
                         <div
+                          data-header-portal="mega-menu"
                           className="fixed w-[850px] max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-stone-200 z-50 p-5 lg:p-6 transition-all duration-200 animate-in fade-in slide-in-from-top-2 text-left select-none whitespace-normal"
                           style={{ top: megaMenuPos.top, left: megaMenuPos.left }}
                           onMouseEnter={() => setActiveMegaMenu(cat.slug)}
