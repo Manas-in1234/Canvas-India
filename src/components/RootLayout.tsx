@@ -83,7 +83,8 @@ export const RootLayout: React.FC = () => {
     // Generic category page routes (from origin/main)
     const categoryRoutes = [
       'acrylic', 'posters', 'cork', 'yoga-fitness',
-      'home-decor', 'custom-prints', 'gifts', 'bulk-order', 'corporate-orders', 'designers-architects'
+      'home-decor', 'custom-prints', 'gifts', 'bulk-order', 'corporate-orders', 'designers-architects',
+      'wall-art', 'photo-frames'
     ];
     if (categoryRoutes.includes(slug)) {
       navigate(`/${slug}`);
