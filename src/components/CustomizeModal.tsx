@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, UploadCloud, Check, ShoppingCart, SlidersHorizontal, Sparkles, Layers, Box, CheckCircle2 } from 'lucide-react';
+import { X, UploadCloud, Check, ShoppingCart, SlidersHorizontal, Sparkles, Layers, Box, CheckCircle2, ZoomIn, ZoomOut, RotateCw, Maximize2, AlignStartVertical, AlignCenterVertical, AlignEndVertical } from 'lucide-react';
 import { Product } from '../types';
+
+type TextPosition = 'top' | 'center' | 'bottom';
 
 interface CustomizeModalProps {
   isOpen: boolean;
@@ -39,8 +41,23 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
   const [selectedBase, setSelectedBase] = useState(product.availableBases?.[0] || 'Without Base');
   const [selectedPaper, setSelectedPaper] = useState(product.availablePapers?.[0] || 'White Luster Photo Paper');
   const [customText, setCustomText] = useState('');
+  const [textPosition, setTextPosition] = useState<TextPosition>('bottom');
   const [photoPreview, setPhotoPreview] = useState(product.image);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+
+  const ZOOM_MIN = 0.5;
+  const ZOOM_MAX = 2.5;
+  const ZOOM_STEP = 0.1;
+
+  const handleZoomIn = () => setZoom((z) => Math.min(ZOOM_MAX, Math.round((z + ZOOM_STEP) * 10) / 10));
+  const handleZoomOut = () => setZoom((z) => Math.max(ZOOM_MIN, Math.round((z - ZOOM_STEP) * 10) / 10));
+  const handleRotate = () => setRotation((r) => (r + 90) % 360);
+  const handleFitReset = () => {
+    setZoom(1);
+    setRotation(0);
+  };
 
   // Sync state if product changes
   useEffect(() => {
@@ -53,6 +70,9 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
       setSelectedPaper(product.availablePapers?.[0] || 'White Luster Photo Paper');
       setPhotoPreview(product.image);
       setCustomText('');
+      setTextPosition('bottom');
+      setZoom(1);
+      setRotation(0);
       setUploadError(null);
     }
   }, [product]);
@@ -77,6 +97,8 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
     setUploadError(null);
     const url = URL.createObjectURL(file);
     setPhotoPreview(url);
+    setZoom(1);
+    setRotation(0);
   };
 
   // Dynamic price calculation
@@ -156,35 +178,87 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
         <div className="p-4 sm:p-6 space-y-5 overflow-y-auto flex-1">
           
           {/* Top Row: Live Interactive Preview & Image Upload */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
             {/* Live Visual Preview Frame with Realistic Acrylic Glass Effect */}
-            <div className="relative aspect-[4/3] bg-stone-100 rounded-xl overflow-hidden border-2 border-stone-200 shadow-md">
-              <img
-                src={photoPreview}
-                alt="Customized Preview"
-                className="w-full h-full object-cover"
-              />
+            <div className="space-y-2">
+              <div className="relative aspect-[4/3] bg-stone-100 rounded-xl overflow-hidden border-2 border-stone-200 shadow-md">
+                <img
+                  src={photoPreview}
+                  alt="Customized Preview"
+                  className="w-full h-full object-cover transition-transform duration-150 ease-out"
+                  style={{ transform: `scale(${zoom}) rotate(${rotation}deg)` }}
+                />
 
-              {/* Gloss Acrylic Reflection Overlay */}
-              {isAcrylic && (
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/15 to-white/30 pointer-events-none" />
-              )}
+                {/* Gloss Acrylic Reflection Overlay */}
+                {isAcrylic && (
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/15 to-white/30 pointer-events-none" />
+                )}
 
-              {customText && (
-                <div className="absolute bottom-2 left-2 right-2 bg-black/75 backdrop-blur-xs text-white text-[11px] font-semibold py-1 px-2 rounded text-center truncate">
-                  {customText}
+                {customText && (
+                  <div
+                    className={`absolute left-2 right-2 bg-black/75 backdrop-blur-xs text-white text-[11px] font-semibold py-1 px-2 rounded text-center truncate ${
+                      textPosition === 'top' ? 'top-2' : textPosition === 'center' ? 'top-1/2 -translate-y-1/2' : 'bottom-2'
+                    }`}
+                  >
+                    {customText}
+                  </div>
+                )}
+
+                <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-xs text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                  {selectedSize} {isAcrylic && selectedThickness && `• ${selectedThickness}`}
                 </div>
-              )}
 
-              <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-xs text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                {selectedSize} {isAcrylic && selectedThickness && `• ${selectedThickness}`}
+                {isAcrylic && selectedBase && selectedBase !== 'Without Base' && (
+                  <div className="absolute bottom-2 left-2 bg-[#0E4A93]/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                    {selectedBase}
+                  </div>
+                )}
               </div>
 
-              {isAcrylic && selectedBase && selectedBase !== 'Without Base' && (
-                <div className="absolute bottom-2 left-2 bg-[#0E4A93]/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                  {selectedBase}
-                </div>
-              )}
+              {/* Image Zoom / Rotate / Fit Controls */}
+              <div className="flex items-center justify-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleZoomOut}
+                  disabled={zoom <= ZOOM_MIN}
+                  className="p-1.5 rounded-lg border border-stone-200 bg-white text-stone-700 hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  aria-label="Zoom out"
+                  title="Zoom out"
+                >
+                  <ZoomOut className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-[10px] font-bold text-stone-500 w-9 text-center">{Math.round(zoom * 100)}%</span>
+                <button
+                  type="button"
+                  onClick={handleZoomIn}
+                  disabled={zoom >= ZOOM_MAX}
+                  className="p-1.5 rounded-lg border border-stone-200 bg-white text-stone-700 hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  aria-label="Zoom in"
+                  title="Zoom in"
+                >
+                  <ZoomIn className="w-3.5 h-3.5" />
+                </button>
+                <div className="w-px h-4 bg-stone-200 mx-1" />
+                <button
+                  type="button"
+                  onClick={handleRotate}
+                  className="p-1.5 rounded-lg border border-stone-200 bg-white text-stone-700 hover:bg-stone-50 transition-colors cursor-pointer"
+                  aria-label="Rotate image"
+                  title="Rotate 90°"
+                >
+                  <RotateCw className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleFitReset}
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-700 hover:bg-stone-50 transition-colors cursor-pointer text-[10px] font-bold"
+                  aria-label="Fit image to frame"
+                  title="Fit / Reset"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                  <span>Fit</span>
+                </button>
+              </div>
             </div>
 
             {/* Photo Upload Box */}
@@ -194,7 +268,11 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                 {photoPreview !== product.image && (
                   <button
                     type="button"
-                    onClick={() => setPhotoPreview(product.image)}
+                    onClick={() => {
+                      setPhotoPreview(product.image);
+                      setZoom(1);
+                      setRotation(0);
+                    }}
                     className="text-[10px] text-rose-600 hover:underline cursor-pointer lowercase"
                   >
                     reset photo
@@ -397,8 +475,39 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
 
           {/* Personalized Text */}
           <div>
-            <label className="block text-xs font-bold text-stone-700 uppercase mb-1.5">
-              Personalized Text / Engraving (Optional)
+            <label className="block text-xs font-bold text-stone-700 uppercase mb-1.5 flex items-center justify-between">
+              <span>Personalized Text / Engraving (Optional)</span>
+              {customText && (
+                <span className="flex items-center gap-1 normal-case">
+                  <button
+                    type="button"
+                    onClick={() => setTextPosition('top')}
+                    className={`p-1 rounded border transition-colors cursor-pointer ${textPosition === 'top' ? 'bg-[#0E4A93] text-white border-[#0E4A93]' : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50'}`}
+                    aria-label="Place text at top"
+                    title="Place text at top"
+                  >
+                    <AlignStartVertical className="w-3 h-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTextPosition('center')}
+                    className={`p-1 rounded border transition-colors cursor-pointer ${textPosition === 'center' ? 'bg-[#0E4A93] text-white border-[#0E4A93]' : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50'}`}
+                    aria-label="Place text at center"
+                    title="Place text at center"
+                  >
+                    <AlignCenterVertical className="w-3 h-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTextPosition('bottom')}
+                    className={`p-1 rounded border transition-colors cursor-pointer ${textPosition === 'bottom' ? 'bg-[#0E4A93] text-white border-[#0E4A93]' : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50'}`}
+                    aria-label="Place text at bottom"
+                    title="Place text at bottom"
+                  >
+                    <AlignEndVertical className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
             </label>
             <input
               type="text"
@@ -407,6 +516,9 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
               placeholder="e.g. Names, Date, Mantra, Heartfelt Message"
               className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-lg text-xs sm:text-sm text-stone-900 focus:outline-none focus:border-[#0E4A93]"
             />
+            {customText && (
+              <p className="text-[10px] text-stone-400 mt-1">Shown live in the preview above — use the icons to choose where it appears.</p>
+            )}
           </div>
 
         </div>

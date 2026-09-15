@@ -80,8 +80,7 @@ export const Homepage: React.FC<HomepageProps> = ({
                 className="text-4xl sm:text-5xl lg:text-[58px] xl:text-[64px] font-bold italic text-[#111827] leading-[1.02] sm:leading-[1.04] tracking-tight font-serif"
                 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
               >
-                Turn Your Memories<br />
-                <span className="text-[#0E4A93] italic">Into Beautiful Wall Art</span>
+                <span className="text-[#0E4A93] italic">Make it yours</span>
               </h1>
 
               {/* Subtext */}
