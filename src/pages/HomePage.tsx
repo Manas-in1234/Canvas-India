@@ -19,6 +19,7 @@ export const HomePage: React.FC = () => {
     'canvas': '/canvas',
     'canvas-prints': '/canvas',
     'acrylic': '/acrylic',
+    'acrylic-prints': '/acrylic',
     'posters': '/posters',
     'cork': '/cork',
     'cork-prints': '/cork',
