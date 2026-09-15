@@ -1,13 +1,14 @@
 import React from 'react';
-import { 
-  ArrowRight, 
-  Sparkles, 
-  Truck, 
-  ShieldCheck, 
-  SlidersHorizontal, 
-  MapPin, 
-  Award, 
-  Check 
+import { useNavigate } from 'react-router-dom';
+import {
+  ArrowRight,
+  Sparkles,
+  Truck,
+  ShieldCheck,
+  SlidersHorizontal,
+  MapPin,
+  Award,
+  Check
 } from 'lucide-react';
 import { Product } from '../types';
 import { ProductCard } from './ProductCard';
@@ -42,6 +43,14 @@ export const Homepage: React.FC<HomepageProps> = ({
   onToggleWishlist,
   allProducts,
 }) => {
+  const navigate = useNavigate();
+
+  // Launch the full Canvas Studio customizer, same rich experience as Acrylic's
+  const handleStartCreatingCanvas = () => {
+    const firstCanvasProduct = allProducts.find((p) => p.categorySlug === 'canvas');
+    navigate(`/customize/canvas/${firstCanvasProduct?.slug || firstCanvasProduct?.id || 'canvas-classic'}`);
+  };
+
   // 6 Bestsellers for 6-col desktop layout
   const bestsellers = allProducts.slice(0, 6);
 
@@ -97,7 +106,7 @@ export const Homepage: React.FC<HomepageProps> = ({
               <div className="flex flex-wrap items-center gap-4 sm:gap-5 pt-2">
                 <button
                   type="button"
-                  onClick={() => onCustomize()}
+                  onClick={handleStartCreatingCanvas}
                   className="px-6 py-3.5 bg-[#E8752A] hover:bg-[#D3631A] text-white text-xs sm:text-sm font-bold rounded-lg shadow-sm transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <span>Create Your Canvas →</span>
@@ -138,7 +147,7 @@ export const Homepage: React.FC<HomepageProps> = ({
       {/* 2. "CREATE SOMETHING NEW" (Positioned IMMEDIATELY after the Hero, White)  */}
       {/* ========================================================================= */}
       <CreateSomethingNew
-        onStartCreating={() => onCustomize()}
+        onStartCreating={handleStartCreatingCanvas}
         onSelectCategory={onSelectCategory}
       />
 
