@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { 
   SlidersHorizontal, 
   X, 
@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
-import { CreateSomethingNew } from '../components/CreateSomethingNew';
 import { CANVAS_FILTER_OCCASIONS } from '../data/storeData';
 import { Product } from '../types';
 
@@ -22,7 +21,6 @@ const PRICE_MIN_DEFAULT = 400;
 const PRICE_MAX_DEFAULT = 4000;
 
 export const CanvasCategoryPage: React.FC = () => {
-  const navigate = useNavigate();
   const {
     allProducts,
     wishlistIds,
@@ -58,22 +56,6 @@ export const CanvasCategoryPage: React.FC = () => {
     });
     return counts;
   }, [products]);
-
-  // Handle category routing from CreateSomethingNew
-  const handleSelectCategory = (slug: string) => {
-    if (slug === 'canvas' || slug === 'canvas-prints') {
-      const el = document.getElementById('canvas-catalog-section');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-    } else if (slug === 'acrylic-prints' || slug === 'cork-prints') {
-      navigate('/');
-      setTimeout(() => {
-        const el = document.getElementById('shop-categories');
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    } else {
-      navigate('/');
-    }
-  };
 
   // Toggle occasion filter
   const handleToggleOccasion = (occ: string) => {
@@ -141,17 +123,9 @@ export const CanvasCategoryPage: React.FC = () => {
 
   return (
     <div className="w-full bg-[#FFFDF9] text-stone-900 font-manrope">
-      
-      {/* ========================================================================= */}
-      {/* 1. REUSED HOMEPAGE SECTION: "Create Something New"                         */}
-      {/* ========================================================================= */}
-      <CreateSomethingNew
-        onStartCreating={() => onOpenCustomize()}
-        onSelectCategory={handleSelectCategory}
-      />
 
       {/* ========================================================================= */}
-      {/* 2. CANVAS PRODUCT LISTING (Amazon-Style Layout + Canvas India Identity)  */}
+      {/* CANVAS PRODUCT LISTING (Amazon-Style Layout + Canvas India Identity)     */}
       {/* ========================================================================= */}
       <section id="canvas-catalog-section" className="w-full py-8 sm:py-12 border-b border-stone-200/80">
         <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
