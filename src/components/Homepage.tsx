@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
@@ -56,6 +56,22 @@ export const Homepage: React.FC<HomepageProps> = ({
 
   // 7 Circular Categories from shared single source of truth
   const categories = PRIMARY_CATEGORIES;
+
+  // Hero flash-card stack: cycles through a few signature products
+  const heroFlashCards = [
+    { name: 'Museum Cotton Canvas', image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&auto=format&fit=crop&q=80', alt: 'Personalized Canvas Wall Art' },
+    { name: 'Crystal Acrylic Glass', image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&auto=format&fit=crop&q=80', alt: 'Acrylic Glass Photo Print' },
+    { name: 'Eco Cork Board', image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=800&auto=format&fit=crop&q=80', alt: 'Natural Cork Pinboard' },
+    { name: 'Custom Photo Gifting', image: 'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?w=800&auto=format&fit=crop&q=80', alt: 'Personalized Gift Print' },
+  ];
+  const [activeFlashCard, setActiveFlashCard] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveFlashCard((prev) => (prev + 1) % heroFlashCards.length);
+    }, 2600);
+    return () => clearInterval(timer);
+  }, [heroFlashCards.length]);
 
   // 6 Compact Occasions
   const occasions = [
@@ -125,16 +141,51 @@ export const Homepage: React.FC<HomepageProps> = ({
               </div>
             </div>
 
-            {/* Right Column: 45% (Integrated Lifestyle Scene, Unboxed) */}
+            {/* Right Column: 45% (Animated Flash-Card Stack) */}
             <div className="lg:col-span-5 flex items-center justify-center">
-              <div className="relative w-full max-w-md aspect-[4/3] sm:aspect-[16/12] rounded-2xl overflow-hidden shadow-lg bg-stone-100 border border-stone-200/80">
-                <img
-                  src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&auto=format&fit=crop&q=80"
-                  alt="Personalized Canvas Wall Art"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute bottom-3 left-3 bg-[#0E4A93]/90 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-md shadow-sm">
-                  Museum Cotton Canvas
+              <div className="relative w-full max-w-md aspect-[4/3] sm:aspect-[16/12]">
+                {heroFlashCards.map((card, idx) => {
+                  const offset = (idx - activeFlashCard + heroFlashCards.length) % heroFlashCards.length;
+                  const isActive = offset === 0;
+                  return (
+                    <div
+                      key={card.name}
+                      className="absolute inset-0 rounded-2xl overflow-hidden shadow-lg bg-stone-100 border border-stone-200/80 transition-all duration-700 ease-out"
+                      style={{
+                        transform: `translate(${offset * 14}px, ${offset * -14}px) scale(${1 - offset * 0.05})`,
+                        zIndex: heroFlashCards.length - offset,
+                        opacity: offset < 3 ? 1 : 0,
+                        pointerEvents: isActive ? 'auto' : 'none',
+                      }}
+                    >
+                      <img
+                        src={card.image}
+                        alt={card.alt}
+                        className="w-full h-full object-cover"
+                      />
+                      <div
+                        className="absolute bottom-3 left-3 bg-[#0E4A93]/90 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-md shadow-sm transition-opacity duration-500"
+                        style={{ opacity: isActive ? 1 : 0 }}
+                      >
+                        {card.name}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Progress dots */}
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
+                  {heroFlashCards.map((card, idx) => (
+                    <button
+                      key={card.name}
+                      type="button"
+                      onClick={() => setActiveFlashCard(idx)}
+                      aria-label={`Show ${card.name}`}
+                      className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                        idx === activeFlashCard ? 'w-5 bg-[#0E4A93]' : 'w-1.5 bg-stone-300 hover:bg-stone-400'
+                      }`}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
