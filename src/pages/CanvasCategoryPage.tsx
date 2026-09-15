@@ -13,7 +13,7 @@ import {
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
 import { CreateSomethingNew } from '../components/CreateSomethingNew';
-import { CANVAS_PRODUCTS, CANVAS_FILTER_OCCASIONS } from '../data/storeData';
+import { CANVAS_FILTER_OCCASIONS } from '../data/storeData';
 import { Product } from '../types';
 
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'discount';
@@ -23,11 +23,12 @@ const PRICE_MAX_DEFAULT = 4000;
 
 export const CanvasCategoryPage: React.FC = () => {
   const navigate = useNavigate();
-  const { 
-    wishlistIds, 
-    onAddToCart, 
-    onOpenCustomize, 
-    onToggleWishlist 
+  const {
+    allProducts,
+    wishlistIds,
+    onAddToCart,
+    onOpenCustomize,
+    onToggleWishlist
   } = useShop();
 
   // Filter States
@@ -37,14 +38,23 @@ export const CanvasCategoryPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
 
-  // Source of truth for Canvas category products
-  const products: Product[] = CANVAS_PRODUCTS;
+  // Source of truth for Canvas category products — pulled from the shared
+  // catalog (same as Acrylic) so product cards link to real, working detail pages
+  const products: Product[] = useMemo(
+    () => allProducts.filter((p) => p.categorySlug === 'canvas'),
+    [allProducts]
+  );
+
+  // Matches an occasion against a product's occasions list, falling back to tags
+  const productMatchesOccasion = (product: Product, occ: string) =>
+    !!product.occasions?.includes(occ) ||
+    !!product.tags?.some((t) => t.toLowerCase() === occ.toLowerCase());
 
   // Occasion count helper
   const occasionCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     CANVAS_FILTER_OCCASIONS.forEach((occ) => {
-      counts[occ] = products.filter((p) => p.occasions?.includes(occ)).length;
+      counts[occ] = products.filter((p) => productMatchesOccasion(p, occ)).length;
     });
     return counts;
   }, [products]);
@@ -93,9 +103,9 @@ export const CanvasCategoryPage: React.FC = () => {
       const matchesPrice = product.price >= minPrice && product.price <= maxPrice;
 
       // Occasion check
-      const matchesOccasion = 
+      const matchesOccasion =
         selectedOccasions.length === 0 ||
-        (product.occasions && selectedOccasions.some((occ) => product.occasions?.includes(occ)));
+        selectedOccasions.some((occ) => productMatchesOccasion(product, occ));
 
       return matchesPrice && matchesOccasion;
     });
