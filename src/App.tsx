@@ -57,6 +57,9 @@ export function App() {
           <Route path="/corporate-orders" element={<CategoryPage categorySlug="corporate-orders" />} />
           <Route path="/corporate" element={<CategoryPage categorySlug="corporate-orders" />} />
 
+          <Route path="/wall-art" element={<CategoryPage categorySlug="wall-art" />} />
+          <Route path="/photo-frames" element={<CategoryPage categorySlug="photo-frames" />} />
+
           {/* Solutions for Designers & Architects */}
           <Route path="/designers-architects" element={<DesignersArchitectsPage />} />
 
