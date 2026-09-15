@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   SlidersHorizontal,
   X,
@@ -23,6 +23,7 @@ const PRICE_MIN_DEFAULT = 400;
 const PRICE_MAX_DEFAULT = 4000;
 
 export const CanvasCategoryPage: React.FC = () => {
+  const navigate = useNavigate();
   const {
     allProducts,
     wishlistIds,
@@ -181,7 +182,7 @@ export const CanvasCategoryPage: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => onOpenCustomize()}
+                  onClick={() => navigate(`/customize/canvas/${products[0]?.slug || products[0]?.id || 'canvas-classic'}`)}
                   className="px-6 py-3.5 bg-[#E8752A] hover:bg-[#d6651d] active:scale-[0.99] text-white text-xs sm:text-sm font-black rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4 text-amber-200" />
