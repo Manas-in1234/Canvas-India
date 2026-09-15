@@ -68,7 +68,6 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
   // Set document title
   useEffect(() => {
     document.title = `${config.seoTitle || config.title} | Canvas India`;
-    window.scrollTo(0, 0);
   }, [config]);
 
   const handleSelectSub = (sub: string) => {

@@ -15,7 +15,6 @@ interface PolicyPageLayoutProps {
 export const PolicyPageLayout: React.FC<PolicyPageLayoutProps> = ({ title, children }) => {
   useEffect(() => {
     document.title = `${title} | Canvas India`;
-    window.scrollTo(0, 0);
   }, [title]);
 
   return (

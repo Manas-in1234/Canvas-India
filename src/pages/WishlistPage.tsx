@@ -17,7 +17,6 @@ export const WishlistPage: React.FC = () => {
 
   useEffect(() => {
     document.title = 'My Wishlist | Canvas India';
-    window.scrollTo(0, 0);
   }, []);
 
   const handleAddAllToCart = () => {

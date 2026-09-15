@@ -25,7 +25,6 @@ export const CartPage: React.FC = () => {
 
   useEffect(() => {
     document.title = 'Shopping Cart | Canvas India';
-    window.scrollTo(0, 0);
   }, []);
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);

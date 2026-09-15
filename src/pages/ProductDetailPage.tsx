@@ -97,7 +97,6 @@ export const ProductDetailPage: React.FC = () => {
       setUploadedFile(null);
       setUploadSuccess(false);
       document.title = `${product.name} | Canvas India`;
-      window.scrollTo(0, 0);
 
       // Save to recently viewed
       try {

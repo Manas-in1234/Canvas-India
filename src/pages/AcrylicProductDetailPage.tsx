@@ -82,7 +82,6 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
     setQuantity(1);
     setActiveImageIndex(0);
     document.title = `${product.name} | Canvas India`;
-    window.scrollTo(0, 0);
   }, [product]);
 
   // Gallery Navigation Controls

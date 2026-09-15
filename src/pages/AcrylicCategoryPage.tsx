@@ -120,7 +120,6 @@ export const AcrylicCategoryPage: React.FC = () => {
 
   useEffect(() => {
     document.title = 'Acrylic Prints & Acrylic Wall Art | Canvas India';
-    window.scrollTo(0, 0);
   }, []);
 
   // Close sort dropdown when clicking outside
