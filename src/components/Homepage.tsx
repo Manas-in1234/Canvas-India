@@ -57,21 +57,52 @@ export const Homepage: React.FC<HomepageProps> = ({
   // 7 Circular Categories from shared single source of truth
   const categories = PRIMARY_CATEGORIES;
 
-  // Hero flash-card stack: cycles through a few signature products
+  // Hero flash-card: a literal flip card that turns over to reveal the next product,
+  // like a real flash card — not a carousel.
   const heroFlashCards = [
     { name: 'Museum Cotton Canvas', image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&auto=format&fit=crop&q=80', alt: 'Personalized Canvas Wall Art' },
     { name: 'Crystal Acrylic Glass', image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&auto=format&fit=crop&q=80', alt: 'Acrylic Glass Photo Print' },
     { name: 'Eco Cork Board', image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=800&auto=format&fit=crop&q=80', alt: 'Natural Cork Pinboard' },
     { name: 'Custom Photo Gifting', image: 'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?w=800&auto=format&fit=crop&q=80', alt: 'Personalized Gift Print' },
   ];
-  const [activeFlashCard, setActiveFlashCard] = useState(0);
+  const FLIP_DURATION_MS = 700;
+  const [frontCardIdx, setFrontCardIdx] = useState(0);
+  const [backCardIdx, setBackCardIdx] = useState(1);
+  const [isFlipped, setIsFlipped] = useState(false); // true = rotated 180deg, back face showing
+  const [skipTransition, setSkipTransition] = useState(false); // disables CSS transition for the instant snap-back
 
+  // Kick off a flip every few seconds
   useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveFlashCard((prev) => (prev + 1) % heroFlashCards.length);
-    }, 2600);
+    const timer = setInterval(() => setIsFlipped(true), 2600);
     return () => clearInterval(timer);
-  }, [heroFlashCards.length]);
+  }, []);
+
+  // Once a flip finishes, silently swap which card is "front" and snap rotation back to 0
+  // (no transition) so the next flip always animates 0deg -> 180deg again.
+  useEffect(() => {
+    if (!isFlipped) return;
+    const timeout = setTimeout(() => {
+      setSkipTransition(true);
+      setFrontCardIdx(backCardIdx);
+      setBackCardIdx((backCardIdx + 1) % heroFlashCards.length);
+      setIsFlipped(false);
+    }, FLIP_DURATION_MS);
+    return () => clearTimeout(timeout);
+  }, [isFlipped, backCardIdx, heroFlashCards.length]);
+
+  // Re-enable the transition on the next frame after an instant snap-back
+  useEffect(() => {
+    if (!skipTransition) return;
+    const raf = requestAnimationFrame(() => setSkipTransition(false));
+    return () => cancelAnimationFrame(raf);
+  }, [skipTransition]);
+
+  const jumpToFlashCard = (idx: number) => {
+    setSkipTransition(true);
+    setIsFlipped(false);
+    setFrontCardIdx(idx);
+    setBackCardIdx((idx + 1) % heroFlashCards.length);
+  };
 
   // 6 Compact Occasions
   const occasions = [
@@ -141,37 +172,49 @@ export const Homepage: React.FC<HomepageProps> = ({
               </div>
             </div>
 
-            {/* Right Column: 45% (Animated Flash-Card Stack) */}
+            {/* Right Column: 45% (Flipping Flash Card) */}
             <div className="lg:col-span-5 flex items-center justify-center">
-              <div className="relative w-full max-w-md aspect-[4/3] sm:aspect-[16/12]">
-                {heroFlashCards.map((card, idx) => {
-                  const offset = (idx - activeFlashCard + heroFlashCards.length) % heroFlashCards.length;
-                  const isActive = offset === 0;
-                  return (
-                    <div
-                      key={card.name}
-                      className="absolute inset-0 rounded-2xl overflow-hidden shadow-lg bg-stone-100 border border-stone-200/80 transition-all duration-700 ease-out"
-                      style={{
-                        transform: `translate(${offset * 14}px, ${offset * -14}px) scale(${1 - offset * 0.05})`,
-                        zIndex: heroFlashCards.length - offset,
-                        opacity: offset < 3 ? 1 : 0,
-                        pointerEvents: isActive ? 'auto' : 'none',
-                      }}
-                    >
-                      <img
-                        src={card.image}
-                        alt={card.alt}
-                        className="w-full h-full object-cover"
-                      />
-                      <div
-                        className="absolute bottom-3 left-3 bg-[#0E4A93]/90 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-md shadow-sm transition-opacity duration-500"
-                        style={{ opacity: isActive ? 1 : 0 }}
-                      >
-                        {card.name}
-                      </div>
+              <div className="relative w-full max-w-md aspect-[4/3] sm:aspect-[16/12]" style={{ perspective: '1800px' }}>
+                <div
+                  className={skipTransition ? '' : 'transition-transform duration-700 ease-in-out'}
+                  style={{
+                    position: 'relative',
+                    width: '100%',
+                    height: '100%',
+                    transformStyle: 'preserve-3d',
+                    transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                  }}
+                >
+                  {/* FRONT FACE */}
+                  <div
+                    className="absolute inset-0 rounded-2xl overflow-hidden shadow-lg bg-stone-100 border border-stone-200/80"
+                    style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+                  >
+                    <img
+                      src={heroFlashCards[frontCardIdx].image}
+                      alt={heroFlashCards[frontCardIdx].alt}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-3 left-3 bg-[#0E4A93]/90 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-md shadow-sm">
+                      {heroFlashCards[frontCardIdx].name}
                     </div>
-                  );
-                })}
+                  </div>
+
+                  {/* BACK FACE (pre-rotated 180deg so it reads right-way-up once flipped) */}
+                  <div
+                    className="absolute inset-0 rounded-2xl overflow-hidden shadow-lg bg-stone-100 border border-stone-200/80"
+                    style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                  >
+                    <img
+                      src={heroFlashCards[backCardIdx].image}
+                      alt={heroFlashCards[backCardIdx].alt}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-3 left-3 bg-[#0E4A93]/90 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-md shadow-sm">
+                      {heroFlashCards[backCardIdx].name}
+                    </div>
+                  </div>
+                </div>
 
                 {/* Progress dots */}
                 <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
@@ -179,10 +222,10 @@ export const Homepage: React.FC<HomepageProps> = ({
                     <button
                       key={card.name}
                       type="button"
-                      onClick={() => setActiveFlashCard(idx)}
+                      onClick={() => jumpToFlashCard(idx)}
                       aria-label={`Show ${card.name}`}
                       className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                        idx === activeFlashCard ? 'w-5 bg-[#0E4A93]' : 'w-1.5 bg-stone-300 hover:bg-stone-400'
+                        idx === frontCardIdx && !isFlipped ? 'w-5 bg-[#0E4A93]' : 'w-1.5 bg-stone-300 hover:bg-stone-400'
                       }`}
                     />
                   ))}
