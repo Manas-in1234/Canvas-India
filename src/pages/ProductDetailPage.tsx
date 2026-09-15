@@ -12,13 +12,14 @@ import {
   ChevronRight, 
   Share2, 
   Sparkles, 
-  ArrowRight,
-  CheckCircle2,
-  Upload,
-  Layers,
-  Sliders,
-  Type,
-  Maximize2
+  ArrowRight, 
+  CheckCircle2, 
+  Upload, 
+  Layers, 
+  Sliders, 
+  Type, 
+  Maximize2,
+  PackageCheck
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
@@ -26,6 +27,11 @@ import { ProductImage } from '../components/ProductImage';
 import { CUSTOMER_REVIEWS } from '../data/storeData';
 import { Product } from '../types';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
+import { 
+  AcrylicProductReview, 
+  getProductReviews, 
+  saveProductReview 
+} from '../data/acrylicReviews';
 
 export const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -52,7 +58,94 @@ export const ProductDetailPage: React.FC = () => {
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
 
-  // In-page customization state
+  // Tabs state ('description' | 'specifications' | 'shipping' | 'reviews')
+  const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'shipping' | 'reviews'>('description');
+
+  // Product Reviews State for this specific product
+  const [reviews, setReviews] = useState<AcrylicProductReview[]>(() => {
+    return getProductReviews(product?.id || '');
+  });
+
+  useEffect(() => {
+    if (!product) return;
+    const stored = getProductReviews(product.id);
+    if (stored && stored.length > 0) {
+      setReviews(stored);
+    } else {
+      // Provide default relevant reviews
+      const defaults = CUSTOMER_REVIEWS.filter(
+        (r) => r.product.toLowerCase().includes('canvas') || !r.product.toLowerCase().includes('acrylic')
+      ).slice(0, 3).map((r) => ({
+        id: r.id,
+        productId: product.id,
+        author: r.name,
+        rating: r.rating,
+        comment: r.review,
+        date: r.date,
+        verified: r.verified,
+      }));
+      setReviews(defaults);
+    }
+  }, [product?.id]);
+
+  const averageRating = useMemo(() => {
+    if (!reviews.length) return Number(product?.rating || 4.8);
+    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+    return Number((sum / reviews.length).toFixed(1));
+  }, [reviews, product?.rating]);
+
+  const totalReviewsCount = useMemo(() => {
+    return (product?.reviewsCount || 48) + Math.max(0, reviews.length - 2);
+  }, [reviews.length, product?.reviewsCount]);
+
+  // Review Modal State
+  const [reviewModalOpen, setReviewModalOpen] = useState<boolean>(false);
+  const [reviewRating, setReviewRating] = useState<number>(5);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [reviewText, setReviewText] = useState<string>('');
+  const [reviewerName, setReviewerName] = useState<string>('');
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [reviewSuccessMessage, setReviewSuccessMessage] = useState<string | null>(null);
+
+  const handleOpenReviewModal = () => {
+    setReviewRating(5);
+    setHoverRating(0);
+    setReviewText('');
+    setReviewerName('');
+    setReviewError(null);
+    setReviewModalOpen(true);
+  };
+
+  const handleCloseReviewModal = () => {
+    setReviewModalOpen(false);
+    setReviewError(null);
+  };
+
+  const handleSubmitReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!product) return;
+    if (!reviewRating || reviewRating < 1 || reviewRating > 5) {
+      setReviewError('Please select a rating between 1 and 5 stars.');
+      return;
+    }
+    if (!reviewText.trim() || reviewText.trim().length < 5) {
+      setReviewError('Please write at least a few words describing your experience (minimum 5 characters).');
+      return;
+    }
+
+    const created = saveProductReview(product.id, {
+      author: reviewerName.trim() || 'Verified Customer',
+      rating: reviewRating,
+      comment: reviewText.trim(),
+    });
+
+    setReviews(prev => [created, ...prev]);
+    setReviewSuccessMessage(`Thank you! Your review for "${product.name}" has been added.`);
+    setTimeout(() => setReviewSuccessMessage(null), 4000);
+    handleCloseReviewModal();
+  };
+
+  // In-page customization state (preserved for cart compatibility)
   const [customText, setCustomText] = useState<string>('');
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
@@ -442,96 +535,11 @@ export const ProductDetailPage: React.FC = () => {
               <p className="text-[11px] text-stone-500 mt-1">Inclusive of GST taxes. Free shipping on orders above ₹999 across India.</p>
             </div>
 
-            {/* ========================================================================= */}
-            {/* PROMINENT "CUSTOMIZE YOUR PRODUCT" WORKFLOW                               */}
-            {/* ========================================================================= */}
-            {product.customizationAvailable && (
-              <div className="p-4 rounded-xl bg-orange-50/70 border border-orange-200/80 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-black uppercase tracking-wider text-[#E8752A] flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-[#E8752A]" />
-                    <span>Customize Your Product</span>
-                  </div>
-                  <span className="text-[10px] font-bold bg-[#E8752A] text-white px-2 py-0.5 rounded-full">
-                    Step-by-Step
-                  </span>
-                </div>
-
-                {/* 7-Step Visual List */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-stone-700 font-medium">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-white text-[#0E4A93] font-bold text-[11px] flex items-center justify-center border border-orange-200 shrink-0">1</span>
-                    <span>Select Size</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-white text-[#0E4A93] font-bold text-[11px] flex items-center justify-center border border-orange-200 shrink-0">2</span>
-                    <span>Select Material</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-white text-[#0E4A93] font-bold text-[11px] flex items-center justify-center border border-orange-200 shrink-0">3</span>
-                    <span>Select Finish</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-white text-[#0E4A93] font-bold text-[11px] flex items-center justify-center border border-orange-200 shrink-0">4</span>
-                    <span>Upload Your Design</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-white text-[#0E4A93] font-bold text-[11px] flex items-center justify-center border border-orange-200 shrink-0">5</span>
-                    <span>Add Custom Text</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-white text-[#0E4A93] font-bold text-[11px] flex items-center justify-center border border-orange-200 shrink-0">6</span>
-                    <span>Choose Quantity</span>
-                  </div>
-                </div>
-
-                {/* Upload & Custom Text In-Page Inputs */}
-                <div className="pt-2 border-t border-orange-200/60 space-y-2.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-800 mb-1 flex items-center gap-1">
-                      <Upload className="w-3 h-3 text-[#E8752A]" />
-                      <span>4. Upload Your Photo or Artwork:</span>
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <label className="flex-1 px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-600 hover:border-[#0E4A93] cursor-pointer flex items-center justify-between">
-                        <span className="truncate">{uploadSuccess ? 'Photo attached successfully!' : 'Choose JPG, PNG or WebP file...'}</span>
-                        <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-                        <span className="px-2 py-0.5 bg-stone-100 text-[10px] font-bold rounded">Browse</span>
-                      </label>
-                      {uploadSuccess && (
-                        <button 
-                          type="button" 
-                          onClick={() => { setUploadedFile(null); setUploadSuccess(false); }}
-                          className="text-[11px] text-rose-600 hover:underline cursor-pointer"
-                        >
-                          Clear
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-800 mb-1 flex items-center gap-1">
-                      <Type className="w-3 h-3 text-[#E8752A]" />
-                      <span>5. Add Custom Text (e.g. Names, Date, Mantra):</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={customText}
-                      onChange={(e) => setCustomText(e.target.value)}
-                      placeholder="Optional text to print on product..."
-                      className="w-full px-3 py-1.5 text-xs bg-white rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* 1. Size Selector */}
             {product.sizes && product.sizes.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-stone-800">1. Available Sizes:</span>
+                  <span className="font-bold text-stone-800">Available Sizes:</span>
                   <span className="text-stone-500 font-medium">{selectedSize}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -557,7 +565,7 @@ export const ProductDetailPage: React.FC = () => {
             {availableMaterials.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-stone-800">2. Material:</span>
+                  <span className="font-bold text-stone-800">Material:</span>
                   <span className="text-stone-500 font-medium">{selectedMaterial}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -583,7 +591,7 @@ export const ProductDetailPage: React.FC = () => {
             {product.finishes && product.finishes.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-stone-800">3. Finish &amp; Style:</span>
+                  <span className="font-bold text-stone-800">Finish &amp; Style:</span>
                   <span className="text-stone-500 font-medium">{selectedFinish}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -607,7 +615,7 @@ export const ProductDetailPage: React.FC = () => {
 
             {/* Quantity Selector */}
             <div className="flex items-center gap-4 pt-1">
-              <span className="font-bold text-xs text-stone-800">6. Quantity:</span>
+              <span className="font-bold text-xs text-stone-800">Quantity:</span>
               <div className="inline-flex items-center border border-stone-200 rounded-lg bg-white overflow-hidden shadow-2xs">
                 <button
                   type="button"
@@ -637,7 +645,7 @@ export const ProductDetailPage: React.FC = () => {
                 className="flex-1 py-3.5 px-6 rounded-xl bg-[#E8752A] hover:bg-[#D3631A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
               >
                 <ShoppingBag className="w-4 h-4" />
-                <span>7. Add to Cart</span>
+                <span>Add to Cart</span>
               </button>
 
               <button
@@ -698,91 +706,194 @@ export const ProductDetailPage: React.FC = () => {
         </div>
 
         {/* ========================================================================= */}
-        {/* 3. PRODUCT SPECIFICATIONS & APPLICATIONS                                  */}
+        {/* 3. PRODUCT TABS: DESCRIPTION, SPECIFICATIONS, SHIPPING, REVIEWS           */}
         {/* ========================================================================= */}
         <div className="mt-16 sm:mt-20 pt-12 border-t border-stone-200 text-left">
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            
-            {/* Left: Product Description & Craftsmanship */}
-            <div className="lg:col-span-7 space-y-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
-                Product Description &amp; Craftsmanship
-              </h2>
-
-              <p className="text-sm text-stone-700 leading-relaxed">
-                {product.description} Handcrafted at Canvas India&apos;s dedicated print studio, each personalized piece undergoes meticulous color grading, museum-grade pigment printing, and professional artisan assembly. Whether displayed in your living room, gifted for an anniversary, or installed in modern corporate spaces, our prints are built to retain vibrancy and depth for over 50 years.
-              </p>
-
-              {/* Recommended Applications */}
-              <div className="space-y-3 pt-2">
-                <h3 className="font-bold text-sm text-stone-900">Recommended Applications &amp; Spaces:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {(product.applications || ['Living Room', 'Master Bedroom', 'Home Office', 'Dining Foyer', 'Corridors']).map((app) => (
-                    <span key={app} className="px-3 py-1 bg-stone-100 text-stone-700 rounded-full text-xs font-semibold border border-stone-200">
-                      {app}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-3 pt-2">
-                <h3 className="font-bold text-sm text-stone-900">Care &amp; Handling Instructions:</h3>
-                <ul className="text-xs text-stone-600 space-y-1.5 list-disc pl-5 leading-relaxed">
-                  <li>Dust gently with a clean, dry microfiber cloth. Avoid abrasive cleaning pads.</li>
-                  <li>For acrylic glass surfaces, use a soft cotton cloth lightly dampened with water.</li>
-                  <li>Keep out of continuous direct rainfall and excessive humidity.</li>
-                  <li>Pre-installed hanging hardware makes mounting effortless on standard wall hooks or screws.</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Right: Specifications Table */}
-            <div className="lg:col-span-5 space-y-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
-                Product Specifications
-              </h2>
-
-              <div className="rounded-xl border border-stone-200 overflow-hidden text-xs bg-white divide-y divide-stone-100">
-                <div className="flex py-2.5 px-4 bg-stone-50">
-                  <span className="w-1/3 font-bold text-stone-800">Category</span>
-                  <span className="w-2/3 text-stone-700">{categoryName}</span>
-                </div>
-                {product.subcategory && (
-                  <div className="flex py-2.5 px-4">
-                    <span className="w-1/3 font-bold text-stone-800">Subcategory</span>
-                    <span className="w-2/3 text-stone-700">{product.subcategory}</span>
-                  </div>
-                )}
-                <div className="flex py-2.5 px-4 bg-stone-50">
-                  <span className="w-1/3 font-bold text-stone-800">Material</span>
-                  <span className="w-2/3 text-stone-700">{selectedMaterial || product.material || 'Museum Grade Fine Art'}</span>
-                </div>
-                <div className="flex py-2.5 px-4">
-                  <span className="w-1/3 font-bold text-stone-800">Print Quality</span>
-                  <span className="w-2/3 text-stone-700">12-Color Archival UV-Resistant Inks (2400 DPI)</span>
-                </div>
-                <div className="flex py-2.5 px-4 bg-stone-50">
-                  <span className="w-1/3 font-bold text-stone-800">Available Sizes</span>
-                  <span className="w-2/3 text-stone-700">{product.sizes?.join(', ') || 'Custom Dimensions Available'}</span>
-                </div>
-                <div className="flex py-2.5 px-4">
-                  <span className="w-1/3 font-bold text-stone-800">Available Finishes</span>
-                  <span className="w-2/3 text-stone-700">{product.finishes?.join(', ') || 'Standard Finish'}</span>
-                </div>
-                <div className="flex py-2.5 px-4 bg-stone-50">
-                  <span className="w-1/3 font-bold text-stone-800">Mounting Hardware</span>
-                  <span className="w-2/3 text-stone-700">Pre-attached hangers &amp; stainless wall standoffs included</span>
-                </div>
-                <div className="flex py-2.5 px-4">
-                  <span className="w-1/3 font-bold text-stone-800">Origin</span>
-                  <span className="w-2/3 text-stone-700">Proudly Designed &amp; Handcrafted in India</span>
-                </div>
-              </div>
-            </div>
-
+          {/* Tabs Bar */}
+          <div className="flex items-center gap-3 border-b border-stone-200 overflow-x-auto scrollbar-none pb-px mb-8">
+            {[
+              { id: 'description', label: 'Description' },
+              { id: 'specifications', label: 'Specifications' },
+              { id: 'shipping', label: 'Shipping & Delivery' },
+              { id: 'reviews', label: `Reviews (${totalReviewsCount})` },
+            ].map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`py-3 px-4 text-xs sm:text-sm font-extrabold whitespace-nowrap transition-all border-b-2 cursor-pointer ${
+                    isActive
+                      ? 'border-[#0E4A93] text-[#0E4A93]'
+                      : 'border-transparent text-stone-500 hover:text-stone-800'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
+          {/* Tab Content */}
+          <div className="max-w-4xl">
+            {activeTab === 'description' && (
+              <div className="space-y-4 text-xs sm:text-sm text-stone-600 leading-relaxed">
+                <h3 className="text-base font-bold text-stone-900">
+                  About {product.name}
+                </h3>
+                <p>
+                  {product.description} Handcrafted at Canvas India&apos;s dedicated print studio, each personalized piece undergoes meticulous color grading, museum-grade pigment printing, and professional artisan assembly. Whether displayed in your living room, gifted for an anniversary, or installed in modern corporate spaces, our prints are built to retain vibrancy and depth for over 50 years.
+                </p>
+
+                {/* Recommended Applications */}
+                <div className="space-y-3 pt-2">
+                  <h4 className="font-bold text-sm text-stone-900">Recommended Applications &amp; Spaces:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {(product.applications || ['Living Room', 'Master Bedroom', 'Home Office', 'Dining Foyer', 'Corridors']).map((app) => (
+                      <span key={app} className="px-3 py-1 bg-stone-100 text-stone-700 rounded-full text-xs font-semibold border border-stone-200">
+                        {app}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <h4 className="font-bold text-sm text-stone-900">Care &amp; Handling Instructions:</h4>
+                  <ul className="text-xs text-stone-600 space-y-1.5 list-disc pl-5 leading-relaxed">
+                    <li>Dust gently with a clean, dry microfiber cloth. Avoid abrasive cleaning pads and liquid solvents.</li>
+                    <li>Keep out of continuous direct rainfall and excessive humidity.</li>
+                    <li>Pre-installed hanging hardware makes mounting effortless on standard wall hooks or screws.</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'specifications' && (
+              <div className="bg-stone-50 rounded-2xl p-6 border border-stone-200">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div className="flex justify-between py-2 border-b border-stone-200">
+                    <span className="text-stone-500 font-medium">Category</span>
+                    <span className="font-bold text-stone-900">{categoryName}</span>
+                  </div>
+                  {product.subcategory && (
+                    <div className="flex justify-between py-2 border-b border-stone-200">
+                      <span className="text-stone-500 font-medium">Subcategory</span>
+                      <span className="font-bold text-stone-900">{product.subcategory}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between py-2 border-b border-stone-200">
+                    <span className="text-stone-500 font-medium">Material</span>
+                    <span className="font-bold text-stone-900">{selectedMaterial || product.material || 'Museum Grade Fine Art Canvas'}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-stone-200">
+                    <span className="text-stone-500 font-medium">Print Quality</span>
+                    <span className="font-bold text-stone-900">12-Color Archival UV-Resistant Inks (2400 DPI)</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-stone-200">
+                    <span className="text-stone-500 font-medium">Available Sizes</span>
+                    <span className="font-bold text-stone-900">{product.sizes?.join(', ') || 'Custom Dimensions Available'}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-stone-200">
+                    <span className="text-stone-500 font-medium">Available Finishes</span>
+                    <span className="font-bold text-stone-900">{product.finishes?.join(', ') || 'Standard Finish'}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-stone-200">
+                    <span className="text-stone-500 font-medium">Mounting Hardware</span>
+                    <span className="font-bold text-stone-900">Pre-attached hangers &amp; stainless wall standoffs included</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-stone-200">
+                    <span className="text-stone-500 font-medium">Origin</span>
+                    <span className="font-bold text-stone-900">Proudly Designed &amp; Handcrafted in India</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'shipping' && (
+              <div className="space-y-4 text-xs sm:text-sm text-stone-600 leading-relaxed">
+                <h3 className="text-base font-bold text-stone-900">
+                  Fast &amp; Secure Pan-India Dispatch
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                  <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
+                    <PackageCheck className="w-5 h-5 text-[#0E4A93]" />
+                    <div className="font-bold text-stone-900 text-xs">Production Time</div>
+                    <div className="text-[11px] text-stone-500">Handcrafted &amp; cured in 24 - 48 hours</div>
+                  </div>
+                  <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
+                    <Truck className="w-5 h-5 text-emerald-600" />
+                    <div className="font-bold text-stone-900 text-xs">Delivery Time</div>
+                    <div className="text-[11px] text-stone-500">3 - 5 business days across Indian pin codes</div>
+                  </div>
+                  <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
+                    <ShieldCheck className="w-5 h-5 text-amber-600" />
+                    <div className="font-bold text-stone-900 text-xs">Transit Guarantee</div>
+                    <div className="text-[11px] text-stone-500">Free replacement if damaged in transit</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'reviews' && (
+              <div className="space-y-6 text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-stone-50 rounded-2xl border border-stone-200">
+                  <div className="flex items-center gap-3">
+                    <div className="flex text-amber-500">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star key={s} className={`w-4 h-4 ${s <= Math.round(averageRating) ? 'fill-amber-400 text-amber-400' : 'text-stone-300'}`} />
+                      ))}
+                    </div>
+                    <span className="font-extrabold text-stone-900 text-sm">{averageRating} out of 5</span>
+                    <span className="text-xs text-stone-500">({totalReviewsCount} Customer Reviews)</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleOpenReviewModal}
+                    className="px-4 py-2 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer self-start sm:self-auto"
+                  >
+                    <Star className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
+                    <span>+ Add Review</span>
+                  </button>
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  {reviews.length > 0 ? (
+                    reviews.map((rev) => (
+                      <div key={rev.id} className="p-4 bg-stone-50 rounded-xl border border-stone-200 space-y-1.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-stone-900">{rev.author}</span>
+                            {rev.verified && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">
+                                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                                <span>Verified Buyer</span>
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-stone-400 text-[11px]">{rev.date}</span>
+                        </div>
+                        <div className="flex text-amber-400 text-xs">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <span key={s} className={s <= rev.rating ? 'text-amber-400' : 'text-stone-300'}>
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-xs text-stone-600 italic leading-relaxed">&ldquo;{rev.comment}&rdquo;</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center text-xs text-stone-500 bg-stone-50 rounded-xl border border-stone-200">
+                      No customer reviews yet for {product.name}. Be the first to add your review!
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ========================================================================= */}
@@ -903,6 +1014,122 @@ export const ProductDetailPage: React.FC = () => {
         )}
 
       </div>
+
+      {/* ========================================================================= */}
+      {/* 7. ADD REVIEW MODAL                                                       */}
+      {/* ========================================================================= */}
+      {reviewModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in select-none">
+          <div className="bg-white rounded-2xl shadow-2xl border border-stone-200 max-w-lg w-full p-6 text-left space-y-4">
+            <div className="flex items-start justify-between border-b border-stone-100 pb-3">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#0E4A93]">Customer Review</span>
+                <h3 className="text-base font-extrabold text-stone-900">
+                  Write a Review for {product.name}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={handleCloseReviewModal}
+                className="p-1 text-stone-400 hover:text-stone-700 rounded-lg cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitReview} className="space-y-4">
+              {/* Star Rating */}
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">
+                  Overall Rating:
+                </label>
+                <div className="flex items-center gap-1.5">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className="p-1 text-xl cursor-pointer transition-transform hover:scale-110 focus:outline-none"
+                    >
+                      <span className={(hoverRating || reviewRating) >= star ? 'text-amber-400' : 'text-stone-300'}>
+                        ★
+                      </span>
+                    </button>
+                  ))}
+                  <span className="text-xs font-bold text-stone-600 ml-2">
+                    {(hoverRating || reviewRating)} / 5 Stars
+                  </span>
+                </div>
+              </div>
+
+              {/* Review Text */}
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">
+                  Review:
+                </label>
+                <textarea
+                  value={reviewText}
+                  onChange={(e) => {
+                    setReviewText(e.target.value);
+                    if (reviewError) setReviewError(null);
+                  }}
+                  rows={4}
+                  placeholder="Write your review about canvas texture, colors, framing, packaging..."
+                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl focus:outline-none focus:border-[#0E4A93] focus:ring-1 focus:ring-[#0E4A93]"
+                  required
+                />
+              </div>
+
+              {/* Reviewer Name */}
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">
+                  Name:
+                </label>
+                <input
+                  type="text"
+                  value={reviewerName}
+                  onChange={(e) => setReviewerName(e.target.value)}
+                  placeholder="Your name (e.g. Priya Sharma)"
+                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl focus:outline-none focus:border-[#0E4A93] focus:ring-1 focus:ring-[#0E4A93]"
+                />
+              </div>
+
+              {reviewError && (
+                <div className="text-xs font-bold text-rose-600 bg-rose-50 p-2.5 rounded-lg border border-rose-200">
+                  {reviewError}
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-stone-100">
+                <button
+                  type="button"
+                  onClick={handleCloseReviewModal}
+                  className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-xl shadow-xs hover:shadow-md transition-all cursor-pointer"
+                >
+                  Submit Review
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Success Notification Toast */}
+      {reviewSuccessMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-emerald-600 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 animate-in slide-in-from-bottom-2">
+          <CheckCircle2 className="w-4 h-4 text-white" />
+          <span>{reviewSuccessMessage}</span>
+        </div>
+      )}
+
     </div>
   );
 };
