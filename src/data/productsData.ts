@@ -314,6 +314,40 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     ],
     ctaText: 'Request Corporate Quote',
     ctaType: 'quote'
+  },
+  'wall-art': {
+    id: 'wall-art',
+    slug: 'wall-art',
+    title: 'Wall Art',
+    shortTitle: 'Wall Art',
+    seoTitle: 'Wall Art Prints | Canvas India',
+    description: 'Curated statement wall art across canvas, acrylic and poster formats — botanical sets, Indian folk motifs, and modern abstract designs.',
+    heroImage: 'https://images.unsplash.com/photo-1582561424760-0321d75e81fa?w=1200&auto=format&fit=crop&q=80',
+    subcategories: ['All'],
+    features: [
+      'Curated across canvas, acrylic and poster materials',
+      'Gallery wall sets and standalone statement pieces',
+      'Ready to hang with mounting hardware included'
+    ],
+    ctaText: 'Shop Wall Art',
+    ctaType: 'shop'
+  },
+  'photo-frames': {
+    id: 'photo-frames',
+    slug: 'photo-frames',
+    title: 'Photo Frames',
+    shortTitle: 'Photo Frames',
+    seoTitle: 'Photo Frames | Canvas India',
+    description: 'Framed prints across our catalog — solid wood and metal frame finishes for canvas, cork and poster prints.',
+    heroImage: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=1200&auto=format&fit=crop&q=80',
+    subcategories: ['All'],
+    features: [
+      'Solid wood and anodized metal frame options',
+      'Shatterproof mounting glass where applicable',
+      'Ready-to-hang mounting hardware included'
+    ],
+    ctaText: 'Shop Photo Frames',
+    ctaType: 'shop'
   }
 };
 
