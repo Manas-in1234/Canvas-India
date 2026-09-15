@@ -1,0 +1,10 @@
+<<<<<<< HEAD
+{"name":"Canvas-India","description":"Personalized Canvas, Acrylic and Cork printing e-commerce store. High quality custom prints, photo frames and wall art delivered across India.","requestFramePermissions":[],"majorCapabilities":["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]}
+=======
+{
+  "name": "Canvas India",
+  "description": "Personalized Canvas, Acrylic and Cork printing e-commerce store. High quality custom prints, photo frames and wall art delivered across India.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+>>>>>>> a22bbca639fecb15c11b0856725d9847ed842605

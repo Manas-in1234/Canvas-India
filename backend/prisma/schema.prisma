@@ -1,0 +1,1333 @@
+// CanvasChamp — Phase 1: Core Foundation schema
+// See backend scope doc §87 for the full target schema; this is the Phase 1 subset:
+// Auth/RBAC, Customers, Catalog, Commerce (cart/orders), Payments, basic Inventory, Audit.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// AUTH / RBAC (scope §72–73, §87 Authentication)
+// ─────────────────────────────────────────────────────────────────────────
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  isActive     Boolean  @default(true) @map("is_active")
+  roleId       String   @map("role_id")
+  role         Role     @relation(fields: [roleId], references: [id])
+  sessions     Session[]
+  auditLogs    AuditLog[]
+  orderNotes   OrderNote[]
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("admin_users")
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String?
+  isSystem    Boolean          @default(false) @map("is_system")
+  permissions RolePermission[]
+  adminUsers  AdminUser[]
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  @@map("roles")
+}
+
+// Granular permission strings, e.g. "orders.view", "orders.refund" (scope §73)
+model Permission {
+  id          String           @id @default(uuid())
+  key         String           @unique // e.g. "orders.refund"
+  description String?
+  roles       RolePermission[]
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id")
+  permissionId String     @map("permission_id")
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Session {
+  id                 String    @id @default(uuid())
+  adminUserId        String    @map("admin_user_id")
+  adminUser          AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  refreshTokenHash   String    @map("refresh_token_hash")
+  userAgent          String?   @map("user_agent")
+  ipAddress          String?   @map("ip_address")
+  expiresAt          DateTime  @map("expires_at")
+  revokedAt          DateTime? @map("revoked_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  @@index([adminUserId])
+  @@map("sessions")
+}
+
+// Write-only from application code; no update/delete endpoint exposed (scope §74)
+model AuditLog {
+  id          String     @id @default(uuid())
+  adminUserId String?    @map("admin_user_id")
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id])
+  action      String // e.g. "PRODUCT_PRICE_CHANGED"
+  entityType  String     @map("entity_type") // e.g. "Product"
+  entityId    String     @map("entity_id")
+  changes     Json? // { field: { old, new } }
+  reason      String?
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// CUSTOMERS (scope §41–43, §87 Customers)
+// ─────────────────────────────────────────────────────────────────────────
+
+model Customer {
+  id            String             @id @default(uuid())
+  name          String
+  email         String?            @unique
+  phone         String?            @unique
+  isGuest       Boolean            @default(false) @map("is_guest")
+  addresses     CustomerAddress[]
+  carts         Cart[]
+  orders        Order[]
+  designs       Design[]
+  segmentMemberships CustomerSegmentMember[]
+  discountRedemptions DiscountRedemption[]
+  cartRecoveries     AbandonedCartRecovery[]
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+  deletedAt     DateTime?          @map("deleted_at")
+
+  @@map("customers")
+}
+
+model CustomerAddress {
+  id          String   @id @default(uuid())
+  customerId  String   @map("customer_id")
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  label       String? // e.g. "Home", "Office"
+  line1       String
+  line2       String?
+  city        String
+  state       String
+  postalCode  String   @map("postal_code")
+  country     String   @default("IN")
+  phone       String?
+  isDefault   Boolean  @default(false) @map("is_default")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("customer_addresses")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// CATALOG (scope §11–20, §87 Catalog)
+// ─────────────────────────────────────────────────────────────────────────
+
+model ProductType {
+  id       String    @id @default(uuid())
+  name     String    @unique // Canvas, Photo Print, Mug, ...
+  products Product[]
+  slaRules ProductionSlaRule[]
+
+  @@map("product_types")
+}
+
+model Category {
+  id       String             @id @default(uuid())
+  name     String
+  slug     String             @unique
+  products ProductCategory[]
+
+  @@map("categories")
+}
+
+model Collection {
+  id       String              @id @default(uuid())
+  name     String
+  slug     String              @unique
+  products ProductCollection[]
+
+  @@map("collections")
+}
+
+model Product {
+  id            String              @id @default(uuid())
+  name          String
+  slug          String              @unique
+  description   String?
+  productTypeId String              @map("product_type_id")
+  productType   ProductType         @relation(fields: [productTypeId], references: [id])
+  status        ProductStatus       @default(DRAFT)
+  basePrice     Decimal             @map("base_price") @db.Decimal(12, 2)
+  costPrice     Decimal?            @map("cost_price") @db.Decimal(12, 2)
+  categories    ProductCategory[]
+  collections   ProductCollection[]
+  options       ProductOption[]
+  variants      ProductVariant[]
+  pricingRules  PricingRule[]
+  designs       Design[]
+  billOfMaterials BillOfMaterials?
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+  deletedAt     DateTime?           @map("deleted_at")
+
+  @@map("products")
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+model ProductCategory {
+  productId  String   @map("product_id")
+  categoryId String   @map("category_id")
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@map("product_categories")
+}
+
+model ProductCollection {
+  productId    String     @map("product_id")
+  collectionId String     @map("collection_id")
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@id([productId, collectionId])
+  @@map("product_collections")
+}
+
+// Dynamic option groups, e.g. SIZE, FRAME (scope §14) — reusable across products
+model OptionGroup {
+  id             String          @id @default(uuid())
+  name           String          @unique // SIZE, FRAME, SHAPE, MATERIAL, FINISH, WRAP
+  values         OptionValue[]
+  productOptions ProductOption[]
+
+  @@map("option_groups")
+}
+
+model OptionValue {
+  id             String            @id @default(uuid())
+  optionGroupId  String            @map("option_group_id")
+  optionGroup    OptionGroup       @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+  value          String // "20x30", "Gallery Wrap", "Black"
+  priceAdjustment Decimal          @default(0) @map("price_adjustment") @db.Decimal(12, 2)
+  sortOrder      Int               @default(0) @map("sort_order")
+  variantOptions VariantOption[]
+
+  @@unique([optionGroupId, value])
+  @@map("option_values")
+}
+
+// Links a product to the option groups it exposes (scope §13, §17)
+model ProductOption {
+  id            String      @id @default(uuid())
+  productId     String      @map("product_id")
+  product       Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  optionGroupId String      @map("option_group_id")
+  optionGroup   OptionGroup @relation(fields: [optionGroupId], references: [id])
+  isRequired    Boolean     @default(true) @map("is_required")
+  sortOrder     Int         @default(0) @map("sort_order")
+
+  @@unique([productId, optionGroupId])
+  @@map("product_options")
+}
+
+// Concrete SKU-bearing combination of option values (scope §16)
+model ProductVariant {
+  id         String          @id @default(uuid())
+  productId  String          @map("product_id")
+  product    Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku        String          @unique
+  price      Decimal         @db.Decimal(12, 2)
+  isActive   Boolean         @default(true) @map("is_active")
+  options    VariantOption[]
+  inventory  InventoryItem?
+  orderItems OrderItem[]
+  cartItems  CartItem[]
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
+
+  @@map("product_variants")
+}
+
+model VariantOption {
+  variantId     String         @map("variant_id")
+  optionValueId String         @map("option_value_id")
+  variant       ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  optionValue   OptionValue    @relation(fields: [optionValueId], references: [id])
+
+  @@id([variantId, optionValueId])
+  @@map("variant_options")
+}
+
+// Configurable pricing rules engine (scope §18–20) — conditions as JSON so the
+// admin can extend rules without a code change.
+model PricingRule {
+  id         String    @id @default(uuid())
+  productId  String?   @map("product_id") // null = applies globally
+  product    Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name       String
+  priority   Int       @default(0)
+  conditions Json // e.g. { "size": "20x30" } or { "frame": "Premium Gold" }
+  adjustment Decimal   @db.Decimal(12, 2) // flat add; percentage variants can extend this later
+  startDate  DateTime? @map("start_date")
+  endDate    DateTime? @map("end_date")
+  isActive   Boolean   @default(true) @map("is_active")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  @@map("pricing_rules")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// COMMERCE — cart & orders (scope §44–45, §89, §114, §87 Commerce)
+// ─────────────────────────────────────────────────────────────────────────
+
+model Cart {
+  id         String     @id @default(uuid())
+  customerId String?    @map("customer_id")
+  customer   Customer?  @relation(fields: [customerId], references: [id])
+  status       CartStatus @default(ACTIVE)
+  discountCode String?    @map("discount_code")
+  items        CartItem[]
+  recovery     AbandonedCartRecovery?
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@map("carts")
+}
+
+enum CartStatus {
+  ACTIVE
+  ABANDONED
+  CONVERTED
+  EXPIRED
+}
+
+model CartItem {
+  id              String         @id @default(uuid())
+  cartId          String         @map("cart_id")
+  cart            Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variantId       String         @map("variant_id")
+  variant         ProductVariant @relation(fields: [variantId], references: [id])
+  configuration   Json? // simple option-only customization (no design/upload involved)
+  designVersionId String?        @map("design_version_id") // set when the line is a customized/uploaded design (Phase 2, scope §21-24)
+  designVersion   DesignVersion? @relation(fields: [designVersionId], references: [id])
+  quantity        Int            @default(1)
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  @@map("cart_items")
+}
+
+// Orders are the central entity (scope §8). Order/payment/shipping statuses are
+// kept as SEPARATE enum columns — never a single unified status field.
+model Order {
+  id             String        @id @default(uuid())
+  orderNumber    String        @unique @map("order_number") // e.g. CC10291
+  customerId     String        @map("customer_id")
+  customer       Customer      @relation(fields: [customerId], references: [id])
+  orderStatus    OrderStatus   @default(DRAFT) @map("order_status")
+  paymentStatus  PaymentStatus @default(PENDING) @map("payment_status")
+  shippingStatus ShippingStatus @default(NOT_SHIPPED) @map("shipping_status")
+
+  subtotal   Decimal @db.Decimal(12, 2)
+  discount   Decimal @default(0) @db.Decimal(12, 2)
+  tax        Decimal @default(0) @db.Decimal(12, 2)
+  shipping   Decimal @default(0) @db.Decimal(12, 2)
+  total      Decimal @db.Decimal(12, 2)
+
+  items      OrderItem[]
+  addresses  OrderAddress[]
+  events     OrderEvent[]
+  notes      OrderNote[]
+  payments   Payment[]
+  shipments  Shipment[]
+  returnRequests      ReturnRequest[]
+  replacementRequests ReplacementRequest[]
+  discountRedemptions DiscountRedemption[]
+
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING_PAYMENT
+  PAID
+  CONFIRMED
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  FAILED
+  PARTIALLY_REFUNDED
+  REFUNDED
+}
+
+enum ShippingStatus {
+  NOT_SHIPPED
+  READY
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  NDR
+  RTO
+}
+
+// Historical snapshot fields are mandatory (scope §89, §114): an order must
+// keep displaying the price/name/config that existed at purchase time, even
+// after the live product/variant changes later.
+model OrderItem {
+  id        String          @id @default(uuid())
+  orderId   String          @map("order_id")
+  order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId String?         @map("variant_id") // kept for traceability; never used for display
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+
+  productNameSnapshot   String @map("product_name_snapshot")
+  variantSnapshot        Json   @map("variant_snapshot")
+  priceSnapshot          Decimal @map("price_snapshot") @db.Decimal(12, 2)
+  configurationSnapshot  Json?  @map("configuration_snapshot")
+  // Frozen copy of DesignVersion.designJson at order-creation time (scope §24:
+  // "the approved version must be permanently associated with the order").
+  // Never re-read from the live Design/DesignVersion tables for display.
+  designVersionSnapshot  Json?  @map("design_version_snapshot")
+  taxSnapshot            Decimal @default(0) @map("tax_snapshot") @db.Decimal(12, 2)
+
+  quantity  Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  artwork        Artwork?
+  productionJobs ProductionJob[]
+  shipmentItems  ShipmentItem[]
+  returnRequests      ReturnRequest[]
+  replacementRequests ReplacementRequest[]
+
+  @@map("order_items")
+}
+
+model OrderAddress {
+  id         String      @id @default(uuid())
+  orderId    String      @map("order_id")
+  order      Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type       AddressType
+  name       String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String      @map("postal_code")
+  country    String      @default("IN")
+  phone      String?
+
+  @@map("order_addresses")
+}
+
+enum AddressType {
+  BILLING
+  SHIPPING
+}
+
+// Every action creates an event (scope §10) — append-only order timeline.
+model OrderEvent {
+  id        String   @id @default(uuid())
+  orderId   String   @map("order_id")
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type      String // e.g. "order.created", "order.paid"
+  message   String?
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("order_events")
+}
+
+model OrderNote {
+  id          String     @id @default(uuid())
+  orderId     String     @map("order_id")
+  order       Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  adminUserId String?    @map("admin_user_id")
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id])
+  note        String
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  @@map("order_notes")
+}
+
+model ReturnRequest {
+  id          String       @id @default(uuid())
+  orderId     String       @map("order_id")
+  orderItemId String       @map("order_item_id")
+  reason      String
+  status      ReturnStatus @default(REQUESTED)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id])
+
+  @@index([orderId])
+  @@index([orderItemId])
+  @@index([status])
+  @@map("return_requests")
+}
+
+model ReplacementRequest {
+  id              String             @id @default(uuid())
+  orderId         String             @map("order_id")
+  orderItemId     String             @map("order_item_id")
+  complaintReason String             @map("complaint_reason")
+  status          ReplacementStatus  @default(REQUESTED)
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id])
+
+  @@index([orderId])
+  @@index([orderItemId])
+  @@index([status])
+  @@map("replacement_requests")
+}
+
+enum ReturnStatus {
+  REQUESTED
+  REVIEW
+  APPROVED
+  RETURNED
+  REFUNDED
+}
+
+enum ReplacementStatus {
+  REQUESTED
+  REVIEW
+  APPROVED
+  COMPLETED
+  REJECTED
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PAYMENTS (scope §46–48, §87 Payments) — abstraction only in Phase 1
+// ─────────────────────────────────────────────────────────────────────────
+
+model Payment {
+  id            String              @id @default(uuid())
+  orderId       String              @map("order_id")
+  order         Order               @relation(fields: [orderId], references: [id])
+  provider      PaymentProvider
+  status        PaymentStatus       @default(PENDING)
+  amount        Decimal             @db.Decimal(12, 2)
+  currency      String              @default("INR")
+  providerRef   String?             @map("provider_ref") // gateway payment/order id
+  transactions  PaymentTransaction[]
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+
+  @@map("payments")
+}
+
+enum PaymentProvider {
+  RAZORPAY
+  UPI
+  COD
+}
+
+model PaymentTransaction {
+  id        String   @id @default(uuid())
+  paymentId String   @map("payment_id")
+  payment   Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  type      String // AUTH, CAPTURE, REFUND, WEBHOOK
+  status    String
+  rawPayload Json?   @map("raw_payload")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("payment_transactions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// INVENTORY — basic only in Phase 1 (scope §36–39, §87 Inventory)
+// Warehouses/BOM/purchase orders arrive in Phase 4.
+// ─────────────────────────────────────────────────────────────────────────
+
+model InventoryItem {
+  id        String            @id @default(uuid())
+  variantId String            @unique @map("variant_id")
+  variant   ProductVariant    @relation(fields: [variantId], references: [id])
+  available Int               @default(0)
+  reserved  Int               @default(0)
+  damaged   Int               @default(0)
+  reorderLevel Int            @default(0) @map("reorder_level")
+  movements InventoryMovement[]
+  updatedAt DateTime          @updatedAt @map("updated_at")
+
+  @@map("inventory_items")
+}
+
+model InventoryMovement {
+  id              String          @id @default(uuid())
+  inventoryItemId String          @map("inventory_item_id")
+  inventoryItem   InventoryItem   @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  movementType    MovementType    @map("movement_type")
+  quantity        Int
+  referenceType   String?         @map("reference_type") // e.g. "Order"
+  referenceId     String?         @map("reference_id")
+  beforeQuantity  Int             @map("before_quantity")
+  afterQuantity   Int             @map("after_quantity")
+  performedBy     String?         @map("performed_by")
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  @@map("inventory_movements")
+}
+
+enum MovementType {
+  PURCHASE
+  RESERVATION
+  RELEASE
+  CONSUMPTION
+  RETURN
+  DAMAGE
+  TRANSFER
+  ADJUSTMENT
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// CUSTOMIZATION (scope §21–29, §84–85, §87 Customization) — Phase 2
+// ─────────────────────────────────────────────────────────────────────────
+
+// Generic uploaded/derived file record (scope §26) — original uploads,
+// generated thumbnails/previews, and production files are all Assets,
+// distinguished by assetType. ownerType/ownerId is a polymorphic pair
+// (e.g. "Customer"/customerId) rather than a hard FK, matching the doc.
+model Asset {
+  id          String    @id @default(uuid())
+  ownerType   String    @map("owner_type") // e.g. "Customer"
+  ownerId     String    @map("owner_id")
+  storageKey  String    @unique @map("storage_key") // S3/MinIO object key
+  fileName    String    @map("file_name")
+  mimeType    String    @map("mime_type")
+  fileSize    Int       @map("file_size")
+  width       Int?
+  height      Int?
+  checksum    String?
+  assetType   AssetType @map("asset_type")
+  uploadStatus AssetUploadStatus @default(PENDING_UPLOAD) @map("upload_status")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  designElements       DesignElement[]
+  designVersionPreviews DesignVersion[]  @relation("DesignVersionPreview")
+  artworkProductionFile Artwork[]        @relation("ArtworkProductionFile")
+
+  @@index([ownerType, ownerId])
+  @@map("assets")
+}
+
+enum AssetType {
+  ORIGINAL
+  THUMBNAIL
+  PREVIEW
+  PRODUCTION_FILE
+}
+
+// The API never blocks on image processing (scope §84): an Asset starts
+// PENDING_UPLOAD, moves to PROCESSING once the client confirms the upload,
+// and READY once the background worker has generated derivatives/metadata.
+enum AssetUploadStatus {
+  PENDING_UPLOAD
+  PROCESSING
+  READY
+  FAILED
+}
+
+// A customer's customization project for one product (scope §21-22).
+model Design {
+  id                String        @id @default(uuid())
+  customerId        String        @map("customer_id")
+  customer          Customer      @relation(fields: [customerId], references: [id])
+  productId         String        @map("product_id")
+  product           Product       @relation(fields: [productId], references: [id])
+  status            DesignStatus  @default(DRAFT)
+  currentVersionId  String?       @unique @map("current_version_id")
+  currentVersion    DesignVersion? @relation("DesignCurrentVersion", fields: [currentVersionId], references: [id])
+  versions          DesignVersion[] @relation("DesignVersions")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  @@map("designs")
+}
+
+enum DesignStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+}
+
+// Append-only (scope §24): a new version is always inserted, never mutated,
+// so an approved version stays permanently and unambiguously reconstructable.
+model DesignVersion {
+  id             String   @id @default(uuid())
+  designId       String   @map("design_id")
+  design         Design   @relation("DesignVersions", fields: [designId], references: [id], onDelete: Cascade)
+  versionNumber  Int      @map("version_number")
+  canvasWidth    Int      @map("canvas_width") // design canvas size in pixels (scope §23)
+  canvasHeight   Int      @map("canvas_height")
+  // Physical print target size in inches, captured from the product/variant's
+  // chosen size option at save time — used by pre-flight DPI checks (§28) and
+  // kept separate from canvasWidth/Height, which are pixel dimensions, not inches.
+  targetWidthInches  Decimal @map("target_width_inches") @db.Decimal(6, 2)
+  targetHeightInches Decimal @map("target_height_inches") @db.Decimal(6, 2)
+  // Source of truth for reconstructing the customer's design (scope §23).
+  designJson     Json     @map("design_json")
+  previewAssetId String?  @map("preview_asset_id")
+  previewAsset   Asset?   @relation("DesignVersionPreview", fields: [previewAssetId], references: [id])
+  elements       DesignElement[]
+  cartItems      CartItem[]
+  artwork        Artwork[]
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  currentForDesign Design? @relation("DesignCurrentVersion")
+
+  @@unique([designId, versionNumber])
+  @@map("design_versions")
+}
+
+// Denormalized index into designJson's elements for querying/analytics
+// (scope §22-23) — designJson on DesignVersion remains the source of truth;
+// this table is never read for reconstructing a design, only for search.
+model DesignElement {
+  id              String        @id @default(uuid())
+  designVersionId String        @map("design_version_id")
+  designVersion   DesignVersion @relation(fields: [designVersionId], references: [id], onDelete: Cascade)
+  type            String // "image", "text", ...
+  assetId         String?       @map("asset_id")
+  asset           Asset?        @relation(fields: [assetId], references: [id])
+  x               Float
+  y               Float
+  width           Float
+  height          Float
+  rotation        Float         @default(0)
+  zIndex          Int           @default(0) @map("z_index")
+
+  @@map("design_elements")
+}
+
+// Artwork/pre-flight pipeline (scope §27-29). One Artwork per attempt at
+// turning a DesignVersion into a production-ready file; a rejected attempt
+// is not deleted, a new Artwork row is created for the retry.
+model Artwork {
+  id                    String         @id @default(uuid())
+  designVersionId       String         @map("design_version_id")
+  designVersion         DesignVersion  @relation(fields: [designVersionId], references: [id])
+  orderItemId           String?        @unique @map("order_item_id")
+  orderItem             OrderItem?     @relation(fields: [orderItemId], references: [id])
+  status                ArtworkStatus  @default(PENDING)
+  // PASS/WARNING/FAIL breakdown per check (scope §28-29): resolution, dpi,
+  // aspectRatio, bleed, safeArea, colorMode, etc.
+  preflightResult       Json?          @map("preflight_result")
+  productionFileAssetId String?        @map("production_file_asset_id")
+  productionFileAsset   Asset?         @relation("ArtworkProductionFile", fields: [productionFileAssetId], references: [id])
+  reviewedBy            String?        @map("reviewed_by")
+  reviewedAt            DateTime?      @map("reviewed_at")
+  createdAt             DateTime       @default(now()) @map("created_at")
+  updatedAt             DateTime       @updatedAt @map("updated_at")
+
+  @@map("artwork")
+}
+
+enum ArtworkStatus {
+  PENDING
+  PREFLIGHT_PASSED
+  PREFLIGHT_WARNING
+  PREFLIGHT_FAILED
+  APPROVED
+  REJECTED
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PRODUCTION (scope §30–40, §87 Production, §106–109) — Phase 3
+// ─────────────────────────────────────────────────────────────────────────
+
+model Warehouse {
+  id             String   @id @default(uuid())
+  name           String
+  code           String   @unique
+  addressLine1   String   @map("address_line1")
+  addressLine2   String?  @map("address_line2")
+  city           String
+  state          String
+  postalCode     String   @map("postal_code")
+  country        String   @default("IN")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  machines       Machine[]
+  productionJobs ProductionJob[]
+  shipments      Shipment[]
+  rtoCases RtoCase[]
+
+  @@map("warehouses")
+}
+
+model Machine {
+  id                 String        @id @default(uuid())
+  name               String
+  type               String // e.g. "Printer", "Framing Station"
+  status             MachineStatus @default(AVAILABLE)
+  capacity           Int? // units/hour, admin-defined
+  supportedMaterials String[]      @map("supported_materials")
+  warehouseId        String?       @map("warehouse_id")
+  warehouse          Warehouse?    @relation(fields: [warehouseId], references: [id])
+  maintenanceDate    DateTime?     @map("maintenance_date")
+  stages             ProductionJobStage[]
+  batches            ProductionBatch[]
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+
+  @@map("machines")
+}
+
+enum MachineStatus {
+  AVAILABLE
+  RUNNING
+  MAINTENANCE
+  OFFLINE
+}
+
+// One job per order item (scope §31) — created once an artwork tied to a real
+// order item is approved (see ArtworkService.approve).
+model ProductionJob {
+  id           String              @id @default(uuid())
+  orderItemId  String              @map("order_item_id")
+  orderItem    OrderItem           @relation(fields: [orderItemId], references: [id])
+  warehouseId  String?             @map("warehouse_id")
+  warehouse    Warehouse?          @relation(fields: [warehouseId], references: [id])
+  priority     Int                 @default(0)
+  status       ProductionJobStatus @default(QUEUED)
+  reworkCount  Int                 @default(0) @map("rework_count")
+  stages       ProductionJobStage[]
+  events       ProductionEvent[]
+  batchJobs    ProductionBatchJob[]
+  createdAt    DateTime            @default(now()) @map("created_at")
+  startedAt    DateTime?           @map("started_at")
+  completedAt  DateTime?           @map("completed_at")
+
+  @@map("production_jobs")
+}
+
+enum ProductionJobStatus {
+  QUEUED
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+// Coarse pipeline stage type (scope §30, §33's Kanban columns). ARTWORK_QUEUE
+// is included for board completeness even though its actual work happens in
+// ArtworkModule (Phase 2) — it reflects, it does not duplicate, that state.
+enum ProductionStageType {
+  ARTWORK_QUEUE
+  PRINTING
+  CUTTING
+  FRAMING
+  ASSEMBLY
+  QC
+  PACKAGING
+}
+
+enum ProductionStageStatus {
+  PENDING
+  IN_PROGRESS
+  PASSED
+  FAILED
+  SKIPPED
+}
+
+// Each stage is its own record (scope §32-33) — status/employee/machine/SLA
+// tracked per stage, not squashed into one status column on the job.
+model ProductionJobStage {
+  id                  String                 @id @default(uuid())
+  productionJobId     String                 @map("production_job_id")
+  productionJob       ProductionJob          @relation(fields: [productionJobId], references: [id], onDelete: Cascade)
+  stage               ProductionStageType
+  status              ProductionStageStatus  @default(PENDING)
+  machineId           String?                @map("machine_id")
+  machine             Machine?               @relation(fields: [machineId], references: [id])
+  assignedAdminUserId String?                @map("assigned_admin_user_id")
+  slaDueAt            DateTime?              @map("sla_due_at")
+  startedAt           DateTime?              @map("started_at")
+  completedAt         DateTime?              @map("completed_at")
+  notes               String?
+  failureReason        String?               @map("failure_reason")
+  // Set when this stage instance exists because a prior QC FAIL required
+  // redoing an earlier stage (scope §108) — the failed prior attempt is kept,
+  // not overwritten.
+  reworkOfStageId      String?               @map("rework_of_stage_id")
+  qualityChecks        QualityCheck[]
+  createdAt            DateTime              @default(now()) @map("created_at")
+
+  @@map("production_job_stages")
+}
+
+// Batching multiple jobs sharing product/material/machine (scope §34) — pure
+// optimization metadata, does not itself change job/stage state.
+model ProductionBatch {
+  id        String               @id @default(uuid())
+  name      String
+  machineId String?              @map("machine_id")
+  machine   Machine?             @relation(fields: [machineId], references: [id])
+  status    String               @default("OPEN")
+  jobs      ProductionBatchJob[]
+  createdAt DateTime             @default(now()) @map("created_at")
+
+  @@map("production_batches")
+}
+
+model ProductionBatchJob {
+  productionBatchId String        @map("production_batch_id")
+  productionJobId   String        @map("production_job_id")
+  batch             ProductionBatch @relation(fields: [productionBatchId], references: [id], onDelete: Cascade)
+  job               ProductionJob   @relation(fields: [productionJobId], references: [id], onDelete: Cascade)
+
+  @@id([productionBatchId, productionJobId])
+  @@map("production_batch_jobs")
+}
+
+// Raw-material stock, kept separate from finished-variant InventoryItem
+// (scope §36: Raw Materials vs. Finished Products are distinct categories).
+// Same available/reserved/consumed/damaged shape and movement-ledger pattern
+// as InventoryItem/InventoryMovement (scope §37-39), just a parallel table.
+model RawMaterial {
+  id           String                @id @default(uuid())
+  name         String                @unique // "Canvas Roll", "Ink", "Wood Frame"
+  unit         String // "meters", "ml", "units"
+  available    Decimal               @default(0) @db.Decimal(12, 3)
+  reserved     Decimal               @default(0) @db.Decimal(12, 3)
+  consumed     Decimal               @default(0) @db.Decimal(12, 3)
+  damaged      Decimal               @default(0) @db.Decimal(12, 3)
+  reorderLevel Decimal               @default(0) @map("reorder_level") @db.Decimal(12, 3)
+  movements    RawMaterialMovement[]
+  bomItems     BomItem[]
+  createdAt    DateTime              @default(now()) @map("created_at")
+  updatedAt    DateTime              @updatedAt @map("updated_at")
+
+  @@map("raw_materials")
+}
+
+model RawMaterialMovement {
+  id             String       @id @default(uuid())
+  rawMaterialId  String       @map("raw_material_id")
+  rawMaterial    RawMaterial  @relation(fields: [rawMaterialId], references: [id], onDelete: Cascade)
+  movementType   MovementType @map("movement_type") // reuses the Phase 1 enum
+  quantity       Decimal      @db.Decimal(12, 3)
+  referenceType  String?      @map("reference_type") // e.g. "ProductionJob"
+  referenceId    String?      @map("reference_id")
+  beforeQuantity Decimal      @map("before_quantity") @db.Decimal(12, 3)
+  afterQuantity  Decimal      @map("after_quantity") @db.Decimal(12, 3)
+  performedBy    String?      @map("performed_by")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@map("raw_material_movements")
+}
+
+// Bill of materials per product (scope §35).
+model BillOfMaterials {
+  id        String    @id @default(uuid())
+  productId String    @unique @map("product_id")
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  items     BomItem[]
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("bill_of_materials")
+}
+
+model BomItem {
+  id                String          @id @default(uuid())
+  billOfMaterialsId String          @map("bill_of_materials_id")
+  billOfMaterials   BillOfMaterials @relation(fields: [billOfMaterialsId], references: [id], onDelete: Cascade)
+  rawMaterialId     String          @map("raw_material_id")
+  rawMaterial       RawMaterial     @relation(fields: [rawMaterialId], references: [id])
+  quantityRequired  Decimal         @map("quantity_required") @db.Decimal(12, 3)
+
+  @@unique([billOfMaterialsId, rawMaterialId])
+  @@map("bom_items")
+}
+
+enum QcResult {
+  PASS
+  FAIL
+  REWORK
+}
+
+// Structured QC record (scope §108) attached to a QC-type ProductionJobStage.
+model QualityCheck {
+  id                   String                @id @default(uuid())
+  productionJobStageId String                @map("production_job_stage_id")
+  productionJobStage   ProductionJobStage    @relation(fields: [productionJobStageId], references: [id], onDelete: Cascade)
+  printQuality         QcResult              @map("print_quality")
+  colorQuality         QcResult              @map("color_quality")
+  alignment            QcResult
+  materialQuality      QcResult              @map("material_quality")
+  assemblyQuality      QcResult              @map("assembly_quality")
+  packagingQuality     QcResult              @map("packaging_quality")
+  result               QcResult // overall verdict
+  photos               String[] // asset storage keys
+  checkedBy            String?               @map("checked_by")
+  createdAt            DateTime              @default(now()) @map("created_at")
+
+  @@map("quality_checks")
+}
+
+// Append-only production timeline, same philosophy as OrderEvent (scope §10).
+model ProductionEvent {
+  id              String        @id @default(uuid())
+  productionJobId String        @map("production_job_id")
+  productionJob   ProductionJob @relation(fields: [productionJobId], references: [id], onDelete: Cascade)
+  type            String // e.g. "production.started", "stage.completed"
+  message         String?
+  metadata        Json?
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@map("production_events")
+}
+
+// Configurable per product type + stage (scope §104-106, §113: don't hard-code).
+model ProductionSlaRule {
+  id              String              @id @default(uuid())
+  productTypeId   String?             @map("product_type_id") // null = applies to all product types
+  productType     ProductType?        @relation(fields: [productTypeId], references: [id])
+  stage           ProductionStageType
+  durationMinutes Int                 @map("duration_minutes")
+  isActive        Boolean             @default(true) @map("is_active")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  @@unique([productTypeId, stage])
+  @@map("production_sla_rules")
+}
+
+// Shipping & courier lifecycle (scope §52-54, §80)
+model Shipment {
+  id              String         @id @default(uuid())
+  orderId         String         @map("order_id")
+  warehouseId     String         @map("warehouse_id")
+  courierProvider String         @map("courier_provider")
+  awbNumber       String?        @map("awb_number")
+  status          ShippingStatus @default(READY)
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  order           Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  warehouse       Warehouse      @relation(fields: [warehouseId], references: [id])
+  items           ShipmentItem[]
+  trackingEvents  TrackingEvent[]
+  ndrCases        NdrCase[]
+  rtoCases        RtoCase[]
+
+  @@index([orderId])
+  @@index([warehouseId])
+  @@index([awbNumber])
+  @@map("shipments")
+}
+
+model ShipmentItem {
+  id           String     @id @default(uuid())
+  shipmentId   String     @map("shipment_id")
+  orderItemId  String     @map("order_item_id")
+  quantity     Int
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  shipment     Shipment   @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  orderItem    OrderItem  @relation(fields: [orderItemId], references: [id])
+
+  @@unique([shipmentId, orderItemId])
+  @@index([orderItemId])
+  @@map("shipment_items")
+}
+
+model TrackingEvent {
+  id          String         @id @default(uuid())
+  shipmentId  String         @map("shipment_id")
+  status      ShippingStatus
+  description String?
+  location    String?
+  occurredAt  DateTime       @default(now()) @map("occurred_at")
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  shipment    Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@index([shipmentId, occurredAt])
+  @@map("tracking_events")
+}
+
+model NdrCase {
+  id            String         @id @default(uuid())
+  shipmentId    String         @map("shipment_id")
+  reason        String
+  attemptNumber Int            @map("attempt_number")
+  status        ShippingStatus @default(NDR)
+  resolution    String?
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  shipment      Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@index([shipmentId])
+  @@index([status])
+  @@map("ndr_cases")
+}
+
+model RtoCase {
+  id              String    @id @default(uuid())
+  shipmentId      String    @map("shipment_id")
+  warehouseId     String    @map("warehouse_id")
+  receivedAt      DateTime? @map("received_at")
+  inventoryUpdated Boolean   @default(false) @map("inventory_updated")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  shipment        Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id])
+
+  @@index([shipmentId])
+  @@index([warehouseId])
+  @@map("rto_cases")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// GROWTH (Phase 5 — Discounts, Promotions, Campaigns, Segments, Abandoned Carts)
+// ─────────────────────────────────────────────────────────────────────────
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum PromotionType {
+  AUTOMATIC_DISCOUNT
+  BUY_X_GET_Y
+  TIERED_DISCOUNT
+  FREE_SHIPPING
+}
+
+enum CampaignType {
+  SEASONAL
+  PRODUCT_LAUNCH
+  ABANDONED_CART
+  RETENTION
+  SPECIAL_PROMO
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum SegmentType {
+  MANUAL
+  DYNAMIC
+}
+
+enum AbandonedRecoveryStatus {
+  DETECTED
+  NOTIFICATION_SENT
+  RECOVERED
+  EXPIRED
+  CANCELLED
+}
+
+model CustomerSegment {
+  id          String                  @id @default(uuid())
+  name        String                  @unique
+  slug        String                  @unique
+  description String?
+  type        SegmentType             @default(DYNAMIC)
+  criteria    Json?
+  isActive    Boolean                 @default(true) @map("is_active")
+  members     CustomerSegmentMember[]
+  campaigns   Campaign[]
+  discounts   Discount[]
+  promotions  Promotion[]
+  createdAt   DateTime                @default(now()) @map("created_at")
+  updatedAt   DateTime                @updatedAt @map("updated_at")
+
+  @@map("customer_segments")
+}
+
+model CustomerSegmentMember {
+  segmentId  String          @map("segment_id")
+  customerId String          @map("customer_id")
+  joinedAt   DateTime        @default(now()) @map("joined_at")
+  segment    CustomerSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  customer   Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@id([segmentId, customerId])
+  @@index([customerId])
+  @@map("customer_segment_members")
+}
+
+model Campaign {
+  id               String           @id @default(uuid())
+  name             String
+  code             String           @unique
+  description      String?
+  type             CampaignType     @default(SEASONAL)
+  status           CampaignStatus   @default(DRAFT)
+  startsAt         DateTime         @map("starts_at")
+  endsAt           DateTime?        @map("ends_at")
+  budget           Decimal?         @db.Decimal(12, 2)
+  revenueGenerated Decimal          @default(0) @map("revenue_generated") @db.Decimal(12, 2)
+  targetSegmentId  String?          @map("target_segment_id")
+  targetSegment    CustomerSegment? @relation(fields: [targetSegmentId], references: [id])
+  discounts        Discount[]
+  promotions       Promotion[]
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("campaigns")
+}
+
+model Discount {
+  id                    String                  @id @default(uuid())
+  code                  String                  @unique
+  description           String?
+  discountType          DiscountType            @map("discount_type")
+  value                 Decimal                 @db.Decimal(12, 2)
+  maxDiscountAmount     Decimal?                @map("max_discount_amount") @db.Decimal(12, 2)
+  minOrderSubtotal      Decimal?                @map("min_order_subtotal") @db.Decimal(12, 2)
+  usageLimit            Int?                    @map("usage_limit")
+  usageCount            Int                     @default(0) @map("usage_count")
+  perCustomerLimit      Int?                    @map("per_customer_limit")
+  startsAt              DateTime?               @map("starts_at")
+  expiresAt             DateTime?               @map("expires_at")
+  isActive              Boolean                 @default(true) @map("is_active")
+  isExclusive           Boolean                 @default(false) @map("is_exclusive")
+  applicableCategoryIds String[]                @default([]) @map("applicable_category_ids")
+  applicableProductIds  String[]                @default([]) @map("applicable_product_ids")
+  customerSegmentId     String?                 @map("customer_segment_id")
+  customerSegment       CustomerSegment?        @relation(fields: [customerSegmentId], references: [id])
+  campaignId            String?                 @map("campaign_id")
+  campaign              Campaign?               @relation(fields: [campaignId], references: [id])
+  redemptions           DiscountRedemption[]
+  recoveriesOffered     AbandonedCartRecovery[]
+  createdAt             DateTime                @default(now()) @map("created_at")
+  updatedAt             DateTime                @updatedAt @map("updated_at")
+
+  @@index([code])
+  @@index([isActive])
+  @@map("discounts")
+}
+
+model DiscountRedemption {
+  id         String   @id @default(uuid())
+  discountId String   @map("discount_id")
+  customerId String   @map("customer_id")
+  orderId    String?  @map("order_id")
+  cartId     String?  @map("cart_id")
+  amount     Decimal  @db.Decimal(12, 2)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  discount   Discount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  order      Order?   @relation(fields: [orderId], references: [id])
+
+  @@index([discountId, customerId])
+  @@index([orderId])
+  @@map("discount_redemptions")
+}
+
+model Promotion {
+  id                    String           @id @default(uuid())
+  name                  String
+  slug                  String           @unique
+  description           String?
+  promotionType         PromotionType    @default(AUTOMATIC_DISCOUNT) @map("promotion_type")
+  discountType          DiscountType     @default(PERCENTAGE) @map("discount_type")
+  value                 Decimal          @db.Decimal(12, 2)
+  minOrderSubtotal      Decimal?         @map("min_order_subtotal") @db.Decimal(12, 2)
+  minQuantity           Int?             @map("min_quantity")
+  maxDiscountAmount     Decimal?         @map("max_discount_amount") @db.Decimal(12, 2)
+  priority              Int              @default(0)
+  isStackable           Boolean          @default(false) @map("is_stackable")
+  startsAt              DateTime         @map("starts_at")
+  endsAt                DateTime         @map("ends_at")
+  isActive              Boolean          @default(true) @map("is_active")
+  applicableCategoryIds String[]         @default([]) @map("applicable_category_ids")
+  applicableProductIds  String[]         @default([]) @map("applicable_product_ids")
+  customerSegmentId     String?          @map("customer_segment_id")
+  customerSegment       CustomerSegment? @relation(fields: [customerSegmentId], references: [id])
+  campaignId            String?          @map("campaign_id")
+  campaign              Campaign?        @relation(fields: [campaignId], references: [id])
+  rules                 Json?
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@index([priority])
+  @@map("promotions")
+}
+
+model AbandonedCartRecovery {
+  id                     String                  @id @default(uuid())
+  cartId                 String                  @unique @map("cart_id")
+  cart                   Cart                    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  customerId             String?                 @map("customer_id")
+  customer               Customer?               @relation(fields: [customerId], references: [id])
+  recoveryToken          String                  @unique @map("recovery_token")
+  status                 AbandonedRecoveryStatus @default(DETECTED)
+  reminderCount          Int                     @default(0) @map("reminder_count")
+  lastNotificationSentAt DateTime?               @map("last_notification_sent_at")
+  recoveredAt            DateTime?               @map("recovered_at")
+  offeredDiscountId      String?                 @map("offered_discount_id")
+  offeredDiscount        Discount?               @relation(fields: [offeredDiscountId], references: [id])
+  metadata               Json?
+  createdAt              DateTime                @default(now()) @map("created_at")
+  updatedAt              DateTime                @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([recoveryToken])
+  @@map("abandoned_cart_recoveries")
+}
+
+
