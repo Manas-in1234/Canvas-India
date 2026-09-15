@@ -15,23 +15,34 @@ export const HomePage: React.FC = () => {
     onAddToCartFromWorkbench,
   } = useShop();
 
-  const handleSelectCategory = (slug: string) => {
-    // Canvas category navigates to the dedicated Canvas page
-    if (slug === 'canvas-prints' || slug === 'canvas') {
-      navigate('/canvas');
+  const CATEGORY_ROUTES: Record<string, string> = {
+    'canvas': '/canvas',
+    'canvas-prints': '/canvas',
+    'acrylic': '/acrylic',
+    'posters': '/posters',
+    'cork': '/cork',
+    'cork-prints': '/cork',
+    'yoga-fitness': '/yoga-fitness',
+    'home-decor': '/home-decor',
+    'custom-prints': '/custom-prints',
+    'gifts': '/gifts',
+    'occasions': '/gifts',
+    'festivals': '/gifts',
+    'bulk-order': '/bulk-order',
+    'bulk-orders': '/bulk-order',
+    'corporate-orders': '/corporate-orders',
+    'corporate': '/corporate-orders',
+    'corporate-printing': '/corporate-orders',
+  };
+
+  const handleSelectCategory = (slug: string, sub?: string) => {
+    const route = CATEGORY_ROUTES[slug];
+    if (route) {
+      navigate(sub ? `${route}?sub=${encodeURIComponent(sub)}` : route);
       return;
     }
-    if (slug === 'corporate' || slug === 'corporate-printing' || slug === 'bulk-order' || slug === 'corporate-orders' || slug === 'bulk-orders') {
-      const el = document.getElementById('corporate-section');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-    } else if (slug === 'deals' || slug === 'sale') {
+    if (slug === 'deals' || slug === 'sale') {
       const el = document.getElementById('deals-section');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-    } else if (slug === 'custom-prints') {
-      const el = document.getElementById('create-something-new');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-    } else if (slug === 'gifts' || slug === 'occasions' || slug === 'festivals') {
-      const el = document.getElementById('shop-occasions');
       if (el) el.scrollIntoView({ behavior: 'smooth' });
     } else {
       const el = document.getElementById('shop-categories');

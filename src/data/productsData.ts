@@ -242,6 +242,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
       "Mother's Day",
       "Father's Day",
       'Festivals',
+      'Diwali',
       'Personalized Gifts',
       'Photo Gifts',
       'Corporate Gifts'

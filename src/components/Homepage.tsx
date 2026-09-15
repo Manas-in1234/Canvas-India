@@ -15,7 +15,7 @@ import { PRIMARY_CATEGORIES } from '../data/storeData';
 import { CreateSomethingNew } from './CreateSomethingNew';
 
 export interface HomepageProps {
-  onSelectCategory: (slug: string) => void;
+  onSelectCategory: (slug: string, sub?: string) => void;
   onAddToCart: (product: Product) => void;
   onCustomize: (product?: Product) => void;
   onOpenQuote: () => void;
@@ -50,12 +50,12 @@ export const Homepage: React.FC<HomepageProps> = ({
 
   // 6 Compact Occasions
   const occasions = [
-    { name: 'Birthday', slug: 'gifts', image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=400&auto=format&fit=crop&q=80' },
-    { name: 'Anniversary', slug: 'gifts', image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&auto=format&fit=crop&q=80' },
-    { name: 'Wedding', slug: 'gifts', image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=400&auto=format&fit=crop&q=80' },
-    { name: 'Housewarming', slug: 'gifts', image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&auto=format&fit=crop&q=80' },
-    { name: 'Diwali', slug: 'gifts', image: 'https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=400&auto=format&fit=crop&q=80' },
-    { name: 'Corporate Gifts', slug: 'corporate', image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80' },
+    { name: 'Birthday', slug: 'gifts', sub: 'Birthday', image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=400&auto=format&fit=crop&q=80' },
+    { name: 'Anniversary', slug: 'gifts', sub: 'Anniversary', image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&auto=format&fit=crop&q=80' },
+    { name: 'Wedding', slug: 'gifts', sub: 'Wedding', image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=400&auto=format&fit=crop&q=80' },
+    { name: 'Housewarming', slug: 'gifts', sub: 'Housewarming', image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&auto=format&fit=crop&q=80' },
+    { name: 'Diwali', slug: 'gifts', sub: 'Diwali', image: 'https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=400&auto=format&fit=crop&q=80' },
+    { name: 'Corporate Gifts', slug: 'gifts', sub: 'Corporate Gifts', image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80' },
   ];
 
   return (
@@ -298,7 +298,7 @@ export const Homepage: React.FC<HomepageProps> = ({
             {occasions.map((occ) => (
               <div
                 key={occ.name}
-                onClick={() => onSelectCategory(occ.slug)}
+                onClick={() => onSelectCategory(occ.slug, occ.sub)}
                 className="group cursor-pointer text-left"
               >
                 <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-stone-100 mb-2 border border-stone-200 shadow-2xs">
