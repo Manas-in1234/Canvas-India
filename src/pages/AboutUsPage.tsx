@@ -21,7 +21,6 @@ export const AboutUsPage: React.FC = () => {
 
   useEffect(() => {
     document.title = 'About Us | Canvas India — Handcrafted Personalized Art & Printing';
-    window.scrollTo(0, 0);
   }, []);
 
   return (
