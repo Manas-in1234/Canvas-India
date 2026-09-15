@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Search, 
@@ -66,6 +67,13 @@ export const Header: React.FC<HeaderProps> = ({
   const [expandedMobileCategory, setExpandedMobileCategory] = useState<string | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const allCatRef = useRef<HTMLDivElement>(null);
+
+  // Dropdown panels are rendered via a portal (see below) so the horizontally
+  // scrollable category nav row (overflow-x-auto) doesn't clip them — per the
+  // CSS overflow spec, overflow-x: auto forces overflow-y to auto too, which
+  // silently clips any absolutely-positioned dropdown nested inside that row.
+  const [allCatMenuPos, setAllCatMenuPos] = useState<{ top: number; left: number } | null>(null);
+  const [megaMenuPos, setMegaMenuPos] = useState<{ top: number; left: number } | null>(null);
 
   // Helper to resolve icon from primary category data
   const getCategoryIcon = (iconName: string) => {
@@ -156,31 +164,6 @@ export const Header: React.FC<HeaderProps> = ({
       case 'building': return <Building2 className="w-3.5 h-3.5 text-[#0E4A93]" />;
       default:
         return <Sliders className="w-3.5 h-3.5 text-[#0E4A93]" />;
-    }
-  };
-
-  const getDropdownPositionClass = (slug: string) => {
-    switch (slug) {
-      case 'canvas-prints':
-      case 'canvas':
-        return 'left-0';
-      case 'acrylic-prints':
-      case 'acrylic':
-        return 'left-0 xl:left-[-20px]';
-      case 'cork-prints':
-      case 'cork':
-        return 'left-[-40px] xl:left-[0px]';
-      case 'custom-prints':
-        return 'left-1/2 -translate-x-1/2';
-      case 'gifts':
-        return 'right-[-60px] xl:right-[-20px]';
-      case 'corporate':
-      case 'corporate-orders':
-      case 'bulk-orders':
-      case 'bulk-order':
-        return 'right-0';
-      default:
-        return 'left-0';
     }
   };
 
@@ -508,15 +491,23 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="flex items-center gap-1 xl:gap-2 overflow-x-auto scrollbar-none py-1">
               
               {/* 1. "ALL CATEGORIES ↓" DROPDOWN BUTTON (Far Left) */}
-              <div 
+              <div
                 ref={allCatRef}
                 className="relative"
-                onMouseEnter={() => setAllCategoriesOpen(true)}
+                onMouseEnter={(e) => {
+                  const r = e.currentTarget.getBoundingClientRect();
+                  setAllCatMenuPos({ top: r.bottom + 4, left: r.left });
+                  setAllCategoriesOpen(true);
+                }}
                 onMouseLeave={() => setAllCategoriesOpen(false)}
               >
                 <button
                   type="button"
-                  onClick={() => setAllCategoriesOpen(!allCategoriesOpen)}
+                  onClick={(e) => {
+                    const r = e.currentTarget.getBoundingClientRect();
+                    setAllCatMenuPos({ top: r.bottom + 4, left: r.left });
+                    setAllCategoriesOpen(!allCategoriesOpen);
+                  }}
                   className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200/90 text-[#0E4A93] font-bold rounded-lg transition-colors flex items-center gap-2 cursor-pointer whitespace-nowrap shadow-2xs border border-stone-200/80"
                 >
                   <Grid className="w-4 h-4 text-[#0E4A93]" />
@@ -524,10 +515,12 @@ export const Header: React.FC<HeaderProps> = ({
                   <ChevronDown className={`w-3.5 h-3.5 text-[#0E4A93] transition-transform duration-200 ${allCategoriesOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* All Categories Dropdown Menu */}
-                {allCategoriesOpen && (
-                  <div 
-                    className="absolute top-full left-0 mt-1 w-72 bg-white rounded-xl shadow-2xl border border-stone-200 z-50 p-2 text-left animate-in fade-in slide-in-from-top-2 select-none"
+                {/* All Categories Dropdown Menu — portaled to <body> so the
+                    scrollable nav row above can't clip it (see megaMenuPos comment) */}
+                {allCategoriesOpen && allCatMenuPos && createPortal(
+                  <div
+                    className="fixed w-72 bg-white rounded-xl shadow-2xl border border-stone-200 z-50 p-2 text-left animate-in fade-in slide-in-from-top-2 select-none"
+                    style={{ top: allCatMenuPos.top, left: allCatMenuPos.left }}
                     onMouseEnter={() => setAllCategoriesOpen(true)}
                     onMouseLeave={() => setAllCategoriesOpen(false)}
                   >
@@ -559,7 +552,8 @@ export const Header: React.FC<HeaderProps> = ({
                         <span>Need Custom Dimensions? Request Quote →</span>
                       </button>
                     </div>
-                  </div>
+                  </div>,
+                  document.body
                 )}
               </div>
 
@@ -582,15 +576,25 @@ export const Header: React.FC<HeaderProps> = ({
 
                     <div
                       className="relative"
-                      onMouseEnter={() => setActiveMegaMenu(cat.slug)}
+                      onMouseEnter={(e) => {
+                        const r = e.currentTarget.getBoundingClientRect();
+                        const estWidth = Math.min(850, window.innerWidth * 0.9);
+                        const left = Math.min(Math.max(r.left, 16), window.innerWidth - estWidth - 16);
+                        setMegaMenuPos({ top: r.bottom + 4, left });
+                        setActiveMegaMenu(cat.slug);
+                      }}
                       onMouseLeave={() => setActiveMegaMenu(null)}
                     >
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={(e) => {
                           if (activeMegaMenu === cat.slug) {
                             handleItemClick(cat.slug, 'category');
                           } else {
+                            const r = e.currentTarget.getBoundingClientRect();
+                            const estWidth = Math.min(850, window.innerWidth * 0.9);
+                            const left = Math.min(Math.max(r.left, 16), window.innerWidth - estWidth - 16);
+                            setMegaMenuPos({ top: r.bottom + 4, left });
                             setActiveMegaMenu(cat.slug);
                           }
                         }}
@@ -611,10 +615,15 @@ export const Header: React.FC<HeaderProps> = ({
                         }`} />
                       </button>
 
-                      {/* Mega-Menu Dropdown Panel */}
-                      {isMenuOpen && menuData && (
-                        <div 
-                          className={`absolute top-full ${getDropdownPositionClass(cat.slug)} mt-1 w-[850px] max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-stone-200 z-50 p-5 lg:p-6 transition-all duration-200 animate-in fade-in slide-in-from-top-2 text-left select-none whitespace-normal`}
+                      {/* Mega-Menu Dropdown Panel — portaled to <body> so the horizontally
+                          scrollable nav row (overflow-x-auto) can't clip it. Per the CSS
+                          overflow spec, overflow-x: auto forces overflow-y to auto too,
+                          which silently clips an absolutely-positioned dropdown nested
+                          inside that row instead of showing it below the nav bar. */}
+                      {isMenuOpen && menuData && megaMenuPos && createPortal(
+                        <div
+                          className="fixed w-[850px] max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-stone-200 z-50 p-5 lg:p-6 transition-all duration-200 animate-in fade-in slide-in-from-top-2 text-left select-none whitespace-normal"
+                          style={{ top: megaMenuPos.top, left: megaMenuPos.left }}
                           onMouseEnter={() => setActiveMegaMenu(cat.slug)}
                           onMouseLeave={() => setActiveMegaMenu(null)}
                         >
@@ -707,7 +716,8 @@ export const Header: React.FC<HeaderProps> = ({
                               </button>
                             </div>
                           </div>
-                        </div>
+                        </div>,
+                        document.body
                       )}
                     </div>
                   </React.Fragment>
