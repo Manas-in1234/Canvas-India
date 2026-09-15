@@ -19,6 +19,7 @@ import { RefundReturnPage } from './pages/RefundReturnPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { CanvasCategoryPage } from './pages/CanvasCategoryPage';
 import { AcrylicCustomizerPage } from './pages/AcrylicCustomizerPage';
+import { CanvasCustomizerPage } from './pages/CanvasCustomizerPage';
 
 export function App() {
   return (
@@ -26,6 +27,8 @@ export function App() {
       <Routes>
         {/* Dedicated Full-Screen Acrylic Customizer */}
         <Route path="/customize/acrylic/:productId" element={<AcrylicCustomizerPage />} />
+        {/* Dedicated Full-Screen Canvas Customizer */}
+        <Route path="/customize/canvas/:productId" element={<CanvasCustomizerPage />} />
 
         <Route element={<RootLayout />}>
           {/* Home */}
