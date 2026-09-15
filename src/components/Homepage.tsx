@@ -57,52 +57,42 @@ export const Homepage: React.FC<HomepageProps> = ({
   // 7 Circular Categories from shared single source of truth
   const categories = PRIMARY_CATEGORIES;
 
-  // Hero flash-card: a literal flip card that turns over to reveal the next product,
-  // like a real flash card — not a carousel.
+  // Hero flash cards: a stack of photos where the front card flies off to the
+  // top-right (like flicking through a physical stack of flash cards),
+  // revealing the next one underneath. Advances on a timer AND on click.
   const heroFlashCards = [
-    { name: 'Museum Cotton Canvas', image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&auto=format&fit=crop&q=80', alt: 'Personalized Canvas Wall Art' },
-    { name: 'Crystal Acrylic Glass', image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&auto=format&fit=crop&q=80', alt: 'Acrylic Glass Photo Print' },
-    { name: 'Eco Cork Board', image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=800&auto=format&fit=crop&q=80', alt: 'Natural Cork Pinboard' },
-    { name: 'Custom Photo Gifting', image: 'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?w=800&auto=format&fit=crop&q=80', alt: 'Personalized Gift Print' },
+    { name: 'Museum Cotton Canvas', image: 'https://images.unsplash.com/photo-1582561424760-0321d75e81fa?w=800&auto=format&fit=crop&q=80', alt: 'Personalized Canvas Wall Art' },
+    { name: 'Crystal Acrylic Glass', image: '/assets/acrylic/acrylic-panel-living.jpg', alt: 'Acrylic Glass Photo Print' },
+    { name: 'Eco Cork Board', image: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=800&auto=format&fit=crop&q=80', alt: 'Natural Cork Pinboard' },
+    { name: 'Custom Photo Gifting', image: 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=800&auto=format&fit=crop&q=80', alt: 'Personalized Gift Print' },
   ];
-  const FLIP_DURATION_MS = 700;
-  const [frontCardIdx, setFrontCardIdx] = useState(0);
-  const [backCardIdx, setBackCardIdx] = useState(1);
-  const [isFlipped, setIsFlipped] = useState(false); // true = rotated 180deg, back face showing
-  const [skipTransition, setSkipTransition] = useState(false); // disables CSS transition for the instant snap-back
+  const FLY_DURATION_MS = 550;
+  const AUTO_ADVANCE_MS = 2800;
+  // stackOrder[0] is the index (into heroFlashCards) of the card currently on top
+  const [stackOrder, setStackOrder] = useState(heroFlashCards.map((_, i) => i));
+  const [flyingOut, setFlyingOut] = useState(false);
 
-  // Kick off a flip every few seconds
-  useEffect(() => {
-    const timer = setInterval(() => setIsFlipped(true), 2600);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Once a flip finishes, silently swap which card is "front" and snap rotation back to 0
-  // (no transition) so the next flip always animates 0deg -> 180deg again.
-  useEffect(() => {
-    if (!isFlipped) return;
-    const timeout = setTimeout(() => {
-      setSkipTransition(true);
-      setFrontCardIdx(backCardIdx);
-      setBackCardIdx((backCardIdx + 1) % heroFlashCards.length);
-      setIsFlipped(false);
-    }, FLIP_DURATION_MS);
-    return () => clearTimeout(timeout);
-  }, [isFlipped, backCardIdx, heroFlashCards.length]);
-
-  // Re-enable the transition on the next frame after an instant snap-back
-  useEffect(() => {
-    if (!skipTransition) return;
-    const raf = requestAnimationFrame(() => setSkipTransition(false));
-    return () => cancelAnimationFrame(raf);
-  }, [skipTransition]);
-
-  const jumpToFlashCard = (idx: number) => {
-    setSkipTransition(true);
-    setIsFlipped(false);
-    setFrontCardIdx(idx);
-    setBackCardIdx((idx + 1) % heroFlashCards.length);
+  const advanceFlashCard = () => {
+    setFlyingOut(true);
   };
+
+  // Once the fly-out animation finishes, send the front card to the back of the stack
+  useEffect(() => {
+    if (!flyingOut) return;
+    const timeout = setTimeout(() => {
+      setStackOrder((prev) => [...prev.slice(1), prev[0]]);
+      setFlyingOut(false);
+    }, FLY_DURATION_MS);
+    return () => clearTimeout(timeout);
+  }, [flyingOut]);
+
+  // Auto-advance on a timer, unless a card is already mid-flight
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (!flyingOut) advanceFlashCard();
+    }, AUTO_ADVANCE_MS);
+    return () => clearInterval(timer);
+  }, [flyingOut]);
 
   // 6 Compact Occasions
   const occasions = [
@@ -172,60 +162,52 @@ export const Homepage: React.FC<HomepageProps> = ({
               </div>
             </div>
 
-            {/* Right Column: 45% (Flipping Flash Card) */}
+            {/* Right Column: 45% (Flash Card Stack — top card flies off to reveal the next) */}
             <div className="lg:col-span-5 flex items-center justify-center">
-              <div className="relative w-full max-w-md aspect-[4/3] sm:aspect-[16/12]" style={{ perspective: '1800px' }}>
-                <div
-                  className={skipTransition ? '' : 'transition-transform duration-700 ease-in-out'}
-                  style={{
-                    position: 'relative',
-                    width: '100%',
-                    height: '100%',
-                    transformStyle: 'preserve-3d',
-                    transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                  }}
-                >
-                  {/* FRONT FACE */}
-                  <div
-                    className="absolute inset-0 rounded-2xl overflow-hidden shadow-lg bg-stone-100 border border-stone-200/80"
-                    style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
-                  >
-                    <img
-                      src={heroFlashCards[frontCardIdx].image}
-                      alt={heroFlashCards[frontCardIdx].alt}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute bottom-3 left-3 bg-[#0E4A93]/90 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-md shadow-sm">
-                      {heroFlashCards[frontCardIdx].name}
-                    </div>
-                  </div>
+              <div className="relative w-full max-w-md aspect-[4/3] sm:aspect-[16/12]">
+                {heroFlashCards.map((card, cardIdx) => {
+                  const stackPos = stackOrder.indexOf(cardIdx);
+                  const isFront = stackPos === 0;
+                  const isFlying = isFront && flyingOut;
 
-                  {/* BACK FACE (pre-rotated 180deg so it reads right-way-up once flipped) */}
-                  <div
-                    className="absolute inset-0 rounded-2xl overflow-hidden shadow-lg bg-stone-100 border border-stone-200/80"
-                    style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-                  >
-                    <img
-                      src={heroFlashCards[backCardIdx].image}
-                      alt={heroFlashCards[backCardIdx].alt}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute bottom-3 left-3 bg-[#0E4A93]/90 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-md shadow-sm">
-                      {heroFlashCards[backCardIdx].name}
+                  return (
+                    <div
+                      key={card.name}
+                      onClick={isFront ? advanceFlashCard : undefined}
+                      className={`absolute inset-0 rounded-2xl overflow-hidden shadow-lg bg-stone-100 border border-stone-200/80 ${
+                        isFront ? 'cursor-pointer' : ''
+                      } ${isFlying ? 'transition-all ease-in' : 'transition-all ease-out'}`}
+                      style={{
+                        transitionDuration: isFlying ? `${FLY_DURATION_MS}ms` : '500ms',
+                        transform: isFlying
+                          ? 'translate(160px, -190px) rotate(22deg) scale(0.7)'
+                          : `translate(${stackPos * 14}px, ${stackPos * -14}px) scale(${1 - stackPos * 0.05})`,
+                        opacity: isFlying ? 0 : stackPos < 3 ? 1 : 0,
+                        zIndex: isFlying ? heroFlashCards.length + 1 : heroFlashCards.length - stackPos,
+                      }}
+                    >
+                      <img
+                        src={card.image}
+                        alt={card.alt}
+                        className="w-full h-full object-cover pointer-events-none"
+                      />
+                      <div
+                        className="absolute bottom-3 left-3 bg-[#0E4A93]/90 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-md shadow-sm transition-opacity duration-300 pointer-events-none"
+                        style={{ opacity: isFront && !isFlying ? 1 : 0 }}
+                      >
+                        {card.name}
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })}
 
                 {/* Progress dots */}
                 <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
                   {heroFlashCards.map((card, idx) => (
-                    <button
+                    <span
                       key={card.name}
-                      type="button"
-                      onClick={() => jumpToFlashCard(idx)}
-                      aria-label={`Show ${card.name}`}
-                      className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                        idx === frontCardIdx && !isFlipped ? 'w-5 bg-[#0E4A93]' : 'w-1.5 bg-stone-300 hover:bg-stone-400'
+                      className={`h-1.5 rounded-full transition-all ${
+                        stackOrder[0] === idx && !flyingOut ? 'w-5 bg-[#0E4A93]' : 'w-1.5 bg-stone-300'
                       }`}
                     />
                   ))}
