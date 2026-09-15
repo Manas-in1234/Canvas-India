@@ -373,15 +373,6 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </button>
 
-              {/* 4. PROMINENT "GET A QUOTE →" BUTTON (Orange #E8752A) */}
-              <button
-                type="button"
-                onClick={onOpenQuote}
-                className="px-4 py-2 bg-[#E8752A] hover:bg-[#D3631A] text-white font-bold rounded-lg text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition-all cursor-pointer whitespace-nowrap"
-              >
-                <span>Get a Quote →</span>
-              </button>
-
             </div>
 
           </div>
