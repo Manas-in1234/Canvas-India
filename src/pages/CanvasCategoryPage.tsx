@@ -1,14 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  SlidersHorizontal, 
-  X, 
-  RotateCcw, 
-  ChevronRight, 
-  FilterX, 
+import {
+  SlidersHorizontal,
+  X,
+  RotateCcw,
+  ChevronRight,
+  FilterX,
   ArrowUpDown,
   Sparkles,
-  Check
+  Check,
+  CheckCircle2,
+  ShoppingCart
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
@@ -125,39 +127,126 @@ export const CanvasCategoryPage: React.FC = () => {
     <div className="w-full bg-[#FFFDF9] text-stone-900 font-manrope">
 
       {/* ========================================================================= */}
+      {/* HERO SECTION                                                              */}
+      {/* ========================================================================= */}
+      <section className="w-full bg-gradient-to-b from-[#FFFDF9] via-[#F8F9FA] to-white border-b border-stone-200/80 overflow-hidden">
+        <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-8 sm:py-12 lg:py-14">
+
+          {/* Breadcrumb: Home > Canvas */}
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-stone-500 mb-6">
+            <Link to="/" className="hover:text-[#0E4A93] transition-colors">Home</Link>
+            <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
+            <span className="font-semibold text-stone-900">Canvas</span>
+          </nav>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+
+            {/* LEFT COLUMN: Heading, Description, and CTAs */}
+            <div className="lg:col-span-7 space-y-6">
+
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-[#0E4A93] text-xs font-black tracking-wide uppercase">
+                <Sparkles className="w-3.5 h-3.5 text-[#0E4A93]" />
+                <span>Museum-Grade Cotton Canvas</span>
+              </div>
+
+              {/* Heading & Subtitle */}
+              <div className="space-y-3">
+                <h1
+                  className="text-3xl sm:text-4xl lg:text-5xl font-black text-stone-950 tracking-tight leading-tight"
+                  style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
+                >
+                  Canvas Prints &amp; Wall Art
+                </h1>
+                <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-2xl">
+                  Archival 380 GSM pure cotton stretched over kiln-dried solid pine frames. Fade-resistant pigment inks handcrafted for Indian homes, galleries, and corporate workspaces.
+                </p>
+              </div>
+
+              {/* Primary Action Buttons: [ SHOP CANVAS ] & [ CUSTOMIZE YOUR CANVAS ] */}
+              <div className="flex flex-wrap items-center gap-3.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const catalogEl = document.getElementById('canvas-catalog-section');
+                    if (catalogEl) {
+                      catalogEl.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="px-6 py-3.5 bg-[#0E4A93] hover:bg-[#09356A] active:scale-[0.99] text-white text-xs sm:text-sm font-black rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center gap-2"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  <span>SHOP CANVAS</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onOpenCustomize()}
+                  className="px-6 py-3.5 bg-[#E8752A] hover:bg-[#d6651d] active:scale-[0.99] text-white text-xs sm:text-sm font-black rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-200" />
+                  <span>CUSTOMIZE YOUR CANVAS</span>
+                </button>
+              </div>
+
+              {/* Key Trust Badges */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-stone-200/70 text-xs text-stone-600">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="font-semibold">380 GSM Cotton Canvas</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="font-semibold">Ready to Hang</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="font-semibold">Fade-Resistant Inks</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="font-semibold">Pan-India Delivery</span>
+                </div>
+              </div>
+
+            </div>
+
+            {/* RIGHT COLUMN: Canvas Lifestyle Visual */}
+            <div className="lg:col-span-5 relative">
+              <div className="relative rounded-3xl overflow-hidden border border-stone-200 shadow-xl bg-stone-100 group aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3]">
+                <img
+                  src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=1200&auto=format&fit=crop&q=80"
+                  alt="Canvas Prints and Wall Art in Living Room"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/10 pointer-events-none" />
+
+                {/* Floating Highlight Badge */}
+                <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-md border border-stone-200/80 flex items-center gap-2.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <div>
+                    <div className="text-[11px] font-black text-stone-900 leading-tight">Museum Cotton Canvas</div>
+                    <div className="text-[10px] text-stone-500">Starting from ₹499 | Up to 38% OFF</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
       {/* CANVAS PRODUCT LISTING (Amazon-Style Layout + Canvas India Identity)     */}
       {/* ========================================================================= */}
       <section id="canvas-catalog-section" className="w-full py-8 sm:py-12 border-b border-stone-200/80">
         <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
-          
-          {/* Breadcrumb Navigation */}
-          <nav aria-label="Breadcrumb" className="mb-4 text-xs font-medium text-stone-500 flex items-center gap-1.5">
-            <Link to="/" className="hover:text-[#0E4A93] transition-colors">Home</Link>
-            <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
-            <Link to="/" className="hover:text-[#0E4A93] transition-colors">Shop by Category</Link>
-            <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
-            <span className="font-semibold text-stone-900">Canvas Prints</span>
-          </nav>
 
           {/* Section Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 mb-6 border-b border-stone-200">
-            <div className="text-left space-y-1">
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#E8752A] uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Museum Cotton Canvas</span>
-              </div>
-              <h1 
-                className="text-3xl sm:text-4xl font-bold italic text-stone-900 tracking-tight font-serif"
-                style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
-              >
-                Canvas Prints &amp; Wall Art
-              </h1>
-              <p className="text-xs sm:text-sm text-stone-600 max-w-2xl">
-                Archival 380 GSM pure cotton stretched over kiln-dried solid pine frames. 
-                Fade-resistant pigment inks handcrafted for Indian homes, galleries, and corporate workspaces.
-              </p>
-            </div>
-
+          <div className="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-6 mb-6 border-b border-stone-200">
             {/* Results Count & Controls */}
             <div className="flex items-center gap-3 shrink-0 self-start md:self-end">
               {/* Mobile Filter Trigger */}
