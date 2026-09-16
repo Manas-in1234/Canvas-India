@@ -10,7 +10,7 @@ import type { AuthenticatedUser } from './types/authenticated-user.js';
 export interface LoginResult {
   accessToken: string;
   refreshToken: string;
-  user: Pick<AuthenticatedUser, 'id' | 'email' | 'roleName'>;
+  user: AuthenticatedUser;
 }
 
 @Injectable()
@@ -25,7 +25,7 @@ export class AuthService {
   async login(email: string, password: string, userAgent?: string, ipAddress?: string): Promise<LoginResult> {
     const adminUser = await this.prisma.adminUser.findUnique({
       where: { email },
-      include: { role: true },
+      include: { role: { include: { permissions: { include: { permission: true } } } } },
     });
 
     if (!adminUser || !adminUser.isActive) {
@@ -62,7 +62,13 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      user: { id: adminUser.id, email: adminUser.email, roleName: adminUser.role.name },
+      user: {
+        id: adminUser.id,
+        email: adminUser.email,
+        roleId: adminUser.roleId,
+        roleName: adminUser.role.name,
+        permissions: adminUser.role.permissions.map((rp) => rp.permission.key),
+      },
     };
   }
 
