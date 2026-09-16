@@ -18,8 +18,6 @@ export class ProductsController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @RequirePermissions('products.view')
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
   }
