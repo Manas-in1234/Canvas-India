@@ -9,35 +9,37 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { AuthenticatedUser } from '../../auth/types/authenticated-user.js';
 
 @Controller('products')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
-  @RequirePermissions('products.view')
   findAll() {
     return this.productsService.findAll();
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('products.view')
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('products.create')
   create(@Body() dto: CreateProductDto) {
     return this.productsService.create(dto);
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('products.edit')
   update(@Param('id') id: string, @Body() dto: UpdateProductDto, @CurrentUser() user: AuthenticatedUser) {
     return this.productsService.update(id, dto, user.id);
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('products.delete')
   remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.productsService.softDelete(id, user.id);
