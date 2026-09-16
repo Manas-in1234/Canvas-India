@@ -1,13 +1,14 @@
-import React from 'react';
-import { 
-  ArrowRight, 
-  Sparkles, 
-  Truck, 
-  ShieldCheck, 
-  SlidersHorizontal, 
-  MapPin, 
-  Award, 
-  Check 
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  ArrowRight,
+  Sparkles,
+  Truck,
+  ShieldCheck,
+  SlidersHorizontal,
+  MapPin,
+  Award,
+  Check
 } from 'lucide-react';
 import { Product } from '../types';
 import { ProductCard } from './ProductCard';
@@ -15,7 +16,7 @@ import { PRIMARY_CATEGORIES } from '../data/storeData';
 import { CreateSomethingNew } from './CreateSomethingNew';
 
 export interface HomepageProps {
-  onSelectCategory: (slug: string) => void;
+  onSelectCategory: (slug: string, sub?: string) => void;
   onAddToCart: (product: Product) => void;
   onCustomize: (product?: Product) => void;
   onOpenQuote: () => void;
@@ -42,20 +43,65 @@ export const Homepage: React.FC<HomepageProps> = ({
   onToggleWishlist,
   allProducts,
 }) => {
+  const navigate = useNavigate();
+
+  // Launch the full Canvas Studio customizer, same rich experience as Acrylic's
+  const handleStartCreatingCanvas = () => {
+    const firstCanvasProduct = allProducts.find((p) => p.categorySlug === 'canvas');
+    navigate(`/customize/canvas/${firstCanvasProduct?.slug || firstCanvasProduct?.id || 'canvas-classic'}`);
+  };
+
   // 6 Bestsellers for 6-col desktop layout
   const bestsellers = allProducts.slice(0, 6);
 
   // 7 Circular Categories from shared single source of truth
   const categories = PRIMARY_CATEGORIES;
 
+  // Hero flash cards: a stack of photos where the front card flies off to the
+  // top-right (like flicking through a physical stack of flash cards),
+  // revealing the next one underneath. Advances on a timer AND on click.
+  const heroFlashCards = [
+    { name: 'Museum Cotton Canvas', image: 'https://images.unsplash.com/photo-1582561424760-0321d75e81fa?w=800&auto=format&fit=crop&q=80', alt: 'Personalized Canvas Wall Art' },
+    { name: 'Crystal Acrylic Glass', image: '/assets/acrylic/acrylic-panel-living.jpg', alt: 'Acrylic Glass Photo Print' },
+    { name: 'Eco Cork Board', image: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=800&auto=format&fit=crop&q=80', alt: 'Natural Cork Pinboard' },
+    { name: 'Custom Photo Gifting', image: 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=800&auto=format&fit=crop&q=80', alt: 'Personalized Gift Print' },
+  ];
+  const FLY_DURATION_MS = 550;
+  const AUTO_ADVANCE_MS = 2800;
+  // stackOrder[0] is the index (into heroFlashCards) of the card currently on top
+  const [stackOrder, setStackOrder] = useState(heroFlashCards.map((_, i) => i));
+  const [flyingOut, setFlyingOut] = useState(false);
+
+  const advanceFlashCard = () => {
+    setFlyingOut(true);
+  };
+
+  // Once the fly-out animation finishes, send the front card to the back of the stack
+  useEffect(() => {
+    if (!flyingOut) return;
+    const timeout = setTimeout(() => {
+      setStackOrder((prev) => [...prev.slice(1), prev[0]]);
+      setFlyingOut(false);
+    }, FLY_DURATION_MS);
+    return () => clearTimeout(timeout);
+  }, [flyingOut]);
+
+  // Auto-advance on a timer, unless a card is already mid-flight
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (!flyingOut) advanceFlashCard();
+    }, AUTO_ADVANCE_MS);
+    return () => clearInterval(timer);
+  }, [flyingOut]);
+
   // 6 Compact Occasions
   const occasions = [
-    { name: 'Birthday', slug: 'gifts', image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=400&auto=format&fit=crop&q=80' },
-    { name: 'Anniversary', slug: 'gifts', image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&auto=format&fit=crop&q=80' },
-    { name: 'Wedding', slug: 'gifts', image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=400&auto=format&fit=crop&q=80' },
-    { name: 'Housewarming', slug: 'gifts', image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&auto=format&fit=crop&q=80' },
-    { name: 'Diwali', slug: 'gifts', image: 'https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=400&auto=format&fit=crop&q=80' },
-    { name: 'Corporate Gifts', slug: 'corporate', image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80' },
+    { name: 'Birthday', slug: 'gifts', sub: 'Birthday', image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=400&auto=format&fit=crop&q=80' },
+    { name: 'Anniversary', slug: 'gifts', sub: 'Anniversary', image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&auto=format&fit=crop&q=80' },
+    { name: 'Wedding', slug: 'gifts', sub: 'Wedding', image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=400&auto=format&fit=crop&q=80' },
+    { name: 'Housewarming', slug: 'gifts', sub: 'Housewarming', image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&auto=format&fit=crop&q=80' },
+    { name: 'Diwali', slug: 'gifts', sub: 'Diwali', image: 'https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=400&auto=format&fit=crop&q=80' },
+    { name: 'Corporate Gifts', slug: 'gifts', sub: 'Corporate Gifts', image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80' },
   ];
 
   return (
@@ -80,8 +126,7 @@ export const Homepage: React.FC<HomepageProps> = ({
                 className="text-4xl sm:text-5xl lg:text-[58px] xl:text-[64px] font-bold italic text-[#111827] leading-[1.02] sm:leading-[1.04] tracking-tight font-serif"
                 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
               >
-                Turn Your Memories<br />
-                <span className="text-[#0E4A93] italic">Into Beautiful Wall Art</span>
+                <span className="text-[#0E4A93] italic">Make it yours</span>
               </h1>
 
               {/* Subtext */}
@@ -98,7 +143,7 @@ export const Homepage: React.FC<HomepageProps> = ({
               <div className="flex flex-wrap items-center gap-4 sm:gap-5 pt-2">
                 <button
                   type="button"
-                  onClick={() => onCustomize()}
+                  onClick={handleStartCreatingCanvas}
                   className="px-6 py-3.5 bg-[#E8752A] hover:bg-[#D3631A] text-white text-xs sm:text-sm font-bold rounded-lg shadow-sm transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <span>Create Your Canvas →</span>
@@ -117,16 +162,55 @@ export const Homepage: React.FC<HomepageProps> = ({
               </div>
             </div>
 
-            {/* Right Column: 45% (Integrated Lifestyle Scene, Unboxed) */}
+            {/* Right Column: 45% (Flash Card Stack — top card flies off to reveal the next) */}
             <div className="lg:col-span-5 flex items-center justify-center">
-              <div className="relative w-full max-w-md aspect-[4/3] sm:aspect-[16/12] rounded-2xl overflow-hidden shadow-lg bg-stone-100 border border-stone-200/80">
-                <img
-                  src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&auto=format&fit=crop&q=80"
-                  alt="Personalized Canvas Wall Art"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute bottom-3 left-3 bg-[#0E4A93]/90 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-md shadow-sm">
-                  Museum Cotton Canvas
+              <div className="relative w-full max-w-md aspect-[4/3] sm:aspect-[16/12]">
+                {heroFlashCards.map((card, cardIdx) => {
+                  const stackPos = stackOrder.indexOf(cardIdx);
+                  const isFront = stackPos === 0;
+                  const isFlying = isFront && flyingOut;
+
+                  return (
+                    <div
+                      key={card.name}
+                      onClick={isFront ? advanceFlashCard : undefined}
+                      className={`absolute inset-0 rounded-2xl overflow-hidden shadow-lg bg-stone-100 border border-stone-200/80 ${
+                        isFront ? 'cursor-pointer' : ''
+                      } ${isFlying ? 'transition-all ease-in' : 'transition-all ease-out'}`}
+                      style={{
+                        transitionDuration: isFlying ? `${FLY_DURATION_MS}ms` : '500ms',
+                        transform: isFlying
+                          ? 'translate(160px, -190px) rotate(22deg) scale(0.7)'
+                          : `translate(${stackPos * 14}px, ${stackPos * -14}px) scale(${1 - stackPos * 0.05})`,
+                        opacity: isFlying ? 0 : stackPos < 3 ? 1 : 0,
+                        zIndex: isFlying ? heroFlashCards.length + 1 : heroFlashCards.length - stackPos,
+                      }}
+                    >
+                      <img
+                        src={card.image}
+                        alt={card.alt}
+                        className="w-full h-full object-cover pointer-events-none"
+                      />
+                      <div
+                        className="absolute bottom-3 left-3 bg-[#0E4A93]/90 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-md shadow-sm transition-opacity duration-300 pointer-events-none"
+                        style={{ opacity: isFront && !isFlying ? 1 : 0 }}
+                      >
+                        {card.name}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Progress dots */}
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
+                  {heroFlashCards.map((card, idx) => (
+                    <span
+                      key={card.name}
+                      className={`h-1.5 rounded-full transition-all ${
+                        stackOrder[0] === idx && !flyingOut ? 'w-5 bg-[#0E4A93]' : 'w-1.5 bg-stone-300'
+                      }`}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
@@ -139,7 +223,7 @@ export const Homepage: React.FC<HomepageProps> = ({
       {/* 2. "CREATE SOMETHING NEW" (Positioned IMMEDIATELY after the Hero, White)  */}
       {/* ========================================================================= */}
       <CreateSomethingNew
-        onStartCreating={() => onCustomize()}
+        onStartCreating={handleStartCreatingCanvas}
         onSelectCategory={onSelectCategory}
       />
 
@@ -298,7 +382,7 @@ export const Homepage: React.FC<HomepageProps> = ({
             {occasions.map((occ) => (
               <div
                 key={occ.name}
-                onClick={() => onSelectCategory(occ.slug)}
+                onClick={() => onSelectCategory(occ.slug, occ.sub)}
                 className="group cursor-pointer text-left"
               >
                 <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-stone-100 mb-2 border border-stone-200 shadow-2xs">

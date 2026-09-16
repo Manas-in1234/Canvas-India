@@ -5,7 +5,6 @@ import { Home, ShoppingBag, ArrowLeft } from 'lucide-react';
 export const NotFoundPage: React.FC = () => {
   useEffect(() => {
     document.title = 'Page Not Found | Canvas India';
-    window.scrollTo(0, 0);
   }, []);
 
   return (

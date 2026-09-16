@@ -25,7 +25,6 @@ export const CartPage: React.FC = () => {
 
   useEffect(() => {
     document.title = 'Shopping Cart | Canvas India';
-    window.scrollTo(0, 0);
   }, []);
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
@@ -144,6 +143,14 @@ export const CartPage: React.FC = () => {
                             <span>Size: <strong>{item.size || 'Standard'}</strong></span>
                             {item.finish && <span className="ml-2">• Finish: <strong>{item.finish}</strong></span>}
                           </div>
+                          {(item.thickness || item.style || item.base || item.paper) && (
+                            <div className="text-xs text-stone-500 flex flex-wrap gap-2">
+                              {item.thickness && <span>Thickness: <strong>{item.thickness}</strong></span>}
+                              {item.style && <span>• Style: <strong>{item.style}</strong></span>}
+                              {item.base && <span>• Base: <strong>{item.base}</strong></span>}
+                              {item.paper && <span>• Paper: <strong>{item.paper}</strong></span>}
+                            </div>
+                          )}
                           {item.customText && (
                             <div className="text-xs text-[#E8752A] italic">
                               Custom Text: "{item.customText}"

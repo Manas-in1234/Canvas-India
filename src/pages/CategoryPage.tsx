@@ -68,7 +68,6 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
   // Set document title
   useEffect(() => {
     document.title = `${config.seoTitle || config.title} | Canvas India`;
-    window.scrollTo(0, 0);
   }, [config]);
 
   const handleSelectSub = (sub: string) => {
@@ -98,6 +97,12 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
       }
       if (activeSlug === 'gifts') {
         return p.categorySlug === 'gifts' || p.tags?.includes('gift');
+      }
+      if (activeSlug === 'wall-art') {
+        return p.tags?.some((t) => t.toLowerCase() === 'wall art') ?? false;
+      }
+      if (activeSlug === 'photo-frames') {
+        return p.finishes?.some((f) => f.toLowerCase().includes('frame')) ?? false;
       }
       return true;
     });

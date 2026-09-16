@@ -22,7 +22,6 @@ export const SearchPage: React.FC = () => {
   useEffect(() => {
     setInputValue(query);
     document.title = query ? `Search: "${query}" | Canvas India` : 'Search Products | Canvas India';
-    window.scrollTo(0, 0);
   }, [query]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {

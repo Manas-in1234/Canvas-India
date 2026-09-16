@@ -24,7 +24,6 @@ export const DesignersArchitectsPage: React.FC = () => {
 
   useEffect(() => {
     document.title = 'Solutions for Interior Designers & Architects | Canvas India';
-    window.scrollTo(0, 0);
   }, []);
 
   const supportedSpaces = [

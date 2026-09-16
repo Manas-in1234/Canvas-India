@@ -116,6 +116,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       <div className="text-[11px] text-stone-500 mt-0.5">
                         {item.size || 'Standard Size'} {item.finish && `• ${item.finish}`}
                       </div>
+                      {(item.thickness || item.style || item.base || item.paper) && (
+                        <div className="text-[10px] text-stone-500 flex flex-wrap gap-1 mt-0.5">
+                          {item.thickness && <span>{item.thickness}</span>}
+                          {item.style && <span>• {item.style}</span>}
+                          {item.base && <span>• {item.base}</span>}
+                          {item.paper && <span>• {item.paper}</span>}
+                        </div>
+                      )}
                       {item.customText && (
                         <div className="text-[10px] text-[#E8752A] italic truncate">
                           "{item.customText}"

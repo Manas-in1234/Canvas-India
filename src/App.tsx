@@ -4,6 +4,7 @@ import { ShopProvider } from './context/ShopContext';
 import { RootLayout } from './components/RootLayout';
 import { HomePage } from './pages/HomePage';
 import { CategoryPage } from './pages/CategoryPage';
+import { AcrylicCategoryPage } from './pages/AcrylicCategoryPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { DesignersArchitectsPage } from './pages/DesignersArchitectsPage';
 import { CartPage } from './pages/CartPage';
@@ -17,11 +18,18 @@ import { CancellationPolicyPage } from './pages/CancellationPolicyPage';
 import { RefundReturnPage } from './pages/RefundReturnPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { CanvasCategoryPage } from './pages/CanvasCategoryPage';
+import { AcrylicCustomizerPage } from './pages/AcrylicCustomizerPage';
+import { CanvasCustomizerPage } from './pages/CanvasCustomizerPage';
 
 export function App() {
   return (
     <ShopProvider>
       <Routes>
+        {/* Dedicated Full-Screen Acrylic Customizer */}
+        <Route path="/customize/acrylic/:productId" element={<AcrylicCustomizerPage />} />
+        {/* Dedicated Full-Screen Canvas Customizer */}
+        <Route path="/customize/canvas/:productId" element={<CanvasCustomizerPage />} />
+
         <Route element={<RootLayout />}>
           {/* Home */}
           <Route path="/" element={<HomePage />} />
@@ -30,11 +38,9 @@ export function App() {
           <Route path="/canvas" element={<CanvasCategoryPage />} />
           {/* /canvas-prints is an alias that uses the generic CategoryPage for SEO parity */}
           <Route path="/canvas-prints" element={<CategoryPage categorySlug="canvas" />} />
-
-          {/* Other Primary Category Routes */}
-          <Route path="/acrylic" element={<CategoryPage categorySlug="acrylic" />} />
-          <Route path="/acrylic-prints" element={<CategoryPage categorySlug="acrylic" />} />
-
+          {/* Acrylic — dedicated category page */}
+          <Route path="/acrylic" element={<AcrylicCategoryPage />} />
+          <Route path="/acrylic-prints" element={<AcrylicCategoryPage />} />
           <Route path="/posters" element={<CategoryPage categorySlug="posters" />} />
 
           <Route path="/cork" element={<CategoryPage categorySlug="cork" />} />
@@ -50,6 +56,9 @@ export function App() {
 
           <Route path="/corporate-orders" element={<CategoryPage categorySlug="corporate-orders" />} />
           <Route path="/corporate" element={<CategoryPage categorySlug="corporate-orders" />} />
+
+          <Route path="/wall-art" element={<CategoryPage categorySlug="wall-art" />} />
+          <Route path="/photo-frames" element={<CategoryPage categorySlug="photo-frames" />} />
 
           {/* Solutions for Designers & Architects */}
           <Route path="/designers-architects" element={<DesignersArchitectsPage />} />

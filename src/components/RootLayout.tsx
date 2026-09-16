@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef } from 'react';
+import { Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { CartDrawer } from './CartDrawer';
@@ -7,13 +7,14 @@ import { WishlistDrawer } from './WishlistDrawer';
 import { CustomizeModal } from './CustomizeModal';
 import { QuoteModal } from './QuoteModal';
 import { AccountModal } from './AccountModal';
-import { AccentColorPicker } from './AccentColorPicker';
 import { useShop } from '../context/ShopContext';
 import { Home, Layers, Sparkles, Heart, ShoppingBag } from 'lucide-react';
 
 export const RootLayout: React.FC = () => {
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
   const navigate = useNavigate();
+  const navigationType = useNavigationType();
 
   const {
     cartItems,
@@ -39,10 +40,37 @@ export const RootLayout: React.FC = () => {
     onOpenCustomize,
   } = useShop();
 
-  // Scroll to top on route change
+  // We manage scroll position ourselves instead of trusting the browser's
+  // native scroll restoration. For a client-routed SPA, native restoration
+  // tends to jump to the top first and only settle at the previous position
+  // a beat later once content/images finish laying out — visible as a
+  // "jump to top, then to the right section" flash on back/forward nav.
+  // Tracking the last scroll position via a listener (rather than reading
+  // window.scrollY inside a route-change effect, which can already reflect
+  // the new page's DOM by the time it runs) keeps the saved value accurate.
+  const scrollPositions = useRef<Map<string, number>>(new Map());
+  const lastScrollYRef = useRef(0);
+  const prevLocationKeyRef = useRef(location.key);
+
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [pathname]);
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    const onScroll = () => { lastScrollYRef.current = window.scrollY; };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (prevLocationKeyRef.current !== location.key) {
+      scrollPositions.current.set(prevLocationKeyRef.current, lastScrollYRef.current);
+      prevLocationKeyRef.current = location.key;
+    }
+
+    const targetY = navigationType === 'POP' ? (scrollPositions.current.get(location.key) ?? 0) : 0;
+    window.scrollTo({ top: targetY, behavior: 'instant' });
+    lastScrollYRef.current = targetY;
+  }, [location.key, navigationType]);
 
   const handleSelectCategory = (slug: string) => {
     // Canvas category navigates to the dedicated Canvas product listing page
@@ -55,7 +83,8 @@ export const RootLayout: React.FC = () => {
     // Generic category page routes (from origin/main)
     const categoryRoutes = [
       'acrylic', 'posters', 'cork', 'yoga-fitness',
-      'home-decor', 'custom-prints', 'gifts', 'bulk-order', 'corporate-orders', 'designers-architects'
+      'home-decor', 'custom-prints', 'gifts', 'bulk-order', 'corporate-orders', 'designers-architects',
+      'wall-art', 'photo-frames'
     ];
     if (categoryRoutes.includes(slug)) {
       navigate(`/${slug}`);
@@ -253,9 +282,6 @@ export const RootLayout: React.FC = () => {
         isOpen={quoteModalOpen}
         onClose={() => setQuoteModalOpen(false)}
       />
-
-      {/* Live Accent Color Picker (client demo tool) */}
-      <AccentColorPicker />
     </div>
   );
 };
