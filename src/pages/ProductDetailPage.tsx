@@ -22,6 +22,7 @@ import {
   PackageCheck
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
+import { fetchProductByIdFromApi } from '../api/productsApi';
 import { ProductCard } from '../components/ProductCard';
 import { ProductImage } from '../components/ProductImage';
 import { CUSTOMER_REVIEWS } from '../data/storeData';
@@ -41,13 +42,35 @@ export const ProductDetailPage: React.FC = () => {
     wishlistIds, 
     onToggleWishlist, 
     onAddToCart, 
-    onOpenCustomize 
+    onOpenCustomize,
+    isLoadingProducts 
   } = useShop();
+
+  const [singleProduct, setSingleProduct] = useState<Product | null>(null);
+  const [isFetchingSingle, setIsFetchingSingle] = useState<boolean>(false);
 
   // Find product by id or slug
   const product = useMemo(() => {
-    return allProducts.find((p) => p.id === productId || p.slug === productId);
-  }, [allProducts, productId]);
+    return allProducts.find((p) => p.id === productId || p.slug === productId) || singleProduct;
+  }, [allProducts, productId, singleProduct]);
+
+  useEffect(() => {
+    if (!productId || product || isLoadingProducts) return;
+    let cancelled = false;
+    setIsFetchingSingle(true);
+    fetchProductByIdFromApi(productId)
+      .then((p) => {
+        if (!cancelled && p) {
+          setSingleProduct(p);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsFetchingSingle(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [productId, product, isLoadingProducts]);
 
   const isWishlisted = product ? wishlistIds.includes(product.id) : false;
 
@@ -288,6 +311,17 @@ export const ProductDetailPage: React.FC = () => {
     onAddToCart(product, selectedSize, selectedFinish, quantity, customText, uploadedFile || undefined, selectedMaterial);
     navigate('/cart');
   };
+
+  if (!product && (isLoadingProducts || isFetchingSingle)) {
+    return (
+      <div className="w-full bg-[#FFFDF9] py-20 text-center text-stone-900 font-manrope min-h-[65vh] flex items-center justify-center">
+        <div className="max-w-md mx-auto px-4 space-y-4">
+          <div className="w-12 h-12 border-3 border-stone-200 border-t-[#0E4A93] rounded-full animate-spin mx-auto" />
+          <p className="text-sm font-medium text-stone-600">Loading product details...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
