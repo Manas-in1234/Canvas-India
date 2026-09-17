@@ -15,24 +15,40 @@ import {
   Star,
   Award,
   Palette,
-  Gift
+  Gift,
+  Shapes
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductImage } from '../components/ProductImage';
 import { Product } from '../types';
 import { loadAllStoredReviews, AcrylicProductReview } from '../data/acrylicReviews';
 
-const ACRYLIC_CHIPS = [
-  'All Acrylic Products',
-  'Photo Panels',
-  'Wall Art',
-  'Posters',
-  'Artwork',
-  'Signage',
-  'Decorative Panels',
-  'Corporate',
-  'Office Graphics',
-  'Gifts'
+export interface ShapeTab {
+  slug: string;
+  name: string;
+}
+
+export const SHAPE_TABS: ShapeTab[] = [
+  { slug: 'all', name: 'All Shapes' },
+  { slug: 'rectangle', name: 'Rectangle' },
+  { slug: 'square', name: 'Square' },
+  { slug: 'circle', name: 'Circle' },
+  { slug: 'oval', name: 'Oval' },
+  { slug: 'heart', name: 'Heart' },
+  { slug: 'star', name: 'Star' },
+  { slug: 'hexagon', name: 'Hexagon' },
+  { slug: 'rounded-rectangle', name: 'Rounded Rectangle' },
+  { slug: 'triangle', name: 'Triangle' },
+  { slug: 'octagon', name: 'Octagon' },
+  { slug: 'diamond', name: 'Diamond' },
+  { slug: 'arch', name: 'Arch' },
+  { slug: 'capsule', name: 'Capsule' },
+  { slug: 'cloud', name: 'Cloud' },
+  { slug: 'scalloped', name: 'Scalloped' },
+  { slug: 'tag', name: 'Tag' },
+  { slug: 'polaroid', name: 'Polaroid' },
+  { slug: 'speech-bubble', name: 'Speech Bubble' },
+  { slug: 'other', name: 'Other Shapes' }
 ];
 
 const OCCASIONS_LIST = [
@@ -59,7 +75,8 @@ type SortOption =
   | 'Newest First'
   | 'Best Selling'
   | 'Discount: High to Low'
-  | 'Customer Rating';
+  | 'Customer Rating'
+  | 'Name: A–Z';
 
 const SORT_OPTIONS: SortOption[] = [
   'Price: Low to High',
@@ -67,10 +84,9 @@ const SORT_OPTIONS: SortOption[] = [
   'Newest First',
   'Best Selling',
   'Discount: High to Low',
-  'Customer Rating'
+  'Customer Rating',
+  'Name: A–Z'
 ];
-
-
 
 export const AcrylicCategoryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -82,9 +98,9 @@ export const AcrylicCategoryPage: React.FC = () => {
     onAddToCart 
   } = useShop();
 
-  // Subcategory state
-  const initialSub = searchParams.get('sub') || 'All Acrylic Products';
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string>(initialSub);
+  // Shape filter state (Default: 'all')
+  const initialShape = searchParams.get('shape') || 'all';
+  const [selectedShape, setSelectedShape] = useState<string>(initialShape);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Panels Open/Close State (BOTH CLOSED BY DEFAULT)
@@ -115,19 +131,18 @@ export const AcrylicCategoryPage: React.FC = () => {
   const sortRef = useRef<HTMLDivElement>(null);
   const filterRef = useRef<HTMLDivElement>(null);
 
-  // Sync subcategory with URL
+  // Sync shape with URL
   useEffect(() => {
-    const sub = searchParams.get('sub');
-    if (sub && ACRYLIC_CHIPS.some(c => c.toLowerCase() === sub.toLowerCase())) {
-      const matched = ACRYLIC_CHIPS.find(c => c.toLowerCase() === sub.toLowerCase());
-      if (matched) setSelectedSubcategory(matched);
-    } else if (!sub) {
-      setSelectedSubcategory('All Acrylic Products');
+    const shape = searchParams.get('shape');
+    if (shape && SHAPE_TABS.some(t => t.slug.toLowerCase() === shape.toLowerCase())) {
+      setSelectedShape(shape.toLowerCase());
+    } else if (!shape) {
+      setSelectedShape('all');
     }
   }, [searchParams]);
 
   useEffect(() => {
-    document.title = 'Acrylic Prints & Acrylic Wall Art | Canvas India';
+    document.title = 'Acrylic Prints & Wall Art | Canvas India';
   }, []);
 
   // Close sort dropdown when clicking outside
@@ -148,7 +163,7 @@ export const AcrylicCategoryPage: React.FC = () => {
       setDraftMaxPrice(appliedMaxPrice);
       setDraftOccasions([...appliedOccasions]);
       setDraftFeatures([...appliedFeatures]);
-      setSortPanelOpen(false); // Close sort if open
+      setSortPanelOpen(false);
       setFilterPanelOpen(true);
     } else {
       setFilterPanelOpen(false);
@@ -157,21 +172,22 @@ export const AcrylicCategoryPage: React.FC = () => {
 
   const handleToggleSortPanel = () => {
     if (!sortPanelOpen) {
-      setFilterPanelOpen(false); // Close filter if open
+      setFilterPanelOpen(false);
       setSortPanelOpen(true);
     } else {
       setSortPanelOpen(false);
     }
   };
 
-  const handleSelectSub = (sub: string) => {
-    setSelectedSubcategory(sub);
-    if (sub === 'All Acrylic Products') {
-      searchParams.delete('sub');
-      setSearchParams(searchParams, { replace: true });
+  const handleSelectShape = (slug: string) => {
+    setSelectedShape(slug);
+    const newParams = new URLSearchParams(searchParams);
+    if (slug === 'all') {
+      newParams.delete('shape');
     } else {
-      setSearchParams({ sub }, { replace: true });
+      newParams.set('shape', slug);
     }
+    setSearchParams(newParams, { replace: true });
   };
 
   // Base Acrylic products from catalog
@@ -241,13 +257,22 @@ export const AcrylicCategoryPage: React.FC = () => {
   // Filtered Acrylic Products
   const filteredProducts = useMemo(() => {
     return acrylicProducts.filter((product) => {
-      // 1. Subcategory filter
-      if (selectedSubcategory !== 'All Acrylic Products') {
-        const sel = selectedSubcategory.toLowerCase();
-        const matchesSubcategory = product.subcategory?.toLowerCase() === sel;
-        const matchesTag = product.tags?.some(t => t.toLowerCase() === sel || sel.includes(t.toLowerCase()));
-        if (!matchesSubcategory && !matchesTag) {
-          return false;
+      // 1. Shape filter
+      if (selectedShape !== 'all') {
+        const sel = selectedShape.toLowerCase();
+        if (sel === 'other') {
+          const mainShapeSlugs = [
+            'rectangle', 'square', 'circle', 'oval', 'heart', 'star',
+            'hexagon', 'rounded-rectangle', 'triangle', 'octagon', 'diamond',
+            'arch', 'capsule', 'cloud', 'scalloped', 'tag', 'polaroid', 'speech-bubble'
+          ];
+          const hasOther = (product.shapes && product.shapes.some(s => !mainShapeSlugs.includes(s.toLowerCase()))) ||
+                           (product.shape && !mainShapeSlugs.includes(product.shape.toLowerCase()));
+          if (!hasOther) return false;
+        } else {
+          const matchesShapes = product.shapes?.some(s => s.toLowerCase() === sel);
+          const matchesShape = product.shape?.toLowerCase() === sel;
+          if (!matchesShapes && !matchesShape) return false;
         }
       }
 
@@ -284,15 +309,18 @@ export const AcrylicCategoryPage: React.FC = () => {
         const q = searchQuery.toLowerCase().trim();
         const matchesName = product.name.toLowerCase().includes(q);
         const matchesDesc = product.description.toLowerCase().includes(q);
+        const matchesShape = product.shape?.toLowerCase().includes(q);
+        const matchesShapes = product.shapes?.some(s => s.toLowerCase().includes(q));
         const matchesTags = product.tags?.some(t => t.toLowerCase().includes(q));
-        if (!matchesName && !matchesDesc && !matchesTags) {
+        const matchesMaterial = product.material?.toLowerCase().includes(q);
+        if (!matchesName && !matchesDesc && !matchesShape && !matchesShapes && !matchesTags && !matchesMaterial) {
           return false;
         }
       }
 
       return true;
     });
-  }, [acrylicProducts, selectedSubcategory, appliedMinPrice, appliedMaxPrice, appliedOccasions, appliedFeatures, searchQuery]);
+  }, [acrylicProducts, selectedShape, appliedMinPrice, appliedMaxPrice, appliedOccasions, appliedFeatures, searchQuery]);
 
   // Sorted Products
   const sortedProducts = useMemo(() => {
@@ -316,24 +344,19 @@ export const AcrylicCategoryPage: React.FC = () => {
       case 'Customer Rating':
         list.sort((a, b) => (b.rating || 4.5) - (a.rating || 4.5));
         break;
+      case 'Name: A–Z':
+        list.sort((a, b) => a.name.localeCompare(b.name));
+        break;
       default:
         break;
     }
     return list;
   }, [filteredProducts, sortBy]);
 
-  // Primary Card Purchase CTA Handler
-  const handleCardCta = (e: React.MouseEvent, product: Product) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (product.uploadRequired) {
-      // Personalized / photo upload item -> opens dedicated customization page
-      navigate(`/customize/acrylic/${product.slug || product.id}`);
-    } else {
-      // Standard item -> add directly to cart with immediate drawer feedback
-      onAddToCart(product);
-    }
-  };
+  // Current active shape tab object
+  const currentShapeTab = useMemo(() => {
+    return SHAPE_TABS.find(t => t.slug === selectedShape) || SHAPE_TABS[0];
+  }, [selectedShape]);
 
   return (
     <div className="w-full bg-[#FFFDF9] text-stone-900 font-manrope min-h-screen">
@@ -362,16 +385,16 @@ export const AcrylicCategoryPage: React.FC = () => {
                 <span>Premium Optical Acrylic Glass</span>
               </div>
 
-              {/* Heading & Subtitle */}
+              {/* Exact Heading & Subtitle */}
               <div className="space-y-3">
                 <h1 
                   className="text-3xl sm:text-4xl lg:text-5xl font-black text-stone-950 tracking-tight leading-tight"
                   style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
                 >
-                  Arcylic prints and wall Arts
+                  Acrylic Prints &amp; Wall Art
                 </h1>
                 <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-2xl">
-                  Turn your photographs, artwork and ideas into vibrant acrylic pieces made for modern homes, offices and commercial spaces.
+                  Choose from a wide range of Acrylic shapes and turn your photos into stunning displays.
                 </p>
               </div>
 
@@ -393,7 +416,7 @@ export const AcrylicCategoryPage: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => navigate('/customize/acrylic/acrylic-wall-display')}
+                  onClick={() => navigate('/customize/acrylic/acrylic-rectangle-print')}
                   className="px-6 py-3.5 bg-[#E8752A] hover:bg-[#d6651d] active:scale-[0.99] text-white text-xs sm:text-sm font-black rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4 text-amber-200" />
@@ -446,7 +469,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                   <div>
                     <div className="text-[11px] font-black text-stone-900 leading-tight">Crystal Clear Optical Acrylic</div>
-                    <div className="text-[10px] text-stone-500">Starting from ₹355 | Up to 60% OFF</div>
+                    <div className="text-[10px] text-stone-500">Starting from ₹899 | Up to 60% OFF</div>
                   </div>
                 </div>
 
@@ -459,25 +482,48 @@ export const AcrylicCategoryPage: React.FC = () => {
       </section>
 
       {/* ========================================================================= */}
-      {/* 2. SUBCATEGORY PILLS / TABS                                               */}
+      {/* 2. SHOP-BY-SHAPE HORIZONTAL FILTER BAR                                    */}
       {/* ========================================================================= */}
       <div id="acrylic-catalog" className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-2xs">
         <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-3">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5">
-            {ACRYLIC_CHIPS.map((chip) => {
-              const isActive = selectedSubcategory.toLowerCase() === chip.toLowerCase();
+            {SHAPE_TABS.map((tab) => {
+              const isActive = selectedShape === tab.slug;
+              // Compute dynamic product count for this shape
+              const count = tab.slug === 'all'
+                ? acrylicProducts.length
+                : tab.slug === 'other'
+                  ? acrylicProducts.filter(p => {
+                      const mainShapeSlugs = [
+                        'rectangle', 'square', 'circle', 'oval', 'heart', 'star',
+                        'hexagon', 'rounded-rectangle', 'triangle', 'octagon', 'diamond',
+                        'arch', 'capsule', 'cloud', 'scalloped', 'tag', 'polaroid', 'speech-bubble'
+                      ];
+                      return (p.shapes && p.shapes.some(s => !mainShapeSlugs.includes(s.toLowerCase()))) ||
+                             (p.shape && !mainShapeSlugs.includes(p.shape.toLowerCase()));
+                    }).length
+                  : acrylicProducts.filter(p => 
+                      p.shapes?.some(s => s.toLowerCase() === tab.slug.toLowerCase()) ||
+                      p.shape?.toLowerCase() === tab.slug.toLowerCase()
+                    ).length;
+
               return (
                 <button
-                  key={chip}
+                  key={tab.slug}
                   type="button"
-                  onClick={() => handleSelectSub(chip)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  onClick={() => handleSelectShape(tab.slug)}
+                  className={`px-4 py-2 rounded-full text-xs whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                     isActive
                       ? 'bg-[#0E4A93] text-white shadow-xs ring-2 ring-[#0E4A93]/20 font-bold'
-                      : 'bg-stone-100 hover:bg-stone-200/80 text-stone-700'
+                      : 'bg-stone-50 hover:bg-stone-100 text-stone-700 border border-stone-300 font-medium'
                   }`}
                 >
-                  {chip}
+                  <span>{tab.name}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                    isActive ? 'bg-white/25 text-white' : 'bg-stone-200/80 text-stone-600'
+                  }`}>
+                    {count}
+                  </span>
                 </button>
               );
             })}
@@ -486,7 +532,7 @@ export const AcrylicCategoryPage: React.FC = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* 3. TOP CONTROLS: HORIZONTAL FILTERS & SORT BUTTONS                        */}
+      {/* 3. TOP CONTROLS: HORIZONTAL FILTERS, SORT BUTTONS, & SEARCH               */}
       {/* ========================================================================= */}
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 pt-5 pb-2">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -550,10 +596,10 @@ export const AcrylicCategoryPage: React.FC = () => {
                           key={option}
                           type="button"
                           onClick={() => handleSelectSort(option)}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-left font-medium transition-colors cursor-pointer ${
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
                             isSelected
-                              ? 'bg-blue-50 text-[#0E4A93] font-bold'
-                              : 'text-stone-700 hover:bg-stone-100'
+                              ? 'bg-blue-50 text-[#0E4A93]'
+                              : 'text-stone-700 hover:bg-stone-50 hover:text-stone-900'
                           }`}
                         >
                           <span>{option}</span>
@@ -575,7 +621,7 @@ export const AcrylicCategoryPage: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search acrylic prints..."
+              placeholder="Search by shape, name, or style..."
               className="w-full pl-8 pr-7 py-2 bg-white text-stone-900 placeholder-stone-400 rounded-xl border border-stone-300 focus:outline-none focus:border-[#0E4A93] text-xs transition-colors shadow-2xs"
             />
             {searchQuery && (
@@ -619,57 +665,11 @@ export const AcrylicCategoryPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               
               {/* SECTION A: PRICE RANGE */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
-                    Price Range
-                  </span>
-                  <span className="text-xs font-bold text-[#0E4A93]">
-                    ₹{draftMinPrice.toLocaleString('en-IN')} – ₹{draftMaxPrice.toLocaleString('en-IN')}
-                  </span>
-                </div>
-
-                {/* Dual-ended range slider track */}
-                <div className="relative pt-3 pb-2 px-1">
-                  <div className="relative h-2 bg-stone-200 rounded-full">
-                    {/* Active highlight segment between min and max */}
-                    <div 
-                      className="absolute h-2 bg-[#0E4A93] rounded-full"
-                      style={{
-                        left: `${((draftMinPrice - 400) / (4000 - 400)) * 100}%`,
-                        right: `${100 - ((draftMaxPrice - 400) / (4000 - 400)) * 100}%`
-                      }}
-                    />
-                  </div>
-
-                  {/* Dual input range thumbs */}
-                  <input
-                    type="range"
-                    min={400}
-                    max={4000}
-                    step={50}
-                    value={draftMinPrice}
-                    onChange={(e) => {
-                      const val = Math.min(Number(e.target.value), draftMaxPrice - 100);
-                      setDraftMinPrice(val);
-                    }}
-                    className="absolute inset-0 w-full h-2 appearance-none bg-transparent pointer-events-none cursor-pointer accent-[#0E4A93] [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#0E4A93] [&::-webkit-slider-thumb]:shadow-md"
-                  />
-                  <input
-                    type="range"
-                    min={400}
-                    max={4000}
-                    step={50}
-                    value={draftMaxPrice}
-                    onChange={(e) => {
-                      const val = Math.max(Number(e.target.value), draftMinPrice + 100);
-                      setDraftMaxPrice(val);
-                    }}
-                    className="absolute inset-0 w-full h-2 appearance-none bg-transparent pointer-events-none cursor-pointer accent-[#0E4A93] [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#0E4A93] [&::-webkit-slider-thumb]:shadow-md"
-                  />
-                </div>
-
-                {/* Synchronized Min & Max Price numeric inputs */}
+              <div className="space-y-3">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">
+                  Price Range
+                </span>
+                
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <div>
                     <label className="block text-[11px] font-semibold text-stone-500 mb-1">
@@ -744,7 +744,6 @@ export const AcrylicCategoryPage: React.FC = () => {
                 <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                   {OCCASIONS_LIST.map((occasion) => {
                     const isChecked = draftOccasions.includes(occasion);
-                    // Match count for badge
                     const matchCount = acrylicProducts.filter(p => 
                       p.occasions?.includes(occasion) || p.tags?.some(t => t.toLowerCase() === occasion.toLowerCase())
                     ).length;
@@ -792,7 +791,6 @@ export const AcrylicCategoryPage: React.FC = () => {
                 <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                   {FEATURES_LIST.map((feature) => {
                     const isChecked = draftFeatures.includes(feature);
-                    // Match count for badge
                     const matchCount = acrylicProducts.filter(p => {
                       if (feature === 'Personalized' && (p.customizable || p.uploadRequired)) return true;
                       if (feature === 'Corporate Use' && (p.subcategory === 'Corporate' || p.subcategory === 'Signage' || p.tags?.includes('corporate'))) return true;
@@ -876,7 +874,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                   }}
                   className="hover:text-rose-600 cursor-pointer"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </span>
             )}
@@ -889,7 +887,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                   onClick={() => setAppliedOccasions(prev => prev.filter(o => o !== occ))}
                   className="hover:text-rose-600 cursor-pointer"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </span>
             ))}
@@ -902,7 +900,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                   onClick={() => setAppliedFeatures(prev => prev.filter(f => f !== feat))}
                   className="hover:text-rose-600 cursor-pointer"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </span>
             ))}
@@ -927,12 +925,25 @@ export const AcrylicCategoryPage: React.FC = () => {
         {/* Dynamic Product Count Display */}
         <div className="flex items-center justify-between pb-4">
           <div className="text-sm text-stone-600 font-medium">
-            Showing <span className="font-extrabold text-stone-900">{sortedProducts.length}</span> of <span className="font-extrabold text-stone-900">{acrylicProducts.length}</span> Acrylic Products
+            {selectedShape === 'all' ? (
+              <>
+                Showing <span className="font-extrabold text-stone-900">{sortedProducts.length}</span> of{' '}
+                <span className="font-extrabold text-stone-900">{acrylicProducts.length}</span> Acrylic Products
+              </>
+            ) : (
+              <>
+                Showing <span className="font-extrabold text-stone-900">{sortedProducts.length}</span>{' '}
+                <span className="font-extrabold text-[#0E4A93]">{currentShapeTab.name}</span> Acrylic Products
+              </>
+            )}
           </div>
 
-          {selectedSubcategory !== 'All Acrylic Products' && (
-            <div className="text-xs text-stone-500 hidden sm:block">
-              Category: <span className="font-bold text-[#0E4A93]">{selectedSubcategory}</span>
+          {selectedShape !== 'all' && (
+            <div className="text-xs text-stone-500 hidden sm:flex items-center gap-1.5">
+              <span>Filter:</span>
+              <span className="font-bold text-[#0E4A93] bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">
+                {currentShapeTab.name}
+              </span>
             </div>
           )}
         </div>
@@ -958,13 +969,15 @@ export const AcrylicCategoryPage: React.FC = () => {
                   className="group bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
                 >
                   {/* Top Image Container with Overlays */}
-                  <div className="relative aspect-[4/3] bg-stone-100 overflow-hidden">
-                    <Link to={`/products/${product.id}`} className="block w-full h-full">
+                  <div className="relative aspect-[4/3] bg-stone-100 overflow-hidden flex items-center justify-center p-3">
+                    <Link to={`/products/${product.slug || product.id}`} className="block w-full h-full">
                       <ProductImage
                         src={product.image}
                         alt={product.name}
                         category="acrylic"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        categorySlug="acrylic"
+                        shape={product.shape}
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                       />
                     </Link>
 
@@ -1007,13 +1020,14 @@ export const AcrylicCategoryPage: React.FC = () => {
                   {/* Card Content */}
                   <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
                     <div className="space-y-1.5">
-                      {/* Category Tag */}
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-[#0E4A93]">
-                        {product.subcategory || 'ACRYLIC PRINTS'}
+                      {/* Shape / Category Tag */}
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-[#0E4A93] flex items-center gap-1">
+                        <Shapes className="w-3 h-3" />
+                        <span>{product.shape ? `${product.shape.replace('-', ' ')} Acrylic` : (product.subcategory || 'ACRYLIC PRINT')}</span>
                       </div>
 
                       {/* Product Title (clickable) */}
-                      <Link to={`/products/${product.id}`} className="block">
+                      <Link to={`/products/${product.slug || product.id}`} className="block">
                         <h3 className="font-bold text-stone-900 text-sm sm:text-base leading-snug group-hover:text-[#0E4A93] transition-colors line-clamp-2">
                           {product.name}
                         </h3>
@@ -1025,7 +1039,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                       </p>
                     </div>
 
-                    {/* Rating Summary Row (Clean, NO Add Review button) */}
+                    {/* Rating Summary Row (Clean display of rating and reviews count) */}
                     <div className="pt-2 border-t border-stone-100 flex items-center gap-1.5 text-xs text-amber-500 font-bold">
                       <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                       <span>{averageRating}</span>
@@ -1050,21 +1064,40 @@ export const AcrylicCategoryPage: React.FC = () => {
                         </span>
                       </div>
 
-                      {/* Single Primary Purchase CTA Button per Card */}
-                      <button
-                        type="button"
-                        onClick={(e) => handleCardCta(e, product)}
-                        className="w-full py-2.5 px-3 bg-[#0E4A93] hover:bg-[#09356A] active:scale-[0.99] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-xs hover:shadow-md transition-all cursor-pointer"
-                      >
-                        <ShoppingCart className="w-3.5 h-3.5 text-white" />
-                        <span>ADD TO CART</span>
-                      </button>
+                      {/* Two Action Buttons: [ CUSTOMIZE ] & [ ADD TO CART ] */}
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            navigate(`/customize/acrylic/${product.slug || product.id}`);
+                          }}
+                          className="py-2 px-2 bg-stone-100 hover:bg-[#0E4A93] hover:text-white text-[#0E4A93] border border-[#0E4A93]/30 active:scale-[0.99] text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>CUSTOMIZE</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onAddToCart(product);
+                          }}
+                          className="py-2 px-2 bg-[#0E4A93] hover:bg-[#09356A] active:scale-[0.99] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-xs hover:shadow-md transition-all cursor-pointer"
+                        >
+                          <ShoppingCart className="w-3.5 h-3.5 text-white" />
+                          <span>ADD TO CART</span>
+                        </button>
+                      </div>
                     </div>
 
                   </div>
                 </div>
               );
-            })}          </div>
+            })}
+          </div>
         ) : (
           /* Empty State */
           <div className="py-20 text-center space-y-4 max-w-md mx-auto">
@@ -1074,16 +1107,20 @@ export const AcrylicCategoryPage: React.FC = () => {
             <div className="space-y-1">
               <h3 className="font-bold text-stone-900 text-lg">No Acrylic Products Found</h3>
               <p className="text-xs text-stone-500 leading-relaxed">
-                We couldn&apos;t find any acrylic products matching the selected filters.
+                We couldn&apos;t find any acrylic products matching the selected shape or filters.
               </p>
             </div>
             <button
               type="button"
-              onClick={handleClearAllFilters}
+              onClick={() => {
+                handleSelectShape('all');
+                handleClearAllFilters();
+                setSearchQuery('');
+              }}
               className="px-5 py-2.5 bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold rounded-xl text-xs transition-colors cursor-pointer inline-flex items-center gap-1.5"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset All Filters</span>
+              <span>Reset Shape &amp; Filters</span>
             </button>
           </div>
         )}
@@ -1139,7 +1176,7 @@ export const AcrylicCategoryPage: React.FC = () => {
               </div>
               <h3 className="font-bold text-stone-900 text-sm sm:text-base">3. Fully Customizable</h3>
               <p className="text-xs text-stone-600 leading-relaxed">
-                Your design, your way. Choose custom millimetre sizes, 7mm to 18mm thicknesses, desktop freestanding blocks, metallic paper, or floating wall studs.
+                Your design, your way. Choose custom shapes, 18+ cut geometries, 5mm to 8mm thicknesses, desktop freestanding blocks, metallic paper, or floating wall studs.
               </p>
             </div>
 
@@ -1150,71 +1187,8 @@ export const AcrylicCategoryPage: React.FC = () => {
               </div>
               <h3 className="font-bold text-stone-900 text-sm sm:text-base">4. Perfect for Gifting</h3>
               <p className="text-xs text-stone-600 leading-relaxed">
-                Personalized memories that last. Solid acrylic photo blocks make memorable gifts for weddings, anniversaries, birthdays, housewarmings, and awards.
+                Cherish weddings, anniversaries, and milestones forever. Acrylic glass will never discolor, oxidize, or warp under ambient humidity.
               </p>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ========================================================================= */}
-      {/* 7. MADE FOR MODERN SPACES / WHERE ACRYLIC PRINTS WORK BEST                */}
-      {/* ========================================================================= */}
-      <section className="w-full bg-white border-t border-stone-200 py-12 sm:py-16">
-        <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
-            
-            {/* Left Description */}
-            <div className="space-y-5">
-              <div className="space-y-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#0E4A93]">Architectural Aesthetics</span>
-                <h2 
-                  className="text-2xl sm:text-4xl font-extrabold text-stone-900 tracking-tight"
-                  style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
-                >
-                  Made for Modern Spaces
-                </h2>
-                <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
-                  Unlike traditional glass frames that trap glare and break easily, optical cast acrylic delivers stunning shatterproof clarity and deep luminous saturation. Each piece is manufactured in our Hyderabad facility and hand-inspected for zero blemishes before dispatch.
-                </p>
-              </div>
-
-              {/* Where Acrylic Works Best Grid */}
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200/70">
-                  <div className="font-bold text-stone-900 text-xs sm:text-sm">Living &amp; Dining Rooms</div>
-                  <div className="text-[11px] text-stone-500 mt-0.5">Large-format statement wall panels</div>
-                </div>
-                <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200/70">
-                  <div className="font-bold text-stone-900 text-xs sm:text-sm">Executive Offices</div>
-                  <div className="text-[11px] text-stone-500 mt-0.5">Corporate branding &amp; directories</div>
-                </div>
-                <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200/70">
-                  <div className="font-bold text-stone-900 text-xs sm:text-sm">Work Desks &amp; Shelves</div>
-                  <div className="text-[11px] text-stone-500 mt-0.5">Freestanding 18mm crystal blocks</div>
-                </div>
-                <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200/70">
-                  <div className="font-bold text-stone-900 text-xs sm:text-sm">Hotels &amp; Galleries</div>
-                  <div className="text-[11px] text-stone-500 mt-0.5">Museum-grade floating standoff art</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Visual Image */}
-            <div className="relative rounded-3xl overflow-hidden border border-stone-200 shadow-lg aspect-[16/10] bg-stone-100">
-              <ProductImage
-                src="/assets/acrylic/acrylic-panel-living.jpg"
-                alt="Acrylic wall art installed in modern luxury room"
-                category="acrylic"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              <div className="absolute bottom-5 left-5 right-5 text-white">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300">Modern Architecture</span>
-                <div className="text-lg font-bold">Luminous Depth in Natural Sunlight</div>
-              </div>
             </div>
 
           </div>

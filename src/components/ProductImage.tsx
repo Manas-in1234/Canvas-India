@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react';
 
-export const getCategoryPlaceholder = (categorySlug?: string): string => {
+export const getCategoryPlaceholder = (categorySlug?: string, shape?: string): string => {
   if (!categorySlug) return '/products/placeholders/default-placeholder.svg';
   const slug = categorySlug.toLowerCase().trim();
+  if (slug.includes('acrylic')) {
+    if (shape) {
+      const cleanShape = shape.toLowerCase().trim().replace(/^shape-/, '');
+      const validShapes = [
+        'rectangle', 'square', 'circle', 'oval', 'heart', 'star',
+        'hexagon', 'rounded-rectangle', 'triangle', 'octagon', 'diamond',
+        'arch', 'capsule', 'cloud', 'scalloped', 'tag', 'polaroid', 'speech-bubble'
+      ];
+      if (validShapes.includes(cleanShape)) {
+        return `/products/placeholders/acrylic-${cleanShape}-placeholder.svg`;
+      }
+    }
+    return '/products/placeholders/acrylic-placeholder.svg';
+  }
   if (slug.includes('canvas')) return '/products/placeholders/canvas-placeholder.svg';
-  if (slug.includes('acrylic')) return '/products/placeholders/acrylic-placeholder.svg';
   if (slug.includes('poster')) return '/products/placeholders/poster-placeholder.svg';
   if (slug.includes('cork')) return '/products/placeholders/cork-placeholder.svg';
   if (slug.includes('yoga')) return '/products/placeholders/yoga-placeholder.svg';
@@ -19,6 +32,7 @@ export const getCategoryPlaceholder = (categorySlug?: string): string => {
 interface ProductImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   categorySlug?: string;
   category?: string;
+  shape?: string;
   fallbackSrc?: string;
 }
 
@@ -27,11 +41,12 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   alt,
   categorySlug,
   category,
+  shape,
   fallbackSrc,
   className = '',
   ...props
 }) => {
-  const defaultPlaceholder = fallbackSrc || getCategoryPlaceholder(categorySlug || category);
+  const defaultPlaceholder = fallbackSrc || getCategoryPlaceholder(categorySlug || category, shape);
   const [imgSrc, setImgSrc] = useState<string>(src || defaultPlaceholder);
   const [hasError, setHasError] = useState<boolean>(!src);
 

@@ -17,6 +17,9 @@ export interface Product {
   badge?: 'Best Seller' | 'Sale' | 'Trending' | 'Popular' | 'Hot' | 'New' | 'Custom';
   description: string;
   shortDescription?: string;
+  shape?: string;
+  shapes?: string[];
+  finish?: string;
   material?: string;
   tags?: string[];
   occasions?: string[];

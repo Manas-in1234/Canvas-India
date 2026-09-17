@@ -172,7 +172,23 @@ export const AcrylicCustomizerPage: React.FC = () => {
   }, [sizeCategory]);
 
   // Shape Selection State (SHAPE Tab - 23 Shapes Suite)
-  const [selectedShapeId, setSelectedShapeId] = useState<string>('shape-square');
+  const [selectedShapeId, setSelectedShapeId] = useState<string>(() => {
+    const paramShape = searchParams.get('shape');
+    if (paramShape) {
+      const match = ACRYLIC_SHAPES.find(s => s.id === paramShape || s.id === `shape-${paramShape}`);
+      if (match) return match.id;
+    }
+    if (catalogProduct?.shape) {
+      const match = ACRYLIC_SHAPES.find(s => s.id === catalogProduct.shape || s.id === `shape-${catalogProduct.shape}`);
+      if (match) return match.id;
+    }
+    if (catalogProduct?.shapes && catalogProduct.shapes.length > 0) {
+      const s0 = catalogProduct.shapes[0];
+      const match = ACRYLIC_SHAPES.find(s => s.id === s0 || s.id === `shape-${s0}`);
+      if (match) return match.id;
+    }
+    return 'shape-square';
+  });
   const [shapeFilterCategory, setShapeFilterCategory] = useState<'ALL' | 'BASIC' | 'SPECIAL' | 'DECORATIVE'>('ALL');
 
   const currentShape = useMemo(() => {
@@ -180,9 +196,18 @@ export const AcrylicCustomizerPage: React.FC = () => {
   }, [selectedShapeId]);
 
   const filteredShapes = useMemo(() => {
-    if (shapeFilterCategory === 'ALL') return ACRYLIC_SHAPES;
-    return ACRYLIC_SHAPES.filter((s) => s.category.toUpperCase() === shapeFilterCategory);
-  }, [shapeFilterCategory]);
+    let baseList = ACRYLIC_SHAPES;
+    if (catalogProduct?.shapes && catalogProduct.shapes.length > 0) {
+      const supportedSlugs = catalogProduct.shapes.map((s) => s.toLowerCase());
+      baseList = ACRYLIC_SHAPES.filter((s) => {
+        const slug = s.id.replace('shape-', '').toLowerCase();
+        return supportedSlugs.includes(slug) || supportedSlugs.includes(s.id.toLowerCase());
+      });
+      if (baseList.length === 0) baseList = ACRYLIC_SHAPES;
+    }
+    if (shapeFilterCategory === 'ALL') return baseList;
+    return baseList.filter((s) => s.category.toUpperCase() === shapeFilterCategory);
+  }, [shapeFilterCategory, catalogProduct]);
 
   // Dynamic Shape-Specific Sizes (Section 8 & 9)
   const shapeSizes = useMemo(() => {
@@ -190,7 +215,16 @@ export const AcrylicCustomizerPage: React.FC = () => {
   }, [selectedShapeId, selectedProductTypeId]);
 
   // Selected Size Option
-  const [selectedSizeId, setSelectedSizeId] = useState<string>('shape-square-8x8');
+  const [selectedSizeId, setSelectedSizeId] = useState<string>(() => {
+    const defaultSizes = getSizesForShape(selectedShapeId, selectedProductTypeId);
+    return defaultSizes[2]?.id || defaultSizes[0]?.id || 'shape-square-8x8';
+  });
+
+  useEffect(() => {
+    if (shapeSizes.length > 0 && !shapeSizes.some((s) => s.id === selectedSizeId)) {
+      setSelectedSizeId(shapeSizes[2]?.id || shapeSizes[0]?.id);
+    }
+  }, [shapeSizes, selectedSizeId]);
 
   // Custom Size controls
   const [isCustomSize, setIsCustomSize] = useState<boolean>(false);

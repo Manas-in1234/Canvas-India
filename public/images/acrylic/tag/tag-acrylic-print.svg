@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+  <defs>
+    <!-- Wall Drop Shadow Filter -->
+    <filter id="wall-shadow" x="-15%" y="-15%" width="135%" height="135%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#0F172A" flood-opacity="0.28"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.18"/>
+    </filter>
+
+    <!-- Acrylic Edge Refraction Bevel -->
+    <filter id="edge-bevel" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#FFFFFF" flood-opacity="0.9"/>
+    </filter>
+
+    <!-- Photo Art Gradient -->
+    <linearGradient id="grad-tag" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3e5151"/>
+      <stop offset="35%" stop-color="#decba4"/>
+      <stop offset="70%" stop-color="#3f2b96"/>
+      <stop offset="100%" stop-color="#a8c0ff"/>
+    </linearGradient>
+
+    <!-- Standoff Chrome Finish -->
+    <radialGradient id="metal-standoff" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="35%" stop-color="#CBD5E1"/>
+      <stop offset="70%" stop-color="#64748B"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </radialGradient>
+
+    <!-- Glass Specular Glare -->
+    <linearGradient id="glare-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Shape Clip Path -->
+    <clipPath id="clip-tag">
+      <path d="M 180 120 L 420 120 L 470 200 L 470 480 L 130 480 L 130 200 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Clean Studio Wall Background -->
+  <rect width="600" height="600" fill="#F8FAFC"/>
+  <rect width="600" height="600" fill="radial-gradient(circle at 50% 40%, rgba(255,255,255,0.8) 0%, rgba(241,245,249,0.5) 100%)"/>
+
+  <!-- Acrylic Floating Drop Shadow -->
+  <g filter="url(#wall-shadow)">
+    <g fill="#000000" opacity="0.3">
+      <path d="M 180 120 L 420 120 L 470 200 L 470 480 L 130 480 L 130 200 Z"/>
+    </g>
+  </g>
+
+  <!-- 5mm Optical Acrylic Glass Plate Body -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="4.5" filter="url(#edge-bevel)">
+    <path d="M 180 120 L 420 120 L 470 200 L 470 480 L 130 480 L 130 200 Z"/>
+  </g>
+
+  <!-- Inner Clipped Art & Glass Reflections -->
+  
+      <g clip-path="url(#clip-tag)">
+        <!-- Photo Artwork Gradient -->
+        <rect x="0" y="0" width="600" height="600" fill="url(#grad-tag)"/>
+        
+      <circle cx="300" cy="160" r="14" fill="#ffffff" stroke="#3e5151" stroke-width="4"/>
+      <circle cx="300" cy="300" r="80" fill="#decba4" opacity="0.75"/>
+      <path d="M 130 410 Q 250 350 370 380 T 470 370 L 470 480 L 130 480 Z" fill="#3e5151"/>
+    
+        
+        <!-- Diagonal Acrylic Gloss Glare -->
+        <path d="M 0 0 L 220 0 L 100 600 L 0 600 Z" fill="url(#glare-gradient)" opacity="0.35"/>
+        <path d="M 180 0 L 380 0 L 240 600 L 120 600 Z" fill="#FFFFFF" opacity="0.12"/>
+      </g>
+    
+
+  <!-- Acrylic Outer Polished Crystal Bevel Edge -->
+  <g fill="none" stroke="#0E4A93" stroke-width="1.8" opacity="0.3">
+    <path d="M 180 120 L 420 120 L 470 200 L 470 480 L 130 480 L 130 200 Z"/>
+  </g>
+  <g fill="none" stroke="#FFFFFF" stroke-width="2.5" opacity="0.85">
+    <path d="M 180 120 L 420 120 L 470 200 L 470 480 L 130 480 L 130 200 Z"/>
+  </g>
+
+  <!-- Chrome Standoff Bolts -->
+  
+    <!-- Standoff Bolt -->
+    <g transform="translate(300, 160)">
+      <circle cx="0" cy="0" r="14" fill="#64748B" opacity="0.4" filter="blur(2px)"/>
+      <circle cx="0" cy="0" r="11" fill="url(#metal-standoff)"/>
+      <circle cx="0" cy="0" r="8" fill="none" stroke="#FFFFFF" stroke-width="1.2" opacity="0.8"/>
+      <circle cx="0" cy="0" r="4.5" fill="#334155"/>
+      <circle cx="-2" cy="-2" r="2.5" fill="#FFFFFF" opacity="0.9"/>
+    </g>
+  
+    <!-- Standoff Bolt -->
+    <g transform="translate(170, 440)">
+      <circle cx="0" cy="0" r="14" fill="#64748B" opacity="0.4" filter="blur(2px)"/>
+      <circle cx="0" cy="0" r="11" fill="url(#metal-standoff)"/>
+      <circle cx="0" cy="0" r="8" fill="none" stroke="#FFFFFF" stroke-width="1.2" opacity="0.8"/>
+      <circle cx="0" cy="0" r="4.5" fill="#334155"/>
+      <circle cx="-2" cy="-2" r="2.5" fill="#FFFFFF" opacity="0.9"/>
+    </g>
+  
+    <!-- Standoff Bolt -->
+    <g transform="translate(430, 440)">
+      <circle cx="0" cy="0" r="14" fill="#64748B" opacity="0.4" filter="blur(2px)"/>
+      <circle cx="0" cy="0" r="11" fill="url(#metal-standoff)"/>
+      <circle cx="0" cy="0" r="8" fill="none" stroke="#FFFFFF" stroke-width="1.2" opacity="0.8"/>
+      <circle cx="0" cy="0" r="4.5" fill="#334155"/>
+      <circle cx="-2" cy="-2" r="2.5" fill="#FFFFFF" opacity="0.9"/>
+    </g>
+  
+
+  <!-- Subtle Quality Badge -->
+  <rect x="20" y="556" width="170" height="24" rx="6" fill="#0E4A93" opacity="0.9"/>
+  <text x="105" y="572" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF">5mm Cast Optical Acrylic</text>
+</svg>
