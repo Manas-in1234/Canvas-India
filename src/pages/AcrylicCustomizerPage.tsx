@@ -26,7 +26,10 @@ import {
   Eye,
   Crop,
   Grid,
-  Search
+  Search,
+  Box,
+  Shapes,
+  Maximize2
 } from 'lucide-react';
 import { CanvasIndiaLogo } from '../components/CanvasIndiaLogo';
 import { useShop } from '../context/ShopContext';
@@ -59,6 +62,8 @@ import {
   ACRYLIC_TEMPLATES,
   AcrylicEdgeWrap,
   ACRYLIC_EDGE_WRAPS,
+  AcrylicShapeOption,
+  ACRYLIC_SHAPES,
   ACRYLIC_BACKGROUNDS,
   ACRYLIC_BORDER_WIDTHS,
   ACRYLIC_BORDER_COLORS,
@@ -112,18 +117,6 @@ export interface SelectedElement {
   elementId?: string;
 }
 
-const POSITION_PRESETS = [
-  { label: 'TL', title: 'Top Left', x: -32, y: -35 },
-  { label: 'TC', title: 'Top Center', x: 0, y: -35 },
-  { label: 'TR', title: 'Top Right', x: 32, y: -35 },
-  { label: 'CL', title: 'Center Left', x: -32, y: 0 },
-  { label: 'C', title: 'Center', x: 0, y: 0 },
-  { label: 'CR', title: 'Center Right', x: 32, y: 0 },
-  { label: 'BL', title: 'Bottom Left', x: -32, y: 35 },
-  { label: 'BC', title: 'Bottom Center', x: 0, y: 35 },
-  { label: 'BR', title: 'Bottom Right', x: 32, y: 35 }
-];
-
 const createDefaultPanelState = (imageUrl: string | null = null): PanelImageState => ({
   imageUrl,
   panX: 0,
@@ -152,7 +145,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     ) || allProducts.find((p) => p.categorySlug === 'acrylic') || allProducts[0];
   }, [allProducts, productId]);
 
-  // Active Left Toolbar Tab (8 tabs in exact order)
+  // Active Left Toolbar Tab (8 tabs: PRODUCTS, UPLOAD, SELECT SIZE, LAYOUTS & DESIGNS, SHAPE, WRAP & BORDER, HARDWARE & FINISH, OPTIONS)
   const [activeTab, setActiveTab] = useState<ToolbarTab>('PRODUCTS');
 
   // Selected Acrylic Product Type
@@ -196,31 +189,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const [expandedPhotoCount, setExpandedPhotoCount] = useState<number | null>(1);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
 
-  // Template Selection Tab States
-  const [templateCategory, setTemplateCategory] = useState<TemplateCategory>('All');
-  const [templateSearch, setTemplateSearch] = useState<string>('');
-  const [workspaceMode, setWorkspaceMode] = useState<'CANVAS' | 'TEMPLATES'>('CANVAS');
-
-  // Filtered Templates
-  const filteredTemplates = useMemo(() => {
-    return ACRYLIC_TEMPLATES.filter((tmpl) => {
-      // Category filter
-      const matchesCategory = 
-        templateCategory === 'All' || 
-        tmpl.category === templateCategory || 
-        (tmpl.secondaryCategories && tmpl.secondaryCategories.includes(templateCategory));
-      
-      // Search filter
-      const matchesSearch = 
-        !templateSearch.trim() || 
-        tmpl.name.toLowerCase().includes(templateSearch.toLowerCase()) || 
-        tmpl.category.toLowerCase().includes(templateSearch.toLowerCase()) ||
-        tmpl.description.toLowerCase().includes(templateSearch.toLowerCase()) ||
-        tmpl.defaultTitle.toLowerCase().includes(templateSearch.toLowerCase());
-
-      return matchesCategory && matchesSearch;
-    });
-  }, [templateCategory, templateSearch]);
+  // Shape Selection State (SHAPE Tab)
+  const [selectedShapeId, setSelectedShapeId] = useState<string>('shape-square');
+  const currentShape = useMemo(() => {
+    return ACRYLIC_SHAPES.find((s) => s.id === selectedShapeId) || ACRYLIC_SHAPES[0];
+  }, [selectedShapeId]);
 
   const currentLayout = useMemo(() => {
     return LAYOUT_PRESETS.find((l) => l.id === selectedLayoutId) || LAYOUT_PRESETS[0];
@@ -263,18 +236,28 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Room View state
   const [showRoomView, setShowRoomView] = useState<boolean>(false);
-  const [roomBackgroundIndex, setRoomBackgroundIndex] = useState<number>(0);
+  const [roomBackdrop, setRoomBackdrop] = useState<'living' | 'office' | 'bedroom'>('living');
 
-  // Add Text Editor state
+  // 3D View Modal State
+  const [show3DModal, setShow3DModal] = useState<boolean>(false);
+  const [threeDViewAngle, setThreeDViewAngle] = useState<'angle' | 'front' | 'edge'>('angle');
+
+  // Add Text Editor Popover State
+  const [showTextModal, setShowTextModal] = useState<boolean>(false);
   const [textInput, setTextInput] = useState<string>('');
   const [selectedFontFamily, setSelectedFontFamily] = useState<string>('Georgia, serif');
-  const [selectedFontSize, setSelectedFontSize] = useState<number>(18);
+  const [selectedFontSize, setSelectedFontSize] = useState<number>(20);
   const [selectedTextColor, setSelectedTextColor] = useState<string>('#FFFFFF');
   const [textAlignment, setTextAlignment] = useState<'left' | 'center' | 'right'>('center');
+
+  // Clipart Picker Popover State
+  const [showClipartModal, setShowClipartModal] = useState<boolean>(false);
+  const [selectedClipartCategory, setSelectedClipartCategory] = useState<string>('Love & Wedding');
 
   // UI Modals & Notifications
   const [saveToast, setSaveToast] = useState<string | null>(null);
   const [validationWarning, setValidationWarning] = useState<string | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   // Dragging State
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -286,13 +269,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const singleFileInputRef = useRef<HTMLInputElement>(null);
   const uploadTargetPanelRef = useRef<number>(0);
-
-  // Auto switch workspaceMode if TEMPLATES tab is clicked
-  useEffect(() => {
-    if (activeTab === 'TEMPLATES') {
-      setWorkspaceMode('TEMPLATES');
-    }
-  }, [activeTab]);
 
   // Handle URL pre-selects
   useEffect(() => {
@@ -438,75 +414,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
         }));
       }
     });
-  };
-
-  // Select a template from the Template Gallery
-  const handleSelectTemplate = (template: AcrylicTemplateItem) => {
-    setSelectedTemplateId(template.id);
-
-    // Check if user has an uploaded photo in frame 0
-    const currentFrame = panelImages[0];
-    const isUserPhoto = !!currentFrame?.imageUrl && uploadedPhotos.includes(currentFrame.imageUrl);
-
-    // Build template text elements
-    const newTextElements: TextElement[] = [];
-    if (template.defaultTitle) {
-      newTextElements.push({
-        id: `txt-tmpl-title-${Date.now()}`,
-        text: template.defaultTitle,
-        fontFamily: 'Georgia, serif',
-        fontSize: 18,
-        color: '#FFFFFF',
-        x: 0,
-        y: -30,
-        alignment: 'center'
-      });
-    }
-    if (template.defaultSubtitle) {
-      newTextElements.push({
-        id: `txt-tmpl-sub-${Date.now() + 1}`,
-        text: template.defaultSubtitle,
-        fontFamily: 'system-ui, sans-serif',
-        fontSize: 11,
-        color: '#E2E8F0',
-        x: 0,
-        y: -20,
-        alignment: 'center'
-      });
-    }
-    if (template.defaultLyrics && template.defaultLyrics.length > 0) {
-      newTextElements.push({
-        id: `txt-tmpl-lyrics-${Date.now() + 2}`,
-        text: template.defaultLyrics.join('\n'),
-        fontFamily: 'Georgia, serif',
-        fontSize: 10,
-        color: '#F8FAFC',
-        x: 0,
-        y: 22,
-        alignment: 'center'
-      });
-    }
-
-    updateFrame(0, (curr) => ({
-      ...curr,
-      // Retain user's uploaded photo if already present! Otherwise use template mockup image
-      imageUrl: isUserPhoto ? curr.imageUrl : template.image,
-      textElements: newTextElements
-    }));
-
-    // Auto-switch to canvas view so user can immediately see and edit their template
-    setWorkspaceMode('CANVAS');
-  };
-
-  // Clear / Start with Blank Canvas
-  const handleSelectBlankCanvas = () => {
-    setSelectedTemplateId(null);
-    // Remove template-generated text elements while keeping uploaded photo intact
-    updateFrame(0, (curr) => ({
-      ...curr,
-      textElements: curr.textElements.filter((t) => !t.id.startsWith('txt-tmpl-'))
-    }));
-    setWorkspaceMode('CANVAS');
   };
 
   // Image Transformations (Per Active Frame)
@@ -690,6 +597,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
     setSelectedElement({ type: 'text', panelIndex: activePanelIndex, elementId: newId });
     setTextInput('');
+    setShowTextModal(false);
   };
 
   // Add Clipart to active frame
@@ -758,6 +666,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
       productId: catalogProduct?.id || productId,
       productTypeId: selectedProductTypeId,
       sizeId: selectedSizeId,
+      shapeId: selectedShapeId,
       isCustomSize,
       customWidth,
       customHeight,
@@ -780,7 +689,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Add to Cart
   const handleAddToCart = () => {
-    // Validation: at least one photo must be loaded
     const hasAnyPhoto = Object.values(panelImages).some((p) => !!p.imageUrl);
     if (!hasAnyPhoto) {
       setValidationWarning('Please upload at least one photo to complete your Acrylic customizer.');
@@ -801,6 +709,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
         customizationDetails: {
           acrylicProductType: selectedProductType.name,
           dimensions: currentDimensionLabel,
+          shape: currentShape.name,
           layout: currentLayout.name,
           template: selectedTemplateId ? ACRYLIC_TEMPLATES.find((t) => t.id === selectedTemplateId)?.name : 'Blank Canvas',
           hardware: HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name,
@@ -834,6 +743,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
     // Border style
     const borderWidthPx = ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0;
 
+    // Shape class application (Circle, Rounded Rect, or standard aspect)
+    const effectiveAspectClass = selectedShapeId === 'shape-circle' 
+      ? 'aspect-square rounded-full' 
+      : selectedShapeId === 'shape-rounded-rect'
+      ? `${aspectClass} rounded-3xl`
+      : `${aspectClass} rounded-xl`;
+
     return (
       <div
         key={panelIdx}
@@ -845,7 +761,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
             handleEmptyFrameClick(panelIdx);
           }
         }}
-        className={`acrylic-frame-container relative w-full ${aspectClass} bg-white rounded-xl overflow-hidden transition-all select-none border-2 ${
+        className={`acrylic-frame-container relative w-full ${effectiveAspectClass} bg-white overflow-hidden transition-all select-none border-2 ${
           isActive
             ? 'border-[#0E4A93] shadow-2xl ring-4 ring-[#0E4A93]/30 z-20'
             : 'border-stone-300 shadow-md hover:border-stone-400 z-10'
@@ -870,13 +786,14 @@ export const AcrylicCustomizerPage: React.FC = () => {
           <div
             className="absolute inset-0 pointer-events-none z-25"
             style={{
-              border: `${borderWidthPx}px solid ${selectedBorderColor}`
+              border: `${borderWidthPx}px solid ${selectedBorderColor}`,
+              borderRadius: selectedShapeId === 'shape-circle' ? '9999px' : undefined
             }}
           />
         )}
 
         {/* Architectural Chrome Standoff Bolts */}
-        {(selectedHardwareId === 'standoff-mounts' || selectedProductTypeId === 'acrylic-signage' || selectedDisplayOptionId === 'display-standoff') && (
+        {(selectedHardwareId === 'standoff-mounts' || selectedProductTypeId === 'acrylic-signage' || selectedDisplayOptionId === 'display-standoff') && selectedShapeId !== 'shape-circle' && (
           <>
             <div className="absolute top-2.5 left-2.5 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-stone-400 via-stone-200 to-stone-50 border border-stone-600 shadow-md z-30 pointer-events-none flex items-center justify-center">
               <div className="w-1 h-1 rounded-full bg-stone-500" />
@@ -893,7 +810,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           </>
         )}
 
-        {/* Frame Label Badge (Frame Number) */}
+        {/* Frame Label Badge */}
         <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm z-30 pointer-events-none">
           <span>{frameInfo?.label || `Frame ${panelIdx + 1}`}</span>
           {isActive && (
@@ -1015,9 +932,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
             })}
           </div>
         ) : (
-          /* ============================================================= */
-          /* STRICTLY MINIMAL EMPTY FRAME: ONLY THE UPLOAD ICON (Rule 15)  */
-          /* ============================================================= */
+          /* STRICTLY MINIMAL EMPTY FRAME: ONLY THE UPLOAD ICON (Rule 15) */
           <div 
             className="w-full h-full flex items-center justify-center bg-stone-50/70 hover:bg-stone-100/90 transition-colors cursor-pointer group"
             title="Click to upload photo for this frame"
@@ -1031,19 +946,19 @@ export const AcrylicCustomizerPage: React.FC = () => {
     );
   };
 
-  // Dynamic frame outer border CSS (Modern Mouldings)
+  // Dynamic frame outer border CSS
   const currentFrameCss = useMemo(() => {
     const frameObj = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
     return frameObj?.borderCss || '';
   }, [selectedFrameId]);
 
-  // Toolbar items configuration (8 items in exact order)
+  // Primary Toolbar items: EXACT 8 ITEMS IN ORDER (Section 3 & 4)
   const toolbarItems: { id: ToolbarTab; label: string; icon: React.ElementType }[] = [
     { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
     { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud },
     { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
     { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers },
-    { id: 'TEMPLATES', label: 'TEMPLATES', icon: Smile },
+    { id: 'SHAPE', label: 'SHAPE', icon: Shapes },
     { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
     { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
     { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
@@ -1073,45 +988,51 @@ export const AcrylicCustomizerPage: React.FC = () => {
         }}
       />
 
-      {/* ------------------------------------------------------------------- */}
-      {/* TOP HEADER BAR                                                      */}
-      {/* ------------------------------------------------------------------- */}
-      <header className="h-14 bg-[#0E4A93] text-white flex items-center justify-between px-4 sm:px-6 shadow-md z-30 shrink-0">
-        <div className="flex items-center gap-3">
+      {/* =================================================================== */}
+      {/* 1. RESTORED CUSTOMIZER HEADER (Section 1)                          */}
+      {/* =================================================================== */}
+      <header className="h-14 bg-[#0E4A93] text-white flex items-center justify-between px-3 sm:px-6 shadow-md z-30 shrink-0">
+        
+        {/* LEFT: Menu / Back / Logo / Customizer */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-1.5 hover:bg-white/10 rounded-lg text-white transition-colors cursor-pointer"
+            title="Navigation Menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          
           <Link
             to="/acrylic"
-            className="flex items-center gap-1.5 text-xs font-semibold text-white/90 hover:text-white bg-white/10 hover:bg-white/15 px-2.5 py-1.5 rounded-md transition-colors"
+            className="flex items-center gap-1 text-xs font-semibold text-white/90 hover:text-white bg-white/10 hover:bg-white/15 px-2.5 py-1.5 rounded-md transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Back to Acrylic</span>
           </Link>
+          
           <div className="h-5 w-px bg-white/20 hidden sm:block" />
+          
+          {/* Canvas India Logo directly on header background without white card */}
           <div className="flex items-center gap-2">
             <CanvasIndiaLogo className="h-6 w-auto brightness-0 invert" />
-            <span className="text-sm font-bold tracking-tight hidden md:inline">
+            <span className="text-sm font-bold tracking-tight text-white hidden md:inline">
               Customizer
             </span>
           </div>
         </div>
 
-        {/* Center: Selected Product & Dimensions summary */}
-        <div className="hidden lg:flex items-center gap-2 text-xs">
-          <span className="font-semibold text-white/80">{selectedProductType.name}</span>
+        {/* CENTER: Current product name & selected size */}
+        <div className="hidden md:flex items-center gap-2 text-xs font-medium text-white/90">
+          <span className="font-bold text-white">{selectedProductType.name}</span>
           <span className="text-white/40">•</span>
-          <span className="font-bold text-white bg-white/15 px-2 py-0.5 rounded">
+          <span className="font-bold text-white bg-white/15 px-2.5 py-0.5 rounded-full">
             {currentDimensionLabel}
           </span>
-          {selectedTemplateId && (
-            <>
-              <span className="text-white/40">•</span>
-              <span className="font-bold text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded truncate max-w-[160px]">
-                {ACRYLIC_TEMPLATES.find((t) => t.id === selectedTemplateId)?.name}
-              </span>
-            </>
-          )}
         </div>
 
-        {/* Right Actions: Price, Save & Add to Cart */}
+        {/* RIGHT: Total Price, Save, Add to Cart */}
         <div className="flex items-center gap-3">
           <div className="text-right">
             <div className="text-[10px] text-white/70 font-semibold leading-tight">Total Price</div>
@@ -1157,9 +1078,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
         </div>
       )}
 
-      {/* ------------------------------------------------------------------- */}
+      {/* =================================================================== */}
       {/* MAIN CUSTOMIZER BODY                                                */}
-      {/* ------------------------------------------------------------------- */}
+      {/* =================================================================== */}
       <div 
         className="flex-1 flex flex-col md:flex-row overflow-hidden"
         onPointerMove={onPointerMove}
@@ -1167,7 +1088,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
       >
 
         {/* ----------------------------------------------------------------- */}
-        {/* LEFT PRIMARY TOOLBAR (8 TABS IN EXACT ORDER)                      */}
+        {/* LEFT PRIMARY TOOLBAR: 8 ITEMS IN ORDER (Sections 3 & 4)           */}
         {/* ----------------------------------------------------------------- */}
         <aside className="w-full md:w-20 bg-white border-b md:border-b-0 md:border-r border-stone-200 flex md:flex-col items-center justify-between md:justify-start py-1 md:py-3 z-20 shrink-0 overflow-x-auto md:overflow-x-visible">
           {toolbarItems.map((item) => {
@@ -1177,12 +1098,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => {
-                  setActiveTab(item.id);
-                  if (item.id === 'TEMPLATES') {
-                    setWorkspaceMode('TEMPLATES');
-                  }
-                }}
+                onClick={() => setActiveTab(item.id)}
                 className={`flex-1 md:flex-none md:w-16 py-2 px-1 flex flex-col items-center justify-center gap-1 transition-all cursor-pointer relative ${
                   isActive
                     ? 'text-[#0E4A93] font-bold bg-blue-50/60'
@@ -1217,7 +1133,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               {activeTab === 'PRODUCTS' && '7 Styles'}
               {activeTab === 'SELECT SIZE' && `${filteredSizes.length} Options`}
               {activeTab === 'LAYOUTS & DESIGNS' && `${LAYOUT_PRESETS.length} Layouts`}
-              {activeTab === 'TEMPLATES' && '20 Templates'}
+              {activeTab === 'SHAPE' && '5 Shapes'}
               {activeTab === 'WRAP & BORDER' && '4 Edges'}
               {activeTab === 'HARDWARE & FINISH' && 'Hardware'}
               {activeTab === 'OPTIONS' && 'Specifications'}
@@ -1245,7 +1161,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Compact Fixed Image Container */}
                     <div className="w-full h-20 bg-stone-50 flex items-center justify-center p-1 overflow-hidden relative">
                       <img 
                         src={pt.image} 
@@ -1283,7 +1198,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </p>
               </div>
 
-              {/* Frame target selector */}
               {frames.length > 1 && (
                 <div className="p-2.5 bg-stone-100 rounded-xl space-y-1.5">
                   <div className="text-[11px] font-bold text-stone-700">Assign to Frame:</div>
@@ -1311,7 +1225,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Upload Drop Zone */}
               <div
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={(e) => e.preventDefault()}
@@ -1332,7 +1245,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Uploaded Gallery Thumbnails */}
               {uploadedPhotos.length > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
@@ -1363,7 +1275,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
           {/* TAB 3: SELECT SIZE */}
           {activeTab === 'SELECT SIZE' && (
             <div className="p-3.5 space-y-3">
-              {/* Category Filter Pills */}
               <div className="flex gap-1 overflow-x-auto pb-1">
                 {(['RECOMMENDED', 'SQUARE', 'PANORAMIC', 'LARGE'] as SizeCategory[]).map((cat) => (
                   <button
@@ -1395,7 +1306,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Standard Sizes Grid */}
               {!isCustomSize ? (
                 <div className="grid grid-cols-2 gap-2.5">
                   {filteredSizes.map((size) => {
@@ -1419,7 +1329,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           </div>
                         )}
 
-                        {/* Compact Visual Aspect Container */}
                         <div className="w-full h-16 bg-stone-50 flex items-center justify-center p-1.5 overflow-hidden relative">
                           <img 
                             src={size.image} 
@@ -1441,7 +1350,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                   })}
                 </div>
               ) : (
-                /* Custom Size Dimensions */
                 <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 space-y-3">
                   <div className="text-xs font-bold text-stone-800">Set Custom Dimensions:</div>
                   <div className="grid grid-cols-2 gap-2">
@@ -1479,7 +1387,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
           {/* TAB 4: LAYOUTS & DESIGNS */}
           {activeTab === 'LAYOUTS & DESIGNS' && (
             <div className="p-3.5 space-y-3">
-              {/* Sub-Tabs: DESIGNS vs LAYOUTS */}
               <div className="flex border border-stone-200 rounded-xl p-1 bg-stone-100">
                 <button
                   type="button"
@@ -1505,7 +1412,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* LAYOUTS SUB-TAB */}
               {layoutSubTab === 'LAYOUTS' && (
                 <div className="space-y-2.5">
                   {[1, 2, 3, 4].map((count) => {
@@ -1543,7 +1449,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                                     </div>
                                   )}
 
-                                  {/* Compact Visual Diagram Representation */}
                                   <div className="w-full h-16 bg-stone-50 border-b border-stone-100 p-2 flex items-center justify-center">
                                     {layout.layoutType === '1-single' && (
                                       <div className="w-12 h-10 bg-[#0E4A93]/40 rounded-xs" />
@@ -1600,7 +1505,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* DESIGNS SUB-TAB */}
               {layoutSubTab === 'DESIGNS' && (
                 <div className="grid grid-cols-2 gap-2.5">
                   {DESIGN_TEMPLATES.map((tmpl) => {
@@ -1648,53 +1552,58 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 5: TEMPLATES (DRAWER QUICK CONTROLS) */}
-          {activeTab === 'TEMPLATES' && (
+          {/* =============================================================== */}
+          {/* TAB 5: SHAPE (NEW: Section 4 & 5)                                */}
+          {/* =============================================================== */}
+          {activeTab === 'SHAPE' && (
             <div className="p-3.5 space-y-3">
-              <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 space-y-2">
-                <div className="text-xs font-bold text-stone-800">Current Selection:</div>
-                <div className="text-xs font-extrabold text-[#0E4A93] truncate">
-                  {selectedTemplateId 
-                    ? ACRYLIC_TEMPLATES.find((t) => t.id === selectedTemplateId)?.name 
-                    : 'Blank Canvas'}
-                </div>
-                <div className="flex gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setWorkspaceMode('TEMPLATES')}
-                    className="flex-1 py-1.5 px-2 bg-[#0E4A93] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
-                  >
-                    Open Gallery
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSelectBlankCanvas}
-                    className="py-1.5 px-2.5 border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 text-xs font-bold rounded-lg transition-colors cursor-pointer"
-                  >
-                    Blank Canvas
-                  </button>
-                </div>
+              <div>
+                <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-1">
+                  Acrylic Shape
+                </h3>
+                <p className="text-[11px] text-stone-500">
+                  Select a precision-cut acrylic shape for your custom display.
+                </p>
               </div>
 
-              <div className="text-xs font-bold text-stone-700 uppercase tracking-wider">Quick Categories:</div>
-              <div className="flex flex-wrap gap-1.5">
-                {(['All', 'Wedding', 'Love', 'Family', 'Music', 'Quotes', 'Baby', 'Travel', 'Minimal'] as TemplateCategory[]).map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => {
-                      setTemplateCategory(cat);
-                      setWorkspaceMode('TEMPLATES');
-                    }}
-                    className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-colors cursor-pointer ${
-                      templateCategory === cat
-                        ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
-                        : 'bg-white text-stone-600 border-stone-200 hover:border-stone-300'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 gap-2.5">
+                {ACRYLIC_SHAPES.map((shape) => {
+                  const isSelected = selectedShapeId === shape.id;
+                  return (
+                    <div
+                      key={shape.id}
+                      onClick={() => setSelectedShapeId(shape.id)}
+                      className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
+                        isSelected
+                          ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
+                          : 'border-stone-200 hover:border-stone-400 bg-white'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      )}
+
+                      <div className="w-full h-18 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
+                        <img 
+                          src={shape.image} 
+                          alt={shape.name} 
+                          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform" 
+                        />
+                      </div>
+
+                      <div className="p-2 bg-white border-t border-stone-100 text-center">
+                        <div className="text-xs font-bold text-stone-900 leading-tight">
+                          {shape.name}
+                        </div>
+                        <div className="text-[10px] text-stone-500 mt-0.5 line-clamp-1">
+                          {shape.description}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -1747,7 +1656,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Inner Border Width */}
               <div>
                 <div className="text-xs font-black text-stone-800 uppercase tracking-wider mb-2">
                   Inner Border Width
@@ -1773,7 +1681,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Border Color */}
               {selectedBorderWidthId !== 'none' && (
                 <div>
                   <div className="text-xs font-black text-stone-800 uppercase tracking-wider mb-2">
@@ -1801,7 +1708,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
           {/* TAB 7: HARDWARE & FINISH */}
           {activeTab === 'HARDWARE & FINISH' && (
             <div className="p-3.5 space-y-4">
-              {/* Hardware Selection */}
               <div>
                 <div className="text-xs font-black text-stone-800 uppercase tracking-wider mb-2">
                   Hardware & Mounting
@@ -1847,7 +1753,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Surface Finish */}
               <div>
                 <div className="text-xs font-black text-stone-800 uppercase tracking-wider mb-2">
                   Surface Finish
@@ -1898,7 +1803,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
           {/* TAB 8: OPTIONS */}
           {activeTab === 'OPTIONS' && (
             <div className="p-3.5 space-y-4">
-              {/* Frames */}
               <div>
                 <div className="text-xs font-black text-stone-800 uppercase tracking-wider mb-2">
                   Frame Moulding
@@ -1944,7 +1848,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Color Finishing (Filters) */}
               <div>
                 <div className="text-xs font-black text-stone-800 uppercase tracking-wider mb-2">
                   Color Finishing
@@ -1999,373 +1902,480 @@ export const AcrylicCustomizerPage: React.FC = () => {
         <main className="flex-1 flex flex-col bg-[#F8FAFC] relative overflow-hidden">
           
           {/* =============================================================== */}
-          {/* MODE A: TEMPLATE SELECTION PANEL IN WORKSPACE (Per user spec)    */}
+          {/* 6. TOP-RIGHT TOOLBAR ABOVE WORKSPACE (Sections 6 - 12)           */}
           {/* =============================================================== */}
-          {workspaceMode === 'TEMPLATES' ? (
-            <div className="flex-1 flex flex-col overflow-y-auto p-4 sm:p-6 max-w-6xl w-full mx-auto space-y-4">
-              
-              {/* Top Bar inside Template Workspace */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200 pb-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-lg sm:text-xl font-black text-stone-900 tracking-tight">
-                      Choose a Template
-                    </h1>
-                    <span className="text-xs font-semibold text-stone-500">
-                      (Optional)
-                    </span>
-                  </div>
-                  <p className="text-xs text-stone-600 mt-0.5">
-                    Pick a template and we'll add it to your canvas. You can still customize everything.
-                  </p>
-                </div>
+          <div className="h-12 bg-white border-b border-stone-200 px-3 sm:px-4 flex items-center justify-between shrink-0 z-20 overflow-x-auto">
+            
+            {/* Left Image Manipulation Tools */}
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={handleZoomIn}
+                className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
+                title="Zoom In"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleZoomOut}
+                className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleRotate}
+                className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
+                title="Rotate 90°"
+              >
+                <RotateCw className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleResetImage}
+                className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
+                title="Reset Image"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
 
-                {/* View Canvas Toggle */}
+            {/* Right: Restored Top-Right Toolbar [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW, 3D VIEW] */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              
+              {/* SAVE */}
+              <button
+                type="button"
+                onClick={handleSaveDesign}
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 rounded-lg text-xs font-bold transition-all shadow-2xs hover:border-stone-400 cursor-pointer"
+                title="Save design to browser"
+              >
+                <Save className="w-3.5 h-3.5 text-[#0E4A93]" />
+                <span>SAVE</span>
+              </button>
+
+              {/* ADD TEXT */}
+              <button
+                type="button"
+                onClick={() => setShowTextModal(!showTextModal)}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
+                  showTextModal
+                    ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
+                    : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
+                }`}
+                title="Add custom typography and lyrics"
+              >
+                <Type className="w-3.5 h-3.5" />
+                <span>ADD TEXT</span>
+              </button>
+
+              {/* ADD CLIPART */}
+              <button
+                type="button"
+                onClick={() => setShowClipartModal(!showClipartModal)}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
+                  showClipartModal
+                    ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
+                    : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
+                }`}
+                title="Add stickers and clipart"
+              >
+                <Smile className="w-3.5 h-3.5" />
+                <span>ADD CLIPART</span>
+              </button>
+
+              {/* ROOM VIEW */}
+              <button
+                type="button"
+                onClick={() => setShowRoomView(!showRoomView)}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
+                  showRoomView
+                    ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
+                    : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
+                }`}
+                title="Preview in realistic room interior"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>ROOM VIEW</span>
+              </button>
+
+              {/* 3D VIEW */}
+              <button
+                type="button"
+                onClick={() => setShow3DModal(true)}
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 rounded-lg text-xs font-bold transition-all shadow-2xs hover:border-stone-400 cursor-pointer"
+                title="Preview 3D acrylic depth and reflections"
+              >
+                <Box className="w-3.5 h-3.5 text-[#E8752A]" />
+                <span>3D VIEW</span>
+              </button>
+
+              {/* Delete Selected Element (Text/Clipart) */}
+              {selectedElement.type !== 'image' && (
                 <button
                   type="button"
-                  onClick={() => setWorkspaceMode('CANVAS')}
-                  className="self-start sm:self-auto px-4 py-2 bg-[#0E4A93] hover:bg-[#0c3e7b] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                  onClick={handleDeleteSelectedElement}
+                  className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors cursor-pointer ml-1"
+                  title="Delete Selected Item"
                 >
-                  <span>View Canvas</span>
-                  <ChevronRight className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+
+            </div>
+          </div>
+
+          {/* =============================================================== */}
+          {/* FLOATING ADD TEXT TOOLBAR / MODAL                                */}
+          {/* =============================================================== */}
+          {showTextModal && (
+            <div className="absolute top-14 right-4 z-40 bg-white border border-stone-300 rounded-2xl shadow-2xl p-4 w-80 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center justify-between pb-2 border-b border-stone-100 mb-3">
+                <div className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
+                  <Type className="w-4 h-4 text-[#0E4A93]" />
+                  <span>Add Typography</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTextModal(false)}
+                  className="text-stone-400 hover:text-stone-700 p-0.5 rounded"
+                >
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Search Bar & Category Filter Tabs */}
-              <div className="space-y-2.5">
-                {/* Search Input */}
-                <div className="relative max-w-md">
-                  <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={templateSearch}
-                    onChange={(e) => setTemplateSearch(e.target.value)}
-                    placeholder="Search templates by name or lyric..."
-                    className="w-full pl-9 pr-8 py-2 bg-white border border-stone-300 rounded-xl text-xs font-medium text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#0E4A93]/30 focus:border-[#0E4A93]"
+              <div className="space-y-3">
+                <div>
+                  <label className="text-[10px] font-bold text-stone-500 uppercase block mb-1">Your Text / Lyrics</label>
+                  <textarea
+                    rows={2}
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
+                    placeholder="Enter custom text or vows..."
+                    className="w-full px-2.5 py-1.5 border border-stone-300 rounded-lg text-xs text-stone-900 focus:outline-none focus:border-[#0E4A93]"
                   />
-                  {templateSearch && (
-                    <button
-                      type="button"
-                      onClick={() => setTemplateSearch('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-0.5"
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] font-bold text-stone-500 uppercase block mb-1">Font Style</label>
+                    <select
+                      value={selectedFontFamily}
+                      onChange={(e) => setSelectedFontFamily(e.target.value)}
+                      className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs font-medium text-stone-900"
                     >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Categories Tabs */}
-                <div className="flex gap-1.5 overflow-x-auto pb-1">
-                  {(['All', 'Wedding', 'Love', 'Family', 'Music', 'Quotes', 'Baby', 'Travel', 'Minimal'] as TemplateCategory[]).map((cat) => {
-                    const isActive = templateCategory === cat;
-                    return (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => setTemplateCategory(cat)}
-                        className={`text-xs font-bold px-3.5 py-1.5 rounded-full whitespace-nowrap transition-all cursor-pointer ${
-                          isActive
-                            ? 'bg-[#0E4A93] text-white shadow-xs'
-                            : 'bg-white text-stone-700 border border-stone-200 hover:border-stone-400'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Yellow Information Notice Box (Section 3) */}
-              <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 flex items-start gap-2.5 text-xs text-amber-950 shadow-xs">
-                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <div className="leading-relaxed">
-                  These templates are for reference purpose only. Our designer will try to match the final product with selected template but it may vary based on the lyrics and image you have uploaded while placing the order. Final image proof will be shared with you before manufacturing the order.
-                </div>
-              </div>
-
-              {/* Templates Grid (3-4 Columns on Desktop, 2 on Mobile) */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5">
-                {filteredTemplates.map((tmpl) => {
-                  const isSelected = selectedTemplateId === tmpl.id;
-                  return (
-                    <div
-                      key={tmpl.id}
-                      onClick={() => handleSelectTemplate(tmpl)}
-                      className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
-                        isSelected
-                          ? 'border-[#0E4A93] bg-blue-50/20 shadow-md ring-2 ring-[#0E4A93]/20'
-                          : 'border-stone-200 hover:border-stone-400 bg-white shadow-xs'
-                      }`}
-                    >
-                      {/* Top Right Checkmark Badge */}
-                      {isSelected && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
-                          <Check className="w-3.5 h-3.5 stroke-[3]" />
-                        </div>
-                      )}
-
-                      {/* Compact Fixed Image Container (Approx 100-140px wide, 70-100px high) */}
-                      <div className="w-full h-24 sm:h-28 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
-                        <img 
-                          src={tmpl.image} 
-                          alt={tmpl.name} 
-                          className="max-h-full max-w-[140px] object-contain group-hover:scale-105 transition-transform"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/assets/customizer/acrylic/templates/blank-canvas.svg';
-                          }}
-                        />
-                      </div>
-
-                      {/* Template Title & Category */}
-                      <div className="p-2.5 bg-white border-t border-stone-100 flex-1 flex flex-col justify-between">
-                        <div className="text-xs font-bold text-stone-900 leading-snug line-clamp-2 min-h-[32px]">
-                          {tmpl.name}
-                        </div>
-                        <div className="flex items-center justify-between mt-2 pt-1 border-t border-stone-50 text-[10px]">
-                          <span className="font-semibold text-stone-500">{tmpl.category}</span>
-                          <span className="font-bold text-[#0E4A93]">Free Template</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Bottom Section: Or Start with a Blank Canvas (Section 11) */}
-              <div className="pt-4 border-t border-stone-200 space-y-2">
-                <div className="text-xs font-bold text-stone-500 uppercase tracking-wider">
-                  Or Start with a Blank Canvas
-                </div>
-                <div
-                  onClick={handleSelectBlankCanvas}
-                  className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-3.5 ${
-                    !selectedTemplateId
-                      ? 'border-[#0E4A93] bg-blue-50/30 ring-1 ring-[#0E4A93]/20 shadow-xs'
-                      : 'border-stone-200 hover:border-stone-400 bg-white'
-                  }`}
-                >
-                  <div className="w-14 h-11 rounded-lg bg-stone-100 border border-stone-200 flex items-center justify-center text-stone-400 shrink-0">
-                    <img src="/assets/customizer/acrylic/templates/blank-canvas.svg" alt="Blank Canvas" className="w-10 h-8 object-contain" />
+                      {FONT_OPTIONS.map((f) => (
+                        <option key={f.value} value={f.value}>{f.label}</option>
+                      ))}
+                    </select>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold text-stone-900">Blank Canvas</div>
-                    <div className="text-[11px] text-stone-500">Upload your own image and design freely without template overlays</div>
-                  </div>
-                  {!selectedTemplateId && (
-                    <div className="w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shrink-0">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-            </div>
-          ) : (
-            /* =============================================================== */
-            /* MODE B: INTERACTIVE ACRYLIC CANVAS WORKSPACE                    */
-            /* =============================================================== */
-            <div className="flex-1 flex flex-col relative overflow-hidden">
-              
-              {/* Workspace Top Toolbar */}
-              <div className="h-11 bg-white border-b border-stone-200 px-4 flex items-center justify-between shrink-0 z-20">
-                {/* Left: Interactive Tools (Zoom In/Out, Rotate, Reset) */}
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={handleZoomIn}
-                    className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
-                    title="Zoom In"
-                  >
-                    <ZoomIn className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleZoomOut}
-                    className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
-                    title="Zoom Out"
-                  >
-                    <ZoomOut className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleRotate}
-                    className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
-                    title="Rotate 90°"
-                  >
-                    <RotateCw className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleResetImage}
-                    className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
-                    title="Reset Photo Pan/Scale"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Center: Template Badge with Quick Gallery Toggle */}
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setWorkspaceMode('TEMPLATES')}
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-lg text-xs font-bold transition-colors cursor-pointer"
-                  >
-                    <Smile className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Template: {selectedTemplateId ? ACRYLIC_TEMPLATES.find((t) => t.id === selectedTemplateId)?.name.slice(0, 24) + '...' : 'Blank Canvas'}</span>
-                    <span className="text-[10px] text-amber-700 underline ml-0.5">Change</span>
-                  </button>
-                </div>
-
-                {/* Right: Room View & Delete Element */}
-                <div className="flex items-center gap-1.5">
-                  {selectedElement.type !== 'image' && (
-                    <button
-                      type="button"
-                      onClick={handleDeleteSelectedElement}
-                      className="flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-bold transition-colors cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete</span>
-                    </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => setShowRoomView(!showRoomView)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-                      showRoomView
-                        ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
-                        : 'bg-white text-stone-700 border-stone-300 hover:bg-stone-50'
-                    }`}
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Room View</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Canvas Interactive Grid Container */}
-              <div 
-                className={`flex-1 relative flex items-center justify-center p-4 sm:p-8 overflow-hidden select-none ${
-                  showRoomView ? 'bg-stone-800' : 'bg-[#E2E8F0]/50'
-                }`}
-                style={{
-                  backgroundImage: showRoomView 
-                    ? 'url(/assets/acrylic/acrylic-panel-living.jpg)' 
-                    : 'radial-gradient(circle at 50% 50%, #F8FAFC 0%, #E2E8F0 100%)',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center'
-                }}
-              >
-
-                {/* Acrylic Product Frame Wrapper with Optional Outer Moulding Frame */}
-                <div 
-                  className={`relative max-w-2xl w-full flex items-center justify-center transition-all duration-300 ${currentFrameCss}`}
-                >
-                  
-                  {/* Single Frame Layout */}
-                  {selectedLayoutId === 'layout-1-single' && (
-                    <div className="w-full max-w-lg">
-                      {renderFrameContainer(0, currentSizeOption.aspectClass, currentDimensionLabel)}
-                    </div>
-                  )}
-
-                  {/* 2 Split Vertical Layout */}
-                  {selectedLayoutId === 'layout-2-vertical' && (
-                    <div className="w-full max-w-xl flex gap-3">
-                      <div className="flex-1">
-                        {renderFrameContainer(0, 'aspect-[3/4]')}
-                      </div>
-                      <div className="flex-1">
-                        {renderFrameContainer(1, 'aspect-[3/4]')}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 2 Split Horizontal Layout */}
-                  {selectedLayoutId === 'layout-2-horizontal' && (
-                    <div className="w-full max-w-md flex flex-col gap-3">
-                      <div className="w-full">
-                        {renderFrameContainer(0, 'aspect-[16/9]')}
-                      </div>
-                      <div className="w-full">
-                        {renderFrameContainer(1, 'aspect-[16/9]')}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 3 Wall / Triptych Display Layout */}
-                  {(selectedLayoutId === 'layout-3-wall' || selectedProductTypeId === 'acrylic-wall-art' || selectedProductTypeId === 'acrylic-split') && (
-                    <div className="w-full max-w-2xl flex items-center justify-center gap-3">
-                      <div className="w-1/3">
-                        {renderFrameContainer(0, 'aspect-[1/2]')}
-                      </div>
-                      <div className="w-1/3 scale-105 z-10">
-                        {renderFrameContainer(1, 'aspect-[1/2]')}
-                      </div>
-                      <div className="w-1/3">
-                        {renderFrameContainer(2, 'aspect-[1/2]')}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 4 Photo Grid / Collage Layout */}
-                  {selectedLayoutId === 'layout-4-grid' && (
-                    <div className="w-full max-w-lg grid grid-cols-2 gap-3">
-                      {renderFrameContainer(0, 'aspect-square')}
-                      {renderFrameContainer(1, 'aspect-square')}
-                      {renderFrameContainer(2, 'aspect-square')}
-                      {renderFrameContainer(3, 'aspect-square')}
-                    </div>
-                  )}
-
-                </div>
-
-              </div>
-
-              {/* Bottom Quick-Add Action Bar (Text & Clipart) */}
-              <div className="h-12 bg-white border-t border-stone-200 px-4 flex items-center justify-between shrink-0 z-20">
-                <div className="flex items-center gap-2">
-                  <div className="relative">
+                  <div>
+                    <label className="text-[10px] font-bold text-stone-500 uppercase block mb-1">Font Size</label>
                     <input
-                      type="text"
-                      value={textInput}
-                      onChange={(e) => setTextInput(e.target.value)}
-                      placeholder="Add custom text..."
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleAddText();
-                      }}
-                      className="w-40 sm:w-60 px-3 py-1 bg-stone-100 border border-stone-300 rounded-lg text-xs text-stone-900"
+                      type="number"
+                      min={10}
+                      max={72}
+                      value={selectedFontSize}
+                      onChange={(e) => setSelectedFontSize(Number(e.target.value))}
+                      className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs font-bold text-stone-900"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-stone-500 uppercase block mb-1">Text Color</label>
+                  <div className="flex gap-2">
+                    {TEXT_COLOR_PRESETS.map((col) => (
+                      <button
+                        key={col.name}
+                        type="button"
+                        onClick={() => setSelectedTextColor(col.hex)}
+                        style={{ backgroundColor: col.hex }}
+                        title={col.name}
+                        className={`w-6 h-6 rounded-full border transition-transform cursor-pointer ${
+                          selectedTextColor === col.hex ? 'border-[#0E4A93] scale-110 ring-2 ring-[#0E4A93]/30' : 'border-stone-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-1">
                   <button
                     type="button"
                     onClick={handleAddText}
-                    className="px-3 py-1 bg-[#0E4A93] hover:bg-[#0c3e7b] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                    className="flex-1 py-2 bg-[#0E4A93] hover:bg-[#0c3e7b] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
                   >
-                    Add Text
+                    Add to Canvas
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* =============================================================== */}
+          {/* FLOATING ADD CLIPART TOOLBAR / MODAL                             */}
+          {/* =============================================================== */}
+          {showClipartModal && (
+            <div className="absolute top-14 right-4 z-40 bg-white border border-stone-300 rounded-2xl shadow-2xl p-4 w-80 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center justify-between pb-2 border-b border-stone-100 mb-3">
+                <div className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
+                  <Smile className="w-4 h-4 text-[#E8752A]" />
+                  <span>Select Clipart</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowClipartModal(false)}
+                  className="text-stone-400 hover:text-stone-700 p-0.5 rounded"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Clipart Categories */}
+              <div className="flex gap-1 overflow-x-auto pb-2 mb-2">
+                {Object.keys(CLIPART_CATEGORIES).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedClipartCategory(cat)}
+                    className={`text-[10px] font-bold px-2 py-1 rounded-md whitespace-nowrap transition-colors cursor-pointer ${
+                      selectedClipartCategory === cat
+                        ? 'bg-[#0E4A93] text-white'
+                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Clipart Icons Grid */}
+              <div className="grid grid-cols-5 gap-2 p-2 bg-stone-50 rounded-xl max-h-48 overflow-y-auto">
+                {(CLIPART_CATEGORIES[selectedClipartCategory] || []).map((emoji, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleAddClipart(emoji)}
+                    className="w-10 h-10 bg-white hover:bg-stone-100 border border-stone-200 rounded-lg flex items-center justify-center text-xl hover:scale-110 transition-transform cursor-pointer"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* =============================================================== */}
+          {/* 3D VIEW MODAL (Section 11)                                       */}
+          {/* =============================================================== */}
+          {show3DModal && (
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4 animate-in fade-in zoom-in-95">
+                <div className="flex items-center justify-between border-b border-stone-200 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Box className="w-5 h-5 text-[#0E4A93]" />
+                    <h3 className="text-base font-black text-stone-900">
+                      3D Acrylic Product Preview
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShow3DModal(false)}
+                    className="p-1 hover:bg-stone-100 rounded-lg text-stone-500"
+                  >
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-stone-500 font-semibold hidden sm:inline">Add Emoji:</span>
-                  {['❤️', '✨', '💍', '🕊️', '🌸', '⭐'].map((emoji) => (
+                {/* 3D View Angles Switcher */}
+                <div className="flex gap-2 justify-center">
+                  {(['angle', 'front', 'edge'] as const).map((viewMode) => (
                     <button
-                      key={emoji}
+                      key={viewMode}
                       type="button"
-                      onClick={() => handleAddClipart(emoji)}
-                      className="w-7 h-7 rounded hover:bg-stone-100 flex items-center justify-center text-base transition-colors cursor-pointer"
+                      onClick={() => setThreeDViewAngle(viewMode)}
+                      className={`px-3 py-1 text-xs font-bold rounded-lg border transition-colors cursor-pointer ${
+                        threeDViewAngle === viewMode
+                          ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
+                          : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
+                      }`}
                     >
-                      {emoji}
+                      {viewMode === 'angle' && 'Perspective 3D Angle'}
+                      {viewMode === 'front' && 'Front Elevation'}
+                      {viewMode === 'edge' && 'Glass Edge Depth'}
                     </button>
                   ))}
                 </div>
-              </div>
 
+                {/* 3D Viewport Stage */}
+                <div className="h-72 bg-gradient-to-b from-stone-900 via-stone-800 to-stone-950 rounded-xl flex items-center justify-center relative overflow-hidden p-6 perspective-[1000px]">
+                  
+                  {/* The 3D Acrylic Object */}
+                  <div
+                    style={{
+                      transform: threeDViewAngle === 'angle'
+                        ? 'perspective(1000px) rotateY(-22deg) rotateX(12deg)'
+                        : threeDViewAngle === 'edge'
+                        ? 'perspective(1000px) rotateY(-65deg) rotateX(4deg)'
+                        : 'none',
+                      transition: 'transform 0.4s ease-out',
+                      boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 18px 36px -18px rgba(0, 0, 0, 0.6)'
+                    }}
+                    className={`relative max-w-xs w-full aspect-[4/3] bg-stone-100 rounded-xl overflow-hidden border-2 border-white/40 ${
+                      selectedShapeId === 'shape-circle' ? 'rounded-full aspect-square' : ''
+                    }`}
+                  >
+                    {/* Simulated Acrylic Side Edge Depth Glass Rim */}
+                    <div 
+                      className="absolute inset-0 pointer-events-none z-30"
+                      style={{
+                        boxShadow: 'inset 0 0 14px rgba(255, 255, 255, 0.8), inset 0 0 4px rgba(56, 189, 248, 0.6)'
+                      }}
+                    />
+
+                    {/* Acrylic Surface Photo */}
+                    <img
+                      src={activeFrameState.imageUrl || selectedProductType.image}
+                      alt="3D Preview"
+                      className="w-full h-full object-cover"
+                    />
+
+                    {/* Optical Glass Sheen Reflection */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/25 to-white/40 pointer-events-none z-20" />
+
+                    {/* Standoff Bolts in 3D */}
+                    <div className="absolute top-3 left-3 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-stone-400 via-stone-100 to-white shadow-md z-30" />
+                    <div className="absolute top-3 right-3 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-stone-400 via-stone-100 to-white shadow-md z-30" />
+                    <div className="absolute bottom-3 left-3 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-stone-400 via-stone-100 to-white shadow-md z-30" />
+                    <div className="absolute bottom-3 right-3 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-stone-400 via-stone-100 to-white shadow-md z-30" />
+                  </div>
+
+                  {/* Reflection Surface Underneath */}
+                  <div className="absolute bottom-2 w-64 h-6 bg-cyan-400/10 blur-xl rounded-full pointer-events-none" />
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-stone-600 bg-stone-50 p-3 rounded-xl border border-stone-200">
+                  <span>Product: <strong className="text-stone-900">{selectedProductType.name}</strong></span>
+                  <span>Thickness: <strong className="text-stone-900">{THICKNESS_OPTIONS.find(t => t.id === selectedThicknessId)?.label}</strong></span>
+                  <button
+                    type="button"
+                    onClick={() => setShow3DModal(false)}
+                    className="px-4 py-1.5 bg-[#0E4A93] text-white font-bold rounded-lg"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
             </div>
           )}
+
+          {/* =============================================================== */}
+          {/* CANVAS INTERACTIVE WORKSPACE (Section 13)                         */}
+          {/* =============================================================== */}
+          <div 
+            className={`flex-1 relative flex items-center justify-center p-4 sm:p-8 overflow-hidden select-none ${
+              showRoomView ? 'bg-stone-800' : 'bg-[#E2E8F0]/50'
+            }`}
+            style={{
+              backgroundImage: showRoomView 
+                ? roomBackdrop === 'office'
+                  ? 'url(/assets/acrylic/acrylic-corporate-office.jpg)'
+                  : roomBackdrop === 'bedroom'
+                  ? 'url(/assets/acrylic/acrylic-family-wall.jpg)'
+                  : 'url(/assets/acrylic/acrylic-panel-living.jpg)' 
+                : 'radial-gradient(circle at 50% 50%, #F8FAFC 0%, #E2E8F0 100%)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+
+            {/* Room View Backdrop Switcher overlay */}
+            {showRoomView && (
+              <div className="absolute top-4 left-4 z-30 bg-black/75 backdrop-blur-md rounded-xl p-2 flex gap-1.5 text-white">
+                {(['living', 'office', 'bedroom'] as const).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setRoomBackdrop(r)}
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-colors cursor-pointer ${
+                      roomBackdrop === r ? 'bg-[#0E4A93] text-white' : 'hover:bg-white/20 text-stone-300'
+                    }`}
+                  >
+                    {r === 'living' && 'Living Room'}
+                    {r === 'office' && 'Modern Office'}
+                    {r === 'bedroom' && 'Gallery Wall'}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Acrylic Product Frame Wrapper with Optional Outer Moulding Frame */}
+            <div 
+              className={`relative max-w-2xl w-full flex items-center justify-center transition-all duration-300 ${currentFrameCss}`}
+            >
+              
+              {/* Single Frame Layout */}
+              {selectedLayoutId === 'layout-1-single' && (
+                <div className="w-full max-w-lg">
+                  {renderFrameContainer(0, currentShape.aspectClass, currentDimensionLabel)}
+                </div>
+              )}
+
+              {/* 2 Split Vertical Layout */}
+              {selectedLayoutId === 'layout-2-vertical' && (
+                <div className="w-full max-w-xl flex gap-3">
+                  <div className="flex-1">
+                    {renderFrameContainer(0, 'aspect-[3/4]')}
+                  </div>
+                  <div className="flex-1">
+                    {renderFrameContainer(1, 'aspect-[3/4]')}
+                  </div>
+                </div>
+              )}
+
+              {/* 2 Split Horizontal Layout */}
+              {selectedLayoutId === 'layout-2-horizontal' && (
+                <div className="w-full max-w-md flex flex-col gap-3">
+                  <div className="w-full">
+                    {renderFrameContainer(0, 'aspect-[16/9]')}
+                  </div>
+                  <div className="w-full">
+                    {renderFrameContainer(1, 'aspect-[16/9]')}
+                  </div>
+                </div>
+              )}
+
+              {/* 3 Wall / Triptych Display Layout */}
+              {(selectedLayoutId === 'layout-3-wall' || selectedProductTypeId === 'acrylic-wall-art' || selectedProductTypeId === 'acrylic-split') && (
+                <div className="w-full max-w-2xl flex items-center justify-center gap-3">
+                  <div className="w-1/3">
+                    {renderFrameContainer(0, 'aspect-[1/2]')}
+                  </div>
+                  <div className="w-1/3 scale-105 z-10">
+                    {renderFrameContainer(1, 'aspect-[1/2]')}
+                  </div>
+                  <div className="w-1/3">
+                    {renderFrameContainer(2, 'aspect-[1/2]')}
+                  </div>
+                </div>
+              )}
+
+              {/* 4 Photo Grid / Collage Layout */}
+              {selectedLayoutId === 'layout-4-grid' && (
+                <div className="w-full max-w-lg grid grid-cols-2 gap-3">
+                  {renderFrameContainer(0, 'aspect-square')}
+                  {renderFrameContainer(1, 'aspect-square')}
+                  {renderFrameContainer(2, 'aspect-square')}
+                  {renderFrameContainer(3, 'aspect-square')}
+                </div>
+              )}
+
+            </div>
+
+          </div>
 
         </main>
 

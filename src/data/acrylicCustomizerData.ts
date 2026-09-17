@@ -9,10 +9,11 @@ export type ToolbarTab =
   | 'UPLOAD' 
   | 'SELECT SIZE' 
   | 'LAYOUTS & DESIGNS' 
-  | 'TEMPLATES'
+  | 'SHAPE'
   | 'WRAP & BORDER'
   | 'HARDWARE & FINISH' 
-  | 'OPTIONS';
+  | 'OPTIONS'
+  | 'TEMPLATES';
 
 export interface AcrylicProductType {
   id: string;
@@ -1328,5 +1329,61 @@ export const ACRYLIC_EDGE_WRAPS: AcrylicEdgeWrap[] = [
     price: 190,
     description: 'High-contrast jet black edge framing your acrylic print with sharp definition.',
     image: '/assets/customizer/acrylic/wraps/flame-black-edge.svg'
+  }
+];
+
+// ============================================================================
+// ACRYLIC SHAPES (SHAPE Tab)
+// ============================================================================
+
+export interface AcrylicShapeOption {
+  id: string;
+  name: string;
+  description: string;
+  aspectClass: string;
+  borderRadiusClass: string;
+  image: string;
+}
+
+export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
+  {
+    id: 'shape-square',
+    name: 'Square (1:1)',
+    description: 'Classic symmetrical modern acrylic block or panel.',
+    aspectClass: 'aspect-square',
+    borderRadiusClass: 'rounded-xl',
+    image: '/assets/customizer/acrylic/shapes/shape-square.svg'
+  },
+  {
+    id: 'shape-landscape',
+    name: 'Landscape (4:3)',
+    description: 'Panoramic horizontal presentation for vistas and groups.',
+    aspectClass: 'aspect-[4/3]',
+    borderRadiusClass: 'rounded-xl',
+    image: '/assets/customizer/acrylic/shapes/shape-landscape.svg'
+  },
+  {
+    id: 'shape-portrait',
+    name: 'Portrait (3:4)',
+    description: 'Vertical focal format for individual and couple photography.',
+    aspectClass: 'aspect-[3/4]',
+    borderRadiusClass: 'rounded-xl',
+    image: '/assets/customizer/acrylic/shapes/shape-portrait.svg'
+  },
+  {
+    id: 'shape-circle',
+    name: 'Circle',
+    description: 'Curved circular optical acrylic with laser-cut perimeter.',
+    aspectClass: 'aspect-square',
+    borderRadiusClass: 'rounded-full',
+    image: '/assets/customizer/acrylic/shapes/shape-circle.svg'
+  },
+  {
+    id: 'shape-rounded-rect',
+    name: 'Rounded Rectangle',
+    description: 'Smooth 30mm radius crystal corners for a sleek display.',
+    aspectClass: 'aspect-[4/3]',
+    borderRadiusClass: 'rounded-3xl',
+    image: '/assets/customizer/acrylic/shapes/shape-rounded-rect.svg'
   }
 ];

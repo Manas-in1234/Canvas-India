@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="160" height="120">
+      <rect width="160" height="120" fill="#F8FAFC"/>
+      <rect x="35" y="15" width="90" height="90" rx="4" fill="#E2E8F0" stroke="#0E4A93" stroke-width="2"/>
+      <path d="M 35 15 L 75 15 L 45 105 L 35 105 Z" fill="#FFFFFF" opacity="0.35"/>
+      <text x="80" y="65" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#0E4A93">Square 1:1</text>
+    </svg>
