@@ -9,6 +9,8 @@ export type ToolbarTab =
   | 'UPLOAD' 
   | 'SELECT SIZE' 
   | 'LAYOUTS & DESIGNS' 
+  | 'TEMPLATES'
+  | 'WRAP & BORDER'
   | 'HARDWARE & FINISH' 
   | 'OPTIONS';
 
@@ -916,3 +918,415 @@ export const CLIPART_CATEGORIES: Record<string, string[]> = {
   'Decorative': ['⭐', '✨', '💎', '👑', '🌿', '🌙', '🦋', '🍀', '🕯️', '🪄'],
   'Business': ['🏆', '🎖️', '💼', '🏢', '🏷️', '🌟', '🛡️', '💯', '🔖', '📐']
 };
+
+// ============================================================================
+// TEMPLATE SELECTION DATA (20 Curated Acrylic Templates)
+// ============================================================================
+
+export type TemplateCategory = 
+  | 'All'
+  | 'Wedding'
+  | 'Love'
+  | 'Family'
+  | 'Music'
+  | 'Quotes'
+  | 'Baby'
+  | 'Travel'
+  | 'Minimal';
+
+export interface AcrylicTemplateItem {
+  id: string;
+  name: string;
+  category: 'Wedding' | 'Love' | 'Family' | 'Music' | 'Quotes' | 'Baby' | 'Travel' | 'Minimal';
+  secondaryCategories?: ('Wedding' | 'Love' | 'Family' | 'Music' | 'Quotes' | 'Baby' | 'Travel' | 'Minimal')[];
+  image: string;
+  description: string;
+  defaultTitle: string;
+  defaultSubtitle: string;
+  defaultLyrics: string[];
+  layoutId?: string;
+  borderWidth?: number;
+  borderColor?: string;
+  compatibleProducts?: string[];
+}
+
+export const ACRYLIC_TEMPLATES: AcrylicTemplateItem[] = [
+  // Wedding (1 - 6)
+  {
+    id: 'wedding-picture-lyrics',
+    name: 'Personalized Wedding Picture Acrylic Prints With Song Lyrics',
+    category: 'Wedding',
+    secondaryCategories: ['Music', 'Love'],
+    image: '/assets/customizer/acrylic/templates/wedding-picture-lyrics.svg',
+    description: 'Cherish your wedding photograph side-by-side with your favorite song lyrics on optical acrylic.',
+    defaultTitle: 'All of Me Loves All of You',
+    defaultSubtitle: 'Emma & James • October 14, 2024',
+    defaultLyrics: [
+      "'Cause all of me loves all of you",
+      "All your curves and all your edges",
+      "All your perfect imperfections",
+      "Give your all to me, I'll give my all to you"
+    ],
+    layoutId: 'layout-1-single'
+  },
+  {
+    id: 'wedding-first-dance',
+    name: 'Wedding First Dance Song Lyrics',
+    category: 'Wedding',
+    secondaryCategories: ['Music', 'Love'],
+    image: '/assets/customizer/acrylic/templates/wedding-first-dance.svg',
+    description: 'Immortalize that unforgettable first dance moment with the song that brought you together.',
+    defaultTitle: 'Our First Dance',
+    defaultSubtitle: 'At Last • Etta James',
+    defaultLyrics: [
+      "At last, my love has come along",
+      "My lonely days are over",
+      "And life is like a song",
+      "For you are mine at last"
+    ],
+    layoutId: 'layout-1-single'
+  },
+  {
+    id: 'wedding-vows-art',
+    name: 'Turn Wedding Vows into Wall Art',
+    category: 'Wedding',
+    secondaryCategories: ['Love', 'Quotes'],
+    image: '/assets/customizer/acrylic/templates/wedding-vows-art.svg',
+    description: 'Your sacred promises etched with clarity on floating crystal acrylic wall art.',
+    defaultTitle: 'Our Sacred Vows',
+    defaultSubtitle: 'To Have and to Hold • Forever and Always',
+    defaultLyrics: [
+      "I promise to love you unconditionally,",
+      "To support your wildest dreams, and",
+      "To walk beside you through every season of life.",
+      "Today, tomorrow, and for all eternity."
+    ],
+    layoutId: 'layout-1-single'
+  },
+  {
+    id: 'first-anniversary-songs',
+    name: 'First Marriage Anniversary Songs on Acrylic',
+    category: 'Wedding',
+    secondaryCategories: ['Music', 'Love'],
+    image: '/assets/customizer/acrylic/templates/first-anniversary-songs.svg',
+    description: 'Celebrate 365 days of marriage with your soundtrack commemorated in acrylic brilliance.',
+    defaultTitle: '1st Marriage Anniversary',
+    defaultSubtitle: '365 Days of Loving You • 2023 - 2024',
+    defaultLyrics: [
+      "Every single day with you is better than the day before.",
+      "Here is to 365 days down and forever to go.",
+      "Happy 1st Anniversary, my soulmate."
+    ],
+    layoutId: 'layout-1-single'
+  },
+  {
+    id: 'personalized-wedding-gift',
+    name: 'Personalized Wedding Gift Acrylic Prints',
+    category: 'Wedding',
+    secondaryCategories: ['Love'],
+    image: '/assets/customizer/acrylic/templates/personalized-wedding-gift.svg',
+    description: 'A timeless heirloom gift for newlyweds showcasing ceremony details and heartfelt blessings.',
+    defaultTitle: 'Mr. & Mrs. Sharma',
+    defaultSubtitle: 'Established November 24, 2024',
+    defaultLyrics: [
+      "Two lives, two hearts, joined together in friendship,",
+      "United forever in love.",
+      "May your love grow stronger with each passing day."
+    ],
+    layoutId: 'layout-1-single'
+  },
+  {
+    id: 'wedding-vows-acrylic',
+    name: 'Acrylic Wall Art - Wedding Vows Acrylic',
+    category: 'Wedding',
+    secondaryCategories: ['Love', 'Quotes'],
+    image: '/assets/customizer/acrylic/templates/wedding-vows-acrylic.svg',
+    description: 'Grand format acrylic wall display featuring vows inscribed beside your high-res wedding portrait.',
+    defaultTitle: 'Wedding Vows on Acrylic',
+    defaultSubtitle: 'Bound in Love & Faith',
+    defaultLyrics: [
+      "Where you go I will go, and where you stay I will stay.",
+      "Your people shall be my people.",
+      "Entreat me not to leave you, or to return from following after you."
+    ],
+    layoutId: 'layout-1-single'
+  },
+
+  // Music (7 - 9)
+  {
+    id: 'forever-young-lyrics',
+    name: 'Forever Young Bob Dylan Lyrics on Acrylic',
+    category: 'Music',
+    secondaryCategories: ['Quotes', 'Minimal'],
+    image: '/assets/customizer/acrylic/templates/forever-young-lyrics.svg',
+    description: 'Bob Dylan’s poetic masterpiece printed over luminous acrylic with warm golden accents.',
+    defaultTitle: 'Forever Young',
+    defaultSubtitle: 'Bob Dylan • Planet Waves (1974)',
+    defaultLyrics: [
+      "May your hands always be busy",
+      "May your feet always be swift",
+      "May you have a strong foundation",
+      "When the winds of changes shift"
+    ],
+    layoutId: 'layout-1-single'
+  },
+  {
+    id: 'sheet-music-art',
+    name: 'Sheet Music Acrylic Print – Wall Art',
+    category: 'Music',
+    secondaryCategories: ['Minimal'],
+    image: '/assets/customizer/acrylic/templates/sheet-music-art.svg',
+    description: 'Authentic notation score combined with your chosen melody printed onto sleek acrylic.',
+    defaultTitle: 'Canon in D Major',
+    defaultSubtitle: 'Johann Pachelbel • Classical Repertoire',
+    defaultLyrics: [
+      "𝄞 ♩ ♪ ♫ ♬ ♭ ♮ ♯",
+      "Allegro Moderato - In Three Parts",
+      "Harmonic Counterpoint in Floating Crystal Glass"
+    ],
+    layoutId: 'layout-1-single'
+  },
+  {
+    id: 'lyrics-on-acrylic',
+    name: 'Lyrics on Acrylic',
+    category: 'Music',
+    secondaryCategories: ['Love', 'Quotes'],
+    image: '/assets/customizer/acrylic/templates/lyrics-on-acrylic.svg',
+    description: 'Turn your favorite song into visual poetry on premium optical acrylic glass.',
+    defaultTitle: 'Soundtrack of Our Lives',
+    defaultSubtitle: 'Personalized Melody & Words',
+    defaultLyrics: [
+      "You're the melody in the quiet,",
+      "The harmony in the rush,",
+      "And the song I'll sing forever."
+    ],
+    layoutId: 'layout-1-single'
+  },
+
+  // Love (10 - 12)
+  {
+    id: 'love-quotes-acrylic',
+    name: 'Love Quotes Acrylic Print',
+    category: 'Love',
+    secondaryCategories: ['Quotes', 'Minimal'],
+    image: '/assets/customizer/acrylic/templates/love-quotes-acrylic.svg',
+    description: 'Romantic declaration featuring classic script typography and crystal acrylic clarity.',
+    defaultTitle: 'I Have Found the One',
+    defaultSubtitle: 'Song of Solomon 3:4',
+    defaultLyrics: [
+      "In all the world, there is no heart for me like yours.",
+      "In all the world, there is no love for you like mine.",
+      "Forever grateful for every moment with you."
+    ],
+    layoutId: 'layout-1-single'
+  },
+  {
+    id: 'anniversary-timeline',
+    name: 'Anniversary Timeline Acrylic',
+    category: 'Love',
+    secondaryCategories: ['Wedding', 'Family'],
+    image: '/assets/customizer/acrylic/templates/anniversary-timeline.svg',
+    description: 'Milestone timeline marking your relationship journey from first date to forever.',
+    defaultTitle: 'Our Love Story',
+    defaultSubtitle: 'A Journey of Two Hearts',
+    defaultLyrics: [
+      "• First Date: July 18, 2018",
+      "• She Said Yes: October 10, 2021",
+      "• Best Day Ever: November 24, 2024",
+      "The best is yet to come."
+    ],
+    layoutId: 'layout-1-single'
+  },
+  {
+    id: 'romantic-quote-acrylic',
+    name: 'Romantic Quote Acrylic',
+    category: 'Love',
+    secondaryCategories: ['Quotes'],
+    image: '/assets/customizer/acrylic/templates/romantic-quote-acrylic.svg',
+    description: 'Elegant literary quote rendered in delicate serif typeface on sparkling acrylic.',
+    defaultTitle: 'Soulmates',
+    defaultSubtitle: 'Emily Brontë • Wuthering Heights',
+    defaultLyrics: [
+      "Whatever our souls are made of,",
+      "His and mine are the same.",
+      "You are my sun, my moon, and all of my stars."
+    ],
+    layoutId: 'layout-1-single'
+  },
+
+  // Family (13 - 15)
+  {
+    id: 'family-photo-collage',
+    name: 'Family Photo Collage',
+    category: 'Family',
+    secondaryCategories: ['Love'],
+    image: '/assets/customizer/acrylic/templates/family-photo-collage.svg',
+    description: 'Curated photo arrangement celebrating generations of laughter and family bonds.',
+    defaultTitle: 'The Sharma Family',
+    defaultSubtitle: 'Together is our favorite place to be',
+    defaultLyrics: [
+      "Family: where life begins and love never ends.",
+      "Bound by heartstrings that never break."
+    ],
+    layoutId: 'layout-4-grid'
+  },
+  {
+    id: 'family-memories-acrylic',
+    name: 'Family Memories Acrylic',
+    category: 'Family',
+    secondaryCategories: ['Quotes'],
+    image: '/assets/customizer/acrylic/templates/family-memories-acrylic.svg',
+    description: 'Cherished memories preserved in pristine scratch-resistant sub-surface acrylic.',
+    defaultTitle: 'Cherished Memories',
+    defaultSubtitle: 'Generations of Love & Joy',
+    defaultLyrics: [
+      "Having somewhere to go is home.",
+      "Having someone to love is family.",
+      "Having both is a blessing."
+    ],
+    layoutId: 'layout-1-single'
+  },
+  {
+    id: 'family-celebration-acrylic',
+    name: 'Family Celebration Acrylic',
+    category: 'Family',
+    secondaryCategories: ['Love'],
+    image: '/assets/customizer/acrylic/templates/family-celebration-acrylic.svg',
+    description: 'Vibrant tribute to reunions, milestone birthdays, and festive family gatherings.',
+    defaultTitle: 'Celebrate Everyday Moments',
+    defaultSubtitle: 'Laughter • Joy • Togetherness',
+    defaultLyrics: [
+      "The love of a family is life's greatest blessing.",
+      "Cherish every smile, hold every memory close."
+    ],
+    layoutId: 'layout-1-single'
+  },
+
+  // Baby (16)
+  {
+    id: 'baby-milestone-acrylic',
+    name: 'Baby Milestone Acrylic Print',
+    category: 'Baby',
+    secondaryCategories: ['Family'],
+    image: '/assets/customizer/acrylic/templates/baby-milestone-acrylic.svg',
+    description: 'Nursery statement art capturing birth stats, footprints, and newborn serenity.',
+    defaultTitle: 'Welcome Little One',
+    defaultSubtitle: 'Aarav Sharma • Born Nov 12, 2024',
+    defaultLyrics: [
+      "Ten little fingers, ten little toes,",
+      "With love and grace, our family grows.",
+      "Weight: 7 lbs 4 oz • Length: 20 inches"
+    ],
+    layoutId: 'layout-1-single'
+  },
+
+  // Travel (17)
+  {
+    id: 'travel-memories-acrylic',
+    name: 'Travel Memories Acrylic Print',
+    category: 'Travel',
+    secondaryCategories: ['Quotes'],
+    image: '/assets/customizer/acrylic/templates/travel-memories-acrylic.svg',
+    description: 'High-gloss panoramic capture of bucket-list destinations, mountain peaks, and voyages.',
+    defaultTitle: 'Wanderlust & Wild Air',
+    defaultSubtitle: 'Kashmir • Leh Ladakh Expedition 2024',
+    defaultLyrics: [
+      "Not all those who wander are lost.",
+      "The mountains are calling, and I must go.",
+      "Adventure is the best way to learn."
+    ],
+    layoutId: 'layout-1-single'
+  },
+
+  // Minimal (18 - 20)
+  {
+    id: 'minimal-text-art',
+    name: 'Minimal Text Art',
+    category: 'Minimal',
+    secondaryCategories: ['Quotes'],
+    image: '/assets/customizer/acrylic/templates/minimal-text-art.svg',
+    description: 'Architectural Scandinavian typography with high optical transparency and clean lines.',
+    defaultTitle: 'SIMPLICITY',
+    defaultSubtitle: 'The Ultimate Sophistication',
+    defaultLyrics: [
+      "LESS IS MORE",
+      "Purity in design, clarity in glass.",
+      "Modern interior accent."
+    ],
+    layoutId: 'layout-1-single'
+  },
+  {
+    id: 'custom-text-design',
+    name: 'Custom Text Design',
+    category: 'Minimal',
+    secondaryCategories: ['Quotes'],
+    image: '/assets/customizer/acrylic/templates/custom-text-design.svg',
+    description: 'Statement typography artwork on optical crystal acrylic tailored to your chosen mantra.',
+    defaultTitle: 'CREATE YOUR STORY',
+    defaultSubtitle: 'Custom Typography on Acrylic',
+    defaultLyrics: [
+      "Design your personal statement piece.",
+      "Crisp UV cured typography floating in crystal."
+    ],
+    layoutId: 'layout-1-single'
+  },
+  {
+    id: 'minimal-quote-acrylic',
+    name: 'Minimal Quote Acrylic',
+    category: 'Minimal',
+    secondaryCategories: ['Quotes'],
+    image: '/assets/customizer/acrylic/templates/minimal-quote-acrylic.svg',
+    description: 'Contemporary minimalist typographic block delivering daily peace and mindful inspiration.',
+    defaultTitle: 'Breathe. Trust. Let Go.',
+    defaultSubtitle: 'Daily Mindful Inspiration',
+    defaultLyrics: [
+      "Be still, and know that you are right",
+      "Where you need to be today.",
+      "Peace begins within."
+    ],
+    layoutId: 'layout-1-single'
+  }
+];
+
+// ============================================================================
+// ACRYLIC EDGE WRAP / FINISH (WRAP & BORDER Tab)
+// ============================================================================
+
+export interface AcrylicEdgeWrap {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  image: string;
+}
+
+export const ACRYLIC_EDGE_WRAPS: AcrylicEdgeWrap[] = [
+  {
+    id: 'polished-clear',
+    name: 'Polished Clear Edge',
+    price: 0,
+    description: 'Crystal-clear flame polished edge providing 3D optical depth and transparency.',
+    image: '/assets/customizer/acrylic/wraps/polished-clear-edge.svg'
+  },
+  {
+    id: 'diamond-beveled',
+    name: 'Diamond Beveled Edge',
+    price: 150,
+    description: 'Precision 45° chamfered facet catching and refracting room light.',
+    image: '/assets/customizer/acrylic/wraps/diamond-beveled-edge.svg'
+  },
+  {
+    id: 'frosted-satin',
+    name: 'Frosted Satin Edge',
+    price: 100,
+    description: 'Subtle frosted matte border perimeter for contemporary architectural appeal.',
+    image: '/assets/customizer/acrylic/wraps/frosted-satin-edge.svg'
+  },
+  {
+    id: 'flame-black',
+    name: 'Flame Black Edge',
+    price: 190,
+    description: 'High-contrast jet black edge framing your acrylic print with sharp definition.',
+    image: '/assets/customizer/acrylic/wraps/flame-black-edge.svg'
+  }
+];
