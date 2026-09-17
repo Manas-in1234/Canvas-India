@@ -1,6 +1,7 @@
 // ============================================================================
 // ACRYLIC CUSTOMIZER DATA & CONFIGURATION CONSTANTS
 // Strictly Acrylic-only options (No canvas wrap, wood, or metal customizer options)
+// Image-first architecture: All options include local image examples
 // ============================================================================
 
 export type ToolbarTab = 
@@ -15,6 +16,7 @@ export interface AcrylicProductType {
   id: string;
   name: string;
   startingPrice: number;
+  image: string;
   iconType: 'block' | 'panel' | 'wall' | 'print' | 'collage' | 'split' | 'signage';
   panelsCount: number;
   description: string;
@@ -26,64 +28,71 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     id: 'acrylic-photo-block',
     name: 'Acrylic Photo Block',
     startingPrice: 499.00,
+    image: '/assets/customizer/acrylic/products/acrylic-photo-block.jpg',
     iconType: 'block',
     panelsCount: 1,
     description: 'Freestanding, solid optical acrylic block with 3D crystal depth.',
-    defaultSizeOptionId: 'block-6x4'
+    defaultSizeOptionId: 'sq-4x4'
   },
   {
     id: 'acrylic-photo-panel',
     name: 'Acrylic Photo Panel',
     startingPrice: 355.00,
+    image: '/assets/customizer/acrylic/products/acrylic-photo-panel.jpg',
     iconType: 'panel',
     panelsCount: 1,
     description: 'Modern slim acrylic panel with diamond polished border.',
-    defaultSizeOptionId: 'single-8x8'
+    defaultSizeOptionId: 'sq-8x8'
   },
   {
     id: 'acrylic-wall-art',
     name: 'Acrylic Wall Art',
     startingPrice: 2338.90,
+    image: '/assets/customizer/acrylic/products/acrylic-wall-art.jpg',
     iconType: 'wall',
     panelsCount: 3,
     description: 'Multi-panel gallery wall display for striking home and office focal points.',
-    defaultSizeOptionId: 'wd-3p-12x18-10x8'
+    defaultSizeOptionId: 'rec-12x18'
   },
   {
     id: 'acrylic-print',
     name: 'Acrylic Print',
     startingPrice: 355.00,
+    image: '/assets/customizer/acrylic/products/acrylic-print.jpg',
     iconType: 'print',
     panelsCount: 1,
     description: 'Vibrant direct UV sub-surface print on crystal acrylic.',
-    defaultSizeOptionId: 'single-8x8'
+    defaultSizeOptionId: 'sq-8x8'
   },
   {
     id: 'acrylic-collage',
     name: 'Acrylic Collage',
     startingPrice: 426.00,
+    image: '/assets/customizer/acrylic/products/acrylic-collage.jpg',
     iconType: 'collage',
     panelsCount: 4,
     description: 'Multiple cherished photographs printed together on acrylic.',
-    defaultSizeOptionId: 'col-4p-12x12'
+    defaultSizeOptionId: 'sq-12x12'
   },
   {
     id: 'acrylic-split',
     name: 'Acrylic Split Panel',
     startingPrice: 674.50,
+    image: '/assets/customizer/acrylic/products/acrylic-split-panel.jpg',
     iconType: 'split',
     panelsCount: 3,
     description: 'Panoramic photograph split seamlessly across 3 triptych panels.',
-    defaultSizeOptionId: 'split-3p-36x24'
+    defaultSizeOptionId: 'pan-12x36'
   },
   {
     id: 'acrylic-signage',
     name: 'Acrylic Signage',
     startingPrice: 799.00,
+    image: '/assets/customizer/acrylic/products/acrylic-signage.jpg',
     iconType: 'signage',
     panelsCount: 1,
     description: 'Professional architectural logo and nameplate display with standoff bolts.',
-    defaultSizeOptionId: 'signage-12x8'
+    defaultSizeOptionId: 'rec-12x18'
   }
 ];
 
@@ -99,6 +108,7 @@ export interface SizeOption {
   heightInches: number;
   price: number;
   aspectClass: string;
+  image: string;
 }
 
 export const SIZE_OPTIONS: SizeOption[] = [
@@ -112,7 +122,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 17,
     heightInches: 11,
     price: 447.00,
-    aspectClass: 'aspect-[17/11]'
+    aspectClass: 'aspect-[17/11]',
+    image: '/assets/customizer/acrylic/sizes/landscape.svg'
   },
   {
     id: 'rec-22x34',
@@ -123,7 +134,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 34,
     heightInches: 22,
     price: 1624.00,
-    aspectClass: 'aspect-[34/22]'
+    aspectClass: 'aspect-[34/22]',
+    image: '/assets/customizer/acrylic/sizes/landscape.svg'
   },
   {
     id: 'rec-33x51',
@@ -134,7 +146,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 51,
     heightInches: 33,
     price: 3584.00,
-    aspectClass: 'aspect-[51/33]'
+    aspectClass: 'aspect-[51/33]',
+    image: '/assets/customizer/acrylic/sizes/large.svg'
   },
   {
     id: 'rec-8x10',
@@ -145,7 +158,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 10,
     heightInches: 8,
     price: 590.00,
-    aspectClass: 'aspect-[10/8]'
+    aspectClass: 'aspect-[10/8]',
+    image: '/assets/customizer/acrylic/sizes/landscape.svg'
   },
   {
     id: 'rec-12x18',
@@ -156,7 +170,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 18,
     heightInches: 12,
     price: 1250.00,
-    aspectClass: 'aspect-[18/12]'
+    aspectClass: 'aspect-[18/12]',
+    image: '/assets/customizer/acrylic/sizes/landscape.svg'
   },
 
   // Square
@@ -169,7 +184,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 4,
     heightInches: 4,
     price: 499.00,
-    aspectClass: 'aspect-square'
+    aspectClass: 'aspect-square',
+    image: '/assets/customizer/acrylic/sizes/square.svg'
   },
   {
     id: 'sq-5x5',
@@ -180,7 +196,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 5,
     heightInches: 5,
     price: 450.00,
-    aspectClass: 'aspect-square'
+    aspectClass: 'aspect-square',
+    image: '/assets/customizer/acrylic/sizes/square.svg'
   },
   {
     id: 'sq-6x6',
@@ -191,7 +208,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 6,
     heightInches: 6,
     price: 699.00,
-    aspectClass: 'aspect-square'
+    aspectClass: 'aspect-square',
+    image: '/assets/customizer/acrylic/sizes/square.svg'
   },
   {
     id: 'sq-8x8',
@@ -202,7 +220,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 8,
     heightInches: 8,
     price: 355.00,
-    aspectClass: 'aspect-square'
+    aspectClass: 'aspect-square',
+    image: '/assets/customizer/acrylic/sizes/square.svg'
   },
   {
     id: 'sq-10x10',
@@ -213,7 +232,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 10,
     heightInches: 10,
     price: 799.00,
-    aspectClass: 'aspect-square'
+    aspectClass: 'aspect-square',
+    image: '/assets/customizer/acrylic/sizes/square.svg'
   },
   {
     id: 'sq-12x12',
@@ -224,7 +244,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 12,
     heightInches: 12,
     price: 999.00,
-    aspectClass: 'aspect-square'
+    aspectClass: 'aspect-square',
+    image: '/assets/customizer/acrylic/sizes/square.svg'
   },
 
   // Panoramic
@@ -237,7 +258,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 30,
     heightInches: 10,
     price: 1450.00,
-    aspectClass: 'aspect-[30/10]'
+    aspectClass: 'aspect-[30/10]',
+    image: '/assets/customizer/acrylic/sizes/panoramic.svg'
   },
   {
     id: 'pan-12x36',
@@ -248,7 +270,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 36,
     heightInches: 12,
     price: 1850.00,
-    aspectClass: 'aspect-[36/12]'
+    aspectClass: 'aspect-[36/12]',
+    image: '/assets/customizer/acrylic/sizes/panoramic.svg'
   },
   {
     id: 'pan-16x48',
@@ -259,7 +282,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 48,
     heightInches: 16,
     price: 2890.00,
-    aspectClass: 'aspect-[48/16]'
+    aspectClass: 'aspect-[48/16]',
+    image: '/assets/customizer/acrylic/sizes/panoramic.svg'
   },
 
   // Large
@@ -272,7 +296,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 30,
     heightInches: 20,
     price: 2490.00,
-    aspectClass: 'aspect-[30/20]'
+    aspectClass: 'aspect-[30/20]',
+    image: '/assets/customizer/acrylic/sizes/large.svg'
   },
   {
     id: 'lg-24x36',
@@ -283,7 +308,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 36,
     heightInches: 24,
     price: 3150.00,
-    aspectClass: 'aspect-[36/24]'
+    aspectClass: 'aspect-[36/24]',
+    image: '/assets/customizer/acrylic/sizes/large.svg'
   },
   {
     id: 'lg-30x40',
@@ -294,7 +320,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 40,
     heightInches: 30,
     price: 4200.00,
-    aspectClass: 'aspect-[40/30]'
+    aspectClass: 'aspect-[40/30]',
+    image: '/assets/customizer/acrylic/sizes/large.svg'
   },
 
   // Small
@@ -307,7 +334,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 6,
     heightInches: 4,
     price: 355.00,
-    aspectClass: 'aspect-[6/4]'
+    aspectClass: 'aspect-[6/4]',
+    image: '/assets/customizer/acrylic/sizes/portrait.svg'
   },
   {
     id: 'sm-5x7',
@@ -318,7 +346,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 7,
     heightInches: 5,
     price: 420.00,
-    aspectClass: 'aspect-[7/5]'
+    aspectClass: 'aspect-[7/5]',
+    image: '/assets/customizer/acrylic/sizes/portrait.svg'
   },
   {
     id: 'sm-6x8',
@@ -329,7 +358,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
     widthInches: 8,
     heightInches: 6,
     price: 490.00,
-    aspectClass: 'aspect-[8/6]'
+    aspectClass: 'aspect-[8/6]',
+    image: '/assets/customizer/acrylic/sizes/portrait.svg'
   }
 ];
 
@@ -363,73 +393,73 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
   // 2 Photos
   {
     id: 'layout-2-vertical',
-    name: '2 Columns Side-by-Side',
+    name: '2 Columns',
     photoCount: 2,
     description: 'Dual portrait panels side-by-side.',
     layoutType: '2-vertical',
     frames: [
-      { id: 'f0', label: 'Frame 1 (Left)', dimension: 'Half Width', aspectRatio: 'w-full h-full' },
-      { id: 'f1', label: 'Frame 2 (Right)', dimension: 'Half Width', aspectRatio: 'w-full h-full' }
+      { id: 'f0', label: 'Frame 1', dimension: 'Half Width', aspectRatio: 'w-full h-full' },
+      { id: 'f1', label: 'Frame 2', dimension: 'Half Width', aspectRatio: 'w-full h-full' }
     ]
   },
   {
     id: 'layout-2-horizontal',
-    name: '2 Rows Stacked',
+    name: '2 Rows',
     photoCount: 2,
     description: 'Dual horizontal panels stacked vertically.',
     layoutType: '2-horizontal',
     frames: [
-      { id: 'f0', label: 'Frame 1 (Top)', dimension: 'Half Height', aspectRatio: 'w-full h-full' },
-      { id: 'f1', label: 'Frame 2 (Bottom)', dimension: 'Half Height', aspectRatio: 'w-full h-full' }
+      { id: 'f0', label: 'Frame 1', dimension: 'Half Height', aspectRatio: 'w-full h-full' },
+      { id: 'f1', label: 'Frame 2', dimension: 'Half Height', aspectRatio: 'w-full h-full' }
     ]
   },
   {
     id: 'layout-2-offset',
     name: '2 Offset Panes',
     photoCount: 2,
-    description: 'Staggered dual acrylic panels with modern dynamic spacing.',
+    description: 'Staggered dual acrylic panels with dynamic spacing.',
     layoutType: '2-offset',
     frames: [
-      { id: 'f0', label: 'Frame 1 (Upper Left)', dimension: 'Offset Left', aspectRatio: 'w-full h-full' },
-      { id: 'f1', label: 'Frame 2 (Lower Right)', dimension: 'Offset Right', aspectRatio: 'w-full h-full' }
+      { id: 'f0', label: 'Frame 1', dimension: 'Offset Left', aspectRatio: 'w-full h-full' },
+      { id: 'f1', label: 'Frame 2', dimension: 'Offset Right', aspectRatio: 'w-full h-full' }
     ]
   },
 
   // 3 Photos
   {
     id: 'layout-3-wall',
-    name: 'Wall Art Trio (1 Top, 2 Bottom)',
+    name: 'Wall Trio',
     photoCount: 3,
     description: 'Hero landscape panel above two complementary square panels.',
     layoutType: '3-wall',
     frames: [
-      { id: 'f0', label: 'Hero Top (1)', dimension: '12" × 18"', aspectRatio: 'aspect-[18/12]' },
-      { id: 'f1', label: 'Bottom Left (2)', dimension: '10" × 8"', aspectRatio: 'aspect-[8/10]' },
-      { id: 'f2', label: 'Bottom Right (3)', dimension: '10" × 8"', aspectRatio: 'aspect-[8/10]' }
+      { id: 'f0', label: 'Hero Top', dimension: '12" × 18"', aspectRatio: 'aspect-[18/12]' },
+      { id: 'f1', label: 'Bottom Left', dimension: '10" × 8"', aspectRatio: 'aspect-[8/10]' },
+      { id: 'f2', label: 'Bottom Right', dimension: '10" × 8"', aspectRatio: 'aspect-[8/10]' }
     ]
   },
   {
     id: 'layout-3-triptych',
-    name: '3-Piece Triptych Split',
+    name: '3-Piece Triptych',
     photoCount: 3,
     description: 'Panoramic composition split across 3 equal vertical panels.',
     layoutType: '3-triptych',
     frames: [
-      { id: 'f0', label: 'Panel 1 (Left)', dimension: '1/3 Width', aspectRatio: 'h-full w-full' },
-      { id: 'f1', label: 'Panel 2 (Center)', dimension: '1/3 Width', aspectRatio: 'h-full w-full' },
-      { id: 'f2', label: 'Panel 3 (Right)', dimension: '1/3 Width', aspectRatio: 'h-full w-full' }
+      { id: 'f0', label: 'Panel 1', dimension: '1/3 Width', aspectRatio: 'h-full w-full' },
+      { id: 'f1', label: 'Panel 2', dimension: '1/3 Width', aspectRatio: 'h-full w-full' },
+      { id: 'f2', label: 'Panel 3', dimension: '1/3 Width', aspectRatio: 'h-full w-full' }
     ]
   },
   {
     id: 'layout-3-split-left',
-    name: '1 Left + 2 Stacked Right',
+    name: '1 Left + 2 Right',
     photoCount: 3,
-    description: 'Large portrait frame on the left with two stacked frames on the right.',
+    description: 'Large portrait frame with two stacked frames on right.',
     layoutType: '3-split-left',
     frames: [
-      { id: 'f0', label: 'Frame 1 (Main Left)', dimension: 'Large Portrait', aspectRatio: 'h-full w-full' },
-      { id: 'f1', label: 'Frame 2 (Top Right)', dimension: 'Small Landscape', aspectRatio: 'h-full w-full' },
-      { id: 'f2', label: 'Frame 3 (Bottom Right)', dimension: 'Small Landscape', aspectRatio: 'h-full w-full' }
+      { id: 'f0', label: 'Hero Left', dimension: 'Large Portrait', aspectRatio: 'h-full w-full' },
+      { id: 'f1', label: 'Top Right', dimension: 'Small Landscape', aspectRatio: 'h-full w-full' },
+      { id: 'f2', label: 'Bottom Right', dimension: 'Small Landscape', aspectRatio: 'h-full w-full' }
     ]
   },
 
@@ -441,23 +471,23 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     description: 'Symmetric 4-quadrant square grid for story collages.',
     layoutType: '4-grid',
     frames: [
-      { id: 'f0', label: 'Top Left (1)', dimension: 'Quadrant 1', aspectRatio: 'aspect-square' },
-      { id: 'f1', label: 'Top Right (2)', dimension: 'Quadrant 2', aspectRatio: 'aspect-square' },
-      { id: 'f2', label: 'Bottom Left (3)', dimension: 'Quadrant 3', aspectRatio: 'aspect-square' },
-      { id: 'f3', label: 'Bottom Right (4)', dimension: 'Quadrant 4', aspectRatio: 'aspect-square' }
+      { id: 'f0', label: 'Top Left', dimension: 'Quadrant 1', aspectRatio: 'aspect-square' },
+      { id: 'f1', label: 'Top Right', dimension: 'Quadrant 2', aspectRatio: 'aspect-square' },
+      { id: 'f2', label: 'Bottom Left', dimension: 'Quadrant 3', aspectRatio: 'aspect-square' },
+      { id: 'f3', label: 'Bottom Right', dimension: 'Quadrant 4', aspectRatio: 'aspect-square' }
     ]
   },
   {
     id: 'layout-4-hero-right',
-    name: '1 Large Hero + 3 Stacked Right',
+    name: '1 Hero + 3 Mini',
     photoCount: 4,
-    description: 'Dominant hero portrait photo accompanied by 3 stacked mini moments.',
+    description: 'Dominant hero portrait photo with 3 stacked mini moments.',
     layoutType: '4-hero-right',
     frames: [
-      { id: 'f0', label: 'Hero Left (1)', dimension: 'Main Feature', aspectRatio: 'h-full w-full' },
-      { id: 'f1', label: 'Top Right (2)', dimension: 'Mini 1', aspectRatio: 'h-full w-full' },
-      { id: 'f2', label: 'Mid Right (3)', dimension: 'Mini 2', aspectRatio: 'h-full w-full' },
-      { id: 'f3', label: 'Bottom Right (4)', dimension: 'Mini 3', aspectRatio: 'h-full w-full' }
+      { id: 'f0', label: 'Hero Left', dimension: 'Main Feature', aspectRatio: 'h-full w-full' },
+      { id: 'f1', label: 'Top Right', dimension: 'Mini 1', aspectRatio: 'h-full w-full' },
+      { id: 'f2', label: 'Mid Right', dimension: 'Mini 2', aspectRatio: 'h-full w-full' },
+      { id: 'f3', label: 'Bottom Right', dimension: 'Mini 3', aspectRatio: 'h-full w-full' }
     ]
   },
   {
@@ -497,7 +527,7 @@ export interface DesignTemplate {
   borderColor: string;
   backgroundColor: string;
   defaultText?: string;
-  previewColor: string;
+  image: string;
 }
 
 export const DESIGN_TEMPLATES: DesignTemplate[] = [
@@ -509,7 +539,7 @@ export const DESIGN_TEMPLATES: DesignTemplate[] = [
     borderWidth: 0,
     borderColor: '#FFFFFF',
     backgroundColor: 'transparent',
-    previewColor: 'from-blue-500/20 to-sky-200/20'
+    image: '/assets/customizer/acrylic/finishes/high-gloss.svg'
   },
   {
     id: 'tmpl-modern-gold',
@@ -520,7 +550,7 @@ export const DESIGN_TEMPLATES: DesignTemplate[] = [
     borderColor: '#D4AF37',
     backgroundColor: '#000000',
     defaultText: 'Captured Moments',
-    previewColor: 'from-amber-500/20 to-yellow-200/20'
+    image: '/assets/customizer/acrylic/frames/gold-frame.svg'
   },
   {
     id: 'tmpl-duo-harmony',
@@ -531,7 +561,7 @@ export const DESIGN_TEMPLATES: DesignTemplate[] = [
     borderColor: '#FFFFFF',
     backgroundColor: '#FFFFFF',
     defaultText: 'Together Forever',
-    previewColor: 'from-rose-500/20 to-pink-200/20'
+    image: '/assets/customizer/acrylic/frames/white-frame.svg'
   },
   {
     id: 'tmpl-family-trio',
@@ -542,7 +572,7 @@ export const DESIGN_TEMPLATES: DesignTemplate[] = [
     borderColor: '#FFFFFF',
     backgroundColor: 'transparent',
     defaultText: 'Our Family Story',
-    previewColor: 'from-emerald-500/20 to-teal-200/20'
+    image: '/assets/customizer/acrylic/products/acrylic-wall-art.jpg'
   },
   {
     id: 'tmpl-quad-story',
@@ -552,7 +582,7 @@ export const DESIGN_TEMPLATES: DesignTemplate[] = [
     borderWidth: 4,
     borderColor: '#FFFFFF',
     backgroundColor: '#F8FAFC',
-    previewColor: 'from-indigo-500/20 to-purple-200/20'
+    image: '/assets/customizer/acrylic/products/acrylic-collage.jpg'
   }
 ];
 
@@ -561,7 +591,7 @@ export interface HardwareOption {
   name: string;
   price: number;
   description: string;
-  iconName: 'hooks' | 'wall-cleat' | 'no-hooks' | 'sawtooth' | 'easel' | 'nail-free' | 'standoff';
+  image: string;
 }
 
 export const HARDWARE_OPTIONS: HardwareOption[] = [
@@ -570,49 +600,49 @@ export const HARDWARE_OPTIONS: HardwareOption[] = [
     name: 'Hooks for Hanging',
     price: 0,
     description: 'Pre-attached dual mounting hooks for balanced wall hanging.',
-    iconName: 'hooks'
+    image: '/assets/customizer/acrylic/hardware/hooks-hanging.svg'
   },
   {
     id: 'ready-to-hang',
-    name: 'Ready to Hang Wall Bracket',
+    name: 'Ready to Hang Cleat',
     price: 0,
     description: 'Precision hidden French cleat bracket for flush, floating look.',
-    iconName: 'wall-cleat'
+    image: '/assets/customizer/acrylic/hardware/ready-to-hang.svg'
   },
   {
     id: 'no-hooks',
     name: 'Without Base / No Hooks',
     price: 0,
     description: 'Clean unmounted acrylic for tabletop propping or custom frames.',
-    iconName: 'no-hooks'
+    image: '/assets/customizer/acrylic/hardware/no-hooks.svg'
   },
   {
     id: 'sawtooth-hanger',
     name: 'Sawtooth Hanger',
     price: 25.00,
     description: 'Heavy duty brass sawtooth bracket installed on reverse side.',
-    iconName: 'sawtooth'
+    image: '/assets/customizer/acrylic/hardware/sawtooth-hanger.svg'
   },
   {
     id: 'easel-back',
-    name: 'Easel Back / Desktop Stand',
+    name: 'Easel Back / Stand',
     price: 49.00,
     description: 'Foldable acrylic kickstand for desktop, shelf & mantle display.',
-    iconName: 'easel'
+    image: '/assets/customizer/acrylic/hardware/easel-back.svg'
   },
   {
     id: 'nail-free-hook',
-    name: 'Nail Free Adhesive Hook',
+    name: 'Nail Free Hook',
     price: 49.00,
     description: 'No-drill wall adhesive tab system with clean removal capability.',
-    iconName: 'nail-free'
+    image: '/assets/customizer/acrylic/hardware/nail-free-hook.svg'
   },
   {
     id: 'standoff-mounts',
-    name: 'Chrome Floating Standoffs',
+    name: 'Chrome Standoffs',
     price: 199.00,
     description: '4 Stainless steel brushed chrome architectural corner bolts.',
-    iconName: 'standoff'
+    image: '/assets/customizer/acrylic/hardware/standoff-mounts.svg'
   }
 ];
 
@@ -621,26 +651,30 @@ export interface DisplayOption {
   name: string;
   price: number;
   description: string;
+  image: string;
 }
 
 export const DISPLAY_OPTIONS: DisplayOption[] = [
   {
     id: 'display-tabletop',
-    name: 'Tabletop Freestanding Display',
+    name: 'Tabletop Display',
     price: 0,
-    description: 'Optimized for desk, shelf, or mantle display.'
+    description: 'Optimized for desk, shelf, or mantle display.',
+    image: '/assets/customizer/acrylic/hardware/no-hooks.svg'
   },
   {
     id: 'display-wall-cleat',
-    name: 'Floating Wall Cleat System',
+    name: 'Floating Wall Cleat',
     price: 149.00,
-    description: 'Suspends acrylic 0.75" away from the wall with soft ambient shadow.'
+    description: 'Suspends acrylic 0.75" away from the wall with soft ambient shadow.',
+    image: '/assets/customizer/acrylic/hardware/ready-to-hang.svg'
   },
   {
     id: 'display-standoff',
-    name: 'Architectural Standoff Bolts',
+    name: 'Standoff Corner Bolts',
     price: 199.00,
-    description: 'Four pre-drilled corner holes with premium metal chrome spacers.'
+    description: 'Four pre-drilled corner holes with premium metal chrome spacers.',
+    image: '/assets/customizer/acrylic/hardware/standoff-mounts.svg'
   }
 ];
 
@@ -649,6 +683,7 @@ export interface FinishOption {
   name: string;
   price: number;
   description: string;
+  image: string;
 }
 
 export const FINISH_OPTIONS: FinishOption[] = [
@@ -656,25 +691,81 @@ export const FINISH_OPTIONS: FinishOption[] = [
     id: 'high-gloss',
     name: 'High Gloss Clear',
     price: 0,
-    description: 'Direct optical crystal finish with unmatched vibrancy & 3D depth.'
+    description: 'Direct optical crystal finish with unmatched vibrancy & 3D depth.',
+    image: '/assets/customizer/acrylic/finishes/high-gloss.svg'
   },
   {
     id: 'anti-glare',
     name: 'Anti-Glare Matte',
     price: 180.00,
-    description: 'Velvet soft matte surface reducing reflection from bright lights & windows.'
+    description: 'Velvet soft matte surface reducing reflection from bright lights & windows.',
+    image: '/assets/customizer/acrylic/finishes/anti-glare.svg'
   },
   {
     id: 'frosted-backing',
     name: 'Frosted Backing',
     price: 150.00,
-    description: 'Soft diffused translucency for gentle light transmission.'
+    description: 'Soft diffused translucency for gentle light transmission.',
+    image: '/assets/customizer/acrylic/finishes/frosted-backing.svg'
   },
   {
     id: 'diamond-bevel',
     name: 'Diamond Beveled Edge',
     price: 220.00,
-    description: 'Hand-polished 45-degree prism beveled luxury perimeter edge.'
+    description: 'Hand-polished 45-degree prism beveled luxury perimeter edge.',
+    image: '/assets/customizer/acrylic/finishes/diamond-bevel.svg'
+  }
+];
+
+export interface FrameOption {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  borderCss: string;
+  color: string;
+}
+
+export const FRAME_OPTIONS: FrameOption[] = [
+  {
+    id: 'no-frame',
+    name: 'No Frame (Frameless)',
+    price: 0,
+    image: '/assets/customizer/acrylic/frames/no-frame.svg',
+    borderCss: 'none',
+    color: 'transparent'
+  },
+  {
+    id: 'black-frame',
+    name: 'Modern Black Frame',
+    price: 350.00,
+    image: '/assets/customizer/acrylic/frames/black-frame.svg',
+    borderCss: '12px solid #18181b',
+    color: '#18181b'
+  },
+  {
+    id: 'gold-frame',
+    name: 'Brushed Gold Frame',
+    price: 450.00,
+    image: '/assets/customizer/acrylic/frames/gold-frame.svg',
+    borderCss: '12px solid #d4af37',
+    color: '#d4af37'
+  },
+  {
+    id: 'white-frame',
+    name: 'Gallery White Frame',
+    price: 350.00,
+    image: '/assets/customizer/acrylic/frames/white-frame.svg',
+    borderCss: '12px solid #ffffff',
+    color: '#ffffff'
+  },
+  {
+    id: 'wood-frame',
+    name: 'Natural Oak Frame',
+    price: 490.00,
+    image: '/assets/customizer/acrylic/frames/wood-frame.svg',
+    borderCss: '12px solid #92400e',
+    color: '#92400e'
   }
 ];
 
@@ -685,7 +776,7 @@ export interface ColorFinishOption {
   label: string;
   tag: string;
   cssFilter: string;
-  sampleImg: string;
+  defaultImg: string;
 }
 
 export const COLOR_FINISH_OPTIONS: ColorFinishOption[] = [
@@ -694,21 +785,74 @@ export const COLOR_FINISH_OPTIONS: ColorFinishOption[] = [
     label: 'Original',
     tag: 'FREE!',
     cssFilter: 'none',
-    sampleImg: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=160&auto=format&fit=crop&q=80'
+    defaultImg: '/assets/customizer/acrylic/products/acrylic-photo-panel.jpg'
   },
   {
     id: 'sepia',
     label: 'Sepia',
     tag: 'FREE!',
     cssFilter: 'sepia(0.85) contrast(1.1) brightness(0.95)',
-    sampleImg: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=160&auto=format&fit=crop&q=80'
+    defaultImg: '/assets/customizer/acrylic/products/acrylic-photo-panel.jpg'
   },
   {
     id: 'grayscale',
     label: 'GrayScale',
     tag: 'FREE!',
     cssFilter: 'grayscale(100%) contrast(1.05)',
-    sampleImg: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=160&auto=format&fit=crop&q=80'
+    defaultImg: '/assets/customizer/acrylic/products/acrylic-photo-panel.jpg'
+  }
+];
+
+export interface TypographyOption {
+  id: string;
+  name: string;
+  fontFamily: string;
+  previewSample: string;
+  category: string;
+}
+
+export const TYPOGRAPHY_OPTIONS: TypographyOption[] = [
+  {
+    id: 'modern-sans',
+    name: 'Modern Sans',
+    fontFamily: 'Arial, sans-serif',
+    previewSample: 'Aa',
+    category: 'Sans-Serif'
+  },
+  {
+    id: 'classic-serif',
+    name: 'Classic Serif',
+    fontFamily: 'Georgia, serif',
+    previewSample: 'Aa',
+    category: 'Serif'
+  },
+  {
+    id: 'editorial-serif',
+    name: 'Editorial Serif',
+    fontFamily: '"Times New Roman", Times, serif',
+    previewSample: 'Aa',
+    category: 'Serif'
+  },
+  {
+    id: 'elegant-script',
+    name: 'Elegant Display',
+    fontFamily: '"Playfair Display", serif',
+    previewSample: 'Aa',
+    category: 'Display'
+  },
+  {
+    id: 'clean-tech',
+    name: 'Clean Tech',
+    fontFamily: '"Trebuchet MS", sans-serif',
+    previewSample: 'Aa',
+    category: 'Clean'
+  },
+  {
+    id: 'monospaced',
+    name: 'Typewriter Mono',
+    fontFamily: '"Courier New", Courier, monospace',
+    previewSample: 'Aa',
+    category: 'Monospace'
   }
 ];
 
@@ -746,13 +890,13 @@ export const PAPER_OPTIONS = [
 ];
 
 export const FONT_OPTIONS = [
-  { label: 'Arial', value: 'Arial, sans-serif' },
-  { label: 'Georgia', value: 'Georgia, serif' },
-  { label: 'Times New Roman', value: '"Times New Roman", Times, serif' },
-  { label: 'Verdana', value: 'Verdana, Geneva, sans-serif' },
-  { label: 'Trebuchet MS', value: '"Trebuchet MS", sans-serif' },
-  { label: 'Courier New', value: '"Courier New", Courier, monospace' },
-  { label: 'Playfair Display', value: '"Playfair Display", serif' }
+  { label: 'Arial (Modern Sans)', value: 'Arial, sans-serif' },
+  { label: 'Georgia (Classic Serif)', value: 'Georgia, serif' },
+  { label: 'Times New Roman (Editorial)', value: '"Times New Roman", Times, serif' },
+  { label: 'Playfair Display (Elegant)', value: '"Playfair Display", serif' },
+  { label: 'Trebuchet MS (Clean Tech)', value: '"Trebuchet MS", sans-serif' },
+  { label: 'Courier New (Typewriter)', value: '"Courier New", Courier, monospace' },
+  { label: 'Verdana (Clean Geometric)', value: 'Verdana, Geneva, sans-serif' }
 ];
 
 export const TEXT_COLOR_PRESETS = [

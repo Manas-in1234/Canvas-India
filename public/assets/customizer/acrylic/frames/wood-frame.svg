@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" width="200" height="150">
+  <defs>
+    <linearGradient id="wood" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a16207"/>
+      <stop offset="35%" stop-color="#78350f"/>
+      <stop offset="70%" stop-color="#92400e"/>
+      <stop offset="100%" stop-color="#451a03"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="150" fill="#f8fafc"/>
+  <!-- Outer Natural Oak Wood Frame -->
+  <rect x="25" y="15" width="150" height="120" rx="3" fill="url(#wood)" stroke="#292524" stroke-width="1.5"/>
+  <!-- Wood grain lines -->
+  <line x1="28" y1="25" x2="172" y2="25" stroke="#b45309" stroke-width="1" opacity="0.4"/>
+  <line x1="28" y1="125" x2="172" y2="125" stroke="#b45309" stroke-width="1" opacity="0.4"/>
+  <!-- Inner acrylic area -->
+  <rect x="42" y="32" width="116" height="86" fill="#e0f2fe" opacity="0.45"/>
+  <text x="100" y="80" fill="#fef08a" font-size="12" font-family="Georgia" font-weight="bold" text-anchor="middle">Natural Oak Wood</text>
+</svg>

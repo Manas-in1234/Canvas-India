@@ -19,30 +19,16 @@ import {
   SlidersHorizontal, 
   Save, 
   ShoppingCart, 
-  MessageSquare, 
   Check, 
-  CheckCircle2, 
   AlertCircle, 
   Trash2, 
-  Plus, 
-  Minus, 
   Move,
-  Sparkles,
-  Phone,
-  ShieldCheck,
-  Truck,
   Eye,
-  Maximize2,
   Crop,
-  Palette,
-  Info,
-  ArrowRight,
-  ArrowLeft,
   Grid
 } from 'lucide-react';
 import { CanvasIndiaLogo } from '../components/CanvasIndiaLogo';
 import { useShop } from '../context/ShopContext';
-import { Product } from '../types';
 import {
   ToolbarTab,
   AcrylicProductType,
@@ -60,9 +46,13 @@ import {
   DISPLAY_OPTIONS,
   FinishOption,
   FINISH_OPTIONS,
+  FrameOption,
+  FRAME_OPTIONS,
   ColorFilterType,
   ColorFinishOption,
   COLOR_FINISH_OPTIONS,
+  TypographyOption,
+  TYPOGRAPHY_OPTIONS,
   ACRYLIC_BACKGROUNDS,
   ACRYLIC_BORDER_WIDTHS,
   ACRYLIC_BORDER_COLORS,
@@ -140,7 +130,7 @@ const createDefaultPanelState = (imageUrl: string | null = null): PanelImageStat
 });
 
 // ============================================================================
-// MAIN COMPONENT
+// MAIN ACRYLIC CUSTOMIZER COMPONENT
 // ============================================================================
 
 export const AcrylicCustomizerPage: React.FC = () => {
@@ -178,7 +168,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // Size Category filter tabs in SELECT SIZE panel
   const [sizeCategory, setSizeCategory] = useState<SizeCategory>('RECOMMENDED');
 
-  // Filtered standard sizes
   const filteredSizes = useMemo(() => {
     return SIZE_OPTIONS.filter((s) => s.category === sizeCategory);
   }, [sizeCategory]);
@@ -218,7 +207,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // Active Frame Index
   const [activePanelIndex, setActivePanelIndex] = useState<number>(0);
 
-  // Selected Element (image, text, or clipart)
+  // Selected Element
   const [selectedElement, setSelectedElement] = useState<SelectedElement>({
     type: 'image',
     panelIndex: 0
@@ -228,6 +217,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const [selectedHardwareId, setSelectedHardwareId] = useState<string>('hooks-hanging');
   const [selectedDisplayOptionId, setSelectedDisplayOptionId] = useState<string>('display-tabletop');
   const [selectedFinishId, setSelectedFinishId] = useState<string>('high-gloss');
+  const [selectedFrameId, setSelectedFrameId] = useState<string>('no-frame');
   const [selectedBackgroundId, setSelectedBackgroundId] = useState<string>('transparent');
   const [selectedBorderWidthId, setSelectedBorderWidthId] = useState<string>('none');
   const [selectedBorderColor, setSelectedBorderColor] = useState<string>('#FFFFFF');
@@ -239,7 +229,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // Uploaded Photos session gallery
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
 
-  // Feedback & UI State
+  // UI state
   const [validationWarning, setValidationWarning] = useState<string | null>(null);
   const [saveToast, setSaveToast] = useState<string | null>(null);
   const [showClipartSelector, setShowClipartSelector] = useState<boolean>(false);
@@ -282,7 +272,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     frameHeight: 1
   });
 
-  // Storage key for saving
+  // Storage key
   const storageKey = `ci_acrylic_customizer_${catalogProduct.id || catalogProduct.slug || 'acrylic'}`;
 
   // Restore saved state
@@ -300,6 +290,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
         if (data.selectedHardwareId) setSelectedHardwareId(data.selectedHardwareId);
         if (data.selectedDisplayOptionId) setSelectedDisplayOptionId(data.selectedDisplayOptionId);
         if (data.selectedFinishId) setSelectedFinishId(data.selectedFinishId);
+        if (data.selectedFrameId) setSelectedFrameId(data.selectedFrameId);
         if (data.selectedBackgroundId) setSelectedBackgroundId(data.selectedBackgroundId);
         if (data.selectedBorderWidthId) setSelectedBorderWidthId(data.selectedBorderWidthId);
         if (data.selectedBorderColor) setSelectedBorderColor(data.selectedBorderColor);
@@ -344,6 +335,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
         selectedHardwareId,
         selectedDisplayOptionId,
         selectedFinishId,
+        selectedFrameId,
         selectedBackgroundId,
         selectedBorderWidthId,
         selectedBorderColor,
@@ -364,7 +356,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
   };
 
-  // Synchronize product type change with layout & size defaults
+  // Synchronize product type change
   const handleSelectProductType = (ptId: string) => {
     setSelectedProductTypeId(ptId);
     if (ptId === 'acrylic-photo-block') {
@@ -372,6 +364,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
       setExpandedPhotoCount(1);
       setSelectedSizeId('sq-4x4');
       setIsCustomSize(false);
+      setSelectedFrameId('no-frame'); // Blocks are freestanding frameless
     } else if (ptId === 'acrylic-wall-art') {
       setSelectedLayoutId('layout-3-wall');
       setExpandedPhotoCount(3);
@@ -391,7 +384,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const handleSelectLayout = (layout: LayoutPreset) => {
     setSelectedLayoutId(layout.id);
     setExpandedPhotoCount(layout.photoCount);
-    // Ensure all required frame states exist without resetting existing frames
     setPanelImages((prev) => {
       const next: Record<number, PanelImageState> = { ...prev };
       for (let i = 0; i < layout.frames.length; i++) {
@@ -407,7 +399,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
   };
 
-  // Design Template selection
+  // Template selection
   const handleSelectTemplate = (tmpl: DesignTemplate) => {
     setSelectedTemplateId(tmpl.id);
     const matchedLayout = LAYOUT_PRESETS.find((l) => l.id === tmpl.layoutId);
@@ -424,45 +416,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
     if (bgMatch) {
       setSelectedBackgroundId(bgMatch.id);
     }
-    if (tmpl.defaultText) {
-      const newText: TextElement = {
-        id: `tmpl_txt_${Date.now()}`,
-        text: tmpl.defaultText,
-        fontFamily: 'Playfair Display, serif',
-        fontSize: 26,
-        color: tmpl.borderColor === '#FFFFFF' ? '#FFFFFF' : '#0E4A93',
-        x: 0,
-        y: 32,
-        alignment: 'center'
-      };
-      setPanelImages((prev) => {
-        const frame0 = prev[0] || createDefaultPanelState();
-        return {
-          ...prev,
-          0: {
-            ...frame0,
-            textElements: [...frame0.textElements.filter((t) => !t.id.startsWith('tmpl_')), newText]
-          }
-        };
-      });
-    }
   };
 
   const handleRemoveTemplate = () => {
     setSelectedTemplateId(null);
     setSelectedBorderWidthId('none');
     setSelectedBackgroundId('transparent');
-    setPanelImages((prev) => {
-      const next: Record<number, PanelImageState> = {};
-      Object.keys(prev).forEach((k) => {
-        const idx = Number(k);
-        next[idx] = {
-          ...prev[idx],
-          textElements: prev[idx].textElements.filter((t) => !t.id.startsWith('tmpl_'))
-        };
-      });
-      return next;
-    });
   };
 
   // Dimensions & Aspect
@@ -499,6 +458,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const fin = FINISH_OPTIONS.find((f) => f.id === selectedFinishId);
     if (fin) price += fin.price;
 
+    const frame = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
+    if (frame) price += frame.price;
+
     const th = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId);
     if (th) price += th.price;
 
@@ -518,6 +480,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     selectedHardwareId,
     selectedDisplayOptionId,
     selectedFinishId,
+    selectedFrameId,
     selectedThicknessId,
     selectedPaperId,
     selectedBorderWidthId
@@ -943,7 +906,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
   };
 
-  // Add to Cart with complete payload & validation
+  // Add to Cart
   const handleAddToCart = () => {
     if (!isComplete) {
       const missingIdx = firstEmptyPanelIndex;
@@ -960,6 +923,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const firstImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || catalogProduct.image;
     const borderObj = ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId);
     const bgObj = ACRYLIC_BACKGROUNDS.find((b) => b.id === selectedBackgroundId);
+    const frameObj = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
 
     onAddToCartCustomized({
       product: {
@@ -989,6 +953,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
         hardware: HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name,
         displayOption: DISPLAY_OPTIONS.find((d) => d.id === selectedDisplayOptionId)?.name,
         finish: FINISH_OPTIONS.find((f) => f.id === selectedFinishId)?.name,
+        frame: frameObj?.name,
         border: borderObj?.label,
         borderColor: selectedBorderColor,
         background: bgObj?.label,
@@ -1012,6 +977,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
     navigate('/cart');
   };
+
+  // Selected frame styling for outer canvas
+  const activeFrameOption = useMemo(() => {
+    return FRAME_OPTIONS.find((f) => f.id === selectedFrameId) || FRAME_OPTIONS[0];
+  }, [selectedFrameId]);
 
   // Render a Single Acrylic Frame within the workspace
   const renderFrame = (panelIdx: number, aspectClass: string, dimensionLabel?: string) => {
@@ -1053,9 +1023,17 @@ export const AcrylicCustomizerPage: React.FC = () => {
         }}
       >
         {/* Optical Acrylic Gloss Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/15 to-transparent pointer-events-none z-20" />
+        {selectedFinishId === 'high-gloss' && (
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-transparent pointer-events-none z-20" />
+        )}
+        {selectedFinishId === 'anti-glare' && (
+          <div className="absolute inset-0 bg-stone-900/5 backdrop-blur-[0.5px] pointer-events-none z-20" />
+        )}
+        {selectedFinishId === 'diamond-bevel' && (
+          <div className="absolute inset-0 border-4 border-white/60 pointer-events-none z-20 shadow-inner" />
+        )}
 
-        {/* Optional Border Rendering */}
+        {/* Optional Inner Border Rendering */}
         {borderWidthPx > 0 && (
           <div
             className="absolute inset-0 pointer-events-none z-25"
@@ -1065,7 +1043,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           />
         )}
 
-        {/* Architectural Chrome Standoff Bolts (shown for signage or standoff mounts) */}
+        {/* Architectural Chrome Standoff Bolts */}
         {(selectedHardwareId === 'standoff-mounts' || selectedProductTypeId === 'acrylic-signage' || selectedDisplayOptionId === 'display-standoff') && (
           <>
             <div className="absolute top-2.5 left-2.5 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-stone-400 via-stone-200 to-stone-50 border border-stone-600 shadow-md z-30 pointer-events-none flex items-center justify-center">
@@ -1083,7 +1061,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           </>
         )}
 
-        {/* Frame Label Badge */}
+        {/* Frame Label Badge (Frame Number) */}
         <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm z-30 pointer-events-none">
           <span>{frameInfo?.label || `Frame ${panelIdx + 1}`}</span>
           {isActive && (
@@ -1103,7 +1081,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           </div>
         )}
 
-        {/* Frame Image / Empty Callout */}
+        {/* Frame Content */}
         {frame.imageUrl ? (
           <div
             className="w-full h-full relative overflow-hidden flex items-center justify-center"
@@ -1204,19 +1182,15 @@ export const AcrylicCustomizerPage: React.FC = () => {
             })}
           </div>
         ) : (
-          /* Empty Frame Placeholder with Direct Upload Trigger (Matches Reference Screen 3) */
-          <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-stone-50 hover:bg-orange-50/20 transition-colors group">
-            <div className="w-12 h-12 rounded-full bg-white shadow-xs flex items-center justify-center text-[#E8752A] group-hover:scale-110 transition-transform mb-2">
-              <Upload className="w-6 h-6 stroke-[2.5]" />
-            </div>
-            <div className="text-xs font-black text-stone-900 uppercase tracking-tight">
-              Upload an Image
-            </div>
-            <div className="text-[11px] text-stone-500 mt-0.5">
-              Click to upload photo for this frame
-            </div>
-            <div className="text-[9px] text-stone-400 mt-2 font-medium">
-              Maximum upload size: 25MB per file
+          /* ============================================================= */
+          /* STRICTLY MINIMAL EMPTY FRAME: ONLY THE UPLOAD ICON (Rule 15)  */
+          /* ============================================================= */
+          <div 
+            className="w-full h-full flex items-center justify-center bg-stone-50/70 hover:bg-stone-100/90 transition-colors cursor-pointer group"
+            title="Click to upload photo for this frame"
+          >
+            <div className="w-11 h-11 rounded-full bg-white shadow-sm border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:border-[#0E4A93]/40 group-hover:scale-110 transition-all">
+              <Upload className="w-5 h-5 stroke-[2.2]" />
             </div>
           </div>
         )}
@@ -1303,7 +1277,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
       </header>
 
       {/* ------------------------------------------------------------------- */}
-      {/* MAIN LAYOUT: LEFT TOOLBAR + CONFIG PANEL + WORKSPACE               */}
+      {/* MAIN CONTAINER: LEFT TOOLBAR + IMAGE-BASED CONFIG PANEL + WORKSPACE */}
       {/* ------------------------------------------------------------------- */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         
@@ -1345,11 +1319,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
         </nav>
 
         {/* ----------------------------------------------------------------- */}
-        {/* COLUMN 2: LEFT CONFIGURATION PANEL                                */}
+        {/* COLUMN 2: IMAGE-BASED CONFIGURATION PANEL                         */}
         {/* ----------------------------------------------------------------- */}
-        <aside className="w-full md:w-[380px] lg:w-[410px] bg-white shrink-0 border-r border-stone-200 flex flex-col h-[320px] md:h-full overflow-y-auto shadow-sm z-10">
+        <aside className="w-full md:w-[380px] lg:w-[410px] bg-white shrink-0 border-r border-stone-200 flex flex-col h-[340px] md:h-full overflow-y-auto shadow-sm z-10">
           
-          {/* TAB 1: PRODUCTS (Screenshot 1) */}
+          {/* TAB 1: PRODUCTS (Image-First Option Cards) */}
           {activeTab === 'PRODUCTS' && (
             <div className="p-4 space-y-4">
               <div className="flex items-center justify-between pb-2 border-b border-stone-100">
@@ -1366,93 +1340,52 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </span>
               </div>
 
-              {/* Acrylic Product Types Grid */}
-              <div className="space-y-2">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-700">
-                  Select Acrylic Product:
-                </label>
-
-                <div className="grid grid-cols-2 gap-2.5">
-                  {ACRYLIC_PRODUCT_TYPES.map((pt) => {
-                    const isSelected = selectedProductTypeId === pt.id;
-                    return (
-                      <div
-                        key={pt.id}
-                        onClick={() => handleSelectProductType(pt.id)}
-                        className={`relative p-3 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center text-center justify-between min-h-[96px] ${
-                          isSelected
-                            ? 'border-[#0E4A93] bg-blue-50/30 shadow-xs ring-1 ring-[#0E4A93]/20'
-                            : 'border-stone-200 hover:border-stone-400 bg-white'
-                        }`}
-                      >
-                        {isSelected && (
-                          <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#0E4A93] text-white rounded flex items-center justify-center shadow-xs">
-                            <Check className="w-3 h-3 stroke-[3]" />
-                          </div>
-                        )}
-
-                        {/* Diagram representation */}
-                        <div className="w-8 h-8 flex items-center justify-center text-stone-500 my-1">
-                          {pt.iconType === 'wall' && (
-                            <div className="space-y-1">
-                              <div className="w-6 h-2.5 bg-[#0E4A93]/40 rounded-xs" />
-                              <div className="flex gap-1">
-                                <div className="w-2.5 h-3 bg-[#0E4A93]/40 rounded-xs" />
-                                <div className="w-2.5 h-3 bg-[#0E4A93]/40 rounded-xs" />
-                              </div>
-                            </div>
-                          )}
-                          {pt.iconType === 'block' && (
-                            <div className="w-6 h-6 border-2 border-[#0E4A93]/60 rounded-xs shadow-xs bg-stone-50" />
-                          )}
-                          {pt.iconType === 'panel' && (
-                            <div className="w-6 h-6 border-2 border-stone-400 rounded-xs" />
-                          )}
-                          {pt.iconType === 'print' && (
-                            <div className="w-6 h-6 border-2 border-stone-400 rounded-xs" />
-                          )}
-                          {pt.iconType === 'collage' && (
-                            <div className="grid grid-cols-2 gap-0.5">
-                              <div className="w-3 h-3 bg-[#0E4A93]/40 rounded-xs" />
-                              <div className="w-3 h-3 bg-[#0E4A93]/40 rounded-xs" />
-                              <div className="w-3 h-3 bg-[#0E4A93]/40 rounded-xs" />
-                              <div className="w-3 h-3 bg-[#0E4A93]/40 rounded-xs" />
-                            </div>
-                          )}
-                          {pt.iconType === 'split' && (
-                            <div className="flex gap-1">
-                              <div className="w-2 h-6 bg-[#0E4A93]/40 rounded-xs" />
-                              <div className="w-2 h-6 bg-[#0E4A93]/40 rounded-xs" />
-                              <div className="w-2 h-6 bg-[#0E4A93]/40 rounded-xs" />
-                            </div>
-                          )}
-                          {pt.iconType === 'signage' && (
-                            <div className="w-7 h-5 border border-stone-400 rounded-xs relative flex items-center justify-center">
-                              <div className="w-1 h-1 bg-[#0E4A93] rounded-full absolute top-0.5 left-0.5" />
-                              <div className="w-1 h-1 bg-[#0E4A93] rounded-full absolute top-0.5 right-0.5" />
-                              <div className="w-1 h-1 bg-[#0E4A93] rounded-full absolute bottom-0.5 left-0.5" />
-                              <div className="w-1 h-1 bg-[#0E4A93] rounded-full absolute bottom-0.5 right-0.5" />
-                            </div>
-                          )}
+              <div className="grid grid-cols-2 gap-3">
+                {ACRYLIC_PRODUCT_TYPES.map((pt) => {
+                  const isSelected = selectedProductTypeId === pt.id;
+                  return (
+                    <div
+                      key={pt.id}
+                      onClick={() => handleSelectProductType(pt.id)}
+                      className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
+                        isSelected
+                          ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
+                          : 'border-stone-200 hover:border-stone-400 bg-white'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
                         </div>
+                      )}
 
-                        <div>
-                          <div className="text-xs font-bold text-stone-900 leading-tight">
-                            {pt.name}
-                          </div>
-                          <div className={`text-[11px] font-semibold mt-0.5 ${isSelected ? 'text-[#0E4A93]' : 'text-stone-500'}`}>
-                            Starts at ₹{pt.startingPrice.toLocaleString('en-IN')}
-                          </div>
+                      <div className="aspect-[4/3] w-full bg-stone-100 overflow-hidden relative">
+                        <img 
+                          src={pt.image} 
+                          alt={pt.name} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/assets/acrylic/acrylic-fallback.jpg';
+                          }}
+                        />
+                      </div>
+
+                      <div className="p-2.5 bg-white border-t border-stone-100">
+                        <div className="text-xs font-bold text-stone-900 leading-tight truncate">
+                          {pt.name}
+                        </div>
+                        <div className="text-[11px] font-black text-[#0E4A93] mt-0.5">
+                          Starts at ₹{pt.startingPrice.toLocaleString('en-IN')}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {/* TAB 2: UPLOAD (Screenshot 3 & Prompt Section 3 & 4) */}
+          {/* TAB 2: UPLOAD */}
           {activeTab === 'UPLOAD' && (
             <div className="p-4 space-y-5">
               <div className="space-y-1">
@@ -1552,11 +1485,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 3: SELECT SIZE (Screenshot 2) */}
+          {/* TAB 3: SELECT SIZE (Image-Based Aspect Ratio Cards) */}
           {activeTab === 'SELECT SIZE' && (
             <div className="p-4 space-y-5">
               
-              {/* Size Category Filter Tabs */}
+              {/* Category Filter Pills */}
               <div className="flex items-center border-b border-stone-200 overflow-x-auto scrollbar-none pb-1 gap-1">
                 {(['RECOMMENDED', 'SQUARE', 'PANORAMIC', 'LARGE', 'SMALL'] as SizeCategory[]).map((cat) => (
                   <button
@@ -1577,8 +1510,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 ))}
               </div>
 
-              {/* Standard Sizes Cards Grid */}
-              <div className="grid grid-cols-3 gap-2.5">
+              {/* Size Cards Grid with Visual Aspect Ratio Graphics */}
+              <div className="grid grid-cols-2 gap-3">
                 {filteredSizes.map((sz) => {
                   const isSelected = !isCustomSize && selectedSizeId === sz.id;
                   return (
@@ -1588,20 +1521,31 @@ export const AcrylicCustomizerPage: React.FC = () => {
                         setSelectedSizeId(sz.id);
                         setIsCustomSize(false);
                       }}
-                      className={`relative p-2.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center text-center justify-between min-h-[96px] ${
+                      className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
                         isSelected
-                          ? 'border-[#0E4A93] bg-blue-50/20 shadow-xs'
+                          ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
                           : 'border-stone-200 hover:border-stone-400 bg-white'
                       }`}
                     >
-                      {/* Visual Aspect Ratio Box */}
-                      <div className="w-12 h-8 bg-stone-300 rounded-xs flex items-center justify-center my-1" />
+                      {isSelected && (
+                        <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      )}
 
-                      <div>
+                      <div className="aspect-[4/3] w-full bg-stone-50 overflow-hidden flex items-center justify-center p-2 border-b border-stone-100">
+                        <img 
+                          src={sz.image} 
+                          alt={sz.label} 
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform" 
+                        />
+                      </div>
+
+                      <div className="p-2.5 bg-white">
                         <div className="text-xs font-bold text-stone-900 leading-tight">
                           {sz.label}
                         </div>
-                        <div className={`text-[11px] font-bold mt-0.5 ${isSelected ? 'text-[#0E4A93]' : 'text-stone-600'}`}>
+                        <div className="text-[11px] font-black text-[#0E4A93] mt-0.5">
                           ₹{sz.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </div>
                       </div>
@@ -1610,7 +1554,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 })}
               </div>
 
-              {/* Custom Size Section (Screenshot 2) */}
+              {/* Custom Size Section */}
               <div className="border border-stone-200 rounded-2xl p-4 bg-stone-50/50 space-y-3">
                 <div className="text-xs font-extrabold uppercase tracking-wider text-stone-800 text-center">
                   Custom Size (H × W inches)
@@ -1672,7 +1616,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 4: LAYOUTS & DESIGNS (Screenshot 3) */}
+          {/* TAB 4: LAYOUTS & DESIGNS (Visual Layout Option Cards) */}
           {activeTab === 'LAYOUTS & DESIGNS' && (
             <div className="p-4 space-y-4">
               
@@ -1733,105 +1677,118 @@ export const AcrylicCustomizerPage: React.FC = () => {
                         </button>
 
                         {isExpanded && (
-                          <div className="p-3 grid grid-cols-2 gap-2 bg-white border-t border-stone-100">
+                          <div className="p-3 grid grid-cols-2 gap-2.5 bg-white border-t border-stone-100">
                             {matchingLayouts.map((layout) => {
                               const isSelected = selectedLayoutId === layout.id;
                               return (
                                 <div
                                   key={layout.id}
                                   onClick={() => handleSelectLayout(layout)}
-                                  className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center justify-between min-h-[90px] text-center ${
+                                  className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
                                     isSelected
-                                      ? 'border-[#0E4A93] bg-blue-50/30 ring-1 ring-[#0E4A93]/20 shadow-xs'
+                                      ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
                                       : 'border-stone-200 hover:border-stone-400 bg-white'
                                   }`}
                                 >
-                                  {/* Visual Diagram */}
-                                  <div className="w-14 h-9 bg-stone-100 border border-stone-300 rounded p-1 flex items-center justify-center my-1">
-                                    {layout.layoutType === '1-single' && (
-                                      <div className="w-full h-full bg-[#0E4A93]/30 rounded-xs" />
-                                    )}
-                                    {layout.layoutType === '2-vertical' && (
-                                      <div className="w-full h-full flex gap-1">
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                      </div>
-                                    )}
-                                    {layout.layoutType === '2-horizontal' && (
-                                      <div className="w-full h-full flex flex-col gap-1">
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                      </div>
-                                    )}
-                                    {layout.layoutType === '2-offset' && (
-                                      <div className="w-full h-full relative">
-                                        <div className="w-7 h-5 bg-[#0E4A93]/40 rounded-xs absolute top-0 left-0" />
-                                        <div className="w-7 h-5 bg-[#0E4A93]/40 rounded-xs absolute bottom-0 right-0" />
-                                      </div>
-                                    )}
-                                    {layout.layoutType === '3-wall' && (
-                                      <div className="w-full h-full flex flex-col gap-0.5">
-                                        <div className="w-full h-4 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="w-full h-3 flex gap-0.5">
+                                  {isSelected && (
+                                    <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                    </div>
+                                  )}
+
+                                  {/* Visual Diagram Representation */}
+                                  <div className="aspect-[4/3] w-full bg-stone-50 border-b border-stone-100 p-2.5 flex items-center justify-center">
+                                    <div className="w-full h-full bg-stone-200/80 rounded p-1 flex items-center justify-center">
+                                      {layout.layoutType === '1-single' && (
+                                        <div className="w-full h-full bg-[#0E4A93]/40 rounded-xs" />
+                                      )}
+                                      {layout.layoutType === '2-vertical' && (
+                                        <div className="w-full h-full flex gap-1">
                                           <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
                                           <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
                                         </div>
-                                      </div>
-                                    )}
-                                    {layout.layoutType === '3-triptych' && (
-                                      <div className="w-full h-full flex gap-0.5">
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                      </div>
-                                    )}
-                                    {layout.layoutType === '3-split-left' && (
-                                      <div className="w-full h-full flex gap-0.5">
-                                        <div className="w-6 h-full bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 flex flex-col gap-0.5">
+                                      )}
+                                      {layout.layoutType === '2-horizontal' && (
+                                        <div className="w-full h-full flex flex-col gap-1">
                                           <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
                                           <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
                                         </div>
-                                      </div>
-                                    )}
-                                    {layout.layoutType === '4-grid' && (
-                                      <div className="w-full h-full grid grid-cols-2 gap-0.5">
-                                        <div className="bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="bg-[#0E4A93]/40 rounded-xs" />
-                                      </div>
-                                    )}
-                                    {layout.layoutType === '4-hero-right' && (
-                                      <div className="w-full h-full flex gap-0.5">
-                                        <div className="w-7 h-full bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 flex flex-col gap-0.5">
+                                      )}
+                                      {layout.layoutType === '2-offset' && (
+                                        <div className="w-full h-full relative">
+                                          <div className="w-7 h-5 bg-[#0E4A93]/40 rounded-xs absolute top-0 left-0" />
+                                          <div className="w-7 h-5 bg-[#0E4A93]/40 rounded-xs absolute bottom-0 right-0" />
+                                        </div>
+                                      )}
+                                      {layout.layoutType === '3-wall' && (
+                                        <div className="w-full h-full flex flex-col gap-0.5">
+                                          <div className="w-full h-4 bg-[#0E4A93]/40 rounded-xs" />
+                                          <div className="w-full h-3 flex gap-0.5">
+                                            <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
+                                            <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
+                                          </div>
+                                        </div>
+                                      )}
+                                      {layout.layoutType === '3-triptych' && (
+                                        <div className="w-full h-full flex gap-0.5">
                                           <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
                                           <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
                                           <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
                                         </div>
-                                      </div>
-                                    )}
-                                    {layout.layoutType === '4-strips-h' && (
-                                      <div className="w-full h-full flex flex-col gap-0.5">
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                      </div>
-                                    )}
-                                    {layout.layoutType === '4-strips-v' && (
-                                      <div className="w-full h-full flex gap-0.5">
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                      </div>
-                                    )}
+                                      )}
+                                      {layout.layoutType === '3-split-left' && (
+                                        <div className="w-full h-full flex gap-0.5">
+                                          <div className="w-6 h-full bg-[#0E4A93]/40 rounded-xs" />
+                                          <div className="flex-1 flex flex-col gap-0.5">
+                                            <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
+                                            <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
+                                          </div>
+                                        </div>
+                                      )}
+                                      {layout.layoutType === '4-grid' && (
+                                        <div className="w-full h-full grid grid-cols-2 gap-0.5">
+                                          <div className="bg-[#0E4A93]/40 rounded-xs" />
+                                          <div className="bg-[#0E4A93]/40 rounded-xs" />
+                                          <div className="bg-[#0E4A93]/40 rounded-xs" />
+                                          <div className="bg-[#0E4A93]/40 rounded-xs" />
+                                        </div>
+                                      )}
+                                      {layout.layoutType === '4-hero-right' && (
+                                        <div className="w-full h-full flex gap-0.5">
+                                          <div className="w-7 h-full bg-[#0E4A93]/40 rounded-xs" />
+                                          <div className="flex-1 flex flex-col gap-0.5">
+                                            <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
+                                            <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
+                                            <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
+                                          </div>
+                                        </div>
+                                      )}
+                                      {layout.layoutType === '4-strips-h' && (
+                                        <div className="w-full h-full flex flex-col gap-0.5">
+                                          <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
+                                          <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
+                                          <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
+                                          <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
+                                        </div>
+                                      )}
+                                      {layout.layoutType === '4-strips-v' && (
+                                        <div className="w-full h-full flex gap-0.5">
+                                          <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
+                                          <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
+                                          <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
+                                          <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
 
-                                  <div className="text-[11px] font-bold text-stone-900 leading-tight">
-                                    {layout.name}
+                                  <div className="p-2 bg-white text-center">
+                                    <div className="text-xs font-bold text-stone-900 leading-tight truncate">
+                                      {layout.name}
+                                    </div>
+                                    <div className="text-[10px] text-stone-500 mt-0.5">
+                                      {layout.description}
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -1846,29 +1803,41 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
               {/* DESIGNS SUB-TAB */}
               {layoutSubTab === 'DESIGNS' && (
-                <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   {DESIGN_TEMPLATES.map((tmpl) => {
                     const isSelected = selectedTemplateId === tmpl.id;
                     return (
                       <div
                         key={tmpl.id}
                         onClick={() => handleSelectTemplate(tmpl)}
-                        className={`p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                        className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
                           isSelected
-                            ? 'border-[#0E4A93] bg-blue-50/30 shadow-xs ring-1 ring-[#0E4A93]/20'
-                            : 'border-stone-200 hover:border-stone-300 bg-white'
+                            ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
+                            : 'border-stone-200 hover:border-stone-400 bg-white'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-lg bg-gradient-to-tr ${tmpl.previewColor} border border-stone-200 flex items-center justify-center`} />
-                          <div>
-                            <div className="text-xs font-bold text-stone-900">{tmpl.name}</div>
-                            <div className="text-[11px] text-stone-500">{tmpl.description}</div>
+                        {isSelected && (
+                          <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          </div>
+                        )}
+
+                        <div className="aspect-[4/3] w-full bg-stone-100 overflow-hidden relative">
+                          <img 
+                            src={tmpl.image} 
+                            alt={tmpl.name} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
+                          />
+                        </div>
+
+                        <div className="p-2 bg-white border-t border-stone-100">
+                          <div className="text-xs font-bold text-stone-900 leading-tight truncate">
+                            {tmpl.name}
+                          </div>
+                          <div className="text-[10px] text-stone-500 mt-0.5 truncate">
+                            {tmpl.description}
                           </div>
                         </div>
-                        {isSelected && (
-                          <Check className="w-4 h-4 text-[#0E4A93] shrink-0" />
-                        )}
                       </div>
                     );
                   })}
@@ -1878,51 +1847,48 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 5: HARDWARE & FINISH (Screenshot 4) */}
+          {/* TAB 5: HARDWARE & FINISH (Image-Based Cards) */}
           {activeTab === 'HARDWARE & FINISH' && (
             <div className="p-4 space-y-6">
               
-              {/* Hardware Option & Style (Screenshot 4) */}
+              {/* Hardware Option & Style */}
               <div className="space-y-3">
-                <div className="bg-stone-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg">
+                <div className="bg-stone-800 text-white text-xs font-black uppercase py-1.5 px-3 rounded-lg tracking-wider">
                   Hardware Option &amp; Style
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   {HARDWARE_OPTIONS.map((hw) => {
                     const isSelected = selectedHardwareId === hw.id;
                     return (
                       <div
                         key={hw.id}
                         onClick={() => setSelectedHardwareId(hw.id)}
-                        className={`relative p-2 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center text-center justify-between min-h-[96px] ${
+                        className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
                           isSelected
-                            ? 'border-[#0E4A93] bg-blue-50/20 shadow-xs'
-                            : 'border-stone-200 hover:border-stone-300 bg-white'
+                            ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
+                            : 'border-stone-200 hover:border-stone-400 bg-white'
                         }`}
                       >
                         {isSelected && (
-                          <div className="absolute top-1 right-1 w-4 h-4 bg-[#0E4A93] text-white rounded flex items-center justify-center">
-                            <Check className="w-3 h-3 stroke-[3]" />
+                          <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
                           </div>
                         )}
 
-                        {/* Icon Graphics */}
-                        <div className="w-8 h-8 flex items-center justify-center text-stone-600 my-1">
-                          {hw.iconName === 'hooks' && <div className="w-6 h-4 border-2 border-stone-600 rounded-xs" />}
-                          {hw.iconName === 'wall-cleat' && <div className="w-6 h-2 bg-stone-600 rounded-xs" />}
-                          {hw.iconName === 'no-hooks' && <span className="text-base font-bold text-stone-400">⊘</span>}
-                          {hw.iconName === 'sawtooth' && <div className="w-6 h-1 border-t-2 border-dashed border-stone-600" />}
-                          {hw.iconName === 'easel' && <div className="w-4 h-6 border-b-2 border-r-2 border-stone-600" />}
-                          {hw.iconName === 'nail-free' && <div className="w-4 h-4 rounded-full bg-stone-300 border border-stone-500" />}
-                          {hw.iconName === 'standoff' && <div className="w-3.5 h-3.5 rounded-full bg-[#0E4A93] border border-white" />}
+                        <div className="aspect-[4/3] w-full bg-stone-50 overflow-hidden flex items-center justify-center p-2 border-b border-stone-100">
+                          <img 
+                            src={hw.image} 
+                            alt={hw.name} 
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform" 
+                          />
                         </div>
 
-                        <div>
-                          <div className="text-[11px] font-bold text-stone-900 leading-tight">
+                        <div className="p-2.5 bg-white">
+                          <div className="text-xs font-bold text-stone-900 leading-tight truncate">
                             {hw.name}
                           </div>
-                          <div className="text-[10px] font-bold text-stone-500 mt-0.5">
+                          <div className="text-[11px] font-black text-[#0E4A93] mt-0.5">
                             {hw.price === 0 ? 'Free' : `₹${hw.price.toFixed(2)}`}
                           </div>
                         </div>
@@ -1932,69 +1898,46 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Display Option (Screenshot 4) */}
-              <div className="space-y-3 pt-2">
-                <div className="bg-stone-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg">
-                  Display Option
-                </div>
-
-                <div className="space-y-2">
-                  {DISPLAY_OPTIONS.map((disp) => {
-                    const isSelected = selectedDisplayOptionId === disp.id;
-                    return (
-                      <label
-                        key={disp.id}
-                        onClick={() => setSelectedDisplayOptionId(disp.id)}
-                        className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all cursor-pointer ${
-                          isSelected
-                            ? 'border-[#0E4A93] bg-blue-50/20 shadow-xs'
-                            : 'border-stone-200 hover:border-stone-300 bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <input
-                            type="radio"
-                            name="displayOption"
-                            checked={isSelected}
-                            onChange={() => setSelectedDisplayOptionId(disp.id)}
-                            className="accent-[#0E4A93]"
-                          />
-                          <span className="text-xs font-bold text-stone-900">{disp.name}</span>
-                        </div>
-                        <span className="text-xs font-extrabold text-stone-700">
-                          {disp.price === 0 ? '₹0.00' : `+₹${disp.price.toFixed(2)}`}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
               {/* Acrylic Edge & Surface Finish */}
-              <div className="space-y-3 pt-2">
-                <div className="bg-stone-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg">
+              <div className="space-y-3 pt-2 border-t border-stone-100">
+                <div className="bg-stone-800 text-white text-xs font-black uppercase py-1.5 px-3 rounded-lg tracking-wider">
                   Acrylic Edge &amp; Surface Finish
                 </div>
 
-                <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-3">
                   {FINISH_OPTIONS.map((finish) => {
                     const isSelected = selectedFinishId === finish.id;
                     return (
                       <div
                         key={finish.id}
                         onClick={() => setSelectedFinishId(finish.id)}
-                        className={`p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                        className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
                           isSelected
-                            ? 'border-[#0E4A93] bg-blue-50/20 shadow-xs'
-                            : 'border-stone-200 hover:border-stone-300 bg-white'
+                            ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
+                            : 'border-stone-200 hover:border-stone-400 bg-white'
                         }`}
                       >
-                        <div>
-                          <div className="text-xs font-bold text-stone-900">{finish.name}</div>
-                          <div className="text-[11px] text-stone-500">{finish.description}</div>
+                        {isSelected && (
+                          <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          </div>
+                        )}
+
+                        <div className="aspect-[4/3] w-full bg-stone-900 overflow-hidden flex items-center justify-center border-b border-stone-100">
+                          <img 
+                            src={finish.image} 
+                            alt={finish.name} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
+                          />
                         </div>
-                        <div className="text-xs font-black text-stone-900 ml-2 shrink-0">
-                          {finish.price === 0 ? 'Included' : `+₹${finish.price.toFixed(2)}`}
+
+                        <div className="p-2.5 bg-white">
+                          <div className="text-xs font-bold text-stone-900 leading-tight truncate">
+                            {finish.name}
+                          </div>
+                          <div className="text-[11px] font-black text-[#0E4A93] mt-0.5">
+                            {finish.price === 0 ? 'Included' : `+₹${finish.price.toFixed(2)}`}
+                          </div>
                         </div>
                       </div>
                     );
@@ -2002,44 +1945,45 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Optional Color Finishing (Screenshot 4 & Prompt Section 19/20) */}
-              <div className="space-y-3 pt-2">
-                <div className="bg-stone-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg flex items-center justify-between">
+              {/* Optional Color Finishing (Filters on User's Active Uploaded Image) */}
+              <div className="space-y-3 pt-2 border-t border-stone-100">
+                <div className="bg-stone-800 text-white text-xs font-black uppercase py-1.5 px-3 rounded-lg flex items-center justify-between tracking-wider">
                   <span>Optional Color Finishing</span>
-                  <span className="text-[10px] text-amber-300 font-bold">
-                    Applies to Frame {activePanelIndex + 1}
+                  <span className="text-[10px] text-amber-300 font-bold capitalize">
+                    Frame {activePanelIndex + 1}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
                   {COLOR_FINISH_OPTIONS.map((fOpt) => {
                     const isSelected = activeFrame.filter === fOpt.id;
+                    const sampleSource = activeFrame.imageUrl || uploadedPhotos[0] || fOpt.defaultImg;
                     return (
                       <div
                         key={fOpt.id}
                         onClick={() => handleColorFilterChange(fOpt.id)}
-                        className={`relative p-2 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center text-center justify-between min-h-[96px] ${
+                        className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
                           isSelected
-                            ? 'border-[#0E4A93] bg-blue-50/20 shadow-xs'
-                            : 'border-stone-200 hover:border-stone-300 bg-white'
+                            ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
+                            : 'border-stone-200 hover:border-stone-400 bg-white'
                         }`}
                       >
                         {isSelected && (
-                          <div className="absolute top-1 right-1 w-4 h-4 bg-[#0E4A93] text-white rounded flex items-center justify-center z-10">
-                            <Check className="w-3 h-3 stroke-[3]" />
+                          <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
                           </div>
                         )}
 
-                        <div className="w-12 h-12 rounded-lg overflow-hidden border border-stone-200 bg-stone-100 my-1">
+                        <div className="aspect-square w-full bg-stone-100 overflow-hidden">
                           <img
-                            src={fOpt.sampleImg}
+                            src={sampleSource}
                             alt={fOpt.label}
                             style={{ filter: fOpt.cssFilter }}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                           />
                         </div>
 
-                        <div>
+                        <div className="p-2 bg-white text-center border-t border-stone-100">
                           <div className="text-[11px] font-bold text-stone-900 leading-tight">
                             {fOpt.label}
                           </div>
@@ -2056,86 +2000,59 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 6: OPTIONS (Prompt Sections 28, 29, 30, 37) */}
+          {/* TAB 6: OPTIONS (Frame Options, Backing, Thickness, Paper, Notes) */}
           {activeTab === 'OPTIONS' && (
             <div className="p-4 space-y-6">
               
-              {/* Acrylic Background */}
-              <div className="space-y-2">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
-                  Acrylic Background Backing:
-                </label>
-                <div className="space-y-1.5">
-                  {ACRYLIC_BACKGROUNDS.map((bg) => {
-                    const isSelected = selectedBackgroundId === bg.id;
+              {/* Acrylic Framing Option Cards (Prompt Section 9) */}
+              <div className="space-y-3">
+                <div className="bg-stone-800 text-white text-xs font-black uppercase py-1.5 px-3 rounded-lg tracking-wider">
+                  Frame Options
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {FRAME_OPTIONS.map((frm) => {
+                    const isSelected = selectedFrameId === frm.id;
                     return (
                       <div
-                        key={bg.id}
-                        onClick={() => setSelectedBackgroundId(bg.id)}
-                        className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between text-xs font-bold ${
+                        key={frm.id}
+                        onClick={() => setSelectedFrameId(frm.id)}
+                        className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
                           isSelected
-                            ? 'border-[#0E4A93] bg-blue-50/20 text-[#0E4A93]'
-                            : 'border-stone-200 text-stone-700 hover:border-stone-300 bg-white'
+                            ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
+                            : 'border-stone-200 hover:border-stone-400 bg-white'
                         }`}
                       >
-                        <span>{bg.label}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-[#0E4A93]" />}
+                        {isSelected && (
+                          <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          </div>
+                        )}
+
+                        <div className="aspect-[4/3] w-full bg-stone-50 overflow-hidden flex items-center justify-center border-b border-stone-100">
+                          <img 
+                            src={frm.image} 
+                            alt={frm.name} 
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform" 
+                          />
+                        </div>
+
+                        <div className="p-2.5 bg-white">
+                          <div className="text-xs font-bold text-stone-900 leading-tight truncate">
+                            {frm.name}
+                          </div>
+                          <div className="text-[11px] font-black text-[#0E4A93] mt-0.5">
+                            {frm.price === 0 ? 'Free' : `+₹${frm.price.toFixed(2)}`}
+                          </div>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Border Width & Color */}
-              <div className="space-y-3 pt-3 border-t border-stone-100">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
-                  Border Option:
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {ACRYLIC_BORDER_WIDTHS.map((bw) => {
-                    const isSelected = selectedBorderWidthId === bw.id;
-                    return (
-                      <button
-                        key={bw.id}
-                        type="button"
-                        onClick={() => setSelectedBorderWidthId(bw.id)}
-                        className={`py-2.5 px-2 rounded-xl border-2 text-xs font-bold transition-all cursor-pointer text-center ${
-                          isSelected
-                            ? 'border-[#0E4A93] bg-blue-50/20 text-[#0E4A93]'
-                            : 'border-stone-200 hover:border-stone-300 text-stone-700 bg-white'
-                        }`}
-                      >
-                        {bw.label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {selectedBorderWidthId !== 'none' && (
-                  <div className="space-y-1.5 pt-1">
-                    <label className="text-[11px] font-bold text-stone-600">Border Color:</label>
-                    <div className="flex gap-2">
-                      {ACRYLIC_BORDER_COLORS.map((bc) => (
-                        <button
-                          key={bc.hex}
-                          type="button"
-                          onClick={() => setSelectedBorderColor(bc.hex)}
-                          className={`w-7 h-7 rounded-full border-2 transition-all cursor-pointer ${
-                            selectedBorderColor === bc.hex
-                              ? 'border-[#0E4A93] scale-110 shadow-sm'
-                              : 'border-stone-300 hover:scale-105'
-                          }`}
-                          style={{ backgroundColor: bc.hex }}
-                          title={bc.name}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
               {/* Sheet Thickness */}
-              <div className="space-y-2 pt-3 border-t border-stone-100">
+              <div className="space-y-2 pt-2 border-t border-stone-100">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
                   Acrylic Sheet Thickness:
                 </label>
@@ -2161,7 +2078,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               </div>
 
               {/* Sub-surface Photo Paper */}
-              <div className="space-y-2 pt-3 border-t border-stone-100">
+              <div className="space-y-2 pt-2 border-t border-stone-100">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
                   Sub-surface Photo Paper:
                 </label>
@@ -2187,21 +2104,21 @@ export const AcrylicCustomizerPage: React.FC = () => {
               </div>
 
               {/* Special Instructions */}
-              <div className="space-y-1.5 pt-3 border-t border-stone-100">
+              <div className="space-y-1.5 pt-2 border-t border-stone-100">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
-                  Special Printing Notes:
+                  Special Instructions:
                 </label>
                 <textarea
                   rows={2}
                   value={specialInstructions}
                   onChange={(e) => setSpecialInstructions(e.target.value)}
-                  placeholder="Optional custom instructions for our printing lab..."
+                  placeholder="Optional custom instructions for our lab..."
                   className="w-full p-2.5 border border-stone-300 rounded-xl text-xs focus:outline-none focus:border-[#0E4A93] resize-none"
                 />
               </div>
 
               {/* Quantity Stepper */}
-              <div className="space-y-2 pt-3 border-t border-stone-100">
+              <div className="space-y-2 pt-2 border-t border-stone-100">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
                   Quantity:
                 </label>
@@ -2241,7 +2158,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
         {/* ----------------------------------------------------------------- */}
         <main className="flex-1 flex flex-col h-full bg-[#FAFAFA] relative overflow-hidden">
           
-          {/* Graph Grid Pattern Background (Screenshot 3) */}
+          {/* Graph Grid Pattern Background */}
           <div 
             className="absolute inset-0 pointer-events-none opacity-40"
             style={{
@@ -2267,7 +2184,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           )}
 
-          {/* Top Instruction Banner (Screenshot 3) */}
+          {/* Top Instruction Banner */}
           <div className="w-full bg-[#FEF08A] text-stone-900 text-xs font-bold py-1.5 px-4 flex items-center justify-center gap-2 border-b border-amber-300 shadow-xs z-10">
             <Move className="w-3.5 h-3.5 text-stone-900" />
             <span>Click and drag within the print lines to Adjust your Photo, or click empty frames to upload.</span>
@@ -2342,7 +2259,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 ))}
               </div>
 
-              {/* Clipart Emoji Items Grid */}
+              {/* Clipart Items Grid */}
               <div className="grid grid-cols-4 gap-2 text-2xl text-center max-h-48 overflow-y-auto p-1">
                 {(CLIPART_CATEGORIES[selectedClipartCategory] || []).map((item, i) => (
                   <button
@@ -2391,7 +2308,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               <span className="text-[10px] font-black tracking-tight uppercase mt-0.5">HARDWARE &amp; FINISH</span>
             </button>
 
-            {/* Canvas Outer Boundary with Dimension Lines (Screenshot 3) */}
+            {/* Canvas Outer Boundary with Dimension Lines */}
             <div className="relative z-10 flex flex-col items-center justify-center max-w-2xl w-full">
               
               {/* Top Dimension Guide Line */}
@@ -2407,8 +2324,14 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Dynamic Frame Layout Renderer */}
-              <div className="w-full flex justify-center relative">
+              {/* Dynamic Frame Layout Renderer (with optional outer physical frame) */}
+              <div 
+                className="w-full flex justify-center relative p-1 transition-all rounded-2xl"
+                style={{
+                  border: activeFrameOption.id !== 'no-frame' ? activeFrameOption.borderCss : 'none',
+                  boxShadow: activeFrameOption.id !== 'no-frame' ? '0 25px 35px -5px rgba(0, 0, 0, 0.25)' : 'none'
+                }}
+              >
                 
                 {/* 1 Photo Single */}
                 {currentLayout.layoutType === '1-single' && (
@@ -2436,7 +2359,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* 2 Photos Offset / Staggered (Screenshot 3) */}
+                {/* 2 Photos Offset / Staggered */}
                 {currentLayout.layoutType === '2-offset' && (
                   <div className="grid grid-cols-2 gap-4 w-full max-w-lg aspect-[16/11] items-center">
                     <div className="-translate-y-3">
@@ -2645,107 +2568,125 @@ export const AcrylicCustomizerPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* 2. TEXT CONTROLS (When Text is Selected) */}
+                {/* 2. TEXT CONTROLS & VISUAL TYPOGRAPHY CARDS (When Text is Selected) */}
                 {selectedElement.type === 'text' && selectedElement.elementId && (
-                  <div className="flex flex-wrap items-center justify-center gap-2 bg-white/95 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-stone-200 text-xs animate-in fade-in">
-                    {/* Text Input */}
-                    <input
-                      type="text"
-                      value={activeFrame.textElements.find((t) => t.id === selectedElement.elementId)?.text || ''}
-                      onChange={(e) => updateSelectedText({ text: e.target.value })}
-                      className="px-2 py-1 border border-stone-300 rounded text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] w-36"
-                      placeholder="Enter text..."
-                    />
-
-                    {/* Font Dropdown */}
-                    <select
-                      value={activeFrame.textElements.find((t) => t.id === selectedElement.elementId)?.fontFamily || 'Arial, sans-serif'}
-                      onChange={(e) => updateSelectedText({ fontFamily: e.target.value })}
-                      className="px-2 py-1 border border-stone-300 rounded text-xs font-bold bg-white focus:outline-none focus:border-[#0E4A93]"
-                    >
-                      {FONT_OPTIONS.map((f) => (
-                        <option key={f.value} value={f.value}>{f.label}</option>
-                      ))}
-                    </select>
-
-                    {/* Text Size Stepper */}
-                    <div className="flex items-center border border-stone-300 rounded bg-stone-50">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const curr = activeFrame.textElements.find((t) => t.id === selectedElement.elementId);
-                          if (curr) updateSelectedText({ fontSize: Math.max(12, curr.fontSize - 2) });
-                        }}
-                        className="px-1.5 py-0.5 font-bold"
-                      >
-                        −
-                      </button>
-                      <span className="px-1 text-[11px] font-bold">
-                        {activeFrame.textElements.find((t) => t.id === selectedElement.elementId)?.fontSize || 24}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const curr = activeFrame.textElements.find((t) => t.id === selectedElement.elementId);
-                          if (curr) updateSelectedText({ fontSize: Math.min(48, curr.fontSize + 2) });
-                        }}
-                        className="px-1.5 py-0.5 font-bold"
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    {/* Color Swatches */}
-                    <div className="flex gap-1">
-                      {TEXT_COLOR_PRESETS.map((c) => (
-                        <button
-                          key={c.hex}
-                          type="button"
-                          onClick={() => updateSelectedText({ color: c.hex })}
-                          className="w-4 h-4 rounded-full border border-stone-300 hover:scale-110 transition-transform"
-                          style={{ backgroundColor: c.hex }}
-                          title={c.name}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Position Presets Toggle */}
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setShowPositionPopover(!showPositionPopover)}
-                        className="p-1 text-stone-700 hover:bg-stone-100 rounded font-bold border border-stone-200"
-                        title="Position Preset"
-                      >
-                        Position
-                      </button>
-
-                      {showPositionPopover && (
-                        <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-white rounded-xl shadow-xl border border-stone-200 p-2 grid grid-cols-3 gap-1 z-40">
-                          {POSITION_PRESETS.map((pos) => (
+                  <div className="w-full bg-white/95 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-stone-200 text-xs space-y-2 animate-in fade-in">
+                    
+                    {/* Visual Typography Font Cards (Section 13) */}
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-black uppercase text-stone-600">Select Typography Style:</div>
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                        {TYPOGRAPHY_OPTIONS.map((typo) => {
+                          const isCurrentFont = activeFrame.textElements.find((t) => t.id === selectedElement.elementId)?.fontFamily === typo.fontFamily;
+                          return (
                             <button
-                              key={pos.label}
+                              key={typo.id}
                               type="button"
-                              onClick={() => handleApplyPositionPreset(pos.x, pos.y)}
-                              className="px-2 py-1 bg-stone-100 hover:bg-[#0E4A93] hover:text-white rounded text-[10px] font-bold transition-colors"
-                              title={pos.title}
+                              onClick={() => updateSelectedText({ fontFamily: typo.fontFamily })}
+                              className={`p-1.5 rounded-lg border text-center transition-all cursor-pointer ${
+                                isCurrentFont
+                                  ? 'border-[#0E4A93] bg-blue-50 text-[#0E4A93] font-bold shadow-xs'
+                                  : 'border-stone-200 hover:border-stone-300 bg-white text-stone-700'
+                              }`}
                             >
-                              {pos.label}
+                              <div className="text-base leading-none mb-0.5" style={{ fontFamily: typo.fontFamily }}>
+                                {typo.previewSample}
+                              </div>
+                              <div className="text-[9px] truncate">{typo.name}</div>
                             </button>
-                          ))}
-                        </div>
-                      )}
+                          );
+                        })}
+                      </div>
                     </div>
 
-                    {/* Delete Text */}
-                    <button
-                      type="button"
-                      onClick={handleDeleteSelectedText}
-                      className="p-1 text-red-600 hover:bg-red-50 rounded"
-                      title="Delete Text"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-stone-100">
+                      {/* Text Input */}
+                      <input
+                        type="text"
+                        value={activeFrame.textElements.find((t) => t.id === selectedElement.elementId)?.text || ''}
+                        onChange={(e) => updateSelectedText({ text: e.target.value })}
+                        className="px-2 py-1 border border-stone-300 rounded text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] flex-1 min-w-[120px]"
+                        placeholder="Enter text..."
+                      />
+
+                      {/* Text Size Stepper */}
+                      <div className="flex items-center border border-stone-300 rounded bg-stone-50">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const curr = activeFrame.textElements.find((t) => t.id === selectedElement.elementId);
+                            if (curr) updateSelectedText({ fontSize: Math.max(12, curr.fontSize - 2) });
+                          }}
+                          className="px-1.5 py-0.5 font-bold"
+                        >
+                          −
+                        </button>
+                        <span className="px-1 text-[11px] font-bold">
+                          {activeFrame.textElements.find((t) => t.id === selectedElement.elementId)?.fontSize || 24}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const curr = activeFrame.textElements.find((t) => t.id === selectedElement.elementId);
+                            if (curr) updateSelectedText({ fontSize: Math.min(48, curr.fontSize + 2) });
+                          }}
+                          className="px-1.5 py-0.5 font-bold"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      {/* Color Swatches */}
+                      <div className="flex gap-1">
+                        {TEXT_COLOR_PRESETS.map((c) => (
+                          <button
+                            key={c.hex}
+                            type="button"
+                            onClick={() => updateSelectedText({ color: c.hex })}
+                            className="w-4 h-4 rounded-full border border-stone-300 hover:scale-110 transition-transform"
+                            style={{ backgroundColor: c.hex }}
+                            title={c.name}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Position Presets Toggle */}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setShowPositionPopover(!showPositionPopover)}
+                          className="p-1 text-stone-700 hover:bg-stone-100 rounded font-bold border border-stone-200"
+                        >
+                          Position
+                        </button>
+
+                        {showPositionPopover && (
+                          <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-white rounded-xl shadow-xl border border-stone-200 p-2 grid grid-cols-3 gap-1 z-40">
+                            {POSITION_PRESETS.map((pos) => (
+                              <button
+                                key={pos.label}
+                                type="button"
+                                onClick={() => handleApplyPositionPreset(pos.x, pos.y)}
+                                className="px-2 py-1 bg-stone-100 hover:bg-[#0E4A93] hover:text-white rounded text-[10px] font-bold transition-colors"
+                                title={pos.title}
+                              >
+                                {pos.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Delete Text */}
+                      <button
+                        type="button"
+                        onClick={handleDeleteSelectedText}
+                        className="p-1 text-red-600 hover:bg-red-50 rounded"
+                        title="Delete Text"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -2802,7 +2743,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                         type="button"
                         onClick={() => setShowPositionPopover(!showPositionPopover)}
                         className="p-1 text-stone-700 hover:bg-stone-100 rounded font-bold border border-stone-200"
-                        title="Position Preset"
                       >
                         Position
                       </button>
@@ -2846,7 +2786,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
       </div>
 
       {/* ------------------------------------------------------------------- */}
-      {/* BOTTOM CHECKOUT BAR (Dynamic Pricing & Add to Cart)                 */}
+      {/* BOTTOM CHECKOUT BAR                                                 */}
       {/* ------------------------------------------------------------------- */}
       <footer className="h-16 bg-white border-t border-stone-200 px-4 sm:px-8 flex items-center justify-between shadow-lg z-30 shrink-0">
         <div className="flex items-center gap-4">
@@ -2928,14 +2868,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     : 'url(https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=1200&auto=format&fit=crop&q=80)'
               }}
             >
-              {/* Room Ambiance Filter */}
               <div className="absolute inset-0 bg-black/20 pointer-events-none" />
 
-              {/* Rendered Acrylic Print Preview on Wall */}
               <div 
                 className="relative max-w-sm w-full bg-white/90 backdrop-blur-xs rounded-xl overflow-hidden shadow-2xl transition-transform hover:scale-105"
                 style={{
-                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.45)'
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.45)',
+                  border: activeFrameOption.id !== 'no-frame' ? activeFrameOption.borderCss : 'none'
                 }}
               >
                 <div className="p-3">
