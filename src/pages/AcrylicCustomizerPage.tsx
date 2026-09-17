@@ -27,8 +27,7 @@ import {
   Crop,
   Grid,
   Search,
-  Box,
-  Shapes,
+Shapes,
   Maximize2
 } from 'lucide-react';
 import { CanvasIndiaLogo } from '../components/CanvasIndiaLogo';
@@ -258,9 +257,15 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const [showRoomView, setShowRoomView] = useState<boolean>(false);
   const [roomBackdrop, setRoomBackdrop] = useState<'living' | 'office' | 'bedroom'>('living');
 
-  // 3D View Modal State
-  const [show3DModal, setShow3DModal] = useState<boolean>(false);
-  const [threeDViewAngle, setThreeDViewAngle] = useState<'angle' | 'front' | 'edge'>('angle');
+  // Wheel Cleanup Map for smooth native non-passive zooming
+  const wheelCleanupMapRef = useRef<Map<number, () => void>>(new Map());
+
+  useEffect(() => {
+    return () => {
+      wheelCleanupMapRef.current.forEach((cleanup) => cleanup());
+      wheelCleanupMapRef.current.clear();
+    };
+  }, []);
 
   // Add Text Editor Popover State
   const [showTextModal, setShowTextModal] = useState<boolean>(false);
@@ -281,7 +286,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Dragging State
   const [isDragging, setIsDragging] = useState<boolean>(false);
-  const dragStartRef = useRef<{ x: number; y: number; initialPanX: number; initialPanY: number } | null>(null);
+  const dragStartRef = useRef<{ x: number; y: number; initialPanX: number; initialPanY: number; panelIdx: number } | null>(null);
   const textDragRef = useRef<{ x: number; y: number; initialOffset: { x: number; y: number }; rect: DOMRect } | null>(null);
   const clipartDragRef = useRef<{ x: number; y: number; initialOffset: { x: number; y: number }; rect: DOMRect } | null>(null);
 
@@ -484,8 +489,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }));
   };
 
-  // Panning / Dragging Handlers
-  const startImageDrag = (e: React.PointerEvent, panelIdx: number) => {
+  // Dedicated Image Panning Handlers (Independent per frame, Touch & Mouse)
+  const handleImagePointerDown = (e: React.PointerEvent<HTMLDivElement>, panelIdx: number) => {
+    if (e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
     setActivePanelIndex(panelIdx);
@@ -496,24 +502,79 @@ export const AcrylicCustomizerPage: React.FC = () => {
     dragStartRef.current = {
       x: e.clientX,
       y: e.clientY,
-      initialPanX: frame.panX,
-      initialPanY: frame.panY
+      initialPanX: frame.panX || 0,
+      initialPanY: frame.panY || 0,
+      panelIdx
     };
 
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {}
   };
 
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (isDragging && dragStartRef.current) {
-      const deltaX = e.clientX - dragStartRef.current.x;
-      const deltaY = e.clientY - dragStartRef.current.y;
-      updateFrame(activePanelIndex, (curr) => ({
-        ...curr,
-        panX: dragStartRef.current!.initialPanX + deltaX,
-        panY: dragStartRef.current!.initialPanY + deltaY
-      }));
-    }
+  const handleImagePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging || !dragStartRef.current) return;
+    e.preventDefault();
+    e.stopPropagation();
 
+    const { x: startX, y: startY, initialPanX, initialPanY, panelIdx } = dragStartRef.current;
+    const deltaX = e.clientX - startX;
+    const deltaY = e.clientY - startY;
+
+    const currentFrame = panelImages[panelIdx];
+    const scale = currentFrame?.scale || 1;
+    const maxPan = 450 * Math.max(1, scale);
+
+    const newPanX = Math.max(-maxPan, Math.min(maxPan, initialPanX + deltaX));
+    const newPanY = Math.max(-maxPan, Math.min(maxPan, initialPanY + deltaY));
+
+    updateFrame(panelIdx, (curr) => ({
+      ...curr,
+      panX: Math.round(newPanX),
+      panY: Math.round(newPanY)
+    }));
+  };
+
+  const handleImagePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDragging) {
+      setIsDragging(false);
+      dragStartRef.current = null;
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {}
+    }
+  };
+
+  // Dedicated Wheel Zoom Registration with { passive: false } for smooth zooming and no page scroll
+  const registerWheelRef = (panelIdx: number) => (el: HTMLDivElement | null) => {
+    if (wheelCleanupMapRef.current.has(panelIdx)) {
+      wheelCleanupMapRef.current.get(panelIdx)!();
+      wheelCleanupMapRef.current.delete(panelIdx);
+    }
+    if (!el) return;
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setActivePanelIndex(panelIdx);
+      const delta = e.deltaY < 0 ? 0.08 : -0.08;
+      updateFrame(panelIdx, (curr) => {
+        const nextScale = Math.max(0.5, Math.min(3.5, Number((curr.scale + delta).toFixed(2))));
+        return {
+          ...curr,
+          scale: nextScale
+        };
+      });
+    };
+
+    el.addEventListener('wheel', onWheel, { passive: false });
+    wheelCleanupMapRef.current.set(panelIdx, () => {
+      el.removeEventListener('wheel', onWheel);
+    });
+  };
+
+  // Global Pointer Handlers for Independent Text & Clipart Dragging
+  const onPointerMove = (e: React.PointerEvent) => {
     if (textDragRef.current && selectedElement.type === 'text' && selectedElement.elementId) {
       const { x: startX, y: startY, initialOffset, rect } = textDragRef.current;
       const dxPx = e.clientX - startX;
@@ -558,11 +619,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
     dragStartRef.current = null;
     textDragRef.current = null;
     clipartDragRef.current = null;
-    try {
-      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-    } catch {
-      // Ignored if target wasn't captured
-    }
   };
 
   // Text Drag start
@@ -891,20 +947,28 @@ export const AcrylicCustomizerPage: React.FC = () => {
           </div>
         )}
 
-        {/* Frame Content */}
+        {/* Frame Content (Independent Image Transform Inside Shape) */}
         {frame.imageUrl ? (
           <div
-            className="w-full h-full relative overflow-hidden flex items-center justify-center"
-            onPointerDown={(e) => startImageDrag(e, panelIdx)}
+            ref={registerWheelRef(panelIdx)}
+            onPointerDown={(e) => handleImagePointerDown(e, panelIdx)}
+            onPointerMove={handleImagePointerMove}
+            onPointerUp={handleImagePointerUp}
+            onPointerCancel={handleImagePointerUp}
+            style={{ touchAction: 'none' }}
+            className={`w-full h-full relative overflow-hidden flex items-center justify-center select-none ${
+              isDragging && activePanelIndex === panelIdx ? 'cursor-grabbing' : 'cursor-grab'
+            }`}
           >
             <img
               src={frame.imageUrl}
               alt={label}
               draggable={false}
               style={{
-                transform: `translate(${frame.panX}px, ${frame.panY}px) scale(${frame.scale}) rotate(${frame.rotation}deg)`,
+                transform: `translate3d(${frame.panX || 0}px, ${frame.panY || 0}px, 0) scale(${frame.scale || 1}) rotate(${frame.rotation || 0}deg)`,
+                transformOrigin: 'center center',
                 filter: filterCss,
-                transition: isDragging ? 'none' : 'transform 0.12s ease-out'
+                transition: isDragging ? 'none' : 'transform 0.1s ease-out'
               }}
               className="max-w-none w-full h-full object-cover pointer-events-none select-none"
             />
@@ -2097,7 +2161,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Right: Restored Top-Right Toolbar [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW, 3D VIEW] */}
+            {/* Right: Top-Right Toolbar [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW] */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               
               {/* SAVE */}
@@ -2156,16 +2220,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 <span>ROOM VIEW</span>
               </button>
 
-              {/* 3D VIEW */}
-              <button
-                type="button"
-                onClick={() => setShow3DModal(true)}
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 rounded-lg text-xs font-bold transition-all shadow-2xs hover:border-stone-400 cursor-pointer"
-                title="Preview 3D acrylic depth and reflections"
-              >
-                <Box className="w-3.5 h-3.5 text-[#E8752A]" />
-                <span>3D VIEW</span>
-              </button>
 
               {/* Delete Selected Element (Text/Clipart) */}
               {selectedElement.type !== 'image' && (
@@ -2323,115 +2377,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           )}
 
-          {/* =============================================================== */}
-          {/* 3D VIEW MODAL (Section 11)                                       */}
-          {/* =============================================================== */}
-          {show3DModal && (
-            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4 animate-in fade-in zoom-in-95">
-                <div className="flex items-center justify-between border-b border-stone-200 pb-3">
-                  <div className="flex items-center gap-2">
-                    <Box className="w-5 h-5 text-[#0E4A93]" />
-                    <h3 className="text-base font-black text-stone-900">
-                      3D Acrylic Product Preview
-                    </h3>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShow3DModal(false)}
-                    className="p-1 hover:bg-stone-100 rounded-lg text-stone-500"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                {/* 3D View Angles Switcher */}
-                <div className="flex gap-2 justify-center">
-                  {(['angle', 'front', 'edge'] as const).map((viewMode) => (
-                    <button
-                      key={viewMode}
-                      type="button"
-                      onClick={() => setThreeDViewAngle(viewMode)}
-                      className={`px-3 py-1 text-xs font-bold rounded-lg border transition-colors cursor-pointer ${
-                        threeDViewAngle === viewMode
-                          ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
-                          : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
-                      }`}
-                    >
-                      {viewMode === 'angle' && 'Perspective 3D Angle'}
-                      {viewMode === 'front' && 'Front Elevation'}
-                      {viewMode === 'edge' && 'Glass Edge Depth'}
-                    </button>
-                  ))}
-                </div>
-
-                {/* 3D Viewport Stage */}
-                <div className="h-72 bg-gradient-to-b from-stone-900 via-stone-800 to-stone-950 rounded-xl flex items-center justify-center relative overflow-hidden p-6 perspective-[1000px]">
-                  
-                  {/* The 3D Acrylic Object */}
-                  <div
-                    style={{
-                      transform: threeDViewAngle === 'angle'
-                        ? 'perspective(1000px) rotateY(-22deg) rotateX(12deg)'
-                        : threeDViewAngle === 'edge'
-                        ? 'perspective(1000px) rotateY(-65deg) rotateX(4deg)'
-                        : 'none',
-                      transition: 'transform 0.4s ease-out',
-                      boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 18px 36px -18px rgba(0, 0, 0, 0.6)'
-                    }}
-                    className={`relative max-w-xs w-full aspect-[4/3] bg-stone-100 rounded-xl overflow-hidden border-2 border-white/40 ${
-                      selectedShapeId === 'shape-circle' ? 'rounded-full aspect-square' : ''
-                    }`}
-                  >
-                    {/* Simulated Acrylic Side Edge Depth Glass Rim */}
-                    <div 
-                      className="absolute inset-0 pointer-events-none z-30"
-                      style={{
-                        boxShadow: 'inset 0 0 14px rgba(255, 255, 255, 0.8), inset 0 0 4px rgba(56, 189, 248, 0.6)'
-                      }}
-                    />
-
-                    {/* Acrylic Surface Photo */}
-                    <img
-                      src={activeFrameState.imageUrl || selectedProductType.image}
-                      alt="3D Preview"
-                      className="w-full h-full object-cover"
-                    />
-
-                    {/* Optical Glass Sheen Reflection */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/25 to-white/40 pointer-events-none z-20" />
-
-                    {/* Standoff Bolts in 3D */}
-                    <div className="absolute top-3 left-3 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-stone-400 via-stone-100 to-white shadow-md z-30" />
-                    <div className="absolute top-3 right-3 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-stone-400 via-stone-100 to-white shadow-md z-30" />
-                    <div className="absolute bottom-3 left-3 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-stone-400 via-stone-100 to-white shadow-md z-30" />
-                    <div className="absolute bottom-3 right-3 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-stone-400 via-stone-100 to-white shadow-md z-30" />
-                  </div>
-
-                  {/* Reflection Surface Underneath */}
-                  <div className="absolute bottom-2 w-64 h-6 bg-cyan-400/10 blur-xl rounded-full pointer-events-none" />
-                </div>
-
-                <div className="flex items-center justify-between text-xs text-stone-600 bg-stone-50 p-3 rounded-xl border border-stone-200">
-                  <span>Product: <strong className="text-stone-900">{selectedProductType.name}</strong></span>
-                  <span>Thickness: <strong className="text-stone-900">{THICKNESS_OPTIONS.find(t => t.id === selectedThicknessId)?.label}</strong></span>
-                  <button
-                    type="button"
-                    onClick={() => setShow3DModal(false)}
-                    className="px-4 py-1.5 bg-[#0E4A93] text-white font-bold rounded-lg"
-                  >
-                    Done
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* =============================================================== */}
+                    {/* =============================================================== */}
           {/* CANVAS INTERACTIVE WORKSPACE (Section 13)                         */}
           {/* =============================================================== */}
           <div 
-            className={`flex-1 relative flex items-center justify-center p-4 sm:p-8 overflow-hidden select-none ${
+            className={`flex-1 relative flex flex-col items-center justify-center p-4 sm:p-8 overflow-hidden select-none ${
               showRoomView ? 'bg-stone-800' : 'bg-[#E2E8F0]/50'
             }`}
             style={{
@@ -2529,6 +2479,62 @@ export const AcrylicCustomizerPage: React.FC = () => {
               )}
 
             </div>
+
+            {/* Compact Floating Image Editor Controls Bar (Section 6, 8, 9, 18) */}
+            {activeFrameState.imageUrl && (
+              <div className="mt-4 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-xl shadow-lg border border-stone-200/90 flex items-center gap-2.5 z-30 select-none animate-in fade-in slide-in-from-bottom-2">
+                {frames.length > 1 && (
+                  <div className="text-[11px] font-bold text-stone-700 pr-2 border-r border-stone-200">
+                    Frame {activePanelIndex + 1}
+                  </div>
+                )}
+
+                {/* Zoom Controls: [ − ] [ 1.00x ] [ + ] */}
+                <div className="flex items-center gap-1 bg-stone-100 px-1.5 py-0.5 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={handleZoomOut}
+                    className="w-6 h-6 rounded flex items-center justify-center hover:bg-white text-stone-700 hover:text-stone-900 transition-colors font-bold text-sm cursor-pointer"
+                    title="Zoom Out (or wheel down)"
+                  >
+                    −
+                  </button>
+                  <span className="text-[11px] font-extrabold text-stone-800 min-w-[36px] text-center">
+                    {(activeFrameState.scale || 1).toFixed(2)}x
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleZoomIn}
+                    className="w-6 h-6 rounded flex items-center justify-center hover:bg-white text-stone-700 hover:text-stone-900 transition-colors font-bold text-sm cursor-pointer"
+                    title="Zoom In (or wheel up)"
+                  >
+                    +
+                  </button>
+                </div>
+
+                {/* Rotate Button */}
+                <button
+                  type="button"
+                  onClick={handleRotate}
+                  className="flex items-center gap-1 text-xs font-bold text-stone-700 hover:text-[#0E4A93] bg-stone-100 hover:bg-stone-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                  title="Rotate 90°"
+                >
+                  <RotateCw className="w-3.5 h-3.5" />
+                  <span>Rotate</span>
+                </button>
+
+                {/* Reset Button */}
+                <button
+                  type="button"
+                  onClick={handleResetImage}
+                  className="flex items-center gap-1 text-xs font-bold text-stone-700 hover:text-amber-700 bg-stone-100 hover:bg-amber-50 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                  title="Reset position, zoom & rotation"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Reset</span>
+                </button>
+              </div>
+            )}
 
           </div>
 
