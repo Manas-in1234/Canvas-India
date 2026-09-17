@@ -24,6 +24,7 @@ export interface AcrylicProductType {
   panelsCount: number;
   description: string;
   defaultSizeOptionId: string;
+  supportedShapeIds?: string[];
 }
 
 export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
@@ -35,7 +36,8 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     iconType: 'block',
     panelsCount: 1,
     description: 'Freestanding, solid optical acrylic block with 3D crystal depth.',
-    defaultSizeOptionId: 'sq-4x4'
+    defaultSizeOptionId: 'sq-4x4',
+    supportedShapeIds: ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait', 'shape-rounded-rect', 'shape-arch', 'shape-circle']
   },
   {
     id: 'acrylic-photo-panel',
@@ -45,7 +47,12 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     iconType: 'panel',
     panelsCount: 1,
     description: 'Modern slim acrylic panel with diamond polished border.',
-    defaultSizeOptionId: 'sq-8x8'
+    defaultSizeOptionId: 'sq-8x8',
+    supportedShapeIds: [
+      'shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait', 'shape-rounded-rect', 'shape-circle', 'shape-oval',
+      'shape-heart', 'shape-star', 'shape-hexagon', 'shape-octagon', 'shape-diamond', 'shape-triangle', 'shape-arch', 'shape-capsule', 'shape-cloud', 'shape-speech-bubble',
+      'shape-scalloped', 'shape-ticket', 'shape-tag', 'shape-polaroid', 'shape-photo-frame', 'shape-organic-blob'
+    ]
   },
   {
     id: 'acrylic-wall-art',
@@ -55,7 +62,8 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     iconType: 'wall',
     panelsCount: 3,
     description: 'Multi-panel gallery wall display for striking home and office focal points.',
-    defaultSizeOptionId: 'rec-12x18'
+    defaultSizeOptionId: 'rec-12x18',
+    supportedShapeIds: ['shape-rectangle', 'shape-landscape', 'shape-square', 'shape-portrait', 'shape-rounded-rect', 'shape-circle', 'shape-oval', 'shape-hexagon', 'shape-arch', 'shape-polaroid', 'shape-photo-frame']
   },
   {
     id: 'acrylic-print',
@@ -65,7 +73,12 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     iconType: 'print',
     panelsCount: 1,
     description: 'Vibrant direct UV sub-surface print on crystal acrylic.',
-    defaultSizeOptionId: 'sq-8x8'
+    defaultSizeOptionId: 'sq-8x8',
+    supportedShapeIds: [
+      'shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait', 'shape-rounded-rect', 'shape-circle', 'shape-oval',
+      'shape-heart', 'shape-star', 'shape-hexagon', 'shape-octagon', 'shape-diamond', 'shape-triangle', 'shape-arch', 'shape-capsule', 'shape-cloud', 'shape-speech-bubble',
+      'shape-scalloped', 'shape-ticket', 'shape-tag', 'shape-polaroid', 'shape-photo-frame', 'shape-organic-blob'
+    ]
   },
   {
     id: 'acrylic-collage',
@@ -75,7 +88,8 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     iconType: 'collage',
     panelsCount: 4,
     description: 'Multiple cherished photographs printed together on acrylic.',
-    defaultSizeOptionId: 'sq-12x12'
+    defaultSizeOptionId: 'sq-12x12',
+    supportedShapeIds: ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait', 'shape-rounded-rect', 'shape-circle', 'shape-hexagon']
   },
   {
     id: 'acrylic-split',
@@ -85,7 +99,8 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     iconType: 'split',
     panelsCount: 3,
     description: 'Panoramic photograph split seamlessly across 3 triptych panels.',
-    defaultSizeOptionId: 'pan-12x36'
+    defaultSizeOptionId: 'pan-12x36',
+    supportedShapeIds: ['shape-landscape', 'shape-rectangle', 'shape-square', 'shape-arch']
   },
   {
     id: 'acrylic-signage',
@@ -95,7 +110,8 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     iconType: 'signage',
     panelsCount: 1,
     description: 'Professional architectural logo and nameplate display with standoff bolts.',
-    defaultSizeOptionId: 'rec-12x18'
+    defaultSizeOptionId: 'rec-12x18',
+    supportedShapeIds: ['shape-rectangle', 'shape-landscape', 'shape-rounded-rect', 'shape-square', 'shape-oval', 'shape-tag', 'shape-ticket', 'shape-capsule', 'shape-arch']
   }
 ];
 
@@ -1333,57 +1349,834 @@ export const ACRYLIC_EDGE_WRAPS: AcrylicEdgeWrap[] = [
 ];
 
 // ============================================================================
-// ACRYLIC SHAPES (SHAPE Tab)
+// ACRYLIC SHAPES (SHAPE Tab - Full 23 Shapes Suite)
 // ============================================================================
 
 export interface AcrylicShapeOption {
   id: string;
   name: string;
+  category: 'basic' | 'special' | 'decorative';
   description: string;
   aspectClass: string;
+  aspectRatio: number;
   borderRadiusClass: string;
+  clipPathStyle: string;
+  svgClipId?: string;
+  isSingleDimension: boolean;
   image: string;
+  priceAddon: number;
 }
 
 export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
+  // --------------------------------------------------------------------------
+  // BASIC SHAPES (1-7)
+  // --------------------------------------------------------------------------
   {
     id: 'shape-square',
     name: 'Square (1:1)',
-    description: 'Classic symmetrical modern acrylic block or panel.',
+    category: 'basic',
+    description: 'Classic symmetrical modern acrylic format.',
     aspectClass: 'aspect-square',
+    aspectRatio: 1,
     borderRadiusClass: 'rounded-xl',
-    image: '/assets/customizer/acrylic/shapes/shape-square.svg'
+    clipPathStyle: 'inset(0 round 12px)',
+    isSingleDimension: true,
+    image: '/assets/customizer/acrylic/shapes/shape-square.svg',
+    priceAddon: 0
+  },
+  {
+    id: 'shape-rectangle',
+    name: 'Rectangle (3:2)',
+    category: 'basic',
+    description: 'Timeless proportional display for all photography.',
+    aspectClass: 'aspect-[3/2]',
+    aspectRatio: 1.5,
+    borderRadiusClass: 'rounded-xl',
+    clipPathStyle: 'inset(0 round 12px)',
+    isSingleDimension: false,
+    image: '/assets/customizer/acrylic/shapes/shape-rectangle.svg',
+    priceAddon: 0
   },
   {
     id: 'shape-landscape',
-    name: 'Landscape (4:3)',
-    description: 'Panoramic horizontal presentation for vistas and groups.',
-    aspectClass: 'aspect-[4/3]',
+    name: 'Landscape (16:10)',
+    category: 'basic',
+    description: 'Panoramic horizontal presentation for vistas & groups.',
+    aspectClass: 'aspect-[16/10]',
+    aspectRatio: 1.6,
     borderRadiusClass: 'rounded-xl',
-    image: '/assets/customizer/acrylic/shapes/shape-landscape.svg'
+    clipPathStyle: 'inset(0 round 12px)',
+    isSingleDimension: false,
+    image: '/assets/customizer/acrylic/shapes/shape-landscape.svg',
+    priceAddon: 0
   },
   {
     id: 'shape-portrait',
     name: 'Portrait (3:4)',
-    description: 'Vertical focal format for individual and couple photography.',
+    category: 'basic',
+    description: 'Vertical focal format for individual & couple portraits.',
     aspectClass: 'aspect-[3/4]',
+    aspectRatio: 0.75,
     borderRadiusClass: 'rounded-xl',
-    image: '/assets/customizer/acrylic/shapes/shape-portrait.svg'
-  },
-  {
-    id: 'shape-circle',
-    name: 'Circle',
-    description: 'Curved circular optical acrylic with laser-cut perimeter.',
-    aspectClass: 'aspect-square',
-    borderRadiusClass: 'rounded-full',
-    image: '/assets/customizer/acrylic/shapes/shape-circle.svg'
+    clipPathStyle: 'inset(0 round 12px)',
+    isSingleDimension: false,
+    image: '/assets/customizer/acrylic/shapes/shape-portrait.svg',
+    priceAddon: 0
   },
   {
     id: 'shape-rounded-rect',
     name: 'Rounded Rectangle',
-    description: 'Smooth 30mm radius crystal corners for a sleek display.',
+    category: 'basic',
+    description: 'Smooth 30mm radius crystal corners for modern displays.',
     aspectClass: 'aspect-[4/3]',
+    aspectRatio: 1.333,
     borderRadiusClass: 'rounded-3xl',
-    image: '/assets/customizer/acrylic/shapes/shape-rounded-rect.svg'
+    clipPathStyle: 'inset(0 round 24px)',
+    isSingleDimension: false,
+    image: '/assets/customizer/acrylic/shapes/shape-rounded-rect.svg',
+    priceAddon: 0
+  },
+  {
+    id: 'shape-circle',
+    name: 'Circle',
+    category: 'basic',
+    description: 'Curved circular optical acrylic with laser-cut perimeter.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-full',
+    clipPathStyle: 'circle(50% at 50% 50%)',
+    isSingleDimension: true,
+    image: '/assets/customizer/acrylic/shapes/shape-circle.svg',
+    priceAddon: 0
+  },
+  {
+    id: 'shape-oval',
+    name: 'Oval',
+    category: 'basic',
+    description: 'Graceful elliptical acrylic silhouette for classic wall art.',
+    aspectClass: 'aspect-[4/3]',
+    aspectRatio: 1.333,
+    borderRadiusClass: 'rounded-[50%]',
+    clipPathStyle: 'ellipse(50% 38% at 50% 50%)',
+    isSingleDimension: false,
+    image: '/assets/customizer/acrylic/shapes/shape-oval.svg',
+    priceAddon: 0
+  },
+
+  // --------------------------------------------------------------------------
+  // SPECIAL SHAPES (8-17)
+  // --------------------------------------------------------------------------
+  {
+    id: 'shape-heart',
+    name: 'Heart',
+    category: 'special',
+    description: 'Romantic heart contour for weddings & anniversaries.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-none',
+    svgClipId: 'acrylic-clip-shape-heart',
+    clipPathStyle: 'url(#acrylic-clip-shape-heart)',
+    isSingleDimension: true,
+    image: '/assets/customizer/acrylic/shapes/shape-heart.svg',
+    priceAddon: 150
+  },
+  {
+    id: 'shape-star',
+    name: 'Star',
+    category: 'special',
+    description: 'Dynamic 5-point star laser-cut crystal acrylic.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-none',
+    clipPathStyle: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+    isSingleDimension: true,
+    image: '/assets/customizer/acrylic/shapes/shape-star.svg',
+    priceAddon: 150
+  },
+  {
+    id: 'shape-hexagon',
+    name: 'Hexagon',
+    category: 'special',
+    description: 'Geometric 6-sided honeycomb block for modern clusters.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-none',
+    clipPathStyle: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+    isSingleDimension: true,
+    image: '/assets/customizer/acrylic/shapes/shape-hexagon.svg',
+    priceAddon: 150
+  },
+  {
+    id: 'shape-octagon',
+    name: 'Octagon',
+    category: 'special',
+    description: 'Symmetrical 8-sided beveled contour display.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-none',
+    clipPathStyle: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
+    isSingleDimension: true,
+    image: '/assets/customizer/acrylic/shapes/shape-octagon.svg',
+    priceAddon: 150
+  },
+  {
+    id: 'shape-diamond',
+    name: 'Diamond',
+    category: 'special',
+    description: 'Striking rhombus diamond crystal profile.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-none',
+    clipPathStyle: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+    isSingleDimension: true,
+    image: '/assets/customizer/acrylic/shapes/shape-diamond.svg',
+    priceAddon: 150
+  },
+  {
+    id: 'shape-triangle',
+    name: 'Triangle',
+    category: 'special',
+    description: 'Modern triangular geometry with crisp optical angles.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-none',
+    clipPathStyle: 'polygon(50% 5%, 96% 95%, 4% 95%)',
+    isSingleDimension: true,
+    image: '/assets/customizer/acrylic/shapes/shape-triangle.svg',
+    priceAddon: 150
+  },
+  {
+    id: 'shape-arch',
+    name: 'Arch',
+    category: 'special',
+    description: 'Elegant architectural curved archway contour.',
+    aspectClass: 'aspect-[3/4]',
+    aspectRatio: 0.75,
+    borderRadiusClass: 'rounded-t-[999px] rounded-b-xl',
+    svgClipId: 'acrylic-clip-shape-arch',
+    clipPathStyle: 'url(#acrylic-clip-shape-arch)',
+    isSingleDimension: false,
+    image: '/assets/customizer/acrylic/shapes/shape-arch.svg',
+    priceAddon: 150
+  },
+  {
+    id: 'shape-capsule',
+    name: 'Capsule / Pill',
+    category: 'special',
+    description: 'Elongated rounded pill shape with ultra-smooth curves.',
+    aspectClass: 'aspect-[2/1]',
+    aspectRatio: 2,
+    borderRadiusClass: 'rounded-full',
+    clipPathStyle: 'inset(0 round 999px)',
+    isSingleDimension: false,
+    image: '/assets/customizer/acrylic/shapes/shape-capsule.svg',
+    priceAddon: 150
+  },
+  {
+    id: 'shape-cloud',
+    name: 'Cloud',
+    category: 'special',
+    description: 'Whimsical puffy cloud silhouette for kids & nursery photos.',
+    aspectClass: 'aspect-[4/3]',
+    aspectRatio: 1.333,
+    borderRadiusClass: 'rounded-3xl',
+    svgClipId: 'acrylic-clip-shape-cloud',
+    clipPathStyle: 'url(#acrylic-clip-shape-cloud)',
+    isSingleDimension: false,
+    image: '/assets/customizer/acrylic/shapes/shape-cloud.svg',
+    priceAddon: 150
+  },
+  {
+    id: 'shape-speech-bubble',
+    name: 'Speech Bubble',
+    category: 'special',
+    description: 'Playful quote & caption acrylic dialogue panel.',
+    aspectClass: 'aspect-[4/3]',
+    aspectRatio: 1.333,
+    borderRadiusClass: 'rounded-2xl',
+    svgClipId: 'acrylic-clip-shape-speech-bubble',
+    clipPathStyle: 'url(#acrylic-clip-shape-speech-bubble)',
+    isSingleDimension: false,
+    image: '/assets/customizer/acrylic/shapes/shape-speech-bubble.svg',
+    priceAddon: 150
+  },
+
+  // --------------------------------------------------------------------------
+  // DECORATIVE SHAPES (18-23)
+  // --------------------------------------------------------------------------
+  {
+    id: 'shape-scalloped',
+    name: 'Scalloped',
+    category: 'decorative',
+    description: 'Ornate scalloped petal edge detail around perimeter.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-full',
+    svgClipId: 'acrylic-clip-shape-scalloped',
+    clipPathStyle: 'url(#acrylic-clip-shape-scalloped)',
+    isSingleDimension: true,
+    image: '/assets/customizer/acrylic/shapes/shape-scalloped.svg',
+    priceAddon: 180
+  },
+  {
+    id: 'shape-ticket',
+    name: 'Ticket',
+    category: 'decorative',
+    description: 'Vintage admit-one movie / concert stub notch design.',
+    aspectClass: 'aspect-[2/1]',
+    aspectRatio: 2,
+    borderRadiusClass: 'rounded-lg',
+    svgClipId: 'acrylic-clip-shape-ticket',
+    clipPathStyle: 'url(#acrylic-clip-shape-ticket)',
+    isSingleDimension: false,
+    image: '/assets/customizer/acrylic/shapes/shape-ticket.svg',
+    priceAddon: 180
+  },
+  {
+    id: 'shape-tag',
+    name: 'Tag',
+    category: 'decorative',
+    description: 'Gift / luggage tag profile with angled top corners.',
+    aspectClass: 'aspect-[3/4]',
+    aspectRatio: 0.75,
+    borderRadiusClass: 'rounded-xl',
+    clipPathStyle: 'polygon(22% 0%, 78% 0%, 100% 20%, 100% 100%, 0% 100%, 0% 20%)',
+    isSingleDimension: false,
+    image: '/assets/customizer/acrylic/shapes/shape-tag.svg',
+    priceAddon: 180
+  },
+  {
+    id: 'shape-polaroid',
+    name: 'Polaroid',
+    category: 'decorative',
+    description: 'Retro instant film frame with wide bottom border.',
+    aspectClass: 'aspect-[3/4]',
+    aspectRatio: 0.75,
+    borderRadiusClass: 'rounded-lg',
+    clipPathStyle: 'inset(0 round 8px)',
+    isSingleDimension: false,
+    image: '/assets/customizer/acrylic/shapes/shape-polaroid.svg',
+    priceAddon: 180
+  },
+  {
+    id: 'shape-photo-frame',
+    name: 'Photo Frame',
+    category: 'decorative',
+    description: 'Floating double-border crystal frame with bevel.',
+    aspectClass: 'aspect-[4/3]',
+    aspectRatio: 1.333,
+    borderRadiusClass: 'rounded-xl',
+    clipPathStyle: 'inset(0 round 12px)',
+    isSingleDimension: false,
+    image: '/assets/customizer/acrylic/shapes/shape-photo-frame.svg',
+    priceAddon: 180
+  },
+  {
+    id: 'shape-organic-blob',
+    name: 'Organic Blob',
+    category: 'decorative',
+    description: 'Contemporary fluid abstract organic curve contour.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-[60%_40%_30%_70%/60%_30%_70%_40%]',
+    svgClipId: 'acrylic-clip-shape-organic-blob',
+    clipPathStyle: 'url(#acrylic-clip-shape-organic-blob)',
+    isSingleDimension: true,
+    image: '/assets/customizer/acrylic/shapes/shape-organic-blob.svg',
+    priceAddon: 180
   }
 ];
+
+// ============================================================================
+// SHAPE-SPECIFIC SIZES & COMPATIBILITY HELPERS (Sections 8 & 9)
+// ============================================================================
+
+export function getSizesForShape(shapeId: string, productTypeId: string = 'acrylic-photo-panel'): SizeOption[] {
+  // 1. Single dimension shapes (Circle, Heart, Star, Scalloped, Organic Blob)
+  if (['shape-circle', 'shape-heart', 'shape-star', 'shape-scalloped', 'shape-organic-blob'].includes(shapeId)) {
+    const isCircle = shapeId === 'shape-circle';
+    const isHeart = shapeId === 'shape-heart';
+    const prefix = isCircle ? 'Circle' : isHeart ? 'Heart' : 'Size';
+    return [
+      {
+        id: `${shapeId}-4`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: `4" ${prefix}`,
+        dimensionsSummary: '4" Dia',
+        widthInches: 4,
+        heightInches: 4,
+        price: 399,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-6`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: `6" ${prefix}`,
+        dimensionsSummary: '6" Dia',
+        widthInches: 6,
+        heightInches: 6,
+        price: 549,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-8`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: `8" ${prefix}`,
+        dimensionsSummary: '8" Dia',
+        widthInches: 8,
+        heightInches: 8,
+        price: 799,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-10`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: `10" ${prefix}`,
+        dimensionsSummary: '10" Dia',
+        widthInches: 10,
+        heightInches: 10,
+        price: 1099,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-12`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: `12" ${prefix}`,
+        dimensionsSummary: '12" Dia',
+        widthInches: 12,
+        heightInches: 12,
+        price: 1499,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-16`,
+        productTypeId,
+        category: 'LARGE',
+        label: `16" ${prefix}`,
+        dimensionsSummary: '16" Dia',
+        widthInches: 16,
+        heightInches: 16,
+        price: 2299,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/large.svg'
+      }
+    ];
+  }
+
+  // 2. Square & symmetrical polygons (Square, Hexagon, Octagon, Diamond, Triangle)
+  if (['shape-square', 'shape-hexagon', 'shape-octagon', 'shape-diamond', 'shape-triangle'].includes(shapeId)) {
+    return [
+      {
+        id: `${shapeId}-4x4`,
+        productTypeId,
+        category: 'SQUARE',
+        label: '4" × 4"',
+        dimensionsSummary: '4" × 4"',
+        widthInches: 4,
+        heightInches: 4,
+        price: 499,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-6x6`,
+        productTypeId,
+        category: 'SQUARE',
+        label: '6" × 6"',
+        dimensionsSummary: '6" × 6"',
+        widthInches: 6,
+        heightInches: 6,
+        price: 649,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-8x8`,
+        productTypeId,
+        category: 'SQUARE',
+        label: '8" × 8"',
+        dimensionsSummary: '8" × 8"',
+        widthInches: 8,
+        heightInches: 8,
+        price: 799,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-10x10`,
+        productTypeId,
+        category: 'SQUARE',
+        label: '10" × 10"',
+        dimensionsSummary: '10" × 10"',
+        widthInches: 10,
+        heightInches: 10,
+        price: 1099,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-12x12`,
+        productTypeId,
+        category: 'SQUARE',
+        label: '12" × 12"',
+        dimensionsSummary: '12" × 12"',
+        widthInches: 12,
+        heightInches: 12,
+        price: 1499,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-16x16`,
+        productTypeId,
+        category: 'LARGE',
+        label: '16" × 16"',
+        dimensionsSummary: '16" × 16"',
+        widthInches: 16,
+        heightInches: 16,
+        price: 2299,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/large.svg'
+      }
+    ];
+  }
+
+  // 3. Landscape & horizontal rectangular shapes
+  if (['shape-landscape', 'shape-rounded-rect', 'shape-cloud', 'shape-speech-bubble', 'shape-photo-frame'].includes(shapeId)) {
+    return [
+      {
+        id: `${shapeId}-8x6`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: '8" × 6"',
+        dimensionsSummary: '8" × 6"',
+        widthInches: 8,
+        heightInches: 6,
+        price: 699,
+        aspectClass: 'aspect-[4/3]',
+        image: '/assets/customizer/acrylic/sizes/landscape.svg'
+      },
+      {
+        id: `${shapeId}-10x8`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: '10" × 8"',
+        dimensionsSummary: '10" × 8"',
+        widthInches: 10,
+        heightInches: 8,
+        price: 899,
+        aspectClass: 'aspect-[10/8]',
+        image: '/assets/customizer/acrylic/sizes/landscape.svg'
+      },
+      {
+        id: `${shapeId}-12x8`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: '12" × 8"',
+        dimensionsSummary: '12" × 8"',
+        widthInches: 12,
+        heightInches: 8,
+        price: 1099,
+        aspectClass: 'aspect-[12/8]',
+        image: '/assets/customizer/acrylic/sizes/landscape.svg'
+      },
+      {
+        id: `${shapeId}-16x10`,
+        productTypeId,
+        category: 'LARGE',
+        label: '16" × 10"',
+        dimensionsSummary: '16" × 10"',
+        widthInches: 16,
+        heightInches: 10,
+        price: 1799,
+        aspectClass: 'aspect-[16/10]',
+        image: '/assets/customizer/acrylic/sizes/large.svg'
+      },
+      {
+        id: `${shapeId}-18x12`,
+        productTypeId,
+        category: 'LARGE',
+        label: '18" × 12"',
+        dimensionsSummary: '18" × 12"',
+        widthInches: 18,
+        heightInches: 12,
+        price: 2199,
+        aspectClass: 'aspect-[18/12]',
+        image: '/assets/customizer/acrylic/sizes/large.svg'
+      }
+    ];
+  }
+
+  // 4. Portrait & vertical shapes (Portrait, Arch, Tag, Polaroid)
+  if (['shape-portrait', 'shape-arch', 'shape-tag', 'shape-polaroid'].includes(shapeId)) {
+    return [
+      {
+        id: `${shapeId}-6x8`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: '6" × 8"',
+        dimensionsSummary: '6" × 8"',
+        widthInches: 6,
+        heightInches: 8,
+        price: 699,
+        aspectClass: 'aspect-[3/4]',
+        image: '/assets/customizer/acrylic/sizes/landscape.svg'
+      },
+      {
+        id: `${shapeId}-8x10`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: '8" × 10"',
+        dimensionsSummary: '8" × 10"',
+        widthInches: 8,
+        heightInches: 10,
+        price: 899,
+        aspectClass: 'aspect-[4/5]',
+        image: '/assets/customizer/acrylic/sizes/landscape.svg'
+      },
+      {
+        id: `${shapeId}-10x12`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: '10" × 12"',
+        dimensionsSummary: '10" × 12"',
+        widthInches: 10,
+        heightInches: 12,
+        price: 1199,
+        aspectClass: 'aspect-[5/6]',
+        image: '/assets/customizer/acrylic/sizes/landscape.svg'
+      },
+      {
+        id: `${shapeId}-12x16`,
+        productTypeId,
+        category: 'LARGE',
+        label: '12" × 16"',
+        dimensionsSummary: '12" × 16"',
+        widthInches: 12,
+        heightInches: 16,
+        price: 1799,
+        aspectClass: 'aspect-[3/4]',
+        image: '/assets/customizer/acrylic/sizes/large.svg'
+      },
+      {
+        id: `${shapeId}-16x20`,
+        productTypeId,
+        category: 'LARGE',
+        label: '16" × 20"',
+        dimensionsSummary: '16" × 20"',
+        widthInches: 16,
+        heightInches: 20,
+        price: 2499,
+        aspectClass: 'aspect-[4/5]',
+        image: '/assets/customizer/acrylic/sizes/large.svg'
+      }
+    ];
+  }
+
+  // 5. Oval shapes
+  if (shapeId === 'shape-oval') {
+    return [
+      {
+        id: 'oval-6x4',
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: '6" × 4"',
+        dimensionsSummary: '6" × 4"',
+        widthInches: 6,
+        heightInches: 4,
+        price: 599,
+        aspectClass: 'aspect-[3/2]',
+        image: '/assets/customizer/acrylic/sizes/landscape.svg'
+      },
+      {
+        id: 'oval-8x5',
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: '8" × 5"',
+        dimensionsSummary: '8" × 5"',
+        widthInches: 8,
+        heightInches: 5,
+        price: 799,
+        aspectClass: 'aspect-[8/5]',
+        image: '/assets/customizer/acrylic/sizes/landscape.svg'
+      },
+      {
+        id: 'oval-10x7',
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: '10" × 7"',
+        dimensionsSummary: '10" × 7"',
+        widthInches: 10,
+        heightInches: 7,
+        price: 1099,
+        aspectClass: 'aspect-[10/7]',
+        image: '/assets/customizer/acrylic/sizes/landscape.svg'
+      },
+      {
+        id: 'oval-12x8',
+        productTypeId,
+        category: 'LARGE',
+        label: '12" × 8"',
+        dimensionsSummary: '12" × 8"',
+        widthInches: 12,
+        heightInches: 8,
+        price: 1499,
+        aspectClass: 'aspect-[12/8]',
+        image: '/assets/customizer/acrylic/sizes/large.svg'
+      },
+      {
+        id: 'oval-16x10',
+        productTypeId,
+        category: 'LARGE',
+        label: '16" × 10"',
+        dimensionsSummary: '16" × 10"',
+        widthInches: 16,
+        heightInches: 10,
+        price: 2199,
+        aspectClass: 'aspect-[16/10]',
+        image: '/assets/customizer/acrylic/sizes/large.svg'
+      }
+    ];
+  }
+
+  // 6. Capsule & Ticket elongated shapes (2:1)
+  if (['shape-capsule', 'shape-ticket'].includes(shapeId)) {
+    return [
+      {
+        id: `${shapeId}-8x4`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: '8" × 4"',
+        dimensionsSummary: '8" × 4"',
+        widthInches: 8,
+        heightInches: 4,
+        price: 649,
+        aspectClass: 'aspect-[2/1]',
+        image: '/assets/customizer/acrylic/sizes/panoramic.svg'
+      },
+      {
+        id: `${shapeId}-10x5`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: '10" × 5"',
+        dimensionsSummary: '10" × 5"',
+        widthInches: 10,
+        heightInches: 5,
+        price: 899,
+        aspectClass: 'aspect-[2/1]',
+        image: '/assets/customizer/acrylic/sizes/panoramic.svg'
+      },
+      {
+        id: `${shapeId}-12x6`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: '12" × 6"',
+        dimensionsSummary: '12" × 6"',
+        widthInches: 12,
+        heightInches: 6,
+        price: 1249,
+        aspectClass: 'aspect-[2/1]',
+        image: '/assets/customizer/acrylic/sizes/panoramic.svg'
+      },
+      {
+        id: `${shapeId}-16x8`,
+        productTypeId,
+        category: 'LARGE',
+        label: '16" × 8"',
+        dimensionsSummary: '16" × 8"',
+        widthInches: 16,
+        heightInches: 8,
+        price: 1899,
+        aspectClass: 'aspect-[2/1]',
+        image: '/assets/customizer/acrylic/sizes/large.svg'
+      }
+    ];
+  }
+
+  // 7. Default standard Rectangle (4x6, 5x7, 8x10, 10x12, 12x18, 16x24)
+  return [
+    {
+      id: `${shapeId}-4x6`,
+      productTypeId,
+      category: 'RECOMMENDED',
+      label: '4" × 6"',
+      dimensionsSummary: '4" × 6"',
+      widthInches: 6,
+      heightInches: 4,
+      price: 449,
+      aspectClass: 'aspect-[3/2]',
+      image: '/assets/customizer/acrylic/sizes/landscape.svg'
+    },
+    {
+      id: `${shapeId}-5x7`,
+      productTypeId,
+      category: 'RECOMMENDED',
+      label: '5" × 7"',
+      dimensionsSummary: '5" × 7"',
+      widthInches: 7,
+      heightInches: 5,
+      price: 599,
+      aspectClass: 'aspect-[7/5]',
+      image: '/assets/customizer/acrylic/sizes/landscape.svg'
+    },
+    {
+      id: `${shapeId}-8x10`,
+      productTypeId,
+      category: 'RECOMMENDED',
+      label: '8" × 10"',
+      dimensionsSummary: '8" × 10"',
+      widthInches: 10,
+      heightInches: 8,
+      price: 799,
+      aspectClass: 'aspect-[5/4]',
+      image: '/assets/customizer/acrylic/sizes/landscape.svg'
+    },
+    {
+      id: `${shapeId}-10x12`,
+      productTypeId,
+      category: 'RECOMMENDED',
+      label: '10" × 12"',
+      dimensionsSummary: '10" × 12"',
+      widthInches: 12,
+      heightInches: 10,
+      price: 1199,
+      aspectClass: 'aspect-[6/5]',
+      image: '/assets/customizer/acrylic/sizes/landscape.svg'
+    },
+    {
+      id: `${shapeId}-12x18`,
+      productTypeId,
+      category: 'RECOMMENDED',
+      label: '12" × 18"',
+      dimensionsSummary: '12" × 18"',
+      widthInches: 18,
+      heightInches: 12,
+      price: 1699,
+      aspectClass: 'aspect-[3/2]',
+      image: '/assets/customizer/acrylic/sizes/landscape.svg'
+    },
+    {
+      id: `${shapeId}-16x24`,
+      productTypeId,
+      category: 'LARGE',
+      label: '16" × 24"',
+      dimensionsSummary: '16" × 24"',
+      widthInches: 24,
+      heightInches: 16,
+      price: 2799,
+      aspectClass: 'aspect-[3/2]',
+      image: '/assets/customizer/acrylic/sizes/large.svg'
+    }
+  ];
+}
+

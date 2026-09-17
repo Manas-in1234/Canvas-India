@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="160" height="120">
+  <rect width="160" height="120" fill="#F8FAFC"/>
+  <path d="M 80 15 C 105 12, 122 30, 120 55 C 118 78, 100 88, 75 85 C 50 82, 38 72, 40 48 C 42 25, 55 18, 80 15 Z" fill="#E2E8F0" stroke="#0E4A93" stroke-width="2.5"/><path d="M 65 18 C 85 14, 98 28, 95 45 L 60 78 C 45 68, 42 42, 65 18 Z" fill="#FFFFFF" opacity="0.4"/>
+  <text x="80" y="110" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="bold" fill="#0E4A93">Organic Blob</text>
+</svg>

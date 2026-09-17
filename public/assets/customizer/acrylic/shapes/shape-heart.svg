@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="160" height="120">
+  <rect width="160" height="120" fill="#F8FAFC"/>
+  <path d="M 80 82 C 40 55, 35 30, 52 20 C 65 12, 76 22, 80 28 C 84 22, 95 12, 108 20 C 125 30, 120 55, 80 82 Z" fill="#E2E8F0" stroke="#0E4A93" stroke-width="2.5"/><path d="M 54 22 C 60 17, 70 24, 76 30 L 65 55 C 50 45, 45 35, 54 22 Z" fill="#FFFFFF" opacity="0.4"/>
+  <text x="80" y="110" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="bold" fill="#0E4A93">Heart</text>
+</svg>

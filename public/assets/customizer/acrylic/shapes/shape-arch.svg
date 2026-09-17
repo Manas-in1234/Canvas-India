@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="160" height="120">
+  <rect width="160" height="120" fill="#F8FAFC"/>
+  <path d="M 45 88 L 45 45 A 35 35 0 0 1 115 45 L 115 88 Z" fill="#E2E8F0" stroke="#0E4A93" stroke-width="2.5"/><path d="M 45 45 A 35 35 0 0 1 80 15 L 60 88 L 45 88 Z" fill="#FFFFFF" opacity="0.4"/>
+  <text x="80" y="110" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="bold" fill="#0E4A93">Arch</text>
+</svg>

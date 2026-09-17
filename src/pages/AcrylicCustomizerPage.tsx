@@ -64,6 +64,7 @@ import {
   ACRYLIC_EDGE_WRAPS,
   AcrylicShapeOption,
   ACRYLIC_SHAPES,
+  getSizesForShape,
   ACRYLIC_BACKGROUNDS,
   ACRYLIC_BORDER_WIDTHS,
   ACRYLIC_BORDER_COLORS,
@@ -171,8 +172,26 @@ export const AcrylicCustomizerPage: React.FC = () => {
     return SIZE_OPTIONS.filter((s) => s.category === sizeCategory);
   }, [sizeCategory]);
 
+  // Shape Selection State (SHAPE Tab - 23 Shapes Suite)
+  const [selectedShapeId, setSelectedShapeId] = useState<string>('shape-square');
+  const [shapeFilterCategory, setShapeFilterCategory] = useState<'ALL' | 'BASIC' | 'SPECIAL' | 'DECORATIVE'>('ALL');
+
+  const currentShape = useMemo(() => {
+    return ACRYLIC_SHAPES.find((s) => s.id === selectedShapeId) || ACRYLIC_SHAPES[0];
+  }, [selectedShapeId]);
+
+  const filteredShapes = useMemo(() => {
+    if (shapeFilterCategory === 'ALL') return ACRYLIC_SHAPES;
+    return ACRYLIC_SHAPES.filter((s) => s.category.toUpperCase() === shapeFilterCategory);
+  }, [shapeFilterCategory]);
+
+  // Dynamic Shape-Specific Sizes (Section 8 & 9)
+  const shapeSizes = useMemo(() => {
+    return getSizesForShape(selectedShapeId, selectedProductTypeId);
+  }, [selectedShapeId, selectedProductTypeId]);
+
   // Selected Size Option
-  const [selectedSizeId, setSelectedSizeId] = useState<string>('rec-11x17');
+  const [selectedSizeId, setSelectedSizeId] = useState<string>('shape-square-8x8');
 
   // Custom Size controls
   const [isCustomSize, setIsCustomSize] = useState<boolean>(false);
@@ -180,8 +199,14 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const [customHeight, setCustomHeight] = useState<number>(8);
 
   const currentSizeOption = useMemo(() => {
-    return SIZE_OPTIONS.find((s) => s.id === selectedSizeId) || SIZE_OPTIONS[0];
-  }, [selectedSizeId]);
+    return (
+      shapeSizes.find((s) => s.id === selectedSizeId) ||
+      SIZE_OPTIONS.find((s) => s.id === selectedSizeId) ||
+      shapeSizes[2] ||
+      shapeSizes[0] ||
+      SIZE_OPTIONS[0]
+    );
+  }, [selectedSizeId, shapeSizes]);
 
   // Layouts & Designs Subtabs
   const [layoutSubTab, setLayoutSubTab] = useState<'DESIGNS' | 'LAYOUTS'>('LAYOUTS');
@@ -189,11 +214,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const [expandedPhotoCount, setExpandedPhotoCount] = useState<number | null>(1);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
 
-  // Shape Selection State (SHAPE Tab)
-  const [selectedShapeId, setSelectedShapeId] = useState<string>('shape-square');
-  const currentShape = useMemo(() => {
-    return ACRYLIC_SHAPES.find((s) => s.id === selectedShapeId) || ACRYLIC_SHAPES[0];
-  }, [selectedShapeId]);
 
   const currentLayout = useMemo(() => {
     return LAYOUT_PRESETS.find((l) => l.id === selectedLayoutId) || LAYOUT_PRESETS[0];
@@ -302,6 +322,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
       base = Math.max(399, Math.round(customWidth * customHeight * 4.5));
     }
 
+    // Shape Laser-Cut Addon (if any)
+    if (currentShape?.priceAddon) {
+      base += currentShape.priceAddon;
+    }
+
     // Hardware
     const hw = HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId);
     if (hw) base += hw.price;
@@ -333,6 +358,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     isCustomSize,
     customWidth,
     customHeight,
+    currentShape,
     selectedHardwareId,
     selectedFinishId,
     selectedFrameId,
@@ -343,8 +369,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Dimension summary string
   const currentDimensionLabel = isCustomSize
-    ? `${customWidth}" × ${customHeight}"`
-    : currentSizeOption?.dimensionsSummary || selectedProductType.name;
+    ? currentShape.isSingleDimension
+      ? `${customWidth}" Dia`
+      : `${customWidth}" × ${customHeight}"`
+    : currentSizeOption?.label || currentSizeOption?.dimensionsSummary || currentShape.name;
 
   // Direct Click to Upload on Empty Frame
   const handleEmptyFrameClick = (panelIdx: number) => {
@@ -642,7 +670,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
     setSelectedProductTypeId(ptId);
     const pt = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === ptId);
     if (pt) {
-      setSelectedSizeId(pt.defaultSizeOptionId);
       if (ptId === 'acrylic-wall-art' || ptId === 'acrylic-split') {
         setSelectedLayoutId('layout-3-wall');
       } else if (ptId === 'acrylic-collage') {
@@ -650,6 +677,29 @@ export const AcrylicCustomizerPage: React.FC = () => {
       } else {
         setSelectedLayoutId('layout-1-single');
       }
+      // Check shape compatibility with this product
+      if (pt.supportedShapeIds && !pt.supportedShapeIds.includes(selectedShapeId)) {
+        const supported = pt.supportedShapeIds[0] || 'shape-square';
+        setSelectedShapeId(supported);
+      }
+      const newSizes = getSizesForShape(selectedShapeId, ptId);
+      if (newSizes.length > 0) {
+        setSelectedSizeId(newSizes[2]?.id || newSizes[0]?.id);
+      }
+    }
+  };
+
+  // Switch acrylic shape with automatic size & canvas adaptation
+  const handleSelectShape = (shapeId: string) => {
+    setSelectedShapeId(shapeId);
+    const newSizes = getSizesForShape(shapeId, selectedProductTypeId);
+    if (newSizes.length > 0) {
+      // Pick balanced preset (index 2 is typically 8" or 8x8)
+      const targetSize = newSizes[2] || newSizes[0];
+      setSelectedSizeId(targetSize.id);
+      setIsCustomSize(false);
+      setCustomWidth(targetSize.widthInches);
+      setCustomHeight(targetSize.heightInches);
     }
   };
 
@@ -724,7 +774,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
   };
 
-  // RENDER A SINGLE ACRYLIC FRAME
+  // RENDER A SINGLE ACRYLIC FRAME (Fully Functional Image Masking & Shape Dimensions)
   const renderFrameContainer = (panelIdx: number, aspectClass: string, dimensionLabel?: string) => {
     const frame = panelImages[panelIdx] || createDefaultPanelState(null);
     const isActive = activePanelIndex === panelIdx;
@@ -732,7 +782,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const frameInfo = frames[panelIdx];
     const label = dimensionLabel || frameInfo?.dimension || `Frame ${panelIdx + 1}`;
 
-    // Filter CSS
+    // Filter CSS (Section 21)
     const filterCss = 
       frame.filter === 'sepia'
         ? 'sepia(0.85) contrast(1.1) brightness(0.95)'
@@ -743,33 +793,44 @@ export const AcrylicCustomizerPage: React.FC = () => {
     // Border style
     const borderWidthPx = ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0;
 
-    // Shape class application (Circle, Rounded Rect, or standard aspect)
-    const effectiveAspectClass = selectedShapeId === 'shape-circle' 
-      ? 'aspect-square rounded-full' 
-      : selectedShapeId === 'shape-rounded-rect'
-      ? `${aspectClass} rounded-3xl`
-      : `${aspectClass} rounded-xl`;
+    // True Shape Masking & Dimensions (Section 6 & 7)
+    const shapeClip = currentShape.clipPathStyle;
+    const shapeRadius = currentShape.borderRadiusClass;
+
+    // Custom dimensions or shape aspect class
+    const containerAspectStyle: React.CSSProperties = isCustomSize
+      ? { aspectRatio: `${customWidth} / ${customHeight}` }
+      : {};
+    const effectiveAspectClass = isCustomSize ? '' : (aspectClass || currentShape.aspectClass);
 
     return (
-      <div
-        key={panelIdx}
-        onClick={(e) => {
-          e.stopPropagation();
-          setActivePanelIndex(panelIdx);
-          setSelectedElement({ type: 'image', panelIndex: panelIdx });
-          if (isTargetEmpty) {
-            handleEmptyFrameClick(panelIdx);
-          }
-        }}
-        className={`acrylic-frame-container relative w-full ${effectiveAspectClass} bg-white overflow-hidden transition-all select-none border-2 ${
-          isActive
-            ? 'border-[#0E4A93] shadow-2xl ring-4 ring-[#0E4A93]/30 z-20'
-            : 'border-stone-300 shadow-md hover:border-stone-400 z-10'
-        } ${isTargetEmpty ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
+      <div 
+        key={panelIdx} 
+        className="relative w-full transition-all"
         style={{
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
+          filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.2)) drop-shadow(0 8px 10px rgba(0, 0, 0, 0.1))'
         }}
       >
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            setActivePanelIndex(panelIdx);
+            setSelectedElement({ type: 'image', panelIndex: panelIdx });
+            if (isTargetEmpty) {
+              handleEmptyFrameClick(panelIdx);
+            }
+          }}
+          className={`acrylic-frame-container relative w-full ${effectiveAspectClass} ${shapeRadius} bg-white overflow-hidden transition-all select-none border-2 ${
+            isActive
+              ? 'border-[#0E4A93] ring-4 ring-[#0E4A93]/30 z-20'
+              : 'border-stone-300 hover:border-stone-400 z-10'
+          } ${isTargetEmpty ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
+          style={{
+            clipPath: shapeClip,
+            WebkitClipPath: shapeClip,
+            ...containerAspectStyle
+          }}
+        >
         {/* Optical Acrylic Gloss Overlay */}
         {selectedFinishId === 'high-gloss' && (
           <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-transparent pointer-events-none z-20" />
@@ -935,7 +996,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
           /* STRICTLY MINIMAL EMPTY FRAME: ONLY THE UPLOAD ICON (Rule 15) */
           <div 
             className="w-full h-full flex items-center justify-center bg-stone-50/70 hover:bg-stone-100/90 transition-colors cursor-pointer group"
-            title="Click to upload photo for this frame"
           >
             <div className="w-11 h-11 rounded-full bg-white shadow-sm border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:border-[#0E4A93]/40 group-hover:scale-110 transition-all">
               <Upload className="w-5 h-5 stroke-[2.2]" />
@@ -943,6 +1003,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           </div>
         )}
       </div>
+    </div>
     );
   };
 
@@ -1014,10 +1075,14 @@ export const AcrylicCustomizerPage: React.FC = () => {
           
           <div className="h-5 w-px bg-white/20 hidden sm:block" />
           
-          {/* Canvas India Logo directly on header background without white card */}
+          {/* Canvas India Original Logo directly on header background without white box (Section 1 & 24) */}
           <div className="flex items-center gap-2">
-            <CanvasIndiaLogo className="h-6 w-auto brightness-0 invert" />
-            <span className="text-sm font-bold tracking-tight text-white hidden md:inline">
+            <img 
+              src="/canvas-india-official-logo.png" 
+              alt="Canvas India" 
+              className="h-7 sm:h-8 w-auto object-contain shrink-0" 
+            />
+            <span className="text-xs sm:text-sm font-bold tracking-tight text-white hidden md:inline">
               Customizer
             </span>
           </div>
@@ -1061,6 +1126,34 @@ export const AcrylicCustomizerPage: React.FC = () => {
           </button>
         </div>
       </header>
+
+      {/* SVG Global ClipPath Mask Definitions for 23 Acrylic Shapes (Section 7) */}
+      <svg width="0" height="0" className="absolute pointer-events-none opacity-0" aria-hidden="true">
+        <defs>
+          <clipPath id="acrylic-clip-shape-heart" clipPathUnits="objectBoundingBox">
+            <path d="M 0.5,0.85 C 0.12,0.58 0.02,0.38 0.02,0.24 C 0.02,0.08 0.14,0.02 0.28,0.02 C 0.38,0.02 0.46,0.08 0.5,0.18 C 0.54,0.08 0.62,0.02 0.72,0.02 C 0.86,0.02 0.98,0.08 0.98,0.24 C 0.98,0.38 0.88,0.58 0.5,0.85 Z" />
+          </clipPath>
+          <clipPath id="acrylic-clip-shape-arch" clipPathUnits="objectBoundingBox">
+            <path d="M 0,1 L 0,0.4 C 0,0.15 0.22,0 0.5,0 C 0.78,0 1,0.15 1,0.4 L 1,1 Z" />
+          </clipPath>
+          <clipPath id="acrylic-clip-shape-cloud" clipPathUnits="objectBoundingBox">
+            <path d="M 0.17,0.7 C 0.08,0.7 0.02,0.6 0.05,0.5 C 0.02,0.38 0.14,0.28 0.26,0.3 C 0.33,0.14 0.55,0.12 0.65,0.22 C 0.75,0.14 0.93,0.18 0.96,0.32 C 1.05,0.36 1.05,0.52 0.98,0.62 C 1.02,0.7 0.94,0.72 0.88,0.7 Z" />
+          </clipPath>
+          <clipPath id="acrylic-clip-shape-speech-bubble" clipPathUnits="objectBoundingBox">
+            <path d="M 0.05,0.05 L 0.95,0.05 C 0.98,0.05 1,0.08 1,0.12 L 1,0.68 C 1,0.72 0.98,0.75 0.95,0.75 L 0.45,0.75 L 0.15,0.98 L 0.22,0.75 L 0.05,0.75 C 0.02,0.75 0,0.72 0,0.68 L 0,0.12 C 0,0.08 0.02,0.05 0.05,0.05 Z" />
+          </clipPath>
+          <clipPath id="acrylic-clip-shape-ticket" clipPathUnits="objectBoundingBox">
+            <path d="M 0,0 L 1,0 L 1,0.38 C 0.94,0.38 0.9,0.43 0.9,0.5 C 0.9,0.57 0.94,0.62 1,0.62 L 1,1 L 0,1 L 0,0.62 C 0.06,0.62 0.1,0.57 0.1,0.5 C 0.1,0.43 0.06,0.38 0,0.38 Z" />
+          </clipPath>
+          <clipPath id="acrylic-clip-shape-scalloped" clipPathUnits="objectBoundingBox">
+            <path d="M 0.5,0.02 C 0.56,0.02 0.62,0.06 0.65,0.12 C 0.71,0.08 0.78,0.09 0.82,0.15 C 0.88,0.14 0.93,0.19 0.94,0.25 C 1,0.28 1.01,0.36 0.98,0.41 C 1.02,0.47 1,0.54 0.95,0.59 C 0.98,0.65 0.94,0.73 0.88,0.76 C 0.88,0.83 0.82,0.88 0.75,0.88 C 0.71,0.94 0.64,0.96 0.58,0.94 C 0.52,0.99 0.45,0.98 0.4,0.94 C 0.35,0.97 0.27,0.94 0.24,0.88 C 0.17,0.87 0.12,0.81 0.12,0.74 C 0.06,0.71 0.03,0.63 0.05,0.57 C 0.01,0.51 0.01,0.43 0.05,0.38 C 0.03,0.31 0.06,0.24 0.13,0.22 C 0.14,0.15 0.21,0.11 0.28,0.12 C 0.33,0.06 0.41,0.05 0.47,0.1 C 0.5,0.04 0.45,0.02 0.5,0.02 Z" />
+          </clipPath>
+          <clipPath id="acrylic-clip-shape-organic-blob" clipPathUnits="objectBoundingBox">
+            <path d="M 0.5,0.02 C 0.78,0 0.98,0.18 0.98,0.45 C 0.98,0.75 0.8,0.98 0.52,0.96 C 0.25,0.94 0.02,0.78 0.02,0.5 C 0.02,0.22 0.22,0.04 0.5,0.02 Z" />
+          </clipPath>
+        </defs>
+      </svg>
+
 
       {/* Save Notification Toast */}
       {saveToast && (
@@ -1131,9 +1224,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </h2>
             <span className="text-[11px] font-semibold text-stone-500">
               {activeTab === 'PRODUCTS' && '7 Styles'}
-              {activeTab === 'SELECT SIZE' && `${filteredSizes.length} Options`}
+              {activeTab === 'SELECT SIZE' && `${shapeSizes.length} Options`}
               {activeTab === 'LAYOUTS & DESIGNS' && `${LAYOUT_PRESETS.length} Layouts`}
-              {activeTab === 'SHAPE' && '5 Shapes'}
+              {activeTab === 'SHAPE' && `${ACRYLIC_SHAPES.length} Shapes`}
               {activeTab === 'WRAP & BORDER' && '4 Edges'}
               {activeTab === 'HARDWARE & FINISH' && 'Hardware'}
               {activeTab === 'OPTIONS' && 'Specifications'}
@@ -1275,40 +1368,44 @@ export const AcrylicCustomizerPage: React.FC = () => {
           {/* TAB 3: SELECT SIZE */}
           {activeTab === 'SELECT SIZE' && (
             <div className="p-3.5 space-y-3">
-              <div className="flex gap-1 overflow-x-auto pb-1">
-                {(['RECOMMENDED', 'SQUARE', 'PANORAMIC', 'LARGE'] as SizeCategory[]).map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => {
-                      setSizeCategory(cat);
-                      setIsCustomSize(false);
-                    }}
-                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap transition-colors cursor-pointer ${
-                      sizeCategory === cat && !isCustomSize
-                        ? 'bg-[#0E4A93] text-white'
-                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-stone-800 uppercase tracking-wider">
+                  {currentShape.name} Sizes
+                </span>
+                <span className="text-[11px] font-bold text-[#0E4A93]">
+                  {shapeSizes.length} Available
+                </span>
+              </div>
+
+              {/* Subtabs: Preset Sizes vs Custom Dimensions */}
+              <div className="flex gap-1 bg-stone-100 p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setIsCustomSize(false)}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+                    !isCustomSize
+                      ? 'bg-white text-[#0E4A93] shadow-sm'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  PRESET SIZES
+                </button>
                 <button
                   type="button"
                   onClick={() => setIsCustomSize(true)}
-                  className={`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap transition-colors cursor-pointer ${
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
                     isCustomSize
-                      ? 'bg-[#0E4A93] text-white'
-                      : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                      ? 'bg-white text-[#0E4A93] shadow-sm'
+                      : 'text-stone-600 hover:text-stone-900'
                   }`}
                 >
-                  CUSTOM
+                  CUSTOM SIZE
                 </button>
               </div>
 
               {!isCustomSize ? (
-                <div className="grid grid-cols-2 gap-2.5">
-                  {filteredSizes.map((size) => {
+                <div className="grid grid-cols-2 gap-2.5 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
+                  {shapeSizes.map((size) => {
                     const isSelected = selectedSizeId === size.id && !isCustomSize;
                     return (
                       <div
@@ -1316,6 +1413,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
                         onClick={() => {
                           setSelectedSizeId(size.id);
                           setIsCustomSize(false);
+                          setCustomWidth(size.widthInches);
+                          setCustomHeight(size.heightInches);
                         }}
                         className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
                           isSelected
@@ -1350,34 +1449,62 @@ export const AcrylicCustomizerPage: React.FC = () => {
                   })}
                 </div>
               ) : (
-                <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 space-y-3">
-                  <div className="text-xs font-bold text-stone-800">Set Custom Dimensions:</div>
-                  <div className="grid grid-cols-2 gap-2">
+                <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200 space-y-3">
+                  <div className="text-xs font-bold text-stone-800">Custom Dimensions:</div>
+                  {currentShape.isSingleDimension ? (
                     <div>
-                      <label className="text-[10px] font-bold text-stone-500 block mb-1">WIDTH (INCHES)</label>
+                      <label className="text-[10px] font-bold text-stone-500 block mb-1 uppercase">
+                        DIAMETER / SIZE (INCHES)
+                      </label>
                       <input
                         type="number"
-                        min={6}
-                        max={60}
+                        min={4}
+                        max={48}
                         value={customWidth}
-                        onChange={(e) => setCustomWidth(Math.max(6, Math.min(60, Number(e.target.value))))}
-                        className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs font-bold text-stone-900"
+                        onChange={(e) => {
+                          const val = Math.max(4, Math.min(48, Number(e.target.value) || 4));
+                          setCustomWidth(val);
+                          setCustomHeight(val);
+                        }}
+                        className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
                       />
+                      <div className="text-[10px] text-stone-500 mt-1">Min 4", Max 48" for symmetrical laser cuts</div>
                     </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-stone-500 block mb-1">HEIGHT (INCHES)</label>
-                      <input
-                        type="number"
-                        min={6}
-                        max={60}
-                        value={customHeight}
-                        onChange={(e) => setCustomHeight(Math.max(6, Math.min(60, Number(e.target.value))))}
-                        className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs font-bold text-stone-900"
-                      />
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] font-bold text-stone-500 block mb-1 uppercase">WIDTH (INCHES)</label>
+                        <input
+                          type="number"
+                          min={4}
+                          max={60}
+                          value={customWidth}
+                          onChange={(e) => {
+                            const val = Math.max(4, Math.min(60, Number(e.target.value) || 4));
+                            setCustomWidth(val);
+                          }}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-stone-500 block mb-1 uppercase">HEIGHT (INCHES)</label>
+                        <input
+                          type="number"
+                          min={4}
+                          max={60}
+                          value={customHeight}
+                          onChange={(e) => {
+                            const val = Math.max(4, Math.min(60, Number(e.target.value) || 4));
+                            setCustomHeight(val);
+                          }}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-[11px] text-stone-600 bg-white p-2 rounded-lg border border-stone-200">
-                    Acrylic custom size: <span className="font-bold">{customWidth}" × {customHeight}"</span>
+                  )}
+                  <div className="text-[11px] text-stone-700 bg-white p-2.5 rounded-lg border border-stone-200 flex items-center justify-between">
+                    <span>Dimension: <strong className="text-stone-900">{currentDimensionLabel}</strong></span>
+                    <span className="text-[#0E4A93] font-black">₹{Math.max(399, Math.round(customWidth * customHeight * 4.5))}</span>
                   </div>
                 </div>
               )}
@@ -1553,30 +1680,58 @@ export const AcrylicCustomizerPage: React.FC = () => {
           )}
 
           {/* =============================================================== */}
-          {/* TAB 5: SHAPE (NEW: Section 4 & 5)                                */}
+          {/* TAB 5: SHAPE (Full 23 Shapes Suite: Section 4, 5, 6 & 13)         */}
           {/* =============================================================== */}
           {activeTab === 'SHAPE' && (
             <div className="p-3.5 space-y-3">
-              <div>
-                <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-1">
-                  Acrylic Shape
-                </h3>
-                <p className="text-[11px] text-stone-500">
-                  Select a precision-cut acrylic shape for your custom display.
-                </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-0.5">
+                    Acrylic Shapes
+                  </h3>
+                  <p className="text-[10px] text-stone-500">
+                    Select laser-cut shape. Instant canvas masking.
+                  </p>
+                </div>
+                <span className="text-[11px] font-bold text-[#0E4A93]">
+                  {ACRYLIC_SHAPES.length} Shapes
+                </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5">
-                {ACRYLIC_SHAPES.map((shape) => {
+              {/* Category Filter Chips */}
+              <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar">
+                {(['ALL', 'BASIC', 'SPECIAL', 'DECORATIVE'] as const).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setShapeFilterCategory(cat)}
+                    className={`text-[10px] font-bold px-2 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                      shapeFilterCategory === cat
+                        ? 'bg-[#0E4A93] text-white'
+                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                    }`}
+                  >
+                    {cat} {cat === 'ALL' ? `(${ACRYLIC_SHAPES.length})` : `(${ACRYLIC_SHAPES.filter(s => s.category.toUpperCase() === cat).length})`}
+                  </button>
+                ))}
+              </div>
+
+              {/* Grid of 23 Shape Cards with Image Thumbnails */}
+              <div className="grid grid-cols-2 gap-2.5 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
+                {filteredShapes.map((shape) => {
                   const isSelected = selectedShapeId === shape.id;
+                  const isSupported = !selectedProductType.supportedShapeIds || selectedProductType.supportedShapeIds.includes(shape.id);
+
                   return (
                     <div
                       key={shape.id}
-                      onClick={() => setSelectedShapeId(shape.id)}
+                      onClick={() => handleSelectShape(shape.id)}
                       className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
                         isSelected
-                          ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
-                          : 'border-stone-200 hover:border-stone-400 bg-white'
+                          ? 'border-[#0E4A93] bg-blue-50/25 shadow-sm ring-1 ring-[#0E4A93]/20'
+                          : isSupported
+                          ? 'border-stone-200 hover:border-stone-400 bg-white'
+                          : 'border-stone-200 bg-stone-50/80 opacity-60 hover:opacity-100'
                       }`}
                     >
                       {isSelected && (
@@ -1585,7 +1740,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                         </div>
                       )}
 
-                      <div className="w-full h-18 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
+                      <div className="w-full h-20 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
                         <img 
                           src={shape.image} 
                           alt={shape.name} 
@@ -1594,11 +1749,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
                       </div>
 
                       <div className="p-2 bg-white border-t border-stone-100 text-center">
-                        <div className="text-xs font-bold text-stone-900 leading-tight">
+                        <div className="text-xs font-bold text-stone-900 leading-tight truncate">
                           {shape.name}
                         </div>
-                        <div className="text-[10px] text-stone-500 mt-0.5 line-clamp-1">
-                          {shape.description}
+                        <div className="text-[10px] font-semibold text-stone-500 mt-0.5">
+                          {shape.priceAddon ? `+₹${shape.priceAddon}` : 'Included'}
                         </div>
                       </div>
                     </div>
