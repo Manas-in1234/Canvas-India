@@ -110,10 +110,21 @@ export const Homepage: React.FC<HomepageProps> = ({
       {/* ========================================================================= */}
       {/* 1. HERO SECTION (Georgia Italic Headline, Light clean background, Unboxed)*/}
       {/* ========================================================================= */}
-      <section className="bg-gradient-to-b from-[#F7F9FC] to-[#F1F5FA] py-10 sm:py-14 lg:py-16 border-b border-stone-200/80">
-        <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
+      <section className="relative overflow-hidden py-10 sm:py-14 lg:py-16 border-b border-stone-200/80">
+        {/* Background photograph, softened behind a light gradient wash */}
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1615529182904-14819c35db37?w=1800&auto=format&fit=crop&q=80"
+            alt=""
+            aria-hidden="true"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#F7F9FC] via-[#F7F9FC]/92 to-[#F1F5FA]/55" />
+        </div>
+
+        <div className="relative z-10 w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-            
+
             {/* Left Column: 55% (Editorial Typography, CTAs, Process) */}
             <div className="lg:col-span-7 space-y-4 sm:space-y-5 text-left">
               <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#E8752A] tracking-wider uppercase bg-orange-50 px-3 py-1 rounded-full border border-orange-200/60">
