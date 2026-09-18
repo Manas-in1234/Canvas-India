@@ -45,6 +45,7 @@ export const SHAPE_TABS: ShapeTab[] = [
   { slug: 'capsule', name: 'Capsule' },
   { slug: 'cloud', name: 'Cloud' },
   { slug: 'scalloped', name: 'Scalloped' },
+  { slug: 'ticket', name: 'Ticket' },
   { slug: 'tag', name: 'Tag' },
   { slug: 'polaroid', name: 'Polaroid' },
   { slug: 'speech-bubble', name: 'Speech Bubble' },

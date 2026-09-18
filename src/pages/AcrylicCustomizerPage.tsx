@@ -70,40 +70,33 @@ import {
   THICKNESS_OPTIONS,
   PAPER_OPTIONS,
   FONT_OPTIONS,
-  TEXT_COLOR_PRESETS,
-  CLIPART_CATEGORIES
+  TEXT_COLOR_PRESETS
 } from '../data/acrylicCustomizerData';
+import { AcrylicLiveTextEditor, TextElement } from '../components/AcrylicLiveTextEditor';
+import { AcrylicClipartModal, ClipartElement } from '../components/AcrylicClipartModal';
+import { AcrylicRoomViewModal } from '../components/AcrylicRoomViewModal';
+import { ClipartItem } from '../data/acrylicClipartData';
 
 // ============================================================================
 // COMPONENT TYPES
 // ============================================================================
 
-export interface TextElement {
-  id: string;
-  text: string;
-  fontFamily: string;
-  fontSize: number;
-  color: string;
-  x: number; // % offset from center (-42 to 42)
-  y: number; // % offset from center (-42 to 42)
-  alignment: 'left' | 'center' | 'right';
-}
-
-export interface ClipartElement {
-  id: string;
-  emoji: string;
-  x: number; // % offset from center (-42 to 42)
-  y: number; // % offset from center (-42 to 42)
-  scale: number; // 0.6 to 2.5
-  rotation: number; // 0, 90, 180, 270
+export interface UploadedImageMeta {
+  file?: File;
+  src: string;
+  naturalWidth: number;
+  naturalHeight: number;
+  aspectRatio: number;
 }
 
 export interface PanelImageState {
   imageUrl: string | null;
+  uploadedImage?: UploadedImageMeta | null;
   panX: number;
   panY: number;
   scale: number;
   rotation: number;
+  fitMode: 'contain' | 'cover';
   filter: ColorFilterType;
   textElements: TextElement[];
   clipartElements: ClipartElement[];
@@ -119,10 +112,12 @@ export interface SelectedElement {
 
 const createDefaultPanelState = (imageUrl: string | null = null): PanelImageState => ({
   imageUrl,
+  uploadedImage: null,
   panX: 0,
   panY: 0,
   scale: 1,
   rotation: 0,
+  fitMode: 'contain',
   filter: 'original',
   textElements: [],
   clipartElements: []
@@ -421,7 +416,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     singleFileInputRef.current?.click();
   };
 
-  // Single file picker change
+  // Single file picker change (Non-Destructive Full Image Preservation)
   const handleSingleFileChange = (file: File | null) => {
     if (!file) return;
     const targetIdx = uploadTargetPanelRef.current;
@@ -435,49 +430,105 @@ export const AcrylicCustomizerPage: React.FC = () => {
     reader.onload = (e) => {
       const result = e.target?.result as string;
       if (result) {
-        updateFrame(targetIdx, (curr) => ({
-          ...curr,
-          imageUrl: result,
-          panX: 0,
-          panY: 0,
-          scale: 1,
-          rotation: 0
-        }));
-        setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
-        setActivePanelIndex(targetIdx);
-        setSelectedElement({ type: 'image', panelIndex: targetIdx });
-        setValidationWarning(null);
+        const img = new Image();
+        img.onload = () => {
+          const naturalWidth = img.naturalWidth || 800;
+          const naturalHeight = img.naturalHeight || 600;
+          const aspectRatio = naturalWidth / naturalHeight;
+
+          updateFrame(targetIdx, (curr) => ({
+            ...curr,
+            imageUrl: result,
+            uploadedImage: {
+              file,
+              src: result,
+              naturalWidth,
+              naturalHeight,
+              aspectRatio
+            },
+            panX: 0,
+            panY: 0,
+            scale: 1,
+            rotation: 0,
+            fitMode: 'contain'
+          }));
+          setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
+          setActivePanelIndex(targetIdx);
+          setSelectedElement({ type: 'image', panelIndex: targetIdx });
+          setValidationWarning(null);
+        };
+        img.onerror = () => {
+          updateFrame(targetIdx, (curr) => ({
+            ...curr,
+            imageUrl: result,
+            panX: 0,
+            panY: 0,
+            scale: 1,
+            rotation: 0,
+            fitMode: 'contain'
+          }));
+          setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
+        };
+        img.src = result;
       }
     };
     reader.readAsDataURL(file);
   };
 
-  // Multiple files upload to session gallery
+  // Multiple files upload to session gallery with natural dimensions
   const handleGalleryUpload = (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const readers: Promise<string>[] = [];
+    const readers: Promise<{ result: string; file: File; naturalWidth: number; naturalHeight: number; aspectRatio: number } | null>[] = [];
 
     Array.from(files).forEach((file) => {
       if (file.size <= 25 * 1024 * 1024) {
-        const promise = new Promise<string>((resolve) => {
+        const promise = new Promise<{ result: string; file: File; naturalWidth: number; naturalHeight: number; aspectRatio: number } | null>((resolve) => {
           const reader = new FileReader();
           reader.onload = (e) => {
             const result = e.target?.result as string;
-            if (result) resolve(result);
+            if (result) {
+              const img = new Image();
+              img.onload = () => {
+                const naturalWidth = img.naturalWidth || 800;
+                const naturalHeight = img.naturalHeight || 600;
+                resolve({ result, file, naturalWidth, naturalHeight, aspectRatio: naturalWidth / naturalHeight });
+              };
+              img.onerror = () => resolve({ result, file, naturalWidth: 800, naturalHeight: 600, aspectRatio: 1.33 });
+              img.src = result;
+            } else {
+              resolve(null);
+            }
           };
+          reader.onerror = () => resolve(null);
           reader.readAsDataURL(file);
         });
         readers.push(promise);
       }
     });
 
-    Promise.all(readers).then((newPhotos) => {
+    Promise.all(readers).then((items) => {
+      const validItems = items.filter((item): item is NonNullable<typeof item> => !!item);
+      const newPhotos = validItems.map((v) => v.result);
       setUploadedPhotos((prev) => [...newPhotos, ...prev]);
+
       // If current active frame is empty, populate it with the first uploaded image
-      if (!panelImages[activePanelIndex]?.imageUrl && newPhotos[0]) {
+      if (!panelImages[activePanelIndex]?.imageUrl && validItems[0]) {
+        const first = validItems[0];
         updateFrame(activePanelIndex, (curr) => ({
           ...curr,
-          imageUrl: newPhotos[0]
+          imageUrl: first.result,
+          uploadedImage: {
+            file: first.file,
+            src: first.result,
+            naturalWidth: first.naturalWidth,
+            naturalHeight: first.naturalHeight,
+            aspectRatio: first.aspectRatio
+          },
+          panX: 0,
+          panY: 0,
+          scale: 1,
+          rotation: 0,
+          fitMode: 'contain'
         }));
       }
     });
@@ -693,19 +744,22 @@ export const AcrylicCustomizerPage: React.FC = () => {
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
-  // Add new Text to active frame
-  const handleAddText = () => {
-    if (!textInput.trim()) return;
+  // Add new Text to active frame (Real-time, instant placement)
+  const handleAddNewText = () => {
     const newId = `text-${Date.now()}`;
     const newText: TextElement = {
       id: newId,
-      text: textInput,
-      fontFamily: selectedFontFamily,
-      fontSize: selectedFontSize,
-      color: selectedTextColor,
+      text: 'Happy Birthday!',
+      fontFamily: '"Playfair Display", Georgia, serif',
+      fontSize: 28,
+      fontWeight: 'bold',
+      color: '#FFFFFF',
+      alignment: 'center',
+      lineHeight: 1.2,
+      letterSpacing: 0,
+      rotation: 0,
       x: 0,
-      y: 0,
-      alignment: textAlignment
+      y: 0
     };
 
     updateFrame(activePanelIndex, (curr) => ({
@@ -714,16 +768,62 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }));
 
     setSelectedElement({ type: 'text', panelIndex: activePanelIndex, elementId: newId });
-    setTextInput('');
-    setShowTextModal(false);
+    setShowTextModal(true);
   };
 
-  // Add Clipart to active frame
-  const handleAddClipart = (emoji: string) => {
+  // Real-time text properties update (live sync)
+  const handleUpdateActiveText = (updates: Partial<TextElement>) => {
+    if (selectedElement.type !== 'text' || !selectedElement.elementId) return;
+    const panelIdx = selectedElement.panelIndex;
+    updateFrame(panelIdx, (curr) => ({
+      ...curr,
+      textElements: curr.textElements.map((t) =>
+        t.id === selectedElement.elementId ? { ...t, ...updates } : t
+      )
+    }));
+  };
+
+  // Duplicate active text element
+  const handleDuplicateActiveText = () => {
+    if (selectedElement.type !== 'text' || !selectedElement.elementId) return;
+    const panelIdx = selectedElement.panelIndex;
+    const source = panelImages[panelIdx]?.textElements.find((t) => t.id === selectedElement.elementId);
+    if (!source) return;
+    const newId = `text-${Date.now()}`;
+    const copyText: TextElement = {
+      ...source,
+      id: newId,
+      x: Math.min(42, source.x + 4),
+      y: Math.min(42, source.y + 4)
+    };
+    updateFrame(panelIdx, (curr) => ({
+      ...curr,
+      textElements: [...curr.textElements, copyText]
+    }));
+    setSelectedElement({ type: 'text', panelIndex: panelIdx, elementId: newId });
+  };
+
+  // Delete active text element
+  const handleDeleteActiveText = () => {
+    if (selectedElement.type !== 'text' || !selectedElement.elementId) return;
+    const panelIdx = selectedElement.panelIndex;
+    updateFrame(panelIdx, (curr) => ({
+      ...curr,
+      textElements: curr.textElements.filter((t) => t.id !== selectedElement.elementId)
+    }));
+    setSelectedElement({ type: 'image', panelIndex: panelIdx });
+  };
+
+  // Add Clipart item to active frame (Real-time, instant placement)
+  const handleAddClipartItem = (item: ClipartItem) => {
     const newId = `clipart-${Date.now()}`;
     const newClip: ClipartElement = {
       id: newId,
-      emoji,
+      clipartId: item.id,
+      name: item.name,
+      svgPath: item.svgPath,
+      viewBox: item.viewBox,
+      color: item.defaultColor || '#D4AF37',
       x: 0,
       y: 0,
       scale: 1.2,
@@ -738,20 +838,70 @@ export const AcrylicCustomizerPage: React.FC = () => {
     setSelectedElement({ type: 'clipart', panelIndex: activePanelIndex, elementId: newId });
   };
 
-  // Delete selected element
+  // Real-time clipart properties update
+  const handleUpdateActiveClipart = (updates: Partial<ClipartElement>) => {
+    if (selectedElement.type !== 'clipart' || !selectedElement.elementId) return;
+    const panelIdx = selectedElement.panelIndex;
+    updateFrame(panelIdx, (curr) => ({
+      ...curr,
+      clipartElements: curr.clipartElements.map((c) =>
+        c.id === selectedElement.elementId ? { ...c, ...updates } : c
+      )
+    }));
+  };
+
+  // Duplicate active clipart
+  const handleDuplicateActiveClipart = () => {
+    if (selectedElement.type !== 'clipart' || !selectedElement.elementId) return;
+    const panelIdx = selectedElement.panelIndex;
+    const source = panelImages[panelIdx]?.clipartElements.find((c) => c.id === selectedElement.elementId);
+    if (!source) return;
+    const newId = `clipart-${Date.now()}`;
+    const copyClip: ClipartElement = {
+      ...source,
+      id: newId,
+      x: Math.min(42, source.x + 4),
+      y: Math.min(42, source.y + 4)
+    };
+    updateFrame(panelIdx, (curr) => ({
+      ...curr,
+      clipartElements: [...curr.clipartElements, copyClip]
+    }));
+    setSelectedElement({ type: 'clipart', panelIndex: panelIdx, elementId: newId });
+  };
+
+  // Delete active clipart
+  const handleDeleteActiveClipart = () => {
+    if (selectedElement.type !== 'clipart' || !selectedElement.elementId) return;
+    const panelIdx = selectedElement.panelIndex;
+    updateFrame(panelIdx, (curr) => ({
+      ...curr,
+      clipartElements: curr.clipartElements.filter((c) => c.id !== selectedElement.elementId)
+    }));
+    setSelectedElement({ type: 'image', panelIndex: panelIdx });
+  };
+
+  // Active element helpers for property inspectors
+  const activeTextElement = useMemo(() => {
+    if (selectedElement.type === 'text' && selectedElement.elementId) {
+      return panelImages[selectedElement.panelIndex]?.textElements.find((t) => t.id === selectedElement.elementId) || null;
+    }
+    return null;
+  }, [selectedElement, panelImages]);
+
+  const activeClipartElement = useMemo(() => {
+    if (selectedElement.type === 'clipart' && selectedElement.elementId) {
+      return panelImages[selectedElement.panelIndex]?.clipartElements.find((c) => c.id === selectedElement.elementId) || null;
+    }
+    return null;
+  }, [selectedElement, panelImages]);
+
+  // Delete selected element (general)
   const handleDeleteSelectedElement = () => {
     if (selectedElement.type === 'text' && selectedElement.elementId) {
-      updateFrame(selectedElement.panelIndex, (curr) => ({
-        ...curr,
-        textElements: curr.textElements.filter((t) => t.id !== selectedElement.elementId)
-      }));
-      setSelectedElement({ type: 'image', panelIndex: selectedElement.panelIndex });
+      handleDeleteActiveText();
     } else if (selectedElement.type === 'clipart' && selectedElement.elementId) {
-      updateFrame(selectedElement.panelIndex, (curr) => ({
-        ...curr,
-        clipartElements: curr.clipartElements.filter((c) => c.id !== selectedElement.elementId)
-      }));
-      setSelectedElement({ type: 'image', panelIndex: selectedElement.panelIndex });
+      handleDeleteActiveClipart();
     }
   };
 
@@ -800,7 +950,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     setSelectedElement({ type: 'image', panelIndex: 0 });
   };
 
-  // Save customization to local storage
+  // Save customization to local storage (Section 24)
   const handleSaveDesign = () => {
     const designPayload = {
       productId: catalogProduct?.id || productId,
@@ -827,7 +977,23 @@ export const AcrylicCustomizerPage: React.FC = () => {
     setTimeout(() => setSaveToast(null), 3500);
   };
 
-  // Add to Cart
+  // Restore saved design from localStorage on initial mount if available
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`canvas_india_acrylic_custom_${productId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.panelImages) setPanelImages(parsed.panelImages);
+        if (parsed.selectedFinishId) setSelectedFinishId(parsed.selectedFinishId);
+        if (parsed.selectedHardwareId) setSelectedHardwareId(parsed.selectedHardwareId);
+        if (parsed.selectedThicknessId) setSelectedThicknessId(parsed.selectedThicknessId);
+      }
+    } catch (e) {
+      console.error('Failed to restore saved design', e);
+    }
+  }, [productId]);
+
+  // Add to Cart with full customization metadata (Section 25)
   const handleAddToCart = () => {
     const hasAnyPhoto = Object.values(panelImages).some((p) => !!p.imageUrl);
     if (!hasAnyPhoto) {
@@ -839,6 +1005,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
     if (onAddToCartCustomized && catalogProduct) {
       const primaryPhoto = Object.values(panelImages).find((p) => !!p.imageUrl)?.imageUrl || catalogProduct.image;
+      const activeFrame = panelImages[activePanelIndex] || createDefaultPanelState(null);
+
       onAddToCartCustomized({
         product: catalogProduct,
         quantity: 1,
@@ -857,7 +1025,27 @@ export const AcrylicCustomizerPage: React.FC = () => {
           frame: FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name,
           edgeWrap: ACRYLIC_EDGE_WRAPS.find((w) => w.id === selectedEdgeWrapId)?.name,
           thickness: THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label,
-          border: ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.label
+          border: ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.label,
+          textElements: activeFrame.textElements.map((t) => ({
+            text: t.text,
+            font: t.fontFamily,
+            color: t.color,
+            fontSize: t.fontSize,
+            alignment: t.alignment
+          })),
+          clipartElements: activeFrame.clipartElements.map((c) => ({
+            name: c.name,
+            scale: c.scale,
+            rotation: c.rotation,
+            color: c.color
+          })),
+          imageTransforms: {
+            panX: activeFrame.panX,
+            panY: activeFrame.panY,
+            scale: activeFrame.scale,
+            rotation: activeFrame.rotation,
+            fitMode: activeFrame.fitMode
+          }
         }
       });
       navigate('/cart');
@@ -1002,12 +1190,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 transform: `translate3d(${frame.panX || 0}px, ${frame.panY || 0}px, 0) scale(${frame.scale || 1}) rotate(${frame.rotation || 0}deg)`,
                 transformOrigin: 'center center',
                 filter: filterCss,
+                objectFit: frame.fitMode === 'contain' ? 'contain' : 'cover',
                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'
               }}
-              className="max-w-none w-full h-full object-cover pointer-events-none select-none"
+              className="max-w-none w-full h-full pointer-events-none select-none"
             />
 
-            {/* Draggable Text Elements */}
+            {/* Draggable & Editable Text Elements (Live Canvas Interaction) */}
             {frame.textElements?.map((txt) => {
               const isTextSelected =
                 selectedElement.type === 'text' &&
@@ -1027,21 +1216,31 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     e.stopPropagation();
                     setActivePanelIndex(panelIdx);
                     setSelectedElement({ type: 'text', panelIndex: panelIdx, elementId: txt.id });
+                    setShowTextModal(true);
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    setActivePanelIndex(panelIdx);
+                    setSelectedElement({ type: 'text', panelIndex: panelIdx, elementId: txt.id });
+                    setShowTextModal(true);
                   }}
                   style={{
                     position: 'absolute',
                     left: `${50 + txt.x}%`,
                     top: `${50 + txt.y}%`,
-                    transform: 'translate(-50%, -50%)',
+                    transform: `translate(-50%, -50%) rotate(${txt.rotation || 0}deg)`,
                     fontFamily: txt.fontFamily,
                     fontSize: `${txt.fontSize}px`,
+                    fontWeight: txt.fontWeight || 'bold',
                     color: txt.color,
                     textAlign: txt.alignment,
+                    lineHeight: txt.lineHeight || 1.2,
+                    letterSpacing: `${txt.letterSpacing || 0}px`,
                     whiteSpace: 'pre-line'
                   }}
-                  className={`z-30 cursor-move px-2 py-1 select-none transition-shadow rounded ${
+                  className={`z-30 cursor-move px-2.5 py-1 select-none transition-all rounded-lg ${
                     isTextSelected
-                      ? 'ring-2 ring-[#0E4A93] bg-black/40 backdrop-blur-xs'
+                      ? 'ring-2 ring-[#0E4A93] bg-black/45 backdrop-blur-xs shadow-xl'
                       : 'hover:ring-1 hover:ring-white/80'
                   }`}
                 >
@@ -1050,7 +1249,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               );
             })}
 
-            {/* Draggable Clipart Elements */}
+            {/* Draggable & Editable Clipart Elements (Live Visual SVG System) */}
             {frame.clipartElements?.map((clip) => {
               const isClipSelected =
                 selectedElement.type === 'clipart' &&
@@ -1076,16 +1275,24 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     left: `${50 + clip.x}%`,
                     top: `${50 + clip.y}%`,
                     transform: `translate(-50%, -50%) scale(${clip.scale}) rotate(${clip.rotation}deg)`,
-                    fontSize: '28px',
-                    lineHeight: '1'
+                    color: clip.color || '#D4AF37'
                   }}
-                  className={`z-30 cursor-move p-1 select-none rounded transition-shadow ${
+                  className={`z-30 cursor-move p-1.5 select-none rounded-xl transition-all flex items-center justify-center ${
                     isClipSelected
-                      ? 'ring-2 ring-[#0E4A93] bg-black/40 backdrop-blur-xs'
+                      ? 'ring-2 ring-[#0E4A93] bg-black/45 backdrop-blur-xs shadow-xl'
                       : 'hover:ring-1 hover:ring-white/80'
                   }`}
                 >
-                  {clip.emoji}
+                  {clip.svgPath ? (
+                    <div 
+                      className="w-9 h-9 flex items-center justify-center"
+                      dangerouslySetInnerHTML={{
+                        __html: `<svg viewBox="${clip.viewBox || '0 0 24 24'}" width="34" height="34" fill="currentColor">${clip.svgPath}</svg>`
+                      }}
+                    />
+                  ) : (
+                    <span className="text-3xl leading-none">{(clip as any).emoji || '⭐'}</span>
+                  )}
                 </div>
               );
             })}
@@ -2212,13 +2419,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
               {/* ADD TEXT */}
               <button
                 type="button"
-                onClick={() => setShowTextModal(!showTextModal)}
+                onClick={handleAddNewText}
                 className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
                   showTextModal
                     ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
                     : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
                 }`}
-                title="Add custom typography and lyrics"
+                title="Add custom typography and lyrics with live real-time editing"
               >
                 <Type className="w-3.5 h-3.5" />
                 <span>ADD TEXT</span>
@@ -2233,7 +2440,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
                     : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
                 }`}
-                title="Add stickers and clipart"
+                title="Add visual vector stickers and clipart across 12 categories"
               >
                 <Smile className="w-3.5 h-3.5" />
                 <span>ADD CLIPART</span>
@@ -2242,13 +2449,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
               {/* ROOM VIEW */}
               <button
                 type="button"
-                onClick={() => setShowRoomView(!showRoomView)}
+                onClick={() => setShowRoomView(true)}
                 className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
                   showRoomView
                     ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
                     : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
                 }`}
-                title="Preview in realistic room interior"
+                title="Preview on wall with custom room image upload and positioning"
               >
                 <Eye className="w-3.5 h-3.5" />
                 <span>ROOM VIEW</span>
@@ -2273,143 +2480,40 @@ export const AcrylicCustomizerPage: React.FC = () => {
           {/* =============================================================== */}
           {/* FLOATING ADD TEXT TOOLBAR / MODAL                                */}
           {/* =============================================================== */}
+          {/* LIVE REAL-TIME TEXT EDITOR COMPONENT (Section 1 & 2) */}
           {showTextModal && (
-            <div className="absolute top-14 right-4 z-40 bg-white border border-stone-300 rounded-2xl shadow-2xl p-4 w-80 animate-in fade-in slide-in-from-top-2">
-              <div className="flex items-center justify-between pb-2 border-b border-stone-100 mb-3">
-                <div className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
-                  <Type className="w-4 h-4 text-[#0E4A93]" />
-                  <span>Add Typography</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowTextModal(false)}
-                  className="text-stone-400 hover:text-stone-700 p-0.5 rounded"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="text-[10px] font-bold text-stone-500 uppercase block mb-1">Your Text / Lyrics</label>
-                  <textarea
-                    rows={2}
-                    value={textInput}
-                    onChange={(e) => setTextInput(e.target.value)}
-                    placeholder="Enter custom text or vows..."
-                    className="w-full px-2.5 py-1.5 border border-stone-300 rounded-lg text-xs text-stone-900 focus:outline-none focus:border-[#0E4A93]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10px] font-bold text-stone-500 uppercase block mb-1">Font Style</label>
-                    <select
-                      value={selectedFontFamily}
-                      onChange={(e) => setSelectedFontFamily(e.target.value)}
-                      className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs font-medium text-stone-900"
-                    >
-                      {FONT_OPTIONS.map((f) => (
-                        <option key={f.value} value={f.value}>{f.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-stone-500 uppercase block mb-1">Font Size</label>
-                    <input
-                      type="number"
-                      min={10}
-                      max={72}
-                      value={selectedFontSize}
-                      onChange={(e) => setSelectedFontSize(Number(e.target.value))}
-                      className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs font-bold text-stone-900"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold text-stone-500 uppercase block mb-1">Text Color</label>
-                  <div className="flex gap-2">
-                    {TEXT_COLOR_PRESETS.map((col) => (
-                      <button
-                        key={col.name}
-                        type="button"
-                        onClick={() => setSelectedTextColor(col.hex)}
-                        style={{ backgroundColor: col.hex }}
-                        title={col.name}
-                        className={`w-6 h-6 rounded-full border transition-transform cursor-pointer ${
-                          selectedTextColor === col.hex ? 'border-[#0E4A93] scale-110 ring-2 ring-[#0E4A93]/30' : 'border-stone-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={handleAddText}
-                    className="flex-1 py-2 bg-[#0E4A93] hover:bg-[#0c3e7b] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
-                  >
-                    Add to Canvas
-                  </button>
-                </div>
-              </div>
-            </div>
+            <AcrylicLiveTextEditor
+              activeText={activeTextElement || {
+                id: 'temp',
+                text: 'Your Custom Text',
+                fontFamily: '"Playfair Display", Georgia, serif',
+                fontSize: 28,
+                fontWeight: 'bold',
+                color: '#FFFFFF',
+                alignment: 'center',
+                lineHeight: 1.2,
+                letterSpacing: 0,
+                rotation: 0,
+                x: 0,
+                y: 0
+              }}
+              onUpdateText={handleUpdateActiveText}
+              onDuplicateText={handleDuplicateActiveText}
+              onDeleteText={handleDeleteActiveText}
+              onClose={() => setShowTextModal(false)}
+            />
           )}
 
-          {/* =============================================================== */}
-          {/* FLOATING ADD CLIPART TOOLBAR / MODAL                             */}
-          {/* =============================================================== */}
-          {showClipartModal && (
-            <div className="absolute top-14 right-4 z-40 bg-white border border-stone-300 rounded-2xl shadow-2xl p-4 w-80 animate-in fade-in slide-in-from-top-2">
-              <div className="flex items-center justify-between pb-2 border-b border-stone-100 mb-3">
-                <div className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
-                  <Smile className="w-4 h-4 text-[#E8752A]" />
-                  <span>Select Clipart</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowClipartModal(false)}
-                  className="text-stone-400 hover:text-stone-700 p-0.5 rounded"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Clipart Categories */}
-              <div className="flex gap-1 overflow-x-auto pb-2 mb-2">
-                {Object.keys(CLIPART_CATEGORIES).map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setSelectedClipartCategory(cat)}
-                    className={`text-[10px] font-bold px-2 py-1 rounded-md whitespace-nowrap transition-colors cursor-pointer ${
-                      selectedClipartCategory === cat
-                        ? 'bg-[#0E4A93] text-white'
-                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-
-              {/* Clipart Icons Grid */}
-              <div className="grid grid-cols-5 gap-2 p-2 bg-stone-50 rounded-xl max-h-48 overflow-y-auto">
-                {(CLIPART_CATEGORIES[selectedClipartCategory] || []).map((emoji, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleAddClipart(emoji)}
-                    className="w-10 h-10 bg-white hover:bg-stone-100 border border-stone-200 rounded-lg flex items-center justify-center text-xl hover:scale-110 transition-transform cursor-pointer"
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* VISUAL 12-CATEGORY CLIPART MODAL & CONTROLS (Section 3 & 4) */}
+          <AcrylicClipartModal
+            isOpen={showClipartModal}
+            onClose={() => setShowClipartModal(false)}
+            onAddClipart={handleAddClipartItem}
+            activeClipart={activeClipartElement}
+            onUpdateClipart={handleUpdateActiveClipart}
+            onDuplicateClipart={handleDuplicateActiveClipart}
+            onDeleteClipart={handleDeleteActiveClipart}
+          />
 
                     {/* =============================================================== */}
           {/* CANVAS INTERACTIVE WORKSPACE (Section 13)                         */}
@@ -2523,6 +2627,19 @@ export const AcrylicCustomizerPage: React.FC = () => {
                   </div>
                 )}
 
+                {/* Containment Mode: [ Fit / Fill ] (Section 7) */}
+                <button
+                  type="button"
+                  onClick={() => updateFrame(activePanelIndex, (curr) => ({
+                    ...curr,
+                    fitMode: curr.fitMode === 'cover' ? 'contain' : 'cover'
+                  }))}
+                  className="flex items-center gap-1 text-xs font-bold text-stone-700 hover:text-[#0E4A93] bg-stone-100 hover:bg-stone-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                  title="Toggle between complete uncropped fit and full shape cover"
+                >
+                  <span>{activeFrameState.fitMode === 'cover' ? 'Fit (Contain)' : 'Fill (Cover)'}</span>
+                </button>
+
                 {/* Zoom Controls: [ − ] [ 1.00x ] [ + ] */}
                 <div className="flex items-center gap-1 bg-stone-100 px-1.5 py-0.5 rounded-lg">
                   <button
@@ -2575,6 +2692,18 @@ export const AcrylicCustomizerPage: React.FC = () => {
         </main>
 
       </div>
+
+      {/* REALISTIC ROOM VIEW MODAL (Sections 12 - 20) */}
+      <AcrylicRoomViewModal
+        isOpen={showRoomView}
+        onClose={() => setShowRoomView(false)}
+        productDimensionLabel={currentDimensionLabel}
+        renderProduct={(isRoomView) => (
+          <div className="w-full flex items-center justify-center">
+            {renderFrameContainer(0, currentShape.aspectClass, currentDimensionLabel)}
+          </div>
+        )}
+      />
 
     </div>
   );

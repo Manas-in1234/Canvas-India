@@ -909,11 +909,16 @@ export const PAPER_OPTIONS = [
 ];
 
 export const FONT_OPTIONS = [
-  { label: 'Arial (Modern Sans)', value: 'Arial, sans-serif' },
+  { label: 'Playfair Display (Elegant Serif)', value: '"Playfair Display", Georgia, serif' },
+  { label: 'Montserrat (Modern Geometric)', value: 'Montserrat, sans-serif' },
+  { label: 'Great Vibes (Romantic Script)', value: '"Great Vibes", cursive' },
+  { label: 'Cinzel (Classic Roman)', value: 'Cinzel, serif' },
+  { label: 'Dancing Script (Casual Script)', value: '"Dancing Script", cursive' },
+  { label: 'Oswald (Bold Headline)', value: 'Oswald, sans-serif' },
+  { label: 'Inter (Clean UI Sans)', value: 'Inter, sans-serif' },
   { label: 'Georgia (Classic Serif)', value: 'Georgia, serif' },
   { label: 'Times New Roman (Editorial)', value: '"Times New Roman", Times, serif' },
-  { label: 'Playfair Display (Elegant)', value: '"Playfair Display", serif' },
-  { label: 'Trebuchet MS (Clean Tech)', value: '"Trebuchet MS", sans-serif' },
+  { label: 'Arial (Modern Sans)', value: 'Arial, sans-serif' },
   { label: 'Courier New (Typewriter)', value: '"Courier New", Courier, monospace' },
   { label: 'Verdana (Clean Geometric)', value: 'Verdana, Geneva, sans-serif' }
 ];
@@ -927,6 +932,8 @@ export const TEXT_COLOR_PRESETS = [
   { name: 'Orange', hex: '#E8752A' },
   { name: 'Green', hex: '#16A34A' }
 ];
+
+export * from './acrylicClipartData';
 
 export const CLIPART_CATEGORIES: Record<string, string[]> = {
   'Celebration': ['🎉', '🍾', '🥂', '🎂', '🎈', '🎆', '🎊', '🎇', '🍰', '🥳'],
