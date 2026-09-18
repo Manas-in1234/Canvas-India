@@ -303,10 +303,25 @@ const SIZE_OPTIONS: SizeOption[] = [
 
 const SIZE_CATEGORY_TABS: SizeCategory[] = ['RECOMMENDED', 'SQUARE', 'PANORAMIC', 'LARGE', 'SMALL'];
 
-const COLLAGE_LAYOUTS = [
-  { count: 2, sizeId: 'col-2p-16x8' },
-  { count: 3, sizeId: 'col-3p-18x12' },
-  { count: 4, sizeId: 'col-4p-12x12' }
+type LayoutArrangement = 'single' | 'grid2' | 'grid3' | 'grid4' | 'split3' | 'wall3';
+
+interface LayoutPreset {
+  id: string;
+  label: string;
+  productTypeId: string;
+  sizeId: string;
+  arrangement: LayoutArrangement;
+}
+
+// Universal layout picker: always shown, works from any product — picking one
+// switches to the matching product type + size so the panel count actually changes.
+const LAYOUT_PRESETS: LayoutPreset[] = [
+  { id: 'layout-1', label: '1 Photo', productTypeId: 'canvas-classic', sizeId: 'classic-12x18', arrangement: 'single' },
+  { id: 'layout-2', label: '2 Photos', productTypeId: 'canvas-collage', sizeId: 'col-2p-16x8', arrangement: 'grid2' },
+  { id: 'layout-3', label: '3 Photos', productTypeId: 'canvas-collage', sizeId: 'col-3p-18x12', arrangement: 'grid3' },
+  { id: 'layout-4', label: '4 Photos', productTypeId: 'canvas-collage', sizeId: 'col-4p-12x12', arrangement: 'grid4' },
+  { id: 'layout-split', label: '3-Panel Split', productTypeId: 'canvas-split', sizeId: 'split-3p-36x24', arrangement: 'split3' },
+  { id: 'layout-wall', label: '3-Piece Wall Display', productTypeId: 'canvas-wall-art', sizeId: 'wd-3p-12x18-10x8', arrangement: 'wall3' }
 ];
 
 interface DesignTemplate {
@@ -333,10 +348,10 @@ const DESIGN_TEMPLATES: DesignTemplate[] = [
 ];
 
 const WRAP_OPTIONS = [
-  { id: 'canvas-lite', label: 'Canvas Lite', depth: '0.5"', price: 0 },
-  { id: 'thin-gallery', label: 'Thin Gallery Wrap', depth: '0.75"', price: 130, badge: 'Recommended' },
-  { id: 'thick-gallery', label: 'Thick Gallery Wrap', depth: '1.5"', price: 155, badge: 'Museum Quality' },
-  { id: 'hanging-canvas', label: 'Hanging Canvas', depth: '', price: 85 }
+  { id: 'canvas-lite', label: 'Canvas Lite', depth: '0.5"', depthPx: 6, price: 0 },
+  { id: 'thin-gallery', label: 'Thin Gallery Wrap', depth: '0.75"', depthPx: 10, price: 130, badge: 'Recommended' },
+  { id: 'thick-gallery', label: 'Thick Gallery Wrap', depth: '1.5"', depthPx: 18, price: 155, badge: 'Museum Quality' },
+  { id: 'hanging-canvas', label: 'Hanging Canvas', depth: '', depthPx: 4, price: 85 }
 ];
 
 const HARDWARE_OPTIONS = [
@@ -506,7 +521,7 @@ export const CanvasCustomizerPage: React.FC = () => {
   const [layoutSubTab, setLayoutSubTab] = useState<'DESIGNS' | 'LAYOUTS'>('LAYOUTS');
   const [designCategory, setDesignCategory] = useState<string>(DESIGN_TEMPLATE_CATEGORIES[0]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
-  const [expandedPhotoCount, setExpandedPhotoCount] = useState<number | null>(null);
+  const [expandedLayoutId, setExpandedLayoutId] = useState<string | null>('layout-1');
 
   // SHAPE tab
   const [selectedShapeId, setSelectedShapeId] = useState<string>('shape-square');
@@ -778,11 +793,30 @@ export const CanvasCustomizerPage: React.FC = () => {
     setActiveClipart(tpl.emoji || null);
   };
 
-  // Select a collage layout (2 / 3 / 4 photos)
-  const handleSelectCollageLayout = (count: number, sizeId: string) => {
-    setExpandedPhotoCount(count);
-    setSelectedSizeId(sizeId);
+  // Select a layout preset: switches product type + size so panel count actually changes
+  const handleSelectLayoutPreset = (preset: LayoutPreset) => {
+    setExpandedLayoutId(preset.id);
+    setSelectedProductTypeId(preset.productTypeId);
+    setSelectedSizeId(preset.sizeId);
+    setIsCustomSize(false);
     setActivePanelIndex(0);
+  };
+
+  // Small mockup thumbnail matching each layout's real panel arrangement
+  const renderLayoutThumbnail = (arrangement: LayoutArrangement) => {
+    const cell = <div className="bg-stone-300 rounded" />;
+    if (arrangement === 'single') return <div className="h-16 bg-stone-300 rounded" />;
+    if (arrangement === 'grid2') return <div className="h-16 grid grid-cols-2 gap-1">{cell}{cell}</div>;
+    if (arrangement === 'grid3') return <div className="h-16 grid grid-cols-3 gap-1">{cell}{cell}{cell}</div>;
+    if (arrangement === 'grid4') return <div className="h-16 grid grid-cols-2 grid-rows-2 gap-1">{cell}{cell}{cell}{cell}</div>;
+    if (arrangement === 'split3') return <div className="h-16 grid grid-cols-3 gap-0.5">{cell}{cell}{cell}</div>;
+    // wall3: one wide panel on top, two smaller squares below
+    return (
+      <div className="h-16 flex flex-col gap-1">
+        <div className="flex-[1.4] bg-stone-300 rounded" />
+        <div className="flex-1 grid grid-cols-2 gap-1">{cell}{cell}</div>
+      </div>
+    );
   };
 
   // Add to Cart Action
@@ -1431,53 +1465,45 @@ export const CanvasCustomizerPage: React.FC = () => {
 
               {layoutSubTab === 'LAYOUTS' && (
                 <div className="p-4 space-y-2 overflow-y-auto">
-                  {selectedProductTypeId === 'canvas-collage' ? (
-                    COLLAGE_LAYOUTS.map((layout) => {
-                      const isExpanded = expandedPhotoCount === layout.count;
-                      const isSelected = selectedSizeId === layout.sizeId;
-                      return (
-                        <div key={layout.count} className="border border-stone-200 rounded-xl overflow-hidden">
-                          <button
-                            type="button"
-                            onClick={() => setExpandedPhotoCount(isExpanded ? null : layout.count)}
-                            className={`w-full flex items-center justify-between px-3 py-3 text-xs font-bold transition-colors cursor-pointer ${
-                              isSelected ? 'bg-blue-50/40 text-[#0E4A93]' : 'bg-white text-stone-800 hover:bg-stone-50'
-                            }`}
-                          >
-                            <span>{layout.count} Photos</span>
-                            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                          </button>
-                          {isExpanded && (
-                            <div className="p-3 border-t border-stone-100 bg-stone-50">
-                              <div
-                                onClick={() => handleSelectCollageLayout(layout.count, layout.sizeId)}
-                                className={`grid gap-1 cursor-pointer p-2 rounded-lg border-2 ${
-                                  isSelected ? 'border-[#0E4A93]' : 'border-stone-200 hover:border-stone-300'
-                                }`}
-                                style={{ gridTemplateColumns: `repeat(${Math.min(layout.count, 4)}, minmax(0, 1fr))` }}
-                              >
-                                {Array.from({ length: layout.count }).map((_, i) => (
-                                  <div key={i} className="aspect-square bg-stone-300 rounded" />
-                                ))}
-                              </div>
+                  <p className="text-[11px] text-stone-500 pb-1">
+                    Choose how many photos go on your canvas — this switches the product and size to match.
+                  </p>
+                  {LAYOUT_PRESETS.map((preset) => {
+                    const isExpanded = expandedLayoutId === preset.id;
+                    const isSelected = selectedProductTypeId === preset.productTypeId && selectedSizeId === preset.sizeId;
+                    return (
+                      <div
+                        key={preset.id}
+                        className={`border rounded-xl overflow-hidden ${isSelected ? 'border-[#0E4A93]' : 'border-stone-200'}`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setExpandedLayoutId(isExpanded ? null : preset.id)}
+                          className={`w-full flex items-center justify-between px-3 py-3 text-xs font-bold transition-colors cursor-pointer ${
+                            isSelected ? 'bg-blue-50/40 text-[#0E4A93]' : 'bg-white text-stone-800 hover:bg-stone-50'
+                          }`}
+                        >
+                          <span className="flex items-center gap-1.5">
+                            {preset.label}
+                            {isSelected && <Check className="w-3.5 h-3.5 text-[#0E4A93]" />}
+                          </span>
+                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                        </button>
+                        {isExpanded && (
+                          <div className="p-3 border-t border-stone-100 bg-stone-50">
+                            <div
+                              onClick={() => handleSelectLayoutPreset(preset)}
+                              className={`cursor-pointer p-2.5 rounded-lg border-2 transition-all ${
+                                isSelected ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/20' : 'border-stone-200 hover:border-stone-300 bg-white'
+                              }`}
+                            >
+                              {renderLayoutThumbnail(preset.arrangement)}
                             </div>
-                          )}
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="text-xs text-stone-500 space-y-3">
-                      <p>
-                        This product uses a fixed {panels.length}-panel layout. Switch to <strong>Canvas Collage</strong> under
-                        Products for selectable photo counts.
-                      </p>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        {panels.map((p) => (
-                          <div key={p.id} className="aspect-square bg-stone-200 rounded" />
-                        ))}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1566,7 +1592,16 @@ export const CanvasCustomizerPage: React.FC = () => {
                           <Check className="w-3 h-3 stroke-[3]" />
                         </div>
                       )}
-                      <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-900 rounded mx-auto" />
+                      {/* Mini side-profile mockup: photo face + visible wrap depth, scaled to the real inch depth */}
+                      <div className="w-14 h-14 mx-auto flex items-end justify-center" style={{ perspective: '80px' }}>
+                        <div className="relative w-10 h-10 bg-stone-100 border border-stone-300 rounded-sm shadow-xs overflow-hidden">
+                          <div className="absolute inset-1 bg-gradient-to-br from-sky-200 to-emerald-200 rounded-xs" />
+                        </div>
+                        <div
+                          className="bg-gradient-to-b from-amber-700 to-amber-950 rounded-r-xs shadow-inner"
+                          style={{ width: `${w.depthPx}px`, height: '40px', marginLeft: '-2px' }}
+                        />
+                      </div>
                       <div className="text-[11px] font-bold text-stone-800 leading-tight">
                         {w.label} {w.depth && <span className="text-stone-400">({w.depth})</span>}
                       </div>
@@ -1611,6 +1646,13 @@ export const CanvasCustomizerPage: React.FC = () => {
                             isSelected ? 'border-[#0E4A93] bg-blue-50/30 text-[#0E4A93]' : 'border-stone-200 text-stone-600 hover:border-stone-300 bg-white'
                           }`}
                         >
+                          {/* Mockup: photo swatch with a border ring sized to the real width */}
+                          <div
+                            className="w-9 h-9 mx-auto mb-1.5 rounded-xs"
+                            style={{ backgroundColor: bw.widthPx === 0 ? 'transparent' : selectedBorderColor, padding: `${Math.min(bw.widthPx, 10)}px` }}
+                          >
+                            <div className="w-full h-full rounded-xs bg-gradient-to-br from-sky-200 to-emerald-200" />
+                          </div>
                           <div className="text-[10px] font-black leading-tight">{bw.label.split(' ')[0]}</div>
                           <div className="text-[9px] text-stone-400 mt-0.5">
                             {CANVAS_BORDER_WIDTH_PRICES[bw.id] === 0 ? 'Free' : `+₹${CANVAS_BORDER_WIDTH_PRICES[bw.id]}`}
@@ -1660,10 +1702,22 @@ export const CanvasCustomizerPage: React.FC = () => {
                             <Check className="w-3 h-3 stroke-[3]" />
                           </div>
                         )}
+                        {/* Mockup: a small photo sitting inside this frame's actual border color */}
                         <div
-                          className="w-9 h-9 rounded mx-auto border border-stone-300"
-                          style={{ backgroundColor: f.id === 'no-frame' ? 'transparent' : f.color, backgroundImage: f.id === 'no-frame' ? 'repeating-conic-gradient(#e7e5e4 0% 25%, transparent 0% 50%)' : undefined, backgroundSize: '8px 8px' }}
-                        />
+                          className="w-11 h-11 rounded mx-auto p-1.5"
+                          style={
+                            f.id === 'no-frame'
+                              ? {
+                                  backgroundImage:
+                                    'repeating-conic-gradient(#d6d3d1 0% 25%, #f5f5f4 0% 50%)',
+                                  backgroundSize: '8px 8px',
+                                  border: '1px solid #d6d3d1'
+                                }
+                              : { backgroundColor: f.color, border: f.color === '#ffffff' ? '1px solid #d6d3d1' : undefined }
+                          }
+                        >
+                          <div className="w-full h-full rounded-xs bg-gradient-to-br from-sky-200 to-emerald-200" />
+                        </div>
                         <div className="text-[10px] font-bold text-stone-800 leading-tight">{f.name}</div>
                         <div className="text-[10px] font-semibold text-stone-500">{f.price === 0 ? 'Free' : `+₹${f.price.toFixed(0)}`}</div>
                       </div>
