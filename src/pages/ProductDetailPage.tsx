@@ -27,6 +27,24 @@ import { CUSTOMER_REVIEWS } from '../data/storeData';
 import { Product } from '../types';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
 
+interface FinishStyle { wall: string; border: number; color: string; shadow: string; outline: string; overlay: string; }
+
+// Visual swatch for a finish/style name: frame colour, edge treatment and surface sheen.
+const getFinishStyle = (name: string): FinishStyle => {
+  const n = name.toLowerCase();
+  const base: FinishStyle = { wall: '#ECE7DF', border: 0, color: 'transparent', shadow: '0 6px 10px -4px rgba(0,0,0,0.45), 3px 3px 0 #d6d0c4', outline: 'none', overlay: '' };
+  if (n.includes('black')) return { ...base, border: 5, color: '#161616', shadow: '0 6px 10px -4px rgba(0,0,0,0.5)' };
+  if (n.includes('white')) return { ...base, wall: '#E3E8EE', border: 5, color: '#FAFAFA', shadow: '0 6px 10px -4px rgba(0,0,0,0.35)' };
+  if (n.includes('gold')) return { ...base, border: 5, color: '#C9A227', shadow: '0 6px 10px -4px rgba(0,0,0,0.45)' };
+  if (n.includes('teak') || n.includes('oak') || n.includes('wood')) return { ...base, border: 6, color: n.includes('oak') ? '#C99A62' : '#8B5A2B', shadow: '0 6px 10px -4px rgba(0,0,0,0.45)' };
+  if (n.includes('anodized') || n.includes('metal')) return { ...base, border: 3, color: '#9AA3AD', shadow: '0 6px 10px -4px rgba(0,0,0,0.4)' };
+  if (n.includes('mirror')) return { ...base, shadow: '0 6px 10px -4px rgba(0,0,0,0.45), 3px 3px 0 #b9c6d6', overlay: 'linear-gradient(120deg, rgba(255,255,255,0.0) 40%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 60%)' };
+  if (n.includes('bevel')) return { ...base, border: 3, color: 'rgba(255,255,255,0.85)', overlay: 'linear-gradient(135deg, rgba(255,255,255,0.35), rgba(255,255,255,0) 50%)' };
+  if (n.includes('anti-glare') || n.includes('frost') || n.includes('matte') || n.includes('satin')) return { ...base, overlay: 'rgba(255,255,255,0.18)' };
+  if (n.includes('gloss') || n.includes('diamond') || n.includes('pearl') || n.includes('lustre')) return { ...base, overlay: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 45%, rgba(255,255,255,0.15) 100%)' };
+  return base; // gallery wrap / classic wrap / standard: image wraps the edge
+};
+
 export const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
@@ -273,6 +291,18 @@ export const ProductDetailPage: React.FC = () => {
                 categorySlug={product.categorySlug}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
+
+              {/* Live custom text preview on the product image */}
+              {customText.trim() && (
+                <div className="pointer-events-none absolute inset-x-6 top-1/2 -translate-y-1/2 text-center">
+                  <span
+                    className="inline-block max-w-full break-words text-white text-xl sm:text-3xl font-bold leading-tight"
+                    style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic', textShadow: '0 2px 10px rgba(0,0,0,0.65), 0 0 2px rgba(0,0,0,0.6)' }}
+                  >
+                    {customText}
+                  </span>
+                </div>
+              )}
 
               {/* Uploaded User Photo Indicator Overlay */}
               {uploadedFile && (
@@ -586,21 +616,34 @@ export const ProductDetailPage: React.FC = () => {
                   <span className="font-bold text-stone-800">3. Finish &amp; Style:</span>
                   <span className="text-stone-500 font-medium">{selectedFinish}</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {product.finishes.map((finish) => (
-                    <button
-                      key={finish}
-                      type="button"
-                      onClick={() => setSelectedFinish(finish)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-                        selectedFinish === finish
-                          ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
-                          : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
-                      }`}
-                    >
-                      {finish}
-                    </button>
-                  ))}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {product.finishes.map((finish) => {
+                    const fs = getFinishStyle(finish);
+                    const active = selectedFinish === finish;
+                    return (
+                      <button
+                        key={finish}
+                        type="button"
+                        onClick={() => setSelectedFinish(finish)}
+                        className={`p-1.5 text-left rounded-xl border-2 transition-all cursor-pointer ${
+                          active
+                            ? 'border-[#0E4A93] bg-blue-50/60 shadow-2xs'
+                            : 'border-stone-200 bg-white hover:border-stone-400'
+                        }`}
+                      >
+                        <div className="relative aspect-[4/3] bg-stone-200 rounded-md overflow-hidden flex items-center justify-center" style={{ background: fs.wall }}>
+                          <div
+                            className="relative w-[62%] aspect-[4/3] overflow-hidden"
+                            style={{ border: `${fs.border}px solid ${fs.color}`, boxShadow: fs.shadow, outline: fs.outline }}
+                          >
+                            <img src={galleryImages[0] || product.image} alt="" className="w-full h-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }} />
+                            {fs.overlay && <div className="absolute inset-0 pointer-events-none" style={{ background: fs.overlay }} />}
+                          </div>
+                        </div>
+                        <div className={`mt-1.5 px-0.5 text-[11px] font-semibold leading-tight ${active ? 'text-[#0E4A93]' : 'text-stone-700'}`}>{finish}</div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

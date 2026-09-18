@@ -287,7 +287,7 @@ export const Homepage: React.FC<HomepageProps> = ({
             </div>
             <button
               type="button"
-              onClick={() => onSelectCategory('canvas-prints')}
+              onClick={() => navigate('/search')}
               className="text-xs sm:text-sm font-bold text-[#0E4A93] hover:underline cursor-pointer whitespace-nowrap"
             >
               View All →
@@ -338,7 +338,7 @@ export const Homepage: React.FC<HomepageProps> = ({
             </div>
             <button
               type="button"
-              onClick={() => onSelectCategory('canvas-prints')}
+              onClick={() => navigate('/search')}
               className="text-xs sm:text-sm font-bold text-[#0E4A93] hover:underline flex items-center gap-1 cursor-pointer"
             >
               <span>View All</span>
@@ -504,13 +504,6 @@ export const Homepage: React.FC<HomepageProps> = ({
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-4 pt-3">
-                <button
-                  type="button"
-                  onClick={onOpenQuote}
-                  className="px-6 py-3 bg-[#E8752A] hover:bg-[#D3631A] text-white text-xs sm:text-sm font-bold rounded-lg shadow-sm transition-all cursor-pointer flex items-center gap-2"
-                >
-                  <span>Get a Quote →</span>
-                </button>
                 <button
                   type="button"
                   onClick={() => {

@@ -219,16 +219,6 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
                 </Link>
               </li>
             </ul>
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={onOpenQuote}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#E8752A] text-white font-bold text-xs hover:bg-[#d0641e] transition-colors cursor-pointer"
-              >
-                <span>Request Custom Quote</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
           </div>
 
         </div>

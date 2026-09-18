@@ -357,57 +357,6 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="relative z-40 w-full font-manrope">
       
       {/* ========================================================================= */}
-      {/* LAYER 1: TOP PROMOTIONAL STRIP (Dark Navy)                                */}
-      {/* ========================================================================= */}
-      <div className="w-full bg-[#082C59] text-stone-200 text-xs py-1.5 font-medium tracking-wide border-b border-[#062347]">
-        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 flex items-center justify-between">
-          
-          {/* Left: Free delivery + Coupon code */}
-          <div className="flex items-center gap-2 text-[11px] sm:text-xs">
-            <span className="flex items-center gap-1.5 text-stone-100">
-              <span>🚚</span>
-              <span>Free Delivery on orders above ₹999 across India</span>
-            </span>
-            <span className="text-blue-300/40 hidden md:inline">|</span>
-            <span className="hidden md:inline text-stone-300">
-              Use Code: <strong className="text-amber-300 font-bold">CANVAS10</strong> for 10% OFF
-            </span>
-          </div>
-
-          {/* Right: Phone support + Track order + Login */}
-          <div className="flex items-center gap-2 sm:gap-4 text-[11px] sm:text-xs text-stone-200">
-            <a 
-              href="tel:+917893051555" 
-              className="hidden lg:flex items-center gap-1 text-stone-200 hover:text-white transition-colors"
-            >
-              <Phone className="w-3 h-3 text-stone-300" />
-              <span>Support:</span>
-              <span className="font-bold text-white">+91 78930 51555</span>
-            </a>
-            <span className="text-blue-300/40 hidden lg:inline">|</span>
-            
-            <button 
-              type="button"
-              onClick={() => onOpenAccount && onOpenAccount()}
-              className="hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
-            >
-              <span>Track Order</span>
-            </button>
-            <span className="text-blue-300/40">|</span>
-
-            <button 
-              type="button"
-              onClick={() => onOpenAccount && onOpenAccount()}
-              className="hover:text-white flex items-center gap-1 font-semibold text-white transition-colors cursor-pointer"
-            >
-              <span>Login / Sign Up</span>
-            </button>
-          </div>
-
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
       {/* LAYER 2: ROYAL BLUE MAIN HEADER ROW (#0E4A93)                             */}
       {/* ========================================================================= */}
       <div className="w-full bg-[#0E4A93] text-white py-2.5 sm:py-3 shadow-md">
