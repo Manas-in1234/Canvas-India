@@ -35,9 +35,18 @@ import {
   Smartphone,
   Image as ImageIcon,
   Sparkles,
-  FileText
+  FileText,
+  Shapes,
+  FlipHorizontal2
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
+import {
+  ACRYLIC_SHAPES,
+  AcrylicShapeOption,
+  FRAME_OPTIONS,
+  ACRYLIC_BORDER_WIDTHS,
+  ACRYLIC_BORDER_COLORS
+} from '../data/acrylicCustomizerData';
 
 // ============================================================================
 // 1. CONSTANTS & CANVAS-ONLY DATA DEFINITIONS
@@ -48,6 +57,7 @@ type ToolbarTab =
   | 'UPLOAD'
   | 'SELECT SIZE'
   | 'LAYOUTS & DESIGNS'
+  | 'SHAPE'
   | 'WRAP & BORDER'
   | 'HARDWARE & FINISH'
   | 'OPTIONS';
@@ -57,10 +67,20 @@ const TOOLBAR_ITEMS: { id: ToolbarTab; label: string; icon: React.ElementType }[
   { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud },
   { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
   { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers },
+  { id: 'SHAPE', label: 'SHAPE', icon: Shapes },
   { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
   { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
   { id: 'OPTIONS', label: 'OPTIONS', icon: SlidersHorizontal }
 ];
+
+const SHAPE_FILTER_TABS: { id: 'ALL' | 'BASIC' | 'SPECIAL' | 'DECORATIVE'; label: string }[] = [
+  { id: 'ALL', label: 'All' },
+  { id: 'BASIC', label: 'Basic' },
+  { id: 'SPECIAL', label: 'Special' },
+  { id: 'DECORATIVE', label: 'Decorative' }
+];
+
+const CANVAS_BORDER_WIDTH_PRICES: Record<string, number> = { none: 0, thin: 49, medium: 89, thick: 149 };
 
 type ColorFilterType = 'original' | 'sepia' | 'grayscale';
 type SizeCategory = 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL';
@@ -461,6 +481,10 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Panels for the current size layout
   const panels = currentSizeOption.panels;
 
+  // Shapes, borders and outer frames only apply to single-panel canvases
+  // (multi-panel collage / split / wall-art layouts stay rectangular slots).
+  const shapeApplies = panels.length === 1;
+
   // Panel Images State
   const [panelImages, setPanelImages] = useState<Record<number, PanelImageState>>({
     0: createDefaultPanel(),
@@ -484,12 +508,25 @@ export const CanvasCustomizerPage: React.FC = () => {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [expandedPhotoCount, setExpandedPhotoCount] = useState<number | null>(null);
 
+  // SHAPE tab
+  const [selectedShapeId, setSelectedShapeId] = useState<string>('shape-square');
+  const [shapeFilterCategory, setShapeFilterCategory] = useState<'ALL' | 'BASIC' | 'SPECIAL' | 'DECORATIVE'>('ALL');
+
+  const currentShape = useMemo<AcrylicShapeOption>(() => {
+    return ACRYLIC_SHAPES.find((s) => s.id === selectedShapeId) || ACRYLIC_SHAPES[0];
+  }, [selectedShapeId]);
+
+  const filteredShapes = useMemo(() => {
+    if (shapeFilterCategory === 'ALL') return ACRYLIC_SHAPES;
+    return ACRYLIC_SHAPES.filter((s) => s.category.toUpperCase() === shapeFilterCategory);
+  }, [shapeFilterCategory]);
+
   // WRAP & BORDER tab
   const [selectedWrapId, setSelectedWrapId] = useState<string>('canvas-lite');
   const [mirrorImage, setMirrorImage] = useState<boolean>(false);
-  const [borderColorEnabled, setBorderColorEnabled] = useState<boolean>(false);
-  const [borderColor, setBorderColor] = useState<string>('#FFFFFF');
-  const [framesExpanded, setFramesExpanded] = useState<boolean>(false);
+  const [selectedBorderWidthId, setSelectedBorderWidthId] = useState<string>('none');
+  const [selectedBorderColor, setSelectedBorderColor] = useState<string>('#FFFFFF');
+  const [selectedFrameId, setSelectedFrameId] = useState<string>('no-frame');
 
   // HARDWARE & FINISH tab
   const [selectedHardwareId, setSelectedHardwareId] = useState<string>('hooks-hanging');
@@ -543,7 +580,12 @@ export const CanvasCustomizerPage: React.FC = () => {
         const data = JSON.parse(saved);
         if (data.selectedProductTypeId) setSelectedProductTypeId(data.selectedProductTypeId);
         if (data.selectedSizeId) setSelectedSizeId(data.selectedSizeId);
+        if (data.selectedShapeId) setSelectedShapeId(data.selectedShapeId);
         if (data.selectedWrapId) setSelectedWrapId(data.selectedWrapId);
+        if (data.selectedBorderWidthId) setSelectedBorderWidthId(data.selectedBorderWidthId);
+        if (data.selectedBorderColor) setSelectedBorderColor(data.selectedBorderColor);
+        if (data.selectedFrameId) setSelectedFrameId(data.selectedFrameId);
+        if (typeof data.mirrorImage === 'boolean') setMirrorImage(data.mirrorImage);
         if (data.selectedHardwareId) setSelectedHardwareId(data.selectedHardwareId);
         if (data.selectedDisplayOptionId) setSelectedDisplayOptionId(data.selectedDisplayOptionId);
         if (data.selectedLaminationId) setSelectedLaminationId(data.selectedLaminationId);
@@ -566,7 +608,12 @@ export const CanvasCustomizerPage: React.FC = () => {
       const stateToSave = {
         selectedProductTypeId,
         selectedSizeId,
+        selectedShapeId,
         selectedWrapId,
+        selectedBorderWidthId,
+        selectedBorderColor,
+        selectedFrameId,
+        mirrorImage,
         selectedHardwareId,
         selectedDisplayOptionId,
         selectedLaminationId,
@@ -593,8 +640,16 @@ export const CanvasCustomizerPage: React.FC = () => {
   const unitPrice = useMemo(() => {
     let price = sizePrice;
 
+    if (shapeApplies && currentShape.priceAddon) price += currentShape.priceAddon;
+
     const wrap = WRAP_OPTIONS.find((w) => w.id === selectedWrapId);
     if (wrap) price += wrap.price;
+
+    if (shapeApplies) {
+      price += CANVAS_BORDER_WIDTH_PRICES[selectedBorderWidthId] || 0;
+      const frame = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
+      if (frame) price += frame.price;
+    }
 
     const hardware = HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId);
     if (hardware) price += hardware.price;
@@ -609,7 +664,18 @@ export const CanvasCustomizerPage: React.FC = () => {
     else if (selectedMaterialId === 'archival-cotton') price += 450;
 
     return price;
-  }, [sizePrice, selectedWrapId, selectedHardwareId, selectedDisplayOptionId, selectedLaminationId, selectedMaterialId]);
+  }, [
+    sizePrice,
+    shapeApplies,
+    currentShape,
+    selectedWrapId,
+    selectedBorderWidthId,
+    selectedFrameId,
+    selectedHardwareId,
+    selectedDisplayOptionId,
+    selectedLaminationId,
+    selectedMaterialId
+  ]);
 
   const totalPrice = unitPrice * quantity;
 
@@ -748,12 +814,14 @@ export const CanvasCustomizerPage: React.FC = () => {
       customizationDetails: {
         productTypeId: selectedProductTypeId,
         sizeId: selectedSizeId,
+        shape: shapeApplies ? currentShape.name : undefined,
         wrap: WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label,
+        borderWidth: shapeApplies ? ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.label : undefined,
+        borderColor: shapeApplies && selectedBorderWidthId !== 'none' ? selectedBorderColor : undefined,
+        frame: shapeApplies ? FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name : undefined,
+        mirrorImage,
         display: DISPLAY_OPTIONS.find((d) => d.id === selectedDisplayOptionId)?.label,
         lamination: LAMINATION_OPTIONS.find((l) => l.id === selectedLaminationId)?.label,
-        mirrorImage,
-        borderColorEnabled,
-        borderColor: borderColorEnabled ? borderColor : undefined,
         retouching: retouchLabels,
         majorRetouchText: majorRetouchText || undefined,
         proofRequested,
@@ -817,6 +885,33 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   return (
     <div className="w-full h-screen flex flex-col bg-[#F8FAFC] text-stone-900 font-manrope overflow-hidden select-none">
+      {/* SVG ClipPath Mask Definitions for non-rectangular canvas shapes */}
+      <svg width="0" height="0" className="absolute pointer-events-none opacity-0" aria-hidden="true">
+        <defs>
+          <clipPath id="acrylic-clip-shape-heart" clipPathUnits="objectBoundingBox">
+            <path d="M 0.5,0.85 C 0.12,0.58 0.02,0.38 0.02,0.24 C 0.02,0.08 0.14,0.02 0.28,0.02 C 0.38,0.02 0.46,0.08 0.5,0.18 C 0.54,0.08 0.62,0.02 0.72,0.02 C 0.86,0.02 0.98,0.08 0.98,0.24 C 0.98,0.38 0.88,0.58 0.5,0.85 Z" />
+          </clipPath>
+          <clipPath id="acrylic-clip-shape-arch" clipPathUnits="objectBoundingBox">
+            <path d="M 0,1 L 0,0.4 C 0,0.15 0.22,0 0.5,0 C 0.78,0 1,0.15 1,0.4 L 1,1 Z" />
+          </clipPath>
+          <clipPath id="acrylic-clip-shape-cloud" clipPathUnits="objectBoundingBox">
+            <path d="M 0.17,0.7 C 0.08,0.7 0.02,0.6 0.05,0.5 C 0.02,0.38 0.14,0.28 0.26,0.3 C 0.33,0.14 0.55,0.12 0.65,0.22 C 0.75,0.14 0.93,0.18 0.96,0.32 C 1.05,0.36 1.05,0.52 0.98,0.62 C 1.02,0.7 0.94,0.72 0.88,0.7 Z" />
+          </clipPath>
+          <clipPath id="acrylic-clip-shape-speech-bubble" clipPathUnits="objectBoundingBox">
+            <path d="M 0.05,0.05 L 0.95,0.05 C 0.98,0.05 1,0.08 1,0.12 L 1,0.68 C 1,0.72 0.98,0.75 0.95,0.75 L 0.45,0.75 L 0.15,0.98 L 0.22,0.75 L 0.05,0.75 C 0.02,0.75 0,0.72 0,0.68 L 0,0.12 C 0,0.08 0.02,0.05 0.05,0.05 Z" />
+          </clipPath>
+          <clipPath id="acrylic-clip-shape-ticket" clipPathUnits="objectBoundingBox">
+            <path d="M 0,0 L 1,0 L 1,0.38 C 0.94,0.38 0.9,0.43 0.9,0.5 C 0.9,0.57 0.94,0.62 1,0.62 L 1,1 L 0,1 L 0,0.62 C 0.06,0.62 0.1,0.57 0.1,0.5 C 0.1,0.43 0.06,0.38 0,0.38 Z" />
+          </clipPath>
+          <clipPath id="acrylic-clip-shape-scalloped" clipPathUnits="objectBoundingBox">
+            <path d="M 0.5,0.02 C 0.56,0.02 0.62,0.06 0.65,0.12 C 0.71,0.08 0.78,0.09 0.82,0.15 C 0.88,0.14 0.93,0.19 0.94,0.25 C 1,0.28 1.01,0.36 0.98,0.41 C 1.02,0.47 1,0.54 0.95,0.59 C 0.98,0.65 0.94,0.73 0.88,0.76 C 0.88,0.83 0.82,0.88 0.75,0.88 C 0.71,0.94 0.64,0.96 0.58,0.94 C 0.52,0.99 0.45,0.98 0.4,0.94 C 0.35,0.97 0.27,0.94 0.24,0.88 C 0.17,0.87 0.12,0.81 0.12,0.74 C 0.06,0.71 0.03,0.63 0.05,0.57 C 0.01,0.51 0.01,0.43 0.05,0.38 C 0.03,0.31 0.06,0.24 0.13,0.22 C 0.14,0.15 0.21,0.11 0.28,0.12 C 0.33,0.06 0.41,0.05 0.47,0.1 C 0.5,0.04 0.45,0.02 0.5,0.02 Z" />
+          </clipPath>
+          <clipPath id="acrylic-clip-shape-organic-blob" clipPathUnits="objectBoundingBox">
+            <path d="M 0.5,0.02 C 0.78,0 0.98,0.18 0.98,0.45 C 0.98,0.75 0.8,0.98 0.52,0.96 C 0.25,0.94 0.02,0.78 0.02,0.5 C 0.02,0.22 0.22,0.04 0.5,0.02 Z" />
+          </clipPath>
+        </defs>
+      </svg>
+
       {/* Hidden Global File Input */}
       <input
         ref={fileInputRef}
@@ -1299,11 +1394,14 @@ export const CanvasCustomizerPage: React.FC = () => {
                         <div
                           key={tpl.id}
                           onClick={() => handleApplyTemplate(tpl)}
-                          className={`relative aspect-square rounded-xl overflow-hidden border-2 cursor-pointer flex flex-col items-center justify-center gap-1 text-center p-2 ${tpl.swatchClass} ${
+                          className={`relative aspect-square rounded-xl overflow-hidden border-2 cursor-pointer flex flex-col items-center justify-center gap-2 text-center p-3 shadow-xs ${tpl.swatchClass} ${
                             isSelected ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/30' : 'border-stone-200 hover:border-stone-400'
                           }`}
                         >
-                          {tpl.emoji && <span className="text-2xl">{tpl.emoji}</span>}
+                          {/* Mockup photo slot representing where the uploaded photo will sit */}
+                          <div className="w-3/5 aspect-square rounded-md bg-black/10 border border-black/10 flex items-center justify-center">
+                            {tpl.emoji && <span className="text-xl">{tpl.emoji}</span>}
+                          </div>
                           <span className="text-[11px] font-bold leading-tight">{tpl.name}</span>
                           {isSelected && (
                             <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#0E4A93] text-white rounded flex items-center justify-center">
@@ -1385,6 +1483,64 @@ export const CanvasCustomizerPage: React.FC = () => {
             </div>
           )}
 
+          {/* -------------------------------- SHAPE -------------------------------- */}
+          {activeTab === 'SHAPE' && (
+            <div className="flex flex-col h-full">
+              {!shapeApplies ? (
+                <div className="p-4 text-xs text-stone-500 space-y-3">
+                  <p>
+                    Laser-cut shapes are only available on single-panel canvases. Switch to <strong>Classic Canvas Print</strong> or{' '}
+                    <strong>Panoramic Canvas Print</strong> under Products to choose a shape.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center border-b border-stone-200 text-[10px] font-black uppercase tracking-wide shrink-0">
+                    {SHAPE_FILTER_TABS.map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setShapeFilterCategory(tab.id)}
+                        className={`flex-1 text-center py-3 border-b-2 transition-colors cursor-pointer ${
+                          shapeFilterCategory === tab.id ? 'border-[#0E4A93] text-[#0E4A93]' : 'border-transparent text-stone-400 hover:text-stone-600'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="p-4 grid grid-cols-3 gap-2.5 overflow-y-auto">
+                    {filteredShapes.map((shape) => {
+                      const isSelected = selectedShapeId === shape.id;
+                      return (
+                        <div
+                          key={shape.id}
+                          onClick={() => setSelectedShapeId(shape.id)}
+                          className={`relative p-2 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center text-center gap-1.5 ${
+                            isSelected ? 'border-[#0E4A93] bg-blue-50/30' : 'border-stone-200 hover:border-stone-400 bg-white'
+                          }`}
+                        >
+                          {isSelected && (
+                            <div className="absolute top-1 right-1 w-4 h-4 bg-[#0E4A93] text-white rounded flex items-center justify-center z-10">
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            </div>
+                          )}
+                          <div
+                            className="w-full aspect-square bg-gradient-to-br from-[#0E4A93]/70 to-[#0E4A93]/30"
+                            style={{ clipPath: shape.clipPathStyle, WebkitClipPath: shape.clipPathStyle }}
+                          />
+                          <div className="text-[10px] font-bold text-stone-800 leading-tight">{shape.name}</div>
+                          <div className="text-[10px] font-semibold text-stone-500">{shape.priceAddon === 0 ? 'Included' : `+₹${shape.priceAddon}`}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {/* --------------------------- WRAP & BORDER --------------------------- */}
           {activeTab === 'WRAP & BORDER' && (
             <div className="flex flex-col">
@@ -1420,74 +1576,101 @@ export const CanvasCustomizerPage: React.FC = () => {
                 })}
               </div>
 
-              <div className="bg-stone-700 text-white text-xs font-black uppercase tracking-wide px-4 py-2.5">Border</div>
-              <div className="p-4 grid grid-cols-2 gap-2.5">
-                <div
-                  onClick={() => setMirrorImage(!mirrorImage)}
-                  className={`relative p-3 rounded-xl border-2 transition-all cursor-pointer text-center space-y-1 ${
-                    mirrorImage ? 'border-[#0E4A93] bg-blue-50/30' : 'border-stone-200 hover:border-stone-400 bg-white'
+              <div className="bg-stone-700 text-white text-xs font-black uppercase tracking-wide px-4 py-2.5">Mirror Image</div>
+              <div className="p-4">
+                <label
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl border-2 cursor-pointer transition-all ${
+                    mirrorImage ? 'border-[#0E4A93] bg-blue-50/30' : 'border-stone-200 hover:border-stone-300 bg-white'
                   }`}
                 >
-                  {mirrorImage && (
-                    <div className="absolute top-1 right-1 w-4 h-4 bg-[#0E4A93] text-white rounded flex items-center justify-center">
-                      <Check className="w-3 h-3 stroke-[3]" />
-                    </div>
-                  )}
-                  <div className="w-10 h-10 bg-stone-200 rounded mx-auto" />
-                  <div className="text-[11px] font-bold text-stone-800 flex items-center justify-center gap-1">
-                    Mirror Image <Info className="w-3 h-3 text-stone-400" />
-                  </div>
-                  <div className="text-[11px] font-semibold text-stone-500">Free</div>
-                </div>
-
-                <div
-                  onClick={() => setBorderColorEnabled(!borderColorEnabled)}
-                  className={`relative p-3 rounded-xl border-2 transition-all cursor-pointer text-center space-y-1 ${
-                    borderColorEnabled ? 'border-[#0E4A93] bg-blue-50/30' : 'border-stone-200 hover:border-stone-400 bg-white'
-                  }`}
-                >
-                  {borderColorEnabled && (
-                    <div className="absolute top-1 right-1 w-4 h-4 bg-[#0E4A93] text-white rounded flex items-center justify-center">
-                      <Check className="w-3 h-3 stroke-[3]" />
-                    </div>
-                  )}
-                  <div className="w-10 h-10 rounded mx-auto border border-stone-300" style={{ backgroundColor: borderColor }} />
-                  <div className="text-[11px] font-bold text-stone-800 flex items-center justify-center gap-1">
-                    Border Color <Info className="w-3 h-3 text-stone-400" />
-                  </div>
-                  <div className="text-[11px] font-semibold text-stone-500">Free</div>
-                </div>
-
-                {borderColorEnabled && (
-                  <div className="col-span-2 flex items-center gap-2 pt-1">
-                    {['#FFFFFF', '#000000', '#0E4A93', '#E8752A', '#D4AF37'].map((c) => (
-                      <button
-                        key={c}
-                        onClick={() => setBorderColor(c)}
-                        style={{ backgroundColor: c }}
-                        className={`w-6 h-6 rounded-full border-2 ${borderColor === c ? 'ring-2 ring-[#0E4A93]' : 'border-stone-300'}`}
-                      />
-                    ))}
-                  </div>
-                )}
+                  <span className="flex items-center gap-2 text-xs font-bold text-stone-800">
+                    <FlipHorizontal2 className="w-4 h-4 text-stone-500" />
+                    Flip photo horizontally
+                  </span>
+                  <input type="checkbox" checked={mirrorImage} onChange={(e) => setMirrorImage(e.target.checked)} className="accent-[#0E4A93] w-4 h-4" />
+                </label>
+                {!shapeApplies && <p className="text-[11px] text-stone-400 mt-1.5">Applies to the active photo panel.</p>}
               </div>
+
+              <div className="bg-stone-700 text-white text-xs font-black uppercase tracking-wide px-4 py-2.5">Border</div>
+              {!shapeApplies ? (
+                <div className="p-4 text-[11px] text-stone-500">
+                  A print border is only available on single-panel canvases. Switch to Classic or Panoramic Canvas under Products.
+                </div>
+              ) : (
+                <div className="p-4 space-y-3">
+                  <div className="grid grid-cols-4 gap-2">
+                    {ACRYLIC_BORDER_WIDTHS.map((bw) => {
+                      const isSelected = selectedBorderWidthId === bw.id;
+                      return (
+                        <button
+                          key={bw.id}
+                          type="button"
+                          onClick={() => setSelectedBorderWidthId(bw.id)}
+                          className={`py-2.5 px-1 rounded-xl border-2 text-center transition-all cursor-pointer ${
+                            isSelected ? 'border-[#0E4A93] bg-blue-50/30 text-[#0E4A93]' : 'border-stone-200 text-stone-600 hover:border-stone-300 bg-white'
+                          }`}
+                        >
+                          <div className="text-[10px] font-black leading-tight">{bw.label.split(' ')[0]}</div>
+                          <div className="text-[9px] text-stone-400 mt-0.5">
+                            {CANVAS_BORDER_WIDTH_PRICES[bw.id] === 0 ? 'Free' : `+₹${CANVAS_BORDER_WIDTH_PRICES[bw.id]}`}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {selectedBorderWidthId !== 'none' && (
+                    <div className="flex items-center gap-2">
+                      {ACRYLIC_BORDER_COLORS.map((c) => (
+                        <button
+                          key={c.hex}
+                          onClick={() => setSelectedBorderColor(c.hex)}
+                          title={c.name}
+                          style={{ backgroundColor: c.hex }}
+                          className={`w-7 h-7 rounded-full border-2 transition-all ${
+                            selectedBorderColor === c.hex ? 'ring-2 ring-[#0E4A93] ring-offset-2' : 'border-stone-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="bg-stone-700 text-white text-xs font-black uppercase tracking-wide px-4 py-2.5">Frames</div>
-              <div className="p-4">
-                <button
-                  type="button"
-                  onClick={() => setFramesExpanded(!framesExpanded)}
-                  className="w-full flex items-center justify-between px-3 py-3 rounded-xl border border-stone-200 text-xs font-bold text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
-                >
-                  <span>Standard</span>
-                  {framesExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                </button>
-                {framesExpanded && (
-                  <div className="mt-2 p-3 rounded-xl bg-stone-50 border border-stone-100 text-[11px] text-stone-500">
-                    Standard gallery-wrap edges only — no additional outer frame for canvas prints.
-                  </div>
-                )}
-              </div>
+              {!shapeApplies ? (
+                <div className="p-4 text-[11px] text-stone-500">
+                  An outer frame is only available on single-panel canvases. Switch to Classic or Panoramic Canvas under Products.
+                </div>
+              ) : (
+                <div className="p-4 grid grid-cols-3 gap-2.5">
+                  {FRAME_OPTIONS.map((f) => {
+                    const isSelected = selectedFrameId === f.id;
+                    return (
+                      <div
+                        key={f.id}
+                        onClick={() => setSelectedFrameId(f.id)}
+                        className={`relative p-2.5 rounded-xl border-2 transition-all cursor-pointer text-center space-y-1 ${
+                          isSelected ? 'border-[#0E4A93] bg-blue-50/30' : 'border-stone-200 hover:border-stone-400 bg-white'
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-1 right-1 w-4 h-4 bg-[#0E4A93] text-white rounded flex items-center justify-center">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                        )}
+                        <div
+                          className="w-9 h-9 rounded mx-auto border border-stone-300"
+                          style={{ backgroundColor: f.id === 'no-frame' ? 'transparent' : f.color, backgroundImage: f.id === 'no-frame' ? 'repeating-conic-gradient(#e7e5e4 0% 25%, transparent 0% 50%)' : undefined, backgroundSize: '8px 8px' }}
+                        />
+                        <div className="text-[10px] font-bold text-stone-800 leading-tight">{f.name}</div>
+                        <div className="text-[10px] font-semibold text-stone-500">{f.price === 0 ? 'Free' : `+₹${f.price.toFixed(0)}`}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -1976,42 +2159,64 @@ export const CanvasCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* SINGLE PANEL LAYOUTS (Classic, Panoramic) */}
-              {selectedProductTypeId !== 'canvas-wall-art' && panels.length === 1 && (
-                <div
-                  onClick={() => setActivePanelIndex(0)}
-                  onPointerDown={(e) => handlePointerDown(e, 0)}
-                  className={`relative w-full max-w-md aspect-[4/3] bg-white rounded-xl overflow-hidden transition-all cursor-pointer group border-2 ${
-                    activePanelIndex === 0 ? 'border-[#0E4A93] shadow-2xl ring-2 ring-[#0E4A93]/30' : 'border-stone-300 shadow-md hover:border-stone-400'
-                  }`}
-                >
-                  {panelImages[0]?.imageUrl ? (
-                    <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
-                      <img
-                        src={panelImages[0].imageUrl}
-                        alt="Canvas Print"
-                        style={{
-                          transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg)`,
-                          filter: getFilterCss(panelImages[0].filter),
-                          transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                        }}
-                        className="max-w-none w-full h-full object-cover pointer-events-none"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-stone-400 hover:text-stone-600 transition-colors">
-                      <div className="w-10 h-10 rounded-full bg-orange-50 text-[#E8752A] flex items-center justify-center mb-1.5 shadow-xs">
-                        <Upload className="w-5 h-5" />
+              {/* SINGLE PANEL LAYOUTS (Classic, Panoramic) — shape, border & frame aware */}
+              {selectedProductTypeId !== 'canvas-wall-art' && panels.length === 1 && (() => {
+                const frameOption = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
+                const borderWidthPx = ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0;
+                const panelBox = (
+                  <div
+                    onClick={() => setActivePanelIndex(0)}
+                    onPointerDown={(e) => handlePointerDown(e, 0)}
+                    className={`relative w-full max-w-md ${currentShape.aspectClass} ${currentShape.borderRadiusClass} bg-white overflow-hidden transition-all cursor-pointer group border-2 ${
+                      activePanelIndex === 0 ? 'border-[#0E4A93] shadow-2xl ring-2 ring-[#0E4A93]/30' : 'border-stone-300 shadow-md hover:border-stone-400'
+                    }`}
+                    style={{ clipPath: currentShape.clipPathStyle, WebkitClipPath: currentShape.clipPathStyle }}
+                  >
+                    {panelImages[0]?.imageUrl ? (
+                      <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
+                        <img
+                          src={panelImages[0].imageUrl}
+                          alt="Canvas Print"
+                          style={{
+                            transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                            filter: getFilterCss(panelImages[0].filter),
+                            transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                          }}
+                          className="max-w-none w-full h-full object-cover pointer-events-none"
+                        />
                       </div>
-                      <span className="text-xs font-bold text-[#E8752A]">Upload an Image</span>
-                      <span className="text-[11px] text-stone-400 mt-0.5">Maximum upload size: 25MB per file</span>
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-stone-400 hover:text-stone-600 transition-colors">
+                        <div className="w-10 h-10 rounded-full bg-orange-50 text-[#E8752A] flex items-center justify-center mb-1.5 shadow-xs">
+                          <Upload className="w-5 h-5" />
+                        </div>
+                        <span className="text-xs font-bold text-[#E8752A]">Upload an Image</span>
+                        <span className="text-[11px] text-stone-400 mt-0.5">Maximum upload size: 25MB per file</span>
+                      </div>
+                    )}
+
+                    {borderWidthPx > 0 && (
+                      <div
+                        className="absolute inset-0 pointer-events-none z-25"
+                        style={{ border: `${borderWidthPx}px solid ${selectedBorderColor}`, borderRadius: currentShape.id === 'shape-circle' ? '9999px' : undefined }}
+                      />
+                    )}
+
+                    <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded z-20">
+                      {isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary}
                     </div>
-                  )}
-                  <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded z-20">
-                    {isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary}
                   </div>
-                </div>
-              )}
+                );
+
+                if (frameOption && frameOption.id !== 'no-frame') {
+                  return (
+                    <div className="p-3 rounded-2xl shadow-xl w-full max-w-md mx-auto" style={{ background: frameOption.color }}>
+                      {panelBox}
+                    </div>
+                  );
+                }
+                return panelBox;
+              })()}
 
               {/* SPLIT CANVAS (3-Panel Triptych Layout) */}
               {selectedProductTypeId === 'canvas-split' && panels.length === 3 && renderGridPanels([0, 1, 2], 'grid-cols-3')}
