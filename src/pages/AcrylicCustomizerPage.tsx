@@ -296,6 +296,91 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const [validationWarning, setValidationWarning] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
+  // Drag-and-Drop state for Upload Panel -> Canvas Frames
+  const [draggingPhotoIndex, setDraggingPhotoIndex] = useState<number | null>(null);
+  const [dragOverPanelIndex, setDragOverPanelIndex] = useState<number | null>(null);
+  const [isDragOverCanvas, setIsDragOverCanvas] = useState<boolean>(false);
+
+  // Helper to assign a photo to a specific panel slot non-destructively
+  const handleAssignPhotoToPanel = (photoSrc: string, panelIdx: number) => {
+    if (!photoSrc) return;
+    const img = new Image();
+    img.onload = () => {
+      const naturalWidth = img.naturalWidth || 1200;
+      const naturalHeight = img.naturalHeight || 800;
+      const aspectRatio = naturalWidth / naturalHeight;
+
+      updateFrame(panelIdx, (curr) => ({
+        ...curr,
+        imageUrl: photoSrc,
+        uploadedImage: {
+          src: photoSrc,
+          naturalWidth,
+          naturalHeight,
+          aspectRatio
+        },
+        panX: 0,
+        panY: 0,
+        scale: 1,
+        rotation: 0,
+        fitMode: 'contain'
+      }));
+
+      setActivePanelIndex(panelIdx);
+      setSelectedElement({ type: 'image', panelIndex: panelIdx });
+      setValidationWarning(null);
+    };
+    img.onerror = () => {
+      updateFrame(panelIdx, (curr) => ({
+        ...curr,
+        imageUrl: photoSrc,
+        panX: 0,
+        panY: 0,
+        scale: 1,
+        rotation: 0,
+        fitMode: 'contain'
+      }));
+      setActivePanelIndex(panelIdx);
+      setSelectedElement({ type: 'image', panelIndex: panelIdx });
+    };
+    img.src = photoSrc;
+  };
+
+  // Drop handler for a specific panel slot
+  const handlePanelSlotDrop = (e: React.DragEvent, panelIdx: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverPanelIndex(null);
+    setIsDragOverCanvas(false);
+    setDraggingPhotoIndex(null);
+
+    // 1. Check custom tray index data from upload panel
+    const trayIdxStr = e.dataTransfer.getData('application/x-ci-tray');
+    if (trayIdxStr !== '' && !isNaN(Number(trayIdxStr))) {
+      const photo = uploadedPhotos[Number(trayIdxStr)];
+      if (photo) {
+        handleAssignPhotoToPanel(photo, panelIdx);
+        return;
+      }
+    }
+
+    // 2. Check plain text / URL data
+    const textData = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text/uri-list');
+    if (textData && (textData.startsWith('data:image') || textData.startsWith('http') || textData.startsWith('/') || textData.startsWith('blob:'))) {
+      handleAssignPhotoToPanel(textData, panelIdx);
+      setUploadedPhotos((prev) => (prev.includes(textData) ? prev : [textData, ...prev]));
+      return;
+    }
+
+    // 3. Native files dropped from user OS
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file && (file.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|svg)$/i.test(file.name))) {
+        handleSingleFileChange(file, panelIdx);
+      }
+    }
+  };
+
   // Mobile Upload & QR Code Sync State
   const [uploadMode, setUploadMode] = useState<'computer' | 'mobile'>('computer');
   const [uploadSessionId] = useState<string>(() => 'ac-' + Math.random().toString(36).substring(2, 8).toUpperCase());
@@ -540,9 +625,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
   };
 
   // Single file picker change
-  const handleSingleFileChange = (file: File | null) => {
+  const handleSingleFileChange = (file: File | null, explicitPanelIdx?: number) => {
     if (!file) return;
-    const targetIdx = uploadTargetPanelRef.current;
+    const targetIdx = explicitPanelIdx !== undefined ? explicitPanelIdx : uploadTargetPanelRef.current;
 
     if (file.size > 25 * 1024 * 1024) {
       alert(`File ${file.name} exceeds the 25MB limit.`);
@@ -1273,6 +1358,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const isTargetEmpty = !frame.imageUrl;
     const frameInfo = frames[panelIdx];
     const label = dimensionLabel || frameInfo?.dimension || `Frame ${panelIdx + 1}`;
+    const isDragOverThisSlot = dragOverPanelIndex === panelIdx;
 
     const filterCss = 
       frame.filter === 'sepia'
@@ -1306,8 +1392,25 @@ export const AcrylicCustomizerPage: React.FC = () => {
               handleEmptyFrameClick(panelIdx);
             }
           }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.dataTransfer.dropEffect = 'copy';
+            if (dragOverPanelIndex !== panelIdx) {
+              setDragOverPanelIndex(panelIdx);
+            }
+          }}
+          onDragLeave={(e) => {
+            if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+            setDragOverPanelIndex((curr) => (curr === panelIdx ? null : curr));
+          }}
+          onDrop={(e) => {
+            handlePanelSlotDrop(e, panelIdx);
+          }}
           className={`acrylic-frame-container relative w-full ${effectiveAspectClass} ${shapeRadius} bg-white overflow-hidden transition-all select-none border-2 ${
-            isActive
+            isDragOverThisSlot
+              ? 'border-[#0E4A93] ring-4 ring-[#0E4A93] shadow-2xl scale-[1.01] z-30'
+              : isActive
               ? 'border-[#0E4A93] ring-4 ring-[#0E4A93]/30 z-20'
               : 'border-stone-300 hover:border-stone-400 z-10'
           } ${isTargetEmpty ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
@@ -1317,6 +1420,15 @@ export const AcrylicCustomizerPage: React.FC = () => {
             ...containerAspectStyle
           }}
         >
+        {/* Dynamic Drop Overlay when dragging an image over this slot */}
+        {isDragOverThisSlot && (
+          <div className="absolute inset-0 bg-[#0E4A93]/20 backdrop-blur-[1px] z-40 flex flex-col items-center justify-center pointer-events-none transition-all animate-in fade-in duration-150">
+            <div className="bg-[#0E4A93] text-white px-3.5 py-2 rounded-xl shadow-xl flex items-center gap-2 border border-white/20 scale-105">
+              <Upload className="w-4 h-4 animate-bounce" />
+              <span className="text-xs font-black tracking-wide uppercase">Drop Image Here</span>
+            </div>
+          </div>
+        )}
         {/* Optical Acrylic Gloss Overlay */}
         {selectedFinishId === 'high-gloss' && (
           <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-transparent pointer-events-none z-20" />
@@ -1510,11 +1622,16 @@ export const AcrylicCustomizerPage: React.FC = () => {
         ) : (
           /* MINIMAL EMPTY FRAME: ONLY UPLOAD ICON [ ↑ ] */
           <div 
-            className="w-full h-full flex items-center justify-center bg-stone-50/70 hover:bg-stone-100/90 transition-colors cursor-pointer group"
+            className="w-full h-full flex flex-col items-center justify-center bg-stone-50/70 hover:bg-stone-100/90 transition-colors cursor-pointer group p-4 text-center"
           >
-            <div className="w-11 h-11 rounded-full bg-white shadow-sm border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:border-[#0E4A93]/40 group-hover:scale-110 transition-all">
+            <div className="w-11 h-11 rounded-full bg-white shadow-sm border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:border-[#0E4A93]/40 group-hover:scale-110 transition-all mb-1">
               <Upload className="w-5 h-5 stroke-[2.2]" />
             </div>
+            {draggingPhotoIndex !== null && !isDragOverThisSlot && (
+              <span className="text-[11px] font-bold text-[#0E4A93] animate-pulse">
+                Drop photo here
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -1957,45 +2074,54 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Uploaded Photos Gallery */}
+              {/* Uploaded Photos Gallery with Drag-and-Drop & Click-to-Apply */}
               {uploadedPhotos.length > 0 && (
                 <div className="space-y-2 pt-2 border-t border-stone-100">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-stone-700">Uploaded Photos ({uploadedPhotos.length}):</span>
-                    <span className="text-[11px] text-[#0E4A93]">Click to assign</span>
+                    <span className="text-[11px] font-semibold text-[#0E4A93] flex items-center gap-1">
+                      <Move className="w-3 h-3" />
+                      <span>Drag to frame or click</span>
+                    </span>
                   </div>
                   <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto p-1 bg-stone-50 rounded-xl border border-stone-200">
-                    {uploadedPhotos.map((photo, pIdx) => (
-                      <div
-                        key={pIdx}
-                        onClick={() => {
-                          const img = new Image();
-                          img.onload = () => {
-                            const naturalWidth = img.naturalWidth || 1200;
-                            const naturalHeight = img.naturalHeight || 800;
-                            const aspectRatio = naturalWidth / naturalHeight;
-                            updateFrame(activePanelIndex, (curr) => ({
-                              ...curr,
-                              imageUrl: photo,
-                              uploadedImage: {
-                                src: photo,
-                                naturalWidth,
-                                naturalHeight,
-                                aspectRatio
-                              },
-                              panX: 0,
-                              panY: 0,
-                              scale: 1,
-                              rotation: 0
-                            }));
-                          };
-                          img.src = photo;
-                        }}
-                        className="aspect-square rounded-lg overflow-hidden border border-stone-200 hover:border-[#0E4A93] cursor-pointer hover:opacity-90 relative group bg-white shadow-2xs"
-                      >
-                        <img src={photo} alt={`Upload ${pIdx}`} className="w-full h-full object-cover" />
-                      </div>
-                    ))}
+                    {uploadedPhotos.map((photo, pIdx) => {
+                      const isDraggingThis = draggingPhotoIndex === pIdx;
+                      return (
+                        <div
+                          key={pIdx}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('application/x-ci-tray', String(pIdx));
+                            e.dataTransfer.setData('text/plain', photo);
+                            e.dataTransfer.effectAllowed = 'copy';
+                            setDraggingPhotoIndex(pIdx);
+                          }}
+                          onDragEnd={() => {
+                            setDraggingPhotoIndex(null);
+                            setDragOverPanelIndex(null);
+                            setIsDragOverCanvas(false);
+                          }}
+                          onClick={() => handleAssignPhotoToPanel(photo, activePanelIndex)}
+                          className={`aspect-square rounded-lg overflow-hidden border transition-all relative group bg-white shadow-2xs select-none ${
+                            isDraggingThis
+                              ? 'opacity-40 scale-95 ring-2 ring-[#0E4A93] cursor-grabbing'
+                              : 'border-stone-200 hover:border-[#0E4A93] hover:shadow-xs cursor-grab active:cursor-grabbing'
+                          }`}
+                          title="Click to apply to active slot or drag directly onto any frame"
+                        >
+                          <img 
+                            src={photo} 
+                            alt={`Upload ${pIdx}`} 
+                            className="w-full h-full object-cover pointer-events-none" 
+                          />
+                          {/* Move / Drag Indicator Icon */}
+                          <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-xs text-white p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            <Move className="w-2.5 h-2.5" />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -2833,6 +2959,18 @@ export const AcrylicCustomizerPage: React.FC = () => {
           {/* INTERACTIVE WORKSPACE CANVAS */}
           <div 
             onClick={() => setSelectedElement({ type: 'image', panelIndex: activePanelIndex })}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'copy';
+              if (!isDragOverCanvas) setIsDragOverCanvas(true);
+            }}
+            onDragLeave={(e) => {
+              if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+              setIsDragOverCanvas(false);
+            }}
+            onDrop={(e) => {
+              handlePanelSlotDrop(e, activePanelIndex);
+            }}
             className="flex-1 overflow-auto flex flex-col items-center justify-center p-4 sm:p-8 relative bg-radial from-slate-100 via-slate-200/50 to-slate-200"
           >
             
