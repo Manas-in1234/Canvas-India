@@ -1,5 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
+import QRCode from 'qrcode';
 import { 
   Menu,
   X, 
@@ -28,9 +29,13 @@ import {
   Grid,
   Search,
   Shapes,
-  Maximize2
+  Maximize2,
+  Smartphone,
+  Laptop,
+  Copy,
+  ExternalLink,
+  QrCode
 } from 'lucide-react';
-import { CanvasIndiaLogo } from '../components/CanvasIndiaLogo';
 import { useShop } from '../context/ShopContext';
 import {
   ToolbarTab,
@@ -290,6 +295,150 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const [saveToast, setSaveToast] = useState<string | null>(null);
   const [validationWarning, setValidationWarning] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+
+  // Mobile Upload & QR Code Sync State
+  const [uploadMode, setUploadMode] = useState<'computer' | 'mobile'>('computer');
+  const [uploadSessionId] = useState<string>(() => 'ac-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const [serverLanIp, setServerLanIp] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  const processedImagesRef = useRef<Set<string>>(new Set<string>());
+
+  // Discover server LAN IP for direct mobile connection over Wi-Fi
+  useEffect(() => {
+    fetch('/api/server-info')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.localIp) {
+          setServerLanIp(data.localIp);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Compute mobile upload URL
+  const mobileUploadUrl = useMemo(() => {
+    if (serverLanIp && window.location.hostname === 'localhost') {
+      return `http://${serverLanIp}:${window.location.port || '3000'}/mobile-upload/${uploadSessionId}`;
+    }
+    return `${window.location.origin}/mobile-upload/${uploadSessionId}`;
+  }, [serverLanIp, uploadSessionId]);
+
+  // Generate QR Code data URL dynamically
+  useEffect(() => {
+    QRCode.toDataURL(mobileUploadUrl, {
+      width: 260,
+      margin: 2,
+      color: {
+        dark: '#0E4A93',
+        light: '#ffffff'
+      }
+    })
+      .then((url) => setQrDataUrl(url))
+      .catch((err) => console.error('QR code generation error:', err));
+  }, [mobileUploadUrl]);
+
+  // Handler to assign incoming photo from mobile into active slot or next empty slot
+  const handleApplyIncomingPhoto = (imgSrc: string) => {
+    if (processedImagesRef.current.has(imgSrc)) return;
+    processedImagesRef.current.add(imgSrc);
+
+    // 1. Add to gallery list
+    setUploadedPhotos((prev) => (prev.includes(imgSrc) ? prev : [imgSrc, ...prev]));
+
+    // 2. Load into image meta to preserve full natural dimensions non-destructively
+    const img = new Image();
+    img.onload = () => {
+      const naturalWidth = img.naturalWidth || 1200;
+      const naturalHeight = img.naturalHeight || 800;
+      const aspectRatio = naturalWidth / naturalHeight;
+
+      // 3. Determine target slot
+      let targetSlot = activePanelIndex;
+      if (frames.length > 1) {
+        // If active slot already has an image, look for an empty slot
+        const emptyIdx = [0, 1, 2, 3].slice(0, frames.length).find((idx) => !panelImages[idx]?.imageUrl);
+        if (emptyIdx !== undefined) {
+          targetSlot = emptyIdx;
+          setActivePanelIndex(emptyIdx);
+        }
+      }
+
+      updateFrame(targetSlot, (curr) => ({
+        ...curr,
+        imageUrl: imgSrc,
+        uploadedImage: {
+          src: imgSrc,
+          naturalWidth,
+          naturalHeight,
+          aspectRatio
+        },
+        panX: 0,
+        panY: 0,
+        scale: 1,
+        rotation: 0,
+        fitMode: 'contain'
+      }));
+
+      setSelectedElement({ type: 'image', panelIndex: targetSlot });
+      setSaveToast('Photo uploaded from mobile successfully!');
+      setTimeout(() => setSaveToast(null), 4000);
+    };
+    img.src = imgSrc;
+  };
+
+  // 1. Listen via BroadcastChannel (same-origin / multi-tab)
+  useEffect(() => {
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        const channel = new BroadcastChannel(`acrylic-upload-${uploadSessionId}`);
+        channel.onmessage = (event) => {
+          if (event.data && event.data.image) {
+            handleApplyIncomingPhoto(event.data.image);
+          }
+        };
+        return () => {
+          channel.close();
+        };
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+  }, [uploadSessionId, activePanelIndex, frames.length, panelImages]);
+
+  // 2. Listen via localStorage (storage events)
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === `acrylic_upload_${uploadSessionId}` && e.newValue) {
+        try {
+          const data = JSON.parse(e.newValue);
+          if (data && data.image) {
+            handleApplyIncomingPhoto(data.image);
+          }
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [uploadSessionId, activePanelIndex, frames.length, panelImages]);
+
+  // 3. Poll Connect API endpoint every 2 seconds for cross-network phone uploads
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/upload-session/${uploadSessionId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.images && Array.isArray(data.images) && data.images.length > 0) {
+            for (const img of data.images) {
+              handleApplyIncomingPhoto(img);
+            }
+          }
+        }
+      } catch (err) {}
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [uploadSessionId, activePanelIndex, frames.length, panelImages]);
 
   // Dragging State
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -1439,9 +1588,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
           
           <div className="h-5 w-[1px] bg-white/20 mx-1 hidden sm:block" />
           
-          <Link to="/" className="flex items-center gap-2 hover:opacity-95 transition-opacity">
-            <CanvasIndiaLogo className="h-8 w-auto filter brightness-0 invert" />
-            <span className="text-white/80 font-bold text-xs tracking-wider uppercase hidden md:inline">
+          <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity focus:outline-none" title="Canvas India">
+            <img 
+              src="/canvas-india-official-logo.png" 
+              alt="Canvas India" 
+              className="h-7 sm:h-8 md:h-9 w-auto object-contain block select-none" 
+            />
+            <span className="text-white font-bold text-xs tracking-wider uppercase hidden md:inline border-l border-white/20 pl-2">
               Acrylic Customizer
             </span>
           </Link>
@@ -1466,6 +1619,54 @@ export const AcrylicCustomizerPage: React.FC = () => {
           </button>
         </div>
       </header>
+
+      {/* Mobile Slide-Over Navigation Drawer */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex z-50 animate-in fade-in">
+          <div className="bg-white w-72 h-full shadow-2xl p-6 flex flex-col justify-between animate-in slide-in-from-left duration-200 text-stone-800">
+            <div className="space-y-5">
+              <div className="flex items-center justify-between pb-4 border-b border-stone-100">
+                <img src="/canvas-india-official-logo.png" alt="Canvas India" className="h-8 w-auto object-contain" />
+                <button 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="text-stone-400 hover:text-stone-700 cursor-pointer"
+                  title="Close Menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="space-y-1">
+                <Link 
+                  to={`/products/${catalogProduct.slug || catalogProduct.id}`} 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="block px-3 py-2 text-xs font-bold text-stone-800 hover:bg-stone-100 rounded-lg"
+                >
+                  Return to Product Page
+                </Link>
+                <Link 
+                  to="/acrylic" 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="block px-3 py-2 text-xs font-bold text-stone-800 hover:bg-stone-100 rounded-lg"
+                >
+                  View All Acrylic Products
+                </Link>
+                <Link 
+                  to="/" 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="block px-3 py-2 text-xs font-bold text-stone-800 hover:bg-stone-100 rounded-lg"
+                >
+                  Homepage
+                </Link>
+              </div>
+              <div className="pt-4 border-t border-stone-100 space-y-2 text-xs text-stone-500">
+                <div className="font-bold text-stone-900">Official Company Details</div>
+                <div>H NO 4-9-197/8184, HMT Nagar Main Road, Nacharam, Hyderabad, Telangana - 500076</div>
+                <div>Email: info@canvasindia.com | Phone: +91 99999 99999</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* SVG Global ClipPath Mask Definitions for Shapes */}
       <svg width="0" height="0" className="absolute pointer-events-none opacity-0" aria-hidden="true">
@@ -1601,10 +1802,39 @@ export const AcrylicCustomizerPage: React.FC = () => {
                   Upload Photos
                 </h3>
                 <p className="text-[11px] text-stone-500">
-                  Upload multiple photos from your device to easily assign into layout slots.
+                  Add high-resolution photos from your computer or scan the QR code to upload directly from your mobile phone.
                 </p>
               </div>
 
+              {/* Segmented Control: Computer vs Mobile QR */}
+              <div className="flex border border-stone-200 rounded-xl p-1 bg-stone-100">
+                <button
+                  type="button"
+                  onClick={() => setUploadMode('computer')}
+                  className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    uploadMode === 'computer'
+                      ? 'bg-white text-[#0E4A93] shadow-xs'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  <Laptop className="w-3.5 h-3.5" />
+                  <span>Upload from Computer</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUploadMode('mobile')}
+                  className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    uploadMode === 'mobile'
+                      ? 'bg-white text-[#0E4A93] shadow-xs'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span>Upload from Mobile</span>
+                </button>
+              </div>
+
+              {/* Multi-slot assignment selector */}
               {frames.length > 1 && (
                 <div className="p-2.5 bg-stone-100 rounded-xl space-y-1.5">
                   <div className="text-[11px] font-bold text-stone-700">Assign to Slot:</div>
@@ -1632,28 +1862,104 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  handleGalleryUpload(e.dataTransfer.files);
-                }}
-                className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-6 text-center cursor-pointer transition-all group"
-              >
-                <div className="w-12 h-12 rounded-full bg-white text-[#0E4A93] shadow-sm flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                  <UploadCloud className="w-6 h-6 stroke-[2.5]" />
+              {uploadMode === 'computer' ? (
+                /* COMPUTER UPLOAD ZONE */
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    handleGalleryUpload(e.dataTransfer.files);
+                  }}
+                  className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-6 text-center cursor-pointer transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-full bg-white text-[#0E4A93] shadow-sm flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                    <UploadCloud className="w-6 h-6 stroke-[2.5]" />
+                  </div>
+                  <div className="text-xs font-bold text-stone-900">
+                    Click to Browse or Drag Photos
+                  </div>
+                  <div className="text-[11px] text-stone-500 mt-1">
+                    Supports JPG, PNG, WEBP up to 25MB
+                  </div>
                 </div>
-                <div className="text-xs font-bold text-stone-900">
-                  Click to Browse or Drag Photos
-                </div>
-                <div className="text-[11px] text-stone-500 mt-1">
-                  Supports JPG, PNG, WEBP up to 25MB
-                </div>
-              </div>
+              ) : (
+                /* MOBILE QR UPLOAD ZONE */
+                <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm space-y-3.5 text-center">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[11px] font-bold text-stone-700">Listening for mobile upload</span>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold bg-blue-50 text-[#0E4A93] px-2 py-0.5 rounded border border-blue-100">
+                      #{uploadSessionId}
+                    </span>
+                  </div>
 
+                  {/* QR Code Container */}
+                  <div className="relative inline-block p-3 bg-white rounded-2xl border-2 border-stone-200 shadow-sm mx-auto">
+                    {qrDataUrl ? (
+                      <img 
+                        src={qrDataUrl} 
+                        alt="Scan QR code with mobile phone" 
+                        className="w-44 h-44 sm:w-48 sm:h-48 mx-auto block object-contain"
+                      />
+                    ) : (
+                      <div className="w-44 h-44 flex items-center justify-center text-xs text-stone-400">
+                        Generating QR Code...
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="text-xs font-bold text-stone-900">
+                      Scan with your phone camera
+                    </div>
+                    <p className="text-[11px] text-stone-500 leading-relaxed max-w-xs mx-auto">
+                      Point your smartphone camera at this QR code to upload photos directly from your phone into your Acrylic print.
+                    </p>
+                  </div>
+
+                  {/* Direct Link & Test Actions */}
+                  <div className="pt-2 border-t border-stone-100 flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(mobileUploadUrl);
+                        setCopiedLink(true);
+                        setTimeout(() => setCopiedLink(false), 2500);
+                      }}
+                      className="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 rounded-lg text-[11px] font-bold text-stone-700 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedLink ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3 text-stone-500" />
+                          <span>Copy Link</span>
+                        </>
+                      )}
+                    </button>
+
+                    <a
+                      href={mobileUploadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#0E4A93] rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>Open Upload Page</span>
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Uploaded Photos Gallery */}
               {uploadedPhotos.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-2 pt-2 border-t border-stone-100">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-stone-700">Uploaded Photos ({uploadedPhotos.length}):</span>
                     <span className="text-[11px] text-[#0E4A93]">Click to assign</span>
@@ -1663,12 +1969,29 @@ export const AcrylicCustomizerPage: React.FC = () => {
                       <div
                         key={pIdx}
                         onClick={() => {
-                          updateFrame(activePanelIndex, (curr) => ({
-                            ...curr,
-                            imageUrl: photo
-                          }));
+                          const img = new Image();
+                          img.onload = () => {
+                            const naturalWidth = img.naturalWidth || 1200;
+                            const naturalHeight = img.naturalHeight || 800;
+                            const aspectRatio = naturalWidth / naturalHeight;
+                            updateFrame(activePanelIndex, (curr) => ({
+                              ...curr,
+                              imageUrl: photo,
+                              uploadedImage: {
+                                src: photo,
+                                naturalWidth,
+                                naturalHeight,
+                                aspectRatio
+                              },
+                              panX: 0,
+                              panY: 0,
+                              scale: 1,
+                              rotation: 0
+                            }));
+                          };
+                          img.src = photo;
                         }}
-                        className="aspect-square rounded-lg overflow-hidden border border-stone-200 hover:border-[#0E4A93] cursor-pointer hover:opacity-90 relative group"
+                        className="aspect-square rounded-lg overflow-hidden border border-stone-200 hover:border-[#0E4A93] cursor-pointer hover:opacity-90 relative group bg-white shadow-2xs"
                       >
                         <img src={photo} alt={`Upload ${pIdx}`} className="w-full h-full object-cover" />
                       </div>
@@ -1861,6 +2184,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
                         <img 
                           src={shape.image} 
                           alt={shape.name} 
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/assets/acrylic/acrylic-photo-panel.jpg';
+                          }}
                           className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform" 
                         />
                       </div>
