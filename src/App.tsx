@@ -19,8 +19,8 @@ import { RefundReturnPage } from './pages/RefundReturnPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { CanvasCategoryPage } from './pages/CanvasCategoryPage';
 import { AcrylicCustomizerPage } from './pages/AcrylicCustomizerPage';
+import { AllCategoriesPage } from './pages/AllCategoriesPage';
 import { CanvasCustomizerPage } from './pages/CanvasCustomizerPage';
-import { MobileUploadPage } from './pages/MobileUploadPage';
 
 export function App() {
   return (
@@ -30,14 +30,13 @@ export function App() {
         <Route path="/customize/acrylic/:productId" element={<AcrylicCustomizerPage />} />
         {/* Dedicated Full-Screen Canvas Customizer */}
         <Route path="/customize/canvas/:productId" element={<CanvasCustomizerPage />} />
-        {/* Dedicated Mobile QR Upload Page */}
-        <Route path="/mobile-upload/:sessionId" element={<MobileUploadPage />} />
 
         <Route element={<RootLayout />}>
           {/* Home */}
           <Route path="/" element={<HomePage />} />
 
           {/* Canvas — dedicated product listing page (feature/canvas-category-page) */}
+          <Route path="/categories" element={<AllCategoriesPage />} />
           <Route path="/canvas" element={<CanvasCategoryPage />} />
           {/* /canvas-prints is an alias that uses the generic CategoryPage for SEO parity */}
           <Route path="/canvas-prints" element={<CategoryPage categorySlug="canvas" />} />

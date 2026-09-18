@@ -287,7 +287,7 @@ export const Homepage: React.FC<HomepageProps> = ({
             </div>
             <button
               type="button"
-              onClick={() => navigate('/search')}
+              onClick={() => navigate('/categories')}
               className="text-xs sm:text-sm font-bold text-[#0E4A93] hover:underline cursor-pointer whitespace-nowrap"
             >
               View All →
