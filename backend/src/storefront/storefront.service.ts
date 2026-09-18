@@ -21,19 +21,41 @@ export class StorefrontService {
    * password, no email verification. This is a deliberately minimal guest
    * checkout identity, not a real account system (scope for that is future
    * work if the client wants persistent customer logins).
+   *
+   * Customer.phone and Customer.email both have unique constraints, so a
+   * returning phone/email reuses the existing customer record (with a fresh
+   * token) rather than failing on a duplicate-key error.
    */
   async createSession(dto: CreateStorefrontSessionDto) {
     const guestToken = randomBytes(32).toString('hex');
 
-    const customer = await this.prisma.customer.create({
-      data: {
-        name: dto.name,
-        email: dto.email,
-        phone: dto.phone,
-        isGuest: true,
-        guestToken,
-      },
-    });
+    const existing =
+      dto.phone || dto.email
+        ? await this.prisma.customer.findFirst({
+            where: {
+              deletedAt: null,
+              OR: [
+                ...(dto.phone ? [{ phone: dto.phone }] : []),
+                ...(dto.email ? [{ email: dto.email }] : []),
+              ],
+            },
+          })
+        : null;
+
+    const customer = existing
+      ? await this.prisma.customer.update({
+          where: { id: existing.id },
+          data: { guestToken, name: dto.name },
+        })
+      : await this.prisma.customer.create({
+          data: {
+            name: dto.name,
+            email: dto.email,
+            phone: dto.phone,
+            isGuest: true,
+            guestToken,
+          },
+        });
 
     return { customerToken: guestToken, customerId: customer.id };
   }
