@@ -8,7 +8,8 @@ function uploadSessionPlugin(): Plugin {
   const sessions = new Map<string, { images: string[]; updatedAt: number }>();
 
   // Cleanup sessions older than 1 hour every 10 minutes
-  setInterval(() => {
+  // unref() so this timer never keeps `vite build` (e.g. on Vercel) alive after it finishes
+  const cleanupTimer = setInterval(() => {
     const now = Date.now();
     for (const [id, sess] of sessions.entries()) {
       if (now - sess.updatedAt > 60 * 60 * 1000) {
@@ -16,6 +17,7 @@ function uploadSessionPlugin(): Plugin {
       }
     }
   }, 10 * 60 * 1000);
+  cleanupTimer.unref();
 
   const getLocalIp = (): string | null => {
     const interfaces = os.networkInterfaces();
