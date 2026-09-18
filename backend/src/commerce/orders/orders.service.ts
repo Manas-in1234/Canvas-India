@@ -50,7 +50,11 @@ export class OrdersService {
    * snapshotted onto order_items so later product/price changes cannot alter
    * historical order data (scope §89, §114).
    */
-  async createFromCart(customerId: string, cartId: string) {
+  async createFromCart(
+    customerId: string,
+    cartId: string,
+    addresses?: { type: 'BILLING' | 'SHIPPING'; name: string; line1: string; line2?: string; city: string; state: string; postalCode: string; country?: string; phone?: string }[],
+  ) {
     const pricedCart = await this.cartService.priceCart(cartId);
 
     if (pricedCart.customerId !== customerId) {
@@ -134,6 +138,21 @@ export class OrdersService {
           events: {
             create: eventsToCreate,
           },
+          addresses: addresses
+            ? {
+                create: addresses.map((a) => ({
+                  type: a.type,
+                  name: a.name,
+                  line1: a.line1,
+                  line2: a.line2,
+                  city: a.city,
+                  state: a.state,
+                  postalCode: a.postalCode,
+                  country: a.country ?? 'IN',
+                  phone: a.phone,
+                })),
+              }
+            : undefined,
         },
         include: { items: true },
       });
@@ -162,14 +181,18 @@ export class OrdersService {
       await tx.cart.update({ where: { id: cartId }, data: { status: 'CONVERTED' } });
       await this.abandonedCartsService.markConverted(cartId, tx);
 
+      // Reserve inventory for each line inside the same transaction as order
+      // creation (scope §38: Available -> Reserved on payment confirmation;
+      // reserved eagerly here since Phase 1 has no live payment gateway yet).
+      // Must run in this transaction, not after it — otherwise an
+      // insufficient-stock failure here would leave a committed order with
+      // no reserved inventory behind it.
+      for (const item of pricedCart.items) {
+        await this.inventoryService.reserve(item.variantId, item.quantity, 'Order', created.id, tx);
+      }
+
       return created;
     });
-
-    // Reserve inventory for each line (scope §38: Available -> Reserved on payment
-    // confirmation; reserved eagerly here since Phase 1 has no live payment gateway yet).
-    for (const item of pricedCart.items) {
-      await this.inventoryService.reserve(item.variantId, item.quantity, 'Order', order.id);
-    }
 
     return order;
   }

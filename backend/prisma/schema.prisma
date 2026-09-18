@@ -107,6 +107,7 @@ model Customer {
   email         String?            @unique
   phone         String?            @unique
   isGuest       Boolean            @default(false) @map("is_guest")
+  guestToken    String?            @unique @map("guest_token")
   addresses     CustomerAddress[]
   carts         Cart[]
   orders        Order[]

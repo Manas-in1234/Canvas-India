@@ -357,6 +357,21 @@ async function main() {
       });
       seededVariantCount++;
 
+      // Baseline stock so seeded variants are actually purchasable — without
+      // this, checkout fails with "No inventory item for variant" since
+      // OrdersService.createFromCart requires an InventoryItem to reserve against.
+      await prisma.inventoryItem.upsert({
+        where: { variantId: variant.id },
+        update: {},
+        create: {
+          variantId: variant.id,
+          available: 100,
+          reserved: 0,
+          damaged: 0,
+          reorderLevel: 10,
+        },
+      });
+
       const optValId = sizeOptionValueMap.get(sizeVal);
       if (optValId) {
         await prisma.variantOption.upsert({

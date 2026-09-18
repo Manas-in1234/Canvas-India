@@ -1,5 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service.js';
+import type { Prisma } from '../generated/prisma/client.js';
+
+type PrismaTx = Prisma.TransactionClient;
 
 /**
  * Inventory state machine (scope §37-39):
@@ -63,36 +66,59 @@ export class InventoryService {
     });
   }
 
-  async reserve(variantId: string, quantity: number, referenceType: string, referenceId: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const item = await tx.inventoryItem.findUnique({ where: { variantId } });
-      if (!item) {
-        throw new NotFoundException(`No inventory item for variant ${variantId}`);
-      }
-      if (item.available < quantity) {
-        throw new BadRequestException('Insufficient available stock to reserve');
-      }
+  /**
+   * Reserves stock for a variant. Pass an existing `tx` (e.g. from
+   * OrdersService.createFromCart) so this runs inside the caller's own
+   * transaction — otherwise, on its own, this opens a new transaction and
+   * commits independently of whatever else the caller is doing, which is
+   * fine for the standalone admin "reserve" endpoint but was a real bug when
+   * order creation relied on this running after its own transaction had
+   * already committed (an insufficient-stock failure here left a committed
+   * order with no reserved inventory behind it).
+   */
+  async reserve(variantId: string, quantity: number, referenceType: string, referenceId: string, tx?: PrismaTx) {
+    if (tx) {
+      return this.reserveWithClient(tx, variantId, quantity, referenceType, referenceId);
+    }
+    return this.prisma.$transaction((innerTx) =>
+      this.reserveWithClient(innerTx, variantId, quantity, referenceType, referenceId),
+    );
+  }
 
-      const beforeQuantity = item.available;
-      await tx.inventoryItem.update({
-        where: { variantId },
-        data: { available: { decrement: quantity }, reserved: { increment: quantity } },
-      });
+  private async reserveWithClient(
+    tx: PrismaTx,
+    variantId: string,
+    quantity: number,
+    referenceType: string,
+    referenceId: string,
+  ) {
+    const item = await tx.inventoryItem.findUnique({ where: { variantId } });
+    if (!item) {
+      throw new NotFoundException(`No inventory item for variant ${variantId}`);
+    }
+    if (item.available < quantity) {
+      throw new BadRequestException('Insufficient available stock to reserve');
+    }
 
-      await tx.inventoryMovement.create({
-        data: {
-          inventoryItemId: item.id,
-          movementType: 'RESERVATION',
-          quantity,
-          beforeQuantity,
-          afterQuantity: beforeQuantity - quantity,
-          referenceType,
-          referenceId,
-        },
-      });
-
-      return tx.inventoryItem.findUnique({ where: { variantId } });
+    const beforeQuantity = item.available;
+    await tx.inventoryItem.update({
+      where: { variantId },
+      data: { available: { decrement: quantity }, reserved: { increment: quantity } },
     });
+
+    await tx.inventoryMovement.create({
+      data: {
+        inventoryItemId: item.id,
+        movementType: 'RESERVATION',
+        quantity,
+        beforeQuantity,
+        afterQuantity: beforeQuantity - quantity,
+        referenceType,
+        referenceId,
+      },
+    });
+
+    return tx.inventoryItem.findUnique({ where: { variantId } });
   }
 
   async release(variantId: string, quantity: number, referenceType: string, referenceId: string) {

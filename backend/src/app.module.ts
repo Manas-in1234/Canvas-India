@@ -18,6 +18,7 @@ import { CustomizationModule } from './customization/customization.module.js';
 import { ProductionModule } from './production/production.module.js';
 import { ShippingModule } from './shipping/shipping.module.js';
 import { GrowthModule } from './growth/growth.module.js';
+import { StorefrontModule } from './storefront/storefront.module.js';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { GrowthModule } from './growth/growth.module.js';
     ShippingModule,
     GrowthModule,
     AnalyticsModule,
+    StorefrontModule,
   ],
   controllers: [AppController],
   providers: [AppService],
