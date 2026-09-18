@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90" width="120" height="90">
+      <rect width="120" height="90" fill="#2E1065"/>
+      <circle cx="54" cy="40" r="11" fill="none" stroke="#FBBF24" stroke-width="2"/>
+      <circle cx="66" cy="40" r="11" fill="none" stroke="#FDE047" stroke-width="2"/>
+      <text x="60" y="65" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="8" font-weight="bold" letter-spacing="1" text-anchor="middle">MR &amp; MRS</text>
+    </svg>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <filter id="shadow-heart" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.25"/>
+    </filter>
+    <linearGradient id="glare-heart" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.7"/>
+      <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="chrome-heart" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="40%" stop-color="#CBD5E1"/>
+      <stop offset="80%" stop-color="#64748B"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </radialGradient>
+    <clipPath id="clip-heart">
+      <use href="#h-shape" />
+    </clipPath>
+    <path id="h-shape" d="M 100 160 C 50 125, 25 95, 25 68 C 25 45, 43 33, 66 33 C 79 33, 89 40, 100 50 C 111 40, 121 33, 134 33 C 157 33, 175 45, 175 68 C 175 95, 150 125, 100 160 Z" />
+    <linearGradient id="g-hrt" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#E11D48"/><stop offset="50%" stop-color="#F43F5E"/><stop offset="100%" stop-color="#FDA4AF"/></linearGradient>
+  </defs>
+
+  <!-- Drop Shadow -->
+  <g filter="url(#shadow-heart)">
+    <use href="#h-shape" fill="#000000" opacity="0.2" />
+  </g>
+
+  <!-- Main Acrylic Plate with Image Art -->
+  <g clip-path="url(#clip-heart)">
+    <!-- Gradient Landscape/Art Representation -->
+    <rect width="200" height="200" fill="url(#g-hrt)" />
+    
+    <!-- Mountain/Horizon silhouettes representing photo art -->
+    <path d="M 0 140 Q 50 90 100 130 T 200 110.00000000000001 L 200 200 L 0 200 Z" fill="#091E3A" opacity="0.35" />
+    <circle cx="150" cy="70" r="24" fill="#FFF" opacity="0.3" />
+
+    <!-- Glass Glare Reflection -->
+    <rect width="200" height="200" fill="url(#glare-heart)" />
+  </g>
+
+  <!-- Optical Beveled Edge -->
+  <use href="#h-shape" fill="none" stroke="#FFFFFF" stroke-width="2.5" opacity="0.85" />
+
+  <!-- Standoff Chrome Bolts -->
+  
+</svg>

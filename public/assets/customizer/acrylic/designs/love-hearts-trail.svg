@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90" width="120" height="90">
+      <rect width="120" height="90" fill="#881337"/>
+      <path d="M 60 48 C 50 38, 40 46, 40 52 C 40 60, 60 70, 60 70 C 60 70, 80 60, 80 52 C 80 46, 70 38, 60 48 Z" fill="#F43F5E" stroke="#FFF" stroke-width="1"/>
+      <text x="60" y="32" fill="#FFFFFF" font-family="Georgia, serif" font-style="italic" font-size="10" font-weight="bold" text-anchor="middle">You &amp; Me</text>
+    </svg>

@@ -23,34 +23,54 @@ import { ProductImage } from '../components/ProductImage';
 import { Product } from '../types';
 import { loadAllStoredReviews, AcrylicProductReview } from '../data/acrylicReviews';
 
-export interface ShapeTab {
+export interface AcrylicCategoryTab {
   slug: string;
   name: string;
+  description: string;
 }
 
-export const SHAPE_TABS: ShapeTab[] = [
-  { slug: 'all', name: 'All Shapes' },
-  { slug: 'rectangle', name: 'Rectangle' },
-  { slug: 'square', name: 'Square' },
-  { slug: 'circle', name: 'Circle' },
-  { slug: 'oval', name: 'Oval' },
-  { slug: 'heart', name: 'Heart' },
-  { slug: 'star', name: 'Star' },
-  { slug: 'hexagon', name: 'Hexagon' },
-  { slug: 'rounded-rectangle', name: 'Rounded Rectangle' },
-  { slug: 'triangle', name: 'Triangle' },
-  { slug: 'octagon', name: 'Octagon' },
-  { slug: 'diamond', name: 'Diamond' },
-  { slug: 'arch', name: 'Arch' },
-  { slug: 'capsule', name: 'Capsule' },
-  { slug: 'cloud', name: 'Cloud' },
-  { slug: 'scalloped', name: 'Scalloped' },
-  { slug: 'ticket', name: 'Ticket' },
-  { slug: 'tag', name: 'Tag' },
-  { slug: 'polaroid', name: 'Polaroid' },
-  { slug: 'speech-bubble', name: 'Speech Bubble' },
-  { slug: 'other', name: 'Other Shapes' }
+export const ACRYLIC_CATEGORY_TABS: AcrylicCategoryTab[] = [
+  { slug: 'all', name: 'All Acrylic Products', description: 'Complete collection of premium acrylic prints and wall displays' },
+  { slug: 'photo-blocks', name: 'Acrylic Photo Blocks', description: 'Freestanding solid optical acrylic desk blocks' },
+  { slug: 'photo-panels', name: 'Acrylic Photo Panels', description: 'Sleek wall panels with diamond-polished edges' },
+  { slug: 'wall-art', name: 'Acrylic Wall Art', description: 'Statement acrylic displays and multi-piece art' },
+  { slug: 'acrylic-prints', name: 'Acrylic Prints', description: 'Sub-surface UV archival photographic prints' },
+  { slug: 'collage-split', name: 'Collage & Split Panels', description: 'Multi-photo collages and triptych panoramic panels' },
+  { slug: 'signage-corporate', name: 'Signage & Corporate', description: 'Executive nameplates, logos, and architectural signage' },
+  { slug: 'gifts', name: 'Keepsakes & Gifts', description: 'Personalized acrylic gifts for birthdays, weddings, anniversaries' },
+  { slug: 'decorative', name: 'Art & Decorative', description: 'Contemporary designs and inspirational typography' }
 ];
+
+export const SHAPE_TABS = ACRYLIC_CATEGORY_TABS;
+
+export const isProductInAcrylicCategory = (product: Product, slug: string): boolean => {
+  if (slug === 'all') return true;
+  const name = (product.name || '').toLowerCase();
+  const prodSlug = (product.slug || '').toLowerCase();
+  const subcat = (product.subcategory || '').toLowerCase();
+  const tags = (product.tags || []).map(t => t.toLowerCase());
+
+  switch (slug) {
+    case 'photo-blocks':
+      return name.includes('block') || prodSlug.includes('block') || tags.includes('photo block') || tags.includes('freestanding');
+    case 'photo-panels':
+      return (subcat.includes('photo panel') || name.includes('panel') || prodSlug.includes('panel')) && !name.includes('block') && !prodSlug.includes('block');
+    case 'wall-art':
+      return subcat.includes('wall art') || name.includes('wall art') || prodSlug.includes('wall-art');
+    case 'acrylic-prints':
+      return name.includes('print') || prodSlug.includes('print');
+    case 'collage-split':
+      return name.includes('collage') || name.includes('split') || prodSlug.includes('collage') || prodSlug.includes('split');
+    case 'signage-corporate':
+      return subcat.includes('signage') || subcat.includes('corporate') || subcat.includes('office') || name.includes('signage') || name.includes('corporate') || name.includes('reception') || tags.includes('corporate');
+    case 'gifts':
+      return subcat.includes('gifts') || name.includes('gift') || name.includes('keepsake') || Boolean(product.occasions && product.occasions.length > 0);
+    case 'decorative':
+      return subcat.includes('decorative') || subcat.includes('artwork') || subcat.includes('posters') || name.includes('decorative') || name.includes('abstract') || name.includes('poster');
+    default:
+      return true;
+  }
+};
 
 const OCCASIONS_LIST = [
   'Birthday',
@@ -99,9 +119,9 @@ export const AcrylicCategoryPage: React.FC = () => {
     onAddToCart 
   } = useShop();
 
-  // Shape filter state (Default: 'all')
-  const initialShape = searchParams.get('shape') || 'all';
-  const [selectedShape, setSelectedShape] = useState<string>(initialShape);
+  // Product category filter state (Default: 'all')
+  const initialCategory = searchParams.get('category') || searchParams.get('shape') || 'all';
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Panels Open/Close State (BOTH CLOSED BY DEFAULT)
@@ -132,13 +152,13 @@ export const AcrylicCategoryPage: React.FC = () => {
   const sortRef = useRef<HTMLDivElement>(null);
   const filterRef = useRef<HTMLDivElement>(null);
 
-  // Sync shape with URL
+  // Sync category with URL
   useEffect(() => {
-    const shape = searchParams.get('shape');
-    if (shape && SHAPE_TABS.some(t => t.slug.toLowerCase() === shape.toLowerCase())) {
-      setSelectedShape(shape.toLowerCase());
-    } else if (!shape) {
-      setSelectedShape('all');
+    const cat = searchParams.get('category') || searchParams.get('shape');
+    if (cat && ACRYLIC_CATEGORY_TABS.some(t => t.slug.toLowerCase() === cat.toLowerCase())) {
+      setSelectedCategory(cat.toLowerCase());
+    } else if (!cat) {
+      setSelectedCategory('all');
     }
   }, [searchParams]);
 
@@ -180,13 +200,15 @@ export const AcrylicCategoryPage: React.FC = () => {
     }
   };
 
-  const handleSelectShape = (slug: string) => {
-    setSelectedShape(slug);
+  const handleSelectCategory = (slug: string) => {
+    setSelectedCategory(slug);
     const newParams = new URLSearchParams(searchParams);
     if (slug === 'all') {
+      newParams.delete('category');
       newParams.delete('shape');
     } else {
-      newParams.set('shape', slug);
+      newParams.set('category', slug);
+      newParams.delete('shape');
     }
     setSearchParams(newParams, { replace: true });
   };
@@ -258,22 +280,10 @@ export const AcrylicCategoryPage: React.FC = () => {
   // Filtered Acrylic Products
   const filteredProducts = useMemo(() => {
     return acrylicProducts.filter((product) => {
-      // 1. Shape filter
-      if (selectedShape !== 'all') {
-        const sel = selectedShape.toLowerCase();
-        if (sel === 'other') {
-          const mainShapeSlugs = [
-            'rectangle', 'square', 'circle', 'oval', 'heart', 'star',
-            'hexagon', 'rounded-rectangle', 'triangle', 'octagon', 'diamond',
-            'arch', 'capsule', 'cloud', 'scalloped', 'tag', 'polaroid', 'speech-bubble'
-          ];
-          const hasOther = (product.shapes && product.shapes.some(s => !mainShapeSlugs.includes(s.toLowerCase()))) ||
-                           (product.shape && !mainShapeSlugs.includes(product.shape.toLowerCase()));
-          if (!hasOther) return false;
-        } else {
-          const matchesShapes = product.shapes?.some(s => s.toLowerCase() === sel);
-          const matchesShape = product.shape?.toLowerCase() === sel;
-          if (!matchesShapes && !matchesShape) return false;
+      // 1. Category filter
+      if (selectedCategory !== 'all') {
+        if (!isProductInAcrylicCategory(product, selectedCategory)) {
+          return false;
         }
       }
 
@@ -310,18 +320,16 @@ export const AcrylicCategoryPage: React.FC = () => {
         const q = searchQuery.toLowerCase().trim();
         const matchesName = product.name.toLowerCase().includes(q);
         const matchesDesc = product.description.toLowerCase().includes(q);
-        const matchesShape = product.shape?.toLowerCase().includes(q);
-        const matchesShapes = product.shapes?.some(s => s.toLowerCase().includes(q));
         const matchesTags = product.tags?.some(t => t.toLowerCase().includes(q));
         const matchesMaterial = product.material?.toLowerCase().includes(q);
-        if (!matchesName && !matchesDesc && !matchesShape && !matchesShapes && !matchesTags && !matchesMaterial) {
+        if (!matchesName && !matchesDesc && !matchesTags && !matchesMaterial) {
           return false;
         }
       }
 
       return true;
     });
-  }, [acrylicProducts, selectedShape, appliedMinPrice, appliedMaxPrice, appliedOccasions, appliedFeatures, searchQuery]);
+  }, [acrylicProducts, selectedCategory, appliedMinPrice, appliedMaxPrice, appliedOccasions, appliedFeatures, searchQuery]);
 
   // Sorted Products
   const sortedProducts = useMemo(() => {
@@ -354,10 +362,10 @@ export const AcrylicCategoryPage: React.FC = () => {
     return list;
   }, [filteredProducts, sortBy]);
 
-  // Current active shape tab object
-  const currentShapeTab = useMemo(() => {
-    return SHAPE_TABS.find(t => t.slug === selectedShape) || SHAPE_TABS[0];
-  }, [selectedShape]);
+  // Current active category tab object
+  const currentCategoryTab = useMemo(() => {
+    return ACRYLIC_CATEGORY_TABS.find(t => t.slug === selectedCategory) || ACRYLIC_CATEGORY_TABS[0];
+  }, [selectedCategory]);
 
   return (
     <div className="w-full bg-[#FFFDF9] text-stone-900 font-manrope min-h-screen">
@@ -395,7 +403,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                   Acrylic Prints &amp; Wall Art
                 </h1>
                 <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-2xl">
-                  Choose from a wide range of Acrylic shapes and turn your photos into stunning displays.
+                  Turn your memories into crystal-clear luminous wall displays and freestanding desk blocks with premium optical acrylic.
                 </p>
               </div>
 
@@ -483,36 +491,23 @@ export const AcrylicCategoryPage: React.FC = () => {
       </section>
 
       {/* ========================================================================= */}
-      {/* 2. SHOP-BY-SHAPE HORIZONTAL FILTER BAR                                    */}
+      {/* 2. ACRYLIC PRODUCT CATEGORIES HORIZONTAL NAVIGATION                       */}
       {/* ========================================================================= */}
       <div id="acrylic-catalog" className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-2xs">
         <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-3">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5">
-            {SHAPE_TABS.map((tab) => {
-              const isActive = selectedShape === tab.slug;
-              // Compute dynamic product count for this shape
+            {ACRYLIC_CATEGORY_TABS.map((tab) => {
+              const isActive = selectedCategory === tab.slug;
+              // Compute dynamic product count for this acrylic category
               const count = tab.slug === 'all'
                 ? acrylicProducts.length
-                : tab.slug === 'other'
-                  ? acrylicProducts.filter(p => {
-                      const mainShapeSlugs = [
-                        'rectangle', 'square', 'circle', 'oval', 'heart', 'star',
-                        'hexagon', 'rounded-rectangle', 'triangle', 'octagon', 'diamond',
-                        'arch', 'capsule', 'cloud', 'scalloped', 'tag', 'polaroid', 'speech-bubble'
-                      ];
-                      return (p.shapes && p.shapes.some(s => !mainShapeSlugs.includes(s.toLowerCase()))) ||
-                             (p.shape && !mainShapeSlugs.includes(p.shape.toLowerCase()));
-                    }).length
-                  : acrylicProducts.filter(p => 
-                      p.shapes?.some(s => s.toLowerCase() === tab.slug.toLowerCase()) ||
-                      p.shape?.toLowerCase() === tab.slug.toLowerCase()
-                    ).length;
+                : acrylicProducts.filter(p => isProductInAcrylicCategory(p, tab.slug)).length;
 
               return (
                 <button
                   key={tab.slug}
                   type="button"
-                  onClick={() => handleSelectShape(tab.slug)}
+                  onClick={() => handleSelectCategory(tab.slug)}
                   className={`px-4 py-2 rounded-full text-xs whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                     isActive
                       ? 'bg-[#0E4A93] text-white shadow-xs ring-2 ring-[#0E4A93]/20 font-bold'
@@ -926,7 +921,7 @@ export const AcrylicCategoryPage: React.FC = () => {
         {/* Dynamic Product Count Display */}
         <div className="flex items-center justify-between pb-4">
           <div className="text-sm text-stone-600 font-medium">
-            {selectedShape === 'all' ? (
+            {selectedCategory === 'all' ? (
               <>
                 Showing <span className="font-extrabold text-stone-900">{sortedProducts.length}</span> of{' '}
                 <span className="font-extrabold text-stone-900">{acrylicProducts.length}</span> Acrylic Products
@@ -934,16 +929,16 @@ export const AcrylicCategoryPage: React.FC = () => {
             ) : (
               <>
                 Showing <span className="font-extrabold text-stone-900">{sortedProducts.length}</span>{' '}
-                <span className="font-extrabold text-[#0E4A93]">{currentShapeTab.name}</span> Acrylic Products
+                <span className="font-extrabold text-[#0E4A93]">{currentCategoryTab.name}</span>
               </>
             )}
           </div>
 
-          {selectedShape !== 'all' && (
+          {selectedCategory !== 'all' && (
             <div className="text-xs text-stone-500 hidden sm:flex items-center gap-1.5">
-              <span>Filter:</span>
+              <span>Category:</span>
               <span className="font-bold text-[#0E4A93] bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">
-                {currentShapeTab.name}
+                {currentCategoryTab.name}
               </span>
             </div>
           )}
@@ -1021,10 +1016,10 @@ export const AcrylicCategoryPage: React.FC = () => {
                   {/* Card Content */}
                   <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
                     <div className="space-y-1.5">
-                      {/* Shape / Category Tag */}
+                      {/* Product Category Tag */}
                       <div className="text-[11px] font-bold uppercase tracking-wider text-[#0E4A93] flex items-center gap-1">
-                        <Shapes className="w-3 h-3" />
-                        <span>{product.shape ? `${product.shape.replace('-', ' ')} Acrylic` : (product.subcategory || 'ACRYLIC PRINT')}</span>
+                        <Sparkles className="w-3 h-3" />
+                        <span>{product.subcategory || 'ACRYLIC PRINT'}</span>
                       </div>
 
                       {/* Product Title (clickable) */}
@@ -1108,20 +1103,20 @@ export const AcrylicCategoryPage: React.FC = () => {
             <div className="space-y-1">
               <h3 className="font-bold text-stone-900 text-lg">No Acrylic Products Found</h3>
               <p className="text-xs text-stone-500 leading-relaxed">
-                We couldn&apos;t find any acrylic products matching the selected shape or filters.
+                We couldn&apos;t find any acrylic products matching the selected category or filters.
               </p>
             </div>
             <button
               type="button"
               onClick={() => {
-                handleSelectShape('all');
+                handleSelectCategory('all');
                 handleClearAllFilters();
                 setSearchQuery('');
               }}
               className="px-5 py-2.5 bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold rounded-xl text-xs transition-colors cursor-pointer inline-flex items-center gap-1.5"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Shape &amp; Filters</span>
+              <span>Reset Category &amp; Filters</span>
             </button>
           </div>
         )}

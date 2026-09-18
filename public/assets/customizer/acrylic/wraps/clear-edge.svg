@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="160" height="120">
+      <defs>
+        <filter id="ce-glow"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#38BDF8" flood-opacity="0.8"/></filter>
+      </defs>
+      <rect width="160" height="120" fill="#F8FAFC"/>
+      <g transform="translate(25, 20)">
+        <!-- Outer Clear Beveled Border -->
+        <rect x="-4" y="-4" width="118" height="88" rx="8" fill="none" stroke="#BAE6FD" stroke-width="4" filter="url(#ce-glow)"/>
+        <!-- Inner Photo Area -->
+        <rect x="0" y="0" width="110" height="80" rx="4" fill="#3B82F6"/>
+        <path d="M 0 55 Q 30 35 60 50 T 110 40 L 110 80 L 0 80 Z" fill="#1E3A8A" opacity="0.4"/>
+        <line x1="0" y1="0" x2="110" y2="80" stroke="#FFF" stroke-width="1.5" opacity="0.3"/>
+      </g>
+    </svg>

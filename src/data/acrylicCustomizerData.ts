@@ -8,8 +8,9 @@ export type ToolbarTab =
   | 'PRODUCTS' 
   | 'UPLOAD' 
   | 'SELECT SIZE' 
-  | 'LAYOUTS & DESIGNS' 
+  | 'SHAPES'
   | 'SHAPE'
+  | 'LAYOUTS & DESIGNS' 
   | 'WRAP & BORDER'
   | 'HARDWARE & FINISH' 
   | 'OPTIONS'
@@ -387,6 +388,7 @@ export interface LayoutPreset {
   name: string;
   photoCount: number;
   description: string;
+  image: string;
   layoutType: '1-single' | '2-vertical' | '2-horizontal' | '2-offset' | '3-wall' | '3-triptych' | '3-split-left' | '4-grid' | '4-hero-right' | '4-strips-h' | '4-strips-v';
   frames: Array<{
     id: string;
@@ -397,24 +399,114 @@ export interface LayoutPreset {
 }
 
 export const LAYOUT_PRESETS: LayoutPreset[] = [
-  // 1 Photo
+  // 1. Single Image
   {
     id: 'layout-1-single',
     name: 'Single Image',
     photoCount: 1,
     description: 'Full edge-to-edge optical clarity acrylic single print.',
+    image: '/assets/customizer/acrylic/layouts/layout-1-single.svg',
     layoutType: '1-single',
     frames: [
       { id: 'f0', label: 'Main Frame', dimension: 'Edge to Edge', aspectRatio: 'w-full h-full' }
     ]
   },
 
-  // 2 Photos
+  // 2. 2 Image Split
+  {
+    id: 'layout-2-split',
+    name: '2 Image Split',
+    photoCount: 2,
+    description: 'Dual portrait panels split side-by-side.',
+    image: '/assets/customizer/acrylic/layouts/layout-2-split.svg',
+    layoutType: '2-vertical',
+    frames: [
+      { id: 'f0', label: 'Frame 1', dimension: 'Left Panel', aspectRatio: 'w-full h-full' },
+      { id: 'f1', label: 'Frame 2', dimension: 'Right Panel', aspectRatio: 'w-full h-full' }
+    ]
+  },
+
+  // 3. 3 Image Collage
+  {
+    id: 'layout-3-collage',
+    name: '3 Image Collage',
+    photoCount: 3,
+    description: 'Triptych 3-panel panoramic acrylic collage.',
+    image: '/assets/customizer/acrylic/layouts/layout-3-collage.svg',
+    layoutType: '3-triptych',
+    frames: [
+      { id: 'f0', label: 'Panel 1', dimension: 'Left', aspectRatio: 'h-full w-full' },
+      { id: 'f1', label: 'Panel 2', dimension: 'Center', aspectRatio: 'h-full w-full' },
+      { id: 'f2', label: 'Panel 3', dimension: 'Right', aspectRatio: 'h-full w-full' }
+    ]
+  },
+
+  // 4. 4 Image Grid
+  {
+    id: 'layout-4-grid',
+    name: '4 Image Grid',
+    photoCount: 4,
+    description: 'Symmetric 2x2 grid collage for 4 photos.',
+    image: '/assets/customizer/acrylic/layouts/layout-4-grid.svg',
+    layoutType: '4-grid',
+    frames: [
+      { id: 'f0', label: 'Top Left', dimension: 'Quadrant 1', aspectRatio: 'aspect-square' },
+      { id: 'f1', label: 'Top Right', dimension: 'Quadrant 2', aspectRatio: 'aspect-square' },
+      { id: 'f2', label: 'Bottom Left', dimension: 'Quadrant 3', aspectRatio: 'aspect-square' },
+      { id: 'f3', label: 'Bottom Right', dimension: 'Quadrant 4', aspectRatio: 'aspect-square' }
+    ]
+  },
+
+  // 5. Top + Bottom
+  {
+    id: 'layout-top-bottom',
+    name: 'Top + Bottom',
+    photoCount: 2,
+    description: 'Dual horizontal panels stacked vertically.',
+    image: '/assets/customizer/acrylic/layouts/layout-top-bottom.svg',
+    layoutType: '2-horizontal',
+    frames: [
+      { id: 'f0', label: 'Top Panel', dimension: 'Upper Half', aspectRatio: 'w-full h-full' },
+      { id: 'f1', label: 'Bottom Panel', dimension: 'Lower Half', aspectRatio: 'w-full h-full' }
+    ]
+  },
+
+  // 6. Left + Right
+  {
+    id: 'layout-left-right',
+    name: 'Left + Right',
+    photoCount: 2,
+    description: 'Dual vertical side-by-side panels.',
+    image: '/assets/customizer/acrylic/layouts/layout-left-right.svg',
+    layoutType: '2-vertical',
+    frames: [
+      { id: 'f0', label: 'Left Panel', dimension: 'Left Half', aspectRatio: 'w-full h-full' },
+      { id: 'f1', label: 'Right Panel', dimension: 'Right Half', aspectRatio: 'w-full h-full' }
+    ]
+  },
+
+  // 7. Main + 2 Small Images
+  {
+    id: 'layout-main-2small',
+    name: 'Main + 2 Small Images',
+    photoCount: 3,
+    description: 'Dominant hero portrait with 2 stacked side panels.',
+    image: '/assets/customizer/acrylic/layouts/layout-main-2small.svg',
+    layoutType: '3-split-left',
+    frames: [
+      { id: 'f0', label: 'Hero Panel', dimension: 'Main Feature', aspectRatio: 'h-full w-full' },
+      { id: 'f1', label: 'Top Mini', dimension: 'Side Top', aspectRatio: 'h-full w-full' },
+      { id: 'f2', label: 'Bottom Mini', dimension: 'Side Bottom', aspectRatio: 'h-full w-full' }
+    ]
+  },
+
+  // Legacy layout aliases for backward compatibility
   {
     id: 'layout-2-vertical',
     name: '2 Columns',
     photoCount: 2,
     description: 'Dual portrait panels side-by-side.',
+    image: '/assets/customizer/acrylic/layouts/layout-2-split.svg',
     layoutType: '2-vertical',
     frames: [
       { id: 'f0', label: 'Frame 1', dimension: 'Half Width', aspectRatio: 'w-full h-full' },
@@ -426,6 +518,7 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     name: '2 Rows',
     photoCount: 2,
     description: 'Dual horizontal panels stacked vertically.',
+    image: '/assets/customizer/acrylic/layouts/layout-top-bottom.svg',
     layoutType: '2-horizontal',
     frames: [
       { id: 'f0', label: 'Frame 1', dimension: 'Half Height', aspectRatio: 'w-full h-full' },
@@ -433,106 +526,16 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     ]
   },
   {
-    id: 'layout-2-offset',
-    name: '2 Offset Panes',
-    photoCount: 2,
-    description: 'Staggered dual acrylic panels with dynamic spacing.',
-    layoutType: '2-offset',
-    frames: [
-      { id: 'f0', label: 'Frame 1', dimension: 'Offset Left', aspectRatio: 'w-full h-full' },
-      { id: 'f1', label: 'Frame 2', dimension: 'Offset Right', aspectRatio: 'w-full h-full' }
-    ]
-  },
-
-  // 3 Photos
-  {
     id: 'layout-3-wall',
     name: 'Wall Trio',
     photoCount: 3,
     description: 'Hero landscape panel above two complementary square panels.',
+    image: '/assets/customizer/acrylic/layouts/layout-3-collage.svg',
     layoutType: '3-wall',
     frames: [
       { id: 'f0', label: 'Hero Top', dimension: '12" × 18"', aspectRatio: 'aspect-[18/12]' },
       { id: 'f1', label: 'Bottom Left', dimension: '10" × 8"', aspectRatio: 'aspect-[8/10]' },
       { id: 'f2', label: 'Bottom Right', dimension: '10" × 8"', aspectRatio: 'aspect-[8/10]' }
-    ]
-  },
-  {
-    id: 'layout-3-triptych',
-    name: '3-Piece Triptych',
-    photoCount: 3,
-    description: 'Panoramic composition split across 3 equal vertical panels.',
-    layoutType: '3-triptych',
-    frames: [
-      { id: 'f0', label: 'Panel 1', dimension: '1/3 Width', aspectRatio: 'h-full w-full' },
-      { id: 'f1', label: 'Panel 2', dimension: '1/3 Width', aspectRatio: 'h-full w-full' },
-      { id: 'f2', label: 'Panel 3', dimension: '1/3 Width', aspectRatio: 'h-full w-full' }
-    ]
-  },
-  {
-    id: 'layout-3-split-left',
-    name: '1 Left + 2 Right',
-    photoCount: 3,
-    description: 'Large portrait frame with two stacked frames on right.',
-    layoutType: '3-split-left',
-    frames: [
-      { id: 'f0', label: 'Hero Left', dimension: 'Large Portrait', aspectRatio: 'h-full w-full' },
-      { id: 'f1', label: 'Top Right', dimension: 'Small Landscape', aspectRatio: 'h-full w-full' },
-      { id: 'f2', label: 'Bottom Right', dimension: 'Small Landscape', aspectRatio: 'h-full w-full' }
-    ]
-  },
-
-  // 4 Photos
-  {
-    id: 'layout-4-grid',
-    name: '4-Photo 2x2 Grid',
-    photoCount: 4,
-    description: 'Symmetric 4-quadrant square grid for story collages.',
-    layoutType: '4-grid',
-    frames: [
-      { id: 'f0', label: 'Top Left', dimension: 'Quadrant 1', aspectRatio: 'aspect-square' },
-      { id: 'f1', label: 'Top Right', dimension: 'Quadrant 2', aspectRatio: 'aspect-square' },
-      { id: 'f2', label: 'Bottom Left', dimension: 'Quadrant 3', aspectRatio: 'aspect-square' },
-      { id: 'f3', label: 'Bottom Right', dimension: 'Quadrant 4', aspectRatio: 'aspect-square' }
-    ]
-  },
-  {
-    id: 'layout-4-hero-right',
-    name: '1 Hero + 3 Mini',
-    photoCount: 4,
-    description: 'Dominant hero portrait photo with 3 stacked mini moments.',
-    layoutType: '4-hero-right',
-    frames: [
-      { id: 'f0', label: 'Hero Left', dimension: 'Main Feature', aspectRatio: 'h-full w-full' },
-      { id: 'f1', label: 'Top Right', dimension: 'Mini 1', aspectRatio: 'h-full w-full' },
-      { id: 'f2', label: 'Mid Right', dimension: 'Mini 2', aspectRatio: 'h-full w-full' },
-      { id: 'f3', label: 'Bottom Right', dimension: 'Mini 3', aspectRatio: 'h-full w-full' }
-    ]
-  },
-  {
-    id: 'layout-4-strips-h',
-    name: '4 Horizontal Strips',
-    photoCount: 4,
-    description: 'Four wide panoramic cinematic strip slices.',
-    layoutType: '4-strips-h',
-    frames: [
-      { id: 'f0', label: 'Strip 1', dimension: 'Row 1', aspectRatio: 'h-full w-full' },
-      { id: 'f1', label: 'Strip 2', dimension: 'Row 2', aspectRatio: 'h-full w-full' },
-      { id: 'f2', label: 'Strip 3', dimension: 'Row 3', aspectRatio: 'h-full w-full' },
-      { id: 'f3', label: 'Strip 4', dimension: 'Row 4', aspectRatio: 'h-full w-full' }
-    ]
-  },
-  {
-    id: 'layout-4-strips-v',
-    name: '4 Vertical Columns',
-    photoCount: 4,
-    description: 'Four slender vertical panels side-by-side.',
-    layoutType: '4-strips-v',
-    frames: [
-      { id: 'f0', label: 'Col 1', dimension: 'Column 1', aspectRatio: 'h-full w-full' },
-      { id: 'f1', label: 'Col 2', dimension: 'Column 2', aspectRatio: 'h-full w-full' },
-      { id: 'f2', label: 'Col 3', dimension: 'Column 3', aspectRatio: 'h-full w-full' },
-      { id: 'f3', label: 'Col 4', dimension: 'Column 4', aspectRatio: 'h-full w-full' }
     ]
   }
 ];
@@ -1322,38 +1325,62 @@ export interface AcrylicEdgeWrap {
   price: number;
   description: string;
   image: string;
+  borderWidth?: number;
+  borderColor?: string;
+  isClearEdge?: boolean;
 }
 
 export const ACRYLIC_EDGE_WRAPS: AcrylicEdgeWrap[] = [
   {
-    id: 'polished-clear',
-    name: 'Polished Clear Edge',
+    id: 'full-bleed',
+    name: 'Full Bleed',
     price: 0,
-    description: 'Crystal-clear flame polished edge providing 3D optical depth and transparency.',
-    image: '/assets/customizer/acrylic/wraps/polished-clear-edge.svg'
+    description: 'Image reaches the complete printable area to the edge.',
+    image: '/assets/customizer/acrylic/wraps/full-bleed.svg',
+    borderWidth: 0,
+    borderColor: 'transparent'
   },
   {
-    id: 'diamond-beveled',
-    name: 'Diamond Beveled Edge',
-    price: 150,
-    description: 'Precision 45° chamfered facet catching and refracting room light.',
-    image: '/assets/customizer/acrylic/wraps/diamond-beveled-edge.svg'
+    id: 'clear-edge',
+    name: 'Clear Edge',
+    price: 0,
+    description: 'Full image with crystal-clear diamond-polished beveled refraction edge.',
+    image: '/assets/customizer/acrylic/wraps/clear-edge.svg',
+    borderWidth: 10,
+    borderColor: 'rgba(255, 255, 255, 0.75)',
+    isClearEdge: true
   },
   {
-    id: 'frosted-satin',
-    name: 'Frosted Satin Edge',
-    price: 100,
-    description: 'Subtle frosted matte border perimeter for contemporary architectural appeal.',
-    image: '/assets/customizer/acrylic/wraps/frosted-satin-edge.svg'
+    id: 'white-border',
+    name: 'White Border',
+    price: 120,
+    description: '18px studio white border framing the photograph inside the shape.',
+    image: '/assets/customizer/acrylic/wraps/white-border.svg',
+    borderWidth: 16,
+    borderColor: '#FFFFFF'
   },
   {
-    id: 'flame-black',
-    name: 'Flame Black Edge',
-    price: 190,
-    description: 'High-contrast jet black edge framing your acrylic print with sharp definition.',
-    image: '/assets/customizer/acrylic/wraps/flame-black-edge.svg'
+    id: 'black-border',
+    name: 'Black Border',
+    price: 120,
+    description: '18px gallery black border following the shape contour.',
+    image: '/assets/customizer/acrylic/wraps/black-border.svg',
+    borderWidth: 16,
+    borderColor: '#0F172A'
+  },
+  {
+    id: 'no-wrap',
+    name: 'No Wrap',
+    price: 0,
+    description: 'Standard laser-cut clean acrylic edge.',
+    image: '/assets/customizer/acrylic/wraps/no-wrap.svg',
+    borderWidth: 0,
+    borderColor: 'transparent'
   }
 ];
+
+export const ACRYLIC_WRAP_OPTIONS = ACRYLIC_EDGE_WRAPS;
+export type AcrylicWrapOption = AcrylicEdgeWrap;
 
 // ============================================================================
 // ACRYLIC SHAPES (SHAPE Tab - Full 23 Shapes Suite)
@@ -1375,72 +1402,56 @@ export interface AcrylicShapeOption {
 }
 
 export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
-  // --------------------------------------------------------------------------
-  // BASIC SHAPES (1-7)
-  // --------------------------------------------------------------------------
   {
     id: 'shape-square',
-    name: 'Square (1:1)',
+    name: 'Square',
     category: 'basic',
     description: 'Classic symmetrical modern acrylic format.',
     aspectClass: 'aspect-square',
     aspectRatio: 1,
     borderRadiusClass: 'rounded-xl',
-    clipPathStyle: 'inset(0 round 12px)',
+    clipPathStyle: 'inset(0 round 14px)',
     isSingleDimension: true,
-    image: '/assets/customizer/acrylic/shapes/shape-square.svg',
+    image: '/images/acrylic/shapes/square.jpg',
     priceAddon: 0
   },
   {
     id: 'shape-rectangle',
-    name: 'Rectangle (3:2)',
+    name: 'Rectangle',
     category: 'basic',
     description: 'Timeless proportional display for all photography.',
-    aspectClass: 'aspect-[3/2]',
-    aspectRatio: 1.5,
+    aspectClass: 'aspect-[4/3]',
+    aspectRatio: 1.333,
     borderRadiusClass: 'rounded-xl',
-    clipPathStyle: 'inset(0 round 12px)',
+    clipPathStyle: 'inset(0 round 14px)',
     isSingleDimension: false,
-    image: '/assets/customizer/acrylic/shapes/shape-rectangle.svg',
+    image: '/images/acrylic/shapes/rectangle.jpg',
     priceAddon: 0
   },
   {
     id: 'shape-landscape',
-    name: 'Landscape (16:10)',
+    name: 'Landscape',
     category: 'basic',
     description: 'Panoramic horizontal presentation for vistas & groups.',
     aspectClass: 'aspect-[16/10]',
     aspectRatio: 1.6,
     borderRadiusClass: 'rounded-xl',
-    clipPathStyle: 'inset(0 round 12px)',
+    clipPathStyle: 'inset(0 round 14px)',
     isSingleDimension: false,
-    image: '/assets/customizer/acrylic/shapes/shape-landscape.svg',
+    image: '/images/acrylic/shapes/landscape.jpg',
     priceAddon: 0
   },
   {
     id: 'shape-portrait',
-    name: 'Portrait (3:4)',
+    name: 'Portrait',
     category: 'basic',
     description: 'Vertical focal format for individual & couple portraits.',
     aspectClass: 'aspect-[3/4]',
     aspectRatio: 0.75,
     borderRadiusClass: 'rounded-xl',
-    clipPathStyle: 'inset(0 round 12px)',
+    clipPathStyle: 'inset(0 round 14px)',
     isSingleDimension: false,
-    image: '/assets/customizer/acrylic/shapes/shape-portrait.svg',
-    priceAddon: 0
-  },
-  {
-    id: 'shape-rounded-rect',
-    name: 'Rounded Rectangle',
-    category: 'basic',
-    description: 'Smooth 30mm radius crystal corners for modern displays.',
-    aspectClass: 'aspect-[4/3]',
-    aspectRatio: 1.333,
-    borderRadiusClass: 'rounded-3xl',
-    clipPathStyle: 'inset(0 round 24px)',
-    isSingleDimension: false,
-    image: '/assets/customizer/acrylic/shapes/shape-rounded-rect.svg',
+    image: '/images/acrylic/shapes/portrait.jpg',
     priceAddon: 0
   },
   {
@@ -1453,7 +1464,7 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
     borderRadiusClass: 'rounded-full',
     clipPathStyle: 'circle(50% at 50% 50%)',
     isSingleDimension: true,
-    image: '/assets/customizer/acrylic/shapes/shape-circle.svg',
+    image: '/images/acrylic/shapes/circle.jpg',
     priceAddon: 0
   },
   {
@@ -1466,17 +1477,26 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
     borderRadiusClass: 'rounded-[50%]',
     clipPathStyle: 'ellipse(50% 38% at 50% 50%)',
     isSingleDimension: false,
-    image: '/assets/customizer/acrylic/shapes/shape-oval.svg',
+    image: '/images/acrylic/shapes/oval.jpg',
     priceAddon: 0
   },
-
-  // --------------------------------------------------------------------------
-  // SPECIAL SHAPES (8-17)
-  // --------------------------------------------------------------------------
+  {
+    id: 'shape-rounded-rect',
+    name: 'Rounded Rectangle',
+    category: 'basic',
+    description: 'Smooth 28mm radius crystal corners for modern displays.',
+    aspectClass: 'aspect-[4/3]',
+    aspectRatio: 1.333,
+    borderRadiusClass: 'rounded-3xl',
+    clipPathStyle: 'inset(0 round 28px)',
+    isSingleDimension: false,
+    image: '/images/acrylic/shapes/rounded-rectangle.jpg',
+    priceAddon: 0
+  },
   {
     id: 'shape-heart',
     name: 'Heart',
-    category: 'special',
+    category: 'basic',
     description: 'Romantic heart contour for weddings & anniversaries.',
     aspectClass: 'aspect-square',
     aspectRatio: 1,
@@ -1484,215 +1504,25 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
     svgClipId: 'acrylic-clip-shape-heart',
     clipPathStyle: 'url(#acrylic-clip-shape-heart)',
     isSingleDimension: true,
-    image: '/assets/customizer/acrylic/shapes/shape-heart.svg',
-    priceAddon: 150
-  },
-  {
-    id: 'shape-star',
-    name: 'Star',
-    category: 'special',
-    description: 'Dynamic 5-point star laser-cut crystal acrylic.',
-    aspectClass: 'aspect-square',
-    aspectRatio: 1,
-    borderRadiusClass: 'rounded-none',
-    clipPathStyle: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
-    isSingleDimension: true,
-    image: '/assets/customizer/acrylic/shapes/shape-star.svg',
+    image: '/images/acrylic/shapes/heart.jpg',
     priceAddon: 150
   },
   {
     id: 'shape-hexagon',
     name: 'Hexagon',
-    category: 'special',
+    category: 'basic',
     description: 'Geometric 6-sided honeycomb block for modern clusters.',
     aspectClass: 'aspect-square',
     aspectRatio: 1,
     borderRadiusClass: 'rounded-none',
     clipPathStyle: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
     isSingleDimension: true,
-    image: '/assets/customizer/acrylic/shapes/shape-hexagon.svg',
+    image: '/images/acrylic/shapes/hexagon.jpg',
     priceAddon: 150
-  },
-  {
-    id: 'shape-octagon',
-    name: 'Octagon',
-    category: 'special',
-    description: 'Symmetrical 8-sided beveled contour display.',
-    aspectClass: 'aspect-square',
-    aspectRatio: 1,
-    borderRadiusClass: 'rounded-none',
-    clipPathStyle: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
-    isSingleDimension: true,
-    image: '/assets/customizer/acrylic/shapes/shape-octagon.svg',
-    priceAddon: 150
-  },
-  {
-    id: 'shape-diamond',
-    name: 'Diamond',
-    category: 'special',
-    description: 'Striking rhombus diamond crystal profile.',
-    aspectClass: 'aspect-square',
-    aspectRatio: 1,
-    borderRadiusClass: 'rounded-none',
-    clipPathStyle: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-    isSingleDimension: true,
-    image: '/assets/customizer/acrylic/shapes/shape-diamond.svg',
-    priceAddon: 150
-  },
-  {
-    id: 'shape-triangle',
-    name: 'Triangle',
-    category: 'special',
-    description: 'Modern triangular geometry with crisp optical angles.',
-    aspectClass: 'aspect-square',
-    aspectRatio: 1,
-    borderRadiusClass: 'rounded-none',
-    clipPathStyle: 'polygon(50% 5%, 96% 95%, 4% 95%)',
-    isSingleDimension: true,
-    image: '/assets/customizer/acrylic/shapes/shape-triangle.svg',
-    priceAddon: 150
-  },
-  {
-    id: 'shape-arch',
-    name: 'Arch',
-    category: 'special',
-    description: 'Elegant architectural curved archway contour.',
-    aspectClass: 'aspect-[3/4]',
-    aspectRatio: 0.75,
-    borderRadiusClass: 'rounded-t-[999px] rounded-b-xl',
-    svgClipId: 'acrylic-clip-shape-arch',
-    clipPathStyle: 'url(#acrylic-clip-shape-arch)',
-    isSingleDimension: false,
-    image: '/assets/customizer/acrylic/shapes/shape-arch.svg',
-    priceAddon: 150
-  },
-  {
-    id: 'shape-capsule',
-    name: 'Capsule / Pill',
-    category: 'special',
-    description: 'Elongated rounded pill shape with ultra-smooth curves.',
-    aspectClass: 'aspect-[2/1]',
-    aspectRatio: 2,
-    borderRadiusClass: 'rounded-full',
-    clipPathStyle: 'inset(0 round 999px)',
-    isSingleDimension: false,
-    image: '/assets/customizer/acrylic/shapes/shape-capsule.svg',
-    priceAddon: 150
-  },
-  {
-    id: 'shape-cloud',
-    name: 'Cloud',
-    category: 'special',
-    description: 'Whimsical puffy cloud silhouette for kids & nursery photos.',
-    aspectClass: 'aspect-[4/3]',
-    aspectRatio: 1.333,
-    borderRadiusClass: 'rounded-3xl',
-    svgClipId: 'acrylic-clip-shape-cloud',
-    clipPathStyle: 'url(#acrylic-clip-shape-cloud)',
-    isSingleDimension: false,
-    image: '/assets/customizer/acrylic/shapes/shape-cloud.svg',
-    priceAddon: 150
-  },
-  {
-    id: 'shape-speech-bubble',
-    name: 'Speech Bubble',
-    category: 'special',
-    description: 'Playful quote & caption acrylic dialogue panel.',
-    aspectClass: 'aspect-[4/3]',
-    aspectRatio: 1.333,
-    borderRadiusClass: 'rounded-2xl',
-    svgClipId: 'acrylic-clip-shape-speech-bubble',
-    clipPathStyle: 'url(#acrylic-clip-shape-speech-bubble)',
-    isSingleDimension: false,
-    image: '/assets/customizer/acrylic/shapes/shape-speech-bubble.svg',
-    priceAddon: 150
-  },
-
-  // --------------------------------------------------------------------------
-  // DECORATIVE SHAPES (18-23)
-  // --------------------------------------------------------------------------
-  {
-    id: 'shape-scalloped',
-    name: 'Scalloped',
-    category: 'decorative',
-    description: 'Ornate scalloped petal edge detail around perimeter.',
-    aspectClass: 'aspect-square',
-    aspectRatio: 1,
-    borderRadiusClass: 'rounded-full',
-    svgClipId: 'acrylic-clip-shape-scalloped',
-    clipPathStyle: 'url(#acrylic-clip-shape-scalloped)',
-    isSingleDimension: true,
-    image: '/assets/customizer/acrylic/shapes/shape-scalloped.svg',
-    priceAddon: 180
-  },
-  {
-    id: 'shape-ticket',
-    name: 'Ticket',
-    category: 'decorative',
-    description: 'Vintage admit-one movie / concert stub notch design.',
-    aspectClass: 'aspect-[2/1]',
-    aspectRatio: 2,
-    borderRadiusClass: 'rounded-lg',
-    svgClipId: 'acrylic-clip-shape-ticket',
-    clipPathStyle: 'url(#acrylic-clip-shape-ticket)',
-    isSingleDimension: false,
-    image: '/assets/customizer/acrylic/shapes/shape-ticket.svg',
-    priceAddon: 180
-  },
-  {
-    id: 'shape-tag',
-    name: 'Tag',
-    category: 'decorative',
-    description: 'Gift / luggage tag profile with angled top corners.',
-    aspectClass: 'aspect-[3/4]',
-    aspectRatio: 0.75,
-    borderRadiusClass: 'rounded-xl',
-    clipPathStyle: 'polygon(22% 0%, 78% 0%, 100% 20%, 100% 100%, 0% 100%, 0% 20%)',
-    isSingleDimension: false,
-    image: '/assets/customizer/acrylic/shapes/shape-tag.svg',
-    priceAddon: 180
-  },
-  {
-    id: 'shape-polaroid',
-    name: 'Polaroid',
-    category: 'decorative',
-    description: 'Retro instant film frame with wide bottom border.',
-    aspectClass: 'aspect-[3/4]',
-    aspectRatio: 0.75,
-    borderRadiusClass: 'rounded-lg',
-    clipPathStyle: 'inset(0 round 8px)',
-    isSingleDimension: false,
-    image: '/assets/customizer/acrylic/shapes/shape-polaroid.svg',
-    priceAddon: 180
-  },
-  {
-    id: 'shape-photo-frame',
-    name: 'Photo Frame',
-    category: 'decorative',
-    description: 'Floating double-border crystal frame with bevel.',
-    aspectClass: 'aspect-[4/3]',
-    aspectRatio: 1.333,
-    borderRadiusClass: 'rounded-xl',
-    clipPathStyle: 'inset(0 round 12px)',
-    isSingleDimension: false,
-    image: '/assets/customizer/acrylic/shapes/shape-photo-frame.svg',
-    priceAddon: 180
-  },
-  {
-    id: 'shape-organic-blob',
-    name: 'Organic Blob',
-    category: 'decorative',
-    description: 'Contemporary fluid abstract organic curve contour.',
-    aspectClass: 'aspect-square',
-    aspectRatio: 1,
-    borderRadiusClass: 'rounded-[60%_40%_30%_70%/60%_30%_70%_40%]',
-    svgClipId: 'acrylic-clip-shape-organic-blob',
-    clipPathStyle: 'url(#acrylic-clip-shape-organic-blob)',
-    isSingleDimension: true,
-    image: '/assets/customizer/acrylic/shapes/shape-organic-blob.svg',
-    priceAddon: 180
   }
 ];
+
+export const ACRYLIC_9_SHAPES = ACRYLIC_SHAPES;
 
 // ============================================================================
 // SHAPE-SPECIFIC SIZES & COMPATIBILITY HELPERS (Sections 8 & 9)
@@ -2187,3 +2017,234 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
   ];
 }
 
+
+// ============================================================================
+// 11 ACRYLIC DESIGN OVERLAYS (Section 10, 11, 12)
+// ============================================================================
+
+export type DesignCategory =
+  | 'Minimal'
+  | 'Wedding'
+  | 'Love'
+  | 'Birthday'
+  | 'Family'
+  | 'Baby'
+  | 'Travel'
+  | 'Festival'
+  | 'Quotes'
+  | 'Floral'
+  | 'Modern';
+
+export const DESIGN_CATEGORIES: DesignCategory[] = [
+  'Minimal',
+  'Wedding',
+  'Love',
+  'Birthday',
+  'Family',
+  'Baby',
+  'Travel',
+  'Festival',
+  'Quotes',
+  'Floral',
+  'Modern'
+];
+
+export interface AcrylicDesignOverlay {
+  id: string;
+  name: string;
+  category: DesignCategory;
+  image: string;
+  description: string;
+  renderOverlaySvg: string;
+}
+
+export const ACRYLIC_DESIGN_OVERLAYS: AcrylicDesignOverlay[] = [
+  // 1. Minimal
+  {
+    id: 'minimal-thin-frame',
+    name: 'Thin Inset Frame',
+    category: 'Minimal',
+    image: '/assets/customizer/acrylic/designs/minimal-thin-frame.svg',
+    description: 'Delicate geometric inset frame with diamond corner marks.',
+    renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
+      <rect x="6" y="6" width="88" height="88" fill="none" stroke="#FFFFFF" stroke-width="0.8" opacity="0.85" />
+      <polygon points="6,6 8,8 6,10 4,8" fill="#FFFFFF" opacity="0.9" />
+      <polygon points="94,6 96,8 94,10 92,8" fill="#FFFFFF" opacity="0.9" />
+      <polygon points="6,94 8,96 6,98 4,96" fill="#FFFFFF" opacity="0.9" />
+      <polygon points="94,94 96,96 94,98 92,96" fill="#FFFFFF" opacity="0.9" />
+    </svg>`
+  },
+  {
+    id: 'minimal-monogram',
+    name: 'Modern Monogram',
+    category: 'Minimal',
+    image: '/assets/customizer/acrylic/designs/minimal-monogram.svg',
+    description: 'Clean architectural hairline with floating circular emblem.',
+    renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
+      <line x1="15" y1="88" x2="42" y2="88" stroke="#FFFFFF" stroke-width="0.8" opacity="0.8" />
+      <circle cx="50" cy="88" r="5" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.9" />
+      <text x="50" y="90" fill="#FFFFFF" font-family="Georgia, serif" font-size="5" font-weight="bold" text-anchor="middle">M</text>
+      <line x1="58" y1="88" x2="85" y2="88" stroke="#FFFFFF" stroke-width="0.8" opacity="0.8" />
+    </svg>`
+  },
+
+  // 2. Wedding
+  {
+    id: 'wedding-forever',
+    name: 'Together Forever',
+    category: 'Wedding',
+    image: '/assets/customizer/acrylic/designs/wedding-forever.svg',
+    description: 'Romantic calligraphy banner with laurel botanical flourish.',
+    renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
+      <path d="M 25 78 Q 50 72 75 78" fill="none" stroke="#FDE047" stroke-width="1" opacity="0.85"/>
+      <text x="50" y="86" fill="#FFFFFF" font-family="Georgia, serif" font-style="italic" font-size="5.5" font-weight="bold" text-anchor="middle" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))">Together Forever</text>
+    </svg>`
+  },
+  {
+    id: 'wedding-rings',
+    name: 'Entwined Rings',
+    category: 'Wedding',
+    image: '/assets/customizer/acrylic/designs/wedding-rings.svg',
+    description: 'Twin gold wedding rings with modern Mr & Mrs caption.',
+    renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
+      <circle cx="46" cy="18" r="6" fill="none" stroke="#FBBF24" stroke-width="1.2" opacity="0.9"/>
+      <circle cx="54" cy="18" r="6" fill="none" stroke="#FDE047" stroke-width="1.2" opacity="0.9"/>
+      <text x="50" y="32" fill="#FFFFFF" font-family="sans-serif" font-size="4.5" font-weight="bold" letter-spacing="1" text-anchor="middle" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))">MR &amp; MRS</text>
+    </svg>`
+  },
+
+  // 3. Love
+  {
+    id: 'love-infinity',
+    name: 'Forever & Always',
+    category: 'Love',
+    image: '/assets/customizer/acrylic/designs/love-infinity.svg',
+    description: 'Infinity loop merging into heart with sweet cursive script.',
+    renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
+      <path d="M 40 82 C 32 75, 28 89, 40 89 C 48 89, 52 75, 60 75 C 72 75, 68 89, 60 89 C 52 89, 48 75, 40 82 Z" fill="none" stroke="#FECDD3" stroke-width="1.5" opacity="0.9"/>
+      <text x="50" y="95" fill="#FFFFFF" font-family="Georgia, serif" font-style="italic" font-size="4.5" text-anchor="middle" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))">Forever &amp; Always</text>
+    </svg>`
+  },
+  {
+    id: 'love-hearts-trail',
+    name: 'Sweet Hearts',
+    category: 'Love',
+    image: '/assets/customizer/acrylic/designs/love-hearts-trail.svg',
+    description: 'Floating twin heart constellation with delicate script.',
+    renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
+      <path d="M 50 15 C 45 10, 40 14, 40 18 C 40 23, 50 28, 50 28 C 50 28, 60 23, 60 18 C 60 14, 55 10, 50 15 Z" fill="#F43F5E" opacity="0.85" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))"/>
+      <text x="50" y="36" fill="#FFFFFF" font-family="Georgia, serif" font-style="italic" font-size="5" font-weight="bold" text-anchor="middle" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))">You &amp; Me</text>
+    </svg>`
+  },
+
+  // 4. Birthday
+  {
+    id: 'birthday-celebration',
+    name: 'Happy Birthday',
+    category: 'Birthday',
+    image: '/assets/customizer/acrylic/designs/birthday-celebration.svg',
+    description: 'Celebratory festive stars with bold birthday title.',
+    renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
+      <text x="50" y="82" fill="#FFFFFF" font-family="sans-serif" font-size="4.5" font-weight="900" letter-spacing="1" text-anchor="middle" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))">HAPPY</text>
+      <text x="50" y="90" fill="#FDE047" font-family="Georgia, serif" font-style="italic" font-size="6.5" font-weight="bold" text-anchor="middle" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))">Birthday</text>
+    </svg>`
+  },
+
+  // 5. Family
+  {
+    id: 'family-roots',
+    name: 'Our Happy Place',
+    category: 'Family',
+    image: '/assets/customizer/acrylic/designs/family-roots.svg',
+    description: 'Home emblem with warm family typography.',
+    renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
+      <path d="M 50 14 L 40 22 L 44 22 L 44 32 L 56 32 L 56 22 L 60 22 Z" fill="#FDE68A" opacity="0.9" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.7))"/>
+      <text x="50" y="40" fill="#FFFFFF" font-family="sans-serif" font-size="4.2" font-weight="bold" letter-spacing="1" text-anchor="middle" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))">OUR HAPPY PLACE</text>
+    </svg>`
+  },
+
+  // 6. Baby
+  {
+    id: 'baby-miracle',
+    name: 'Welcome Little One',
+    category: 'Baby',
+    image: '/assets/customizer/acrylic/designs/baby-miracle.svg',
+    description: 'Gentle crescent moon and nursery stars.',
+    renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
+      <path d="M 50 12 C 43 12, 38 18, 38 25 C 38 32, 45 38, 52 38 C 47 34, 46 27, 49 21 C 51 15, 57 13, 50 12 Z" fill="#FDE047" opacity="0.9" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.6))"/>
+      <text x="50" y="46" fill="#BAE6FD" font-family="Georgia, serif" font-style="italic" font-size="4.8" font-weight="bold" text-anchor="middle" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))">Welcome Little One</text>
+    </svg>`
+  },
+
+  // 7. Travel
+  {
+    id: 'travel-wanderlust',
+    name: 'Wanderlust Compass',
+    category: 'Travel',
+    image: '/assets/customizer/acrylic/designs/travel-wanderlust.svg',
+    description: 'Fine travel compass rose with coordinates typography.',
+    renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
+      <circle cx="50" cy="80" r="9" fill="none" stroke="#38BDF8" stroke-width="0.8" opacity="0.85"/>
+      <polygon points="50,73 52,80 50,79 48,80" fill="#F43F5E"/>
+      <polygon points="50,87 52,80 50,81 48,80" fill="#E2E8F0"/>
+      <text x="50" y="95" fill="#FFFFFF" font-family="sans-serif" font-size="4.2" font-weight="bold" letter-spacing="1" text-anchor="middle" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))">WANDERLUST</text>
+    </svg>`
+  },
+
+  // 8. Festival
+  {
+    id: 'festival-diwali',
+    name: 'Radiant Mandala',
+    category: 'Festival',
+    image: '/assets/customizer/acrylic/designs/festival-diwali.svg',
+    description: 'Festive corner mandala pattern in luminous golden accents.',
+    renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
+      <circle cx="50" cy="18" r="8" fill="none" stroke="#FDE047" stroke-width="0.7" stroke-dasharray="1 1" opacity="0.9"/>
+      <circle cx="50" cy="18" r="4.5" fill="none" stroke="#F43F5E" stroke-width="0.8" opacity="0.9"/>
+      <text x="50" y="32" fill="#FDE047" font-family="Georgia, serif" font-size="4.5" font-weight="bold" text-anchor="middle" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))">Festive Celebration</text>
+    </svg>`
+  },
+
+  // 9. Quotes
+  {
+    id: 'quote-moments',
+    name: 'Collect Moments',
+    category: 'Quotes',
+    image: '/assets/customizer/acrylic/designs/quote-moments.svg',
+    description: 'Classic quote styling: Collect moments, not things.',
+    renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
+      <text x="50" y="82" fill="#FFFFFF" font-family="Georgia, serif" font-style="italic" font-size="4.8" text-anchor="middle" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))">“Collect moments,</text>
+      <text x="50" y="89" fill="#FDE68A" font-family="Georgia, serif" font-style="italic" font-size="4.8" font-weight="bold" text-anchor="middle" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))">not things”</text>
+    </svg>`
+  },
+
+  // 10. Floral
+  {
+    id: 'floral-botanical',
+    name: 'Botanical Eucalyptus',
+    category: 'Floral',
+    image: '/assets/customizer/acrylic/designs/floral-botanical.svg',
+    description: 'Handcrafted eucalyptus branch bordering the top edge.',
+    renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
+      <path d="M 15 12 Q 50 20 85 12" fill="none" stroke="#6EE7B7" stroke-width="0.8" opacity="0.85"/>
+      <ellipse cx="30" cy="13" rx="2.5" ry="4.5" fill="#A7F3D0" opacity="0.75" transform="rotate(-30 30 13)"/>
+      <ellipse cx="45" cy="16" rx="2.5" ry="4.5" fill="#A7F3D0" opacity="0.75" transform="rotate(30 45 16)"/>
+      <ellipse cx="60" cy="15" rx="2.5" ry="4.5" fill="#A7F3D0" opacity="0.75" transform="rotate(-30 60 15)"/>
+      <ellipse cx="75" cy="13" rx="2.5" ry="4.5" fill="#A7F3D0" opacity="0.75" transform="rotate(30 75 13)"/>
+    </svg>`
+  },
+
+  // 11. Modern
+  {
+    id: 'modern-geometry',
+    name: 'Dual Line Minimal',
+    category: 'Modern',
+    image: '/assets/customizer/acrylic/designs/modern-geometry.svg',
+    description: 'Clean parallel geometric borders with sharp modern balance.',
+    renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
+      <rect x="6" y="6" width="88" height="88" fill="none" stroke="#A1A1AA" stroke-width="0.6" opacity="0.7"/>
+      <rect x="8" y="8" width="84" height="84" fill="none" stroke="#FFFFFF" stroke-width="0.9" opacity="0.85"/>
+      <text x="50" y="95" fill="#FFFFFF" font-family="sans-serif" font-size="3.8" font-weight="900" letter-spacing="2" text-anchor="middle" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))">CONTEMPORARY</text>
+    </svg>`
+  }
+];

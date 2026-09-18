@@ -27,7 +27,7 @@ import {
   Crop,
   Grid,
   Search,
-Shapes,
+  Shapes,
   Maximize2
 } from 'lucide-react';
 import { CanvasIndiaLogo } from '../components/CanvasIndiaLogo';
@@ -56,11 +56,9 @@ import {
   COLOR_FINISH_OPTIONS,
   TypographyOption,
   TYPOGRAPHY_OPTIONS,
-  TemplateCategory,
-  AcrylicTemplateItem,
-  ACRYLIC_TEMPLATES,
   AcrylicEdgeWrap,
   ACRYLIC_EDGE_WRAPS,
+  ACRYLIC_WRAP_OPTIONS,
   AcrylicShapeOption,
   ACRYLIC_SHAPES,
   getSizesForShape,
@@ -70,7 +68,11 @@ import {
   THICKNESS_OPTIONS,
   PAPER_OPTIONS,
   FONT_OPTIONS,
-  TEXT_COLOR_PRESETS
+  TEXT_COLOR_PRESETS,
+  DesignCategory,
+  DESIGN_CATEGORIES,
+  AcrylicDesignOverlay,
+  ACRYLIC_DESIGN_OVERLAYS
 } from '../data/acrylicCustomizerData';
 import { AcrylicLiveTextEditor, TextElement } from '../components/AcrylicLiveTextEditor';
 import { AcrylicClipartModal, ClipartElement } from '../components/AcrylicClipartModal';
@@ -123,6 +125,8 @@ const createDefaultPanelState = (imageUrl: string | null = null): PanelImageStat
   clipartElements: []
 });
 
+const CURVED_GEOMETRIC_SHAPES = ['shape-circle', 'shape-oval', 'shape-heart', 'shape-hexagon'];
+
 // ============================================================================
 // MAIN ACRYLIC CUSTOMIZER COMPONENT
 // ============================================================================
@@ -140,7 +144,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     ) || allProducts.find((p) => p.categorySlug === 'acrylic') || allProducts[0];
   }, [allProducts, productId]);
 
-  // Active Left Toolbar Tab (8 tabs: PRODUCTS, UPLOAD, SELECT SIZE, LAYOUTS & DESIGNS, SHAPE, WRAP & BORDER, HARDWARE & FINISH, OPTIONS)
+  // Active Left Toolbar Tab
   const [activeTab, setActiveTab] = useState<ToolbarTab>('PRODUCTS');
 
   // Selected Acrylic Product Type
@@ -162,11 +166,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // Size Category filter tabs in SELECT SIZE panel
   const [sizeCategory, setSizeCategory] = useState<SizeCategory>('RECOMMENDED');
 
-  const filteredSizes = useMemo(() => {
-    return SIZE_OPTIONS.filter((s) => s.category === sizeCategory);
-  }, [sizeCategory]);
-
-  // Shape Selection State (SHAPE Tab - 23 Shapes Suite)
+  // Shape Selection State (SHAPES Tab - 9 practical shapes)
   const [selectedShapeId, setSelectedShapeId] = useState<string>(() => {
     const paramShape = searchParams.get('shape');
     if (paramShape) {
@@ -184,27 +184,16 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
     return 'shape-square';
   });
-  const [shapeFilterCategory, setShapeFilterCategory] = useState<'ALL' | 'BASIC' | 'SPECIAL' | 'DECORATIVE'>('ALL');
 
   const currentShape = useMemo(() => {
     return ACRYLIC_SHAPES.find((s) => s.id === selectedShapeId) || ACRYLIC_SHAPES[0];
   }, [selectedShapeId]);
 
-  const filteredShapes = useMemo(() => {
-    let baseList = ACRYLIC_SHAPES;
-    if (catalogProduct?.shapes && catalogProduct.shapes.length > 0) {
-      const supportedSlugs = catalogProduct.shapes.map((s) => s.toLowerCase());
-      baseList = ACRYLIC_SHAPES.filter((s) => {
-        const slug = s.id.replace('shape-', '').toLowerCase();
-        return supportedSlugs.includes(slug) || supportedSlugs.includes(s.id.toLowerCase());
-      });
-      if (baseList.length === 0) baseList = ACRYLIC_SHAPES;
-    }
-    if (shapeFilterCategory === 'ALL') return baseList;
-    return baseList.filter((s) => s.category.toUpperCase() === shapeFilterCategory);
-  }, [shapeFilterCategory, catalogProduct]);
+  const isCurvedShape = useMemo(() => {
+    return CURVED_GEOMETRIC_SHAPES.includes(selectedShapeId);
+  }, [selectedShapeId]);
 
-  // Dynamic Shape-Specific Sizes (Section 8 & 9)
+  // Dynamic Shape-Specific Sizes
   const shapeSizes = useMemo(() => {
     return getSizesForShape(selectedShapeId, selectedProductTypeId);
   }, [selectedShapeId, selectedProductTypeId]);
@@ -237,11 +226,17 @@ export const AcrylicCustomizerPage: React.FC = () => {
   }, [selectedSizeId, shapeSizes]);
 
   // Layouts & Designs Subtabs
-  const [layoutSubTab, setLayoutSubTab] = useState<'DESIGNS' | 'LAYOUTS'>('LAYOUTS');
+  const [layoutSubTab, setLayoutSubTab] = useState<'LAYOUTS' | 'DESIGNS'>('LAYOUTS');
   const [selectedLayoutId, setSelectedLayoutId] = useState<string>('layout-1-single');
-  const [expandedPhotoCount, setExpandedPhotoCount] = useState<number | null>(1);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
 
+  // Designs Overlay state
+  const [selectedDesignCategory, setSelectedDesignCategory] = useState<DesignCategory>('Minimal');
+  const [selectedDesignId, setSelectedDesignId] = useState<string | null>(null);
+
+  const activeDesignOverlay = useMemo(() => {
+    if (!selectedDesignId) return null;
+    return ACRYLIC_DESIGN_OVERLAYS.find((d) => d.id === selectedDesignId) || null;
+  }, [selectedDesignId]);
 
   const currentLayout = useMemo(() => {
     return LAYOUT_PRESETS.find((l) => l.id === selectedLayoutId) || LAYOUT_PRESETS[0];
@@ -249,7 +244,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   const frames = currentLayout.frames;
 
-  // Frame Images State
+  // Frame Images State (independent slots)
   const [panelImages, setPanelImages] = useState<Record<number, PanelImageState>>({
     0: createDefaultPanelState(null),
     1: createDefaultPanelState(null),
@@ -269,7 +264,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const [selectedDisplayOptionId, setSelectedDisplayOptionId] = useState<string>('display-standoff');
   const [selectedFinishId, setSelectedFinishId] = useState<string>('high-gloss');
   const [selectedFrameId, setSelectedFrameId] = useState<string>('frame-none');
-  const [selectedEdgeWrapId, setSelectedEdgeWrapId] = useState<string>('polished-clear');
+  const [selectedEdgeWrapId, setSelectedEdgeWrapId] = useState<string>('full-bleed');
 
   // Options panel states
   const [selectedThicknessId, setSelectedThicknessId] = useState<string>('3mm');
@@ -284,29 +279,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Room View state
   const [showRoomView, setShowRoomView] = useState<boolean>(false);
-  const [roomBackdrop, setRoomBackdrop] = useState<'living' | 'office' | 'bedroom'>('living');
-
-  // Wheel Cleanup Map for smooth native non-passive zooming
-  const wheelCleanupMapRef = useRef<Map<number, () => void>>(new Map());
-
-  useEffect(() => {
-    return () => {
-      wheelCleanupMapRef.current.forEach((cleanup) => cleanup());
-      wheelCleanupMapRef.current.clear();
-    };
-  }, []);
 
   // Add Text Editor Popover State
   const [showTextModal, setShowTextModal] = useState<boolean>(false);
-  const [textInput, setTextInput] = useState<string>('');
-  const [selectedFontFamily, setSelectedFontFamily] = useState<string>('Georgia, serif');
-  const [selectedFontSize, setSelectedFontSize] = useState<number>(20);
-  const [selectedTextColor, setSelectedTextColor] = useState<string>('#FFFFFF');
-  const [textAlignment, setTextAlignment] = useState<'left' | 'center' | 'right'>('center');
 
   // Clipart Picker Popover State
   const [showClipartModal, setShowClipartModal] = useState<boolean>(false);
-  const [selectedClipartCategory, setSelectedClipartCategory] = useState<string>('Love & Wedding');
 
   // UI Modals & Notifications
   const [saveToast, setSaveToast] = useState<string | null>(null);
@@ -351,7 +329,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const finalPrice = useMemo(() => {
     let base = currentSizeOption?.price || selectedProductType.startingPrice;
     
-    // Custom size calculation (approx ₹4.5 per sq inch)
+    // Custom size calculation
     if (isCustomSize) {
       base = Math.max(399, Math.round(customWidth * customHeight * 4.5));
     }
@@ -373,19 +351,15 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const frm = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
     if (frm) base += frm.price;
 
-    // Edge Wrap
-    const wrap = ACRYLIC_EDGE_WRAPS.find((w) => w.id === selectedEdgeWrapId);
+    // Edge Wrap / Border
+    const wrap = ACRYLIC_WRAP_OPTIONS.find((w) => w.id === selectedEdgeWrapId);
     if (wrap) base += wrap.price;
 
     // Thickness
-    const thk = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId);
-    if (thk) base += thk.price;
+    const thick = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId);
+    if (thick) base += thick.price;
 
-    // Paper
-    const ppr = PAPER_OPTIONS.find((p) => p.id === selectedPaperId);
-    if (ppr) base += ppr.price;
-
-    return Math.round(base);
+    return Math.max(355, Math.round(base));
   }, [
     currentSizeOption,
     selectedProductType,
@@ -397,26 +371,26 @@ export const AcrylicCustomizerPage: React.FC = () => {
     selectedFinishId,
     selectedFrameId,
     selectedEdgeWrapId,
-    selectedThicknessId,
-    selectedPaperId
+    selectedThicknessId
   ]);
 
-  // Dimension summary string
-  const currentDimensionLabel = isCustomSize
-    ? currentShape.isSingleDimension
-      ? `${customWidth}" Dia`
-      : `${customWidth}" × ${customHeight}"`
-    : currentSizeOption?.label || currentSizeOption?.dimensionsSummary || currentShape.name;
+  // Dimension label helper
+  const currentDimensionLabel = useMemo(() => {
+    if (isCustomSize) {
+      return currentShape.isSingleDimension
+        ? `${customWidth}" Dia`
+        : `${customWidth}" × ${customHeight}"`;
+    }
+    return currentSizeOption?.label || currentShape.name;
+  }, [isCustomSize, customWidth, customHeight, currentShape, currentSizeOption]);
 
-  // Direct Click to Upload on Empty Frame
+  // Click on empty frame opens picker for that specific frame
   const handleEmptyFrameClick = (panelIdx: number) => {
-    setActivePanelIndex(panelIdx);
-    setSelectedElement({ type: 'image', panelIndex: panelIdx });
     uploadTargetPanelRef.current = panelIdx;
     singleFileInputRef.current?.click();
   };
 
-  // Single file picker change (Non-Destructive Full Image Preservation)
+  // Single file picker change
   const handleSingleFileChange = (file: File | null) => {
     if (!file) return;
     const targetIdx = uploadTargetPanelRef.current;
@@ -475,7 +449,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  // Multiple files upload to session gallery with natural dimensions
+  // Multiple files upload to session gallery
   const handleGalleryUpload = (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const readers: Promise<{ result: string; file: File; naturalWidth: number; naturalHeight: number; aspectRatio: number } | null>[] = [];
@@ -511,7 +485,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
       const newPhotos = validItems.map((v) => v.result);
       setUploadedPhotos((prev) => [...newPhotos, ...prev]);
 
-      // If current active frame is empty, populate it with the first uploaded image
       if (!panelImages[activePanelIndex]?.imageUrl && validItems[0]) {
         const first = validItems[0];
         updateFrame(activePanelIndex, (curr) => ({
@@ -566,7 +539,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }));
   };
 
-  // Filter application
   const handleApplyFilter = (filterType: ColorFilterType) => {
     updateFrame(activePanelIndex, (curr) => ({
       ...curr,
@@ -574,7 +546,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }));
   };
 
-  // Dedicated Image Panning Handlers (Independent per frame, Touch & Mouse)
+  // Image Panning Handlers
   const handleImagePointerDown = (e: React.PointerEvent<HTMLDivElement>, panelIdx: number) => {
     if (e.button !== 0) return;
     e.preventDefault();
@@ -600,23 +572,14 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const handleImagePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging || !dragStartRef.current) return;
     e.preventDefault();
-    e.stopPropagation();
+    const deltaX = e.clientX - dragStartRef.current.x;
+    const deltaY = e.clientY - dragStartRef.current.y;
+    const targetIdx = dragStartRef.current.panelIdx;
 
-    const { x: startX, y: startY, initialPanX, initialPanY, panelIdx } = dragStartRef.current;
-    const deltaX = e.clientX - startX;
-    const deltaY = e.clientY - startY;
-
-    const currentFrame = panelImages[panelIdx];
-    const scale = currentFrame?.scale || 1;
-    const maxPan = 450 * Math.max(1, scale);
-
-    const newPanX = Math.max(-maxPan, Math.min(maxPan, initialPanX + deltaX));
-    const newPanY = Math.max(-maxPan, Math.min(maxPan, initialPanY + deltaY));
-
-    updateFrame(panelIdx, (curr) => ({
+    updateFrame(targetIdx, (curr) => ({
       ...curr,
-      panX: Math.round(newPanX),
-      panY: Math.round(newPanY)
+      panX: dragStartRef.current!.initialPanX + deltaX,
+      panY: dragStartRef.current!.initialPanY + deltaY
     }));
   };
 
@@ -630,84 +593,25 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
   };
 
-  // Dedicated Wheel Zoom Registration with { passive: false } for smooth zooming and no page scroll
+  // Wheel Zoom Listener Ref Callback
   const registerWheelRef = (panelIdx: number) => (el: HTMLDivElement | null) => {
-    if (wheelCleanupMapRef.current.has(panelIdx)) {
-      wheelCleanupMapRef.current.get(panelIdx)!();
-      wheelCleanupMapRef.current.delete(panelIdx);
-    }
     if (!el) return;
-
-    const onWheel = (e: WheelEvent) => {
+    const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      setActivePanelIndex(panelIdx);
-      const delta = e.deltaY < 0 ? 0.08 : -0.08;
-      updateFrame(panelIdx, (curr) => {
-        const nextScale = Math.max(0.5, Math.min(3.5, Number((curr.scale + delta).toFixed(2))));
-        return {
-          ...curr,
-          scale: nextScale
-        };
-      });
+      const zoomFactor = e.deltaY < 0 ? 0.08 : -0.08;
+      updateFrame(panelIdx, (curr) => ({
+        ...curr,
+        scale: Math.max(0.4, Math.min(curr.scale + zoomFactor, 3.5))
+      }));
     };
-
-    el.addEventListener('wheel', onWheel, { passive: false });
-    wheelCleanupMapRef.current.set(panelIdx, () => {
-      el.removeEventListener('wheel', onWheel);
-    });
+    el.addEventListener('wheel', handleWheel, { passive: false });
   };
 
-  // Global Pointer Handlers for Independent Text & Clipart Dragging
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (textDragRef.current && selectedElement.type === 'text' && selectedElement.elementId) {
-      const { x: startX, y: startY, initialOffset, rect } = textDragRef.current;
-      const dxPx = e.clientX - startX;
-      const dyPx = e.clientY - startY;
-
-      const pctX = (dxPx / rect.width) * 100;
-      const pctY = (dyPx / rect.height) * 100;
-
-      const newX = Math.max(-42, Math.min(42, Math.round(initialOffset.x + pctX)));
-      const newY = Math.max(-42, Math.min(42, Math.round(initialOffset.y + pctY)));
-
-      updateFrame(selectedElement.panelIndex, (curr) => ({
-        ...curr,
-        textElements: curr.textElements.map((txt) =>
-          txt.id === selectedElement.elementId ? { ...txt, x: newX, y: newY } : txt
-        )
-      }));
-    }
-
-    if (clipartDragRef.current && selectedElement.type === 'clipart' && selectedElement.elementId) {
-      const { x: startX, y: startY, initialOffset, rect } = clipartDragRef.current;
-      const dxPx = e.clientX - startX;
-      const dyPx = e.clientY - startY;
-
-      const pctX = (dxPx / rect.width) * 100;
-      const pctY = (dyPx / rect.height) * 100;
-
-      const newX = Math.max(-42, Math.min(42, Math.round(initialOffset.x + pctX)));
-      const newY = Math.max(-42, Math.min(42, Math.round(initialOffset.y + pctY)));
-
-      updateFrame(selectedElement.panelIndex, (curr) => ({
-        ...curr,
-        clipartElements: curr.clipartElements.map((clip) =>
-          clip.id === selectedElement.elementId ? { ...clip, x: newX, y: newY } : clip
-        )
-      }));
-    }
-  };
-
-  const onPointerUp = (e: React.PointerEvent) => {
-    setIsDragging(false);
-    dragStartRef.current = null;
-    textDragRef.current = null;
-    clipartDragRef.current = null;
-  };
-
-  // Text Drag start
-  const startTextDrag = (e: React.PointerEvent, panelIdx: number, textId: string, frameRect: DOMRect) => {
+  // Drag Text Element
+  const startTextDrag = (e: React.PointerEvent<HTMLDivElement>, panelIdx: number, textId: string, rect: DOMRect) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
     e.stopPropagation();
     setActivePanelIndex(panelIdx);
     setSelectedElement({ type: 'text', panelIndex: panelIdx, elementId: textId });
@@ -719,14 +623,52 @@ export const AcrylicCustomizerPage: React.FC = () => {
       x: e.clientX,
       y: e.clientY,
       initialOffset: { x: txt.x, y: txt.y },
-      rect: frameRect
+      rect
     };
 
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    const targetEl = e.currentTarget;
+    try {
+      targetEl.setPointerCapture(e.pointerId);
+    } catch {}
+
+    const onMove = (moveEv: PointerEvent) => {
+      if (!textDragRef.current) return;
+      const dx = moveEv.clientX - textDragRef.current.x;
+      const dy = moveEv.clientY - textDragRef.current.y;
+      const percentX = (dx / textDragRef.current.rect.width) * 100;
+      const percentY = (dy / textDragRef.current.rect.height) * 100;
+
+      updateFrame(panelIdx, (curr) => ({
+        ...curr,
+        textElements: curr.textElements.map((t) =>
+          t.id === textId
+            ? {
+                ...t,
+                x: Math.max(-48, Math.min(48, textDragRef.current!.initialOffset.x + percentX)),
+                y: Math.max(-48, Math.min(48, textDragRef.current!.initialOffset.y + percentY))
+              }
+            : t
+        )
+      }));
+    };
+
+    const onUp = (upEv: PointerEvent) => {
+      textDragRef.current = null;
+      try {
+        targetEl.releasePointerCapture(upEv.pointerId);
+      } catch {}
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
   };
 
-  // Clipart Drag start
-  const startClipartDrag = (e: React.PointerEvent, panelIdx: number, clipId: string, frameRect: DOMRect) => {
+  // Drag Clipart Element
+  const startClipartDrag = (e: React.PointerEvent<HTMLDivElement>, panelIdx: number, clipId: string, rect: DOMRect) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
     e.stopPropagation();
     setActivePanelIndex(panelIdx);
     setSelectedElement({ type: 'clipart', panelIndex: panelIdx, elementId: clipId });
@@ -738,20 +680,56 @@ export const AcrylicCustomizerPage: React.FC = () => {
       x: e.clientX,
       y: e.clientY,
       initialOffset: { x: clip.x, y: clip.y },
-      rect: frameRect
+      rect
     };
 
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    const targetEl = e.currentTarget;
+    try {
+      targetEl.setPointerCapture(e.pointerId);
+    } catch {}
+
+    const onMove = (moveEv: PointerEvent) => {
+      if (!clipartDragRef.current) return;
+      const dx = moveEv.clientX - clipartDragRef.current.x;
+      const dy = moveEv.clientY - clipartDragRef.current.y;
+      const percentX = (dx / clipartDragRef.current.rect.width) * 100;
+      const percentY = (dy / clipartDragRef.current.rect.height) * 100;
+
+      updateFrame(panelIdx, (curr) => ({
+        ...curr,
+        clipartElements: curr.clipartElements.map((c) =>
+          c.id === clipId
+            ? {
+                ...c,
+                x: Math.max(-48, Math.min(48, textDragRef.current ? 0 : clipartDragRef.current!.initialOffset.x + percentX)),
+                y: Math.max(-48, Math.min(48, textDragRef.current ? 0 : clipartDragRef.current!.initialOffset.y + percentY))
+              }
+            : c
+        )
+      }));
+    };
+
+    const onUp = (upEv: PointerEvent) => {
+      clipartDragRef.current = null;
+      try {
+        targetEl.releasePointerCapture(upEv.pointerId);
+      } catch {}
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
   };
 
-  // Add new Text to active frame (Real-time, instant placement)
+  // Text Elements Management
   const handleAddNewText = () => {
     const newId = `text-${Date.now()}`;
-    const newText: TextElement = {
+    const newTextObj: TextElement = {
       id: newId,
-      text: 'Happy Birthday!',
+      text: 'Captured Moments',
       fontFamily: '"Playfair Display", Georgia, serif',
-      fontSize: 28,
+      fontSize: 26,
       fontWeight: 'bold',
       color: '#FFFFFF',
       alignment: 'center',
@@ -759,31 +737,26 @@ export const AcrylicCustomizerPage: React.FC = () => {
       letterSpacing: 0,
       rotation: 0,
       x: 0,
-      y: 0
+      y: 30
     };
 
     updateFrame(activePanelIndex, (curr) => ({
       ...curr,
-      textElements: [...curr.textElements, newText]
+      textElements: [...curr.textElements, newTextObj]
     }));
-
     setSelectedElement({ type: 'text', panelIndex: activePanelIndex, elementId: newId });
     setShowTextModal(true);
   };
 
-  // Real-time text properties update (live sync)
   const handleUpdateActiveText = (updates: Partial<TextElement>) => {
     if (selectedElement.type !== 'text' || !selectedElement.elementId) return;
     const panelIdx = selectedElement.panelIndex;
     updateFrame(panelIdx, (curr) => ({
       ...curr,
-      textElements: curr.textElements.map((t) =>
-        t.id === selectedElement.elementId ? { ...t, ...updates } : t
-      )
+      textElements: curr.textElements.map((t) => (t.id === selectedElement.elementId ? { ...t, ...updates } : t))
     }));
   };
 
-  // Duplicate active text element
   const handleDuplicateActiveText = () => {
     if (selectedElement.type !== 'text' || !selectedElement.elementId) return;
     const panelIdx = selectedElement.panelIndex;
@@ -793,8 +766,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const copyText: TextElement = {
       ...source,
       id: newId,
-      x: Math.min(42, source.x + 4),
-      y: Math.min(42, source.y + 4)
+      x: Math.min(45, source.x + 4),
+      y: Math.min(45, source.y + 4)
     };
     updateFrame(panelIdx, (curr) => ({
       ...curr,
@@ -803,7 +776,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
     setSelectedElement({ type: 'text', panelIndex: panelIdx, elementId: newId });
   };
 
-  // Delete active text element
   const handleDeleteActiveText = () => {
     if (selectedElement.type !== 'text' || !selectedElement.elementId) return;
     const panelIdx = selectedElement.panelIndex;
@@ -814,43 +786,38 @@ export const AcrylicCustomizerPage: React.FC = () => {
     setSelectedElement({ type: 'image', panelIndex: panelIdx });
   };
 
-  // Add Clipart item to active frame (Real-time, instant placement)
-  const handleAddClipartItem = (item: ClipartItem) => {
+  // Clipart Elements Management
+  const handleSelectClipart = (clip: ClipartItem) => {
     const newId = `clipart-${Date.now()}`;
-    const newClip: ClipartElement = {
+    const newClipObj: ClipartElement = {
       id: newId,
-      clipartId: item.id,
-      name: item.name,
-      svgPath: item.svgPath,
-      viewBox: item.viewBox,
-      color: item.defaultColor || '#D4AF37',
+      clipartId: clip.id,
+      name: clip.name,
+      svgPath: clip.svgPath,
+      viewBox: clip.viewBox,
       x: 0,
-      y: 0,
+      y: -25,
       scale: 1.2,
-      rotation: 0
+      rotation: 0,
+      color: '#D4AF37'
     };
 
     updateFrame(activePanelIndex, (curr) => ({
       ...curr,
-      clipartElements: [...curr.clipartElements, newClip]
+      clipartElements: [...curr.clipartElements, newClipObj]
     }));
-
     setSelectedElement({ type: 'clipart', panelIndex: activePanelIndex, elementId: newId });
   };
 
-  // Real-time clipart properties update
   const handleUpdateActiveClipart = (updates: Partial<ClipartElement>) => {
     if (selectedElement.type !== 'clipart' || !selectedElement.elementId) return;
     const panelIdx = selectedElement.panelIndex;
     updateFrame(panelIdx, (curr) => ({
       ...curr,
-      clipartElements: curr.clipartElements.map((c) =>
-        c.id === selectedElement.elementId ? { ...c, ...updates } : c
-      )
+      clipartElements: curr.clipartElements.map((c) => (c.id === selectedElement.elementId ? { ...c, ...updates } : c))
     }));
   };
 
-  // Duplicate active clipart
   const handleDuplicateActiveClipart = () => {
     if (selectedElement.type !== 'clipart' || !selectedElement.elementId) return;
     const panelIdx = selectedElement.panelIndex;
@@ -870,7 +837,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
     setSelectedElement({ type: 'clipart', panelIndex: panelIdx, elementId: newId });
   };
 
-  // Delete active clipart
   const handleDeleteActiveClipart = () => {
     if (selectedElement.type !== 'clipart' || !selectedElement.elementId) return;
     const panelIdx = selectedElement.panelIndex;
@@ -881,7 +847,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
     setSelectedElement({ type: 'image', panelIndex: panelIdx });
   };
 
-  // Active element helpers for property inspectors
   const activeTextElement = useMemo(() => {
     if (selectedElement.type === 'text' && selectedElement.elementId) {
       return panelImages[selectedElement.panelIndex]?.textElements.find((t) => t.id === selectedElement.elementId) || null;
@@ -896,7 +861,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
     return null;
   }, [selectedElement, panelImages]);
 
-  // Delete selected element (general)
   const handleDeleteSelectedElement = () => {
     if (selectedElement.type === 'text' && selectedElement.elementId) {
       handleDeleteActiveText();
@@ -911,13 +875,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const pt = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === ptId);
     if (pt) {
       if (ptId === 'acrylic-wall-art' || ptId === 'acrylic-split') {
-        setSelectedLayoutId('layout-3-wall');
+        setSelectedLayoutId('layout-3-collage');
       } else if (ptId === 'acrylic-collage') {
         setSelectedLayoutId('layout-4-grid');
       } else {
         setSelectedLayoutId('layout-1-single');
       }
-      // Check shape compatibility with this product
       if (pt.supportedShapeIds && !pt.supportedShapeIds.includes(selectedShapeId)) {
         const supported = pt.supportedShapeIds[0] || 'shape-square';
         setSelectedShapeId(supported);
@@ -929,12 +892,14 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
   };
 
-  // Switch acrylic shape with automatic size & canvas adaptation
+  // Switch acrylic shape
   const handleSelectShape = (shapeId: string) => {
     setSelectedShapeId(shapeId);
+    if (CURVED_GEOMETRIC_SHAPES.includes(shapeId)) {
+      setSelectedLayoutId('layout-1-single');
+    }
     const newSizes = getSizesForShape(shapeId, selectedProductTypeId);
     if (newSizes.length > 0) {
-      // Pick balanced preset (index 2 is typically 8" or 8x8)
       const targetSize = newSizes[2] || newSizes[0];
       setSelectedSizeId(targetSize.id);
       setIsCustomSize(false);
@@ -945,12 +910,15 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Switch layout preset
   const handleSelectLayout = (layout: LayoutPreset) => {
+    if (isCurvedShape && layout.id !== 'layout-1-single') {
+      return;
+    }
     setSelectedLayoutId(layout.id);
     setActivePanelIndex(0);
     setSelectedElement({ type: 'image', panelIndex: 0 });
   };
 
-  // Save customization to local storage (Section 24)
+  // Save customization to local storage
   const handleSaveDesign = () => {
     const designPayload = {
       productId: catalogProduct?.id || productId,
@@ -961,7 +929,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
       customWidth,
       customHeight,
       layoutId: selectedLayoutId,
-      templateId: selectedTemplateId,
+      designId: selectedDesignId,
       hardwareId: selectedHardwareId,
       finishId: selectedFinishId,
       frameId: selectedFrameId,
@@ -987,72 +955,169 @@ export const AcrylicCustomizerPage: React.FC = () => {
         if (parsed.selectedFinishId) setSelectedFinishId(parsed.selectedFinishId);
         if (parsed.selectedHardwareId) setSelectedHardwareId(parsed.selectedHardwareId);
         if (parsed.selectedThicknessId) setSelectedThicknessId(parsed.selectedThicknessId);
+        if (parsed.shapeId) setSelectedShapeId(parsed.shapeId);
+        if (parsed.edgeWrapId) setSelectedEdgeWrapId(parsed.edgeWrapId);
+        if (parsed.designId) setSelectedDesignId(parsed.designId);
       }
     } catch (e) {
       console.error('Failed to restore saved design', e);
     }
   }, [productId]);
 
-  // Add to Cart with full customization metadata (Section 25)
+  // Add to Cart with ShopContext typing
   const handleAddToCart = () => {
     const hasAnyPhoto = Object.values(panelImages).some((p) => !!p.imageUrl);
     if (!hasAnyPhoto) {
       setValidationWarning('Please upload at least one photo to complete your Acrylic customizer.');
-      setActiveTab('UPLOAD');
-      setTimeout(() => setValidationWarning(null), 5000);
+      setTimeout(() => setValidationWarning(null), 4000);
       return;
     }
 
     if (onAddToCartCustomized && catalogProduct) {
-      const primaryPhoto = Object.values(panelImages).find((p) => !!p.imageUrl)?.imageUrl || catalogProduct.image;
-      const activeFrame = panelImages[activePanelIndex] || createDefaultPanelState(null);
-
       onAddToCartCustomized({
         product: catalogProduct,
         quantity: 1,
         size: currentDimensionLabel,
-        photoUrl: primaryPhoto,
         calculatedPrice: finalPrice,
-        finish: FINISH_OPTIONS.find((f) => f.id === selectedFinishId)?.name,
+        material: 'Acrylic',
+        finish: FINISH_OPTIONS.find((f) => f.id === selectedFinishId)?.name || 'High Gloss Optical Acrylic',
+        thickness: THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || '3mm',
+        style: currentShape.name,
+        photoUrl: panelImages[0]?.imageUrl || catalogProduct?.image || '/assets/customizer/acrylic/products/acrylic-photo-panel.jpg',
         customizationDetails: {
-          acrylicProductType: selectedProductType.name,
-          dimensions: currentDimensionLabel,
+          productType: selectedProductType.name,
           shape: currentShape.name,
+          dimensions: currentDimensionLabel,
           layout: currentLayout.name,
-          template: selectedTemplateId ? ACRYLIC_TEMPLATES.find((t) => t.id === selectedTemplateId)?.name : 'Blank Canvas',
-          hardware: HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name,
-          finish: FINISH_OPTIONS.find((f) => f.id === selectedFinishId)?.name,
-          frame: FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name,
-          edgeWrap: ACRYLIC_EDGE_WRAPS.find((w) => w.id === selectedEdgeWrapId)?.name,
-          thickness: THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label,
-          border: ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.label,
-          textElements: activeFrame.textElements.map((t) => ({
-            text: t.text,
-            font: t.fontFamily,
-            color: t.color,
-            fontSize: t.fontSize,
-            alignment: t.alignment
-          })),
-          clipartElements: activeFrame.clipartElements.map((c) => ({
-            name: c.name,
-            scale: c.scale,
-            rotation: c.rotation,
-            color: c.color
-          })),
-          imageTransforms: {
-            panX: activeFrame.panX,
-            panY: activeFrame.panY,
-            scale: activeFrame.scale,
-            rotation: activeFrame.rotation,
-            fitMode: activeFrame.fitMode
-          }
+          design: activeDesignOverlay?.name || 'None',
+          hardware: HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'Standoff Mounts',
+          edgeWrap: ACRYLIC_WRAP_OPTIONS.find((w) => w.id === selectedEdgeWrapId)?.name || 'Full Bleed',
+          frame: FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name || 'Frameless',
+          paper: PAPER_OPTIONS.find((p) => p.id === selectedPaperId)?.label || 'White Luster Finish'
         }
       });
       navigate('/cart');
     }
   };
 
-  // RENDER A SINGLE ACRYLIC FRAME (Fully Functional Image Masking & Shape Dimensions)
+  // ============================================================================
+  // EXACT SHAPE-FOLLOWING SVG BORDER RENDERER
+  // ============================================================================
+  const renderShapeBorder = () => {
+    let strokeColor = 'transparent';
+    let strokeWidth = 0;
+    let isClearEdge = false;
+
+    if (selectedEdgeWrapId === 'white-border') {
+      strokeColor = '#FFFFFF';
+      strokeWidth = 4.5;
+    } else if (selectedEdgeWrapId === 'black-border') {
+      strokeColor = '#0F172A';
+      strokeWidth = 4.5;
+    } else if (selectedEdgeWrapId === 'clear-edge') {
+      strokeColor = 'rgba(255, 255, 255, 0.75)';
+      strokeWidth = 3;
+      isClearEdge = true;
+    }
+
+    const borderWidthPx = ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0;
+    if (borderWidthPx > 0) {
+      strokeColor = selectedBorderColor;
+      strokeWidth = Math.max(strokeWidth, Math.min(8, Math.round(borderWidthPx / 2.5)));
+    }
+
+    if (strokeWidth === 0 && !isClearEdge) return null;
+
+    return (
+      <svg 
+        viewBox="0 0 100 100" 
+        preserveAspectRatio="none" 
+        className="absolute inset-0 w-full h-full pointer-events-none z-25 overflow-visible"
+      >
+        {selectedShapeId === 'shape-heart' && (
+          <path
+            d="M 50,85 C 12,58 2,38 2,24 C 2,8 14,2 28,2 C 38,2 46,8 50,18 C 54,8 62,2 72,2 C 86,2 98,8 98,24 C 98,38 88,58 50,85 Z"
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            strokeLinejoin="round"
+          />
+        )}
+        {selectedShapeId === 'shape-circle' && (
+          <circle
+            cx="50"
+            cy="50"
+            r={50 - strokeWidth / 2}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+          />
+        )}
+        {selectedShapeId === 'shape-oval' && (
+          <ellipse
+            cx="50"
+            cy="50"
+            rx={50 - strokeWidth / 2}
+            ry={38 - strokeWidth / 2}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+          />
+        )}
+        {selectedShapeId === 'shape-hexagon' && (
+          <polygon
+            points="25,1 75,1 99,50 75,99 25,99 1,50"
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            strokeLinejoin="round"
+          />
+        )}
+        {selectedShapeId === 'shape-rounded-rect' && (
+          <rect
+            x={strokeWidth / 2}
+            y={strokeWidth / 2}
+            width={100 - strokeWidth}
+            height={100 - strokeWidth}
+            rx="10"
+            ry="10"
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+          />
+        )}
+        {['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(selectedShapeId) && (
+          <rect
+            x={strokeWidth / 2}
+            y={strokeWidth / 2}
+            width={100 - strokeWidth}
+            height={100 - strokeWidth}
+            rx="3"
+            ry="3"
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+          />
+        )}
+
+        {isClearEdge && (
+          <g opacity="0.6">
+            {selectedShapeId === 'shape-circle' ? (
+              <circle cx="50" cy="50" r={47} fill="none" stroke="#FFFFFF" strokeWidth="1" strokeDasharray="4 2" />
+            ) : selectedShapeId === 'shape-heart' ? (
+              <path d="M 50,82 C 14,56 4,37 4,25 C 4,10 15,4 28,4 C 37,4 45,10 50,19 C 55,10 63,4 72,4 C 85,4 96,10 96,25 C 96,37 86,56 50,82 Z" fill="none" stroke="#FFFFFF" strokeWidth="1" />
+            ) : (
+              <rect x="3" y="3" width="94" height="94" rx="4" ry="4" fill="none" stroke="#FFFFFF" strokeWidth="1" strokeDasharray="5 2" />
+            )}
+          </g>
+        )}
+      </svg>
+    );
+  };
+
+  // ============================================================================
+  // RENDER A SINGLE ACRYLIC FRAME (Slot container)
+  // ============================================================================
   const renderFrameContainer = (panelIdx: number, aspectClass: string, dimensionLabel?: string) => {
     const frame = panelImages[panelIdx] || createDefaultPanelState(null);
     const isActive = activePanelIndex === panelIdx;
@@ -1060,7 +1125,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const frameInfo = frames[panelIdx];
     const label = dimensionLabel || frameInfo?.dimension || `Frame ${panelIdx + 1}`;
 
-    // Filter CSS (Section 21)
     const filterCss = 
       frame.filter === 'sepia'
         ? 'sepia(0.85) contrast(1.1) brightness(0.95)'
@@ -1068,14 +1132,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
         ? 'grayscale(100%) contrast(1.05)'
         : 'none';
 
-    // Border style
-    const borderWidthPx = ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0;
-
-    // True Shape Masking & Dimensions (Section 6 & 7)
     const shapeClip = currentShape.clipPathStyle;
     const shapeRadius = currentShape.borderRadiusClass;
 
-    // Custom dimensions or shape aspect class
     const containerAspectStyle: React.CSSProperties = isCustomSize
       ? { aspectRatio: `${customWidth} / ${customHeight}` }
       : {};
@@ -1120,19 +1179,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
           <div className="absolute inset-0 border-4 border-white/60 pointer-events-none z-20 shadow-inner" />
         )}
 
-        {/* Optional Inner Border Rendering */}
-        {borderWidthPx > 0 && (
-          <div
-            className="absolute inset-0 pointer-events-none z-25"
-            style={{
-              border: `${borderWidthPx}px solid ${selectedBorderColor}`,
-              borderRadius: selectedShapeId === 'shape-circle' ? '9999px' : undefined
-            }}
-          />
-        )}
+        {/* Shape-Following Exact Wrap & Border Overlay */}
+        {renderShapeBorder()}
 
         {/* Architectural Chrome Standoff Bolts */}
-        {(selectedHardwareId === 'standoff-mounts' || selectedProductTypeId === 'acrylic-signage' || selectedDisplayOptionId === 'display-standoff') && selectedShapeId !== 'shape-circle' && (
+        {(selectedHardwareId === 'standoff-mounts' || selectedProductTypeId === 'acrylic-signage' || selectedDisplayOptionId === 'display-standoff') && !isCurvedShape && (
           <>
             <div className="absolute top-2.5 left-2.5 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-stone-400 via-stone-200 to-stone-50 border border-stone-600 shadow-md z-30 pointer-events-none flex items-center justify-center">
               <div className="w-1 h-1 rounded-full bg-stone-500" />
@@ -1149,13 +1200,15 @@ export const AcrylicCustomizerPage: React.FC = () => {
           </>
         )}
 
-        {/* Frame Label Badge */}
-        <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm z-30 pointer-events-none">
-          <span>{frameInfo?.label || `Frame ${panelIdx + 1}`}</span>
-          {isActive && (
-            <span className="w-1.5 h-1.5 rounded-full bg-[#E8752A] animate-pulse" />
-          )}
-        </div>
+        {/* Frame Label Badge for multi-frame layouts */}
+        {frames.length > 1 && (
+          <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm z-30 pointer-events-none">
+            <span>{frameInfo?.label || `Slot ${panelIdx + 1}`}</span>
+            {isActive && (
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E8752A] animate-pulse" />
+            )}
+          </div>
+        )}
 
         {/* Frame Dimension Badge */}
         <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-0.5 rounded shadow-sm z-30 pointer-events-none">
@@ -1169,7 +1222,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           </div>
         )}
 
-        {/* Frame Content (Independent Image Transform Inside Shape) */}
+        {/* Frame Content */}
         {frame.imageUrl ? (
           <div
             ref={registerWheelRef(panelIdx)}
@@ -1196,7 +1249,15 @@ export const AcrylicCustomizerPage: React.FC = () => {
               className="max-w-none w-full h-full pointer-events-none select-none"
             />
 
-            {/* Draggable & Editable Text Elements (Live Canvas Interaction) */}
+            {/* Design Overlay Layer */}
+            {activeDesignOverlay && (
+              <div 
+                className="absolute inset-0 pointer-events-none z-22 w-full h-full flex items-center justify-center select-none"
+                dangerouslySetInnerHTML={{ __html: activeDesignOverlay.renderOverlaySvg }}
+              />
+            )}
+
+            {/* Draggable & Editable Text Elements */}
             {frame.textElements?.map((txt) => {
               const isTextSelected =
                 selectedElement.type === 'text' &&
@@ -1249,7 +1310,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               );
             })}
 
-            {/* Draggable & Editable Clipart Elements (Live Visual SVG System) */}
+            {/* Draggable & Editable Clipart Elements */}
             {frame.clipartElements?.map((clip) => {
               const isClipSelected =
                 selectedElement.type === 'clipart' &&
@@ -1291,14 +1352,14 @@ export const AcrylicCustomizerPage: React.FC = () => {
                       }}
                     />
                   ) : (
-                    <span className="text-3xl leading-none">{(clip as any).emoji || '⭐'}</span>
+                    <span className="text-3xl leading-none">⭐</span>
                   )}
                 </div>
               );
             })}
           </div>
         ) : (
-          /* STRICTLY MINIMAL EMPTY FRAME: ONLY THE UPLOAD ICON (Rule 15) */
+          /* MINIMAL EMPTY FRAME: ONLY UPLOAD ICON [ ↑ ] */
           <div 
             className="w-full h-full flex items-center justify-center bg-stone-50/70 hover:bg-stone-100/90 transition-colors cursor-pointer group"
           >
@@ -1318,13 +1379,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
     return frameObj?.borderCss || '';
   }, [selectedFrameId]);
 
-  // Primary Toolbar items: EXACT 8 ITEMS IN ORDER (Section 3 & 4)
+  // Primary Toolbar items: EXACT 8 ITEMS IN ORDER
   const toolbarItems: { id: ToolbarTab; label: string; icon: React.ElementType }[] = [
     { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
     { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud },
     { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
+    { id: 'SHAPES', label: 'SHAPES', icon: Shapes },
     { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers },
-    { id: 'SHAPE', label: 'SHAPE', icon: Shapes },
     { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
     { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
     { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
@@ -1354,9 +1415,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
         }}
       />
 
-      {/* =================================================================== */}
-      {/* 1. RESTORED CUSTOMIZER HEADER (Section 1)                          */}
-      {/* =================================================================== */}
+      {/* 1. CUSTOMIZER BLUE HEADER WITH ORIGINAL LOGO */}
       <header className="h-14 bg-[#0E4A93] text-white flex items-center justify-between px-3 sm:px-6 shadow-md z-30 shrink-0">
         
         {/* LEFT: Menu / Back / Logo / Customizer */}
@@ -1378,53 +1437,29 @@ export const AcrylicCustomizerPage: React.FC = () => {
             <span className="hidden sm:inline">Back to Acrylic</span>
           </Link>
           
-          <div className="h-5 w-px bg-white/20 hidden sm:block" />
+          <div className="h-5 w-[1px] bg-white/20 mx-1 hidden sm:block" />
           
-          {/* Canvas India Original Logo directly on header background without white box (Section 1 & 24) */}
-          <div className="flex items-center gap-2">
-            <img 
-              src="/canvas-india-official-logo.png" 
-              alt="Canvas India" 
-              className="h-7 sm:h-8 w-auto object-contain shrink-0" 
-            />
-            <span className="text-xs sm:text-sm font-bold tracking-tight text-white hidden md:inline">
-              Customizer
+          <Link to="/" className="flex items-center gap-2 hover:opacity-95 transition-opacity">
+            <CanvasIndiaLogo className="h-8 w-auto filter brightness-0 invert" />
+            <span className="text-white/80 font-bold text-xs tracking-wider uppercase hidden md:inline">
+              Acrylic Customizer
             </span>
-          </div>
+          </Link>
         </div>
 
-        {/* CENTER: Current product name & selected size */}
-        <div className="hidden md:flex items-center gap-2 text-xs font-medium text-white/90">
-          <span className="font-bold text-white">{selectedProductType.name}</span>
-          <span className="text-white/40">•</span>
-          <span className="font-bold text-white bg-white/15 px-2.5 py-0.5 rounded-full">
-            {currentDimensionLabel}
-          </span>
-        </div>
-
-        {/* RIGHT: Total Price, Save, Add to Cart */}
+        {/* RIGHT: Price Display + Add to Cart Button */}
         <div className="flex items-center gap-3">
-          <div className="text-right">
-            <div className="text-[10px] text-white/70 font-semibold leading-tight">Total Price</div>
-            <div className="text-base sm:text-lg font-black text-amber-400 leading-tight">
-              ₹{finalPrice.toLocaleString('en-IN')}
+          <div className="text-right hidden sm:block">
+            <div className="text-[10px] text-white/70 uppercase font-semibold">Total Price</div>
+            <div className="text-lg font-black text-white leading-tight">
+              ₹{finalPrice.toLocaleString()}
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={handleSaveDesign}
-            className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors cursor-pointer"
-            title="Save custom design"
-          >
-            <Save className="w-4 h-4" />
-            <span className="hidden sm:inline">Save</span>
-          </button>
-
+          
           <button
             type="button"
             onClick={handleAddToCart}
-            className="flex items-center gap-2 bg-[#E8752A] hover:bg-[#d6651d] text-white text-xs sm:text-sm font-black px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all cursor-pointer"
+            className="flex items-center gap-2 bg-[#E8752A] hover:bg-[#d4651e] text-white text-xs sm:text-sm font-bold px-4 sm:px-5 py-2 rounded-lg shadow-md transition-all transform active:scale-95 cursor-pointer"
           >
             <ShoppingCart className="w-4 h-4" />
             <span>Add to Cart</span>
@@ -1432,7 +1467,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
         </div>
       </header>
 
-      {/* SVG Global ClipPath Mask Definitions for 23 Acrylic Shapes (Section 7) */}
+      {/* SVG Global ClipPath Mask Definitions for Shapes */}
       <svg width="0" height="0" className="absolute pointer-events-none opacity-0" aria-hidden="true">
         <defs>
           <clipPath id="acrylic-clip-shape-heart" clipPathUnits="objectBoundingBox">
@@ -1441,24 +1476,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
           <clipPath id="acrylic-clip-shape-arch" clipPathUnits="objectBoundingBox">
             <path d="M 0,1 L 0,0.4 C 0,0.15 0.22,0 0.5,0 C 0.78,0 1,0.15 1,0.4 L 1,1 Z" />
           </clipPath>
-          <clipPath id="acrylic-clip-shape-cloud" clipPathUnits="objectBoundingBox">
-            <path d="M 0.17,0.7 C 0.08,0.7 0.02,0.6 0.05,0.5 C 0.02,0.38 0.14,0.28 0.26,0.3 C 0.33,0.14 0.55,0.12 0.65,0.22 C 0.75,0.14 0.93,0.18 0.96,0.32 C 1.05,0.36 1.05,0.52 0.98,0.62 C 1.02,0.7 0.94,0.72 0.88,0.7 Z" />
-          </clipPath>
-          <clipPath id="acrylic-clip-shape-speech-bubble" clipPathUnits="objectBoundingBox">
-            <path d="M 0.05,0.05 L 0.95,0.05 C 0.98,0.05 1,0.08 1,0.12 L 1,0.68 C 1,0.72 0.98,0.75 0.95,0.75 L 0.45,0.75 L 0.15,0.98 L 0.22,0.75 L 0.05,0.75 C 0.02,0.75 0,0.72 0,0.68 L 0,0.12 C 0,0.08 0.02,0.05 0.05,0.05 Z" />
-          </clipPath>
-          <clipPath id="acrylic-clip-shape-ticket" clipPathUnits="objectBoundingBox">
-            <path d="M 0,0 L 1,0 L 1,0.38 C 0.94,0.38 0.9,0.43 0.9,0.5 C 0.9,0.57 0.94,0.62 1,0.62 L 1,1 L 0,1 L 0,0.62 C 0.06,0.62 0.1,0.57 0.1,0.5 C 0.1,0.43 0.06,0.38 0,0.38 Z" />
-          </clipPath>
-          <clipPath id="acrylic-clip-shape-scalloped" clipPathUnits="objectBoundingBox">
-            <path d="M 0.5,0.02 C 0.56,0.02 0.62,0.06 0.65,0.12 C 0.71,0.08 0.78,0.09 0.82,0.15 C 0.88,0.14 0.93,0.19 0.94,0.25 C 1,0.28 1.01,0.36 0.98,0.41 C 1.02,0.47 1,0.54 0.95,0.59 C 0.98,0.65 0.94,0.73 0.88,0.76 C 0.88,0.83 0.82,0.88 0.75,0.88 C 0.71,0.94 0.64,0.96 0.58,0.94 C 0.52,0.99 0.45,0.98 0.4,0.94 C 0.35,0.97 0.27,0.94 0.24,0.88 C 0.17,0.87 0.12,0.81 0.12,0.74 C 0.06,0.71 0.03,0.63 0.05,0.57 C 0.01,0.51 0.01,0.43 0.05,0.38 C 0.03,0.31 0.06,0.24 0.13,0.22 C 0.14,0.15 0.21,0.11 0.28,0.12 C 0.33,0.06 0.41,0.05 0.47,0.1 C 0.5,0.04 0.45,0.02 0.5,0.02 Z" />
-          </clipPath>
-          <clipPath id="acrylic-clip-shape-organic-blob" clipPathUnits="objectBoundingBox">
-            <path d="M 0.5,0.02 C 0.78,0 0.98,0.18 0.98,0.45 C 0.98,0.75 0.8,0.98 0.52,0.96 C 0.25,0.94 0.02,0.78 0.02,0.5 C 0.02,0.22 0.22,0.04 0.5,0.02 Z" />
-          </clipPath>
         </defs>
       </svg>
-
 
       {/* Save Notification Toast */}
       {saveToast && (
@@ -1476,28 +1495,20 @@ export const AcrylicCustomizerPage: React.FC = () => {
         </div>
       )}
 
-      {/* =================================================================== */}
-      {/* MAIN CUSTOMIZER BODY                                                */}
-      {/* =================================================================== */}
-      <div 
-        className="flex-1 flex flex-col md:flex-row overflow-hidden"
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-      >
-
-        {/* ----------------------------------------------------------------- */}
-        {/* LEFT PRIMARY TOOLBAR: 8 ITEMS IN ORDER (Sections 3 & 4)           */}
-        {/* ----------------------------------------------------------------- */}
-        <aside className="w-full md:w-20 bg-white border-b md:border-b-0 md:border-r border-stone-200 flex md:flex-col items-center justify-between md:justify-start py-1 md:py-3 z-20 shrink-0 overflow-x-auto md:overflow-x-visible">
+      {/* MAIN CUSTOMIZER BODY */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+        
+        {/* LEFT PRIMARY TOOLBAR */}
+        <aside className="w-full md:w-20 bg-white border-b md:border-b-0 md:border-r border-stone-200 flex md:flex-col items-center justify-start py-1 md:py-3 px-1 md:px-0 gap-1 md:gap-1 shrink-0 z-20 overflow-x-auto md:overflow-y-auto no-scrollbar">
           {toolbarItems.map((item) => {
             const Icon = item.icon;
-            const isActive = activeTab === item.id;
+            const isActive = activeTab === item.id || (item.id === 'SHAPES' && activeTab === 'SHAPE');
             return (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => setActiveTab(item.id)}
-                className={`flex-1 md:flex-none md:w-16 py-2 px-1 flex flex-col items-center justify-center gap-1 transition-all cursor-pointer relative ${
+                className={`flex-1 md:flex-none md:w-18 py-2 px-1 flex flex-col items-center justify-center gap-1 transition-all cursor-pointer relative ${
                   isActive
                     ? 'text-[#0E4A93] font-bold bg-blue-50/60'
                     : 'text-stone-500 hover:text-stone-900 hover:bg-stone-50 font-medium'
@@ -1517,23 +1528,21 @@ export const AcrylicCustomizerPage: React.FC = () => {
           })}
         </aside>
 
-        {/* ----------------------------------------------------------------- */}
-        {/* LEFT SECONDARY PANEL (DRAWER CONTENT FOR ACTIVE TAB)              */}
-        {/* ----------------------------------------------------------------- */}
+        {/* LEFT SECONDARY DRAWER CONTENT */}
         <section className="w-full md:w-80 bg-white border-b md:border-b-0 md:border-r border-stone-200 flex flex-col z-10 shrink-0 h-72 md:h-auto overflow-y-auto">
           
           {/* Panel Header */}
           <div className="p-3.5 border-b border-stone-200 bg-stone-50/80 flex items-center justify-between shrink-0">
             <h2 className="text-xs font-black tracking-wider text-stone-800 uppercase flex items-center gap-1.5">
-              <span>{activeTab}</span>
+              <span>{activeTab === 'SHAPE' ? 'SHAPES' : activeTab}</span>
             </h2>
             <span className="text-[11px] font-semibold text-stone-500">
               {activeTab === 'PRODUCTS' && '7 Styles'}
               {activeTab === 'SELECT SIZE' && `${shapeSizes.length} Options`}
-              {activeTab === 'LAYOUTS & DESIGNS' && `${LAYOUT_PRESETS.length} Layouts`}
-              {activeTab === 'SHAPE' && `${ACRYLIC_SHAPES.length} Shapes`}
-              {activeTab === 'WRAP & BORDER' && '4 Edges'}
-              {activeTab === 'HARDWARE & FINISH' && 'Hardware'}
+              {(activeTab === 'SHAPES' || activeTab === 'SHAPE') && '9 Shapes'}
+              {activeTab === 'LAYOUTS & DESIGNS' && (layoutSubTab === 'LAYOUTS' ? '7 Layouts' : '11 Categories')}
+              {activeTab === 'WRAP & BORDER' && '5 Options'}
+              {activeTab === 'HARDWARE & FINISH' && 'Hardware & Finish'}
               {activeTab === 'OPTIONS' && 'Specifications'}
             </span>
           </div>
@@ -1592,13 +1601,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
                   Upload Photos
                 </h3>
                 <p className="text-[11px] text-stone-500">
-                  Upload multiple photos from your device to easily assign into frames.
+                  Upload multiple photos from your device to easily assign into layout slots.
                 </p>
               </div>
 
               {frames.length > 1 && (
                 <div className="p-2.5 bg-stone-100 rounded-xl space-y-1.5">
-                  <div className="text-[11px] font-bold text-stone-700">Assign to Frame:</div>
+                  <div className="text-[11px] font-bold text-stone-700">Assign to Slot:</div>
                   <div className="flex gap-1.5">
                     {frames.map((f, fIdx) => {
                       const isTarget = activePanelIndex === fIdx;
@@ -1614,7 +1623,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                               : 'bg-stone-50 border-stone-200 text-stone-600'
                           }`}
                         >
-                          <span>Frame {fIdx + 1}</span>
+                          <span>Slot {fIdx + 1}</span>
                           {hasPhoto && <Check className="w-3 h-3 text-emerald-600" />}
                         </button>
                       );
@@ -1647,7 +1656,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-stone-700">Uploaded Photos ({uploadedPhotos.length}):</span>
-                    <span className="text-[11px] text-[#0E4A93]">Click to assign to active frame</span>
+                    <span className="text-[11px] text-[#0E4A93]">Click to assign</span>
                   </div>
                   <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto p-1 bg-stone-50 rounded-xl border border-stone-200">
                     {uploadedPhotos.map((photo, pIdx) => (
@@ -1678,11 +1687,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
                   {currentShape.name} Sizes
                 </span>
                 <span className="text-[11px] font-bold text-[#0E4A93]">
-                  {shapeSizes.length} Available
+                  {shapeSizes.length} Presets
                 </span>
               </div>
 
-              {/* Subtabs: Preset Sizes vs Custom Dimensions */}
               <div className="flex gap-1 bg-stone-100 p-1 rounded-xl">
                 <button
                   type="button"
@@ -1709,7 +1717,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               </div>
 
               {!isCustomSize ? (
-                <div className="grid grid-cols-2 gap-2.5 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
+                <div className="grid grid-cols-2 gap-2 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
                   {shapeSizes.map((size) => {
                     const isSelected = selectedSizeId === size.id && !isCustomSize;
                     return (
@@ -1733,7 +1741,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           </div>
                         )}
 
-                        <div className="w-full h-16 bg-stone-50 flex items-center justify-center p-1.5 overflow-hidden relative">
+                        <div className="w-full h-14 bg-stone-50 flex items-center justify-center p-1.5 overflow-hidden relative">
                           <img 
                             src={size.image} 
                             alt={size.label} 
@@ -1773,7 +1781,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                         }}
                         className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
                       />
-                      <div className="text-[10px] text-stone-500 mt-1">Min 4", Max 48" for symmetrical laser cuts</div>
+                      <div className="text-[10px] text-stone-500 mt-1">Min 4", Max 48" for symmetrical cuts</div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
@@ -1816,216 +1824,22 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 4: LAYOUTS & DESIGNS */}
-          {activeTab === 'LAYOUTS & DESIGNS' && (
+          {/* TAB 4: SHAPES (The 9 practical shapes) */}
+          {(activeTab === 'SHAPES' || activeTab === 'SHAPE') && (
             <div className="p-3.5 space-y-3">
-              <div className="flex border border-stone-200 rounded-xl p-1 bg-stone-100">
-                <button
-                  type="button"
-                  onClick={() => setLayoutSubTab('DESIGNS')}
-                  className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
-                    layoutSubTab === 'DESIGNS'
-                      ? 'bg-white text-[#0E4A93] shadow-xs'
-                      : 'text-stone-600 hover:text-stone-900'
-                  }`}
-                >
-                  DESIGNS
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLayoutSubTab('LAYOUTS')}
-                  className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
-                    layoutSubTab === 'LAYOUTS'
-                      ? 'bg-white text-[#0E4A93] shadow-xs'
-                      : 'text-stone-600 hover:text-stone-900'
-                  }`}
-                >
-                  LAYOUTS
-                </button>
+              <div>
+                <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-0.5">
+                  Select Acrylic Shape
+                </h3>
+                <p className="text-[10px] text-stone-500">
+                  Select laser-cut shape. Instant canvas masking preserves your photo.
+                </p>
               </div>
 
-              {layoutSubTab === 'LAYOUTS' && (
-                <div className="space-y-2.5">
-                  {[1, 2, 3, 4].map((count) => {
-                    const isExpanded = expandedPhotoCount === count;
-                    const matchingLayouts = LAYOUT_PRESETS.filter((l) => l.photoCount === count);
-
-                    return (
-                      <div key={count} className="border border-stone-200 rounded-xl overflow-hidden">
-                        <button
-                          type="button"
-                          onClick={() => setExpandedPhotoCount(isExpanded ? null : count)}
-                          className="w-full flex items-center justify-between p-2.5 bg-stone-50 hover:bg-stone-100 text-xs font-black text-stone-800 transition-colors cursor-pointer"
-                        >
-                          <span>{count} {count === 1 ? 'Photo' : 'Photos'}</span>
-                          <ChevronDown className={`w-4 h-4 text-stone-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {isExpanded && (
-                          <div className="p-2.5 grid grid-cols-2 gap-2 bg-white border-t border-stone-100">
-                            {matchingLayouts.map((layout) => {
-                              const isSelected = selectedLayoutId === layout.id;
-                              return (
-                                <div
-                                  key={layout.id}
-                                  onClick={() => handleSelectLayout(layout)}
-                                  className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
-                                    isSelected
-                                      ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
-                                      : 'border-stone-200 hover:border-stone-400 bg-white'
-                                  }`}
-                                >
-                                  {isSelected && (
-                                    <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
-                                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                                    </div>
-                                  )}
-
-                                  <div className="w-full h-16 bg-stone-50 border-b border-stone-100 p-2 flex items-center justify-center">
-                                    {layout.layoutType === '1-single' && (
-                                      <div className="w-12 h-10 bg-[#0E4A93]/40 rounded-xs" />
-                                    )}
-                                    {layout.layoutType === '2-vertical' && (
-                                      <div className="w-12 h-10 flex gap-0.5">
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                      </div>
-                                    )}
-                                    {layout.layoutType === '2-horizontal' && (
-                                      <div className="w-12 h-10 flex flex-col gap-0.5">
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                      </div>
-                                    )}
-                                    {layout.layoutType === '3-wall' && (
-                                      <div className="w-12 h-10 flex gap-0.5">
-                                        <div className="w-3 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="w-3 bg-[#0E4A93]/40 rounded-xs" />
-                                      </div>
-                                    )}
-                                    {layout.layoutType === '3-triptych' && (
-                                      <div className="w-12 h-10 flex gap-0.5">
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="flex-1 bg-[#0E4A93]/40 rounded-xs" />
-                                      </div>
-                                    )}
-                                    {layout.layoutType === '4-grid' && (
-                                      <div className="w-12 h-10 grid grid-cols-2 gap-0.5">
-                                        <div className="bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="bg-[#0E4A93]/40 rounded-xs" />
-                                        <div className="bg-[#0E4A93]/40 rounded-xs" />
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  <div className="p-1.5 bg-white text-center">
-                                    <div className="text-[11px] font-bold text-stone-900 leading-tight truncate">
-                                      {layout.name}
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {layoutSubTab === 'DESIGNS' && (
-                <div className="grid grid-cols-2 gap-2.5">
-                  {DESIGN_TEMPLATES.map((tmpl) => {
-                    const isSelected = selectedTemplateId === tmpl.id;
-                    return (
-                      <div
-                        key={tmpl.id}
-                        onClick={() => {
-                          setSelectedTemplateId(tmpl.id);
-                          setSelectedLayoutId(tmpl.layoutId);
-                        }}
-                        className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
-                          isSelected
-                            ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
-                            : 'border-stone-200 hover:border-stone-400 bg-white'
-                        }`}
-                      >
-                        {isSelected && (
-                          <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
-                            <Check className="w-3.5 h-3.5 stroke-[3]" />
-                          </div>
-                        )}
-
-                        <div className="w-full h-20 bg-stone-50 flex items-center justify-center p-1 overflow-hidden relative">
-                          <img 
-                            src={tmpl.image} 
-                            alt={tmpl.name} 
-                            className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform" 
-                          />
-                        </div>
-
-                        <div className="p-2 bg-white border-t border-stone-100">
-                          <div className="text-xs font-bold text-stone-900 leading-tight truncate">
-                            {tmpl.name}
-                          </div>
-                          <div className="text-[10px] text-stone-500 mt-0.5 truncate">
-                            {tmpl.description}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* =============================================================== */}
-          {/* TAB 5: SHAPE (Full 23 Shapes Suite: Section 4, 5, 6 & 13)         */}
-          {/* =============================================================== */}
-          {activeTab === 'SHAPE' && (
-            <div className="p-3.5 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-0.5">
-                    Acrylic Shapes
-                  </h3>
-                  <p className="text-[10px] text-stone-500">
-                    Select laser-cut shape. Instant canvas masking.
-                  </p>
-                </div>
-                <span className="text-[11px] font-bold text-[#0E4A93]">
-                  {ACRYLIC_SHAPES.length} Shapes
-                </span>
-              </div>
-
-              {/* Category Filter Chips */}
-              <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar">
-                {(['ALL', 'BASIC', 'SPECIAL', 'DECORATIVE'] as const).map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setShapeFilterCategory(cat)}
-                    className={`text-[10px] font-bold px-2 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
-                      shapeFilterCategory === cat
-                        ? 'bg-[#0E4A93] text-white'
-                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                    }`}
-                  >
-                    {cat} {cat === 'ALL' ? `(${ACRYLIC_SHAPES.length})` : `(${ACRYLIC_SHAPES.filter(s => s.category.toUpperCase() === cat).length})`}
-                  </button>
-                ))}
-              </div>
-
-              {/* Grid of 23 Shape Cards with Image Thumbnails */}
-              <div className="grid grid-cols-2 gap-2.5 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
-                {filteredShapes.map((shape) => {
+              {/* Grid of 9 Shape Cards with Small Thumbnails */}
+              <div className="grid grid-cols-2 gap-2 max-h-[calc(100vh-260px)] overflow-y-auto pr-1">
+                {ACRYLIC_SHAPES.map((shape) => {
                   const isSelected = selectedShapeId === shape.id;
-                  const isSupported = !selectedProductType.supportedShapeIds || selectedProductType.supportedShapeIds.includes(shape.id);
 
                   return (
                     <div
@@ -2034,9 +1848,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                       className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
                         isSelected
                           ? 'border-[#0E4A93] bg-blue-50/25 shadow-sm ring-1 ring-[#0E4A93]/20'
-                          : isSupported
-                          ? 'border-stone-200 hover:border-stone-400 bg-white'
-                          : 'border-stone-200 bg-stone-50/80 opacity-60 hover:opacity-100'
+                          : 'border-stone-200 hover:border-stone-400 bg-white'
                       }`}
                     >
                       {isSelected && (
@@ -2045,7 +1857,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                         </div>
                       )}
 
-                      <div className="w-full h-20 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
+                      <div className="w-full h-18 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
                         <img 
                           src={shape.image} 
                           alt={shape.name} 
@@ -2053,7 +1865,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                         />
                       </div>
 
-                      <div className="p-2 bg-white border-t border-stone-100 text-center">
+                      <div className="p-1.5 bg-white border-t border-stone-100 text-center">
                         <div className="text-xs font-bold text-stone-900 leading-tight truncate">
                           {shape.name}
                         </div>
@@ -2068,15 +1880,200 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 6: WRAP & BORDER */}
+          {/* TAB 5: LAYOUTS & DESIGNS */}
+          {activeTab === 'LAYOUTS & DESIGNS' && (
+            <div className="p-3.5 space-y-3">
+              <div className="flex border border-stone-200 rounded-xl p-1 bg-stone-100">
+                <button
+                  type="button"
+                  onClick={() => setLayoutSubTab('LAYOUTS')}
+                  className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                    layoutSubTab === 'LAYOUTS'
+                      ? 'bg-white text-[#0E4A93] shadow-xs'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  LAYOUTS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLayoutSubTab('DESIGNS')}
+                  className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                    layoutSubTab === 'DESIGNS'
+                      ? 'bg-white text-[#0E4A93] shadow-xs'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  DESIGNS
+                </button>
+              </div>
+
+              {/* SUBTAB 1: LAYOUTS (7 Options) */}
+              {layoutSubTab === 'LAYOUTS' && (
+                <div className="space-y-2">
+                  {isCurvedShape && (
+                    <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg text-[10px] font-bold text-amber-800 flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                      <span>{currentShape.name} supports Single Image layout only.</span>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-2 max-h-[calc(100vh-300px)] overflow-y-auto pr-1">
+                    {LAYOUT_PRESETS.slice(0, 7).map((layout) => {
+                      const isSelected = selectedLayoutId === layout.id;
+                      const isDisabled = isCurvedShape && layout.id !== 'layout-1-single';
+
+                      return (
+                        <div
+                          key={layout.id}
+                          onClick={() => {
+                            if (!isDisabled) handleSelectLayout(layout);
+                          }}
+                          className={`group relative rounded-xl border-2 transition-all overflow-hidden flex flex-col justify-between ${
+                            isDisabled
+                              ? 'border-stone-200 bg-stone-100 opacity-40 cursor-not-allowed'
+                              : isSelected
+                              ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20 cursor-pointer'
+                              : 'border-stone-200 hover:border-stone-400 bg-white cursor-pointer'
+                          }`}
+                        >
+                          {isSelected && (
+                            <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            </div>
+                          )}
+
+                          <div className="w-full h-16 bg-stone-50 border-b border-stone-100 p-2 flex items-center justify-center">
+                            <img 
+                              src={layout.image} 
+                              alt={layout.name} 
+                              className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform" 
+                            />
+                          </div>
+
+                          <div className="p-1.5 bg-white text-center">
+                            <div className="text-[11px] font-bold text-stone-900 leading-tight truncate">
+                              {layout.name}
+                            </div>
+                            <div className="text-[10px] font-medium text-stone-500">
+                              {layout.photoCount} {layout.photoCount === 1 ? 'Photo' : 'Photos'}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* SUBTAB 2: DESIGNS (11 Categories with Overlays) */}
+              {layoutSubTab === 'DESIGNS' && (
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-stone-800 uppercase tracking-wider">
+                      Categories
+                    </span>
+                    {selectedDesignId && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDesignId(null)}
+                        className="text-[11px] font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md transition-colors cursor-pointer"
+                      >
+                        [ Remove Design ]
+                      </button>
+                    )}
+                  </div>
+
+                  {/* 11 Category Chips */}
+                  <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar">
+                    {DESIGN_CATEGORIES.map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setSelectedDesignCategory(cat)}
+                        className={`text-[10px] font-bold px-2 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                          selectedDesignCategory === cat
+                            ? 'bg-[#0E4A93] text-white'
+                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Design Cards for Selected Category */}
+                  <div className="grid grid-cols-2 gap-2 max-h-[calc(100vh-350px)] overflow-y-auto pr-1">
+                    {/* None Card */}
+                    <div
+                      onClick={() => setSelectedDesignId(null)}
+                      className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
+                        selectedDesignId === null
+                          ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm'
+                          : 'border-stone-200 hover:border-stone-300 bg-white'
+                      }`}
+                    >
+                      <div className="w-full h-18 bg-stone-50 flex items-center justify-center p-2 text-stone-400 font-bold text-xs">
+                        No Design
+                      </div>
+                      <div className="p-1.5 bg-white border-t border-stone-100 text-center">
+                        <div className="text-xs font-bold text-stone-800">Original Only</div>
+                      </div>
+                    </div>
+
+                    {ACRYLIC_DESIGN_OVERLAYS.filter((d) => d.category === selectedDesignCategory).map((overlay) => {
+                      const isSelected = selectedDesignId === overlay.id;
+
+                      return (
+                        <div
+                          key={overlay.id}
+                          onClick={() => setSelectedDesignId(overlay.id)}
+                          className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
+                            isSelected
+                              ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
+                              : 'border-stone-200 hover:border-stone-400 bg-white'
+                          }`}
+                        >
+                          {isSelected && (
+                            <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            </div>
+                          )}
+
+                          <div className="w-full h-18 bg-stone-900 flex items-center justify-center p-1 overflow-hidden relative">
+                            <img 
+                              src={overlay.image} 
+                              alt={overlay.name} 
+                              className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform" 
+                            />
+                          </div>
+
+                          <div className="p-1.5 bg-white border-t border-stone-100 text-center">
+                            <div className="text-xs font-bold text-stone-900 leading-tight truncate">
+                              {overlay.name}
+                            </div>
+                            <div className="text-[10px] text-stone-500 mt-0.5 truncate">
+                              {overlay.description}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 6: WRAP & BORDER (5 Edge Options with Shape-Following Borders) */}
           {activeTab === 'WRAP & BORDER' && (
             <div className="p-3.5 space-y-4">
               <div>
                 <div className="text-xs font-black text-stone-800 uppercase tracking-wider mb-2">
-                  Acrylic Edge Finish / Wrap
+                  Wrap & Edge Finish
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {ACRYLIC_EDGE_WRAPS.map((wrap) => {
+                  {ACRYLIC_WRAP_OPTIONS.map((wrap) => {
                     const isSelected = selectedEdgeWrapId === wrap.id;
                     return (
                       <div
@@ -2094,7 +2091,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           </div>
                         )}
 
-                        <div className="w-full h-18 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
+                        <div className="w-full h-16 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
                           <img 
                             src={wrap.image} 
                             alt={wrap.name} 
@@ -2102,11 +2099,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           />
                         </div>
 
-                        <div className="p-2 bg-white border-t border-stone-100 text-center">
+                        <div className="p-1.5 bg-white border-t border-stone-100 text-center">
                           <div className="text-xs font-bold text-stone-900 leading-tight">
                             {wrap.name}
                           </div>
-                          <div className="text-[11px] font-semibold text-stone-500 mt-0.5">
+                          <div className="text-[10px] font-semibold text-stone-500 mt-0.5">
                             {wrap.price === 0 ? 'Included' : `+₹${wrap.price}`}
                           </div>
                         </div>
@@ -2127,7 +2124,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                       <div
                         key={border.id}
                         onClick={() => setSelectedBorderWidthId(border.id)}
-                        className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer text-center ${
+                        className={`p-2 rounded-xl border-2 transition-all cursor-pointer text-center ${
                           isSelected
                             ? 'border-[#0E4A93] bg-blue-50/30'
                             : 'border-stone-200 hover:border-stone-300 bg-white'
@@ -2191,7 +2188,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           </div>
                         )}
 
-                        <div className="w-full h-18 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
+                        <div className="w-full h-16 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
                           <img 
                             src={hw.image} 
                             alt={hw.name} 
@@ -2199,11 +2196,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           />
                         </div>
 
-                        <div className="p-2 bg-white border-t border-stone-100 text-center">
+                        <div className="p-1.5 bg-white border-t border-stone-100 text-center">
                           <div className="text-xs font-bold text-stone-900 leading-tight">
                             {hw.name}
                           </div>
-                          <div className="text-[11px] font-semibold text-stone-500 mt-0.5">
+                          <div className="text-[10px] font-semibold text-stone-500 mt-0.5">
                             {hw.price === 0 ? 'Included' : `+₹${hw.price}`}
                           </div>
                         </div>
@@ -2236,7 +2233,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           </div>
                         )}
 
-                        <div className="w-full h-18 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
+                        <div className="w-full h-16 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
                           <img 
                             src={fin.image} 
                             alt={fin.name} 
@@ -2244,11 +2241,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           />
                         </div>
 
-                        <div className="p-2 bg-white border-t border-stone-100 text-center">
+                        <div className="p-1.5 bg-white border-t border-stone-100 text-center">
                           <div className="text-xs font-bold text-stone-900 leading-tight">
                             {fin.name}
                           </div>
-                          <div className="text-[11px] font-semibold text-stone-500 mt-0.5">
+                          <div className="text-[10px] font-semibold text-stone-500 mt-0.5">
                             {fin.price === 0 ? 'Included' : `+₹${fin.price}`}
                           </div>
                         </div>
@@ -2286,7 +2283,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           </div>
                         )}
 
-                        <div className="w-full h-18 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
+                        <div className="w-full h-16 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
                           <img 
                             src={frm.image} 
                             alt={frm.name} 
@@ -2294,11 +2291,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           />
                         </div>
 
-                        <div className="p-2 bg-white border-t border-stone-100 text-center">
+                        <div className="p-1.5 bg-white border-t border-stone-100 text-center">
                           <div className="text-xs font-bold text-stone-900 leading-tight">
                             {frm.name}
                           </div>
-                          <div className="text-[11px] font-semibold text-stone-500 mt-0.5">
+                          <div className="text-[10px] font-semibold text-stone-500 mt-0.5">
                             {frm.price === 0 ? 'Included' : `+₹${frm.price}`}
                           </div>
                         </div>
@@ -2332,7 +2329,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           </div>
                         )}
 
-                        <div className="w-full h-16 bg-stone-50 flex items-center justify-center p-1 overflow-hidden relative">
+                        <div className="w-full h-14 bg-stone-50 flex items-center justify-center p-1 overflow-hidden relative">
                           <img
                             src={previewImg}
                             alt={cfo.label}
@@ -2356,14 +2353,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
         </section>
 
-        {/* ----------------------------------------------------------------- */}
-        {/* CENTER / MAIN WORKSPACE                                           */}
-        {/* ----------------------------------------------------------------- */}
+        {/* CENTER / MAIN WORKSPACE */}
         <main className="flex-1 flex flex-col bg-[#F8FAFC] relative overflow-hidden">
           
-          {/* =============================================================== */}
-          {/* 6. TOP-RIGHT TOOLBAR ABOVE WORKSPACE (Sections 6 - 12)           */}
-          {/* =============================================================== */}
+          {/* TOP-RIGHT TOOLBAR ABOVE WORKSPACE */}
           <div className="h-12 bg-white border-b border-stone-200 px-3 sm:px-4 flex items-center justify-between shrink-0 z-20 overflow-x-auto">
             
             {/* Left Image Manipulation Tools */}
@@ -2402,7 +2395,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Right: Top-Right Toolbar [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW] */}
+            {/* Right: [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW]  */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               
               {/* SAVE */}
@@ -2425,7 +2418,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
                     : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
                 }`}
-                title="Add custom typography and lyrics with live real-time editing"
+                title="Add custom typography with live real-time editing"
               >
                 <Type className="w-3.5 h-3.5" />
                 <span>ADD TEXT</span>
@@ -2440,7 +2433,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
                     : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
                 }`}
-                title="Add visual vector stickers and clipart across 12 categories"
+                title="Add clipart and stickers"
               >
                 <Smile className="w-3.5 h-3.5" />
                 <span>ADD CLIPART</span>
@@ -2455,12 +2448,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
                     : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
                 }`}
-                title="Preview on wall with custom room image upload and positioning"
+                title="Preview on realistic wall"
               >
                 <Eye className="w-3.5 h-3.5" />
                 <span>ROOM VIEW</span>
               </button>
-
 
               {/* Delete Selected Element (Text/Clipart) */}
               {selectedElement.type !== 'image' && (
@@ -2477,10 +2469,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           </div>
 
-          {/* =============================================================== */}
-          {/* FLOATING ADD TEXT TOOLBAR / MODAL                                */}
-          {/* =============================================================== */}
-          {/* LIVE REAL-TIME TEXT EDITOR COMPONENT (Section 1 & 2) */}
+          {/* LIVE REAL-TIME TEXT EDITOR COMPONENT */}
           {showTextModal && (
             <AcrylicLiveTextEditor
               activeText={activeTextElement || {
@@ -2504,71 +2493,37 @@ export const AcrylicCustomizerPage: React.FC = () => {
             />
           )}
 
-          {/* VISUAL 12-CATEGORY CLIPART MODAL & CONTROLS (Section 3 & 4) */}
+          {/* VISUAL CLIPART PICKER MODAL */}
           <AcrylicClipartModal
             isOpen={showClipartModal}
             onClose={() => setShowClipartModal(false)}
-            onAddClipart={handleAddClipartItem}
+            onAddClipart={handleSelectClipart}
             activeClipart={activeClipartElement}
             onUpdateClipart={handleUpdateActiveClipart}
             onDuplicateClipart={handleDuplicateActiveClipart}
             onDeleteClipart={handleDeleteActiveClipart}
           />
 
-                    {/* =============================================================== */}
-          {/* CANVAS INTERACTIVE WORKSPACE (Section 13)                         */}
-          {/* =============================================================== */}
+          {/* INTERACTIVE WORKSPACE CANVAS */}
           <div 
-            className={`flex-1 relative flex flex-col items-center justify-center p-4 sm:p-8 overflow-hidden select-none ${
-              showRoomView ? 'bg-stone-800' : 'bg-[#E2E8F0]/50'
-            }`}
-            style={{
-              backgroundImage: showRoomView 
-                ? roomBackdrop === 'office'
-                  ? 'url(/assets/acrylic/acrylic-corporate-office.jpg)'
-                  : roomBackdrop === 'bedroom'
-                  ? 'url(/assets/acrylic/acrylic-family-wall.jpg)'
-                  : 'url(/assets/acrylic/acrylic-panel-living.jpg)' 
-                : 'radial-gradient(circle at 50% 50%, #F8FAFC 0%, #E2E8F0 100%)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }}
+            onClick={() => setSelectedElement({ type: 'image', panelIndex: activePanelIndex })}
+            className="flex-1 overflow-auto flex flex-col items-center justify-center p-4 sm:p-8 relative bg-radial from-slate-100 via-slate-200/50 to-slate-200"
           >
-
-            {/* Room View Backdrop Switcher overlay */}
-            {showRoomView && (
-              <div className="absolute top-4 left-4 z-30 bg-black/75 backdrop-blur-md rounded-xl p-2 flex gap-1.5 text-white">
-                {(['living', 'office', 'bedroom'] as const).map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRoomBackdrop(r)}
-                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-colors cursor-pointer ${
-                      roomBackdrop === r ? 'bg-[#0E4A93] text-white' : 'hover:bg-white/20 text-stone-300'
-                    }`}
-                  >
-                    {r === 'living' && 'Living Room'}
-                    {r === 'office' && 'Modern Office'}
-                    {r === 'bedroom' && 'Gallery Wall'}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Acrylic Product Frame Wrapper with Optional Outer Moulding Frame */}
+            
+            {/* Acrylic Product Frame Wrapper */}
             <div 
               className={`relative max-w-2xl w-full flex items-center justify-center transition-all duration-300 ${currentFrameCss}`}
             >
               
-              {/* Single Frame Layout */}
-              {selectedLayoutId === 'layout-1-single' && (
+              {/* 1. Single Frame Layout */}
+              {(isCurvedShape || selectedLayoutId === 'layout-1-single') && (
                 <div className="w-full max-w-lg">
                   {renderFrameContainer(0, currentShape.aspectClass, currentDimensionLabel)}
                 </div>
               )}
 
-              {/* 2 Split Vertical Layout */}
-              {selectedLayoutId === 'layout-2-vertical' && (
+              {/* 2. 2 Image Split (or Left + Right / 2 Columns) */}
+              {!isCurvedShape && (selectedLayoutId === 'layout-2-split' || selectedLayoutId === 'layout-left-right' || selectedLayoutId === 'layout-2-vertical') && (
                 <div className="w-full max-w-xl flex gap-3">
                   <div className="flex-1">
                     {renderFrameContainer(0, 'aspect-[3/4]')}
@@ -2579,8 +2534,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* 2 Split Horizontal Layout */}
-              {selectedLayoutId === 'layout-2-horizontal' && (
+              {/* 3. Top + Bottom */}
+              {!isCurvedShape && (selectedLayoutId === 'layout-top-bottom' || selectedLayoutId === 'layout-2-horizontal') && (
                 <div className="w-full max-w-md flex flex-col gap-3">
                   <div className="w-full">
                     {renderFrameContainer(0, 'aspect-[16/9]')}
@@ -2591,23 +2546,40 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* 3 Wall / Triptych Display Layout */}
-              {(selectedLayoutId === 'layout-3-wall' || selectedProductTypeId === 'acrylic-wall-art' || selectedProductTypeId === 'acrylic-split') && (
+              {/* 4. 3 Image Collage (Triptych 3 Columns) */}
+              {!isCurvedShape && (selectedLayoutId === 'layout-3-collage' || selectedLayoutId === 'layout-3-wall') && (
                 <div className="w-full max-w-2xl flex items-center justify-center gap-3">
-                  <div className="w-1/3">
+                  <div className="flex-1">
                     {renderFrameContainer(0, 'aspect-[1/2]')}
                   </div>
-                  <div className="w-1/3 scale-105 z-10">
+                  <div className="flex-1 scale-105 z-10">
                     {renderFrameContainer(1, 'aspect-[1/2]')}
                   </div>
-                  <div className="w-1/3">
+                  <div className="flex-1">
                     {renderFrameContainer(2, 'aspect-[1/2]')}
                   </div>
                 </div>
               )}
 
-              {/* 4 Photo Grid / Collage Layout */}
-              {selectedLayoutId === 'layout-4-grid' && (
+              {/* 5. Main + 2 Small Images */}
+              {!isCurvedShape && selectedLayoutId === 'layout-main-2small' && (
+                <div className="w-full max-w-xl flex gap-3">
+                  <div className="w-2/3">
+                    {renderFrameContainer(0, 'aspect-[4/3]')}
+                  </div>
+                  <div className="w-1/3 flex flex-col gap-3">
+                    <div className="flex-1">
+                      {renderFrameContainer(1, 'aspect-[4/3]')}
+                    </div>
+                    <div className="flex-1">
+                      {renderFrameContainer(2, 'aspect-[4/3]')}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 6. 4 Image Grid (2x2 Quadrant Grid) */}
+              {!isCurvedShape && selectedLayoutId === 'layout-4-grid' && (
                 <div className="w-full max-w-lg grid grid-cols-2 gap-3">
                   {renderFrameContainer(0, 'aspect-square')}
                   {renderFrameContainer(1, 'aspect-square')}
@@ -2618,16 +2590,16 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
             </div>
 
-            {/* Compact Floating Image Editor Controls Bar (Section 6, 8, 9, 18) */}
+            {/* Compact Floating Image Editor Controls Bar for Active Slot */}
             {activeFrameState.imageUrl && (
               <div className="mt-4 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-xl shadow-lg border border-stone-200/90 flex items-center gap-2.5 z-30 select-none animate-in fade-in slide-in-from-bottom-2">
-                {frames.length > 1 && (
+                {frames.length > 1 && !isCurvedShape && (
                   <div className="text-[11px] font-bold text-stone-700 pr-2 border-r border-stone-200">
-                    Frame {activePanelIndex + 1}
+                    Slot {activePanelIndex + 1}
                   </div>
                 )}
 
-                {/* Containment Mode: [ Fit / Fill ] (Section 7) */}
+                {/* Containment Mode: [ Fit / Fill ] */}
                 <button
                   type="button"
                   onClick={() => updateFrame(activePanelIndex, (curr) => ({
@@ -2693,7 +2665,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
       </div>
 
-      {/* REALISTIC ROOM VIEW MODAL (Sections 12 - 20) */}
+      {/* REALISTIC ROOM VIEW MODAL */}
       <AcrylicRoomViewModal
         isOpen={showRoomView}
         onClose={() => setShowRoomView(false)}
