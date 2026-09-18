@@ -574,6 +574,13 @@ export const CanvasCustomizerPage: React.FC = () => {
   const [pricePopoverOpen, setPricePopoverOpen] = useState<boolean>(false);
   const [saveToast, setSaveToast] = useState<string | null>(null);
 
+  // Room / 3D / 360 viewer
+  const [viewerMode, setViewerMode] = useState<'room' | '3d' | '360' | null>(null);
+  const [roomBackdrop, setRoomBackdrop] = useState<'living' | 'office' | 'bedroom'>('living');
+  const [viewerRotation, setViewerRotation] = useState<number>(-22);
+  const [viewerAutoRotate, setViewerAutoRotate] = useState<boolean>(false);
+  const viewerDragRef = useRef<{ x: number; startRotation: number } | null>(null);
+
   // Dragging state for the active panel image
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const dragStartRef = useRef<{ x: number; y: number; initialPanX: number; initialPanY: number }>({
@@ -752,6 +759,30 @@ export const CanvasCustomizerPage: React.FC = () => {
   const handleFit = () => updateActivePanelTransform(() => ({ scale: 1, panX: 0, panY: 0 }));
   const handleReset = () => updateActivePanelTransform(() => ({ scale: 1, panX: 0, panY: 0, rotation: 0 }));
   const handleApplyFilter = (filter: ColorFilterType) => updateActivePanelTransform(() => ({ filter }));
+
+  // 360° auto-rotate loop
+  useEffect(() => {
+    if (!viewerAutoRotate || viewerMode !== '360') return;
+    const id = window.setInterval(() => {
+      setViewerRotation((r) => (r + 1.2) % 360);
+    }, 30);
+    return () => window.clearInterval(id);
+  }, [viewerAutoRotate, viewerMode]);
+
+  // Drag-to-spin handlers for the 3D / 360 viewer
+  const handleViewerPointerDown = (e: React.PointerEvent) => {
+    setViewerAutoRotate(false);
+    viewerDragRef.current = { x: e.clientX, startRotation: viewerRotation };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+  const handleViewerPointerMove = (e: React.PointerEvent) => {
+    if (!viewerDragRef.current) return;
+    const delta = e.clientX - viewerDragRef.current.x;
+    setViewerRotation(viewerDragRef.current.startRotation + delta * 0.5);
+  };
+  const handleViewerPointerUp = () => {
+    viewerDragRef.current = null;
+  };
 
   // Mouse/Touch Drag Handlers
   const handlePointerDown = (e: React.PointerEvent, panelIdx: number) => {
@@ -1970,19 +2001,22 @@ export const CanvasCustomizerPage: React.FC = () => {
               <span>ADD CLIPART</span>
             </button>
 
-            {[
-              { label: 'ROOM VIEW', icon: Eye },
-              { label: '3D VIEW', icon: Box },
-              { label: '360° VIEW', icon: RotateCw }
-            ].map((tool) => {
+            {(
+              [
+                { label: 'ROOM VIEW', icon: Eye, mode: 'room' as const },
+                { label: '3D VIEW', icon: Box, mode: '3d' as const },
+                { label: '360° VIEW', icon: RotateCw, mode: '360' as const }
+              ]
+            ).map((tool) => {
               const Icon = tool.icon;
               return (
                 <button
                   key={tool.label}
                   type="button"
                   onClick={() => {
-                    setSaveToast(`${tool.label.replace('°', '')} preview is coming soon.`);
-                    setTimeout(() => setSaveToast(null), 2500);
+                    setViewerRotation(tool.mode === 'room' ? 0 : -22);
+                    setViewerAutoRotate(tool.mode === '360');
+                    setViewerMode(tool.mode);
                   }}
                   className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 bg-white/95 hover:bg-white text-stone-700 hover:text-stone-900 rounded-lg text-xs font-bold shadow-xs border border-stone-200 transition-all cursor-pointer"
                 >
@@ -2342,6 +2376,174 @@ export const CanvasCustomizerPage: React.FC = () => {
       {/* ===================================================================== */}
       {/* 3. POPUP MODALS                                                       */}
       {/* ===================================================================== */}
+
+      {/* ROOM / 3D / 360 VIEWER */}
+      {viewerMode && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-stone-100">
+              <h3 className="text-sm font-black text-stone-900 uppercase tracking-wide flex items-center gap-2">
+                {viewerMode === 'room' && (
+                  <>
+                    <Eye className="w-4 h-4" /> Room View
+                  </>
+                )}
+                {viewerMode === '3d' && (
+                  <>
+                    <Box className="w-4 h-4" /> 3D View
+                  </>
+                )}
+                {viewerMode === '360' && (
+                  <>
+                    <RotateCw className="w-4 h-4" /> 360&deg; View
+                  </>
+                )}
+              </h3>
+              <button onClick={() => setViewerMode(null)} className="text-stone-400 hover:text-stone-700 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {viewerMode === 'room' &&
+              (() => {
+                const photo = panelImages[activePanelIndex]?.imageUrl || panelImages[0]?.imageUrl || uploadedPhotos[0];
+                const backdrops: Record<typeof roomBackdrop, string> = {
+                  living: 'linear-gradient(#e7ded1 0%, #e7ded1 68%, #c9bfae 68%, #c9bfae 100%)',
+                  office: 'linear-gradient(#dfe4e8 0%, #dfe4e8 68%, #b9c2ca 68%, #b9c2ca 100%)',
+                  bedroom: 'linear-gradient(#ece3e9 0%, #ece3e9 68%, #d8c7d3 68%, #d8c7d3 100%)'
+                };
+                return (
+                  <div>
+                    <div className="relative h-80 sm:h-96 w-full overflow-hidden" style={{ background: backdrops[roomBackdrop] }}>
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-14 bg-black/10 rounded-t-2xl" />
+                      <div
+                        className={`absolute top-[18%] left-1/2 -translate-x-1/2 w-[38%] ${
+                          shapeApplies ? currentShape.aspectClass : 'aspect-[4/3]'
+                        } shadow-2xl bg-white`}
+                        style={{
+                          clipPath: shapeApplies ? currentShape.clipPathStyle : undefined,
+                          WebkitClipPath: shapeApplies ? currentShape.clipPathStyle : undefined
+                        }}
+                      >
+                        {photo ? (
+                          <img
+                            src={photo}
+                            alt="Room preview"
+                            style={{ filter: getFilterCss(panelImages[activePanelIndex]?.filter || 'original') }}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-stone-300 text-[10px] text-center p-2">
+                            Upload a photo to preview it on the wall
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-center gap-2 p-3 border-t border-stone-100">
+                      {(['living', 'office', 'bedroom'] as const).map((b) => (
+                        <button
+                          key={b}
+                          type="button"
+                          onClick={() => setRoomBackdrop(b)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
+                            roomBackdrop === b ? 'bg-[#0E4A93] text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                          }`}
+                        >
+                          {b}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+            {(viewerMode === '3d' || viewerMode === '360') &&
+              (() => {
+                const photo = panelImages[activePanelIndex]?.imageUrl || panelImages[0]?.imageUrl || uploadedPhotos[0];
+                const depthPx = WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.depthPx || 10;
+                const frameColor = FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.color;
+                return (
+                  <div
+                    className="h-80 sm:h-96 w-full flex items-center justify-center bg-stone-100 cursor-grab active:cursor-grabbing touch-none"
+                    style={{ perspective: '900px' }}
+                    onPointerDown={handleViewerPointerDown}
+                    onPointerMove={handleViewerPointerMove}
+                    onPointerUp={handleViewerPointerUp}
+                    onPointerLeave={handleViewerPointerUp}
+                  >
+                    <div
+                      className="relative w-56 h-40 sm:w-64 sm:h-48"
+                      style={{
+                        transformStyle: 'preserve-3d',
+                        transform: `rotateY(${viewerRotation}deg) rotateX(8deg)`,
+                        transition: viewerDragRef.current ? 'none' : 'transform 0.08s linear'
+                      }}
+                    >
+                      <div
+                        className="absolute inset-0 bg-white shadow-xl overflow-hidden"
+                        style={{
+                          transform: `translateZ(${depthPx / 2}px)`,
+                          border: frameColor && selectedFrameId !== 'no-frame' ? `6px solid ${frameColor}` : undefined
+                        }}
+                      >
+                        {photo ? (
+                          <img
+                            src={photo}
+                            alt="3D preview"
+                            style={{ filter: getFilterCss(panelImages[activePanelIndex]?.filter || 'original') }}
+                            className="w-full h-full object-cover pointer-events-none"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-stone-300 text-xs bg-stone-50">Upload a photo</div>
+                        )}
+                      </div>
+                      <div
+                        className="absolute top-0 right-0 h-full bg-gradient-to-b from-amber-700 to-amber-950"
+                        style={{ width: `${depthPx}px`, transform: `rotateY(90deg) translateZ(${depthPx / 2}px)`, transformOrigin: 'right center' }}
+                      />
+                      <div
+                        className="absolute top-0 left-0 w-full bg-gradient-to-r from-amber-800 to-amber-950"
+                        style={{ height: `${depthPx}px`, transform: `rotateX(-90deg) translateZ(${depthPx / 2}px)`, transformOrigin: 'top center' }}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
+
+            {viewerMode === '360' && (
+              <div className="flex items-center gap-3 p-3 border-t border-stone-100">
+                <input
+                  type="range"
+                  min={-180}
+                  max={180}
+                  step={1}
+                  value={((viewerRotation % 360) + 540) % 360 - 180}
+                  onChange={(e) => {
+                    setViewerAutoRotate(false);
+                    setViewerRotation(Number(e.target.value));
+                  }}
+                  className="flex-1 accent-[#0E4A93]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setViewerAutoRotate((v) => !v)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    viewerAutoRotate ? 'bg-[#0E4A93] text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  }`}
+                >
+                  {viewerAutoRotate ? 'Stop Spin' : 'Auto Spin'}
+                </button>
+              </div>
+            )}
+
+            {viewerMode === '3d' && (
+              <div className="p-3 border-t border-stone-100 text-center text-[11px] text-stone-400">
+                Drag left / right to rotate and see the gallery-wrap depth.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {materialModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in">
