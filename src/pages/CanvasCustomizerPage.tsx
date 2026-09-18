@@ -324,28 +324,120 @@ const LAYOUT_PRESETS: LayoutPreset[] = [
   { id: 'layout-wall', label: '3-Piece Wall Display', productTypeId: 'canvas-wall-art', sizeId: 'wd-3p-12x18-10x8', arrangement: 'wall3' }
 ];
 
+type DecorType = 'confetti' | 'ribbon' | 'floral' | 'hearts' | 'necktie' | 'balloons';
+
 interface DesignTemplate {
   id: string;
   category: string;
   name: string;
   textPreset: string;
-  emoji?: string;
+  decor: DecorType;
+  accent: string;
   swatchClass: string;
 }
 
 const DESIGN_TEMPLATE_CATEGORIES = ["Father's Day", 'Birthday', 'Wedding', 'Anniversary'];
 
 const DESIGN_TEMPLATES: DesignTemplate[] = [
-  { id: 'tpl-fd-1', category: "Father's Day", name: 'Love You Dad', textPreset: 'Love You Dad', swatchClass: 'bg-stone-900 text-white' },
-  { id: 'tpl-fd-2', category: "Father's Day", name: "Happy Father's Day", textPreset: "Happy Father's Day", emoji: '🕶️', swatchClass: 'bg-sky-100 text-sky-900' },
-  { id: 'tpl-fd-3', category: "Father's Day", name: 'Dad, The Hero', textPreset: 'Dad, The Hero', emoji: '🎩', swatchClass: 'bg-emerald-50 text-emerald-900' },
-  { id: 'tpl-bd-1', category: 'Birthday', name: 'Happy Birthday', textPreset: 'Happy Birthday!', emoji: '🎂', swatchClass: 'bg-rose-100 text-rose-900' },
-  { id: 'tpl-bd-2', category: 'Birthday', name: 'Another Year Wiser', textPreset: 'Another Year Wiser', emoji: '🎈', swatchClass: 'bg-amber-100 text-amber-900' },
-  { id: 'tpl-wd-1', category: 'Wedding', name: 'Mr & Mrs', textPreset: 'Mr & Mrs', emoji: '💍', swatchClass: 'bg-rose-50 text-rose-900' },
-  { id: 'tpl-wd-2', category: 'Wedding', name: 'Forever & Always', textPreset: 'Forever & Always', emoji: '💐', swatchClass: 'bg-white text-stone-900 border border-stone-200' },
-  { id: 'tpl-an-1', category: 'Anniversary', name: 'Happy Anniversary', textPreset: 'Happy Anniversary', emoji: '❤️', swatchClass: 'bg-red-50 text-red-900' },
-  { id: 'tpl-an-2', category: 'Anniversary', name: 'Together Forever', textPreset: 'Together Forever', emoji: '✨', swatchClass: 'bg-indigo-50 text-indigo-900' }
+  { id: 'tpl-fd-1', category: "Father's Day", name: 'Love You Dad', textPreset: 'Love You Dad', decor: 'necktie', accent: '#0f172a', swatchClass: 'bg-stone-900 text-white' },
+  { id: 'tpl-fd-2', category: "Father's Day", name: "Happy Father's Day", textPreset: "Happy Father's Day", decor: 'ribbon', accent: '#0284c7', swatchClass: 'bg-sky-100 text-sky-900' },
+  { id: 'tpl-fd-3', category: "Father's Day", name: 'Dad, The Hero', textPreset: 'Dad, The Hero', decor: 'confetti', accent: '#f59e0b', swatchClass: 'bg-emerald-50 text-emerald-900' },
+  { id: 'tpl-bd-1', category: 'Birthday', name: 'Happy Birthday', textPreset: 'Happy Birthday!', decor: 'balloons', accent: '#e11d48', swatchClass: 'bg-rose-100 text-rose-900' },
+  { id: 'tpl-bd-2', category: 'Birthday', name: 'Another Year Wiser', textPreset: 'Another Year Wiser', decor: 'confetti', accent: '#d97706', swatchClass: 'bg-amber-100 text-amber-900' },
+  { id: 'tpl-wd-1', category: 'Wedding', name: 'Mr & Mrs', textPreset: 'Mr & Mrs', decor: 'floral', accent: '#be123c', swatchClass: 'bg-rose-50 text-rose-900' },
+  { id: 'tpl-wd-2', category: 'Wedding', name: 'Forever & Always', textPreset: 'Forever & Always', decor: 'floral', accent: '#78716c', swatchClass: 'bg-white text-stone-900 border border-stone-200' },
+  { id: 'tpl-an-1', category: 'Anniversary', name: 'Happy Anniversary', textPreset: 'Happy Anniversary', decor: 'hearts', accent: '#dc2626', swatchClass: 'bg-red-50 text-red-900' },
+  { id: 'tpl-an-2', category: 'Anniversary', name: 'Together Forever', textPreset: 'Together Forever', decor: 'hearts', accent: '#4338ca', swatchClass: 'bg-indigo-50 text-indigo-900' }
 ];
+
+// Hand-drawn vector decorations used by design templates (no external images/emoji).
+const renderDecorSvg = (decor: DecorType, accent: string, className = 'absolute inset-0 w-full h-full pointer-events-none') => {
+  if (decor === 'confetti') {
+    const bits = [
+      [6, 8, 0], [15, 5, 30], [93, 6, 15], [86, 13, 60],
+      [4, 88, 10], [11, 94, 50], [95, 90, 20], [88, 96, 80],
+      [50, 5, 0], [50, 95, 0], [5, 50, 0], [95, 50, 0]
+    ];
+    const palette = [accent, '#f59e0b', '#38bdf8', '#f43f5e'];
+    return (
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className={className}>
+        {bits.map(([x, y, r], i) => (
+          <rect key={i} x={x - 2} y={y - 2} width={4} height={4} rx={0.5} fill={palette[i % palette.length]} opacity={0.85} transform={`rotate(${r} ${x} ${y})`} />
+        ))}
+      </svg>
+    );
+  }
+  if (decor === 'ribbon') {
+    return (
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className={className}>
+        <path
+          d="M0,8 L100,8 L100,20 L91,14 L83,20 L75,14 L67,20 L59,14 L51,20 L43,14 L35,20 L27,14 L19,20 L11,14 L3,20 L0,14 Z"
+          fill={accent}
+          opacity={0.9}
+        />
+      </svg>
+    );
+  }
+  if (decor === 'floral') {
+    const leaf = (
+      <g fill={accent}>
+        <path d="M4,4 C16,4 22,12 22,20 C12,20 4,15 4,4 Z" opacity={0.45} />
+        <path d="M4,4 C4,16 9,22 20,22 C20,12 15,4 4,4 Z" opacity={0.3} />
+        <circle cx="9" cy="9" r="2.4" opacity={0.6} />
+      </g>
+    );
+    return (
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className={className}>
+        {leaf}
+        <g transform="translate(100,0) scale(-1,1)">{leaf}</g>
+        <g transform="translate(0,100) scale(1,-1)">{leaf}</g>
+        <g transform="translate(100,100) scale(-1,-1)">{leaf}</g>
+      </svg>
+    );
+  }
+  if (decor === 'hearts') {
+    const heart = 'M0,3.4 C-1.6,0.6 -5,0.4 -5,3 C-5,5.6 -1.8,7.4 0,9.6 C1.8,7.4 5,5.6 5,3 C5,0.4 1.6,0.6 0,3.4 Z';
+    const points = Array.from({ length: 10 }, (_, i) => {
+      const angle = (i / 10) * Math.PI * 2;
+      return { x: 50 + Math.cos(angle) * 44, y: 50 + Math.sin(angle) * 44 };
+    });
+    return (
+      <svg viewBox="0 0 100 100" className={className}>
+        {points.map((p, i) => (
+          <path key={i} d={heart} fill={accent} opacity={0.55} transform={`translate(${p.x} ${p.y}) scale(1.3)`} />
+        ))}
+      </svg>
+    );
+  }
+  if (decor === 'necktie') {
+    const stripes = Array.from({ length: 6 }, (_, i) => i * 9 - 20);
+    return (
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className={className}>
+        <polygon points="0,0 40,0 0,40" fill="#f8fafc" opacity={0.06} />
+        {stripes.map((offset, i) => (
+          <rect key={i} x={offset} y={-6} width={6} height={60} fill={accent} opacity={0.85} transform="rotate(45 0 0)" />
+        ))}
+      </svg>
+    );
+  }
+  // balloons
+  const colors = [accent, '#f59e0b', '#38bdf8'];
+  const positions = [
+    { cx: 28, cy: 14 },
+    { cx: 50, cy: 9 },
+    { cx: 72, cy: 14 }
+  ];
+  return (
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" className={className}>
+      {positions.map((p, i) => (
+        <g key={i}>
+          <ellipse cx={p.cx} cy={p.cy} rx={7} ry={9} fill={colors[i]} opacity={0.9} />
+          <path d={`M${p.cx},${p.cy + 9} C${p.cx - 2},${p.cy + 16} ${p.cx + 2},${p.cy + 20} ${p.cx},${p.cy + 26}`} stroke={colors[i]} strokeWidth={0.6} fill="none" opacity={0.7} />
+        </g>
+      ))}
+    </svg>
+  );
+};
 
 const WRAP_OPTIONS = [
   { id: 'canvas-lite', label: 'Canvas Lite', depth: '0.5"', depthPx: 6, price: 0 },
@@ -817,12 +909,13 @@ export const CanvasCustomizerPage: React.FC = () => {
     }
   };
 
-  // Apply a design template: sets a canned caption + optional emoji
+  // Apply a design template: sets a canned caption + the template's vector decoration
   const handleApplyTemplate = (tpl: DesignTemplate) => {
     setSelectedTemplateId(tpl.id);
     setCustomText(tpl.textPreset);
-    setActiveClipart(tpl.emoji || null);
   };
+
+  const activeTemplate = useMemo(() => DESIGN_TEMPLATES.find((t) => t.id === selectedTemplateId) || null, [selectedTemplateId]);
 
   // Select a layout preset: switches product type + size so panel count actually changes
   const handleSelectLayoutPreset = (preset: LayoutPreset) => {
@@ -847,6 +940,93 @@ export const CanvasCustomizerPage: React.FC = () => {
         <div className="flex-[1.4] bg-stone-300 rounded" />
         <div className="flex-1 grid grid-cols-2 gap-1">{cell}{cell}</div>
       </div>
+    );
+  };
+
+  // Back-of-frame hanging hardware, shown on the flipped-around 3D/360 back face
+  // and as a wall bracket above the print in Room View.
+  const renderHardwareGraphic = (hardwareId: string, forWall: boolean) => {
+    if (hardwareId === 'no-hooks') return null;
+    if (hardwareId === 'easel-back') {
+      return forWall ? null : (
+        <svg viewBox="0 0 100 60" className="absolute bottom-1 left-1/2 -translate-x-1/2 w-14 h-8 pointer-events-none">
+          <path d="M50,4 L20,56 M50,4 L80,56" stroke="#a8a29e" strokeWidth={4} strokeLinecap="round" fill="none" />
+        </svg>
+      );
+    }
+    // Standard hanging bracket: brass plate with a sawtooth zigzag + two screw holes
+    return (
+      <svg viewBox="0 0 100 26" className={forWall ? 'w-16 h-4' : 'absolute top-1.5 left-1/2 -translate-x-1/2 w-16 h-4 pointer-events-none'}>
+        <rect x={2} y={2} width={96} height={22} rx={3} fill="#c9a24b" stroke="#8a6d2f" strokeWidth={1} />
+        <circle cx={10} cy={13} r={3} fill="#5c4a20" />
+        <circle cx={90} cy={13} r={3} fill="#5c4a20" />
+        <path d="M22,20 L30,6 L38,20 L46,6 L54,20 L62,6 L70,20 L78,6" fill="none" stroke="#5c4a20" strokeWidth={2} />
+      </svg>
+    );
+  };
+
+  // Flat-illustration room scenes (no external images) so Room View shows a real, recognizable room.
+  const renderRoomScene = (room: 'living' | 'office' | 'bedroom') => {
+    const accent = '#f87171';
+    if (room === 'bedroom') {
+      return (
+        <svg viewBox="0 0 400 220" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 w-full h-full">
+          <rect x={0} y={0} width={400} height={220} fill="#f4efe9" />
+          <rect x={0} y={188} width={400} height={32} fill="#cbc2b8" />
+          {/* nightstand + lamp (left) */}
+          <rect x={20} y={150} width={54} height={38} fill="#57534e" />
+          <rect x={30} y={122} width={10} height={30} fill={accent} />
+          <rect x={20} y={116} width={34} height={10} fill="#f5f5f4" />
+          {/* bed */}
+          <rect x={110} y={128} width={220} height={20} rx={4} fill="#44403c" />
+          <rect x={110} y={144} width={220} height={44} fill={accent} />
+          <rect x={122} y={100} width={196} height={44} rx={6} fill="#44403c" />
+          <ellipse cx={165} cy={132} rx={26} ry={12} fill="#fafaf9" />
+          <ellipse cx={235} cy={132} rx={26} ry={12} fill="#fafaf9" />
+          {/* nightstand + lamp (right) */}
+          <rect x={326} y={150} width={54} height={38} fill="#57534e" />
+          <rect x={346} y={122} width={10} height={30} fill={accent} />
+          <rect x={334} y={116} width={34} height={10} fill="#f5f5f4" />
+        </svg>
+      );
+    }
+    if (room === 'office') {
+      return (
+        <svg viewBox="0 0 400 220" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 w-full h-full">
+          <rect x={0} y={0} width={400} height={220} fill="#eef1f3" />
+          <rect x={0} y={188} width={400} height={32} fill="#c3ccd2" />
+          {/* desk */}
+          <rect x={90} y={150} width={220} height={12} fill="#57534e" />
+          <rect x={100} y={162} width={14} height={30} fill="#78716c" />
+          <rect x={286} y={162} width={14} height={30} fill="#78716c" />
+          {/* monitor */}
+          <rect x={168} y={104} width={64} height={44} rx={3} fill="#292524" />
+          <rect x={172} y={108} width={56} height={34} fill="#7dd3fc" />
+          <rect x={192} y={148} width={16} height={8} fill="#57534e" />
+          {/* chair */}
+          <rect x={340} y={120} width={40} height={50} rx={8} fill={accent} />
+          <rect x={352} y={170} width={16} height={22} fill="#57534e" />
+        </svg>
+      );
+    }
+    // living room
+    return (
+      <svg viewBox="0 0 400 220" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 w-full h-full">
+        <rect x={0} y={0} width={400} height={220} fill="#f2ede6" />
+        <rect x={0} y={188} width={400} height={32} fill="#c9beae" />
+        {/* sofa */}
+        <rect x={150} y={130} width={220} height={50} rx={10} fill={accent} />
+        <rect x={150} y={112} width={220} height={30} rx={10} fill="#e05a5a" />
+        <rect x={140} y={150} width={16} height={40} rx={4} fill="#dc4c4c" />
+        <rect x={366} y={150} width={16} height={40} rx={4} fill="#dc4c4c" />
+        {/* coffee table */}
+        <rect x={210} y={172} width={90} height={10} fill="#57534e" />
+        <rect x={218} y={182} width={8} height={16} fill="#44403c" />
+        <rect x={284} y={182} width={8} height={16} fill="#44403c" />
+        {/* plant */}
+        <rect x={40} y={168} width={26} height={22} fill="#78716c" />
+        <circle cx={53} cy={148} r={20} fill="#4d7c0f" />
+      </svg>
     );
   };
 
@@ -1448,17 +1628,16 @@ export const CanvasCustomizerPage: React.FC = () => {
                         <div
                           key={tpl.id}
                           onClick={() => handleApplyTemplate(tpl)}
-                          className={`relative aspect-square rounded-xl overflow-hidden border-2 cursor-pointer flex flex-col items-center justify-center gap-2 text-center p-3 shadow-xs ${tpl.swatchClass} ${
+                          className={`relative aspect-square rounded-xl overflow-hidden border-2 cursor-pointer flex flex-col items-center justify-center gap-1.5 text-center p-2.5 shadow-xs ${tpl.swatchClass} ${
                             isSelected ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/30' : 'border-stone-200 hover:border-stone-400'
                           }`}
                         >
-                          {/* Mockup photo slot representing where the uploaded photo will sit */}
-                          <div className="w-3/5 aspect-square rounded-md bg-black/10 border border-black/10 flex items-center justify-center">
-                            {tpl.emoji && <span className="text-xl">{tpl.emoji}</span>}
-                          </div>
-                          <span className="text-[11px] font-bold leading-tight">{tpl.name}</span>
+                          {/* Real vector decoration, not an emoji */}
+                          {renderDecorSvg(tpl.decor, tpl.accent, 'absolute inset-0 w-full h-full pointer-events-none')}
+                          <div className="relative w-3/5 aspect-square rounded-md bg-white/70 border border-black/10 shadow-xs" />
+                          <span className="relative text-[11px] font-bold leading-tight">{tpl.name}</span>
                           {isSelected && (
-                            <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#0E4A93] text-white rounded flex items-center justify-center">
+                            <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#0E4A93] text-white rounded flex items-center justify-center z-10">
                               <Check className="w-3 h-3 stroke-[3]" />
                             </div>
                           )}
@@ -1473,7 +1652,6 @@ export const CanvasCustomizerPage: React.FC = () => {
                       onClick={() => {
                         setSelectedTemplateId(null);
                         setCustomText('');
-                        setActiveClipart(null);
                       }}
                       className="w-full py-1 text-rose-600 hover:underline font-bold text-center text-[11px]"
                     >
@@ -2279,6 +2457,9 @@ export const CanvasCustomizerPage: React.FC = () => {
                       />
                     )}
 
+                    {/* Applied design template: real vector decoration, not an emoji */}
+                    {activeTemplate && renderDecorSvg(activeTemplate.decor, activeTemplate.accent, 'absolute inset-0 w-full h-full pointer-events-none z-25')}
+
                     <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded z-20">
                       {isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary}
                     </div>
@@ -2407,20 +2588,20 @@ export const CanvasCustomizerPage: React.FC = () => {
             {viewerMode === 'room' &&
               (() => {
                 const photo = panelImages[activePanelIndex]?.imageUrl || panelImages[0]?.imageUrl || uploadedPhotos[0];
-                const backdrops: Record<typeof roomBackdrop, string> = {
-                  living: 'linear-gradient(#e7ded1 0%, #e7ded1 68%, #c9bfae 68%, #c9bfae 100%)',
-                  office: 'linear-gradient(#dfe4e8 0%, #dfe4e8 68%, #b9c2ca 68%, #b9c2ca 100%)',
-                  bedroom: 'linear-gradient(#ece3e9 0%, #ece3e9 68%, #d8c7d3 68%, #d8c7d3 100%)'
-                };
+                const isTabletop = selectedHardwareId === 'easel-back';
                 return (
                   <div>
-                    <div className="relative h-80 sm:h-96 w-full overflow-hidden" style={{ background: backdrops[roomBackdrop] }}>
-                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-14 bg-black/10 rounded-t-2xl" />
+                    <div className="relative h-80 sm:h-96 w-full overflow-hidden bg-stone-100">
+                      {renderRoomScene(roomBackdrop)}
+
+                      {!isTabletop && renderHardwareGraphic(selectedHardwareId, true) && (
+                        <div className="absolute top-[13%] left-[16%]">{renderHardwareGraphic(selectedHardwareId, true)}</div>
+                      )}
+
                       <div
-                        className={`absolute top-[18%] left-1/2 -translate-x-1/2 w-[38%] ${
-                          shapeApplies ? currentShape.aspectClass : 'aspect-[4/3]'
-                        } shadow-2xl bg-white`}
+                        className={`absolute left-[16%] w-[26%] ${shapeApplies ? currentShape.aspectClass : 'aspect-[4/3]'} shadow-2xl bg-white`}
                         style={{
+                          top: isTabletop ? '54%' : '17%',
                           clipPath: shapeApplies ? currentShape.clipPathStyle : undefined,
                           WebkitClipPath: shapeApplies ? currentShape.clipPathStyle : undefined
                         }}
@@ -2437,6 +2618,10 @@ export const CanvasCustomizerPage: React.FC = () => {
                             Upload a photo to preview it on the wall
                           </div>
                         )}
+                      </div>
+
+                      <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-amber-100 text-amber-900 text-[10px] font-bold px-3 py-1 rounded-full shadow-xs whitespace-nowrap">
+                        Preview is for illustration only — actual room may differ
                       </div>
                     </div>
                     <div className="flex items-center justify-center gap-2 p-3 border-t border-stone-100">
@@ -2462,49 +2647,72 @@ export const CanvasCustomizerPage: React.FC = () => {
                 const photo = panelImages[activePanelIndex]?.imageUrl || panelImages[0]?.imageUrl || uploadedPhotos[0];
                 const depthPx = WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.depthPx || 10;
                 const frameColor = FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.color;
+                const clip = shapeApplies ? { clipPath: currentShape.clipPathStyle, WebkitClipPath: currentShape.clipPathStyle } : {};
                 return (
-                  <div
-                    className="h-80 sm:h-96 w-full flex items-center justify-center bg-stone-100 cursor-grab active:cursor-grabbing touch-none"
-                    style={{ perspective: '900px' }}
-                    onPointerDown={handleViewerPointerDown}
-                    onPointerMove={handleViewerPointerMove}
-                    onPointerUp={handleViewerPointerUp}
-                    onPointerLeave={handleViewerPointerUp}
-                  >
+                  <div>
+                    <div className="bg-amber-100 text-amber-900 text-[10px] font-bold px-3 py-1.5 text-center">
+                      Preview shown is for illustration purpose only — may differ from the actual product
+                    </div>
                     <div
-                      className="relative w-56 h-40 sm:w-64 sm:h-48"
-                      style={{
-                        transformStyle: 'preserve-3d',
-                        transform: `rotateY(${viewerRotation}deg) rotateX(8deg)`,
-                        transition: viewerDragRef.current ? 'none' : 'transform 0.08s linear'
-                      }}
+                      className="h-80 sm:h-96 w-full flex items-center justify-center bg-stone-100 cursor-grab active:cursor-grabbing touch-none"
+                      style={{ perspective: '900px' }}
+                      onPointerDown={handleViewerPointerDown}
+                      onPointerMove={handleViewerPointerMove}
+                      onPointerUp={handleViewerPointerUp}
+                      onPointerLeave={handleViewerPointerUp}
                     >
                       <div
-                        className="absolute inset-0 bg-white shadow-xl overflow-hidden"
+                        className="relative w-56 h-40 sm:w-64 sm:h-48"
                         style={{
-                          transform: `translateZ(${depthPx / 2}px)`,
-                          border: frameColor && selectedFrameId !== 'no-frame' ? `6px solid ${frameColor}` : undefined
+                          transformStyle: 'preserve-3d',
+                          transform: `rotateY(${viewerRotation}deg) rotateX(8deg)`,
+                          transition: viewerDragRef.current ? 'none' : 'transform 0.08s linear'
                         }}
                       >
-                        {photo ? (
-                          <img
-                            src={photo}
-                            alt="3D preview"
-                            style={{ filter: getFilterCss(panelImages[activePanelIndex]?.filter || 'original') }}
-                            className="w-full h-full object-cover pointer-events-none"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-stone-300 text-xs bg-stone-50">Upload a photo</div>
-                        )}
+                        {/* Front face: the photo, masked to the selected shape */}
+                        <div
+                          className={`absolute inset-0 bg-white shadow-xl overflow-hidden ${shapeApplies ? currentShape.borderRadiusClass : ''}`}
+                          style={{
+                            transform: `translateZ(${depthPx / 2}px)`,
+                            backfaceVisibility: 'hidden',
+                            border: frameColor && selectedFrameId !== 'no-frame' ? `6px solid ${frameColor}` : undefined,
+                            ...clip
+                          }}
+                        >
+                          {photo ? (
+                            <img
+                              src={photo}
+                              alt="3D preview"
+                              style={{ filter: getFilterCss(panelImages[activePanelIndex]?.filter || 'original') }}
+                              className="w-full h-full object-cover pointer-events-none"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-stone-300 text-xs bg-stone-50">Upload a photo</div>
+                          )}
+                        </div>
+
+                        {/* Back face: the canvas backing with the actual hanging hardware */}
+                        <div
+                          className={`absolute inset-0 bg-stone-800 shadow-xl overflow-hidden flex items-start justify-center ${shapeApplies ? currentShape.borderRadiusClass : ''}`}
+                          style={{
+                            transform: `translateZ(${-depthPx / 2}px) rotateY(180deg)`,
+                            backfaceVisibility: 'hidden',
+                            ...clip
+                          }}
+                        >
+                          {renderHardwareGraphic(selectedHardwareId, false)}
+                        </div>
+
+                        {/* Side edge: the gallery-wrap depth, tinted with the chosen border color */}
+                        <div
+                          className="absolute top-0 right-0 h-full"
+                          style={{ width: `${depthPx}px`, transform: `rotateY(90deg) translateZ(${depthPx / 2}px)`, transformOrigin: 'right center', background: selectedBorderWidthId !== 'none' ? selectedBorderColor : '#78350f' }}
+                        />
+                        <div
+                          className="absolute top-0 left-0 w-full"
+                          style={{ height: `${depthPx}px`, transform: `rotateX(-90deg) translateZ(${depthPx / 2}px)`, transformOrigin: 'top center', background: selectedBorderWidthId !== 'none' ? selectedBorderColor : '#92400e' }}
+                        />
                       </div>
-                      <div
-                        className="absolute top-0 right-0 h-full bg-gradient-to-b from-amber-700 to-amber-950"
-                        style={{ width: `${depthPx}px`, transform: `rotateY(90deg) translateZ(${depthPx / 2}px)`, transformOrigin: 'right center' }}
-                      />
-                      <div
-                        className="absolute top-0 left-0 w-full bg-gradient-to-r from-amber-800 to-amber-950"
-                        style={{ height: `${depthPx}px`, transform: `rotateX(-90deg) translateZ(${depthPx / 2}px)`, transformOrigin: 'top center' }}
-                      />
                     </div>
                   </div>
                 );
