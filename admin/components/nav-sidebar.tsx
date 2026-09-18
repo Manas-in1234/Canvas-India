@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ShoppingCart, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, Settings, LogOut } from 'lucide-react';
 import { usePermission } from '@/lib/auth/use-permission';
 import { useAuth } from '@/lib/auth/auth-context';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ interface NavLink {
 const NAV_LINKS: NavLink[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, requiredPermissions: [] },
   { href: '/orders', label: 'Orders', icon: ShoppingCart, requiredPermissions: ['orders.view'] },
+  { href: '/products', label: 'Products', icon: Package, requiredPermissions: ['products.view'] },
   { href: '/settings', label: 'Settings', icon: Settings, requiredPermissions: [] },
 ];
 

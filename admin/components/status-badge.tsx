@@ -28,6 +28,9 @@ const STATUS_STYLES: Record<string, string> = {
   DELIVERED: 'bg-emerald-100 text-emerald-800',
   NDR: 'bg-orange-100 text-orange-800',
   RTO: 'bg-red-100 text-red-800',
+  // Product status
+  ACTIVE: 'bg-emerald-100 text-emerald-800',
+  ARCHIVED: 'bg-stone-200 text-stone-700',
 };
 
 export function StatusBadge({ status }: { status: string }) {
