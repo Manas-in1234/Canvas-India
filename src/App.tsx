@@ -21,6 +21,7 @@ import { CanvasCategoryPage } from './pages/CanvasCategoryPage';
 import { AcrylicCustomizerPage } from './pages/AcrylicCustomizerPage';
 import { AllCategoriesPage } from './pages/AllCategoriesPage';
 import { CanvasCustomizerPage } from './pages/CanvasCustomizerPage';
+import { MobileUploadPage } from './pages/MobileUploadPage';
 
 export function App() {
   return (
@@ -30,6 +31,8 @@ export function App() {
         <Route path="/customize/acrylic/:productId" element={<AcrylicCustomizerPage />} />
         {/* Dedicated Full-Screen Canvas Customizer */}
         <Route path="/customize/canvas/:productId" element={<CanvasCustomizerPage />} />
+        {/* Dedicated Mobile QR Upload Page */}
+        <Route path="/mobile-upload/:sessionId" element={<MobileUploadPage />} />
 
         <Route element={<RootLayout />}>
           {/* Home */}
