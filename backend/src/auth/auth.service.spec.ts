@@ -29,8 +29,12 @@ async function buildAdminUser(overrides: Partial<Record<string, unknown>> = {}) 
 
 function buildDeps(adminUser: Awaited<ReturnType<typeof buildAdminUser>> | null) {
   const prisma = {
-    adminUser: { findUnique: vi.fn().mockResolvedValue(adminUser) },
-    session: { create: vi.fn().mockResolvedValue({}) },
+    adminUser: {
+      findUnique: vi.fn().mockResolvedValue(adminUser),
+      findUniqueOrThrow: vi.fn().mockResolvedValue(adminUser),
+      update: vi.fn().mockResolvedValue(adminUser),
+    },
+    session: { create: vi.fn().mockResolvedValue({}), updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
   } as unknown as PrismaService;
 
   const jwtService = {
@@ -88,5 +92,37 @@ describe('AuthService.login', () => {
 
     const service = new AuthService(prisma, jwtService, configService, auditService);
     await expect(service.login('missing@canvaschamp.in', 'whatever123')).rejects.toThrow(UnauthorizedException);
+  });
+});
+
+describe('AuthService.changePassword', () => {
+  it('updates the password hash and revokes existing sessions when the current password is correct', async () => {
+    const adminUser = await buildAdminUser();
+    const { prisma, jwtService, configService, auditService } = buildDeps(adminUser);
+
+    const service = new AuthService(prisma, jwtService, configService, auditService);
+    await service.changePassword('admin-1', TEST_PASSWORD, 'NewPassword456!');
+
+    expect(prisma.adminUser.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'admin-1' } }),
+    );
+    expect(prisma.session.updateMany).toHaveBeenCalledWith({
+      where: { adminUserId: 'admin-1', revokedAt: null },
+      data: { revokedAt: expect.any(Date) },
+    });
+    expect(auditService.record).toHaveBeenCalledWith(
+      expect.objectContaining({ adminUserId: 'admin-1', action: 'PASSWORD_CHANGE' }),
+    );
+  });
+
+  it('rejects when the current password is wrong', async () => {
+    const adminUser = await buildAdminUser();
+    const { prisma, jwtService, configService, auditService } = buildDeps(adminUser);
+
+    const service = new AuthService(prisma, jwtService, configService, auditService);
+    await expect(service.changePassword('admin-1', 'wrong-password', 'NewPassword456!')).rejects.toThrow(
+      UnauthorizedException,
+    );
+    expect(prisma.adminUser.update).not.toHaveBeenCalled();
   });
 });

@@ -7,6 +7,7 @@ import type { AuthenticatedUser } from '../types/authenticated-user.js';
 
 interface AccessTokenPayload {
   sub: string;
+  iat: number;
 }
 
 @Injectable()
@@ -30,6 +31,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     if (!adminUser || !adminUser.isActive) {
       throw new UnauthorizedException('Account is inactive or no longer exists');
+    }
+
+    // Access tokens are otherwise stateless and would keep working for their
+    // full lifetime even after a password change — reject any token issued
+    // before the account's last update (password change, deactivation, role
+    // change, etc.) rather than waiting for it to expire naturally.
+    const tokenIssuedAt = payload.iat * 1000;
+    if (tokenIssuedAt < adminUser.updatedAt.getTime()) {
+      throw new UnauthorizedException('Session invalidated by a recent account change');
     }
 
     return {
