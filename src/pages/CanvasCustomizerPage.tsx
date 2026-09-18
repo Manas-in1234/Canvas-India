@@ -1106,17 +1106,6 @@ export const CanvasCustomizerPage: React.FC = () => {
           {/* ---------------------------- PRODUCTS ---------------------------- */}
           {activeTab === 'PRODUCTS' && (
             <div className="flex flex-col h-full">
-              {/* Material category strip (Canvas active, others link out) */}
-              <div className="flex items-center border-b border-stone-200 text-[11px] font-black uppercase tracking-wide shrink-0">
-                <div className="flex-1 text-center py-3 border-b-2 border-[#0E4A93] text-[#0E4A93]">Canvas</div>
-                <Link to="/acrylic-customizer" className="flex-1 text-center py-3 text-stone-400 hover:text-stone-700 transition-colors">
-                  Acrylic
-                </Link>
-                <div className="flex-1 text-center py-3 text-stone-300 cursor-not-allowed">Metal</div>
-                <div className="flex-1 text-center py-3 text-stone-300 cursor-not-allowed">Wood</div>
-                <div className="flex-1 text-center py-3 text-stone-300 cursor-not-allowed">Other</div>
-              </div>
-
               <div className="p-4 space-y-2 overflow-y-auto">
                 <div className="grid grid-cols-2 gap-2.5">
                   {CANVAS_PRODUCT_TYPES.map((pt) => {
