@@ -106,11 +106,15 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         <img
           src="/hero-scene.jpg"
           alt="Canvas painting, frame, cork coaster and paints on a sunlit table"
-          className="absolute right-0 top-0 h-full w-full lg:w-[68%] object-cover object-center"
-          style={{ maskImage: 'linear-gradient(to right, transparent 0%, #000 38%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, #000 38%)' }}
+          className="absolute right-0 top-0 h-full w-full lg:w-[64%] object-cover object-center opacity-60 lg:opacity-100"
+          style={{
+            maskImage: 'radial-gradient(ellipse 62% 78% at 62% 50%, #000 38%, rgba(0,0,0,0.55) 62%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 62% 78% at 62% 50%, #000 38%, rgba(0,0,0,0.55) 62%, transparent 100%)',
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#F7EFE3] via-[#F7EFE3]/85 to-transparent lg:via-[#F7EFE3]/40" />
-        <Container className="relative py-14 sm:py-20 lg:py-28">
+        <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7EFE3] via-[#F7EFE3]/70 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#F7EFE3]/80 to-transparent" />
+        <Container className="relative py-14 sm:py-16 lg:py-20 lg:min-h-[560px] flex items-center">
           <div className="max-w-xl">
             <div className="flex items-center gap-3 text-[11px] sm:text-xs tracking-[0.3em] text-stone-600 font-semibold uppercase">
               <span>Art / Craft / Home Decor</span>
