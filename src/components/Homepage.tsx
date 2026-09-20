@@ -121,7 +121,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               <span className="h-px w-10 bg-stone-500/60" />
             </div>
             <h1 className="mt-4 text-5xl sm:text-6xl lg:text-[76px] font-bold leading-[1.02]" style={{ fontFamily: SERIF, color: BLUE }}>
-              Make it <em className="font-semibold">Yours</em>
+              Make it <em className="font-semibold" style={{ color: ORANGE }}>Yours</em>
             </h1>
             <p className="mt-5 text-base sm:text-lg text-stone-700 max-w-md leading-relaxed">
               Premium canvas prints, acrylic photo prints, cork products and more — turn your ideas into art, your way.
