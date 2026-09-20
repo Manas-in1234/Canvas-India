@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight, Truck, BadgeCheck, Headphones, ShieldCheck, Palette, Leaf, Heart, MapPin, Star, ShoppingCart } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Truck, BadgeCheck, Headphones, ShieldCheck, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote } from 'lucide-react';
 import { Product } from '../types';
 
 export interface HomepageProps {
@@ -26,54 +26,56 @@ const SERIF = '"Playfair Display", Georgia, serif';
 const BLUE = '#0E4A93';
 const ORANGE = '#E8752A';
 
+const u = (id: string, w = 700) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=80`;
+
 const CATEGORY_CARDS = [
-  { name: 'Canvas Prints', sub: 'Museum-grade | Made to order', slug: 'canvas', image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=700&auto=format&fit=crop&q=80' },
-  { name: 'Acrylic Prints', sub: 'Vibrant Colors | Crystal Clear', slug: 'acrylic', image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=700&auto=format&fit=crop&q=80' },
-  { name: 'Cork Products', sub: 'Natural | Durable | Stylish', slug: 'cork', image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=700&auto=format&fit=crop&q=80' },
-  { name: 'Personalized Gifts', sub: 'Make it Uniquely Yours', slug: 'gifts', image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=700&auto=format&fit=crop&q=80' },
+  { name: 'Canvas Prints', sub: 'Museum-grade | Made to order', price: 499, slug: 'canvas', image: u('photo-1579783902614-a3fb3927b675'), grad: 'from-[#0E4A93]/90', chip: 'bg-[#E8752A]' },
+  { name: 'Acrylic Prints', sub: 'Vibrant colours | Crystal clear', price: 399, slug: 'acrylic', image: u('photo-1513519245088-0e12902e5a38'), grad: 'from-[#7C3AED]/90', chip: 'bg-[#EC4899]' },
+  { name: 'Cork Products', sub: 'Natural | Durable | Stylish', price: 449, slug: 'cork', image: u('photo-1586075010923-2dd4570fb338'), grad: 'from-[#B45309]/90', chip: 'bg-[#F59E0B]' },
+  { name: 'Personalized Gifts', sub: 'Make it uniquely yours', price: 299, slug: 'gifts', image: u('photo-1513151233558-d860c5398176'), grad: 'from-[#BE185D]/90', chip: 'bg-[#0E4A93]' },
 ];
 
 const OCCASIONS = [
-  { name: 'Birthday', image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=500&auto=format&fit=crop&q=80' },
-  { name: 'Anniversary', image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=500&auto=format&fit=crop&q=80' },
-  { name: 'Wedding', image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=500&auto=format&fit=crop&q=80' },
-  { name: 'Housewarming', image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=500&auto=format&fit=crop&q=80' },
-  { name: 'Diwali', image: 'https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=500&auto=format&fit=crop&q=80' },
-  { name: 'Corporate Gifts', image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=500&auto=format&fit=crop&q=80' },
+  { name: 'Birthday', emoji: '🎂', image: u('photo-1513151233558-d860c5398176', 500), tint: 'from-[#EC4899]/85' },
+  { name: 'Anniversary', emoji: '💞', image: u('photo-1518199266791-5375a83190b7', 500), tint: 'from-[#E11D48]/85' },
+  { name: 'Wedding', emoji: '💍', image: u('photo-1519741497674-611481863552', 500), tint: 'from-[#7C3AED]/85' },
+  { name: 'Housewarming', emoji: '🏡', image: u('photo-1560448204-e02f11c3d0e2', 500), tint: 'from-[#0E4A93]/85' },
+  { name: 'Diwali', emoji: '🪔', image: u('photo-1605721911519-3dfeb3be25e7', 500), tint: 'from-[#EA580C]/85' },
+  { name: 'Corporate Gifts', emoji: '🎁', image: u('photo-1497215728101-856f4ea42174', 500), tint: 'from-[#0F766E]/85' },
 ];
 
 const TESTIMONIALS = [
-  { name: 'Asha S.', text: 'Amazing quality and vibrant colours! My canvas turned out even better than I imagined!', img: 'https://randomuser.me/api/portraits/women/44.jpg' },
-  { name: 'Rohit P.', text: 'Loved the personal touch and quick delivery. Will definitely order again!', img: 'https://randomuser.me/api/portraits/men/32.jpg' },
-  { name: 'Sneha T.', text: 'Beautiful products, great service and such unique designs. Highly recommended!', img: 'https://randomuser.me/api/portraits/women/68.jpg' },
-  { name: 'Vikram R.', text: 'The acrylic print looks stunning on our living room wall. Packaging was superb.', img: 'https://randomuser.me/api/portraits/men/75.jpg' },
+  { name: 'Asha S.', city: 'Bengaluru', text: 'Amazing quality and vibrant colours! My canvas turned out even better than I imagined!', img: 'https://randomuser.me/api/portraits/women/44.jpg' },
+  { name: 'Rohit P.', city: 'Mumbai', text: 'Loved the personal touch and quick delivery. Will definitely order again!', img: 'https://randomuser.me/api/portraits/men/32.jpg' },
+  { name: 'Sneha T.', city: 'Hyderabad', text: 'Beautiful products, great service and such unique designs. Highly recommended!', img: 'https://randomuser.me/api/portraits/women/68.jpg' },
+  { name: 'Vikram R.', city: 'Delhi', text: 'The acrylic print looks stunning on our living room wall. Packaging was superb.', img: 'https://randomuser.me/api/portraits/men/75.jpg' },
 ];
 
 const Container: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
   <div className={`w-full max-w-[1280px] mx-auto px-4 sm:px-8 ${className}`}>{children}</div>
 );
 
-const SectionTitle: React.FC<{ title: string; sub: string }> = ({ title, sub }) => (
-  <div className="text-center mb-7">
+const SectionTitle: React.FC<{ title: string; sub: string; light?: boolean }> = ({ title, sub, light }) => (
+  <div className="text-center mb-8">
     <div className="flex items-center justify-center gap-4">
-      <span className="hidden sm:block h-px w-16" style={{ background: `${BLUE}66` }} />
-      <h2 className="text-2xl sm:text-[28px] font-bold" style={{ fontFamily: SERIF, color: BLUE }}>{title}</h2>
-      <span className="hidden sm:block h-px w-16" style={{ background: `${BLUE}66` }} />
+      <span className="hidden sm:block h-[3px] w-14 rounded-full bg-gradient-to-r from-transparent to-[#E8752A]" />
+      <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: SERIF, color: light ? '#fff' : BLUE }}>{title}</h2>
+      <span className="hidden sm:block h-[3px] w-14 rounded-full bg-gradient-to-l from-transparent to-[#E8752A]" />
     </div>
-    <p className="text-xs text-stone-500 mt-1">{sub}</p>
+    <p className={`text-sm mt-2 ${light ? 'text-white/75' : 'text-stone-500'}`}>{sub}</p>
   </div>
 );
 
 const Stars: React.FC = () => (
   <div className="flex gap-0.5">
     {[0, 1, 2, 3, 4].map((n) => (
-      <Star key={n} className="w-3 h-3 fill-amber-400 text-amber-400" />
+      <Star key={n} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
     ))}
   </div>
 );
 
 const arrowBtn =
-  'w-8 h-8 rounded-full bg-white border border-stone-200 shadow-sm flex items-center justify-center text-[#0E4A93] hover:bg-[#0E4A93] hover:text-white transition-colors cursor-pointer shrink-0';
+  'w-10 h-10 rounded-full bg-white border border-stone-200 shadow-md flex items-center justify-center text-[#0E4A93] hover:bg-[#E8752A] hover:text-white hover:border-[#E8752A] transition-colors cursor-pointer shrink-0';
 
 export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCart, allProducts }) => {
   const navigate = useNavigate();
@@ -93,122 +95,185 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   const bestsellers = allProducts.slice(0, 10);
 
   return (
-    <div className="w-full bg-[#FBF7F0] text-[#1f2937] font-manrope">
+    <div className="w-full bg-[#FFF9F1] text-[#1f2937] font-manrope">
+      <style>{`
+        @keyframes ci-float { 0%,100% { transform: translateY(0) rotate(var(--r,0deg)); } 50% { transform: translateY(-10px) rotate(var(--r,0deg)); } }
+        .ci-float { animation: ci-float 5s ease-in-out infinite; }
+      `}</style>
+
       {/* HERO */}
-      <section className="relative overflow-hidden border-b border-stone-200/70">
-        <img
-          src="https://images.unsplash.com/photo-1582561424760-0321d75e81fa?w=1800&auto=format&fit=crop&q=80"
-          alt="Canvas art and craft supplies on a sunlit shelf"
-          className="absolute inset-0 w-full h-full object-cover object-right"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FBF7F0] via-[#FBF7F0]/90 to-[#FBF7F0]/10" />
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#0A3573] via-[#0E4A93] to-[#5B2BB8] text-white">
+        <div className="absolute -top-24 -left-20 w-72 h-72 rounded-full bg-[#E8752A]/40 blur-3xl" />
+        <div className="absolute top-1/2 right-0 w-96 h-96 rounded-full bg-[#EC4899]/30 blur-3xl" />
+        <div className="absolute -bottom-24 left-1/3 w-80 h-80 rounded-full bg-[#22D3EE]/25 blur-3xl" />
         <Container className="relative py-14 sm:py-20 lg:py-24">
-          <div className="max-w-xl">
-            <div className="text-[11px] tracking-[0.3em] text-stone-600 font-semibold uppercase mb-4">Art / Craft / Home Decor</div>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05]" style={{ fontFamily: SERIF, color: BLUE }}>
-              Make it <em style={{ color: ORANGE }}>Yours</em>
-            </h1>
-            <p className="mt-5 text-sm sm:text-base text-stone-700 max-w-md leading-relaxed">
-              Premium canvas prints, acrylic photo prints, cork products and more — turn your ideas into art, your way.
-            </p>
-            <button
-              type="button"
-              onClick={handleStartCreatingCanvas}
-              className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#0E4A93] hover:bg-[#0B3B77] text-white text-sm font-bold shadow-md transition-colors cursor-pointer"
-            >
-              Create your Canvas <ArrowRight className="w-4 h-4" />
-            </button>
-            <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-lg">
-              {[
-                { icon: Truck, t: 'Free', s: 'Delivery' },
-                { icon: BadgeCheck, t: 'Quality', s: 'Products' },
-                { icon: Headphones, t: 'Satisfaction', s: '& Support' },
-                { icon: ShieldCheck, t: 'Secure', s: 'Payments' },
-              ].map(({ icon: Icon, t, s }) => (
-                <div key={t} className="flex items-center gap-2">
-                  <Icon className="w-6 h-6 shrink-0" style={{ color: BLUE }} strokeWidth={1.6} />
-                  <div className="text-[11px] leading-tight text-stone-700">
-                    <div className="font-semibold">{t}</div>
-                    <div>{s}</div>
-                  </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            <div className="lg:col-span-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/25 text-[11px] tracking-[0.25em] font-semibold uppercase backdrop-blur-sm">
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Art / Craft / Home Decor
+              </div>
+              <h1 className="mt-5 text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.02]" style={{ fontFamily: SERIF }}>
+                Make it{' '}
+                <em className="bg-gradient-to-r from-amber-300 via-[#FF9A5A] to-[#FF6FB1] bg-clip-text text-transparent">Yours</em>
+              </h1>
+              <p className="mt-5 text-base sm:text-lg text-white/85 max-w-md leading-relaxed">
+                Premium canvas prints, acrylic photo prints, cork products and more — turn your ideas into art, your way.
+              </p>
+              <div className="mt-7 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleStartCreatingCanvas}
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#FF8A3D] to-[#E8752A] hover:brightness-110 text-white text-sm font-bold shadow-xl shadow-orange-900/30 transition cursor-pointer"
+                >
+                  Create your Canvas <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/categories')}
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/40 text-white text-sm font-bold backdrop-blur-sm transition cursor-pointer"
+                >
+                  Explore Categories
+                </button>
+              </div>
+              <div className="mt-8 flex items-center gap-3">
+                <div className="flex -space-x-2">
+                  {['women/44', 'men/32', 'women/68', 'men/75'].map((p) => (
+                    <img key={p} src={`https://randomuser.me/api/portraits/${p}.jpg`} alt="" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
+                  ))}
                 </div>
-              ))}
+                <div className="text-xs">
+                  <div className="flex items-center gap-1"><Stars /><span className="font-bold">4.9</span></div>
+                  <div className="text-white/75">Loved by 10,000+ happy customers</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Photo collage */}
+            <div className="lg:col-span-6 relative h-[320px] sm:h-[420px] lg:h-[460px]">
+              <div className="ci-float absolute left-[2%] top-[8%] w-[46%] aspect-[3/4] rounded-2xl overflow-hidden border-[6px] border-white shadow-2xl" style={{ ['--r' as any]: '-6deg' }}>
+                <img src={u('photo-1579783902614-a3fb3927b675', 600)} alt="Canvas art" className="w-full h-full object-cover" />
+              </div>
+              <div className="ci-float absolute right-[2%] top-0 w-[44%] aspect-square rounded-2xl overflow-hidden border-[6px] border-white shadow-2xl" style={{ ['--r' as any]: '5deg', animationDelay: '0.8s' }}>
+                <img src={u('photo-1513519245088-0e12902e5a38', 600)} alt="Acrylic print" className="w-full h-full object-cover" />
+              </div>
+              <div className="ci-float absolute right-[10%] bottom-[2%] w-[48%] aspect-[4/3] rounded-2xl overflow-hidden border-[6px] border-white shadow-2xl" style={{ ['--r' as any]: '-3deg', animationDelay: '1.6s' }}>
+                <img src={u('photo-1586075010923-2dd4570fb338', 600)} alt="Cork products" className="w-full h-full object-cover" />
+              </div>
+              <div className="absolute left-0 bottom-[10%] bg-white text-[#0E4A93] rounded-2xl shadow-xl px-4 py-2.5 rotate-[-4deg]">
+                <div className="text-[10px] uppercase tracking-wider font-bold text-stone-500">Starting at</div>
+                <div className="text-2xl font-black leading-none">₹299</div>
+              </div>
+              <div className="absolute right-[38%] top-[44%] w-16 h-16 rounded-full bg-gradient-to-br from-[#FF6FB1] to-[#E8752A] text-white flex flex-col items-center justify-center shadow-xl rotate-12 font-black leading-none">
+                <span className="text-lg">50%</span><span className="text-[9px] tracking-wider">OFF</span>
+              </div>
             </div>
           </div>
         </Container>
       </section>
 
+      {/* FEATURE STRIP */}
+      <section className="bg-gradient-to-r from-[#E8752A] via-[#F58B3C] to-[#EC4899] text-white">
+        <Container className="py-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { icon: Truck, t: 'Free Delivery', s: 'On orders above ₹999' },
+              { icon: BadgeCheck, t: 'Quality Products', s: 'Museum-grade materials' },
+              { icon: Headphones, t: 'Satisfaction & Support', s: 'We are here to help' },
+              { icon: ShieldCheck, t: 'Secure Payments', s: 'UPI, cards & netbanking' },
+            ].map(({ icon: Icon, t, s }) => (
+              <div key={t} className="flex items-center gap-3">
+                <span className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center shrink-0"><Icon className="w-5 h-5" strokeWidth={1.8} /></span>
+                <div className="leading-tight">
+                  <div className="text-sm font-bold">{t}</div>
+                  <div className="text-[11px] text-white/85">{s}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </section>
+
       {/* SHOP BY CATEGORY */}
-      <section id="shop-categories" className="py-10 sm:py-12">
+      <section id="shop-categories" className="py-12 sm:py-16 bg-[radial-gradient(ellipse_at_top,#FFE9D2_0%,#FFF9F1_60%)]">
         <Container>
           <SectionTitle title="Shop by Category" sub="Explore our wide range of creative handmade products" />
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {CATEGORY_CARDS.map((c) => (
               <button
                 key={c.slug}
                 type="button"
                 onClick={() => onSelectCategory(c.slug)}
-                className="group text-left bg-white rounded-xl overflow-hidden border border-stone-200/80 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                className="group relative text-left aspect-[3/4] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer"
               >
-                <div className="aspect-[4/3] overflow-hidden bg-stone-100">
-                  <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                </div>
-                <div className="flex items-center justify-between gap-2 p-3">
-                  <div className="min-w-0">
-                    <div className="font-bold text-sm truncate" style={{ color: BLUE }}>{c.name}</div>
-                    <div className="text-[11px] text-stone-500 truncate">{c.sub}</div>
+                <img src={c.image} alt={c.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <div className={`absolute inset-0 bg-gradient-to-t ${c.grad} via-black/10 to-transparent`} />
+                <span className={`absolute top-3 left-3 ${c.chip} text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow`}>From ₹{c.price}</span>
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                  <div className="text-lg sm:text-xl font-bold leading-tight" style={{ fontFamily: SERIF }}>{c.name}</div>
+                  <div className="flex items-center justify-between gap-2 mt-1">
+                    <span className="text-[11px] text-white/85 truncate">{c.sub}</span>
+                    <span className="w-8 h-8 rounded-full bg-white text-[#0E4A93] flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] group-hover:text-white transition-colors">
+                      <ArrowRight className="w-4 h-4" />
+                    </span>
                   </div>
-                  <span className="w-7 h-7 rounded-full bg-[#0E4A93] text-white flex items-center justify-center shrink-0">
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
                 </div>
               </button>
             ))}
           </div>
-          <div className="text-center mt-5">
-            <button type="button" onClick={() => navigate('/categories')} className="text-sm font-bold text-[#0E4A93] hover:underline cursor-pointer">
-              View All →
+          <div className="text-center mt-8">
+            <button
+              type="button"
+              onClick={() => navigate('/categories')}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border-2 border-[#0E4A93] text-[#0E4A93] hover:bg-[#0E4A93] hover:text-white text-sm font-bold transition-colors cursor-pointer"
+            >
+              View All Categories <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </Container>
       </section>
 
       {/* OFFER BANNER */}
-      <section className="relative overflow-hidden bg-gradient-to-r from-[#F3E9D8] via-[#F7EFE1] to-[#EADBC2]">
+      <section className="relative overflow-hidden bg-gradient-to-r from-[#7C3AED] via-[#DB2777] to-[#F97316] text-white">
+        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 20% 30%, #fff 2px, transparent 3px), radial-gradient(circle at 70% 60%, #fff 2px, transparent 3px), radial-gradient(circle at 90% 20%, #fff 3px, transparent 4px)', backgroundSize: '90px 90px, 120px 120px, 160px 160px' }} />
         <img
-          src="https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=1400&auto=format&fit=crop&q=80"
+          src={u('photo-1586075010923-2dd4570fb338', 1000)}
           alt=""
-          className="absolute right-0 top-0 h-full w-1/2 object-cover opacity-70"
-          style={{ maskImage: 'linear-gradient(to right, transparent, black 40%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 40%)' }}
+          className="absolute right-0 top-0 h-full w-1/2 object-cover"
+          style={{ maskImage: 'linear-gradient(to right, transparent, black 45%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 45%)', opacity: 0.85 }}
         />
-        <Container className="relative py-10 sm:py-12">
-          <div className="max-w-md">
-            <div className="text-[11px] tracking-[0.25em] text-stone-600 font-semibold uppercase">Limited Time Offer</div>
-            <h3 className="text-3xl sm:text-4xl font-bold italic mt-1" style={{ fontFamily: SERIF, color: BLUE }}>Handcrafted with Love ♡</h3>
-            <p className="text-lg text-stone-800 mt-1" style={{ fontFamily: SERIF }}>Special Offers Just for You!</p>
-            <p className="text-sm text-stone-600 mt-1">Get up to 50% OFF on selected products.</p>
+        <Container className="relative py-12 sm:py-16">
+          <div className="max-w-lg">
+            <span className="inline-block px-3 py-1 rounded-full bg-white/20 border border-white/40 text-[11px] tracking-[0.25em] font-bold uppercase">Limited Time Offer</span>
+            <h3 className="text-4xl sm:text-5xl font-bold italic mt-3 leading-tight" style={{ fontFamily: SERIF }}>Handcrafted with Love ♡</h3>
+            <p className="text-xl mt-2" style={{ fontFamily: SERIF }}>Special Offers Just for You!</p>
+            <p className="mt-2 text-base text-white/90">Get up to <span className="text-3xl font-black text-amber-300 align-middle">50% OFF</span> on selected products.</p>
             <button
               type="button"
               onClick={() => navigate('/search')}
-              className="mt-4 px-5 py-2.5 rounded-lg bg-[#0E4A93] hover:bg-[#0B3B77] text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+              className="mt-5 px-7 py-3 rounded-full bg-white text-[#DB2777] hover:bg-amber-300 hover:text-[#7C3AED] text-sm font-extrabold inline-flex items-center gap-2 shadow-xl cursor-pointer transition-colors"
             >
-              Shop Deals <ArrowRight className="w-3.5 h-3.5" />
+              Shop Deals <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </Container>
       </section>
 
       {/* SHOP BY OCCASION */}
-      <section id="shop-occasions" className="py-10 sm:py-12">
+      <section id="shop-occasions" className="py-12 sm:py-16">
         <Container>
           <SectionTitle title="Shop by Occasion" sub="Thoughtful personalized gifts for life's most precious celebrations" />
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             {OCCASIONS.map((o) => (
-              <button key={o.name} type="button" onClick={() => onSelectCategory('gifts', o.name)} className="group text-left cursor-pointer">
-                <div className="aspect-[4/3] rounded-lg overflow-hidden bg-stone-200 border border-stone-200">
-                  <img src={o.image} alt={o.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                </div>
-                <div className="mt-2 text-xs font-semibold text-stone-800 group-hover:text-[#0E4A93]">{o.name}</div>
+              <button
+                key={o.name}
+                type="button"
+                onClick={() => onSelectCategory('gifts', o.name)}
+                className="group relative aspect-[4/5] rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer text-left"
+              >
+                <img src={o.image} alt={o.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <div className={`absolute inset-0 bg-gradient-to-t ${o.tint} via-transparent to-transparent`} />
+                <span className="absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center text-lg shadow">{o.emoji}</span>
+                <div className="absolute bottom-0 left-0 right-0 p-3 text-white font-bold text-sm" style={{ fontFamily: SERIF }}>{o.name}</div>
               </button>
             ))}
           </div>
@@ -216,31 +281,32 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       </section>
 
       {/* BEST SELLERS */}
-      <section id="bestsellers-unboxed" className="pb-10 sm:pb-12">
+      <section id="bestsellers-unboxed" className="pb-12 sm:pb-16">
         <Container>
           <SectionTitle title="Best Sellers" sub="Loved by artists, creators and home decorators" />
           <div className="flex items-center gap-3">
             <button type="button" aria-label="Previous" onClick={() => scrollRow(carouselRef, -1)} className={arrowBtn}>
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
-            <div ref={carouselRef} className="flex gap-4 overflow-x-auto scroll-smooth pb-2 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+            <div ref={carouselRef} className="flex gap-5 overflow-x-auto scroll-smooth py-3 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
               {bestsellers.map((p) => (
-                <div key={p.id} className="snap-start shrink-0 w-[46%] sm:w-[31%] lg:w-[23.5%] bg-white rounded-xl border border-stone-200/80 shadow-sm p-3">
-                  <Link to={`/products/${p.id}`} className="block aspect-[4/3] rounded-lg overflow-hidden bg-stone-100">
+                <div key={p.id} className="snap-start shrink-0 w-[62%] sm:w-[36%] lg:w-[23.5%] bg-white rounded-2xl border border-orange-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all p-3">
+                  <Link to={`/products/${p.id}`} className="relative block aspect-[4/3] rounded-xl overflow-hidden bg-stone-100">
                     <img
                       src={p.image}
                       alt={p.name}
                       loading="lazy"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
                     />
+                    <span className="absolute top-2 left-2 bg-gradient-to-r from-[#E8752A] to-[#EC4899] text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow">Bestseller</span>
                   </Link>
-                  <Link to={`/products/${p.id}`} className="block mt-2 text-xs font-medium text-stone-800 line-clamp-1 hover:text-[#0E4A93]">
+                  <Link to={`/products/${p.id}`} className="block mt-3 text-sm font-semibold text-stone-800 line-clamp-1 hover:text-[#0E4A93]">
                     {p.name}
                   </Link>
-                  <div className="flex items-end justify-between mt-1">
+                  <div className="flex items-end justify-between mt-1.5">
                     <div>
-                      <div className="text-base font-extrabold" style={{ color: BLUE }}>₹{p.price.toLocaleString('en-IN')}</div>
+                      <div className="text-lg font-extrabold" style={{ color: BLUE }}>₹{p.price.toLocaleString('en-IN')}</div>
                       <div className="flex items-center gap-1 text-[10px] text-stone-500">
                         <Stars />
                         {p.reviewsCount ? <span>({p.reviewsCount})</span> : null}
@@ -250,57 +316,63 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                       type="button"
                       aria-label="Add to cart"
                       onClick={() => onAddToCart(p)}
-                      className="w-8 h-8 rounded-full bg-[#0E4A93] hover:bg-[#E8752A] text-white flex items-center justify-center transition-colors cursor-pointer"
+                      className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0E4A93] to-[#5B2BB8] hover:from-[#E8752A] hover:to-[#EC4899] text-white flex items-center justify-center shadow-md transition cursor-pointer"
                     >
-                      <ShoppingCart className="w-3.5 h-3.5" />
+                      <ShoppingCart className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
               ))}
             </div>
             <button type="button" aria-label="Next" onClick={() => scrollRow(carouselRef, 1)} className={arrowBtn}>
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
-          <div className="text-center mt-4">
-            <button type="button" onClick={() => navigate('/search')} className="text-sm font-bold text-[#0E4A93] hover:underline cursor-pointer">
-              View All →
+          <div className="text-center mt-5">
+            <button
+              type="button"
+              onClick={() => navigate('/search')}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border-2 border-[#0E4A93] text-[#0E4A93] hover:bg-[#0E4A93] hover:text-white text-sm font-bold transition-colors cursor-pointer"
+            >
+              View All Products <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </Container>
       </section>
 
       {/* WHY CHOOSE */}
-      <section className="bg-gradient-to-r from-[#F3E9D8] to-[#F7EFE1] py-10 sm:py-12">
-        <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#0A3573] via-[#0E4A93] to-[#5B2BB8] text-white py-14 sm:py-16">
+        <div className="absolute -right-16 -top-16 w-72 h-72 rounded-full bg-[#E8752A]/30 blur-3xl" />
+        <div className="absolute -left-16 bottom-0 w-72 h-72 rounded-full bg-[#EC4899]/25 blur-3xl" />
+        <Container className="relative">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             <div className="lg:col-span-5">
-              <h2 className="text-3xl font-bold leading-tight" style={{ fontFamily: SERIF, color: BLUE }}>
-                Why Choose<br />Canvas India?
+              <h2 className="text-4xl font-bold leading-tight" style={{ fontFamily: SERIF }}>
+                Why Choose<br /><span className="bg-gradient-to-r from-amber-300 to-[#FF6FB1] bg-clip-text text-transparent">Canvas India?</span>
               </h2>
-              <p className="text-sm text-stone-600 mt-3 max-w-sm">
+              <p className="text-sm text-white/80 mt-4 max-w-sm leading-relaxed">
                 We bring your ideas to life with high-quality canvas, acrylic and cork products — helping you create beautiful, handcrafted art that lasts and adds heart to your space.
               </p>
               <button
                 type="button"
                 onClick={() => navigate('/categories')}
-                className="mt-4 px-5 py-2.5 rounded-lg bg-[#0E4A93] hover:bg-[#0B3B77] text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                className="mt-6 px-7 py-3 rounded-full bg-gradient-to-r from-[#FF8A3D] to-[#E8752A] hover:brightness-110 text-white text-sm font-bold inline-flex items-center gap-2 shadow-xl cursor-pointer transition"
               >
-                Order Now <ArrowRight className="w-3.5 h-3.5" />
+                Order Now <ArrowRight className="w-4 h-4" />
               </button>
             </div>
-            <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+            <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-5 text-center">
               {[
-                { icon: Palette, t: 'Premium Quality' },
-                { icon: Leaf, t: 'Eco-Friendly Materials' },
-                { icon: Heart, t: 'Trusted by Thousands' },
-                { icon: MapPin, t: 'Proudly Indian' },
-              ].map(({ icon: Icon, t }) => (
-                <div key={t} className="flex flex-col items-center gap-2">
-                  <span className="w-14 h-14 rounded-full border bg-white/60 flex items-center justify-center" style={{ borderColor: `${BLUE}66` }}>
-                    <Icon className="w-6 h-6" style={{ color: BLUE }} strokeWidth={1.5} />
+                { icon: Palette, t: 'Premium Quality', c: 'from-[#F59E0B] to-[#EF4444]' },
+                { icon: Leaf, t: 'Eco-Friendly Materials', c: 'from-[#10B981] to-[#0EA5E9]' },
+                { icon: Heart, t: 'Trusted by Thousands', c: 'from-[#EC4899] to-[#8B5CF6]' },
+                { icon: MapPin, t: 'Proudly Indian', c: 'from-[#F97316] to-[#EAB308]' },
+              ].map(({ icon: Icon, t, c }) => (
+                <div key={t} className="flex flex-col items-center gap-3 bg-white/10 border border-white/20 rounded-2xl py-5 px-2 backdrop-blur-sm hover:bg-white/15 transition">
+                  <span className={`w-14 h-14 rounded-full bg-gradient-to-br ${c} flex items-center justify-center shadow-lg`}>
+                    <Icon className="w-6 h-6 text-white" strokeWidth={1.8} />
                   </span>
-                  <span className="text-xs font-semibold text-stone-700">{t}</span>
+                  <span className="text-xs font-bold">{t}</span>
                 </div>
               ))}
             </div>
@@ -309,27 +381,31 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="py-10 sm:py-12">
+      <section className="py-12 sm:py-16 bg-[radial-gradient(ellipse_at_bottom,#FFE9D2_0%,#FFF9F1_60%)]">
         <Container>
           <SectionTitle title="What Our Customers Say" sub="Real people. Real art. Real stories." />
           <div className="flex items-center gap-3">
             <button type="button" aria-label="Previous" onClick={() => scrollRow(testiRef, -1)} className={arrowBtn}>
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
-            <div ref={testiRef} className="flex gap-4 overflow-x-auto scroll-smooth flex-1 snap-x pb-1" style={{ scrollbarWidth: 'none' }}>
+            <div ref={testiRef} className="flex gap-5 overflow-x-auto scroll-smooth flex-1 snap-x py-3" style={{ scrollbarWidth: 'none' }}>
               {TESTIMONIALS.map((t) => (
-                <div key={t.name} className="snap-start shrink-0 w-full sm:w-[48%] lg:w-[32%] bg-white rounded-xl border border-stone-200/80 shadow-sm p-4 flex gap-3">
-                  <img src={t.img} alt={t.name} loading="lazy" className="w-14 h-14 rounded-full object-cover shrink-0 bg-stone-200" />
-                  <div>
-                    <Stars />
-                    <p className="text-xs text-stone-700 mt-1 leading-relaxed">"{t.text}"</p>
-                    <div className="text-[11px] text-stone-500 mt-1">— {t.name}</div>
+                <div key={t.name} className="relative snap-start shrink-0 w-full sm:w-[48%] lg:w-[32%] bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow p-5 border-t-4 border-[#E8752A]">
+                  <Quote className="absolute top-4 right-4 w-8 h-8 text-[#E8752A]/20" />
+                  <Stars />
+                  <p className="text-sm text-stone-700 mt-3 leading-relaxed">"{t.text}"</p>
+                  <div className="flex items-center gap-3 mt-4">
+                    <img src={t.img} alt={t.name} loading="lazy" className="w-11 h-11 rounded-full object-cover ring-2 ring-[#E8752A]/40 bg-stone-200" />
+                    <div className="leading-tight">
+                      <div className="text-sm font-bold text-stone-900">{t.name}</div>
+                      <div className="text-[11px] text-stone-500">{t.city}</div>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
             <button type="button" aria-label="Next" onClick={() => scrollRow(testiRef, 1)} className={arrowBtn}>
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
         </Container>
