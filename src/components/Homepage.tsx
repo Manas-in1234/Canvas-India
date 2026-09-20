@@ -102,70 +102,41 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       `}</style>
 
       {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0A3573] via-[#0E4A93] to-[#5B2BB8] text-white">
-        <div className="absolute -top-24 -left-20 w-72 h-72 rounded-full bg-[#E8752A]/40 blur-3xl" />
-        <div className="absolute top-1/2 right-0 w-96 h-96 rounded-full bg-[#EC4899]/30 blur-3xl" />
-        <div className="absolute -bottom-24 left-1/3 w-80 h-80 rounded-full bg-[#22D3EE]/25 blur-3xl" />
-        <Container className="relative py-14 sm:py-20 lg:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            <div className="lg:col-span-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/25 text-[11px] tracking-[0.25em] font-semibold uppercase backdrop-blur-sm">
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Art / Craft / Home Decor
-              </div>
-              <h1 className="mt-5 text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.02]" style={{ fontFamily: SERIF }}>
-                Make it{' '}
-                <em className="bg-gradient-to-r from-amber-300 via-[#FF9A5A] to-[#FF6FB1] bg-clip-text text-transparent">Yours</em>
-              </h1>
-              <p className="mt-5 text-base sm:text-lg text-white/85 max-w-md leading-relaxed">
-                Premium canvas prints, acrylic photo prints, cork products and more — turn your ideas into art, your way.
-              </p>
-              <div className="mt-7 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleStartCreatingCanvas}
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#FF8A3D] to-[#E8752A] hover:brightness-110 text-white text-sm font-bold shadow-xl shadow-orange-900/30 transition cursor-pointer"
-                >
-                  Create your Canvas <ArrowRight className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate('/categories')}
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/40 text-white text-sm font-bold backdrop-blur-sm transition cursor-pointer"
-                >
-                  Explore Categories
-                </button>
-              </div>
-              <div className="mt-8 flex items-center gap-3">
-                <div className="flex -space-x-2">
-                  {['women/44', 'men/32', 'women/68', 'men/75'].map((p) => (
-                    <img key={p} src={`https://randomuser.me/api/portraits/${p}.jpg`} alt="" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
-                  ))}
-                </div>
-                <div className="text-xs">
-                  <div className="flex items-center gap-1"><Stars /><span className="font-bold">4.9</span></div>
-                  <div className="text-white/75">Loved by 10,000+ happy customers</div>
-                </div>
-              </div>
+      <section className="relative overflow-hidden bg-[#F7EFE3] border-b border-stone-200/70">
+        <img
+          src="/hero-scene.jpg"
+          alt="Canvas painting, frame, cork coaster and paints on a sunlit table"
+          className="absolute right-0 top-0 h-full w-full lg:w-[68%] object-cover object-center"
+          style={{ maskImage: 'linear-gradient(to right, transparent 0%, #000 38%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, #000 38%)' }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#F7EFE3] via-[#F7EFE3]/85 to-transparent lg:via-[#F7EFE3]/40" />
+        <Container className="relative py-14 sm:py-20 lg:py-28">
+          <div className="max-w-xl">
+            <div className="flex items-center gap-3 text-[11px] sm:text-xs tracking-[0.3em] text-stone-600 font-semibold uppercase">
+              <span>Art / Craft / Home Decor</span>
+              <span className="h-px w-10 bg-stone-500/60" />
             </div>
-
-            {/* Photo collage */}
-            <div className="lg:col-span-6 relative h-[320px] sm:h-[420px] lg:h-[460px]">
-              <div className="ci-float absolute left-[2%] top-[8%] w-[46%] aspect-[3/4] rounded-2xl overflow-hidden border-[6px] border-white shadow-2xl" style={{ ['--r' as any]: '-6deg' }}>
-                <img src={u('photo-1579783902614-a3fb3927b675', 600)} alt="Canvas art" className="w-full h-full object-cover" />
-              </div>
-              <div className="ci-float absolute right-[2%] top-0 w-[44%] aspect-square rounded-2xl overflow-hidden border-[6px] border-white shadow-2xl" style={{ ['--r' as any]: '5deg', animationDelay: '0.8s' }}>
-                <img src={u('photo-1513519245088-0e12902e5a38', 600)} alt="Acrylic print" className="w-full h-full object-cover" />
-              </div>
-              <div className="ci-float absolute right-[10%] bottom-[2%] w-[48%] aspect-[4/3] rounded-2xl overflow-hidden border-[6px] border-white shadow-2xl" style={{ ['--r' as any]: '-3deg', animationDelay: '1.6s' }}>
-                <img src={u('photo-1586075010923-2dd4570fb338', 600)} alt="Cork products" className="w-full h-full object-cover" />
-              </div>
-              <div className="absolute left-0 bottom-[10%] bg-white text-[#0E4A93] rounded-2xl shadow-xl px-4 py-2.5 rotate-[-4deg]">
-                <div className="text-[10px] uppercase tracking-wider font-bold text-stone-500">Starting at</div>
-                <div className="text-2xl font-black leading-none">₹299</div>
-              </div>
-              <div className="absolute right-[38%] top-[44%] w-16 h-16 rounded-full bg-gradient-to-br from-[#FF6FB1] to-[#E8752A] text-white flex flex-col items-center justify-center shadow-xl rotate-12 font-black leading-none">
-                <span className="text-lg">50%</span><span className="text-[9px] tracking-wider">OFF</span>
-              </div>
+            <h1 className="mt-4 text-5xl sm:text-6xl lg:text-[76px] font-bold leading-[1.02]" style={{ fontFamily: SERIF, color: BLUE }}>
+              Make it <em className="font-semibold">Yours</em>
+            </h1>
+            <p className="mt-5 text-base sm:text-lg text-stone-700 max-w-md leading-relaxed">
+              Premium canvas prints, acrylic photo prints, cork products and more — turn your ideas into art, your way.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={handleStartCreatingCanvas}
+                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#0E4A93] hover:bg-[#0B3B77] text-white text-sm font-bold shadow-lg shadow-blue-900/25 transition cursor-pointer"
+              >
+                Create your Canvas <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/categories')}
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full border-2 border-[#0E4A93] text-[#0E4A93] hover:bg-[#0E4A93] hover:text-white text-sm font-bold transition cursor-pointer"
+              >
+                Explore Categories
+              </button>
             </div>
           </div>
         </Container>
