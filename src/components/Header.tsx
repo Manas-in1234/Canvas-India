@@ -23,9 +23,12 @@ import {
   Phone,
   Flame,
   Image as ImageIcon,
+  Home as HomeIcon,
   Activity,
-  Home as HomeIcon
+  LogOut,
+  MapPin,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { Product } from '../types';
 import { ProductImage } from './ProductImage';
 import { 
@@ -173,6 +176,9 @@ export const Header: React.FC<HeaderProps> = ({
   }, [location.pathname]);
   const [activeMegaMenu, setActiveMegaMenu] = useState<string | null>(null);
   const [expandedMobileCategory, setExpandedMobileCategory] = useState<string | null>(null);
+  const { user, profile, signOut } = useAuth();
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const allCatRef = useRef<HTMLDivElement>(null);
   const allCatDropdownRef = useRef<HTMLDivElement>(null);
@@ -259,6 +265,11 @@ export const Header: React.FC<HeaderProps> = ({
       // Handle Search dropdown outside click
       if (searchRef.current && !searchRef.current.contains(target)) {
         setSearchOpen(false);
+      }
+
+      // Handle Account menu outside click
+      if (accountMenuRef.current && !accountMenuRef.current.contains(target)) {
+        setAccountMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -468,15 +479,107 @@ export const Header: React.FC<HeaderProps> = ({
             {/* 3. HEADER ACTIONS: Account, Wishlist, Cart, Bulk Order, Get a Quote */}
             <div className="flex items-center gap-3 lg:gap-3.5 xl:gap-5 shrink-0 text-xs sm:text-sm font-semibold">
               
-              {/* Account */}
-              <button 
-                type="button"
-                onClick={() => onOpenAccount && onOpenAccount()}
-                className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors cursor-pointer py-1"
-              >
-                <User className="w-4 h-4 text-white/90" strokeWidth={2} />
-                <span>Account</span>
-              </button>
+              {/* Account Dropdown */}
+              <div ref={accountMenuRef} className="relative">
+                <button 
+                  type="button"
+                  onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                  className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors cursor-pointer py-1"
+                >
+                  <User className="w-4 h-4 text-white/90" strokeWidth={2} />
+                  <span>{user ? (profile?.full_name?.split(' ')[0] || 'My Account') : 'Account'}</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform ${accountMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {accountMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white text-stone-800 rounded-xl shadow-2xl border border-stone-200 overflow-hidden z-50 py-1 text-xs">
+                    {user ? (
+                      <>
+                        <div className="px-4 py-3 bg-stone-50 border-b border-stone-100">
+                          <p className="text-[10px] uppercase font-bold text-stone-400">Signed in as</p>
+                          <p className="font-bold text-stone-900 truncate">{profile?.full_name || 'Canvas Member'}</p>
+                          <p className="text-[11px] text-stone-500 truncate">{user.email}</p>
+                        </div>
+                        <Link
+                          to="/account?tab=orders"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-blue-50/60 hover:text-[#0E4A93] transition font-medium"
+                        >
+                          <Package className="w-3.5 h-3.5 text-[#0E4A93]" />
+                          <span>My Orders & Tracking</span>
+                        </Link>
+                        <Link
+                          to="/account?tab=addresses"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-blue-50/60 hover:text-[#0E4A93] transition font-medium"
+                        >
+                          <MapPin className="w-3.5 h-3.5 text-[#0E4A93]" />
+                          <span>Saved Addresses</span>
+                        </Link>
+                        <Link
+                          to="/account?tab=profile"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-blue-50/60 hover:text-[#0E4A93] transition font-medium"
+                        >
+                          <User className="w-3.5 h-3.5 text-[#0E4A93]" />
+                          <span>Profile Settings</span>
+                        </Link>
+                        <Link
+                          to="/wishlist"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-blue-50/60 hover:text-[#0E4A93] transition font-medium"
+                        >
+                          <Heart className="w-3.5 h-3.5 text-[#0E4A93]" />
+                          <span>My Wishlist</span>
+                        </Link>
+                        <div className="pt-1 mt-1 border-t border-stone-100">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              setAccountMenuOpen(false);
+                              await signOut();
+                              navigate('/');
+                            }}
+                            className="w-full text-left flex items-center gap-2.5 px-4 py-2.5 hover:bg-red-50 text-red-600 transition font-medium cursor-pointer"
+                          >
+                            <LogOut className="w-3.5 h-3.5" />
+                            <span>Sign Out</span>
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="p-3 bg-stone-50 border-b border-stone-100 text-center">
+                          <p className="font-bold text-stone-900 mb-1">Welcome to Canvas India</p>
+                          <p className="text-[11px] text-stone-500 mb-2">Sign in to access your orders, customized prints and saved addresses.</p>
+                          <Link
+                            to="/login"
+                            onClick={() => setAccountMenuOpen(false)}
+                            className="block w-full py-1.5 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg transition text-center shadow-xs"
+                          >
+                            Sign In
+                          </Link>
+                          <Link
+                            to="/signup"
+                            onClick={() => setAccountMenuOpen(false)}
+                            className="block mt-1.5 text-[11px] text-[#0E4A93] font-semibold hover:underline text-center"
+                          >
+                            New customer? Create an account
+                          </Link>
+                        </div>
+                        <Link
+                          to="/login?redirect=/orders"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-stone-50 transition text-stone-700 font-medium"
+                        >
+                          <Package className="w-3.5 h-3.5 text-stone-500" />
+                          <span>Track Order Status</span>
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Wishlist */}
               <button
@@ -924,6 +1027,59 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             
             
+
+            {/* Mobile Account Section */}
+            <div className="p-3 bg-stone-50 border-b border-stone-200">
+              {user ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-[#0E4A93] text-white flex items-center justify-center font-bold text-xs">
+                      {(profile?.full_name || user.email || 'U')[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-stone-900 truncate">{profile?.full_name || 'Canvas Member'}</p>
+                      <p className="text-[10px] text-stone-500 truncate">{user.email}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <Link
+                      to="/account?tab=orders"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="py-1.5 px-2 bg-white border border-stone-200 text-[#0E4A93] text-[11px] font-semibold rounded-lg text-center shadow-2xs"
+                    >
+                      My Orders
+                    </Link>
+                    <Link
+                      to="/account"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="py-1.5 px-2 bg-[#0E4A93] text-white text-[11px] font-semibold rounded-lg text-center shadow-2xs"
+                    >
+                      Account
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-[11px] text-stone-600 font-medium">Sign in for personalized custom orders and tracking.</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link
+                      to="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="py-1.5 px-2 bg-[#0E4A93] text-white text-xs font-bold rounded-lg text-center shadow-2xs"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      to="/signup"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="py-1.5 px-2 bg-white border border-stone-300 text-stone-800 text-xs font-semibold rounded-lg text-center"
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="flex-1 overflow-y-auto p-3 space-y-1">
               <div className="text-[11px] uppercase tracking-wider font-bold text-stone-400 mb-2 px-1">

@@ -66,6 +66,7 @@ interface ShopContextType {
     price: number;
     image: string;
   }) => void;
+  clearCart: () => void;
 }
 
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
@@ -228,6 +229,15 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCartItems((prev) => prev.filter((item) => item.id !== itemId && item.product.id !== itemId));
   };
 
+  const handleClearCart = () => {
+    setCartItems([]);
+    try {
+      localStorage.removeItem('ci_cart');
+    } catch (e) {
+      console.warn('Error clearing cart from localStorage:', e);
+    }
+  };
+
   const handleToggleWishlist = (productId: string) => {
     setWishlistIds((prev) =>
       prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
@@ -352,6 +362,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAccountModalOpen,
         onAddToCartCustomized: handleAddToCartCustomized,
         onAddToCartFromWorkbench: handleAddToCartFromWorkbench,
+        clearCart: handleClearCart,
       }}
     >
       {children}

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   ShoppingBag, 
   Trash2, 
@@ -16,6 +16,7 @@ import { useShop } from '../context/ShopContext';
 import { ProductImage } from '../components/ProductImage';
 
 export const CartPage: React.FC = () => {
+  const navigate = useNavigate();
   const {
     cartItems,
     onUpdateCartQuantity,
@@ -34,10 +35,8 @@ export const CartPage: React.FC = () => {
   const deliveryCharges = subtotal >= freeDeliveryThreshold ? 0 : 99;
   const finalTotal = subtotal + deliveryCharges;
 
-  const [checkoutModalOpen, setCheckoutModalOpen] = React.useState(false);
-
   const handleCheckout = () => {
-    setCheckoutModalOpen(true);
+    navigate('/checkout');
   };
 
   return (
@@ -291,53 +290,6 @@ export const CartPage: React.FC = () => {
         )}
 
       </div>
-
-      {/* Seamless Checkout Modal */}
-      {checkoutModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-stone-100 text-center relative">
-            <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ShieldCheck className="w-7 h-7" />
-            </div>
-            <h3 className="text-xl font-bold text-stone-900 mb-2">Secure Gateway Initiated</h3>
-            <p className="text-xs text-stone-600 mb-4 leading-relaxed">
-              Redirecting to encrypted 256-bit payment gateway (UPI, Cards, Net Banking) for total amount of <span className="font-bold text-stone-900">₹{finalTotal.toLocaleString('en-IN')}</span>. All prints include 100% damage protection.
-            </p>
-            <div className="bg-stone-50 rounded-xl p-3 text-left text-xs space-y-1 mb-5 border border-stone-100">
-              <div className="flex justify-between text-stone-500">
-                <span>Items:</span>
-                <span className="font-medium text-stone-800">{totalCartCount}</span>
-              </div>
-              <div className="flex justify-between text-stone-500">
-                <span>Total Payable:</span>
-                <span className="font-bold text-[#0E4A93]">₹{finalTotal.toLocaleString('en-IN')}</span>
-              </div>
-              <div className="flex justify-between text-stone-500">
-                <span>Dispatch:</span>
-                <span className="font-medium text-emerald-600">24-48 Hours from Hyderabad</span>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setCheckoutModalOpen(false)}
-                className="flex-1 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold rounded-xl text-xs transition-colors cursor-pointer"
-              >
-                Continue Shopping
-              </button>
-              <a
-                href="https://wa.me/917893051555?text=Hello%20Canvas%20India%2C%20I%20would%20like%20to%20place%20my%20order%20directly."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors shadow-xs"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>Pay via WhatsApp</span>
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

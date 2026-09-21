@@ -161,7 +161,7 @@ export const RootLayout: React.FC = () => {
         onSearch={handleSearch}
         allProducts={allProducts}
         onOpenCustomize={onOpenCustomize}
-        onOpenAccount={() => setAccountModalOpen(true)}
+        onOpenAccount={() => navigate('/account')}
       />
 
       {/* Main Routed Page Content */}
@@ -173,7 +173,7 @@ export const RootLayout: React.FC = () => {
       <Footer
         onSelectCategory={handleSelectCategory}
         onOpenQuote={() => setQuoteModalOpen(true)}
-        onOpenAccount={() => setAccountModalOpen(true)}
+        onOpenAccount={() => navigate('/account')}
       />
 
       {/* MOBILE BOTTOM NAVIGATION BAR */}
@@ -248,7 +248,7 @@ export const RootLayout: React.FC = () => {
         onUpdateQuantity={onUpdateCartQuantity}
         onRemoveItem={onRemoveCartItem}
         onCheckout={() => {
-          navigate('/cart');
+          navigate('/checkout');
           setCartDrawerOpen(false);
         }}
       />
