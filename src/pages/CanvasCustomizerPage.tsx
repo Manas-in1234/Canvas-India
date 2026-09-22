@@ -1633,6 +1633,24 @@ export const CanvasCustomizerPage: React.FC = () => {
           {/* ---------------------------- PRODUCTS ---------------------------- */}
           {activeTab === 'PRODUCTS' && (
             <div className="flex flex-col h-full">
+              {/* Material Toggle Bar: CANVAS vs ACRYLIC */}
+              <div className="flex items-center border-b border-stone-200 text-xs font-black uppercase tracking-wider shrink-0 bg-stone-100">
+                <button
+                  type="button"
+                  className="flex-1 text-center py-3 bg-white text-[#0E4A93] border-b-2 border-[#0E4A93] shadow-xs cursor-default font-extrabold flex items-center justify-center gap-1.5"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#0E4A93]" />
+                  CANVAS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/customize/acrylic/acrylic-photo-panel')}
+                  className="flex-1 text-center py-3 bg-stone-100 text-stone-500 hover:text-[#0E4A93] hover:bg-stone-50 border-b-2 border-transparent transition-colors cursor-pointer font-bold flex items-center justify-center gap-1.5"
+                >
+                  ACRYLIC
+                </button>
+              </div>
+
               <div className="p-4 space-y-2 overflow-y-auto">
                 <div className="grid grid-cols-2 gap-2.5">
                   {CANVAS_PRODUCT_TYPES.map((pt) => {

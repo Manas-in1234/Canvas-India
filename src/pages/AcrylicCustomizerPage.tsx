@@ -1867,8 +1867,27 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
           {/* TAB 1: PRODUCTS */}
           {activeTab === 'PRODUCTS' && (
-            <div className="p-3.5 grid grid-cols-2 gap-2.5">
-              {ACRYLIC_PRODUCT_TYPES.map((pt) => {
+            <div className="flex flex-col h-full">
+              {/* Material Toggle Bar: CANVAS vs ACRYLIC */}
+              <div className="flex items-center border-b border-stone-200 text-xs font-black uppercase tracking-wider shrink-0 bg-stone-100">
+                <button
+                  type="button"
+                  onClick={() => navigate('/customize/canvas/canvas-classic')}
+                  className="flex-1 text-center py-3 bg-stone-100 text-stone-500 hover:text-[#0E4A93] hover:bg-stone-50 border-b-2 border-transparent transition-colors cursor-pointer font-bold flex items-center justify-center gap-1.5"
+                >
+                  CANVAS
+                </button>
+                <button
+                  type="button"
+                  className="flex-1 text-center py-3 bg-white text-[#0E4A93] border-b-2 border-[#0E4A93] shadow-xs cursor-default font-extrabold flex items-center justify-center gap-1.5"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#0E4A93]" />
+                  ACRYLIC
+                </button>
+              </div>
+
+              <div className="p-3.5 grid grid-cols-2 gap-2.5 overflow-y-auto">
+                {ACRYLIC_PRODUCT_TYPES.map((pt) => {
                 const isSelected = selectedProductTypeId === pt.id;
                 return (
                   <div
@@ -1909,6 +1928,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 );
               })}
             </div>
+          </div>
           )}
 
           {/* TAB 2: UPLOAD */}
