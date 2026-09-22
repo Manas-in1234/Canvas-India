@@ -1402,6 +1402,7 @@ export interface AcrylicShapeOption {
 }
 
 export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
+  // Basic Shapes
   {
     id: 'shape-square',
     name: 'Square',
@@ -1493,10 +1494,12 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
     image: '/images/acrylic/shapes/rounded-rectangle.jpg',
     priceAddon: 0
   },
+
+  // Special Shapes
   {
     id: 'shape-heart',
     name: 'Heart',
-    category: 'basic',
+    category: 'special',
     description: 'Romantic heart contour for weddings & anniversaries.',
     aspectClass: 'aspect-square',
     aspectRatio: 1,
@@ -1510,7 +1513,7 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
   {
     id: 'shape-hexagon',
     name: 'Hexagon',
-    category: 'basic',
+    category: 'special',
     description: 'Geometric 6-sided honeycomb block for modern clusters.',
     aspectClass: 'aspect-square',
     aspectRatio: 1,
@@ -1519,6 +1522,112 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
     isSingleDimension: true,
     image: '/images/acrylic/shapes/hexagon.jpg',
     priceAddon: 150
+  },
+  {
+    id: 'shape-octagon',
+    name: 'Octagon',
+    category: 'special',
+    description: 'Symmetrical 8-sided geometric architectural cut.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-none',
+    clipPathStyle: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
+    isSingleDimension: true,
+    image: '/images/acrylic/shapes/octagon.jpg',
+    priceAddon: 150
+  },
+  {
+    id: 'shape-diamond',
+    name: 'Diamond',
+    category: 'special',
+    description: 'Rhombus diamond cut for dramatic wall accents.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-none',
+    clipPathStyle: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+    isSingleDimension: true,
+    image: '/images/acrylic/shapes/diamond.jpg',
+    priceAddon: 150
+  },
+  {
+    id: 'shape-triangle',
+    name: 'Triangle',
+    category: 'special',
+    description: 'Modern 3-sided geometric prism layout.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-none',
+    clipPathStyle: 'polygon(50% 0%, 100% 100%, 0% 100%)',
+    isSingleDimension: true,
+    image: '/images/acrylic/shapes/triangle.jpg',
+    priceAddon: 150
+  },
+  {
+    id: 'shape-arch',
+    name: 'Arch',
+    category: 'special',
+    description: 'Trendy domed archway contour for elegant decor.',
+    aspectClass: 'aspect-[3/4]',
+    aspectRatio: 0.75,
+    borderRadiusClass: 'rounded-t-full',
+    clipPathStyle: 'inset(0 round 50% 50% 0 0)',
+    isSingleDimension: false,
+    image: '/images/acrylic/shapes/arch.jpg',
+    priceAddon: 150
+  },
+
+  // Decorative Shapes
+  {
+    id: 'shape-star',
+    name: 'Star',
+    category: 'decorative',
+    description: '5-pointed celestial star cut for celebratory awards.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-none',
+    clipPathStyle: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+    isSingleDimension: true,
+    image: '/images/acrylic/shapes/star.jpg',
+    priceAddon: 199
+  },
+  {
+    id: 'shape-capsule',
+    name: 'Capsule',
+    category: 'decorative',
+    description: 'Smooth pill-shaped continuous rounded contour.',
+    aspectClass: 'aspect-[16/10]',
+    aspectRatio: 1.6,
+    borderRadiusClass: 'rounded-full',
+    clipPathStyle: 'inset(0 round 9999px)',
+    isSingleDimension: false,
+    image: '/images/acrylic/shapes/capsule.jpg',
+    priceAddon: 150
+  },
+  {
+    id: 'shape-scalloped',
+    name: 'Scalloped Badge',
+    category: 'decorative',
+    description: 'Vintage scalloped rim medal silhouette.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-full',
+    clipPathStyle: 'circle(50% at 50% 50%)',
+    isSingleDimension: true,
+    image: '/images/acrylic/shapes/scalloped.jpg',
+    priceAddon: 199
+  },
+  {
+    id: 'shape-shield',
+    name: 'Shield Crest',
+    category: 'decorative',
+    description: 'Heroic coat-of-arms crest shape.',
+    aspectClass: 'aspect-[3/4]',
+    aspectRatio: 0.75,
+    borderRadiusClass: 'rounded-none',
+    clipPathStyle: 'polygon(50% 0%, 100% 20%, 100% 70%, 50% 100%, 0% 70%, 0% 20%)',
+    isSingleDimension: false,
+    image: '/images/acrylic/shapes/shield.jpg',
+    priceAddon: 199
   }
 ];
 

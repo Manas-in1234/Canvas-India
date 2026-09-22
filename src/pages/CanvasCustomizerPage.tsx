@@ -604,10 +604,105 @@ const createDefaultPanel = (): PanelImageState => ({
   filter: 'original'
 });
 
-const getFilterCss = (filter: ColorFilterType): string => {
-  if (filter === 'sepia') return 'sepia(0.85) contrast(1.1) brightness(0.95)';
-  if (filter === 'grayscale') return 'grayscale(100%) contrast(1.05)';
-  return 'none';
+// Helper renderers for 3D isometric wraps (CanvasChamp style) & hardware icons
+const renderWrapPreview = (id: string) => {
+  if (id === 'hanging-canvas') {
+    return (
+      <div className="w-16 h-14 mx-auto relative flex flex-col items-center justify-center">
+        <svg viewBox="0 0 100 80" className="w-full h-full drop-shadow-xs">
+          <rect x="20" y="24" width="60" height="6" fill="#b45309" rx="1.5" />
+          <path d="M50 12 L32 24 M50 12 L68 24" stroke="#78350f" strokeWidth="2" strokeLinecap="round" fill="none" />
+          <circle cx="50" cy="12" r="2.5" fill="#78350f" />
+          <rect x="23" y="30" width="54" height="40" fill="#fde047" opacity="0.9" />
+          <path d="M23 45 Q 50 35 77 50 L 77 70 L 23 70 Z" fill="#eab308" opacity="0.8" />
+          <rect x="20" y="70" width="60" height="6" fill="#b45309" rx="1.5" />
+        </svg>
+      </div>
+    );
+  }
+
+  const depthValue = id === 'canvas-lite' ? '0.5"' : id === 'thin-gallery' ? '0.75"' : '1.5"';
+  const sideWidth = id === 'canvas-lite' ? 12 : id === 'thin-gallery' ? 20 : 30;
+
+  return (
+    <div className="w-20 h-16 mx-auto relative flex items-center justify-center">
+      <svg viewBox="0 0 120 90" className="w-full h-full drop-shadow-xs">
+        <rect x="4" y="4" width="112" height="82" fill="#f8fafc" rx="6" stroke="#e2e8f0" strokeWidth="1" />
+        <g transform="translate(18, 10)">
+          <polygon points="8,22 60,6 60,52 8,68" fill="#ea580c" />
+          <polygon points="8,22 60,6 60,30 8,46" fill="#f97316" opacity="0.85" />
+          <polygon points={`60,6 ${60 + sideWidth},14 ${60 + sideWidth},60 60,52`} fill="#9a3412" />
+          <polygon points={`8,22 60,6 ${60 + sideWidth},14 ${8 + sideWidth},30`} fill="#ffedd5" opacity="0.9" />
+          <line x1={60 + sideWidth / 2} y1="62" x2={60 + sideWidth / 2} y2="72" stroke="#475569" strokeWidth="1.5" strokeDasharray="2,2" />
+          <text x={60 + sideWidth / 2} y="80" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#1e293b">
+            {depthValue}
+          </text>
+        </g>
+      </svg>
+    </div>
+  );
+};
+
+const renderHardwareIcon = (id: string) => {
+  if (id === 'hooks-hanging') {
+    return (
+      <svg viewBox="0 0 60 50" className="w-12 h-10 mx-auto">
+        <rect x="2" y="2" width="56" height="46" fill="#f1f5f9" rx="6" stroke="#cbd5e1" strokeWidth="1" />
+        <rect x="15" y="12" width="10" height="14" fill="#94a3b8" rx="2" />
+        <circle cx="20" cy="17" r="2.5" fill="#334155" />
+        <path d="M15 26 A 7 7 0 0 0 25 26" fill="none" stroke="#475569" strokeWidth="2.5" />
+        <rect x="35" y="12" width="10" height="14" fill="#94a3b8" rx="2" />
+        <circle cx="40" cy="17" r="2.5" fill="#334155" />
+        <path d="M35 26 A 7 7 0 0 0 45 26" fill="none" stroke="#475569" strokeWidth="2.5" />
+      </svg>
+    );
+  }
+  if (id === 'ready-to-hang') {
+    return (
+      <svg viewBox="0 0 60 50" className="w-12 h-10 mx-auto">
+        <rect x="2" y="2" width="56" height="46" fill="#f1f5f9" rx="6" stroke="#cbd5e1" strokeWidth="1" />
+        <path d="M12 28 Q 30 14 48 28" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        <rect x="10" y="26" width="6" height="10" fill="#64748b" rx="1" />
+        <rect x="44" y="26" width="6" height="10" fill="#64748b" rx="1" />
+      </svg>
+    );
+  }
+  if (id === 'sawtooth-hanger') {
+    return (
+      <svg viewBox="0 0 60 50" className="w-12 h-10 mx-auto">
+        <rect x="2" y="2" width="56" height="46" fill="#f1f5f9" rx="6" stroke="#cbd5e1" strokeWidth="1" />
+        <path d="M12 20 L12 28 L16 28 L18 24 L20 28 L22 24 L24 28 L26 24 L28 28 L30 24 L32 28 L34 24 L36 28 L38 24 L40 28 L42 24 L44 28 L48 28 L48 20 Z" fill="#d97706" />
+        <circle cx="15" cy="24" r="1.5" fill="#78350f" />
+        <circle cx="45" cy="24" r="1.5" fill="#78350f" />
+      </svg>
+    );
+  }
+  if (id === 'easel-back') {
+    return (
+      <svg viewBox="0 0 60 50" className="w-12 h-10 mx-auto">
+        <rect x="2" y="2" width="56" height="46" fill="#f1f5f9" rx="6" stroke="#cbd5e1" strokeWidth="1" />
+        <polygon points="22,10 38,10 44,42 16,42" fill="#cbd5e1" stroke="#94a3b8" strokeWidth="1.5" />
+        <polygon points="26,10 34,10 38,42 30,42" fill="#64748b" />
+        <line x1="20" y1="32" x2="40" y2="32" stroke="#475569" strokeWidth="2" />
+      </svg>
+    );
+  }
+  if (id === 'nail-free-hook') {
+    return (
+      <svg viewBox="0 0 60 50" className="w-12 h-10 mx-auto">
+        <rect x="2" y="2" width="56" height="46" fill="#f1f5f9" rx="6" stroke="#cbd5e1" strokeWidth="1" />
+        <rect x="18" y="10" width="24" height="30" fill="#ffffff" stroke="#94a3b8" strokeWidth="1.5" rx="3" />
+        <path d="M30 18 L30 32 C30 37 37 37 37 32" stroke="#0284c7" strokeWidth="3" fill="none" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 60 50" className="w-12 h-10 mx-auto">
+      <rect x="2" y="2" width="56" height="46" fill="#f1f5f9" rx="6" stroke="#cbd5e1" strokeWidth="1" />
+      <rect x="16" y="12" width="28" height="26" fill="#ffffff" stroke="#94a3b8" strokeDasharray="3 3" rx="4" />
+      <line x1="22" y1="18" x2="38" y2="32" stroke="#cbd5e1" strokeWidth="2" />
+    </svg>
+  );
 };
 
 // ============================================================================
@@ -2107,30 +2202,22 @@ export const CanvasCustomizerPage: React.FC = () => {
                     <div
                       key={w.id}
                       onClick={() => setSelectedWrapId(w.id)}
-                      className={`relative p-3 rounded-xl border-2 transition-all cursor-pointer text-center space-y-1 ${
+                      className={`relative p-3 rounded-xl border-2 transition-all cursor-pointer text-center space-y-1.5 ${
                         isSelected ? 'border-[#0E4A93] bg-blue-50/30' : 'border-stone-200 hover:border-stone-400 bg-white'
                       }`}
                     >
                       {w.badge && (
-                        <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase bg-[#E8752A] text-white px-1.5 py-0.5 rounded shadow-xs whitespace-nowrap">
+                        <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase bg-[#E8752A] text-white px-2 py-0.5 rounded shadow-xs whitespace-nowrap z-10">
                           {w.badge}
                         </span>
                       )}
                       {isSelected && (
-                        <div className="absolute top-1 right-1 w-4 h-4 bg-[#0E4A93] text-white rounded flex items-center justify-center">
+                        <div className="absolute top-1 right-1 w-4 h-4 bg-[#0E4A93] text-white rounded flex items-center justify-center z-10">
                           <Check className="w-3 h-3 stroke-[3]" />
                         </div>
                       )}
-                      {/* Mini side-profile mockup: photo face + visible wrap depth, scaled to the real inch depth */}
-                      <div className="w-14 h-14 mx-auto flex items-end justify-center" style={{ perspective: '80px' }}>
-                        <div className="relative w-10 h-10 bg-stone-100 border border-stone-300 rounded-sm shadow-xs overflow-hidden">
-                          <div className="absolute inset-1 bg-gradient-to-br from-sky-200 to-emerald-200 rounded-xs" />
-                        </div>
-                        <div
-                          className="bg-gradient-to-b from-amber-700 to-amber-950 rounded-r-xs shadow-inner"
-                          style={{ width: `${w.depthPx}px`, height: '40px', marginLeft: '-2px' }}
-                        />
-                      </div>
+                      {/* Realistic 3D Isometric Wrap Corner Preview like CanvasChamp */}
+                      {renderWrapPreview(w.id)}
                       <div className="text-[11px] font-bold text-stone-800 leading-tight">
                         {w.label} {w.depth && <span className="text-stone-400">({w.depth})</span>}
                       </div>
@@ -2268,7 +2355,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                     <div
                       key={hw.id}
                       onClick={() => setSelectedHardwareId(hw.id)}
-                      className={`relative p-2.5 rounded-xl border-2 transition-all cursor-pointer text-center space-y-1 ${
+                      className={`relative p-2.5 rounded-xl border-2 transition-all cursor-pointer text-center space-y-1.5 ${
                         isSelected ? 'border-[#0E4A93] bg-blue-50/30' : 'border-stone-200 hover:border-stone-400 bg-white'
                       }`}
                     >
@@ -2277,7 +2364,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                           <Check className="w-3 h-3 stroke-[3]" />
                         </div>
                       )}
-                      <div className="w-9 h-9 bg-stone-200 rounded mx-auto" />
+                      {/* Realistic Hardware / Hook Icon */}
+                      {renderHardwareIcon(hw.id)}
                       <div className="text-[10px] font-bold text-stone-800 leading-tight">{hw.label}</div>
                       <div className="text-[10px] font-semibold text-stone-500">{hw.price === 0 ? 'Free' : `₹${hw.price}`}</div>
                     </div>
