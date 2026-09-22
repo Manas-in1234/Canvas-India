@@ -104,12 +104,12 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#F7EFE3] border-b border-stone-200/70">
         <img
-          src="/hero-scene.jpg"
+          src={u('photo-1579783902614-a3fb3927b675', 2400)}
           alt="Canvas painting, frame, cork coaster and paints on a sunlit table"
-          className="absolute right-0 top-0 h-full w-full lg:w-[64%] object-cover object-center opacity-60 lg:opacity-100"
+          className="absolute right-0 top-0 h-full w-full lg:w-[64%] object-cover object-center opacity-75 lg:opacity-100"
           style={{
-            maskImage: 'radial-gradient(ellipse 62% 78% at 62% 50%, #000 38%, rgba(0,0,0,0.55) 62%, transparent 100%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 62% 78% at 62% 50%, #000 38%, rgba(0,0,0,0.55) 62%, transparent 100%)',
+            maskImage: 'radial-gradient(ellipse 62% 78% at 62% 50%, #000 45%, rgba(0,0,0,0.6) 70%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 62% 78% at 62% 50%, #000 45%, rgba(0,0,0,0.6) 70%, transparent 100%)',
           }}
         />
         <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7EFE3] via-[#F7EFE3]/70 to-transparent" />
@@ -209,10 +209,10 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       <section className="relative overflow-hidden bg-gradient-to-r from-[#7C3AED] via-[#DB2777] to-[#F97316] text-white">
         <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 20% 30%, #fff 2px, transparent 3px), radial-gradient(circle at 70% 60%, #fff 2px, transparent 3px), radial-gradient(circle at 90% 20%, #fff 3px, transparent 4px)', backgroundSize: '90px 90px, 120px 120px, 160px 160px' }} />
         <img
-          src={u('photo-1586075010923-2dd4570fb338', 1000)}
-          alt=""
-          className="absolute right-0 top-0 h-full w-1/2 object-cover"
-          style={{ maskImage: 'linear-gradient(to right, transparent, black 45%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 45%)', opacity: 0.85 }}
+          src={u('photo-1518199266791-5375a83190b7', 1600)}
+          alt="Happy couple with handcrafted love gift"
+          className="absolute right-0 top-0 h-full w-1/2 object-cover object-center"
+          style={{ maskImage: 'linear-gradient(to right, transparent, black 40%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 40%)', opacity: 0.85 }}
         />
         <Container className="relative py-12 sm:py-16">
           <div className="max-w-lg">
