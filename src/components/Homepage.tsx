@@ -26,22 +26,22 @@ const SERIF = '"Playfair Display", Georgia, serif';
 const BLUE = '#0E4A93';
 const ORANGE = '#E8752A';
 
-const u = (id: string, w = 700) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=80`;
+const u = (id: string, w = 1200) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=90`;
 
 const CATEGORY_CARDS = [
-  { name: 'Canvas Prints', sub: 'Museum-grade | Made to order', price: 499, slug: 'canvas', image: u('photo-1579783902614-a3fb3927b675'), grad: 'from-[#0E4A93]/90', chip: 'bg-[#E8752A]' },
-  { name: 'Acrylic Prints', sub: 'Vibrant colours | Crystal clear', price: 399, slug: 'acrylic', image: u('photo-1513519245088-0e12902e5a38'), grad: 'from-[#7C3AED]/90', chip: 'bg-[#EC4899]' },
+  { name: 'Acrylic Paints', sub: 'Vibrant Colors | Endless Possibilities', price: 499, slug: 'acrylic', image: u('photo-1513519245088-0e12902e5a38'), grad: 'from-[#0E4A93]/90', chip: 'bg-[#E8752A]' },
+  { name: 'Canvas & Boards', sub: 'For Every Art Idea', price: 399, slug: 'canvas', image: u('photo-1579783902614-a3fb3927b675'), grad: 'from-[#7C3AED]/90', chip: 'bg-[#EC4899]' },
   { name: 'Cork Products', sub: 'Natural | Durable | Stylish', price: 449, slug: 'cork', image: u('photo-1586075010923-2dd4570fb338'), grad: 'from-[#B45309]/90', chip: 'bg-[#F59E0B]' },
-  { name: 'Personalized Gifts', sub: 'Make it uniquely yours', price: 299, slug: 'gifts', image: u('photo-1513151233558-d860c5398176'), grad: 'from-[#BE185D]/90', chip: 'bg-[#0E4A93]' },
+  { name: 'Personalized Gifts', sub: 'Make it Uniquely Yours', price: 299, slug: 'gifts', image: u('photo-1513151233558-d860c5398176'), grad: 'from-[#BE185D]/90', chip: 'bg-[#0E4A93]' },
 ];
 
 const OCCASIONS = [
-  { name: 'Birthday', emoji: '🎂', image: u('photo-1513151233558-d860c5398176', 500), tint: 'from-[#EC4899]/85' },
-  { name: 'Anniversary', emoji: '💞', image: u('photo-1518199266791-5375a83190b7', 500), tint: 'from-[#E11D48]/85' },
-  { name: 'Wedding', emoji: '💍', image: u('photo-1519741497674-611481863552', 500), tint: 'from-[#7C3AED]/85' },
-  { name: 'Housewarming', emoji: '🏡', image: u('photo-1560448204-e02f11c3d0e2', 500), tint: 'from-[#0E4A93]/85' },
-  { name: 'Diwali', emoji: '🪔', image: u('photo-1605721911519-3dfeb3be25e7', 500), tint: 'from-[#EA580C]/85' },
-  { name: 'Corporate Gifts', emoji: '🎁', image: u('photo-1497215728101-856f4ea42174', 500), tint: 'from-[#0F766E]/85' },
+  { name: 'Birthday', emoji: '🎂', image: u('photo-1513151233558-d860c5398176', 800), tint: 'from-[#EC4899]/85' },
+  { name: 'Anniversary', emoji: '💞', image: u('photo-1518199266791-5375a83190b7', 800), tint: 'from-[#E11D48]/85' },
+  { name: 'Wedding', emoji: '💍', image: u('photo-1519741497674-611481863552', 800), tint: 'from-[#7C3AED]/85' },
+  { name: 'Housewarming', emoji: '🏡', image: u('photo-1560448204-e02f11c3d0e2', 800), tint: 'from-[#0E4A93]/85' },
+  { name: 'Diwali', emoji: '🪔', image: u('photo-1605721911519-3dfeb3be25e7', 800), tint: 'from-[#EA580C]/85' },
+  { name: 'Corporate Gifts', emoji: '🎁', image: u('photo-1497215728101-856f4ea42174', 800), tint: 'from-[#0F766E]/85' },
 ];
 
 const TESTIMONIALS = [
@@ -169,40 +169,38 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       </section>
 
       {/* SHOP BY CATEGORY */}
-      <section id="shop-categories" className="py-12 sm:py-16 bg-[radial-gradient(ellipse_at_top,#FFE9D2_0%,#FFF9F1_60%)]">
+      <section id="shop-categories" className="py-12 sm:py-16 bg-[#FDFCF8]">
         <Container>
-          <SectionTitle title="Shop by Category" sub="Explore our wide range of creative handmade products" />
+          <div className="text-center mb-10">
+            <div className="flex items-center justify-center gap-4">
+              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Shop by Category</h2>
+              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+            </div>
+            <p className="text-sm mt-2 text-[#567477]">Explore our wide range of creative handmade products</p>
+          </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {CATEGORY_CARDS.map((c) => (
               <button
                 key={c.slug}
                 type="button"
                 onClick={() => onSelectCategory(c.slug)}
-                className="group relative text-left aspect-[3/4] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer"
+                className="group flex flex-col text-left cursor-pointer focus:outline-none"
               >
-                <img src={c.image} alt={c.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                <div className={`absolute inset-0 bg-gradient-to-t ${c.grad} via-black/10 to-transparent`} />
-                <span className={`absolute top-3 left-3 ${c.chip} text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow`}>From ₹{c.price}</span>
-                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                  <div className="text-lg sm:text-xl font-bold leading-tight" style={{ fontFamily: SERIF }}>{c.name}</div>
-                  <div className="flex items-center justify-between gap-2 mt-1">
-                    <span className="text-[11px] text-white/85 truncate">{c.sub}</span>
-                    <span className="w-8 h-8 rounded-full bg-white text-[#0E4A93] flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] group-hover:text-white transition-colors">
-                      <ArrowRight className="w-4 h-4" />
-                    </span>
+                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-4 bg-stone-100 shadow-sm">
+                  <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                </div>
+                <div className="flex items-start justify-between gap-2 px-1">
+                  <div>
+                    <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1">{c.name}</h3>
+                    <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">{c.sub}</p>
+                  </div>
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
+                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
                 </div>
               </button>
             ))}
-          </div>
-          <div className="text-center mt-8">
-            <button
-              type="button"
-              onClick={() => navigate('/categories')}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border-2 border-[#0E4A93] text-[#0E4A93] hover:bg-[#0E4A93] hover:text-white text-sm font-bold transition-colors cursor-pointer"
-            >
-              View All Categories <ArrowRight className="w-4 h-4" />
-            </button>
           </div>
         </Container>
       </section>
