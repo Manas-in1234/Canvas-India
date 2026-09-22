@@ -115,12 +115,13 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent" />
         <Container className="relative py-14 sm:py-16 lg:py-20 lg:min-h-[540px] flex items-center">
           <div className="max-w-xl">
-            <div className="flex items-center gap-3 text-[11px] sm:text-xs tracking-[0.3em] text-[#093A3E] font-semibold uppercase">
+            <div className="flex items-center gap-3 text-[11px] sm:text-xs tracking-[0.3em] text-stone-600 font-semibold uppercase">
               <span>ART / CRAFT / HOME DECOR</span>
-              <span className="h-px w-10 bg-[#093A3E]/40" />
+              <span className="h-px w-10 bg-stone-400" />
             </div>
-            <h1 className="mt-4 text-5xl sm:text-6xl lg:text-[72px] font-bold leading-[1.02] text-[#093A3E]" style={{ fontFamily: SERIF }}>
-              Make it <em className="font-normal italic">Yours</em>
+            <h1 className="mt-4 text-5xl sm:text-6xl lg:text-[72px] font-bold leading-[1.02]" style={{ fontFamily: SERIF }}>
+              <span style={{ color: BLUE }}>Make it </span>
+              <em className="font-semibold italic" style={{ color: ORANGE }}>Yours</em>
             </h1>
             <p className="mt-5 text-base sm:text-lg text-stone-700 max-w-md leading-relaxed">
               Premium canvas prints, acrylic paints, cork products and more — turn your ideas into art, your way.
@@ -129,14 +130,14 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               <button
                 type="button"
                 onClick={handleStartCreatingCanvas}
-                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#093A3E] hover:bg-[#06292C] text-white text-sm font-bold shadow-md transition cursor-pointer"
+                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#0E4A93] hover:bg-[#0B3B77] text-white text-sm font-bold shadow-lg shadow-blue-900/20 transition cursor-pointer"
               >
                 Create your Canvas <ArrowRight className="w-4 h-4" />
               </button>
             </div>
 
             {/* In-hero feature highlights */}
-            <div className="mt-10 pt-6 border-t border-[#093A3E]/15 grid grid-cols-2 sm:grid-cols-4 gap-3 text-[#093A3E]">
+            <div className="mt-10 pt-6 border-t border-stone-300/60 grid grid-cols-2 sm:grid-cols-4 gap-3 text-[#0E4A93]">
               {[
                 { icon: Truck, t: 'Free Delivery' },
                 { icon: BadgeCheck, t: 'Quality Products' },
@@ -144,7 +145,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 { icon: ShieldCheck, t: 'Secure Payments' },
               ].map(({ icon: Icon, t }) => (
                 <div key={t} className="flex items-center gap-2">
-                  <Icon className="w-4 h-4 shrink-0 text-[#093A3E]" strokeWidth={2} />
+                  <Icon className="w-4 h-4 shrink-0 text-[#0E4A93]" strokeWidth={2} />
                   <span className="text-xs font-semibold text-stone-800 leading-tight">{t}</span>
                 </div>
               ))}
