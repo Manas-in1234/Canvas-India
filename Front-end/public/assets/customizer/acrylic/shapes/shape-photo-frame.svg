@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="160" height="120">
+  <rect width="160" height="120" fill="#F8FAFC"/>
+  <rect x="35" y="18" width="90" height="64" rx="6" fill="#E2E8F0" stroke="#0E4A93" stroke-width="3"/><rect x="44" y="26" width="72" height="48" rx="2" fill="#FFFFFF" stroke="#0E4A93" stroke-width="1.5"/><path d="M 44 26 L 65 26 L 50 74 L 44 74 Z" fill="#CBD5E1" opacity="0.4"/>
+  <text x="80" y="110" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="bold" fill="#0E4A93">Photo Frame</text>
+</svg>

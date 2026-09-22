@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="160" height="120">
+  <rect width="160" height="120" fill="#F8FAFC"/>
+  <path d="M 48 70 C 40 70, 35 62, 38 54 C 36 44, 46 36, 56 38 C 62 26, 80 24, 88 32 C 96 26, 112 30, 115 40 C 124 44, 125 56, 118 64 C 122 70, 116 72, 110 70 Z" fill="#E2E8F0" stroke="#0E4A93" stroke-width="2.5"/><path d="M 48 54 C 52 42, 65 35, 75 36 L 60 70 C 48 68, 42 62, 48 54 Z" fill="#FFFFFF" opacity="0.4"/>
+  <text x="80" y="110" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="bold" fill="#0E4A93">Cloud</text>
+</svg>

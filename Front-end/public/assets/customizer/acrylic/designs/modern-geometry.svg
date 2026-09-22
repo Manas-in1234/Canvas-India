@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90" width="120" height="90">
+      <rect width="120" height="90" fill="#18181B"/>
+      <rect x="18" y="14" width="84" height="62" fill="none" stroke="#A1A1AA" stroke-width="1"/>
+      <rect x="23" y="19" width="74" height="52" fill="none" stroke="#E4E4E7" stroke-width="1.5"/>
+      <text x="60" y="48" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="7.5" font-weight="900" letter-spacing="2" text-anchor="middle">CONTEMPORARY</text>
+    </svg>

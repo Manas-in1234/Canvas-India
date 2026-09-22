@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="160" height="120">
+  <rect width="160" height="120" fill="#F8FAFC"/>
+  <ellipse cx="80" cy="50" rx="48" ry="33" fill="#E2E8F0" stroke="#0E4A93" stroke-width="2.5"/><path d="M 55 20 A 48 33 0 0 0 45 70 L 65 30 Z" fill="#FFFFFF" opacity="0.4"/>
+  <text x="80" y="110" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="bold" fill="#0E4A93">Oval</text>
+</svg>

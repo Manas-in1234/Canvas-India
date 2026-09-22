@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="160" height="120">
+  <rect width="160" height="120" fill="#F8FAFC"/>
+  <path d="M 32 25 L 128 25 L 128 44 A 8 8 0 0 0 128 60 L 128 75 L 32 75 L 32 60 A 8 8 0 0 0 32 44 Z" fill="#E2E8F0" stroke="#0E4A93" stroke-width="2.5"/><line x1="65" y1="25" x2="65" y2="75" stroke="#0E4A93" stroke-dasharray="3,3" stroke-width="1.5"/><path d="M 32 25 L 55 25 L 42 75 L 32 75 Z" fill="#FFFFFF" opacity="0.4"/>
+  <text x="80" y="110" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="bold" fill="#0E4A93">Ticket</text>
+</svg>

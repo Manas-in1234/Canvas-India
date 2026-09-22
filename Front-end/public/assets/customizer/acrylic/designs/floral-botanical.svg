@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90" width="120" height="90">
+      <rect width="120" height="90" fill="#064E3B"/>
+      <path d="M 20 20 Q 40 30 60 20 T 100 20" fill="none" stroke="#6EE7B7" stroke-width="1.5"/>
+      <ellipse cx="30" cy="22" rx="4" ry="7" fill="#A7F3D0" transform="rotate(-30 30 22)"/>
+      <ellipse cx="50" cy="24" rx="4" ry="7" fill="#A7F3D0" transform="rotate(30 50 24)"/>
+      <ellipse cx="70" cy="22" rx="4" ry="7" fill="#A7F3D0" transform="rotate(-30 70 22)"/>
+      <ellipse cx="90" cy="24" rx="4" ry="7" fill="#A7F3D0" transform="rotate(30 90 24)"/>
+      <text x="60" y="58" fill="#FFFFFF" font-family="Georgia, serif" font-style="italic" font-size="9" text-anchor="middle">Botanical Harmony</text>
+    </svg>

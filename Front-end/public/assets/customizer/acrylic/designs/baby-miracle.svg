@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90" width="120" height="90">
+      <rect width="120" height="90" fill="#1E3A8A"/>
+      <path d="M 60 25 C 50 25, 45 35, 45 45 C 45 55, 55 65, 65 65 C 58 60, 56 50, 60 40 C 64 30, 72 27, 60 25 Z" fill="#FDE047"/>
+      <circle cx="75" cy="35" r="2.5" fill="#FFFFFF"/>
+      <text x="60" y="76" fill="#BAE6FD" font-family="Georgia, serif" font-style="italic" font-size="8" font-weight="bold" text-anchor="middle">Welcome Little One</text>
+    </svg>

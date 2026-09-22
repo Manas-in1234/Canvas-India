@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <filter id="shadow-hexagon" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.25"/>
+    </filter>
+    <linearGradient id="glare-hexagon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.7"/>
+      <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="chrome-hexagon" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="40%" stop-color="#CBD5E1"/>
+      <stop offset="80%" stop-color="#64748B"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </radialGradient>
+    <clipPath id="clip-hexagon">
+      <use href="#hx-shape" />
+    </clipPath>
+    <polygon id="hx-shape" points="50,25 150,25 185,100 150,175 50,175 15,100" />
+    <linearGradient id="g-hex" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D97706"/><stop offset="50%" stop-color="#F59E0B"/><stop offset="100%" stop-color="#FDE68A"/></linearGradient>
+  </defs>
+
+  <!-- Drop Shadow -->
+  <g filter="url(#shadow-hexagon)">
+    <use href="#hx-shape" fill="#000000" opacity="0.2" />
+  </g>
+
+  <!-- Main Acrylic Plate with Image Art -->
+  <g clip-path="url(#clip-hexagon)">
+    <!-- Gradient Landscape/Art Representation -->
+    <rect width="200" height="200" fill="url(#g-hex)" />
+    
+    <!-- Mountain/Horizon silhouettes representing photo art -->
+    <path d="M 0 140 Q 50 90 100 130 T 200 110.00000000000001 L 200 200 L 0 200 Z" fill="#091E3A" opacity="0.35" />
+    <circle cx="150" cy="70" r="24" fill="#FFF" opacity="0.3" />
+
+    <!-- Glass Glare Reflection -->
+    <rect width="200" height="200" fill="url(#glare-hexagon)" />
+  </g>
+
+  <!-- Optical Beveled Edge -->
+  <use href="#hx-shape" fill="none" stroke="#FFFFFF" stroke-width="2.5" opacity="0.85" />
+
+  <!-- Standoff Chrome Bolts -->
+  
+    <g>
+      <circle cx="100" cy="38" r="4" fill="url(#chrome-hexagon)" stroke="#1E293B" stroke-width="0.75" />
+      <circle cx="100" cy="38" r="1.2" fill="#0F172A" />
+    </g>
+  
+    <g>
+      <circle cx="100" cy="162" r="4" fill="url(#chrome-hexagon)" stroke="#1E293B" stroke-width="0.75" />
+      <circle cx="100" cy="162" r="1.2" fill="#0F172A" />
+    </g>
+  
+</svg>

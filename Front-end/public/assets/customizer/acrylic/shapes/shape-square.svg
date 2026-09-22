@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="160" height="120">
+  <rect width="160" height="120" fill="#F8FAFC"/>
+  <rect x="45" y="15" width="70" height="70" rx="6" fill="#E2E8F0" stroke="#0E4A93" stroke-width="2.5"/><path d="M 45 15 L 75 15 L 55 85 L 45 85 Z" fill="#FFFFFF" opacity="0.4"/>
+  <text x="80" y="110" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="bold" fill="#0E4A93">Square (1:1)</text>
+</svg>
