@@ -102,68 +102,53 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       `}</style>
 
       {/* HERO */}
-      <section className="relative overflow-hidden bg-[#F7EFE3] border-b border-stone-200/70">
+      <section className="relative overflow-hidden bg-[#F7F1E5] border-b border-stone-200/60">
         <img
-          src={u('photo-1579783902614-a3fb3927b675', 2400)}
+          src="/hero-scene.jpg"
           alt="Canvas painting, frame, cork coaster and paints on a sunlit table"
-          className="absolute right-0 top-0 h-full w-full lg:w-[64%] object-cover object-center opacity-75 lg:opacity-100"
+          className="absolute right-0 top-0 h-full w-full lg:w-[60%] object-cover object-left lg:object-center"
           style={{
-            maskImage: 'radial-gradient(ellipse 62% 78% at 62% 50%, #000 45%, rgba(0,0,0,0.6) 70%, transparent 100%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 62% 78% at 62% 50%, #000 45%, rgba(0,0,0,0.6) 70%, transparent 100%)',
+            maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
           }}
         />
-        <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7EFE3] via-[#F7EFE3]/70 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#F7EFE3]/80 to-transparent" />
-        <Container className="relative py-14 sm:py-16 lg:py-20 lg:min-h-[560px] flex items-center">
+        <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent" />
+        <Container className="relative py-14 sm:py-16 lg:py-20 lg:min-h-[540px] flex items-center">
           <div className="max-w-xl">
-            <div className="flex items-center gap-3 text-[11px] sm:text-xs tracking-[0.3em] text-stone-600 font-semibold uppercase">
-              <span>Art / Craft / Home Decor</span>
-              <span className="h-px w-10 bg-stone-500/60" />
+            <div className="flex items-center gap-3 text-[11px] sm:text-xs tracking-[0.3em] text-[#093A3E] font-semibold uppercase">
+              <span>ART / CRAFT / HOME DECOR</span>
+              <span className="h-px w-10 bg-[#093A3E]/40" />
             </div>
-            <h1 className="mt-4 text-5xl sm:text-6xl lg:text-[76px] font-bold leading-[1.02]" style={{ fontFamily: SERIF, color: BLUE }}>
-              Make it <em className="font-semibold" style={{ color: ORANGE }}>Yours</em>
+            <h1 className="mt-4 text-5xl sm:text-6xl lg:text-[72px] font-bold leading-[1.02] text-[#093A3E]" style={{ fontFamily: SERIF }}>
+              Make it <em className="font-normal italic">Yours</em>
             </h1>
             <p className="mt-5 text-base sm:text-lg text-stone-700 max-w-md leading-relaxed">
-              Premium canvas prints, acrylic photo prints, cork products and more — turn your ideas into art, your way.
+              Premium canvas prints, acrylic paints, cork products and more — turn your ideas into art, your way.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={handleStartCreatingCanvas}
-                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#0E4A93] hover:bg-[#0B3B77] text-white text-sm font-bold shadow-lg shadow-blue-900/25 transition cursor-pointer"
+                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#093A3E] hover:bg-[#06292C] text-white text-sm font-bold shadow-md transition cursor-pointer"
               >
                 Create your Canvas <ArrowRight className="w-4 h-4" />
               </button>
-              <button
-                type="button"
-                onClick={() => navigate('/categories')}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full border-2 border-[#0E4A93] text-[#0E4A93] hover:bg-[#0E4A93] hover:text-white text-sm font-bold transition cursor-pointer"
-              >
-                Explore Categories
-              </button>
             </div>
-          </div>
-        </Container>
-      </section>
 
-      {/* FEATURE STRIP */}
-      <section className="bg-gradient-to-r from-[#E8752A] via-[#F58B3C] to-[#EC4899] text-white">
-        <Container className="py-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { icon: Truck, t: 'Free Delivery', s: 'On orders above ₹999' },
-              { icon: BadgeCheck, t: 'Quality Products', s: 'Museum-grade materials' },
-              { icon: Headphones, t: 'Satisfaction & Support', s: 'We are here to help' },
-              { icon: ShieldCheck, t: 'Secure Payments', s: 'UPI, cards & netbanking' },
-            ].map(({ icon: Icon, t, s }) => (
-              <div key={t} className="flex items-center gap-3">
-                <span className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center shrink-0"><Icon className="w-5 h-5" strokeWidth={1.8} /></span>
-                <div className="leading-tight">
-                  <div className="text-sm font-bold">{t}</div>
-                  <div className="text-[11px] text-white/85">{s}</div>
+            {/* In-hero feature highlights */}
+            <div className="mt-10 pt-6 border-t border-[#093A3E]/15 grid grid-cols-2 sm:grid-cols-4 gap-3 text-[#093A3E]">
+              {[
+                { icon: Truck, t: 'Free Delivery' },
+                { icon: BadgeCheck, t: 'Quality Products' },
+                { icon: Headphones, t: 'Satisfaction & Support' },
+                { icon: ShieldCheck, t: 'Secure Payments' },
+              ].map(({ icon: Icon, t }) => (
+                <div key={t} className="flex items-center gap-2">
+                  <Icon className="w-4 h-4 shrink-0 text-[#093A3E]" strokeWidth={2} />
+                  <span className="text-xs font-semibold text-stone-800 leading-tight">{t}</span>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </Container>
       </section>
