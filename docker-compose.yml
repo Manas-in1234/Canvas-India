@@ -1,0 +1,69 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: canvaschamp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: canvaschamp
+      POSTGRES_PASSWORD: canvaschamp
+      POSTGRES_DB: canvaschamp
+    ports:
+      - "5433:5432"
+    volumes:
+      - canvaschamp-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U canvaschamp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: canvaschamp-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - canvaschamp-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: canvaschamp-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: canvaschamp
+      MINIO_ROOT_PASSWORD: canvaschamp123
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - canvaschamp-minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: canvaschamp-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 canvaschamp canvaschamp123 &&
+      mc mb -p local/canvaschamp-assets &&
+      exit 0
+      "
+
+volumes:
+  canvaschamp-postgres-data:
+  canvaschamp-redis-data:
+  canvaschamp-minio-data:

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="160" height="120">
+      <defs>
+        <filter id="wb-shadow"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.15"/></filter>
+      </defs>
+      <rect width="160" height="120" fill="#F8FAFC"/>
+      <g transform="translate(25, 20)" filter="url(#wb-shadow)">
+        <!-- Outer White Mat / Border -->
+        <rect x="0" y="0" width="110" height="80" rx="6" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+        <!-- Inner Photo Area with 8px white border -->
+        <rect x="8" y="8" width="94" height="64" rx="2" fill="#0284C7"/>
+        <path d="M 8 50 Q 35 35 60 52 T 102 42 L 102 72 L 8 72 Z" fill="#0369A1" opacity="0.5"/>
+      </g>
+    </svg>

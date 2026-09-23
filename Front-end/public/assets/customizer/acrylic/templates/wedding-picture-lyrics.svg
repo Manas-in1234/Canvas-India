@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 170" width="240" height="170">
+  <defs>
+    <linearGradient id="acrylicGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="50%" stop-color="#F8FAFC" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#E2E8F0" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="photoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCE7F3"/>
+      <stop offset="100%" stop-color="#CBD5E1"/>
+    </linearGradient>
+    <filter id="subtleShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="240" height="170" fill="#F1F5F9"/>
+
+  <!-- Acrylic Block / Panel Mockup with Perspective Glass Shadow -->
+  <g filter="url(#subtleShadow)">
+    <!-- Glass Beveled Acrylic Base -->
+    <rect x="25" y="15" width="190" height="140" rx="8" fill="url(#acrylicGrad)" stroke="#CBD5E1" stroke-width="1.5"/>
+
+    <!-- Inner Photo Area -->
+    <rect x="35" y="25" width="80" height="120" rx="4" fill="url(#photoGrad)"/>
+    
+    <!-- Photo Silhouette / Art -->
+    <circle cx="75" cy="65" r="18" fill="#94A3B8" opacity="0.6"/>
+    <path d="M50 120 C 50 95, 100 95, 100 120 Z" fill="#94A3B8" opacity="0.5"/>
+    <path d="M70 45 Q75 40 80 45 Q85 50 75 58 Q65 50 70 45 Z" fill="#FDA4AF" opacity="0.8"/>
+
+    <!-- Typography / Lyrics Area -->
+    <g transform="translate(125, 30)">
+      <!-- Badge -->
+      <rect x="0" y="0" width="80" height="14" rx="3" fill="#E8752A" opacity="0.15"/>
+      <text x="5" y="10" font-family="sans-serif" font-size="7" font-weight="bold" fill="#E8752A" letter-spacing="0.5">WEDDING LYRICS</text>
+
+      <!-- Title -->
+      <text x="0" y="26" font-family="Georgia, serif" font-size="9" font-weight="bold" fill="#0F172A">
+        All of Me Loves All
+      </text>
+
+      <!-- Subtitle -->
+      <text x="0" y="38" font-family="sans-serif" font-size="7" fill="#64748B">
+        Wedding Song Lyrics
+      </text>
+
+      <!-- Lyrics / Body Lines -->
+      <line x1="0" y1="46" x2="80" y2="46" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="0" y="58" font-family="Georgia, serif" font-size="6" fill="#475569" font-style="italic">
+        Cause all of me
+      </text>
+      <text x="0" y="68" font-family="Georgia, serif" font-size="6" fill="#475569" font-style="italic">
+        Loves all of you
+      </text>
+      <text x="0" y="78" font-family="Georgia, serif" font-size="6" fill="#475569" font-style="italic">
+        All your curves & edges
+      </text>
+      <text x="0" y="88" font-family="Georgia, serif" font-size="6" fill="#475569" font-style="italic">
+        All your imperfections
+      </text>
+    </g>
+
+    <!-- Acrylic Optical Gloss Flare Highlight -->
+    <path d="M 25 15 L 120 15 L 70 155 L 25 155 Z" fill="#FFFFFF" opacity="0.18"/>
+  </g>
+</svg>

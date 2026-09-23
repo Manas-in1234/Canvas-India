@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" width="200" height="150">
+  <rect width="200" height="150" fill="#f8fafc"/>
+  <g transform="translate(45, 20)">
+    <!-- Sleek freestanding tabletop acrylic piece -->
+    <path d="M15 15 L95 15 L80 100 L0 100 Z" fill="#e0f2fe" opacity="0.7" stroke="#0284c7" stroke-width="2"/>
+    <path d="M95 15 L110 15 L95 100 L80 100 Z" fill="#bae6fd" stroke="#0284c7" stroke-width="1.5"/>
+    <line x1="-15" y1="100" x2="125" y2="100" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+    <!-- Freestanding shadow -->
+    <ellipse cx="48" cy="103" rx="55" ry="6" fill="#0f172a" opacity="0.12"/>
+  </g>
+  <circle cx="150" cy="40" r="16" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+  <line x1="140" y1="50" x2="160" y2="30" stroke="#ef4444" stroke-width="2.5"/>
+</svg>

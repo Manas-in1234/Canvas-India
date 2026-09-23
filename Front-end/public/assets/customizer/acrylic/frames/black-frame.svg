@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" width="200" height="150">
+  <rect width="200" height="150" fill="#f8fafc"/>
+  <!-- Outer Matte Black Frame -->
+  <rect x="25" y="15" width="150" height="120" rx="3" fill="#18181b" stroke="#09090b" stroke-width="2"/>
+  <!-- Inner Bevel Line -->
+  <rect x="38" y="28" width="124" height="94" fill="none" stroke="#27272a" stroke-width="1.5"/>
+  <!-- Inner acrylic area -->
+  <rect x="42" y="32" width="116" height="86" fill="#e0f2fe" opacity="0.35"/>
+  <text x="100" y="80" fill="#ffffff" font-size="12" font-family="Arial" font-weight="bold" text-anchor="middle">Matte Black</text>
+</svg>

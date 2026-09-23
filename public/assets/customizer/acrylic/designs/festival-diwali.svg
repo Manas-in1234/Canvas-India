@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90" width="120" height="90">
+      <rect width="120" height="90" fill="#701A75"/>
+      <circle cx="60" cy="40" r="14" fill="none" stroke="#FDE047" stroke-width="1" stroke-dasharray="2 2"/>
+      <circle cx="60" cy="40" r="8" fill="none" stroke="#F43F5E" stroke-width="1.5"/>
+      <circle cx="60" cy="40" r="3" fill="#FDE047"/>
+      <text x="60" y="68" fill="#FDE047" font-family="Georgia, serif" font-size="8" font-weight="bold" text-anchor="middle">Festive Celebration</text>
+    </svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="160" height="120">
+  <rect width="160" height="120" fill="#F8FAFC"/>
+  <path d="M 38 20 C 38 16, 42 14, 48 14 L 112 14 C 118 14, 122 16, 122 20 L 122 66 C 122 70, 118 72, 112 72 L 68 72 L 48 88 L 54 72 L 48 72 C 42 72, 38 70, 38 66 Z" fill="#E2E8F0" stroke="#0E4A93" stroke-width="2.5"/><path d="M 42 20 L 68 20 L 52 70 L 42 66 Z" fill="#FFFFFF" opacity="0.4"/>
+  <text x="80" y="110" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="bold" fill="#0E4A93">Speech Bubble</text>
+</svg>

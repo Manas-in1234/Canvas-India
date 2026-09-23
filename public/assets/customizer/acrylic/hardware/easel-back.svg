@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" width="200" height="150">
+  <rect width="200" height="150" fill="#f8fafc"/>
+  <g transform="translate(60, 20)">
+    <!-- Tilted acrylic back -->
+    <path d="M10 10 L70 10 L55 100 L-5 100 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+    <!-- Folded easel leg extended backward -->
+    <path d="M30 35 L40 35 L70 105 L55 105 Z" fill="#334155" opacity="0.85"/>
+    <!-- Ribbon limiter -->
+    <line x1="28" y1="80" x2="58" y2="80" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="2,2"/>
+    <!-- Table plane -->
+    <line x1="-30" y1="105" x2="100" y2="105" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

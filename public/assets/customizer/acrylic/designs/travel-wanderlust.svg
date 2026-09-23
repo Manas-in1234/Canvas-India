@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90" width="120" height="90">
+      <rect width="120" height="90" fill="#0C4A6E"/>
+      <circle cx="60" cy="42" r="16" fill="none" stroke="#38BDF8" stroke-width="1.5"/>
+      <polygon points="60,28 64,42 60,40 56,42" fill="#F43F5E"/>
+      <polygon points="60,56 64,42 60,44 56,42" fill="#E2E8F0"/>
+      <text x="60" y="72" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="8" font-weight="bold" letter-spacing="1" text-anchor="middle">WANDERLUST</text>
+    </svg>

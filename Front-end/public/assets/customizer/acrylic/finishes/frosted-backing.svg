@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" width="200" height="150">
+  <defs>
+    <linearGradient id="frost" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="50%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="150" fill="#0284c7"/>
+  <!-- Translucent milky frosted acrylic overlay -->
+  <rect x="15" y="15" width="170" height="120" rx="6" fill="url(#frost)" opacity="0.82" stroke="#ffffff" stroke-width="2"/>
+  <!-- Translucent light bubbles -->
+  <circle cx="70" cy="65" r="28" fill="#ffffff" opacity="0.4"/>
+  <circle cx="130" cy="85" r="22" fill="#ffffff" opacity="0.3"/>
+  <rect x="12" y="118" width="105" height="20" rx="4" fill="#0f172a" opacity="0.75"/>
+  <text x="65" y="132" fill="#ffffff" font-size="10" font-family="Arial" font-weight="bold" text-anchor="middle">FROSTED DIFFUSED</text>
+</svg>

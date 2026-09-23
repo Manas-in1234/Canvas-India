@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+  <defs>
+    <!-- Wall Drop Shadow Filter -->
+    <filter id="wall-shadow-ticket" x="-15%" y="-15%" width="135%" height="135%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#0F172A" flood-opacity="0.28"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.18"/>
+    </filter>
+
+    <!-- Acrylic Edge Refraction Bevel -->
+    <filter id="edge-bevel-ticket" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#FFFFFF" flood-opacity="0.9"/>
+    </filter>
+
+    <!-- Photo Art Gradient -->
+    <linearGradient id="grad-ticket" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3c72"/>
+      <stop offset="40%" stop-color="#2a5298"/>
+      <stop offset="70%" stop-color="#e17055"/>
+      <stop offset="100%" stop-color="#fdcb6e"/>
+    </linearGradient>
+
+    <!-- Standoff Chrome Finish -->
+    <radialGradient id="metal-standoff-ticket" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="35%" stop-color="#CBD5E1"/>
+      <stop offset="70%" stop-color="#64748B"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </radialGradient>
+
+    <!-- Glass Specular Glare -->
+    <linearGradient id="glare-gradient-ticket" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Ticket Shape Path: 480x260 with semi-circle side notches -->
+    <clipPath id="clip-ticket">
+      <path d="M 90 170 L 510 170 Q 530 170 530 190 L 530 270 A 30 30 0 0 0 530 330 L 530 410 Q 530 430 510 430 L 90 430 Q 70 430 70 410 L 70 330 A 30 30 0 0 0 70 270 L 70 190 Q 70 170 90 170 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Clean Studio Wall Background -->
+  <rect width="600" height="600" fill="#F8FAFC"/>
+  <rect width="600" height="600" fill="radial-gradient(circle at 50% 40%, rgba(255,255,255,0.8) 0%, rgba(241,245,249,0.5) 100%)"/>
+
+  <!-- Acrylic Floating Drop Shadow -->
+  <g filter="url(#wall-shadow-ticket)">
+    <g fill="#000000" opacity="0.32">
+      <path d="M 90 170 L 510 170 Q 530 170 530 190 L 530 270 A 30 30 0 0 0 530 330 L 530 410 Q 530 430 510 430 L 90 430 Q 70 430 70 410 L 70 330 A 30 30 0 0 0 70 270 L 70 190 Q 70 170 90 170 Z"/>
+    </g>
+  </g>
+
+  <!-- 5mm Optical Acrylic Glass Plate Body -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="4.5" filter="url(#edge-bevel-ticket)">
+    <path d="M 90 170 L 510 170 Q 530 170 530 190 L 530 270 A 30 30 0 0 0 530 330 L 530 410 Q 530 430 510 430 L 90 430 Q 70 430 70 410 L 70 330 A 30 30 0 0 0 70 270 L 70 190 Q 70 170 90 170 Z"/>
+  </g>
+
+  <!-- Inner Clipped Art & Glass Reflections -->
+  <g clip-path="url(#clip-ticket)">
+    <!-- Photo Artwork Gradient -->
+    <rect x="0" y="0" width="600" height="600" fill="url(#grad-ticket)"/>
+    
+    <!-- Ticket perforated decorative line & details -->
+    <line x1="200" y1="170" x2="200" y2="430" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="6,6" opacity="0.6"/>
+    <circle cx="380" cy="270" r="45" fill="#fdcb6e" opacity="0.8"/>
+    <path d="M 70 390 Q 220 310 360 360 T 530 340 L 530 430 L 70 430 Z" fill="#1e3c72" opacity="0.85"/>
+    <text x="135" y="305" font-family="'Courier New', monospace" font-weight="bold" font-size="22" fill="#FFFFFF" opacity="0.9" transform="rotate(-90 135 305)">★ ADMIT ONE ★</text>
+    
+    <!-- Diagonal Acrylic Gloss Glare -->
+    <path d="M 0 0 L 220 0 L 100 600 L 0 600 Z" fill="url(#glare-gradient-ticket)" opacity="0.35"/>
+    <path d="M 220 0 L 420 0 L 280 600 L 160 600 Z" fill="#FFFFFF" opacity="0.12"/>
+  </g>
+
+  <!-- Acrylic Outer Polished Crystal Bevel Edge -->
+  <g fill="none" stroke="#0E4A93" stroke-width="1.8" opacity="0.3">
+    <path d="M 90 170 L 510 170 Q 530 170 530 190 L 530 270 A 30 30 0 0 0 530 330 L 530 410 Q 530 430 510 430 L 90 430 Q 70 430 70 410 L 70 330 A 30 30 0 0 0 70 270 L 70 190 Q 70 170 90 170 Z"/>
+  </g>
+  <g fill="none" stroke="#FFFFFF" stroke-width="2.5" opacity="0.85">
+    <path d="M 90 170 L 510 170 Q 530 170 530 190 L 530 270 A 30 30 0 0 0 530 330 L 530 410 Q 530 430 510 430 L 90 430 Q 70 430 70 410 L 70 330 A 30 30 0 0 0 70 270 L 70 190 Q 70 170 90 170 Z"/>
+  </g>
+
+  <!-- Chrome Standoff Bolts (4 corners) -->
+  <g transform="translate(105, 205)">
+    <circle cx="0" cy="0" r="14" fill="#64748B" opacity="0.4" filter="blur(2px)"/>
+    <circle cx="0" cy="0" r="11" fill="url(#metal-standoff-ticket)"/>
+    <circle cx="0" cy="0" r="8" fill="none" stroke="#FFFFFF" stroke-width="1.2" opacity="0.8"/>
+    <circle cx="0" cy="0" r="4.5" fill="#334155"/>
+    <circle cx="-2" cy="-2" r="2.5" fill="#FFFFFF" opacity="0.9"/>
+  </g>
+  <g transform="translate(495, 205)">
+    <circle cx="0" cy="0" r="14" fill="#64748B" opacity="0.4" filter="blur(2px)"/>
+    <circle cx="0" cy="0" r="11" fill="url(#metal-standoff-ticket)"/>
+    <circle cx="0" cy="0" r="8" fill="none" stroke="#FFFFFF" stroke-width="1.2" opacity="0.8"/>
+    <circle cx="0" cy="0" r="4.5" fill="#334155"/>
+    <circle cx="-2" cy="-2" r="2.5" fill="#FFFFFF" opacity="0.9"/>
+  </g>
+  <g transform="translate(105, 395)">
+    <circle cx="0" cy="0" r="14" fill="#64748B" opacity="0.4" filter="blur(2px)"/>
+    <circle cx="0" cy="0" r="11" fill="url(#metal-standoff-ticket)"/>
+    <circle cx="0" cy="0" r="8" fill="none" stroke="#FFFFFF" stroke-width="1.2" opacity="0.8"/>
+    <circle cx="0" cy="0" r="4.5" fill="#334155"/>
+    <circle cx="-2" cy="-2" r="2.5" fill="#FFFFFF" opacity="0.9"/>
+  </g>
+  <g transform="translate(495, 395)">
+    <circle cx="0" cy="0" r="14" fill="#64748B" opacity="0.4" filter="blur(2px)"/>
+    <circle cx="0" cy="0" r="11" fill="url(#metal-standoff-ticket)"/>
+    <circle cx="0" cy="0" r="8" fill="none" stroke="#FFFFFF" stroke-width="1.2" opacity="0.8"/>
+    <circle cx="0" cy="0" r="4.5" fill="#334155"/>
+    <circle cx="-2" cy="-2" r="2.5" fill="#FFFFFF" opacity="0.9"/>
+  </g>
+</svg>

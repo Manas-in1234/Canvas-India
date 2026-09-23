@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90" width="120" height="90">
+      <rect width="120" height="90" fill="#881337"/>
+      <path d="M 45 45 C 35 35, 30 55, 45 55 C 55 55, 65 35, 75 35 C 90 35, 85 55, 75 55 C 65 55, 55 35, 45 45 Z" fill="none" stroke="#FECDD3" stroke-width="2.5"/>
+      <text x="60" y="70" fill="#FFFFFF" font-family="Georgia, serif" font-style="italic" font-size="9" text-anchor="middle">Forever &amp; Always</text>
+    </svg>

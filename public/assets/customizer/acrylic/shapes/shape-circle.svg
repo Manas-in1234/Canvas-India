@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="160" height="120">
+  <rect width="160" height="120" fill="#F8FAFC"/>
+  <circle cx="80" cy="50" r="38" fill="#E2E8F0" stroke="#0E4A93" stroke-width="2.5"/><path d="M 65 15 A 38 38 0 0 0 50 75 L 70 25 Z" fill="#FFFFFF" opacity="0.4"/>
+  <text x="80" y="110" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="bold" fill="#0E4A93">Circle</text>
+</svg>

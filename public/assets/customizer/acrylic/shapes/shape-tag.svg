@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="160" height="120">
+  <rect width="160" height="120" fill="#F8FAFC"/>
+  <path d="M 55 15 L 105 15 L 118 35 L 118 88 L 42 88 L 42 35 Z" fill="#E2E8F0" stroke="#0E4A93" stroke-width="2.5"/><circle cx="80" cy="26" r="4" fill="white" stroke="#0E4A93" stroke-width="2"/><path d="M 55 15 L 78 15 L 55 88 L 42 88 Z" fill="#FFFFFF" opacity="0.4"/>
+  <text x="80" y="110" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="bold" fill="#0E4A93">Tag</text>
+</svg>

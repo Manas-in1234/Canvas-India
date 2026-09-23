@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: canvaschamp-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install --legacy-peer-deps && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && npm run start:prod
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_PUBLIC_ENDPOINT
+        sync: false
+      - key: S3_ACCESS_KEY
+        sync: false
+      - key: S3_SECRET_KEY
+        sync: false
+      - key: S3_BUCKET
+        value: canvaschamp-assets
+      - key: S3_REGION
+        value: auto

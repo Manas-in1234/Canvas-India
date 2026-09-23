@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" width="200" height="150">
+  <defs>
+    <linearGradient id="glossSheen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="50%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+      <stop offset="40%" stop-color="#ffffff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="150" fill="url(#glossSheen)"/>
+  <!-- Vibrant optical reflections -->
+  <polygon points="0,0 120,0 60,150 0,150" fill="url(#shine)"/>
+  <polygon points="90,0 160,0 120,150 50,150" fill="#ffffff" opacity="0.2"/>
+  <circle cx="150" cy="45" r="22" fill="#ffffff" opacity="0.15"/>
+  <path d="M150 25 L153 38 L166 41 L153 44 L150 57 L147 44 L134 41 L147 38 Z" fill="#ffffff" opacity="0.9"/>
+  <!-- Label tag -->
+  <rect x="12" y="118" width="95" height="20" rx="4" fill="#0f172a" opacity="0.75"/>
+  <text x="60" y="132" fill="#ffffff" font-size="10" font-family="Arial" font-weight="bold" text-anchor="middle">OPTICAL GLOSS</text>
+</svg>

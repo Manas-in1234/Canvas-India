@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="160" height="120">
+  <rect width="160" height="120" fill="#F8FAFC"/>
+  <polygon points="80,14 125,86 35,86" fill="#E2E8F0" stroke="#0E4A93" stroke-width="2.5"/><polygon points="80,14 95,86 35,86" fill="#FFFFFF" opacity="0.4"/>
+  <text x="80" y="110" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="bold" fill="#0E4A93">Triangle</text>
+</svg>
