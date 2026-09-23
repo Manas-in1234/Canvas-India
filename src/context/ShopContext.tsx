@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, CartItem } from '../types';
 import { ALL_PRODUCTS } from '../data/productsData';
+import { fetchProductsFromApi } from '../api/productsApi';
 
 interface ShopContextType {
   cartItems: CartItem[];
@@ -13,6 +14,9 @@ interface ShopContextType {
   selectedProductForCustomize: Product | null;
   allProducts: Product[];
   totalCartCount: number;
+  isLoadingProducts: boolean;
+  productsError: string | null;
+  refetchProducts: () => Promise<void>;
 
   // Actions
   onAddToCart: (
@@ -79,6 +83,34 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [customizeModalOpen, setCustomizeModalOpen] = useState(false);
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [selectedProductForCustomize, setSelectedProductForCustomize] = useState<Product | null>(null);
+  
+  // Products state with initial fallback from productsData
+  const [allProducts, setAllProducts] = useState<Product[]>(ALL_PRODUCTS);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [productsError, setProductsError] = useState<string | null>(null);
+
+  const loadProducts = async () => {
+    setIsLoadingProducts(true);
+    setProductsError(null);
+
+    try {
+      const apiProducts = await fetchProductsFromApi();
+
+      if (apiProducts && apiProducts.length > 0) {
+        setAllProducts(apiProducts);
+      }
+    } catch (err: any) {
+      setProductsError(err?.message || 'Failed to fetch products from backend');
+      // Keep ALL_PRODUCTS as fallback if the backend is unavailable.
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
 
   // Wishlist persisted in localStorage
   const [wishlistIds, setWishlistIds] = useState<string[]>(() => {
@@ -344,8 +376,11 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         quoteModalOpen,
         accountModalOpen,
         selectedProductForCustomize,
-        allProducts: ALL_PRODUCTS,
+        allProducts,
         totalCartCount,
+       isLoadingProducts,
+       productsError,
+       refetchProducts: loadProducts,
         onAddToCart: handleAddToCart,
         onUpdateCartQuantity: handleUpdateCartQuantity,
         onRemoveCartItem: handleRemoveCartItem,
