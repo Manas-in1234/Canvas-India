@@ -725,7 +725,7 @@ export const Header: React.FC<HeaderProps> = ({
       {/* ========================================================================= */}
       <div className="hidden lg:block w-full bg-white border-b border-stone-200 shadow-2xs">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10">
-          <nav className="flex items-center justify-between h-[54px] w-full text-xs font-semibold text-[#111827]">
+          <nav className="flex items-center justify-center h-[54px] w-full text-xs font-semibold text-[#111827]">
             
             <div className="flex items-center gap-1 xl:gap-2 overflow-x-auto scrollbar-none py-1">
               
