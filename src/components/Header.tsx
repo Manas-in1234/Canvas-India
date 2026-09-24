@@ -194,7 +194,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   // Category bar shopping categories (Excludes Bulk Order, which sits in the main header after Cart)
   const CATEGORY_BAR_ITEMS = useMemo(() => {
-    return PRIMARY_CATEGORIES.filter((cat) => cat.slug !== 'bulk-order');
+    return PRIMARY_CATEGORIES.filter((cat) => cat.slug !== 'bulk-order' && cat.slug !== 'posters' && cat.slug !== 'custom-prints');
   }, []);
 
   // Close open dropdown menus on scroll or resize to prevent detached floating elements
@@ -746,7 +746,7 @@ export const Header: React.FC<HeaderProps> = ({
                   aria-haspopup="true"
                 >
                   <Grid className="w-4 h-4 text-[#0E4A93]" />
-                  <span>All Categories</span>
+                  <span>Print Categories</span>
                   <ChevronDown className={`w-3.5 h-3.5 text-[#0E4A93] transition-transform duration-200 ${allCategoriesOpen ? 'rotate-180' : ''}`} />
                 </button>
 
@@ -761,7 +761,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <div className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-stone-500 border-b border-stone-100 flex items-center justify-between">
                       <span className="flex items-center gap-1.5 text-[#0E4A93]">
                         <Grid className="w-3.5 h-3.5 text-[#0E4A93]" />
-                        <span>All Categories</span>
+                        <span>Print Categories</span>
                       </span>
                       <span className="text-[10px] font-semibold text-stone-400">11 Categories</span>
                     </div>
