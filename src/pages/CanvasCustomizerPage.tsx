@@ -81,6 +81,18 @@ const SHAPE_FILTER_TABS: { id: 'ALL' | 'BASIC' | 'SPECIAL' | 'DECORATIVE'; label
 const CANVAS_BORDER_WIDTH_PRICES: Record<string, number> = { none: 0, thin: 49, medium: 89, thick: 149 };
 
 type ColorFilterType = 'original' | 'sepia' | 'grayscale';
+
+const getFilterCss = (filter: ColorFilterType): string => {
+  switch (filter) {
+    case 'sepia':
+      return 'sepia(0.85) contrast(1.1) brightness(0.95)';
+    case 'grayscale':
+      return 'grayscale(100%) contrast(1.05)';
+    case 'original':
+    default:
+      return 'none';
+  }
+};
 type SizeCategory = 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL';
 
 interface CanvasProductType {
@@ -3544,3 +3556,4 @@ export const CanvasCustomizerPage: React.FC = () => {
 };
 
 export default CanvasCustomizerPage;
+
