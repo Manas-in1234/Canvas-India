@@ -629,8 +629,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
     if (!file) return;
     const targetIdx = explicitPanelIdx !== undefined ? explicitPanelIdx : uploadTargetPanelRef.current;
 
-    if (file.size > 25 * 1024 * 1024) {
-      alert(`File ${file.name} exceeds the 25MB limit.`);
+    if (file.size > 40 * 1024 * 1024) {
+      alert(`File ${file.name} exceeds the 40MB limit.`);
       return;
     }
 
@@ -689,7 +689,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const readers: Promise<{ result: string; file: File; naturalWidth: number; naturalHeight: number; aspectRatio: number } | null>[] = [];
 
     Array.from(files).forEach((file) => {
-      if (file.size <= 25 * 1024 * 1024) {
+      if (file.size <= 40 * 1024 * 1024) {
         const promise = new Promise<{ result: string; file: File; naturalWidth: number; naturalHeight: number; aspectRatio: number } | null>((resolve) => {
           const reader = new FileReader();
           reader.onload = (e) => {
@@ -1955,7 +1955,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                   }`}
                 >
                   <Laptop className="w-3.5 h-3.5" />
-                  <span>Upload from Computer</span>
+                  <span>Upload from PC or Laptop</span>
                 </button>
                 <button
                   type="button"
@@ -2017,7 +2017,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     Click to Browse or Drag Photos
                   </div>
                   <div className="text-[11px] text-stone-500 mt-1">
-                    Supports JPG, PNG, WEBP up to 25MB
+                    Supports JPG, PNG, WEBP up to 40MB
                   </div>
                 </div>
               ) : (
@@ -2241,16 +2241,16 @@ export const AcrylicCustomizerPage: React.FC = () => {
                       <input
                         type="number"
                         min={4}
-                        max={48}
+                        max={44}
                         value={customWidth}
                         onChange={(e) => {
-                          const val = Math.max(4, Math.min(48, Number(e.target.value) || 4));
+                          const val = Math.max(4, Math.min(44, Number(e.target.value) || 4));
                           setCustomWidth(val);
                           setCustomHeight(val);
                         }}
                         className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
                       />
-                      <div className="text-[10px] text-stone-500 mt-1">Min 4", Max 48" for symmetrical cuts</div>
+                      <div className="text-[10px] text-stone-500 mt-1">Min 4", Max 44" for symmetrical cuts</div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
@@ -2259,10 +2259,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
                         <input
                           type="number"
                           min={4}
-                          max={60}
+                          max={44}
                           value={customWidth}
                           onChange={(e) => {
-                            const val = Math.max(4, Math.min(60, Number(e.target.value) || 4));
+                            const val = Math.max(4, Math.min(44, Number(e.target.value) || 4));
                             setCustomWidth(val);
                           }}
                           className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
@@ -2273,10 +2273,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
                         <input
                           type="number"
                           min={4}
-                          max={60}
+                          max={44}
                           value={customHeight}
                           onChange={(e) => {
-                            const val = Math.max(4, Math.min(60, Number(e.target.value) || 4));
+                            const val = Math.max(4, Math.min(44, Number(e.target.value) || 4));
                             setCustomHeight(val);
                           }}
                           className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"

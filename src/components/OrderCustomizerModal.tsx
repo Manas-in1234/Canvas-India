@@ -173,7 +173,7 @@ export const OrderCustomizerModal: React.FC<OrderCustomizerModalProps> = ({
                   {isUploading ? 'Uploading...' : 'Click to Upload Photo'}
                 </span>
                 <span className="text-[10px] text-stone-500 mt-0.5">
-                  Supports JPG, PNG, WEBP, TIFF up to 50MB
+                  Supports JPG, PNG, WEBP, TIFF up to 40MB
                 </span>
                 <input
                   type="file"

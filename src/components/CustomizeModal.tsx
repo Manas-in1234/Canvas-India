@@ -88,9 +88,9 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
       return;
     }
 
-    // Validate size (max 25MB)
-    if (file.size > 25 * 1024 * 1024) {
-      setUploadError('File size exceeds 25MB limit. Please upload a smaller file.');
+    // Validate size (max 40MB)
+    if (file.size > 40 * 1024 * 1024) {
+      setUploadError('File size exceeds 40MB limit. Please upload a smaller file.');
       return;
     }
 
@@ -283,7 +283,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
               <label className="border-2 border-dashed border-stone-300 hover:border-[#0E4A93] bg-stone-50 rounded-xl p-4 text-center cursor-pointer flex flex-col items-center justify-center gap-1.5 transition-colors">
                 <UploadCloud className="w-6 h-6 text-[#0E4A93]" />
                 <span className="text-xs font-semibold text-stone-700">Click to upload from device</span>
-                <span className="text-[10px] text-stone-400">JPG, PNG, WEBP (Up to 25MB)</span>
+                <span className="text-[10px] text-stone-400">JPG, PNG, WEBP (Up to 40MB)</span>
                 <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
               </label>
 

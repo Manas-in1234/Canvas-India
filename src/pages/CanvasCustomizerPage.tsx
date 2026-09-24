@@ -236,6 +236,42 @@ const SIZE_OPTIONS: SizeOption[] = [
     categories: ['RECOMMENDED', 'LARGE'],
     panels: [{ id: 'p0', label: 'Canvas', dimension: '24" × 36"', widthRatio: 36, heightRatio: 24 }]
   },
+  {
+    id: 'classic-10x10',
+    productTypeId: 'canvas-classic',
+    label: 'Canvas: 10" × 10"',
+    dimensionsSummary: '10" × 10"',
+    price: 699.0,
+    categories: ['SQUARE'],
+    panels: [{ id: 'p0', label: 'Canvas', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }]
+  },
+  {
+    id: 'classic-16x16',
+    productTypeId: 'canvas-classic',
+    label: 'Canvas: 16" × 16"',
+    dimensionsSummary: '16" × 16"',
+    price: 1299.0,
+    categories: ['SQUARE'],
+    panels: [{ id: 'p0', label: 'Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
+  },
+  {
+    id: 'classic-18x18',
+    productTypeId: 'canvas-classic',
+    label: 'Canvas: 18" × 18"',
+    dimensionsSummary: '18" × 18"',
+    price: 1599.0,
+    categories: ['SQUARE'],
+    panels: [{ id: 'p0', label: 'Canvas', dimension: '18" × 18"', widthRatio: 18, heightRatio: 18 }]
+  },
+  {
+    id: 'classic-20x20',
+    productTypeId: 'canvas-classic',
+    label: 'Canvas: 20" × 20"',
+    dimensionsSummary: '20" × 20"',
+    price: 1899.0,
+    categories: ['SQUARE'],
+    panels: [{ id: 'p0', label: 'Canvas', dimension: '20" × 20"', widthRatio: 20, heightRatio: 20 }]
+  },
   // Panoramic Canvas Print
   {
     id: 'pano-30x12',
@@ -311,7 +347,7 @@ const SIZE_OPTIONS: SizeOption[] = [
   }
 ];
 
-const CUSTOM_SIZE_STEPS = [6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36, 40, 48];
+const CUSTOM_SIZE_STEPS = [6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36, 40, 44];
 
 type LayoutArrangement = 'single' | 'grid2' | 'grid3' | 'grid4' | 'split3' | 'wall3';
 
@@ -1018,8 +1054,8 @@ export const CanvasCustomizerPage: React.FC = () => {
     const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/bmp'];
 
     Array.from(files).forEach((file, i) => {
-      if (file.size > 25 * 1024 * 1024) {
-        alert(`File ${file.name} exceeds the 25MB limit.`);
+      if (file.size > 40 * 1024 * 1024) {
+        alert(`File ${file.name} exceeds the 40MB limit.`);
         return;
       }
       if (!validTypes.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png|webp|bmp)$/i)) {
@@ -1729,7 +1765,7 @@ export const CanvasCustomizerPage: React.FC = () => {
             <div className="p-4 space-y-4">
               <div className="grid grid-cols-4 gap-2">
                 {[
-                  { id: 'computer' as const, label: 'Computer', icon: Monitor },
+                  { id: 'computer' as const, label: 'PC or Laptop', icon: Monitor },
                   { id: 'phone' as const, label: 'Upload from phone', icon: Smartphone },
                   { id: 'gallery' as const, label: 'Gallery', icon: ImageIcon },
                   { id: 'ai' as const, label: 'Art Generator', icon: Sparkles }
@@ -1793,7 +1829,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                   <div className="flex items-start gap-2 text-xs text-stone-600">
                     <FileText className="w-4 h-4 text-stone-400 shrink-0 mt-0.5" />
                     <span>
-                      File types accepted: <strong className="text-stone-800">PNG, JPG and BMP (Up to 25MB)</strong>
+                      File types accepted: <strong className="text-stone-800">PNG, JPG and BMP (Up to 40MB)</strong>
                     </span>
                   </div>
                   <button
@@ -3004,7 +3040,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                           <Upload className="w-5 h-5" />
                         </div>
                         <span className="text-xs font-bold text-[#E8752A]">Upload an Image</span>
-                        <span className="text-[11px] text-stone-400 mt-0.5">Maximum upload size: 25MB per file</span>
+                        <span className="text-[11px] text-stone-400 mt-0.5">Maximum upload size: 40MB per file</span>
                       </div>
                     )}
 

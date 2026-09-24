@@ -268,6 +268,43 @@ export const SIZE_OPTIONS: SizeOption[] = [
     image: '/assets/customizer/acrylic/sizes/square.svg'
   },
 
+  {
+    id: 'sq-16x16',
+    productTypeId: 'acrylic-photo-panel',
+    category: 'SQUARE',
+    label: '16" × 16"',
+    dimensionsSummary: '16" × 16"',
+    widthInches: 16,
+    heightInches: 16,
+    price: 1799.00,
+    aspectClass: 'aspect-square',
+    image: '/assets/customizer/acrylic/sizes/square.svg'
+  },
+  {
+    id: 'sq-18x18',
+    productTypeId: 'acrylic-photo-panel',
+    category: 'SQUARE',
+    label: '18" × 18"',
+    dimensionsSummary: '18" × 18"',
+    widthInches: 18,
+    heightInches: 18,
+    price: 2299.00,
+    aspectClass: 'aspect-square',
+    image: '/assets/customizer/acrylic/sizes/square.svg'
+  },
+  {
+    id: 'sq-20x20',
+    productTypeId: 'acrylic-photo-panel',
+    category: 'SQUARE',
+    label: '20" × 20"',
+    dimensionsSummary: '20" × 20"',
+    widthInches: 20,
+    heightInches: 20,
+    price: 2799.00,
+    aspectClass: 'aspect-square',
+    image: '/assets/customizer/acrylic/sizes/square.svg'
+  },
+
   // Panoramic
   {
     id: 'pan-10x30',

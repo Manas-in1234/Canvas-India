@@ -28,9 +28,9 @@ export const MobileUploadPage: React.FC = () => {
   const handleFileChange = (file: File) => {
     setErrorMessage(null);
 
-    // Validate size (25MB max)
-    if (file.size > 25 * 1024 * 1024) {
-      setErrorMessage('File size exceeds 25MB limit. Please choose a smaller photo.');
+    // Validate size (40MB max)
+    if (file.size > 40 * 1024 * 1024) {
+      setErrorMessage('File size exceeds 40MB limit. Please choose a smaller photo.');
       return;
     }
 
@@ -267,7 +267,7 @@ export const MobileUploadPage: React.FC = () => {
                     {isUploading ? (
                       <>
                         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Sending to Computer...</span>
+                        <span>Sending to PC or Laptop...</span>
                       </>
                     ) : (
                       <>
@@ -292,7 +292,7 @@ export const MobileUploadPage: React.FC = () => {
                     Choose from Gallery
                   </div>
                   <div className="text-[11px] text-stone-500 mt-1 font-medium">
-                    Supports JPG, PNG, WEBP (up to 25MB)
+                    Supports JPG, PNG, WEBP (up to 40MB)
                   </div>
                 </div>
 

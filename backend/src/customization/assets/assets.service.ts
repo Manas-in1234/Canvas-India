@@ -5,7 +5,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { StorageService } from './storage.service.js';
 import { IMAGE_PROCESSING_QUEUE, type ImageProcessingJobData } from '../queue/queue-names.js';
 
-const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
+const MAX_FILE_SIZE_BYTES = 40 * 1024 * 1024; // 40 MB
 
 @Injectable()
 export class AssetsService {
