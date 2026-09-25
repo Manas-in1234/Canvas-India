@@ -14,7 +14,7 @@ import { ARTWORK_GENERATION_QUEUE, type ArtworkGenerationJobData } from '../queu
  * processor only produces the preflight verdict, it does not set
  * productionFileAssetId.
  */
-@Processor(ARTWORK_GENERATION_QUEUE)
+@Processor(ARTWORK_GENERATION_QUEUE, { drainDelay: 30, stalledInterval: 60000 })
 export class ArtworkGenerationProcessor extends WorkerHost {
   private readonly logger = new Logger(ArtworkGenerationProcessor.name);
 
