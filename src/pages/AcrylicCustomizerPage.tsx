@@ -157,17 +157,25 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // Active Left Toolbar Tab
   const [activeTab, setActiveTab] = useState<ToolbarTab>('PRODUCTS');
 
-  // Selected Acrylic Product Type
-  const [selectedProductTypeId, setSelectedProductTypeId] = useState<string>(() => {
-    const key = (catalogProduct?.slug || catalogProduct?.id || catalogProduct?.name || '').toLowerCase();
+  // Resolve initial Acrylic Product ID from URL param or catalog product
+  const resolveProductTypeId = (urlId?: string, catProd?: { id?: string; slug?: string; name?: string }): string => {
+    const directMatch = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === urlId);
+    if (directMatch) return directMatch.id;
+    const key = (urlId || catProd?.slug || catProd?.id || catProd?.name || '').toLowerCase();
     if (key.includes('block')) return 'acrylic-photo-block';
     if (key.includes('wall') || key.includes('display')) return 'acrylic-wall-art';
     if (key.includes('collage')) return 'acrylic-collage';
     if (key.includes('split')) return 'acrylic-split';
     if (key.includes('signage')) return 'acrylic-signage';
+    if (key.includes('print') && !key.includes('panel')) return 'acrylic-print';
     if (key.includes('panel')) return 'acrylic-photo-panel';
     return 'acrylic-photo-panel';
-  });
+  };
+
+  // Selected Acrylic Product Type (Single source of truth for selected Acrylic product)
+  const [selectedProductTypeId, setSelectedProductTypeId] = useState<string>(() =>
+    resolveProductTypeId(productId, catalogProduct)
+  );
 
   const selectedProductType = useMemo(() => {
     return ACRYLIC_PRODUCT_TYPES.find((pt) => pt.id === selectedProductTypeId) || ACRYLIC_PRODUCT_TYPES[0];
@@ -176,7 +184,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // Size Category filter tabs in SELECT SIZE panel
   const [sizeCategory, setSizeCategory] = useState<SizeCategory>('RECOMMENDED');
 
-  // Shape Selection State (SHAPES Tab - 9 practical shapes)
+  // Shape Selection State (SHAPES Tab - 9 practical shapes, independent of product)
   const [selectedShapeId, setSelectedShapeId] = useState<string>(() => {
     const paramShape = searchParams.get('shape');
     if (paramShape) {
@@ -211,12 +219,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // Selected Size Option
   const [selectedSizeId, setSelectedSizeId] = useState<string>(() => {
     const defaultSizes = getSizesForShape(selectedShapeId, selectedProductTypeId);
-    return defaultSizes[2]?.id || defaultSizes[0]?.id || 'shape-square-8x8';
+    return defaultSizes[0]?.id || 'shape-square-8x8';
   });
 
   useEffect(() => {
     if (shapeSizes.length > 0 && !shapeSizes.some((s) => s.id === selectedSizeId)) {
-      setSelectedSizeId(shapeSizes[2]?.id || shapeSizes[0]?.id);
+      setSelectedSizeId(shapeSizes[0]?.id);
     }
   }, [shapeSizes, selectedSizeId]);
 
@@ -256,15 +264,29 @@ export const AcrylicCustomizerPage: React.FC = () => {
     return (
       shapeSizes.find((s) => s.id === selectedSizeId) ||
       SIZE_OPTIONS.find((s) => s.id === selectedSizeId) ||
-      shapeSizes[2] ||
       shapeSizes[0] ||
       SIZE_OPTIONS[0]
     );
   }, [selectedSizeId, shapeSizes]);
 
-  // Layouts & Designs Subtabs
+  // Layouts & Designs Subtabs — initialized from selectedProductType's defaultLayoutId
   const [layoutSubTab, setLayoutSubTab] = useState<'LAYOUTS' | 'DESIGNS'>('LAYOUTS');
-  const [selectedLayoutId, setSelectedLayoutId] = useState<string>('layout-1-single');
+  const [selectedLayoutId, setSelectedLayoutId] = useState<string>(() => {
+    const initProdId = resolveProductTypeId(productId, catalogProduct);
+    const initProd = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === initProdId) || ACRYLIC_PRODUCT_TYPES[0];
+    return initProd.defaultLayoutId || 'layout-1-single';
+  });
+
+  // Sync product & default layout if route param :productId changes
+  useEffect(() => {
+    if (!productId) return;
+    const matchedId = resolveProductTypeId(productId, catalogProduct);
+    const matchedProd = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === matchedId);
+    if (matchedProd) {
+      setSelectedProductTypeId(matchedProd.id);
+      setSelectedLayoutId(matchedProd.defaultLayoutId || 'layout-1-single');
+    }
+  }, [productId]);
 
   // Designs Overlay state
   const [selectedDesignCategory, setSelectedDesignCategory] = useState<DesignCategory>('Minimal');
@@ -591,18 +613,26 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // Active Frame helper
   const activeFrameState = panelImages[activePanelIndex] || createDefaultPanelState(null);
 
-  // Dynamic Pricing Calculation
+  // Helper to compute the price of any size option for the currently selected Acrylic product
+  const getProductSizePrice = (sizeBasePrice: number) => {
+    const minShapeSizePrice = shapeSizes[0]?.price || 399;
+    const sizeDifferential = Math.max(0, sizeBasePrice - minShapeSizePrice);
+    return Math.round((selectedProductType.startingPrice + sizeDifferential) * 100) / 100;
+  };
+
+  // Dynamic Pricing Calculation derived from selectedProductType + selectedSize + options
   const finalPrice = useMemo(() => {
-    let base = currentSizeOption?.price || selectedProductType.startingPrice;
+    let base = selectedProductType.startingPrice;
 
-    // Custom size calculation (1" × 1" up to 44" × 44")
     if (isCustomSize) {
-      base = Math.max(399, Math.round(customWidth * customHeight * 4.5));
+      // Custom size calculation (1" × 1" up to 44" × 44")
+      const customAreaAddon = Math.max(0, Math.round(customWidth * customHeight * 4.5) - 355);
+      base = selectedProductType.startingPrice + customAreaAddon;
+    } else if (currentSizeOption) {
+      const minShapeSizePrice = shapeSizes[0]?.price || currentSizeOption.price;
+      const sizeDifferential = Math.max(0, currentSizeOption.price - minShapeSizePrice);
+      base = selectedProductType.startingPrice + sizeDifferential;
     }
-
-    // Product-type base price differential so selecting different Acrylic products updates price
-    const productDifferential = Math.max(0, Math.round(selectedProductType.startingPrice - 355));
-    base += productDifferential;
 
     // Shape Laser-Cut Addon (if any)
     if (currentShape?.priceAddon) {
@@ -629,9 +659,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const thick = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId);
     if (thick) base += thick.price;
 
-    return Math.max(355, Math.round(base));
+    return Math.max(355, Math.round(base * 100) / 100);
   }, [
     currentSizeOption,
+    shapeSizes,
     selectedProductType,
     isCustomSize,
     customWidth,
@@ -1161,22 +1192,58 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
   };
 
-  // Switch product type (independent of shape and layout selection, preserves uploaded images)
+  // Switch Acrylic Product Type: updates product, header, price, and default layout while preserving shape, size, and uploaded images
   const handleSelectProductType = (ptId: string) => {
-    setSelectedProductTypeId(ptId);
     const pt = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === ptId);
-    if (pt) {
-      if (pt.defaultHardwareId) {
-        setSelectedHardwareId(pt.defaultHardwareId);
-      }
-      if (pt.defaultThicknessId) {
-        setSelectedThicknessId(pt.defaultThicknessId);
-      }
-      if (!isCustomSize) {
-        const newSizes = getSizesForShape(selectedShapeId, ptId);
-        if (newSizes.length > 0 && !newSizes.some((s) => s.id === selectedSizeId)) {
-          setSelectedSizeId(newSizes[2]?.id || newSizes[0]?.id);
+    if (!pt) return;
+
+    // 1. Update selected product state (updates card checkmark, header title, and price)
+    setSelectedProductTypeId(pt.id);
+
+    // 2. Apply the product's default layout (user can still customize layout in LAYOUTS & DESIGNS)
+    const nextLayoutId = pt.defaultLayoutId || 'layout-1-single';
+    setSelectedLayoutId(nextLayoutId);
+
+    // 3. Preserve uploaded images non-destructively across slot count changes
+    setPanelImages((prev) => {
+      const next: Record<number, PanelImageState> = {
+        0: prev[0] || createDefaultPanelState(null),
+        1: prev[1] || createDefaultPanelState(null),
+        2: prev[2] || createDefaultPanelState(null),
+        3: prev[3] || createDefaultPanelState(null)
+      };
+
+      // If switching to a single-image product and slot 0 is empty, keep the first uploaded slot image
+      if (!next[0].imageUrl) {
+        const firstOccupied = [1, 2, 3].map((i) => next[i]).find((s) => !!s?.imageUrl);
+        if (firstOccupied && firstOccupied.imageUrl) {
+          next[0] = {
+            ...firstOccupied,
+            panX: 0,
+            panY: 0,
+            scale: 1,
+            rotation: 0
+          };
         }
+      }
+      return next;
+    });
+
+    // 4. Reset active slot index to 0
+    setActivePanelIndex(0);
+    setSelectedElement({ type: 'image', panelIndex: 0 });
+
+    // 5. Preserve selected shape and selected size
+    if (!isCustomSize) {
+      const newSizes = getSizesForShape(selectedShapeId, pt.id);
+      if (newSizes.length > 0 && !newSizes.some((s) => s.id === selectedSizeId)) {
+        const matchingSize = newSizes.find(
+          (s) =>
+            s.label === currentSizeOption?.label ||
+            (s.widthInches === currentSizeOption?.widthInches &&
+              s.heightInches === currentSizeOption?.heightInches)
+        );
+        setSelectedSizeId(matchingSize?.id || newSizes[0]?.id);
       }
     }
   };
@@ -1187,7 +1254,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
     if (!isCustomSize) {
       const newSizes = getSizesForShape(shapeId, selectedProductTypeId);
       if (newSizes.length > 0) {
-        const targetSize = newSizes[2] || newSizes[0];
+        const matchingSize = newSizes.find(
+          (s) =>
+            s.label === currentSizeOption?.label ||
+            (s.widthInches === currentSizeOption?.widthInches &&
+              s.heightInches === currentSizeOption?.heightInches)
+        );
+        const targetSize = matchingSize || newSizes[0];
         setSelectedSizeId(targetSize.id);
       }
     }
@@ -1236,41 +1309,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
     setTimeout(() => setSaveToast(null), 3500);
   };
 
-  // Restore saved design from localStorage on initial mount if available
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(`canvas_india_acrylic_custom_${productId}`);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.productTypeId) setSelectedProductTypeId(parsed.productTypeId);
-        if (parsed.shapeId) setSelectedShapeId(parsed.shapeId);
-        if (parsed.sizeId && parsed.sizeId !== 'custom') setSelectedSizeId(parsed.sizeId);
-        if (typeof parsed.isCustomSize === 'boolean') setIsCustomSize(parsed.isCustomSize);
-        if (parsed.customWidth) {
-          setCustomWidth(parsed.customWidth);
-          setCustomWidthInput(String(parsed.customWidth));
-        }
-        if (parsed.customHeight) {
-          setCustomHeight(parsed.customHeight);
-          setCustomHeightInput(String(parsed.customHeight));
-        }
-        if (parsed.layoutId) setSelectedLayoutId(parsed.layoutId);
-        if (parsed.panelImages) setPanelImages(parsed.panelImages);
-        if (parsed.uploadedPhotos) setUploadedPhotos(parsed.uploadedPhotos);
-        if (parsed.finishId || parsed.selectedFinishId) setSelectedFinishId(parsed.finishId || parsed.selectedFinishId);
-        if (parsed.hardwareId || parsed.selectedHardwareId) setSelectedHardwareId(parsed.hardwareId || parsed.selectedHardwareId);
-        if (parsed.thicknessId || parsed.selectedThicknessId) setSelectedThicknessId(parsed.thicknessId || parsed.selectedThicknessId);
-        if (parsed.frameId) setSelectedFrameId(parsed.frameId);
-        if (parsed.edgeWrapId) setSelectedEdgeWrapId(parsed.edgeWrapId);
-        if (parsed.borderWidthId) setSelectedBorderWidthId(parsed.borderWidthId);
-        if (parsed.borderColor) setSelectedBorderColor(parsed.borderColor);
-        if (parsed.designId) setSelectedDesignId(parsed.designId);
-      }
-    } catch (e) {
-      console.error('Failed to restore saved design', e);
-    }
-  }, [productId]);
-
   // Add to Cart with ShopContext typing
   const handleAddToCart = () => {
     const hasAnyPhoto = Object.values(panelImages).some((p) => !!p.imageUrl);
@@ -1317,9 +1355,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
           borderColor: selectedBorderWidthId !== 'none' ? selectedBorderColor : undefined,
           frame: FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name || 'Frameless',
           paper: PAPER_OPTIONS.find((p) => p.id === selectedPaperId)?.label || 'White Luster Finish',
-          panels: frames.map((f, idx) => ({
+          panels: layoutSlots.map((slot, idx) => ({
             slot: idx + 1,
-            dimension: f.dimension,
+            dimension: slot.label,
             imageUrl: panelImages[idx]?.imageUrl || null,
             panX: panelImages[idx]?.panX || 0,
             panY: panelImages[idx]?.panY || 0,
@@ -1838,7 +1876,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               alt="Canvas India" 
               className="h-7 sm:h-8 md:h-9 w-auto object-contain block select-none" 
             />
-            <span className="text-white font-bold text-xs tracking-wider uppercase hidden md:inline border-l border-white/20 pl-2">
+            <span className="text-white font-bold text-xs tracking-wider uppercase inline-block border-l border-white/20 pl-2">
               {selectedProductType.name}
             </span>
           </Link>
@@ -1846,10 +1884,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
         {/* RIGHT: Price Display + Add to Cart Button */}
         <div className="flex items-center gap-3">
-          <div className="text-right hidden sm:block">
+          <div className="text-right block">
             <div className="text-[10px] text-white/70 uppercase font-semibold">Total Price</div>
             <div className="text-lg font-black text-white leading-tight">
-              ₹{finalPrice.toLocaleString()}
+              ₹{finalPrice.toLocaleString('en-IN')}
             </div>
           </div>
           
@@ -2097,16 +2135,16 @@ export const AcrylicCustomizerPage: React.FC = () => {
               </div>
 
               {/* Multi-slot assignment selector */}
-              {frames.length > 1 && (
+              {layoutSlots.length > 1 && (
                 <div className="p-2.5 bg-stone-100 rounded-xl space-y-1.5">
                   <div className="text-[11px] font-bold text-stone-700">Assign to Slot:</div>
                   <div className="flex gap-1.5">
-                    {frames.map((f, fIdx) => {
+                    {layoutSlots.map((slot, fIdx) => {
                       const isTarget = activePanelIndex === fIdx;
                       const hasPhoto = !!panelImages[fIdx]?.imageUrl;
                       return (
                         <button
-                          key={f.id}
+                          key={slot.id}
                           type="button"
                           onClick={() => setActivePanelIndex(fIdx)}
                           className={`flex-1 py-1.5 px-2 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 cursor-pointer ${
@@ -2321,7 +2359,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           {size.label}
                         </div>
                         <div className="text-[11px] font-bold text-[#0E4A93] mt-0.5">
-                          ₹{size.price}
+                          ₹{getProductSizePrice(size.price).toLocaleString('en-IN')}
                         </div>
                       </div>
                     </div>

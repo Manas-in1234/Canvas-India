@@ -22,15 +22,19 @@ export interface AcrylicProductType {
   startingPrice: number;
   image: string;
   iconType: 'block' | 'panel' | 'wall' | 'print' | 'collage' | 'split' | 'signage';
+  defaultLayout: LayoutType;
+  defaultLayoutId: string;
+  defaultShape: string;
+  imageSlots: number;
   panelsCount: number;
   description: string;
   defaultSizeOptionId: string;
-  defaultShape: string;
-  defaultLayoutId: string;
   defaultHardwareId: string;
   defaultThicknessId: string;
   supportedShapeIds?: string[];
 }
+
+export type AcrylicProduct = AcrylicProductType;
 
 export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
   {
@@ -39,11 +43,13 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     startingPrice: 499.00,
     image: '',
     iconType: 'block',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-square',
+    imageSlots: 1,
     panelsCount: 1,
     description: 'Freestanding, solid optical acrylic block with 3D crystal depth.',
     defaultSizeOptionId: 'sq-4x4',
-    defaultShape: 'shape-square',
-    defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'standoff-mounts',
     defaultThicknessId: '8mm',
     supportedShapeIds: [
@@ -57,11 +63,13 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     startingPrice: 355.00,
     image: '',
     iconType: 'panel',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-rectangle',
+    imageSlots: 1,
     panelsCount: 1,
     description: 'Modern slim acrylic panel with diamond polished border.',
     defaultSizeOptionId: 'sq-8x8',
-    defaultShape: 'shape-rectangle',
-    defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'standoff-mounts',
     defaultThicknessId: '3mm',
     supportedShapeIds: [
@@ -75,11 +83,13 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     startingPrice: 2338.90,
     image: '',
     iconType: 'wall',
-    panelsCount: 3,
-    description: 'Multi-panel gallery wall display for striking home and office focal points.',
-    defaultSizeOptionId: 'rec-12x18',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
     defaultShape: 'shape-rectangle',
-    defaultLayoutId: 'layout-3-collage',
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Gallery wall display for striking home and office focal points.',
+    defaultSizeOptionId: 'rec-12x18',
     defaultHardwareId: 'french-cleat',
     defaultThicknessId: '5mm',
     supportedShapeIds: [
@@ -93,11 +103,13 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     startingPrice: 355.00,
     image: '',
     iconType: 'print',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-landscape',
+    imageSlots: 1,
     panelsCount: 1,
     description: 'Vibrant direct UV sub-surface print on crystal acrylic.',
     defaultSizeOptionId: 'sq-8x8',
-    defaultShape: 'shape-landscape',
-    defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'standoff-mounts',
     defaultThicknessId: '3mm',
     supportedShapeIds: [
@@ -111,11 +123,13 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     startingPrice: 426.00,
     image: '',
     iconType: 'collage',
+    defaultLayout: 'fourGrid',
+    defaultLayoutId: 'layout-4-grid',
+    defaultShape: 'shape-square',
+    imageSlots: 4,
     panelsCount: 4,
     description: 'Multiple cherished photographs printed together on acrylic.',
     defaultSizeOptionId: 'sq-12x12',
-    defaultShape: 'shape-square',
-    defaultLayoutId: 'layout-4-grid',
     defaultHardwareId: 'standoff-mounts',
     defaultThicknessId: '3mm',
     supportedShapeIds: [
@@ -129,11 +143,13 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     startingPrice: 674.50,
     image: '',
     iconType: 'split',
-    panelsCount: 3,
-    description: 'Panoramic photograph split seamlessly across 3 triptych panels.',
-    defaultSizeOptionId: 'pan-12x36',
+    defaultLayout: 'twoSplit',
+    defaultLayoutId: 'layout-2-split',
     defaultShape: 'shape-landscape',
-    defaultLayoutId: 'layout-3-collage',
+    imageSlots: 2,
+    panelsCount: 2,
+    description: 'Photograph split seamlessly across a dual-panel acrylic display.',
+    defaultSizeOptionId: 'pan-12x36',
     defaultHardwareId: 'french-cleat',
     defaultThicknessId: '5mm',
     supportedShapeIds: [
@@ -147,11 +163,13 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     startingPrice: 799.00,
     image: '',
     iconType: 'signage',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-rectangle',
+    imageSlots: 1,
     panelsCount: 1,
     description: 'Professional architectural logo and nameplate display with standoff bolts.',
     defaultSizeOptionId: 'rec-12x18',
-    defaultShape: 'shape-rectangle',
-    defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'standoff-mounts',
     defaultThicknessId: '5mm',
     supportedShapeIds: [
@@ -160,6 +178,8 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     ]
   }
 ];
+
+export const ACRYLIC_PRODUCTS = ACRYLIC_PRODUCT_TYPES;
 
 export type SizeCategory = 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL';
 
