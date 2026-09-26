@@ -1174,9 +1174,15 @@ export const AcrylicCustomizerPage: React.FC = () => {
       finalPrice
     };
 
-    localStorage.setItem(`canvas_india_acrylic_custom_${productId}`, JSON.stringify(designPayload));
-    setSaveToast('Custom design saved to browser successfully!');
-    setTimeout(() => setSaveToast(null), 3500);
+    try {
+      localStorage.setItem(`canvas_india_acrylic_custom_${productId}`, JSON.stringify(designPayload));
+      setSaveToast('Custom design saved to browser successfully!');
+      setTimeout(() => setSaveToast(null), 3500);
+    } catch (e) {
+      console.error('Failed to save design to localStorage', e);
+      setValidationWarning('Your uploaded photos are too large to save in browser storage. You can still Add to Cart.');
+      setTimeout(() => setValidationWarning(null), 4000);
+    }
   };
 
   // Restore saved design from localStorage on initial mount if available
