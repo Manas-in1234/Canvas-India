@@ -17,6 +17,11 @@ export interface AppConfig {
     bucket: string;
     region: string;
   };
+  razorpay: {
+    keyId: string;
+    keySecret: string;
+    webhookSecret: string;
+  };
 }
 
 export default (): AppConfig => ({
@@ -37,5 +42,10 @@ export default (): AppConfig => ({
     secretKey: process.env.S3_SECRET_KEY ?? '',
     bucket: process.env.S3_BUCKET ?? 'canvaschamp-assets',
     region: process.env.S3_REGION ?? 'us-east-1',
+  },
+  razorpay: {
+    keyId: process.env.RAZORPAY_KEY_ID ?? '',
+    keySecret: process.env.RAZORPAY_KEY_SECRET ?? '',
+    webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET ?? '',
   },
 });

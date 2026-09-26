@@ -4,68 +4,62 @@ import {
   Upload,
   RotateCcw,
   Eye,
-  Compass
+  Move
 } from 'lucide-react';
 
+export type BuiltInRoomPreset = 'office' | 'living';
+
 export interface RoomPlacementState {
-  roomPreset: 'living' | 'office' | 'bedroom' | 'lobby' | 'minimal';
+  roomPreset: BuiltInRoomPreset;
   customRoomUrl: string | null;
-  roomPanX: number;
-  roomPanY: number;
-  roomZoom: number;
   productRoomX: number;
   productRoomY: number;
-  productRoomScale: number;
-  productRoomRotate: number;
-  wallPlacementMode: boolean;
-  wallTiltY: number;
-  wallTiltX: number;
 }
 
 interface AcrylicRoomViewModalProps {
   isOpen: boolean;
   onClose: () => void;
   productDimensionLabel: string;
+  productName?: string;
+  shapeName?: string;
+  widthInches?: number;
+  heightInches?: number;
   renderProduct: (isRoomView: boolean) => React.ReactNode;
 }
 
-const PRESET_ROOMS: { id: RoomPlacementState['roomPreset']; name: string; url: string; defaultY: number }[] = [
-  { id: 'living', name: 'Living Room', url: '/assets/acrylic/acrylic-panel-living.jpg', defaultY: -16 },
-  { id: 'office', name: 'Modern Office', url: '/assets/acrylic/acrylic-corporate-office.jpg', defaultY: -14 },
-  { id: 'bedroom', name: 'Gallery Wall', url: '/assets/acrylic/acrylic-family-wall.jpg', defaultY: -18 },
-  { id: 'lobby', name: 'Reception Lobby', url: '/assets/acrylic/acrylic-reception-lobby.jpg', defaultY: -15 },
-  { id: 'minimal', name: 'Interior Wall', url: '/assets/acrylic/acrylic-abstract-room.jpg', defaultY: -12 }
+const PRESET_ROOMS: { id: BuiltInRoomPreset; name: string; url: string; defaultY: number }[] = [
+  { id: 'office', name: 'OFFICE', url: '/assets/acrylic/acrylic-corporate-office.jpg', defaultY: -14 },
+  { id: 'living', name: 'HOME / LIVING ROOM', url: '/assets/acrylic/acrylic-panel-living.jpg', defaultY: -16 }
 ];
 
 export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
   isOpen,
   onClose,
   productDimensionLabel,
+  productName = 'Acrylic Print',
+  shapeName = 'Square',
+  widthInches = 12,
+  heightInches = 12,
   renderProduct
 }) => {
-  const [roomPreset, setRoomPreset] = useState<RoomPlacementState['roomPreset']>('living');
+  const [roomPreset, setRoomPreset] = useState<BuiltInRoomPreset>('office');
   const [customRoomUrl, setCustomRoomUrl] = useState<string | null>(null);
 
-  // Room background adjustments
-  const [roomPanX, setRoomPanX] = useState<number>(0);
-  const [roomPanY, setRoomPanY] = useState<number>(0);
-  const [roomZoom, setRoomZoom] = useState<number>(1);
-
-  // Acrylic Product on Wall Coordinates
+  // Acrylic Product on Wall X/Y Coordinates (percentage offset from center)
   const [productRoomX, setProductRoomX] = useState<number>(0);
-  const [productRoomY, setProductRoomY] = useState<number>(-16);
-  const [productRoomScale, setProductRoomScale] = useState<number>(0.85);
-  const [productRoomRotate, setProductRoomRotate] = useState<number>(0);
-
-  // Perspective Wall Placement
-  const [wallPlacementMode, setWallPlacementMode] = useState<boolean>(false);
-  const [wallTiltY, setWallTiltY] = useState<number>(0);
-  const [wallTiltX, setWallTiltX] = useState<number>(0);
+  const [productRoomY, setProductRoomY] = useState<number>(-14);
 
   // Dragging states
   const [isDraggingProduct, setIsDraggingProduct] = useState<boolean>(false);
-  const dragProductRef = useRef<{ startX: number; startY: number; initX: number; initY: number; containerRect: DOMRect } | null>(null);
+  const dragProductRef = useRef<{
+    startX: number;
+    startY: number;
+    initX: number;
+    initY: number;
+    containerRect: DOMRect;
+  } | null>(null);
 
+  const roomStageRef = useRef<HTMLDivElement>(null);
   const roomFileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -73,9 +67,20 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
   const currentPreset = PRESET_ROOMS.find((r) => r.id === roomPreset) || PRESET_ROOMS[0];
   const activeRoomBg = customRoomUrl || currentPreset.url;
 
-  // Custom Room Image Upload Handler
+  // Fixed product display width in pixels based on selected size configuration (no free scaling)
+  const maxDim = Math.max(1, widthInches, heightInches);
+  const fixedDisplayMaxPx = Math.round(Math.min(380, Math.max(150, 130 + maxDim * 5.5)));
+
+  // Custom Room Image Upload Handler (JPG, JPEG, PNG, WEBP)
   const handleRoomImageUpload = (file: File | null) => {
     if (!file) return;
+    const isValidType =
+      ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type.toLowerCase()) ||
+      /\.(jpe?g|png|webp)$/i.test(file.name);
+    if (!isValidType) {
+      alert('Please upload a valid JPG, JPEG, PNG, or WEBP room image.');
+      return;
+    }
     if (file.size > 20 * 1024 * 1024) {
       alert('Room image exceeds 20MB limit.');
       return;
@@ -85,47 +90,27 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
       const result = e.target?.result as string;
       if (result) {
         setCustomRoomUrl(result);
-        setRoomPanX(0);
-        setRoomPanY(0);
-        setRoomZoom(1);
+        setProductRoomX(0);
+        setProductRoomY(-10);
       }
     };
     reader.readAsDataURL(file);
   };
 
-  // Reset Product Position without deleting custom room image
-  const handleResetProduct = () => {
+  // Reset Product Position to default center wall position
+  const handleResetPosition = () => {
     setProductRoomX(0);
-    setProductRoomY(currentPreset.defaultY);
-    setProductRoomScale(0.85);
-    setProductRoomRotate(0);
-    setWallTiltY(0);
-    setWallTiltX(0);
+    setProductRoomY(customRoomUrl ? -10 : currentPreset.defaultY);
   };
 
-  // Reset Room (resets room image & pan/zoom)
-  const handleResetRoom = () => {
-    setRoomPreset('living');
-    setRoomPanX(0);
-    setRoomPanY(0);
-    setRoomZoom(1);
-  };
-
-  // Remove custom room image (revert to preset)
-  const handleRemoveCustomRoom = () => {
-    setCustomRoomUrl(null);
-    setRoomPanX(0);
-    setRoomPanY(0);
-    setRoomZoom(1);
-  };
-
-  // Product Drag Handlers on Wall
+  // Product Drag Handlers on Wall (Mouse & Touch via Pointer Events)
   const handleProductPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDraggingProduct(true);
 
-    const container = (e.currentTarget.parentElement as HTMLElement)?.getBoundingClientRect();
+    const container = roomStageRef.current?.getBoundingClientRect() ||
+      (e.currentTarget.parentElement as HTMLElement)?.getBoundingClientRect();
     if (!container) return;
 
     dragProductRef.current = {
@@ -150,11 +135,12 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
     const deltaXPx = e.clientX - startX;
     const deltaYPx = e.clientY - startY;
 
-    const deltaXPercent = (deltaXPx / containerRect.width) * 100;
-    const deltaYPercent = (deltaYPx / containerRect.height) * 100;
+    const deltaXPercent = (deltaXPx / Math.max(1, containerRect.width)) * 100;
+    const deltaYPercent = (deltaYPx / Math.max(1, containerRect.height)) * 100;
 
-    const newX = Math.max(-46, Math.min(46, Number((initX + deltaXPercent).toFixed(1))));
-    const newY = Math.max(-44, Math.min(44, Number((initY + deltaYPercent).toFixed(1))));
+    // Clamp within room boundaries so the product never disappears outside the room
+    const newX = Math.max(-38, Math.min(38, Number((initX + deltaXPercent).toFixed(2))));
+    const newY = Math.max(-36, Math.min(36, Number((initY + deltaYPercent).toFixed(2))));
 
     setProductRoomX(newX);
     setProductRoomY(newY);
@@ -171,108 +157,90 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-stone-900 select-none animate-in fade-in duration-200">
-      {/* Hidden File Input for Custom Room Image */}
+    <div className="fixed inset-0 z-50 flex flex-col bg-stone-950 select-none animate-in fade-in duration-200">
+      {/* Hidden File Input for Upload Room Image */}
       <input
         ref={roomFileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/jpg,image/webp"
+        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
         className="hidden"
         onChange={(e) => {
           if (e.target.files && e.target.files[0]) {
             handleRoomImageUpload(e.target.files[0]);
+            e.target.value = '';
           }
         }}
       />
 
       {/* Top Header Bar */}
-      <header className="h-14 bg-stone-900/90 backdrop-blur-md border-b border-stone-800 px-4 flex items-center justify-between z-30 text-white">
+      <header className="min-h-14 py-2 bg-stone-900 border-b border-stone-800 px-4 flex flex-wrap items-center justify-between gap-2 z-30 text-white shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#0E4A93] flex items-center justify-center font-bold">
+          <div className="w-8 h-8 rounded-lg bg-[#0E4A93] flex items-center justify-center font-bold shrink-0">
             <Eye className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h2 className="text-sm font-black tracking-tight flex items-center gap-2">
-              <span>Realistic Room View</span>
+            <h2 className="text-sm font-black tracking-tight flex items-center gap-2 flex-wrap">
+              <span>Room View</span>
               <span className="text-[10px] font-semibold bg-[#0E4A93] px-2 py-0.5 rounded-full text-white">
-                {productDimensionLabel}
+                {productName} • {shapeName} • {productDimensionLabel}
               </span>
             </h2>
-            <p className="text-[11px] text-stone-400">Drag to position anywhere on the wall</p>
+            <p className="text-[11px] text-stone-400">
+              Drag the product to position it anywhere in the room (fixed size preview)
+            </p>
           </div>
         </div>
 
-        {/* Room Presets + Add Room Image */}
-        <div className="hidden md:flex items-center gap-1.5 bg-stone-800/80 p-1 rounded-xl border border-stone-700">
-          {PRESET_ROOMS.map((r) => (
-            <button
-              key={r.id}
-              type="button"
-              onClick={() => {
-                setRoomPreset(r.id);
-                setCustomRoomUrl(null);
-                setProductRoomY(r.defaultY);
-              }}
-              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-                !customRoomUrl && roomPreset === r.id
-                  ? 'bg-[#0E4A93] text-white'
-                  : 'text-stone-300 hover:text-white hover:bg-stone-700'
-              }`}
-            >
-              {r.name}
-            </button>
-          ))}
+        {/* Room Selector: ONLY OFFICE, HOME / LIVING ROOM, and Upload Room Image */}
+        <div className="flex items-center gap-1.5 bg-stone-800/90 p-1 rounded-xl border border-stone-700">
+          {PRESET_ROOMS.map((r) => {
+            const isSelected = !customRoomUrl && roomPreset === r.id;
+            return (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => {
+                  setRoomPreset(r.id);
+                  setCustomRoomUrl(null);
+                  setProductRoomX(0);
+                  setProductRoomY(r.defaultY);
+                }}
+                className={`px-3 py-1.5 text-xs font-extrabold rounded-lg transition-colors cursor-pointer uppercase tracking-wide ${
+                  isSelected
+                    ? 'bg-[#0E4A93] text-white shadow-xs'
+                    : 'text-stone-300 hover:text-white hover:bg-stone-700'
+                }`}
+              >
+                {r.name}
+              </button>
+            );
+          })}
 
           <button
             type="button"
             onClick={() => roomFileInputRef.current?.click()}
-            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-black rounded-lg transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
               customRoomUrl
                 ? 'bg-[#E8752A] text-white shadow-xs'
-                : 'bg-stone-700 hover:bg-stone-600 text-stone-200'
+                : 'bg-stone-700 hover:bg-stone-600 text-stone-100'
             }`}
-            title="Upload your own room photograph"
+            title="Upload your own room photograph (JPG, JPEG, PNG, WEBP)"
           >
             <Upload className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>{customRoomUrl ? 'Custom Room Active' : '+ ADD ROOM IMAGE'}</span>
+            <span>Upload Room Image</span>
           </button>
         </div>
 
         {/* Action Controls & Close */}
         <div className="flex items-center gap-2">
-          {customRoomUrl && (
-            <button
-              type="button"
-              onClick={handleRemoveCustomRoom}
-              className="text-xs font-bold text-stone-300 hover:text-red-400 bg-stone-800 hover:bg-stone-700 px-2.5 py-1.5 rounded-lg border border-stone-700 transition-colors cursor-pointer"
-              title="Remove custom uploaded room"
-            >
-              Remove Room Image
-            </button>
-          )}
-
           <button
             type="button"
-            onClick={handleResetProduct}
-            className="flex items-center gap-1 text-xs font-bold text-stone-200 hover:text-white bg-stone-800 hover:bg-stone-700 px-2.5 py-1.5 rounded-lg border border-stone-700 transition-colors cursor-pointer"
-            title="Reset product position & scale"
+            onClick={handleResetPosition}
+            className="flex items-center gap-1.5 text-xs font-bold text-stone-200 hover:text-white bg-stone-800 hover:bg-stone-700 px-3 py-1.5 rounded-lg border border-stone-700 transition-colors cursor-pointer"
+            title="Reset product position to center"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Reset Product</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setWallPlacementMode(!wallPlacementMode)}
-            className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
-              wallPlacementMode
-                ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
-                : 'bg-stone-800 hover:bg-stone-700 text-stone-300 border-stone-700'
-            }`}
-            title="Toggle wall angle / 3D perspective"
-          >
-            <Compass className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Wall Angle</span>
+            <span className="hidden sm:inline">Reset Position</span>
           </button>
 
           <button
@@ -286,172 +254,58 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
         </div>
       </header>
 
-      {/* Main Room Canvas Workspace */}
+      {/* Main Room Canvas Stage */}
       <div
-        className="flex-1 relative overflow-hidden flex items-center justify-center"
-        style={{
-          backgroundColor: '#1E293B',
-          backgroundImage: `url(${activeRoomBg})`,
-          backgroundSize: `${roomZoom * 100}%`,
-          backgroundPosition: `calc(50% + ${roomPanX}px) calc(50% + ${roomPanY}px)`,
-          backgroundRepeat: 'no-repeat'
-        }}
+        ref={roomStageRef}
+        className="flex-1 relative overflow-hidden flex items-center justify-center bg-stone-950 p-2 sm:p-4"
       >
-        {/* Layer: Room Dimming & Subtle Vignette */}
-        <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+        {/* Room Photograph Container — preserves aspect ratio without cropping */}
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xl">
+          <img
+            src={activeRoomBg}
+            alt={customRoomUrl ? 'Uploaded Room' : currentPreset.name}
+            draggable={false}
+            className={`w-full h-full select-none pointer-events-none ${
+              customRoomUrl ? 'object-contain bg-stone-900' : 'object-cover'
+            }`}
+          />
 
-        {/* Layer: Draggable Acrylic Product on the Wall */}
-        <div
-          onPointerDown={handleProductPointerDown}
-          onPointerMove={handleProductPointerMove}
-          onPointerUp={handleProductPointerUp}
-          onPointerCancel={handleProductPointerUp}
-          style={{
-            position: 'absolute',
-            left: `${50 + productRoomX}%`,
-            top: `${50 + productRoomY}%`,
-            transform: `translate(-50%, -50%) scale(${productRoomScale}) rotate(${productRoomRotate}deg) perspective(1000px) rotateY(${wallTiltY}deg) rotateX(${wallTiltX}deg)`,
-            transformOrigin: 'center center',
-            touchAction: 'none',
-            filter: 'drop-shadow(0 28px 36px rgba(0, 0, 0, 0.45)) drop-shadow(0 12px 16px rgba(0, 0, 0, 0.3))',
-            transition: isDraggingProduct ? 'none' : 'transform 0.1s ease-out'
-          }}
-          className={`z-20 max-w-md w-full select-none ${
-            isDraggingProduct ? 'cursor-grabbing' : 'cursor-grab hover:ring-2 hover:ring-[#0E4A93]/60 rounded-xl'
-          }`}
-        >
-          {renderProduct(true)}
+          {/* Subtle ambient lighting vignette */}
+          <div className="absolute inset-0 bg-black/5 pointer-events-none" />
+
+          {/* Fixed-Size Draggable Acrylic Product */}
+          <div
+            onPointerDown={handleProductPointerDown}
+            onPointerMove={handleProductPointerMove}
+            onPointerUp={handleProductPointerUp}
+            onPointerCancel={handleProductPointerUp}
+            style={{
+              position: 'absolute',
+              left: `${50 + productRoomX}%`,
+              top: `${50 + productRoomY}%`,
+              width: `${fixedDisplayMaxPx}px`,
+              maxWidth: '42%',
+              transform: 'translate(-50%, -50%)',
+              touchAction: 'none',
+              filter:
+                'drop-shadow(0 24px 32px rgba(0, 0, 0, 0.42)) drop-shadow(0 10px 14px rgba(0, 0, 0, 0.28))'
+            }}
+            className={`z-20 select-none ${
+              isDraggingProduct
+                ? 'cursor-grabbing ring-2 ring-[#0E4A93] rounded-xl'
+                : 'cursor-grab hover:ring-2 hover:ring-[#0E4A93]/70 rounded-xl'
+            }`}
+          >
+            {renderProduct(true)}
+          </div>
         </div>
 
-        {/* Mobile Room Selector Bar */}
-        <div className="md:hidden absolute top-3 left-3 right-3 z-30 flex items-center gap-1 overflow-x-auto bg-stone-900/90 backdrop-blur-md p-1.5 rounded-xl border border-stone-800">
-          {PRESET_ROOMS.map((r) => (
-            <button
-              key={r.id}
-              type="button"
-              onClick={() => {
-                setRoomPreset(r.id);
-                setCustomRoomUrl(null);
-                setProductRoomY(r.defaultY);
-              }}
-              className={`px-2 py-1 text-[11px] font-bold rounded-lg whitespace-nowrap transition-colors ${
-                !customRoomUrl && roomPreset === r.id
-                  ? 'bg-[#0E4A93] text-white'
-                  : 'text-stone-300'
-              }`}
-            >
-              {r.name}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => roomFileInputRef.current?.click()}
-            className="px-2.5 py-1 text-[11px] font-bold bg-[#E8752A] text-white rounded-lg whitespace-nowrap"
-          >
-            + Upload Room
-          </button>
-        </div>
-
-        {/* Floating Product Adjustment Controls Bar (Bottom) */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-stone-900/95 backdrop-blur-md px-4 py-2 rounded-2xl border border-stone-800 shadow-2xl flex flex-wrap items-center gap-3 text-white">
-          {/* Scale Product in Room */}
-          <div className="flex items-center gap-1.5 bg-stone-800/80 px-2 py-1 rounded-xl">
-            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mr-1">Product Size</span>
-            <button
-              type="button"
-              onClick={() => setProductRoomScale((prev) => Math.max(0.35, Number((prev - 0.1).toFixed(2))))}
-              className="w-6 h-6 rounded-lg bg-stone-700 hover:bg-stone-600 flex items-center justify-center font-bold text-xs cursor-pointer"
-              title="Scale smaller"
-            >
-              −
-            </button>
-            <span className="text-xs font-mono font-bold min-w-[36px] text-center">
-              {productRoomScale.toFixed(2)}x
-            </span>
-            <button
-              type="button"
-              onClick={() => setProductRoomScale((prev) => Math.min(2.0, Number((prev + 0.1).toFixed(2))))}
-              className="w-6 h-6 rounded-lg bg-stone-700 hover:bg-stone-600 flex items-center justify-center font-bold text-xs cursor-pointer"
-              title="Scale larger"
-            >
-              +
-            </button>
-          </div>
-
-          {/* Rotate in Room */}
-          <div className="flex items-center gap-1 bg-stone-800/80 px-2 py-1 rounded-xl">
-            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mr-1">Angle</span>
-            <button
-              type="button"
-              onClick={() => setProductRoomRotate((prev) => prev - 5)}
-              className="px-1.5 py-0.5 rounded bg-stone-700 hover:bg-stone-600 text-xs font-bold cursor-pointer"
-              title="Rotate counter-clockwise"
-            >
-              -5°
-            </button>
-            <span className="text-xs font-mono font-bold min-w-[28px] text-center">
-              {productRoomRotate}°
-            </span>
-            <button
-              type="button"
-              onClick={() => setProductRoomRotate((prev) => prev + 5)}
-              className="px-1.5 py-0.5 rounded bg-stone-700 hover:bg-stone-600 text-xs font-bold cursor-pointer"
-              title="Rotate clockwise"
-            >
-              +5°
-            </button>
-          </div>
-
-          {/* Wall Perspective Angles (When Wall Mode is active) */}
-          {wallPlacementMode && (
-            <div className="flex items-center gap-2 bg-stone-800/80 px-2.5 py-1 rounded-xl border border-[#0E4A93]/40">
-              <span className="text-[10px] font-bold text-stone-400 uppercase">Tilt Y</span>
-              <input
-                type="range"
-                min={-30}
-                max={30}
-                value={wallTiltY}
-                onChange={(e) => setWallTiltY(Number(e.target.value))}
-                className="w-16 accent-[#0E4A93] h-1.5 bg-stone-700 rounded-lg cursor-pointer"
-                title="Perspective tilt Y (side wall angle)"
-              />
-              <span className="text-[10px] font-mono w-6 text-right">{wallTiltY}°</span>
-            </div>
-          )}
-
-          {/* Room Background Zoom Controls */}
-          <div className="flex items-center gap-1 bg-stone-800/80 px-2 py-1 rounded-xl">
-            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mr-1">Room Zoom</span>
-            <button
-              type="button"
-              onClick={() => setRoomZoom((prev) => Math.max(1, Number((prev - 0.15).toFixed(2))))}
-              className="w-5 h-5 rounded bg-stone-700 hover:bg-stone-600 flex items-center justify-center font-bold text-xs cursor-pointer"
-              title="Zoom out room"
-            >
-              −
-            </button>
-            <span className="text-xs font-mono font-bold min-w-[32px] text-center">
-              {roomZoom.toFixed(2)}x
-            </span>
-            <button
-              type="button"
-              onClick={() => setRoomZoom((prev) => Math.min(2.5, Number((prev + 0.15).toFixed(2))))}
-              className="w-5 h-5 rounded bg-stone-700 hover:bg-stone-600 flex items-center justify-center font-bold text-xs cursor-pointer"
-              title="Zoom in room"
-            >
-              +
-            </button>
-          </div>
-
-          {/* Reset Room position */}
-          <button
-            type="button"
-            onClick={handleResetRoom}
-            className="text-[11px] font-bold text-stone-400 hover:text-white hover:bg-stone-800 px-2 py-1 rounded-lg transition-colors cursor-pointer"
-            title="Reset room background zoom & pan"
-          >
-            Reset Room
-          </button>
+        {/* Bottom Status Pill */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-stone-900/90 backdrop-blur-md px-4 py-2 rounded-full border border-stone-800 shadow-xl flex items-center gap-2.5 text-white text-xs pointer-events-none">
+          <Move className="w-3.5 h-3.5 text-[#E8752A]" />
+          <span className="font-semibold text-stone-200">
+            Drag product to position • Fixed size ({productDimensionLabel})
+          </span>
         </div>
       </div>
     </div>

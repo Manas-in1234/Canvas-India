@@ -14,7 +14,7 @@ const PREVIEW_MAX_DIMENSION = 1600;
  * image processing"). Confirming an upload only enqueues this job; the Asset
  * stays PROCESSING until this worker finishes.
  */
-@Processor(IMAGE_PROCESSING_QUEUE)
+@Processor(IMAGE_PROCESSING_QUEUE, { drainDelay: 30, stalledInterval: 60000 })
 export class ImageProcessingProcessor extends WorkerHost {
   private readonly logger = new Logger(ImageProcessingProcessor.name);
 
