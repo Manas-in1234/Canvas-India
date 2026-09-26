@@ -1172,6 +1172,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
       if (pt.defaultThicknessId) {
         setSelectedThicknessId(pt.defaultThicknessId);
       }
+      if (pt.defaultLayoutId) {
+        setSelectedLayoutId(pt.defaultLayoutId);
+        setActivePanelIndex(0);
+        setSelectedElement({ type: 'image', panelIndex: 0 });
+      }
       if (!isCustomSize) {
         const newSizes = getSizesForShape(selectedShapeId, ptId);
         if (newSizes.length > 0 && !newSizes.some((s) => s.id === selectedSizeId)) {
