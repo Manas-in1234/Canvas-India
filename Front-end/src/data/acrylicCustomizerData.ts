@@ -19,102 +19,196 @@ export type ToolbarTab =
 export interface AcrylicProductType {
   id: string;
   name: string;
+  price: number;
   startingPrice: number;
   image: string;
   iconType: 'block' | 'panel' | 'wall' | 'print' | 'collage' | 'split' | 'signage';
+  defaultLayout: LayoutType;
+  defaultLayoutId: string;
+  defaultShape: string;
+  supportedShapes: string[];
+  imageSlots: number;
   panelsCount: number;
   description: string;
   defaultSizeOptionId: string;
-  supportedShapeIds?: string[];
+  defaultHardwareId: string;
+  defaultThicknessId: string;
+  supportedShapeIds: string[];
+  supportedHardwareIds: string[];
 }
+
+export type AcrylicProduct = AcrylicProductType;
+
+/**
+ * Centralized Product -> Shape compatibility configuration.
+ * Controls which shapes appear in the SHAPES panel for each Acrylic product.
+ */
+export const AcrylicProductShapeConfig: Record<string, string[]> = {
+  'acrylic-photo-block': [
+    'shape-square',
+    'shape-rectangle',
+    'shape-rounded-rect'
+  ],
+  'acrylic-photo-panel': [
+    'shape-square',
+    'shape-rectangle',
+    'shape-landscape',
+    'shape-portrait',
+    'shape-circle',
+    'shape-oval',
+    'shape-rounded-rect',
+    'shape-heart',
+    'shape-hexagon'
+  ],
+  'acrylic-wall-art': [
+    'shape-square',
+    'shape-rectangle',
+    'shape-landscape',
+    'shape-portrait'
+  ],
+  'acrylic-print': [
+    'shape-square',
+    'shape-rectangle',
+    'shape-landscape',
+    'shape-portrait',
+    'shape-circle',
+    'shape-oval',
+    'shape-rounded-rect'
+  ],
+  'acrylic-collage': [
+    'shape-square',
+    'shape-rectangle',
+    'shape-landscape',
+    'shape-portrait'
+  ]
+};
+
+export const ALL_ACRYLIC_HARDWARE_IDS: string[] = [
+  'hooks-hanging',
+  'ready-to-hang',
+  'no-hooks',
+  'sawtooth-hanger',
+  'easel-back',
+  'nail-free-hook',
+  'standoff-mounts'
+];
+
+/**
+ * Centralized Product -> Hardware configuration.
+ * Preserves all 7 hardware options from the full hardware implementation for every Acrylic product.
+ */
+export const AcrylicHardwareConfig: Record<string, string[]> = {
+  'acrylic-photo-block': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-photo-panel': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-wall-art': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-print': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-collage': ALL_ACRYLIC_HARDWARE_IDS
+};
 
 export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
   {
     id: 'acrylic-photo-block',
     name: 'Acrylic Photo Block',
+    price: 499.00,
     startingPrice: 499.00,
-    image: '/assets/customizer/acrylic/products/acrylic-photo-block.jpg',
+    image: '/images/acrylic/square/square-acrylic-print.svg',
     iconType: 'block',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-square',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-photo-block'],
+    imageSlots: 1,
     panelsCount: 1,
     description: 'Freestanding, solid optical acrylic block with 3D crystal depth.',
-    defaultSizeOptionId: 'sq-4x4',
-    supportedShapeIds: ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait', 'shape-rounded-rect', 'shape-arch', 'shape-circle']
+    defaultSizeOptionId: 'shape-square-4x4',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '8mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-photo-block'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-photo-block']
   },
   {
     id: 'acrylic-photo-panel',
     name: 'Acrylic Photo Panel',
+    price: 355.00,
     startingPrice: 355.00,
-    image: '/assets/customizer/acrylic/products/acrylic-photo-panel.jpg',
+    image: '/images/acrylic/rectangle/rectangle-acrylic-print.svg',
     iconType: 'panel',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-rectangle',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-photo-panel'],
+    imageSlots: 1,
     panelsCount: 1,
     description: 'Modern slim acrylic panel with diamond polished border.',
-    defaultSizeOptionId: 'sq-8x8',
-    supportedShapeIds: [
-      'shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait', 'shape-rounded-rect', 'shape-circle', 'shape-oval',
-      'shape-heart', 'shape-star', 'shape-hexagon', 'shape-octagon', 'shape-diamond', 'shape-triangle', 'shape-arch', 'shape-capsule', 'shape-cloud', 'shape-speech-bubble',
-      'shape-scalloped', 'shape-ticket', 'shape-tag', 'shape-polaroid', 'shape-photo-frame', 'shape-organic-blob'
-    ]
+    defaultSizeOptionId: 'shape-rectangle-12x8',
+    defaultHardwareId: 'standoff-mounts',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-photo-panel'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-photo-panel']
   },
   {
     id: 'acrylic-wall-art',
     name: 'Acrylic Wall Art',
+    price: 2338.90,
     startingPrice: 2338.90,
-    image: '/assets/customizer/acrylic/products/acrylic-wall-art.jpg',
+    image: '/images/acrylic/shapes/rectangle.svg',
     iconType: 'wall',
-    panelsCount: 3,
-    description: 'Multi-panel gallery wall display for striking home and office focal points.',
-    defaultSizeOptionId: 'rec-12x18',
-    supportedShapeIds: ['shape-rectangle', 'shape-landscape', 'shape-square', 'shape-portrait', 'shape-rounded-rect', 'shape-circle', 'shape-oval', 'shape-hexagon', 'shape-arch', 'shape-polaroid', 'shape-photo-frame']
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-rectangle',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-wall-art'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Gallery wall display for striking home and office focal points.',
+    defaultSizeOptionId: 'shape-rectangle-12x8',
+    defaultHardwareId: 'ready-to-hang',
+    defaultThicknessId: '5mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-wall-art'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-wall-art']
   },
   {
     id: 'acrylic-print',
     name: 'Acrylic Print',
+    price: 355.00,
     startingPrice: 355.00,
-    image: '/assets/customizer/acrylic/products/acrylic-print.jpg',
+    image: '/images/acrylic/shapes/landscape.svg',
     iconType: 'print',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-landscape',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-print'],
+    imageSlots: 1,
     panelsCount: 1,
     description: 'Vibrant direct UV sub-surface print on crystal acrylic.',
-    defaultSizeOptionId: 'sq-8x8',
-    supportedShapeIds: [
-      'shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait', 'shape-rounded-rect', 'shape-circle', 'shape-oval',
-      'shape-heart', 'shape-star', 'shape-hexagon', 'shape-octagon', 'shape-diamond', 'shape-triangle', 'shape-arch', 'shape-capsule', 'shape-cloud', 'shape-speech-bubble',
-      'shape-scalloped', 'shape-ticket', 'shape-tag', 'shape-polaroid', 'shape-photo-frame', 'shape-organic-blob'
-    ]
+    defaultSizeOptionId: 'shape-landscape-12x8',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-print'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-print']
   },
   {
     id: 'acrylic-collage',
     name: 'Acrylic Collage',
+    price: 426.00,
     startingPrice: 426.00,
-    image: '/assets/customizer/acrylic/products/acrylic-collage.jpg',
+    image: '/assets/customizer/acrylic/layouts/layout-4-grid.svg',
     iconType: 'collage',
+    defaultLayout: 'fourGrid',
+    defaultLayoutId: 'layout-4-grid',
+    defaultShape: 'shape-square',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-collage'],
+    imageSlots: 4,
     panelsCount: 4,
     description: 'Multiple cherished photographs printed together on acrylic.',
-    defaultSizeOptionId: 'sq-12x12',
-    supportedShapeIds: ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait', 'shape-rounded-rect', 'shape-circle', 'shape-hexagon']
-  },
-  {
-    id: 'acrylic-split',
-    name: 'Acrylic Split Panel',
-    startingPrice: 674.50,
-    image: '/assets/customizer/acrylic/products/acrylic-split-panel.jpg',
-    iconType: 'split',
-    panelsCount: 3,
-    description: 'Panoramic photograph split seamlessly across 3 triptych panels.',
-    defaultSizeOptionId: 'pan-12x36',
-    supportedShapeIds: ['shape-landscape', 'shape-rectangle', 'shape-square', 'shape-arch']
-  },
-  {
-    id: 'acrylic-signage',
-    name: 'Acrylic Signage',
-    startingPrice: 799.00,
-    image: '/assets/customizer/acrylic/products/acrylic-signage.jpg',
-    iconType: 'signage',
-    panelsCount: 1,
-    description: 'Professional architectural logo and nameplate display with standoff bolts.',
-    defaultSizeOptionId: 'rec-12x18',
-    supportedShapeIds: ['shape-rectangle', 'shape-landscape', 'shape-rounded-rect', 'shape-square', 'shape-oval', 'shape-tag', 'shape-ticket', 'shape-capsule', 'shape-arch']
+    defaultSizeOptionId: 'shape-square-4x4',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-collage'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-collage']
   }
 ];
+
+export const ACRYLIC_PRODUCTS = ACRYLIC_PRODUCT_TYPES;
 
 export type SizeCategory = 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL';
 
@@ -268,6 +362,43 @@ export const SIZE_OPTIONS: SizeOption[] = [
     image: '/assets/customizer/acrylic/sizes/square.svg'
   },
 
+  {
+    id: 'sq-16x16',
+    productTypeId: 'acrylic-photo-panel',
+    category: 'SQUARE',
+    label: '16" × 16"',
+    dimensionsSummary: '16" × 16"',
+    widthInches: 16,
+    heightInches: 16,
+    price: 1799.00,
+    aspectClass: 'aspect-square',
+    image: '/assets/customizer/acrylic/sizes/square.svg'
+  },
+  {
+    id: 'sq-18x18',
+    productTypeId: 'acrylic-photo-panel',
+    category: 'SQUARE',
+    label: '18" × 18"',
+    dimensionsSummary: '18" × 18"',
+    widthInches: 18,
+    heightInches: 18,
+    price: 2299.00,
+    aspectClass: 'aspect-square',
+    image: '/assets/customizer/acrylic/sizes/square.svg'
+  },
+  {
+    id: 'sq-20x20',
+    productTypeId: 'acrylic-photo-panel',
+    category: 'SQUARE',
+    label: '20" × 20"',
+    dimensionsSummary: '20" × 20"',
+    widthInches: 20,
+    heightInches: 20,
+    price: 2799.00,
+    aspectClass: 'aspect-square',
+    image: '/assets/customizer/acrylic/sizes/square.svg'
+  },
+
   // Panoramic
   {
     id: 'pan-10x30',
@@ -383,19 +514,108 @@ export const SIZE_OPTIONS: SizeOption[] = [
   }
 ];
 
+export type LayoutType =
+  | 'single'
+  | 'twoSplit'
+  | 'threeCollage'
+  | 'fourGrid'
+  | 'topBottom'
+  | 'leftRight'
+  | 'mainTwoSmall';
+
+export interface LayoutSlotDefinition {
+  id: string;
+  slotIndex: number;
+  label: string;
+  x: number;      // Normalized 0..1
+  y: number;      // Normalized 0..1
+  width: number;  // Normalized 0..1
+  height: number; // Normalized 0..1
+}
+
 export interface LayoutPreset {
   id: string;
   name: string;
   photoCount: number;
   description: string;
   image: string;
-  layoutType: '1-single' | '2-vertical' | '2-horizontal' | '2-offset' | '3-wall' | '3-triptych' | '3-split-left' | '4-grid' | '4-hero-right' | '4-strips-h' | '4-strips-v';
+  layoutType: LayoutType;
   frames: Array<{
     id: string;
     label: string;
     dimension: string;
     aspectRatio: string;
   }>;
+}
+
+/**
+ * Centralized normalized layout slot engine (coordinates 0..1 within the product bounding box).
+ * Used by both the workspace canvas renderer and the sidebar layout card preview icons.
+ */
+export function getLayoutSlots(layoutType: LayoutType, aspectRatio = 1): LayoutSlotDefinition[] {
+  switch (layoutType) {
+    case 'single':
+      return [
+        { id: 'image-1', slotIndex: 0, label: 'Image 1', x: 0, y: 0, width: 1, height: 1 }
+      ];
+
+    case 'twoSplit':
+      // Adapt intelligently to product aspect ratio: portrait (< 1) stacks top/bottom; landscape/square (>= 1) splits left/right
+      if (aspectRatio < 1) {
+        return [
+          { id: 'image-1', slotIndex: 0, label: 'Image 1', x: 0, y: 0, width: 1, height: 0.5 },
+          { id: 'image-2', slotIndex: 1, label: 'Image 2', x: 0, y: 0.5, width: 1, height: 0.5 }
+        ];
+      }
+      return [
+        { id: 'image-1', slotIndex: 0, label: 'Image 1', x: 0, y: 0, width: 0.5, height: 1 },
+        { id: 'image-2', slotIndex: 1, label: 'Image 2', x: 0.5, y: 0, width: 0.5, height: 1 }
+      ];
+
+    case 'threeCollage':
+      // One large image on top (height 0.6), two smaller images below (width 0.5, height 0.4 each)
+      return [
+        { id: 'image-1', slotIndex: 0, label: 'Image 1', x: 0, y: 0, width: 1, height: 0.6 },
+        { id: 'image-2', slotIndex: 1, label: 'Image 2', x: 0, y: 0.6, width: 0.5, height: 0.4 },
+        { id: 'image-3', slotIndex: 2, label: 'Image 3', x: 0.5, y: 0.6, width: 0.5, height: 0.4 }
+      ];
+
+    case 'fourGrid':
+      // Symmetric 2 x 2 grid
+      return [
+        { id: 'image-1', slotIndex: 0, label: 'Image 1', x: 0, y: 0, width: 0.5, height: 0.5 },
+        { id: 'image-2', slotIndex: 1, label: 'Image 2', x: 0.5, y: 0, width: 0.5, height: 0.5 },
+        { id: 'image-3', slotIndex: 2, label: 'Image 3', x: 0, y: 0.5, width: 0.5, height: 0.5 },
+        { id: 'image-4', slotIndex: 3, label: 'Image 4', x: 0.5, y: 0.5, width: 0.5, height: 0.5 }
+      ];
+
+    case 'topBottom':
+      // Two horizontal regions stacked vertically
+      return [
+        { id: 'image-1', slotIndex: 0, label: 'Image 1', x: 0, y: 0, width: 1, height: 0.5 },
+        { id: 'image-2', slotIndex: 1, label: 'Image 2', x: 0, y: 0.5, width: 1, height: 0.5 }
+      ];
+
+    case 'leftRight':
+      // Two vertical regions side-by-side
+      return [
+        { id: 'image-1', slotIndex: 0, label: 'Image 1', x: 0, y: 0, width: 0.5, height: 1 },
+        { id: 'image-2', slotIndex: 1, label: 'Image 2', x: 0.5, y: 0, width: 0.5, height: 1 }
+      ];
+
+    case 'mainTwoSmall':
+      // Dominant main image on top (height 0.65) with two smaller images below (width 0.5, height 0.35 each)
+      return [
+        { id: 'image-1', slotIndex: 0, label: 'Main Image', x: 0, y: 0, width: 1, height: 0.65 },
+        { id: 'image-2', slotIndex: 1, label: 'Small 1', x: 0, y: 0.65, width: 0.5, height: 0.35 },
+        { id: 'image-3', slotIndex: 2, label: 'Small 2', x: 0.5, y: 0.65, width: 0.5, height: 0.35 }
+      ];
+
+    default:
+      return [
+        { id: 'image-1', slotIndex: 0, label: 'Image 1', x: 0, y: 0, width: 1, height: 1 }
+      ];
+  }
 }
 
 export const LAYOUT_PRESETS: LayoutPreset[] = [
@@ -406,9 +626,9 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     photoCount: 1,
     description: 'Full edge-to-edge optical clarity acrylic single print.',
     image: '/assets/customizer/acrylic/layouts/layout-1-single.svg',
-    layoutType: '1-single',
+    layoutType: 'single',
     frames: [
-      { id: 'f0', label: 'Main Frame', dimension: 'Edge to Edge', aspectRatio: 'w-full h-full' }
+      { id: 'image-1', label: 'Image 1', dimension: 'Full Area', aspectRatio: 'w-full h-full' }
     ]
   },
 
@@ -417,12 +637,12 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     id: 'layout-2-split',
     name: '2 Image Split',
     photoCount: 2,
-    description: 'Dual portrait panels split side-by-side.',
+    description: 'Two equal sections adapting to product aspect ratio.',
     image: '/assets/customizer/acrylic/layouts/layout-2-split.svg',
-    layoutType: '2-vertical',
+    layoutType: 'twoSplit',
     frames: [
-      { id: 'f0', label: 'Frame 1', dimension: 'Left Panel', aspectRatio: 'w-full h-full' },
-      { id: 'f1', label: 'Frame 2', dimension: 'Right Panel', aspectRatio: 'w-full h-full' }
+      { id: 'image-1', label: 'Image 1', dimension: 'Section 1', aspectRatio: 'w-full h-full' },
+      { id: 'image-2', label: 'Image 2', dimension: 'Section 2', aspectRatio: 'w-full h-full' }
     ]
   },
 
@@ -431,13 +651,13 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     id: 'layout-3-collage',
     name: '3 Image Collage',
     photoCount: 3,
-    description: 'Triptych 3-panel panoramic acrylic collage.',
+    description: 'One large top image with two smaller images below.',
     image: '/assets/customizer/acrylic/layouts/layout-3-collage.svg',
-    layoutType: '3-triptych',
+    layoutType: 'threeCollage',
     frames: [
-      { id: 'f0', label: 'Panel 1', dimension: 'Left', aspectRatio: 'h-full w-full' },
-      { id: 'f1', label: 'Panel 2', dimension: 'Center', aspectRatio: 'h-full w-full' },
-      { id: 'f2', label: 'Panel 3', dimension: 'Right', aspectRatio: 'h-full w-full' }
+      { id: 'image-1', label: 'Image 1', dimension: 'Top Large', aspectRatio: 'w-full h-full' },
+      { id: 'image-2', label: 'Image 2', dimension: 'Bottom Left', aspectRatio: 'w-full h-full' },
+      { id: 'image-3', label: 'Image 3', dimension: 'Bottom Right', aspectRatio: 'w-full h-full' }
     ]
   },
 
@@ -446,14 +666,14 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     id: 'layout-4-grid',
     name: '4 Image Grid',
     photoCount: 4,
-    description: 'Symmetric 2x2 grid collage for 4 photos.',
+    description: 'Symmetric 2×2 grid collage for 4 photos.',
     image: '/assets/customizer/acrylic/layouts/layout-4-grid.svg',
-    layoutType: '4-grid',
+    layoutType: 'fourGrid',
     frames: [
-      { id: 'f0', label: 'Top Left', dimension: 'Quadrant 1', aspectRatio: 'aspect-square' },
-      { id: 'f1', label: 'Top Right', dimension: 'Quadrant 2', aspectRatio: 'aspect-square' },
-      { id: 'f2', label: 'Bottom Left', dimension: 'Quadrant 3', aspectRatio: 'aspect-square' },
-      { id: 'f3', label: 'Bottom Right', dimension: 'Quadrant 4', aspectRatio: 'aspect-square' }
+      { id: 'image-1', label: 'Image 1', dimension: 'Top Left', aspectRatio: 'w-full h-full' },
+      { id: 'image-2', label: 'Image 2', dimension: 'Top Right', aspectRatio: 'w-full h-full' },
+      { id: 'image-3', label: 'Image 3', dimension: 'Bottom Left', aspectRatio: 'w-full h-full' },
+      { id: 'image-4', label: 'Image 4', dimension: 'Bottom Right', aspectRatio: 'w-full h-full' }
     ]
   },
 
@@ -462,12 +682,12 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     id: 'layout-top-bottom',
     name: 'Top + Bottom',
     photoCount: 2,
-    description: 'Dual horizontal panels stacked vertically.',
+    description: 'Two horizontal regions stacked vertically.',
     image: '/assets/customizer/acrylic/layouts/layout-top-bottom.svg',
-    layoutType: '2-horizontal',
+    layoutType: 'topBottom',
     frames: [
-      { id: 'f0', label: 'Top Panel', dimension: 'Upper Half', aspectRatio: 'w-full h-full' },
-      { id: 'f1', label: 'Bottom Panel', dimension: 'Lower Half', aspectRatio: 'w-full h-full' }
+      { id: 'image-1', label: 'Image 1', dimension: 'Top Region', aspectRatio: 'w-full h-full' },
+      { id: 'image-2', label: 'Image 2', dimension: 'Bottom Region', aspectRatio: 'w-full h-full' }
     ]
   },
 
@@ -476,12 +696,12 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     id: 'layout-left-right',
     name: 'Left + Right',
     photoCount: 2,
-    description: 'Dual vertical side-by-side panels.',
+    description: 'Two vertical regions side-by-side.',
     image: '/assets/customizer/acrylic/layouts/layout-left-right.svg',
-    layoutType: '2-vertical',
+    layoutType: 'leftRight',
     frames: [
-      { id: 'f0', label: 'Left Panel', dimension: 'Left Half', aspectRatio: 'w-full h-full' },
-      { id: 'f1', label: 'Right Panel', dimension: 'Right Half', aspectRatio: 'w-full h-full' }
+      { id: 'image-1', label: 'Image 1', dimension: 'Left Region', aspectRatio: 'w-full h-full' },
+      { id: 'image-2', label: 'Image 2', dimension: 'Right Region', aspectRatio: 'w-full h-full' }
     ]
   },
 
@@ -490,13 +710,13 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     id: 'layout-main-2small',
     name: 'Main + 2 Small Images',
     photoCount: 3,
-    description: 'Dominant hero portrait with 2 stacked side panels.',
+    description: 'Large main hero image above two smaller images.',
     image: '/assets/customizer/acrylic/layouts/layout-main-2small.svg',
-    layoutType: '3-split-left',
+    layoutType: 'mainTwoSmall',
     frames: [
-      { id: 'f0', label: 'Hero Panel', dimension: 'Main Feature', aspectRatio: 'h-full w-full' },
-      { id: 'f1', label: 'Top Mini', dimension: 'Side Top', aspectRatio: 'h-full w-full' },
-      { id: 'f2', label: 'Bottom Mini', dimension: 'Side Bottom', aspectRatio: 'h-full w-full' }
+      { id: 'image-1', label: 'Main Image', dimension: 'Main Top', aspectRatio: 'w-full h-full' },
+      { id: 'image-2', label: 'Small 1', dimension: 'Small Left', aspectRatio: 'w-full h-full' },
+      { id: 'image-3', label: 'Small 2', dimension: 'Small Right', aspectRatio: 'w-full h-full' }
     ]
   },
 
@@ -507,10 +727,10 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     photoCount: 2,
     description: 'Dual portrait panels side-by-side.',
     image: '/assets/customizer/acrylic/layouts/layout-2-split.svg',
-    layoutType: '2-vertical',
+    layoutType: 'leftRight',
     frames: [
-      { id: 'f0', label: 'Frame 1', dimension: 'Half Width', aspectRatio: 'w-full h-full' },
-      { id: 'f1', label: 'Frame 2', dimension: 'Half Width', aspectRatio: 'w-full h-full' }
+      { id: 'image-1', label: 'Image 1', dimension: 'Left Half', aspectRatio: 'w-full h-full' },
+      { id: 'image-2', label: 'Image 2', dimension: 'Right Half', aspectRatio: 'w-full h-full' }
     ]
   },
   {
@@ -519,10 +739,10 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     photoCount: 2,
     description: 'Dual horizontal panels stacked vertically.',
     image: '/assets/customizer/acrylic/layouts/layout-top-bottom.svg',
-    layoutType: '2-horizontal',
+    layoutType: 'topBottom',
     frames: [
-      { id: 'f0', label: 'Frame 1', dimension: 'Half Height', aspectRatio: 'w-full h-full' },
-      { id: 'f1', label: 'Frame 2', dimension: 'Half Height', aspectRatio: 'w-full h-full' }
+      { id: 'image-1', label: 'Image 1', dimension: 'Top Half', aspectRatio: 'w-full h-full' },
+      { id: 'image-2', label: 'Image 2', dimension: 'Bottom Half', aspectRatio: 'w-full h-full' }
     ]
   },
   {
@@ -531,11 +751,11 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     photoCount: 3,
     description: 'Hero landscape panel above two complementary square panels.',
     image: '/assets/customizer/acrylic/layouts/layout-3-collage.svg',
-    layoutType: '3-wall',
+    layoutType: 'threeCollage',
     frames: [
-      { id: 'f0', label: 'Hero Top', dimension: '12" × 18"', aspectRatio: 'aspect-[18/12]' },
-      { id: 'f1', label: 'Bottom Left', dimension: '10" × 8"', aspectRatio: 'aspect-[8/10]' },
-      { id: 'f2', label: 'Bottom Right', dimension: '10" × 8"', aspectRatio: 'aspect-[8/10]' }
+      { id: 'image-1', label: 'Image 1', dimension: 'Top Large', aspectRatio: 'w-full h-full' },
+      { id: 'image-2', label: 'Image 2', dimension: 'Bottom Left', aspectRatio: 'w-full h-full' },
+      { id: 'image-3', label: 'Image 3', dimension: 'Bottom Right', aspectRatio: 'w-full h-full' }
     ]
   }
 ];
@@ -608,6 +828,15 @@ export const DESIGN_TEMPLATES: DesignTemplate[] = [
   }
 ];
 
+export type AcrylicHardwareType =
+  | 'hooks-hanging'
+  | 'ready-to-hang'
+  | 'no-hooks'
+  | 'sawtooth-hanger'
+  | 'easel-back'
+  | 'nail-free-hook'
+  | 'standoff-mounts';
+
 export interface HardwareOption {
   id: string;
   name: string;
@@ -621,52 +850,141 @@ export const HARDWARE_OPTIONS: HardwareOption[] = [
     id: 'hooks-hanging',
     name: 'Hooks for Hanging',
     price: 0,
-    description: 'Pre-attached dual mounting hooks for balanced wall hanging.',
+    description: 'Twin self-levelling hanging hooks included at no charge.',
     image: '/assets/customizer/acrylic/hardware/hooks-hanging.svg'
   },
   {
     id: 'ready-to-hang',
     name: 'Ready to Hang Cleat',
     price: 0,
-    description: 'Precision hidden French cleat bracket for flush, floating look.',
+    description: 'Pre-installed recessed French cleat wall hanger.',
     image: '/assets/customizer/acrylic/hardware/ready-to-hang.svg'
   },
   {
     id: 'no-hooks',
     name: 'Without Base / No Hooks',
     price: 0,
-    description: 'Clean unmounted acrylic for tabletop propping or custom frames.',
+    description: 'Clean unmounted acrylic panel for custom installation.',
     image: '/assets/customizer/acrylic/hardware/no-hooks.svg'
   },
   {
     id: 'sawtooth-hanger',
     name: 'Sawtooth Hanger',
     price: 25.00,
-    description: 'Heavy duty brass sawtooth bracket installed on reverse side.',
+    description: 'Heavy-duty brass sawtooth hanger attached to rear backing.',
     image: '/assets/customizer/acrylic/hardware/sawtooth-hanger.svg'
   },
   {
     id: 'easel-back',
     name: 'Easel Back / Stand',
     price: 49.00,
-    description: 'Foldable acrylic kickstand for desktop, shelf & mantle display.',
+    description: 'Foldable tabletop stand for desk, shelf, and mantle display.',
     image: '/assets/customizer/acrylic/hardware/easel-back.svg'
   },
   {
     id: 'nail-free-hook',
     name: 'Nail Free Hook',
     price: 49.00,
-    description: 'No-drill wall adhesive tab system with clean removal capability.',
+    description: 'Damage-free adhesive wall hook with high weight capacity.',
     image: '/assets/customizer/acrylic/hardware/nail-free-hook.svg'
   },
   {
     id: 'standoff-mounts',
     name: 'Chrome Standoffs',
     price: 199.00,
-    description: '4 Stainless steel brushed chrome architectural corner bolts.',
+    description: '4 architectural brushed chrome corner standoff bolts.',
     image: '/assets/customizer/acrylic/hardware/standoff-mounts.svg'
   }
 ];
+
+const HARDWARE_ALIAS_MAP: Record<string, string> = {
+  'no-hardware': 'no-hooks',
+  'wall-mount': 'hooks-hanging',
+  'standoff-mount': 'standoff-mounts',
+  'floating-mount': 'ready-to-hang',
+  'adhesive-mount': 'nail-free-hook',
+  'stand-table-mount': 'easel-back',
+  'hanging-hardware': 'sawtooth-hanger'
+};
+
+export function normalizeAcrylicHardwareId(hardwareId?: string | null): string {
+  if (!hardwareId) return 'hooks-hanging';
+  const mapped = HARDWARE_ALIAS_MAP[hardwareId] || hardwareId;
+  if (HARDWARE_OPTIONS.some((h) => h.id === mapped)) {
+    return mapped;
+  }
+  return 'hooks-hanging';
+}
+
+export const normalizeHardwareId = normalizeAcrylicHardwareId;
+
+export function getCompatibleHardwareForProduct(productId: string): HardwareOption[] {
+  const allowedIds =
+    AcrylicHardwareConfig[productId] || ALL_ACRYLIC_HARDWARE_IDS;
+  const resolved = allowedIds
+    .map((id) => HARDWARE_OPTIONS.find((h) => h.id === id))
+    .filter((h): h is HardwareOption => Boolean(h));
+  return resolved.length > 0 ? resolved : HARDWARE_OPTIONS;
+}
+
+/**
+ * Returns normalized (0..100) mounting coordinates that strictly stay inside
+ * the safe boundary of the given Acrylic shape geometry.
+ */
+export function getHardwarePointsForShape(shapeId: string): Array<{ x: number; y: number }> {
+  switch (shapeId) {
+    case 'shape-circle':
+      // 4 points along a circle of radius 38% at 45°, 135°, 225°, 315° (well inside r=50%)
+      return [
+        { x: 23, y: 23 },
+        { x: 77, y: 23 },
+        { x: 23, y: 77 },
+        { x: 77, y: 77 }
+      ];
+    case 'shape-oval':
+      // 4 points inside elliptical boundary
+      return [
+        { x: 22, y: 26 },
+        { x: 78, y: 26 },
+        { x: 22, y: 74 },
+        { x: 78, y: 74 }
+      ];
+    case 'shape-heart':
+      // 4 points strictly inside the upper lobes and mid-lower body of the heart contour
+      return [
+        { x: 26, y: 24 },
+        { x: 74, y: 24 },
+        { x: 36, y: 56 },
+        { x: 64, y: 56 }
+      ];
+    case 'shape-hexagon':
+      // 4 points inset along the top and bottom horizontal vertices of the hexagon
+      return [
+        { x: 29, y: 12 },
+        { x: 71, y: 12 },
+        { x: 29, y: 88 },
+        { x: 71, y: 88 }
+      ];
+    case 'shape-rounded-rect':
+      return [
+        { x: 10, y: 10 },
+        { x: 90, y: 10 },
+        { x: 10, y: 90 },
+        { x: 90, y: 90 }
+      ];
+    case 'shape-square':
+    case 'shape-rectangle':
+    case 'shape-landscape':
+    case 'shape-portrait':
+    default:
+      return [
+        { x: 8, y: 8 },
+        { x: 92, y: 8 },
+        { x: 8, y: 92 },
+        { x: 92, y: 92 }
+      ];
+  }
+}
 
 export interface DisplayOption {
   id: string;
@@ -1388,6 +1706,16 @@ export type AcrylicWrapOption = AcrylicEdgeWrap;
 
 export interface AcrylicShapeOption {
   id: string;
+  shapeType:
+    | 'square'
+    | 'rectangle'
+    | 'landscape'
+    | 'portrait'
+    | 'circle'
+    | 'oval'
+    | 'roundedRectangle'
+    | 'heart'
+    | 'hexagon';
   name: string;
   category: 'basic' | 'special' | 'decorative';
   description: string;
@@ -1402,9 +1730,9 @@ export interface AcrylicShapeOption {
 }
 
 export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
-  // Basic Shapes
   {
     id: 'shape-square',
+    shapeType: 'square',
     name: 'Square',
     category: 'basic',
     description: 'Classic symmetrical modern acrylic format.',
@@ -1413,11 +1741,12 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
     borderRadiusClass: 'rounded-xl',
     clipPathStyle: 'inset(0 round 14px)',
     isSingleDimension: true,
-    image: '/images/acrylic/shapes/square.jpg',
+    image: '',
     priceAddon: 0
   },
   {
     id: 'shape-rectangle',
+    shapeType: 'rectangle',
     name: 'Rectangle',
     category: 'basic',
     description: 'Timeless proportional display for all photography.',
@@ -1426,11 +1755,12 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
     borderRadiusClass: 'rounded-xl',
     clipPathStyle: 'inset(0 round 14px)',
     isSingleDimension: false,
-    image: '/images/acrylic/shapes/rectangle.jpg',
+    image: '',
     priceAddon: 0
   },
   {
     id: 'shape-landscape',
+    shapeType: 'landscape',
     name: 'Landscape',
     category: 'basic',
     description: 'Panoramic horizontal presentation for vistas & groups.',
@@ -1439,11 +1769,12 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
     borderRadiusClass: 'rounded-xl',
     clipPathStyle: 'inset(0 round 14px)',
     isSingleDimension: false,
-    image: '/images/acrylic/shapes/landscape.jpg',
+    image: '',
     priceAddon: 0
   },
   {
     id: 'shape-portrait',
+    shapeType: 'portrait',
     name: 'Portrait',
     category: 'basic',
     description: 'Vertical focal format for individual & couple portraits.',
@@ -1452,11 +1783,12 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
     borderRadiusClass: 'rounded-xl',
     clipPathStyle: 'inset(0 round 14px)',
     isSingleDimension: false,
-    image: '/images/acrylic/shapes/portrait.jpg',
+    image: '',
     priceAddon: 0
   },
   {
     id: 'shape-circle',
+    shapeType: 'circle',
     name: 'Circle',
     category: 'basic',
     description: 'Curved circular optical acrylic with laser-cut perimeter.',
@@ -1465,11 +1797,12 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
     borderRadiusClass: 'rounded-full',
     clipPathStyle: 'circle(50% at 50% 50%)',
     isSingleDimension: true,
-    image: '/images/acrylic/shapes/circle.jpg',
+    image: '',
     priceAddon: 0
   },
   {
     id: 'shape-oval',
+    shapeType: 'oval',
     name: 'Oval',
     category: 'basic',
     description: 'Graceful elliptical acrylic silhouette for classic wall art.',
@@ -1478,11 +1811,12 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
     borderRadiusClass: 'rounded-[50%]',
     clipPathStyle: 'ellipse(50% 38% at 50% 50%)',
     isSingleDimension: false,
-    image: '/images/acrylic/shapes/oval.jpg',
+    image: '',
     priceAddon: 0
   },
   {
     id: 'shape-rounded-rect',
+    shapeType: 'roundedRectangle',
     name: 'Rounded Rectangle',
     category: 'basic',
     description: 'Smooth 28mm radius crystal corners for modern displays.',
@@ -1491,13 +1825,12 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
     borderRadiusClass: 'rounded-3xl',
     clipPathStyle: 'inset(0 round 28px)',
     isSingleDimension: false,
-    image: '/images/acrylic/shapes/rounded-rectangle.jpg',
+    image: '',
     priceAddon: 0
   },
-
-  // Special Shapes
   {
     id: 'shape-heart',
+    shapeType: 'heart',
     name: 'Heart',
     category: 'special',
     description: 'Romantic heart contour for weddings & anniversaries.',
@@ -1507,11 +1840,12 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
     svgClipId: 'acrylic-clip-shape-heart',
     clipPathStyle: 'url(#acrylic-clip-shape-heart)',
     isSingleDimension: true,
-    image: '/images/acrylic/shapes/heart.jpg',
+    image: '',
     priceAddon: 150
   },
   {
     id: 'shape-hexagon',
+    shapeType: 'hexagon',
     name: 'Hexagon',
     category: 'special',
     description: 'Geometric 6-sided honeycomb block for modern clusters.',
@@ -1520,130 +1854,161 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
     borderRadiusClass: 'rounded-none',
     clipPathStyle: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
     isSingleDimension: true,
-    image: '/images/acrylic/shapes/hexagon.jpg',
+    image: '',
     priceAddon: 150
-  },
-  {
-    id: 'shape-octagon',
-    name: 'Octagon',
-    category: 'special',
-    description: 'Symmetrical 8-sided geometric architectural cut.',
-    aspectClass: 'aspect-square',
-    aspectRatio: 1,
-    borderRadiusClass: 'rounded-none',
-    clipPathStyle: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
-    isSingleDimension: true,
-    image: '/images/acrylic/shapes/octagon.jpg',
-    priceAddon: 150
-  },
-  {
-    id: 'shape-diamond',
-    name: 'Diamond',
-    category: 'special',
-    description: 'Rhombus diamond cut for dramatic wall accents.',
-    aspectClass: 'aspect-square',
-    aspectRatio: 1,
-    borderRadiusClass: 'rounded-none',
-    clipPathStyle: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-    isSingleDimension: true,
-    image: '/images/acrylic/shapes/diamond.jpg',
-    priceAddon: 150
-  },
-  {
-    id: 'shape-triangle',
-    name: 'Triangle',
-    category: 'special',
-    description: 'Modern 3-sided geometric prism layout.',
-    aspectClass: 'aspect-square',
-    aspectRatio: 1,
-    borderRadiusClass: 'rounded-none',
-    clipPathStyle: 'polygon(50% 0%, 100% 100%, 0% 100%)',
-    isSingleDimension: true,
-    image: '/images/acrylic/shapes/triangle.jpg',
-    priceAddon: 150
-  },
-  {
-    id: 'shape-arch',
-    name: 'Arch',
-    category: 'special',
-    description: 'Trendy domed archway contour for elegant decor.',
-    aspectClass: 'aspect-[3/4]',
-    aspectRatio: 0.75,
-    borderRadiusClass: 'rounded-t-full',
-    clipPathStyle: 'inset(0 round 50% 50% 0 0)',
-    isSingleDimension: false,
-    image: '/images/acrylic/shapes/arch.jpg',
-    priceAddon: 150
-  },
-
-  // Decorative Shapes
-  {
-    id: 'shape-star',
-    name: 'Star',
-    category: 'decorative',
-    description: '5-pointed celestial star cut for celebratory awards.',
-    aspectClass: 'aspect-square',
-    aspectRatio: 1,
-    borderRadiusClass: 'rounded-none',
-    clipPathStyle: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
-    isSingleDimension: true,
-    image: '/images/acrylic/shapes/star.jpg',
-    priceAddon: 199
-  },
-  {
-    id: 'shape-capsule',
-    name: 'Capsule',
-    category: 'decorative',
-    description: 'Smooth pill-shaped continuous rounded contour.',
-    aspectClass: 'aspect-[16/10]',
-    aspectRatio: 1.6,
-    borderRadiusClass: 'rounded-full',
-    clipPathStyle: 'inset(0 round 9999px)',
-    isSingleDimension: false,
-    image: '/images/acrylic/shapes/capsule.jpg',
-    priceAddon: 150
-  },
-  {
-    id: 'shape-scalloped',
-    name: 'Scalloped Badge',
-    category: 'decorative',
-    description: 'Vintage scalloped rim medal silhouette.',
-    aspectClass: 'aspect-square',
-    aspectRatio: 1,
-    borderRadiusClass: 'rounded-full',
-    clipPathStyle: 'circle(50% at 50% 50%)',
-    isSingleDimension: true,
-    image: '/images/acrylic/shapes/scalloped.jpg',
-    priceAddon: 199
-  },
-  {
-    id: 'shape-shield',
-    name: 'Shield Crest',
-    category: 'decorative',
-    description: 'Heroic coat-of-arms crest shape.',
-    aspectClass: 'aspect-[3/4]',
-    aspectRatio: 0.75,
-    borderRadiusClass: 'rounded-none',
-    clipPathStyle: 'polygon(50% 0%, 100% 20%, 100% 70%, 50% 100%, 0% 70%, 0% 20%)',
-    isSingleDimension: false,
-    image: '/images/acrylic/shapes/shield.jpg',
-    priceAddon: 199
   }
 ];
 
 export const ACRYLIC_9_SHAPES = ACRYLIC_SHAPES;
+
+export function getCompatibleShapesForProduct(productId: string): AcrylicShapeOption[] {
+  const allowedIds =
+    AcrylicProductShapeConfig[productId] || AcrylicProductShapeConfig['acrylic-photo-panel'];
+  return allowedIds
+    .map((id) => ACRYLIC_SHAPES.find((s) => s.id === id))
+    .filter((s): s is AcrylicShapeOption => Boolean(s));
+}
 
 // ============================================================================
 // SHAPE-SPECIFIC SIZES & COMPATIBILITY HELPERS (Sections 8 & 9)
 // ============================================================================
 
 export function getSizesForShape(shapeId: string, productTypeId: string = 'acrylic-photo-panel'): SizeOption[] {
+  const requiredSquareSizes: SizeOption[] = [
+    {
+      id: `${shapeId}-10x10`,
+      productTypeId,
+      category: 'SQUARE',
+      label: '10" × 10"',
+      dimensionsSummary: '10" × 10"',
+      widthInches: 10,
+      heightInches: 10,
+      price: 799,
+      aspectClass: 'aspect-square',
+      image: '/assets/customizer/acrylic/sizes/square.svg'
+    },
+    {
+      id: `${shapeId}-16x16`,
+      productTypeId,
+      category: 'SQUARE',
+      label: '16" × 16"',
+      dimensionsSummary: '16" × 16"',
+      widthInches: 16,
+      heightInches: 16,
+      price: 1799,
+      aspectClass: 'aspect-square',
+      image: '/assets/customizer/acrylic/sizes/square.svg'
+    },
+    {
+      id: `${shapeId}-18x18`,
+      productTypeId,
+      category: 'SQUARE',
+      label: '18" × 18"',
+      dimensionsSummary: '18" × 18"',
+      widthInches: 18,
+      heightInches: 18,
+      price: 2299,
+      aspectClass: 'aspect-square',
+      image: '/assets/customizer/acrylic/sizes/square.svg'
+    },
+    {
+      id: `${shapeId}-20x20`,
+      productTypeId,
+      category: 'SQUARE',
+      label: '20" × 20"',
+      dimensionsSummary: '20" × 20"',
+      widthInches: 20,
+      heightInches: 20,
+      price: 2799,
+      aspectClass: 'aspect-square',
+      image: '/assets/customizer/acrylic/sizes/square.svg'
+    }
+  ];
+
+  const ensureSquareSizes = (baseSizes: SizeOption[]): SizeOption[] => {
+    const existingLabels = new Set(baseSizes.map((s) => s.label));
+    const missing = requiredSquareSizes.filter((sq) => !existingLabels.has(sq.label));
+    return [...baseSizes, ...missing];
+  };
+
   // 1. Single dimension shapes (Circle, Heart, Star, Scalloped, Organic Blob)
   if (['shape-circle', 'shape-heart', 'shape-star', 'shape-scalloped', 'shape-organic-blob'].includes(shapeId)) {
     const isCircle = shapeId === 'shape-circle';
     const isHeart = shapeId === 'shape-heart';
     const prefix = isCircle ? 'Circle' : isHeart ? 'Heart' : 'Size';
-    return [
+    return ensureSquareSizes([
+      {
+        id: `${shapeId}-8x8`,
+        productTypeId,
+        category: 'SQUARE',
+        label: '8" × 8"',
+        dimensionsSummary: '8" × 8"',
+        widthInches: 8,
+        heightInches: 8,
+        price: 799,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-10x10`,
+        productTypeId,
+        category: 'SQUARE',
+        label: '10" × 10"',
+        dimensionsSummary: '10" × 10"',
+        widthInches: 10,
+        heightInches: 10,
+        price: 799,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-12x12`,
+        productTypeId,
+        category: 'SQUARE',
+        label: '12" × 12"',
+        dimensionsSummary: '12" × 12"',
+        widthInches: 12,
+        heightInches: 12,
+        price: 999,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-16x16`,
+        productTypeId,
+        category: 'SQUARE',
+        label: '16" × 16"',
+        dimensionsSummary: '16" × 16"',
+        widthInches: 16,
+        heightInches: 16,
+        price: 1799,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-18x18`,
+        productTypeId,
+        category: 'SQUARE',
+        label: '18" × 18"',
+        dimensionsSummary: '18" × 18"',
+        widthInches: 18,
+        heightInches: 18,
+        price: 2299,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-20x20`,
+        productTypeId,
+        category: 'SQUARE',
+        label: '20" × 20"',
+        dimensionsSummary: '20" × 20"',
+        widthInches: 20,
+        heightInches: 20,
+        price: 2799,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
       {
         id: `${shapeId}-4`,
         productTypeId,
@@ -1667,56 +2032,8 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
         price: 549,
         aspectClass: 'aspect-square',
         image: '/assets/customizer/acrylic/sizes/square.svg'
-      },
-      {
-        id: `${shapeId}-8`,
-        productTypeId,
-        category: 'RECOMMENDED',
-        label: `8" ${prefix}`,
-        dimensionsSummary: '8" Dia',
-        widthInches: 8,
-        heightInches: 8,
-        price: 799,
-        aspectClass: 'aspect-square',
-        image: '/assets/customizer/acrylic/sizes/square.svg'
-      },
-      {
-        id: `${shapeId}-10`,
-        productTypeId,
-        category: 'RECOMMENDED',
-        label: `10" ${prefix}`,
-        dimensionsSummary: '10" Dia',
-        widthInches: 10,
-        heightInches: 10,
-        price: 1099,
-        aspectClass: 'aspect-square',
-        image: '/assets/customizer/acrylic/sizes/square.svg'
-      },
-      {
-        id: `${shapeId}-12`,
-        productTypeId,
-        category: 'RECOMMENDED',
-        label: `12" ${prefix}`,
-        dimensionsSummary: '12" Dia',
-        widthInches: 12,
-        heightInches: 12,
-        price: 1499,
-        aspectClass: 'aspect-square',
-        image: '/assets/customizer/acrylic/sizes/square.svg'
-      },
-      {
-        id: `${shapeId}-16`,
-        productTypeId,
-        category: 'LARGE',
-        label: `16" ${prefix}`,
-        dimensionsSummary: '16" Dia',
-        widthInches: 16,
-        heightInches: 16,
-        price: 2299,
-        aspectClass: 'aspect-square',
-        image: '/assets/customizer/acrylic/sizes/large.svg'
       }
-    ];
+    ]);
   }
 
   // 2. Square & symmetrical polygons (Square, Hexagon, Octagon, Diamond, Triangle)
@@ -1766,7 +2083,7 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
         dimensionsSummary: '10" × 10"',
         widthInches: 10,
         heightInches: 10,
-        price: 1099,
+        price: 799,
         aspectClass: 'aspect-square',
         image: '/assets/customizer/acrylic/sizes/square.svg'
       },
@@ -1778,28 +2095,64 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
         dimensionsSummary: '12" × 12"',
         widthInches: 12,
         heightInches: 12,
-        price: 1499,
+        price: 999,
         aspectClass: 'aspect-square',
         image: '/assets/customizer/acrylic/sizes/square.svg'
       },
       {
         id: `${shapeId}-16x16`,
         productTypeId,
-        category: 'LARGE',
+        category: 'SQUARE',
         label: '16" × 16"',
         dimensionsSummary: '16" × 16"',
         widthInches: 16,
         heightInches: 16,
+        price: 1799,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-18x18`,
+        productTypeId,
+        category: 'SQUARE',
+        label: '18" × 18"',
+        dimensionsSummary: '18" × 18"',
+        widthInches: 18,
+        heightInches: 18,
         price: 2299,
         aspectClass: 'aspect-square',
-        image: '/assets/customizer/acrylic/sizes/large.svg'
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      },
+      {
+        id: `${shapeId}-20x20`,
+        productTypeId,
+        category: 'SQUARE',
+        label: '20" × 20"',
+        dimensionsSummary: '20" × 20"',
+        widthInches: 20,
+        heightInches: 20,
+        price: 2799,
+        aspectClass: 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
       }
     ];
   }
 
   // 3. Landscape & horizontal rectangular shapes
   if (['shape-landscape', 'shape-rounded-rect', 'shape-cloud', 'shape-speech-bubble', 'shape-photo-frame'].includes(shapeId)) {
-    return [
+    return ensureSquareSizes([
+      {
+        id: `${shapeId}-12x8`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: '12" × 8"',
+        dimensionsSummary: '12" × 8"',
+        widthInches: 12,
+        heightInches: 8,
+        price: 1099,
+        aspectClass: 'aspect-[12/8]',
+        image: '/assets/customizer/acrylic/sizes/landscape.svg'
+      },
       {
         id: `${shapeId}-8x6`,
         productTypeId,
@@ -1825,18 +2178,6 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
         image: '/assets/customizer/acrylic/sizes/landscape.svg'
       },
       {
-        id: `${shapeId}-12x8`,
-        productTypeId,
-        category: 'RECOMMENDED',
-        label: '12" × 8"',
-        dimensionsSummary: '12" × 8"',
-        widthInches: 12,
-        heightInches: 8,
-        price: 1099,
-        aspectClass: 'aspect-[12/8]',
-        image: '/assets/customizer/acrylic/sizes/landscape.svg'
-      },
-      {
         id: `${shapeId}-16x10`,
         productTypeId,
         category: 'LARGE',
@@ -1859,25 +2200,25 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
         price: 2199,
         aspectClass: 'aspect-[18/12]',
         image: '/assets/customizer/acrylic/sizes/large.svg'
+      },
+      {
+        id: `${shapeId}-20x16`,
+        productTypeId,
+        category: 'LARGE',
+        label: '20" × 16"',
+        dimensionsSummary: '20" × 16"',
+        widthInches: 20,
+        heightInches: 16,
+        price: 2499,
+        aspectClass: 'aspect-[5/4]',
+        image: '/assets/customizer/acrylic/sizes/large.svg'
       }
-    ];
+    ]);
   }
 
   // 4. Portrait & vertical shapes (Portrait, Arch, Tag, Polaroid)
   if (['shape-portrait', 'shape-arch', 'shape-tag', 'shape-polaroid'].includes(shapeId)) {
-    return [
-      {
-        id: `${shapeId}-6x8`,
-        productTypeId,
-        category: 'RECOMMENDED',
-        label: '6" × 8"',
-        dimensionsSummary: '6" × 8"',
-        widthInches: 6,
-        heightInches: 8,
-        price: 699,
-        aspectClass: 'aspect-[3/4]',
-        image: '/assets/customizer/acrylic/sizes/landscape.svg'
-      },
+    return ensureSquareSizes([
       {
         id: `${shapeId}-8x10`,
         productTypeId,
@@ -1888,7 +2229,19 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
         heightInches: 10,
         price: 899,
         aspectClass: 'aspect-[4/5]',
-        image: '/assets/customizer/acrylic/sizes/landscape.svg'
+        image: '/assets/customizer/acrylic/sizes/portrait.svg'
+      },
+      {
+        id: `${shapeId}-6x8`,
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: '6" × 8"',
+        dimensionsSummary: '6" × 8"',
+        widthInches: 6,
+        heightInches: 8,
+        price: 699,
+        aspectClass: 'aspect-[3/4]',
+        image: '/assets/customizer/acrylic/sizes/portrait.svg'
       },
       {
         id: `${shapeId}-10x12`,
@@ -1900,7 +2253,7 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
         heightInches: 12,
         price: 1199,
         aspectClass: 'aspect-[5/6]',
-        image: '/assets/customizer/acrylic/sizes/landscape.svg'
+        image: '/assets/customizer/acrylic/sizes/portrait.svg'
       },
       {
         id: `${shapeId}-12x16`,
@@ -1926,24 +2279,12 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
         aspectClass: 'aspect-[4/5]',
         image: '/assets/customizer/acrylic/sizes/large.svg'
       }
-    ];
+    ]);
   }
 
   // 5. Oval shapes
   if (shapeId === 'shape-oval') {
-    return [
-      {
-        id: 'oval-6x4',
-        productTypeId,
-        category: 'RECOMMENDED',
-        label: '6" × 4"',
-        dimensionsSummary: '6" × 4"',
-        widthInches: 6,
-        heightInches: 4,
-        price: 599,
-        aspectClass: 'aspect-[3/2]',
-        image: '/assets/customizer/acrylic/sizes/landscape.svg'
-      },
+    return ensureSquareSizes([
       {
         id: 'oval-8x5',
         productTypeId,
@@ -1954,6 +2295,18 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
         heightInches: 5,
         price: 799,
         aspectClass: 'aspect-[8/5]',
+        image: '/assets/customizer/acrylic/sizes/landscape.svg'
+      },
+      {
+        id: 'oval-6x4',
+        productTypeId,
+        category: 'RECOMMENDED',
+        label: '6" × 4"',
+        dimensionsSummary: '6" × 4"',
+        widthInches: 6,
+        heightInches: 4,
+        price: 599,
+        aspectClass: 'aspect-[3/2]',
         image: '/assets/customizer/acrylic/sizes/landscape.svg'
       },
       {
@@ -1992,12 +2345,12 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
         aspectClass: 'aspect-[16/10]',
         image: '/assets/customizer/acrylic/sizes/large.svg'
       }
-    ];
+    ]);
   }
 
   // 6. Capsule & Ticket elongated shapes (2:1)
   if (['shape-capsule', 'shape-ticket'].includes(shapeId)) {
-    return [
+    return ensureSquareSizes([
       {
         id: `${shapeId}-8x4`,
         productTypeId,
@@ -2046,33 +2399,21 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
         aspectClass: 'aspect-[2/1]',
         image: '/assets/customizer/acrylic/sizes/large.svg'
       }
-    ];
+    ]);
   }
 
-  // 7. Default standard Rectangle (4x6, 5x7, 8x10, 10x12, 12x18, 16x24)
-  return [
+  // 7. Default standard Rectangle (starts with 12" × 8" rectangle, includes all standard rectangular & square sizes)
+  return ensureSquareSizes([
     {
-      id: `${shapeId}-4x6`,
+      id: `${shapeId}-12x8`,
       productTypeId,
       category: 'RECOMMENDED',
-      label: '4" × 6"',
-      dimensionsSummary: '4" × 6"',
-      widthInches: 6,
-      heightInches: 4,
-      price: 449,
+      label: '12" × 8"',
+      dimensionsSummary: '12" × 8"',
+      widthInches: 12,
+      heightInches: 8,
+      price: 899,
       aspectClass: 'aspect-[3/2]',
-      image: '/assets/customizer/acrylic/sizes/landscape.svg'
-    },
-    {
-      id: `${shapeId}-5x7`,
-      productTypeId,
-      category: 'RECOMMENDED',
-      label: '5" × 7"',
-      dimensionsSummary: '5" × 7"',
-      widthInches: 7,
-      heightInches: 5,
-      price: 599,
-      aspectClass: 'aspect-[7/5]',
       image: '/assets/customizer/acrylic/sizes/landscape.svg'
     },
     {
@@ -2081,11 +2422,11 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
       category: 'RECOMMENDED',
       label: '8" × 10"',
       dimensionsSummary: '8" × 10"',
-      widthInches: 10,
-      heightInches: 8,
+      widthInches: 8,
+      heightInches: 10,
       price: 799,
-      aspectClass: 'aspect-[5/4]',
-      image: '/assets/customizer/acrylic/sizes/landscape.svg'
+      aspectClass: 'aspect-[4/5]',
+      image: '/assets/customizer/acrylic/sizes/portrait.svg'
     },
     {
       id: `${shapeId}-10x12`,
@@ -2093,11 +2434,11 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
       category: 'RECOMMENDED',
       label: '10" × 12"',
       dimensionsSummary: '10" × 12"',
-      widthInches: 12,
-      heightInches: 10,
+      widthInches: 10,
+      heightInches: 12,
       price: 1199,
-      aspectClass: 'aspect-[6/5]',
-      image: '/assets/customizer/acrylic/sizes/landscape.svg'
+      aspectClass: 'aspect-[5/6]',
+      image: '/assets/customizer/acrylic/sizes/portrait.svg'
     },
     {
       id: `${shapeId}-12x18`,
@@ -2105,10 +2446,34 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
       category: 'RECOMMENDED',
       label: '12" × 18"',
       dimensionsSummary: '12" × 18"',
-      widthInches: 18,
-      heightInches: 12,
+      widthInches: 12,
+      heightInches: 18,
       price: 1699,
-      aspectClass: 'aspect-[3/2]',
+      aspectClass: 'aspect-[2/3]',
+      image: '/assets/customizer/acrylic/sizes/portrait.svg'
+    },
+    {
+      id: `${shapeId}-16x20`,
+      productTypeId,
+      category: 'LARGE',
+      label: '16" × 20"',
+      dimensionsSummary: '16" × 20"',
+      widthInches: 16,
+      heightInches: 20,
+      price: 2499,
+      aspectClass: 'aspect-[4/5]',
+      image: '/assets/customizer/acrylic/sizes/large.svg'
+    },
+    {
+      id: `${shapeId}-20x16`,
+      productTypeId,
+      category: 'LARGE',
+      label: '20" × 16"',
+      dimensionsSummary: '20" × 16"',
+      widthInches: 20,
+      heightInches: 16,
+      price: 2499,
+      aspectClass: 'aspect-[5/4]',
       image: '/assets/customizer/acrylic/sizes/landscape.svg'
     },
     {
@@ -2117,13 +2482,37 @@ export function getSizesForShape(shapeId: string, productTypeId: string = 'acryl
       category: 'LARGE',
       label: '16" × 24"',
       dimensionsSummary: '16" × 24"',
-      widthInches: 24,
-      heightInches: 16,
+      widthInches: 16,
+      heightInches: 24,
       price: 2799,
-      aspectClass: 'aspect-[3/2]',
+      aspectClass: 'aspect-[2/3]',
       image: '/assets/customizer/acrylic/sizes/large.svg'
+    },
+    {
+      id: `${shapeId}-4x6`,
+      productTypeId,
+      category: 'RECOMMENDED',
+      label: '4" × 6"',
+      dimensionsSummary: '4" × 6"',
+      widthInches: 4,
+      heightInches: 6,
+      price: 449,
+      aspectClass: 'aspect-[2/3]',
+      image: '/assets/customizer/acrylic/sizes/portrait.svg'
+    },
+    {
+      id: `${shapeId}-5x7`,
+      productTypeId,
+      category: 'RECOMMENDED',
+      label: '5" × 7"',
+      dimensionsSummary: '5" × 7"',
+      widthInches: 5,
+      heightInches: 7,
+      price: 599,
+      aspectClass: 'aspect-[5/7]',
+      image: '/assets/customizer/acrylic/sizes/portrait.svg'
     }
-  ];
+  ]);
 }
 
 

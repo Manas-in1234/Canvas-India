@@ -69,7 +69,11 @@ import {
   ACRYLIC_WRAP_OPTIONS,
   AcrylicShapeOption,
   ACRYLIC_SHAPES,
+  getCompatibleShapesForProduct,
   getSizesForShape,
+  getCompatibleHardwareForProduct,
+  normalizeAcrylicHardwareId,
+  getHardwarePointsForShape,
   ACRYLIC_BACKGROUNDS,
   ACRYLIC_BORDER_WIDTHS,
   ACRYLIC_BORDER_COLORS,
@@ -84,9 +88,9 @@ import {
 } from '../data/acrylicCustomizerData';
 import { AcrylicLiveTextEditor, TextElement } from '../components/AcrylicLiveTextEditor';
 import { AcrylicClipartModal, ClipartElement } from '../components/AcrylicClipartModal';
-import { AcrylicRoomViewModal } from '../components/AcrylicRoomViewModal';
+import { AcrylicRoomViewModal, RoomPlacementState } from '../components/AcrylicRoomViewModal';
 import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
-import { AcrylicProductIcon } from '../components/AcrylicProductIcon';
+import { CustomizerProductSelector } from '../components/CustomizerProductSelector';
 import { ClipartItem } from '../data/acrylicClipartData';
 
 // ============================================================================
@@ -147,17 +151,43 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const navigate = useNavigate();
   const { allProducts, onAddToCartCustomized } = useShop();
 
-  // Matched catalog product
+  // Matched catalog product with safe fallback so route never renders blank even if catalog is empty
   const catalogProduct = useMemo(() => {
-    return allProducts.find(
-      (p) => (p.id === productId || p.slug === productId) && p.categorySlug === 'acrylic'
-    ) || allProducts.find((p) => p.categorySlug === 'acrylic') || allProducts[0];
+    const safeList = Array.isArray(allProducts) ? allProducts : [];
+    return (
+      safeList.find(
+        (p) => (p.id === productId || p.slug === productId) && p.categorySlug === 'acrylic'
+      ) ||
+      safeList.find((p) => p.categorySlug === 'acrylic') ||
+      safeList[0] || {
+        id: productId || 'acrylic-rectangle-print',
+        slug: productId || 'acrylic-rectangle-print',
+        name: 'Acrylic Print',
+        categorySlug: 'acrylic' as const,
+        price: 355,
+        originalPrice: 710,
+        rating: 4.9,
+        reviewsCount: 128,
+        image: '/images/acrylic/shapes/landscape.svg',
+        images: ['/images/acrylic/shapes/landscape.svg'],
+        sizes: [],
+        thicknesses: ['3mm', '5mm', '8mm'],
+        orientations: ['Landscape', 'Portrait', 'Square'],
+        description: 'Vibrant direct UV sub-surface print on crystal acrylic.',
+        highlights: [],
+        inStock: true
+      }
+    );
   }, [allProducts, productId]);
 
   // Active Left Toolbar Tab
   const [activeTab, setActiveTab] = useState<ToolbarTab>('PRODUCTS');
 
-  // Resolve initial Acrylic Product ID from URL param or catalog product
+  // Track whether the user has explicitly selected a custom shape or layout in the SHAPES / LAYOUTS tabs
+  const hasUserSelectedCustomShapeRef = useRef<boolean>(false);
+  const hasUserSelectedCustomLayoutRef = useRef<boolean>(false);
+
+  // Resolve initial Acrylic Product ID from URL param or catalog product (strictly within the 5 Acrylic products)
   const resolveProductTypeId = (urlId?: string, catProd?: { id?: string; slug?: string; name?: string }): string => {
     const directMatch = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === urlId);
     if (directMatch) return directMatch.id;
@@ -165,8 +195,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
     if (key.includes('block')) return 'acrylic-photo-block';
     if (key.includes('wall') || key.includes('display')) return 'acrylic-wall-art';
     if (key.includes('collage')) return 'acrylic-collage';
-    if (key.includes('split')) return 'acrylic-split';
-    if (key.includes('signage')) return 'acrylic-signage';
     if (key.includes('print') && !key.includes('panel')) return 'acrylic-print';
     if (key.includes('panel')) return 'acrylic-photo-panel';
     return 'acrylic-photo-panel';
@@ -181,31 +209,70 @@ export const AcrylicCustomizerPage: React.FC = () => {
     return ACRYLIC_PRODUCT_TYPES.find((pt) => pt.id === selectedProductTypeId) || ACRYLIC_PRODUCT_TYPES[0];
   }, [selectedProductTypeId]);
 
+  // Product-Specific Compatible Shapes (Centralized via AcrylicProductShapeConfig)
+  const compatibleShapes = useMemo(() => {
+    return getCompatibleShapesForProduct(selectedProductTypeId);
+  }, [selectedProductTypeId]);
+
+  // Full Hardware Options (all 7 restored hardware options from HARDWARE_OPTIONS)
+  const compatibleHardware = useMemo(() => {
+    return getCompatibleHardwareForProduct(selectedProductTypeId);
+  }, [selectedProductTypeId]);
+
   // Size Category filter tabs in SELECT SIZE panel
   const [sizeCategory, setSizeCategory] = useState<SizeCategory>('RECOMMENDED');
 
-  // Shape Selection State (SHAPES Tab - 9 practical shapes, independent of product)
+  // Shape Selection State (Filtered by selected Acrylic product)
   const [selectedShapeId, setSelectedShapeId] = useState<string>(() => {
-    const paramShape = searchParams.get('shape');
+    const initProdId = resolveProductTypeId(productId, catalogProduct);
+    const initAllowedShapes = getCompatibleShapesForProduct(initProdId);
+    const paramShape = searchParams.get('shape')?.toLowerCase();
     if (paramShape) {
-      const match = ACRYLIC_SHAPES.find(s => s.id === paramShape || s.id === `shape-${paramShape}`);
+      const match = initAllowedShapes.find(
+        (s) => s.id.toLowerCase() === paramShape || s.id.toLowerCase() === `shape-${paramShape}`
+      );
       if (match) return match.id;
     }
     if (catalogProduct?.shape) {
-      const match = ACRYLIC_SHAPES.find(s => s.id === catalogProduct.shape || s.id === `shape-${catalogProduct.shape}`);
+      const catShape = String(catalogProduct.shape).toLowerCase();
+      const match = initAllowedShapes.find(
+        (s) => s.id.toLowerCase() === catShape || s.id.toLowerCase() === `shape-${catShape}`
+      );
       if (match) return match.id;
     }
-    if (catalogProduct?.shapes && catalogProduct.shapes.length > 0) {
-      const s0 = catalogProduct.shapes[0];
-      const match = ACRYLIC_SHAPES.find(s => s.id === s0 || s.id === `shape-${s0}`);
-      if (match) return match.id;
+    if (productId) {
+      const lowerSlug = productId.toLowerCase();
+      const slugShapeMatch = initAllowedShapes.find((s) =>
+        lowerSlug.includes(s.id.replace('shape-', '').toLowerCase())
+      );
+      if (slugShapeMatch) return slugShapeMatch.id;
     }
-    return 'shape-square';
+    const initProd = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === initProdId);
+    if (initProd?.defaultShape && initAllowedShapes.some((s) => s.id === initProd.defaultShape)) {
+      return initProd.defaultShape;
+    }
+    return initAllowedShapes[0]?.id || 'shape-square';
   });
 
+  // Automatically fallback to the product's default shape (or first compatible shape) if current shape is incompatible
+  useEffect(() => {
+    if (compatibleShapes.length > 0 && !compatibleShapes.some((s) => s.id === selectedShapeId)) {
+      const defaultShape =
+        selectedProductType?.defaultShape && compatibleShapes.some((s) => s.id === selectedProductType.defaultShape)
+          ? selectedProductType.defaultShape
+          : compatibleShapes[0].id;
+      setSelectedShapeId(defaultShape);
+    }
+  }, [compatibleShapes, selectedShapeId, selectedProductType]);
+
   const currentShape = useMemo(() => {
-    return ACRYLIC_SHAPES.find((s) => s.id === selectedShapeId) || ACRYLIC_SHAPES[0];
-  }, [selectedShapeId]);
+    return (
+      compatibleShapes.find((s) => s.id === selectedShapeId) ||
+      ACRYLIC_SHAPES.find((s) => s.id === selectedShapeId) ||
+      compatibleShapes[0] ||
+      ACRYLIC_SHAPES[0]
+    );
+  }, [compatibleShapes, selectedShapeId]);
 
   const isCurvedShape = useMemo(() => {
     return CURVED_GEOMETRIC_SHAPES.includes(selectedShapeId);
@@ -219,14 +286,22 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // Selected Size Option
   const [selectedSizeId, setSelectedSizeId] = useState<string>(() => {
     const defaultSizes = getSizesForShape(selectedShapeId, selectedProductTypeId);
+    const initProd = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === selectedProductTypeId);
+    if (initProd?.defaultSizeOptionId) {
+      const matched = defaultSizes.find((s) => s.id === initProd.defaultSizeOptionId);
+      if (matched) return matched.id;
+    }
     return defaultSizes[0]?.id || 'shape-square-8x8';
   });
 
   useEffect(() => {
     if (shapeSizes.length > 0 && !shapeSizes.some((s) => s.id === selectedSizeId)) {
-      setSelectedSizeId(shapeSizes[0]?.id);
+      const defaultMatched = selectedProductType?.defaultSizeOptionId
+        ? shapeSizes.find((s) => s.id === selectedProductType.defaultSizeOptionId)
+        : undefined;
+      setSelectedSizeId(defaultMatched?.id || shapeSizes[0]?.id);
     }
-  }, [shapeSizes, selectedSizeId]);
+  }, [shapeSizes, selectedSizeId, selectedProductType]);
 
   // Custom Size controls (1" × 1" up to 44" × 44")
   const [isCustomSize, setIsCustomSize] = useState<boolean>(false);
@@ -318,8 +393,21 @@ export const AcrylicCustomizerPage: React.FC = () => {
     panelIndex: 0
   });
 
-  // Hardware & Finish States
-  const [selectedHardwareId, setSelectedHardwareId] = useState<string>('standoff-mounts');
+  // Hardware & Finish States (All 7 restored hardware options available)
+  const [selectedHardwareId, setSelectedHardwareId] = useState<string>(() => {
+    const initProdId = resolveProductTypeId(productId, catalogProduct);
+    const initProd = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === initProdId);
+    return normalizeAcrylicHardwareId(initProd?.defaultHardwareId || 'hooks-hanging');
+  });
+
+  // Normalize hardware ID if any legacy alias is encountered
+  useEffect(() => {
+    const normalized = normalizeAcrylicHardwareId(selectedHardwareId);
+    if (normalized !== selectedHardwareId) {
+      setSelectedHardwareId(normalized);
+    }
+  }, [selectedHardwareId]);
+
   const [selectedDisplayOptionId, setSelectedDisplayOptionId] = useState<string>('display-standoff');
   const [selectedFinishId, setSelectedFinishId] = useState<string>('high-gloss');
   const [selectedFrameId, setSelectedFrameId] = useState<string>('frame-none');
@@ -338,6 +426,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Room View state
   const [showRoomView, setShowRoomView] = useState<boolean>(false);
+  const [roomViewState, setRoomViewState] = useState<RoomPlacementState>({
+    roomPreset: 'office',
+    customRoomUrl: null,
+    productRoomX: 0.22,
+    productRoomY: 0.33
+  });
 
   // Add Text Editor Popover State
   const [showTextModal, setShowTextModal] = useState<boolean>(false);
@@ -684,12 +778,36 @@ export const AcrylicCustomizerPage: React.FC = () => {
   }, [isCustomSize, customWidth, customHeight, currentShape, currentSizeOption]);
 
   const effectiveWidthInches = useMemo(() => {
-    return isCustomSize ? customWidth : (currentSizeOption?.widthInches || 12);
-  }, [isCustomSize, customWidth, currentSizeOption]);
+    const rawW = isCustomSize ? customWidth : (currentSizeOption?.widthInches || 12);
+    const rawH = isCustomSize ? customHeight : (currentSizeOption?.heightInches || 12);
+    if (['shape-square', 'shape-circle', 'shape-heart', 'shape-hexagon'].includes(selectedShapeId)) {
+      return Math.max(rawW, rawH);
+    }
+    if (['shape-landscape', 'shape-oval'].includes(selectedShapeId)) {
+      if (rawW < rawH) return rawH;
+      if (rawW === rawH) return Math.round(rawH * 1.35);
+    }
+    if (selectedShapeId === 'shape-portrait') {
+      if (rawW > rawH) return rawH;
+    }
+    return rawW;
+  }, [isCustomSize, customWidth, customHeight, currentSizeOption, selectedShapeId]);
 
   const effectiveHeightInches = useMemo(() => {
-    return isCustomSize ? customHeight : (currentSizeOption?.heightInches || 12);
-  }, [isCustomSize, customHeight, currentSizeOption]);
+    const rawW = isCustomSize ? customWidth : (currentSizeOption?.widthInches || 12);
+    const rawH = isCustomSize ? customHeight : (currentSizeOption?.heightInches || 12);
+    if (['shape-square', 'shape-circle', 'shape-heart', 'shape-hexagon'].includes(selectedShapeId)) {
+      return Math.max(rawW, rawH);
+    }
+    if (['shape-landscape', 'shape-oval'].includes(selectedShapeId)) {
+      if (rawW < rawH) return rawW;
+    }
+    if (selectedShapeId === 'shape-portrait') {
+      if (rawH < rawW) return rawW;
+      if (rawH === rawW) return Math.round(rawW * 1.35);
+    }
+    return rawH;
+  }, [isCustomSize, customWidth, customHeight, currentSizeOption, selectedShapeId]);
 
   const productAspectRatio = useMemo(() => {
     return Math.max(0.2, effectiveWidthInches / Math.max(1, effectiveHeightInches));
@@ -1045,30 +1163,78 @@ export const AcrylicCustomizerPage: React.FC = () => {
     window.addEventListener('pointerup', onUp);
   };
 
-  // Text Elements Management
+  // Remove any empty text objects (text.trim() === "") across all slots
+  const pruneEmptyTextElements = (keepId?: string) => {
+    setPanelImages((prev) => {
+      let changed = false;
+      const next: Record<number, PanelImageState> = { ...prev };
+      Object.keys(next).forEach((key) => {
+        const idx = Number(key);
+        const slotState = next[idx];
+        if (!slotState?.textElements?.length) return;
+        const filtered = slotState.textElements.filter(
+          (t) => t.id === keepId || t.text.trim().length > 0
+        );
+        if (filtered.length !== slotState.textElements.length) {
+          changed = true;
+          next[idx] = {
+            ...slotState,
+            textElements: filtered
+          };
+        }
+      });
+      return changed ? next : prev;
+    });
+  };
+
+  // Text Elements Management — NEVER insert default visible text
   const handleAddNewText = () => {
+    const activeSlot = panelImages[activePanelIndex] || createDefaultPanelState(null);
+    const existingEmpty = activeSlot.textElements.find((t) => t.text.trim() === '');
+    if (existingEmpty) {
+      setSelectedElement({ type: 'text', panelIndex: activePanelIndex, elementId: existingEmpty.id });
+      setShowTextModal(true);
+      return;
+    }
+
     const newId = `text-${Date.now()}`;
+    const hasPhotoInSlot = !!activeSlot.imageUrl;
     const newTextObj: TextElement = {
       id: newId,
-      text: 'Captured Moments',
+      text: '',
       fontFamily: '"Playfair Display", Georgia, serif',
       fontSize: 26,
       fontWeight: 'bold',
-      color: '#FFFFFF',
+      color: hasPhotoInSlot ? '#FFFFFF' : '#0F172A',
       alignment: 'center',
       lineHeight: 1.2,
       letterSpacing: 0,
       rotation: 0,
       x: 0,
-      y: 30
+      y: 0
     };
 
+    pruneEmptyTextElements(newId);
     updateFrame(activePanelIndex, (curr) => ({
-      ...curr,
-      textElements: [...curr.textElements, newTextObj]
+      ...curr.textElements ? curr : createDefaultPanelState(curr.imageUrl),
+      textElements: [...(curr.textElements || []).filter((t) => t.text.trim().length > 0), newTextObj]
     }));
     setSelectedElement({ type: 'text', panelIndex: activePanelIndex, elementId: newId });
     setShowTextModal(true);
+  };
+
+  const handleCloseTextModal = () => {
+    pruneEmptyTextElements();
+    setShowTextModal(false);
+    setSelectedElement((prev) => {
+      if (prev.type === 'text' && prev.elementId) {
+        const txt = panelImages[prev.panelIndex]?.textElements.find((t) => t.id === prev.elementId);
+        if (!txt || txt.text.trim() === '') {
+          return { type: 'image', panelIndex: activePanelIndex };
+        }
+      }
+      return prev;
+    });
   };
 
   const handleUpdateActiveText = (updates: Partial<TextElement>) => {
@@ -1084,7 +1250,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     if (selectedElement.type !== 'text' || !selectedElement.elementId) return;
     const panelIdx = selectedElement.panelIndex;
     const source = panelImages[panelIdx]?.textElements.find((t) => t.id === selectedElement.elementId);
-    if (!source) return;
+    if (!source || source.text.trim() === '') return;
     const newId = `text-${Date.now()}`;
     const copyText: TextElement = {
       ...source,
@@ -1107,6 +1273,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
       textElements: curr.textElements.filter((t) => t.id !== selectedElement.elementId)
     }));
     setSelectedElement({ type: 'image', panelIndex: panelIdx });
+    setShowTextModal(false);
   };
 
   // Clipart Elements Management
@@ -1192,7 +1359,24 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
   };
 
-  // Switch Acrylic Product Type: updates product, header, price, and default layout while preserving shape, size, and uploaded images
+  // Helper to check if a size option's dimensions match the target shape's natural orientation
+  const doesSizeMatchShapeOrientation = (size: SizeOption, shapeId: string): boolean => {
+    if (['shape-square', 'shape-circle', 'shape-heart', 'shape-hexagon'].includes(shapeId)) {
+      return size.widthInches === size.heightInches;
+    }
+    if (['shape-landscape', 'shape-oval'].includes(shapeId)) {
+      return size.widthInches > size.heightInches;
+    }
+    if (shapeId === 'shape-portrait') {
+      return size.heightInches > size.widthInches;
+    }
+    if (['shape-rectangle', 'shape-rounded-rect'].includes(shapeId)) {
+      return size.widthInches !== size.heightInches;
+    }
+    return true;
+  };
+
+  // Switch Acrylic Product Type: updates product, header, price, default layout, and default/compatible shape & hardware
   const handleSelectProductType = (ptId: string) => {
     const pt = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === ptId);
     if (!pt) return;
@@ -1200,11 +1384,48 @@ export const AcrylicCustomizerPage: React.FC = () => {
     // 1. Update selected product state (updates card checkmark, header title, and price)
     setSelectedProductTypeId(pt.id);
 
-    // 2. Apply the product's default layout (user can still customize layout in LAYOUTS & DESIGNS)
-    const nextLayoutId = pt.defaultLayoutId || 'layout-1-single';
+    // 2. Apply the product's default layout (always 4-grid for Acrylic Collage; preserve manual layout between non-collage products)
+    const shouldApplyDefaultLayout =
+      pt.id === 'acrylic-collage' ||
+      selectedProductTypeId === 'acrylic-collage' ||
+      !hasUserSelectedCustomLayoutRef.current;
+    const nextLayoutId = shouldApplyDefaultLayout
+      ? (pt.defaultLayoutId || 'layout-1-single')
+      : selectedLayoutId;
     setSelectedLayoutId(nextLayoutId);
+    if (pt.id === 'acrylic-collage') {
+      hasUserSelectedCustomLayoutRef.current = false;
+    }
 
-    // 3. Preserve uploaded images non-destructively across slot count changes
+    // 3. Apply product default shape unless user explicitly picked a custom shape in SHAPES that is compatible with the new product
+    const allowedShapes = getCompatibleShapesForProduct(pt.id);
+    const defaultShapeForProduct =
+      pt.defaultShape && allowedShapes.some((s) => s.id === pt.defaultShape)
+        ? pt.defaultShape
+        : (allowedShapes[0]?.id || 'shape-square');
+
+    let nextShapeId = defaultShapeForProduct;
+    if (hasUserSelectedCustomShapeRef.current && allowedShapes.some((s) => s.id === selectedShapeId)) {
+      nextShapeId = selectedShapeId;
+    } else {
+      hasUserSelectedCustomShapeRef.current = false;
+      nextShapeId = defaultShapeForProduct;
+    }
+    if (nextShapeId !== selectedShapeId) {
+      setSelectedShapeId(nextShapeId);
+    }
+
+    // 4. Validate hardware compatibility for the newly selected product
+    const allowedHardware = getCompatibleHardwareForProduct(pt.id);
+    const normalizedHw = normalizeAcrylicHardwareId(selectedHardwareId);
+    if (!allowedHardware.some((h) => h.id === normalizedHw)) {
+      const nextHwId = normalizeAcrylicHardwareId(pt.defaultHardwareId || allowedHardware[0]?.id || 'hooks-hanging');
+      setSelectedHardwareId(nextHwId);
+    } else if (normalizedHw !== selectedHardwareId) {
+      setSelectedHardwareId(normalizedHw);
+    }
+
+    // 5. Preserve uploaded images non-destructively across slot count changes
     setPanelImages((prev) => {
       const next: Record<number, PanelImageState> = {
         0: prev[0] || createDefaultPanelState(null),
@@ -1229,52 +1450,99 @@ export const AcrylicCustomizerPage: React.FC = () => {
       return next;
     });
 
-    // 4. Reset active slot index to 0
+    // 6. Reset active slot index to 0
     setActivePanelIndex(0);
     setSelectedElement({ type: 'image', panelIndex: 0 });
 
-    // 5. Preserve selected shape and selected size
+    // 7. Update selected size to match the active shape and product
     if (!isCustomSize) {
-      const newSizes = getSizesForShape(selectedShapeId, pt.id);
-      if (newSizes.length > 0 && !newSizes.some((s) => s.id === selectedSizeId)) {
-        const matchingSize = newSizes.find(
-          (s) =>
-            s.label === currentSizeOption?.label ||
-            (s.widthInches === currentSizeOption?.widthInches &&
-              s.heightInches === currentSizeOption?.heightInches)
-        );
-        setSelectedSizeId(matchingSize?.id || newSizes[0]?.id);
-      }
-    }
-  };
-
-  // Switch acrylic shape (independent of product type and layout selection, preserves uploaded images)
-  const handleSelectShape = (shapeId: string) => {
-    setSelectedShapeId(shapeId);
-    if (!isCustomSize) {
-      const newSizes = getSizesForShape(shapeId, selectedProductTypeId);
+      const newSizes = getSizesForShape(nextShapeId, pt.id);
       if (newSizes.length > 0) {
+        const defaultProductSize = pt.defaultSizeOptionId
+          ? newSizes.find((s) => s.id === pt.defaultSizeOptionId)
+          : undefined;
         const matchingSize = newSizes.find(
           (s) =>
-            s.label === currentSizeOption?.label ||
-            (s.widthInches === currentSizeOption?.widthInches &&
-              s.heightInches === currentSizeOption?.heightInches)
+            doesSizeMatchShapeOrientation(s, nextShapeId) &&
+            (s.label === currentSizeOption?.label ||
+              (s.widthInches === currentSizeOption?.widthInches &&
+                s.heightInches === currentSizeOption?.heightInches))
         );
-        const targetSize = matchingSize || newSizes[0];
+        const firstOrientationSize = newSizes.find((s) => doesSizeMatchShapeOrientation(s, nextShapeId));
+        const targetSize =
+          nextShapeId === defaultShapeForProduct && defaultProductSize
+            ? defaultProductSize
+            : (matchingSize || defaultProductSize || firstOrientationSize || newSizes[0]);
         setSelectedSizeId(targetSize.id);
       }
     }
   };
 
+  // Switch acrylic shape (updates workspace geometry, aspect ratio, clipping mask, and size orientation)
+  const handleSelectShape = (shapeId: string) => {
+    hasUserSelectedCustomShapeRef.current = true;
+    setSelectedShapeId(shapeId);
+    const newSizes = getSizesForShape(shapeId, selectedProductTypeId);
+
+    if (isCustomSize) {
+      if (['shape-square', 'shape-circle', 'shape-heart', 'shape-hexagon'].includes(shapeId)) {
+        const side = Math.max(customWidth, customHeight);
+        setCustomWidth(side);
+        setCustomHeight(side);
+        setCustomWidthInput(String(side));
+        setCustomHeightInput(String(side));
+      } else if (['shape-landscape', 'shape-oval'].includes(shapeId) && customWidth <= customHeight) {
+        const nextW = customWidth === customHeight ? Math.min(44, Math.round(customHeight * 1.35)) : customHeight;
+        const nextH = customWidth;
+        setCustomWidth(nextW);
+        setCustomHeight(nextH);
+        setCustomWidthInput(String(nextW));
+        setCustomHeightInput(String(nextH));
+      } else if (shapeId === 'shape-portrait' && customHeight <= customWidth) {
+        const nextW = customHeight;
+        const nextH = customWidth === customHeight ? Math.min(44, Math.round(customWidth * 1.35)) : customWidth;
+        setCustomWidth(nextW);
+        setCustomHeight(nextH);
+        setCustomWidthInput(String(nextW));
+        setCustomHeightInput(String(nextH));
+      }
+    } else if (newSizes.length > 0) {
+      const matchingOrientationSize = newSizes.find(
+        (s) =>
+          doesSizeMatchShapeOrientation(s, shapeId) &&
+          (s.label === currentSizeOption?.label ||
+            (s.widthInches === currentSizeOption?.widthInches &&
+              s.heightInches === currentSizeOption?.heightInches))
+      );
+      const firstOrientationSize = newSizes.find((s) => doesSizeMatchShapeOrientation(s, shapeId));
+      const targetSize = matchingOrientationSize || firstOrientationSize || newSizes[0];
+      setSelectedSizeId(targetSize.id);
+    }
+  };
+
   // Switch layout preset (independent of product type and shape selection)
   const handleSelectLayout = (layout: LayoutPreset) => {
+    hasUserSelectedCustomLayoutRef.current = true;
     setSelectedLayoutId(layout.id);
     setActivePanelIndex(0);
     setSelectedElement({ type: 'image', panelIndex: 0 });
   };
 
-  // Save customization to local storage
+  // Save customization to local storage (filtering out any empty text objects)
   const handleSaveDesign = () => {
+    pruneEmptyTextElements();
+    const cleanedPanels: Record<number, PanelImageState> = {};
+    Object.keys(panelImages).forEach((k) => {
+      const idx = Number(k);
+      const p = panelImages[idx];
+      if (p) {
+        cleanedPanels[idx] = {
+          ...p,
+          textElements: (p.textElements || []).filter((t) => t.text.trim().length > 0)
+        };
+      }
+    });
+
     const designPayload = {
       productId: catalogProduct?.id || productId,
       productTypeId: selectedProductTypeId,
@@ -1297,7 +1565,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
       edgeWrapId: selectedEdgeWrapId,
       borderWidthId: selectedBorderWidthId,
       borderColor: selectedBorderColor,
-      panelImages,
+      roomView: roomViewState,
+      panelImages: cleanedPanels,
       uploadedPhotos,
       quantity: 1,
       savedAt: new Date().toISOString(),
@@ -1309,8 +1578,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
     setTimeout(() => setSaveToast(null), 3500);
   };
 
-  // Add to Cart with ShopContext typing
+  // Add to Cart with ShopContext typing (stores full non-empty configuration)
   const handleAddToCart = () => {
+    pruneEmptyTextElements();
     const hasAnyPhoto = Object.values(panelImages).some((p) => !!p.imageUrl);
     if (!hasAnyPhoto) {
       setValidationWarning('Please upload at least one photo to complete your Acrylic customizer.');
@@ -1319,7 +1589,35 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
 
     if (onAddToCartCustomized && catalogProduct) {
-      const firstPhoto = panelImages[0]?.imageUrl || uploadedPhotos[0] || catalogProduct?.image || '/assets/customizer/acrylic/products/acrylic-photo-panel.jpg';
+      const firstPhoto =
+        panelImages[0]?.imageUrl ||
+        uploadedPhotos[0] ||
+        catalogProduct?.image ||
+        '/assets/customizer/acrylic/products/acrylic-photo-panel.jpg';
+
+      const selectedHardwareObj =
+        compatibleHardware.find((h) => h.id === selectedHardwareId) ||
+        HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId);
+      const selectedFinishObj = FINISH_OPTIONS.find((f) => f.id === selectedFinishId);
+
+      const activeSlotsPayload = layoutSlots.map((slot, idx) => {
+        const p = panelImages[idx] || createDefaultPanelState(null);
+        const nonEmptyTexts = (p.textElements || []).filter((t) => t.text.trim().length > 0);
+        return {
+          slot: idx + 1,
+          dimension: slot.label,
+          imageUrl: p.imageUrl || null,
+          panX: p.panX || 0,
+          panY: p.panY || 0,
+          scale: p.scale || 1,
+          rotation: p.rotation || 0,
+          fitMode: p.fitMode || 'contain',
+          filter: p.filter || 'original',
+          textElements: nonEmptyTexts,
+          clipartElements: p.clipartElements || []
+        };
+      });
+
       onAddToCartCustomized({
         product: {
           ...catalogProduct,
@@ -1330,44 +1628,47 @@ export const AcrylicCustomizerPage: React.FC = () => {
         size: currentDimensionLabel,
         calculatedPrice: finalPrice,
         material: 'Acrylic',
-        finish: FINISH_OPTIONS.find((f) => f.id === selectedFinishId)?.name || 'High Gloss Optical Acrylic',
+        finish: selectedFinishObj?.name || 'High Gloss Optical Acrylic',
         thickness: THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || '3mm',
-        style: `${selectedProductType.name} • ${currentShape.name}`,
+        style: `${selectedProductType.name} • ${currentShape.name} • ${selectedHardwareObj?.name || 'No Hardware'}`,
         photoUrl: firstPhoto,
         customizationDetails: {
+          product: selectedProductType.name,
           productTypeId: selectedProductTypeId,
           productType: selectedProductType.name,
           shapeId: selectedShapeId,
           shape: currentShape.name,
           sizeId: isCustomSize ? 'custom' : selectedSizeId,
+          size: currentDimensionLabel,
           isCustomSize,
+          customWidth: isCustomSize ? customWidth : undefined,
+          customHeight: isCustomSize ? customHeight : undefined,
           widthInches: effectiveWidthInches,
           heightInches: effectiveHeightInches,
           dimensions: currentDimensionLabel,
           layoutId: selectedLayoutId,
           layout: currentLayout.name,
           design: activeDesignOverlay?.name || 'None',
-          hardware: HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'Standoff Mounts',
-          finish: FINISH_OPTIONS.find((f) => f.id === selectedFinishId)?.name || 'High Gloss Optical Acrylic',
+          hardwareId: selectedHardwareId,
+          hardware: selectedHardwareObj?.name || 'No Hardware',
+          finishId: selectedFinishId,
+          finish: selectedFinishObj?.name || 'High Gloss Optical Acrylic',
           thickness: THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || '3mm',
           edgeWrap: ACRYLIC_WRAP_OPTIONS.find((w) => w.id === selectedEdgeWrapId)?.name || 'Full Bleed',
           borderWidth: ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.label || 'No Border',
           borderColor: selectedBorderWidthId !== 'none' ? selectedBorderColor : undefined,
           frame: FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name || 'Frameless',
           paper: PAPER_OPTIONS.find((p) => p.id === selectedPaperId)?.label || 'White Luster Finish',
-          panels: layoutSlots.map((slot, idx) => ({
-            slot: idx + 1,
-            dimension: slot.label,
-            imageUrl: panelImages[idx]?.imageUrl || null,
-            panX: panelImages[idx]?.panX || 0,
-            panY: panelImages[idx]?.panY || 0,
-            scale: panelImages[idx]?.scale || 1,
-            rotation: panelImages[idx]?.rotation || 0,
-            fitMode: panelImages[idx]?.fitMode || 'contain',
-            filter: panelImages[idx]?.filter || 'original',
-            textElements: panelImages[idx]?.textElements || [],
-            clipartElements: panelImages[idx]?.clipartElements || []
-          }))
+          uploadedImages: activeSlotsPayload.map((s) => s.imageUrl).filter((u): u is string => !!u),
+          imagePositions: activeSlotsPayload.map((s) => ({ slot: s.slot, x: s.panX, y: s.panY })),
+          imageScale: activeSlotsPayload.map((s) => ({ slot: s.slot, scale: s.scale })),
+          imageRotation: activeSlotsPayload.map((s) => ({ slot: s.slot, rotation: s.rotation })),
+          textObjects: activeSlotsPayload.flatMap((s) => s.textElements),
+          clipart: activeSlotsPayload.flatMap((s) => s.clipartElements),
+          roomView: roomViewState,
+          quantity: 1,
+          price: finalPrice,
+          panels: activeSlotsPayload
         }
       });
       navigate('/cart');
@@ -1378,8 +1679,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // EXACT SHAPE-FOLLOWING SVG BORDER RENDERER
   // ============================================================================
   const renderShapeBorder = () => {
-    let strokeColor = 'transparent';
-    let strokeWidth = 0;
+    let strokeColor = '#CBD5E1';
+    let strokeWidth = 1.4;
     let isClearEdge = false;
 
     if (selectedEdgeWrapId === 'white-border') {
@@ -1389,7 +1690,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
       strokeColor = '#0F172A';
       strokeWidth = 4.5;
     } else if (selectedEdgeWrapId === 'clear-edge') {
-      strokeColor = 'rgba(255, 255, 255, 0.75)';
+      strokeColor = 'rgba(255, 255, 255, 0.78)';
       strokeWidth = 3;
       isClearEdge = true;
     }
@@ -1399,8 +1700,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
       strokeColor = selectedBorderColor;
       strokeWidth = Math.max(strokeWidth, Math.min(8, Math.round(borderWidthPx / 2.5)));
     }
-
-    if (strokeWidth === 0 && !isClearEdge) return null;
 
     return (
       <svg 
@@ -1487,6 +1786,198 @@ export const AcrylicCustomizerPage: React.FC = () => {
         )}
       </svg>
     );
+  };
+
+  // ============================================================================
+  // SHAPE-AWARE HARDWARE VISUAL RENDERER (Applied directly to the product preview)
+  // ============================================================================
+  const renderInternalHardwareOverlay = (isRoomView = false) => {
+    const hwId = normalizeAcrylicHardwareId(selectedHardwareId);
+    if (hwId === 'no-hooks') return null;
+
+    const points = getHardwarePointsForShape(selectedShapeId);
+    const topPoints = points.slice(0, 2);
+
+    // 1. Chrome Standoffs ('standoff-mounts'): 4 brushed stainless corner/perimeter bolts following the active shape
+    if (hwId === 'standoff-mounts') {
+      const boltSizeClass = isRoomView ? 'w-2.5 h-2.5' : 'w-4 h-4';
+      const innerDotClass = isRoomView ? 'w-1 h-1' : 'w-1.5 h-1.5';
+      return (
+        <div className="absolute inset-0 pointer-events-none z-30">
+          {points.map((pt, idx) => (
+            <div
+              key={`standoff-${idx}`}
+              style={{
+                position: 'absolute',
+                left: `${pt.x}%`,
+                top: `${pt.y}%`,
+                transform: 'translate(-50%, -50%)'
+              }}
+              className={`${boltSizeClass} rounded-full bg-gradient-to-tr from-slate-500 via-slate-100 to-white border border-slate-700 shadow-[0_2px_5px_rgba(0,0,0,0.45)] flex items-center justify-center`}
+            >
+              <div className={`${innerDotClass} rounded-full bg-slate-600/80 border border-white/60`} />
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // 2. Hooks for Hanging ('hooks-hanging'): Twin self-levelling top hanging hooks inside the top shape mounting points
+    if (hwId === 'hooks-hanging') {
+      return (
+        <div className="absolute inset-0 pointer-events-none z-30">
+          {topPoints.map((pt, idx) => (
+            <div
+              key={`hooks-hanging-${idx}`}
+              style={{
+                position: 'absolute',
+                left: `${pt.x}%`,
+                top: `${pt.y}%`,
+                transform: 'translate(-50%, -50%)'
+              }}
+              className={`${
+                isRoomView ? 'w-4 h-2.5' : 'w-6 h-3.5'
+              } rounded-t-full bg-gradient-to-b from-slate-300 via-slate-100 to-slate-500 border border-slate-700 shadow-md flex items-center justify-center`}
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-slate-700 border border-white/70" />
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // 3. Ready to Hang Cleat ('ready-to-hang'): Pre-installed recessed French cleat wall hanger inside the shape contour
+    if (hwId === 'ready-to-hang') {
+      return (
+        <svg
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          className="absolute inset-0 w-full h-full pointer-events-none z-28"
+        >
+          {selectedShapeId === 'shape-circle' ? (
+            <circle
+              cx="50"
+              cy="50"
+              r="41"
+              fill="none"
+              stroke="rgba(30, 41, 59, 0.38)"
+              strokeWidth="1.2"
+              strokeDasharray="3 2"
+            />
+          ) : selectedShapeId === 'shape-oval' ? (
+            <ellipse
+              cx="50"
+              cy="50"
+              rx="41"
+              ry="30"
+              fill="none"
+              stroke="rgba(30, 41, 59, 0.38)"
+              strokeWidth="1.2"
+              strokeDasharray="3 2"
+            />
+          ) : selectedShapeId === 'shape-heart' ? (
+            <path
+              d="M 50,76 C 20,54 12,38 12,26 C 12,14 20,10 30,10 C 38,10 45,15 50,23 C 55,15 62,10 70,10 C 80,10 88,14 88,26 C 88,38 80,54 50,76 Z"
+              fill="none"
+              stroke="rgba(30, 41, 59, 0.38)"
+              strokeWidth="1.2"
+              strokeDasharray="3 2"
+            />
+          ) : selectedShapeId === 'shape-hexagon' ? (
+            <polygon
+              points="29,9 71,9 90,50 71,91 29,91 10,50"
+              fill="none"
+              stroke="rgba(30, 41, 59, 0.38)"
+              strokeWidth="1.2"
+              strokeDasharray="3 2"
+            />
+          ) : (
+            <rect
+              x="8"
+              y="8"
+              width="84"
+              height="84"
+              rx={selectedShapeId === 'shape-rounded-rect' ? '7' : '2'}
+              ry={selectedShapeId === 'shape-rounded-rect' ? '7' : '2'}
+              fill="none"
+              stroke="rgba(30, 41, 59, 0.38)"
+              strokeWidth="1.2"
+              strokeDasharray="3.5 2"
+            />
+          )}
+        </svg>
+      );
+    }
+
+    // 4. Sawtooth Hanger ('sawtooth-hanger'): Top-center brass sawtooth hanger attached inside top boundary
+    if (hwId === 'sawtooth-hanger') {
+      const topCenterY = selectedShapeId === 'shape-heart' ? 24 : Math.max(8, topPoints[0]?.y || 8);
+      return (
+        <div className="absolute inset-0 pointer-events-none z-30">
+          <div
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: `${topCenterY}%`,
+              transform: 'translate(-50%, -50%)'
+            }}
+            className={`${
+              isRoomView ? 'w-8 h-2' : 'w-12 h-3'
+            } rounded-xs bg-gradient-to-r from-amber-600 via-yellow-300 to-amber-600 border border-amber-800 shadow-md flex items-center justify-between px-1`}
+          >
+            <div className="w-1 h-1 rounded-full bg-amber-900" />
+            <div className="w-4 h-[2px] border-b-2 border-dotted border-amber-950" />
+            <div className="w-1 h-1 rounded-full bg-amber-900" />
+          </div>
+        </div>
+      );
+    }
+
+    // 5. Nail Free Hook ('nail-free-hook'): Damage-free adhesive wall hook pads at shape-aware mounting points
+    if (hwId === 'nail-free-hook') {
+      const padSizeClass = isRoomView ? 'w-3.5 h-2.5' : 'w-5 h-3.5';
+      return (
+        <div className="absolute inset-0 pointer-events-none z-30">
+          {points.map((pt, idx) => (
+            <div
+              key={`nail-free-${idx}`}
+              style={{
+                position: 'absolute',
+                left: `${pt.x}%`,
+                top: `${pt.y}%`,
+                transform: 'translate(-50%, -50%)'
+              }}
+              className={`${padSizeClass} rounded-[2px] bg-white/75 border border-slate-400/90 shadow-xs backdrop-blur-[1px] flex items-center justify-center`}
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-slate-500/80" />
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  // External protruding hardware elements (Easel Back / Stand tabletop support feet)
+  const renderExternalHardwareOverlay = (isRoomView = false) => {
+    const hwId = normalizeAcrylicHardwareId(selectedHardwareId);
+
+    if (hwId === 'easel-back') {
+      const footWidth = isRoomView ? 'w-5 h-2.5' : 'w-8 h-3.5';
+      return (
+        <div className="absolute inset-x-0 -bottom-2.5 pointer-events-none z-35 flex items-center justify-between px-[20%]">
+          <div
+            className={`${footWidth} rounded-b-md bg-gradient-to-b from-slate-200 via-slate-400 to-slate-700 border border-slate-600 shadow-lg`}
+          />
+          <div
+            className={`${footWidth} rounded-b-md bg-gradient-to-b from-slate-200 via-slate-400 to-slate-700 border border-slate-600 shadow-lg`}
+          />
+        </div>
+      );
+    }
+
+    return null;
   };
 
   // Dynamic frame outer border CSS
@@ -1620,8 +2111,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           )}
 
-          {/* Draggable & Editable Text Elements for this Slot */}
+          {/* Draggable & Editable Text Elements for this Slot (ONLY render non-empty text) */}
           {frame.textElements?.map((txt) => {
+            if (!txt.text || txt.text.trim().length === 0) return null;
+
             const isTextSelected =
               selectedElement.type === 'text' &&
               selectedElement.panelIndex === panelIdx &&
@@ -1660,7 +2153,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
                   textAlign: txt.alignment,
                   lineHeight: txt.lineHeight || 1.2,
                   letterSpacing: `${txt.letterSpacing || 0}px`,
-                  whiteSpace: 'pre-line'
+                  whiteSpace: 'pre-line',
+                  textShadow:
+                    txt.color.toUpperCase() === '#FFFFFF'
+                      ? '0 1px 4px rgba(0,0,0,0.45)'
+                      : 'none'
                 }}
                 className={`z-30 cursor-move px-2.5 py-1 select-none transition-all rounded-lg ${
                   isTextSelected
@@ -1726,33 +2223,51 @@ export const AcrylicCustomizerPage: React.FC = () => {
   };
 
   // ============================================================================
-  // RENDER OUTER ACRYLIC PRODUCT CANVAS (Respects Shape, Aspect Ratio & Layout)
+  // RENDER OUTER ACRYLIC PRODUCT CANVAS (Respects Shape, Aspect Ratio, Layout & Hardware)
   // ============================================================================
   const renderProductCanvas = (isRoomView = false) => {
-    const shapeClip = currentShape.clipPathStyle;
-    const shapeRadius = currentShape.borderRadiusClass;
+    const shapeClip = currentShape?.clipPathStyle;
+    const shapeRadius = currentShape?.borderRadiusClass || 'rounded-sm';
     const isPhotoBlock = selectedProductTypeId === 'acrylic-photo-block';
+    const isFloatingMount = normalizeAcrylicHardwareId(selectedHardwareId) === 'ready-to-hang';
 
-    // Fit within workspace budget without overflowing vertically or horizontally
-    const maxDim = isRoomView ? 280 : 450;
+    // In Room View, the parent AcrylicRoomViewModal controls exact locked pixel width & height
+    const maxDim = isPhotoBlock ? 360 : 450;
     const boxWidthPx =
       productAspectRatio >= 1
         ? maxDim
         : Math.max(180, Math.round(maxDim * productAspectRatio));
 
+    const outerFilter = isPhotoBlock
+      ? 'drop-shadow(6px 7px 0px rgba(203, 213, 225, 0.95)) drop-shadow(10px 12px 0px rgba(148, 163, 184, 0.75)) drop-shadow(0 22px 28px rgba(0, 0, 0, 0.28))'
+      : isFloatingMount
+      ? 'drop-shadow(0 28px 34px rgba(15, 23, 42, 0.36)) drop-shadow(0 12px 16px rgba(15, 23, 42, 0.22))'
+      : 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.2)) drop-shadow(0 8px 10px rgba(0, 0, 0, 0.1))';
+
     return (
       <div
-        className="relative w-full flex items-center justify-center transition-all duration-300"
-        style={{
-          maxWidth: `${boxWidthPx}px`,
-          aspectRatio: `${effectiveWidthInches} / ${effectiveHeightInches}`,
-          filter: isPhotoBlock
-            ? 'drop-shadow(8px 10px 0px rgba(148, 163, 184, 0.55)) drop-shadow(0 22px 28px rgba(0, 0, 0, 0.28))'
-            : 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.2)) drop-shadow(0 8px 10px rgba(0, 0, 0, 0.1))'
-        }}
+        className={`relative w-full ${isRoomView ? 'h-full' : ''} flex items-center justify-center transition-all duration-300`}
+        style={
+          isRoomView
+            ? {
+                width: '100%',
+                height: '100%',
+                filter: isPhotoBlock
+                  ? 'drop-shadow(5px 6px 0px rgba(148, 163, 184, 0.5))'
+                  : undefined
+              }
+            : {
+                maxWidth: `${boxWidthPx}px`,
+                aspectRatio: `${effectiveWidthInches} / ${effectiveHeightInches}`,
+                filter: outerFilter
+              }
+        }
       >
+        {/* External Hardware (Tabletop Stand Feet or Top Hanging Wires) */}
+        {renderExternalHardwareOverlay(isRoomView)}
+
         <div
-          className={`relative w-full h-full ${shapeRadius} bg-white overflow-hidden border-2 border-stone-300 transition-all select-none ${currentFrameCss}`}
+          className={`relative w-full h-full ${shapeRadius} bg-white overflow-hidden transition-all select-none ${currentFrameCss}`}
           style={{
             clipPath: shapeClip,
             WebkitClipPath: shapeClip
@@ -1785,26 +2300,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
           {/* Shape-Following Exact Wrap & Border Overlay */}
           {renderShapeBorder()}
 
-          {/* Architectural Chrome Standoff Bolts */}
-          {(selectedHardwareId === 'standoff-mounts' ||
-            selectedProductTypeId === 'acrylic-signage' ||
-            selectedDisplayOptionId === 'display-standoff') &&
-            !isCurvedShape && (
-              <>
-                <div className="absolute top-2.5 left-2.5 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-stone-400 via-stone-200 to-stone-50 border border-stone-600 shadow-md z-30 pointer-events-none flex items-center justify-center">
-                  <div className="w-1 h-1 rounded-full bg-stone-500" />
-                </div>
-                <div className="absolute top-2.5 right-2.5 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-stone-400 via-stone-200 to-stone-50 border border-stone-600 shadow-md z-30 pointer-events-none flex items-center justify-center">
-                  <div className="w-1 h-1 rounded-full bg-stone-500" />
-                </div>
-                <div className="absolute bottom-2.5 left-2.5 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-stone-400 via-stone-200 to-stone-50 border border-stone-600 shadow-md z-30 pointer-events-none flex items-center justify-center">
-                  <div className="w-1 h-1 rounded-full bg-stone-500" />
-                </div>
-                <div className="absolute bottom-2.5 right-2.5 w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-stone-400 via-stone-200 to-stone-50 border border-stone-600 shadow-md z-30 pointer-events-none flex items-center justify-center">
-                  <div className="w-1 h-1 rounded-full bg-stone-500" />
-                </div>
-              </>
-            )}
+          {/* Shape-Aware Hardware Visuals (Standoff, Wall Mount, Floating Mount, Adhesive, Hanging) */}
+          {renderInternalHardwareOverlay(isRoomView)}
         </div>
       </div>
     );
@@ -1919,7 +2416,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               </div>
               <div className="space-y-1">
                 <Link 
-                  to={`/products/${catalogProduct.slug || catalogProduct.id}`} 
+                  to={`/products/${catalogProduct?.slug || catalogProduct?.id || productId || 'acrylic-rectangle-print'}`} 
                   onClick={() => setIsMobileMenuOpen(false)} 
                   className="block px-3 py-2 text-xs font-bold text-stone-800 hover:bg-stone-100 rounded-lg"
                 >
@@ -2012,86 +2509,35 @@ export const AcrylicCustomizerPage: React.FC = () => {
         {/* LEFT SECONDARY DRAWER CONTENT (Matches Canvas Customizer width md:w-[400px] lg:w-[440px] with internal scroll) */}
         <section className="w-full md:w-[400px] lg:w-[440px] bg-white border-b md:border-b-0 md:border-r border-stone-200 flex flex-col z-10 shrink-0 h-72 md:h-full min-h-0 overflow-hidden shadow-sm">
           
-          {/* Panel Header (shown for non-PRODUCTS tabs) */}
-          {activeTab !== 'PRODUCTS' && (
-            <div className="p-3.5 border-b border-stone-200 bg-stone-50/80 flex items-center justify-between shrink-0">
-              <h2 className="text-xs font-black tracking-wider text-stone-800 uppercase flex items-center gap-1.5">
-                <span>
-                  {activeTab === 'SHAPES' || activeTab === 'SHAPE'
-                    ? 'SHAPES'
-                    : activeTab}
-                </span>
-              </h2>
-              <span className="text-[11px] font-semibold text-stone-500">
-                {(activeTab === 'SHAPES' || activeTab === 'SHAPE') && `${ACRYLIC_SHAPES.length} Shapes`}
-                {activeTab === 'SELECT SIZE' && `${shapeSizes.length + 1} Options`}
-                {activeTab === 'LAYOUTS & DESIGNS' && (layoutSubTab === 'LAYOUTS' ? '7 Layouts' : '11 Categories')}
-                {activeTab === 'WRAP & BORDER' && '5 Options'}
-                {activeTab === 'HARDWARE & FINISH' && 'Hardware & Finish'}
-                {activeTab === 'OPTIONS' && 'Specifications'}
+          {/* Panel Header */}
+          <div className="p-3.5 border-b border-stone-200 bg-stone-50/80 flex items-center justify-between shrink-0">
+            <h2 className="text-xs font-black tracking-wider text-stone-800 uppercase flex items-center gap-1.5">
+              <span>
+                {activeTab === 'SHAPES' || activeTab === 'SHAPE'
+                  ? 'SHAPES'
+                  : activeTab}
               </span>
-            </div>
-          )}
+            </h2>
+            <span className="text-[11px] font-semibold text-stone-500">
+              {activeTab === 'PRODUCTS' && `${ACRYLIC_PRODUCT_TYPES.length} Styles`}
+              {(activeTab === 'SHAPES' || activeTab === 'SHAPE') && `${compatibleShapes.length} Shapes`}
+              {activeTab === 'SELECT SIZE' && `${shapeSizes.length + 1} Options`}
+              {activeTab === 'LAYOUTS & DESIGNS' && (layoutSubTab === 'LAYOUTS' ? '7 Layouts' : '11 Categories')}
+              {activeTab === 'WRAP & BORDER' && '5 Options'}
+              {activeTab === 'HARDWARE & FINISH' && `${compatibleHardware.length} Hardware`}
+              {activeTab === 'OPTIONS' && 'Specifications'}
+            </span>
+          </div>
 
           {/* TAB 1: PRODUCTS */}
           {activeTab === 'PRODUCTS' && (
-            <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-              {/* Material Toggle Bar: CANVAS vs ACRYLIC */}
-              <div className="flex items-center border-b border-stone-200 text-xs font-black uppercase tracking-wider shrink-0 bg-stone-100">
-                <button
-                  type="button"
-                  onClick={() => navigate('/customize/canvas/canvas-classic')}
-                  className="flex-1 text-center py-3 bg-stone-100 text-stone-500 hover:text-[#0E4A93] hover:bg-stone-50 border-b-2 border-transparent transition-colors cursor-pointer font-bold flex items-center justify-center gap-1.5"
-                >
-                  CANVAS
-                </button>
-                <button
-                  type="button"
-                  className="flex-1 text-center py-3 bg-white text-[#0E4A93] border-b-2 border-[#0E4A93] shadow-xs cursor-default font-extrabold flex items-center justify-center gap-1.5"
-                >
-                  <span className="w-2 h-2 rounded-full bg-[#0E4A93]" />
-                  ACRYLIC
-                </button>
-              </div>
-
-              <div className="flex-1 min-h-0 p-4 space-y-2 overflow-y-auto">
-                <div className="grid grid-cols-2 gap-2.5">
-                  {ACRYLIC_PRODUCT_TYPES.map((pt) => {
-                    const isSelected = selectedProductTypeId === pt.id;
-                    return (
-                      <div
-                        key={pt.id}
-                        onClick={() => handleSelectProductType(pt.id)}
-                        className={`relative p-3 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center text-center justify-between min-h-[104px] ${
-                          isSelected
-                            ? 'border-[#0E4A93] bg-blue-50/30 shadow-xs ring-1 ring-[#0E4A93]/20'
-                            : 'border-stone-200 hover:border-[#0E4A93]/40 hover:shadow-xs bg-white'
-                        }`}
-                      >
-                        {isSelected && (
-                          <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#0E4A93] text-white rounded flex items-center justify-center shadow-xs">
-                            <Check className="w-3 h-3 stroke-[3]" />
-                          </div>
-                        )}
-
-                        <div className="my-1 flex items-center justify-center">
-                          <AcrylicProductIcon iconType={pt.iconType} />
-                        </div>
-
-                        <div>
-                          <div className="text-xs font-bold text-stone-900 leading-tight">
-                            {pt.name}
-                          </div>
-                          <div className={`text-[11px] font-semibold mt-0.5 ${isSelected ? 'text-[#0E4A93]' : 'text-stone-500'}`}>
-                            Starts at ₹{pt.startingPrice.toLocaleString('en-IN')}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
+            <CustomizerProductSelector
+              activeMaterial="acrylic"
+              products={ACRYLIC_PRODUCT_TYPES}
+              selectedProductId={selectedProductTypeId}
+              onSelectProduct={handleSelectProductType}
+              onSwitchMaterial={() => navigate('/customize/canvas/canvas-classic')}
+            />
           )}
 
           {/* TAB 2: UPLOAD */}
@@ -2496,21 +2942,21 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 4: SHAPES (The 9 practical shapes) */}
+          {/* TAB 4: SHAPES (Product-Specific Compatible Shapes) */}
           {(activeTab === 'SHAPES' || activeTab === 'SHAPE') && (
             <div className="flex-1 min-h-0 p-3.5 space-y-3 overflow-y-auto">
               <div>
                 <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-0.5">
-                  Select Acrylic Shape
+                  Shapes for {selectedProductType.name}
                 </h3>
                 <p className="text-[10px] text-stone-500">
-                  Select laser-cut shape. Instant canvas masking preserves your photo.
+                  Showing {compatibleShapes.length} compatible laser-cut shapes for this product.
                 </p>
               </div>
 
-              {/* Grid of 9 Shape Cards with SVG Acrylic Shape Previews */}
+              {/* Grid of Product-Compatible Shape Cards with SVG Acrylic Shape Previews */}
               <div className="grid grid-cols-2 gap-2.5">
-                {ACRYLIC_SHAPES.map((shape) => {
+                {compatibleShapes.map((shape) => {
                   const isSelected = selectedShapeId === shape.id;
 
                   return (
@@ -2543,7 +2989,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           {shape.name}
                         </div>
                         <div className="text-[11px] font-medium text-stone-500 mt-0.5">
-                          Acrylic Shape
+                          {shape.aspectRatio}
                         </div>
                       </div>
                     </div>
@@ -2857,7 +3303,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
             <div className="flex-1 min-h-0 p-3.5 space-y-4 overflow-y-auto">
               <div>
                 <div className="text-xs font-black text-stone-800 uppercase tracking-wider mb-2">
-                  Hardware & Mounting
+                  Hardware & Hanging
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   {HARDWARE_OPTIONS.map((hw) => {
@@ -2949,7 +3395,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 <div className="text-xs font-black text-stone-800 uppercase tracking-wider mb-2">
                   Acrylic Thickness
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {THICKNESS_OPTIONS.map((thick) => {
                     const isSelected = selectedThicknessId === thick.id;
                     return (
@@ -3126,6 +3572,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 <span>{currentShape.name}</span>
                 <span className="text-stone-300">•</span>
                 <span className="bg-stone-100 text-stone-800 px-2 py-0.5 rounded">{currentDimensionLabel}</span>
+                <span className="text-stone-300">•</span>
+                <span className="text-stone-500">
+                  {compatibleHardware.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware'}
+                </span>
               </div>
             </div>
 
@@ -3204,26 +3654,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
           </div>
 
           {/* LIVE REAL-TIME TEXT EDITOR COMPONENT */}
-          {showTextModal && (
+          {showTextModal && activeTextElement && (
             <AcrylicLiveTextEditor
-              activeText={activeTextElement || {
-                id: 'temp',
-                text: 'Your Custom Text',
-                fontFamily: '"Playfair Display", Georgia, serif',
-                fontSize: 28,
-                fontWeight: 'bold',
-                color: '#FFFFFF',
-                alignment: 'center',
-                lineHeight: 1.2,
-                letterSpacing: 0,
-                rotation: 0,
-                x: 0,
-                y: 0
-              }}
+              activeText={activeTextElement}
               onUpdateText={handleUpdateActiveText}
               onDuplicateText={handleDuplicateActiveText}
               onDeleteText={handleDeleteActiveText}
-              onClose={() => setShowTextModal(false)}
+              onClose={handleCloseTextModal}
             />
           )}
 
@@ -3240,7 +3677,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
           {/* INTERACTIVE WORKSPACE CANVAS */}
           <div 
-            onClick={() => setSelectedElement({ type: 'image', panelIndex: activePanelIndex })}
+            onClick={() => {
+              pruneEmptyTextElements();
+              setShowTextModal(false);
+              setSelectedElement({ type: 'image', panelIndex: activePanelIndex });
+            }}
             onDragOver={(e) => {
               e.preventDefault();
               e.dataTransfer.dropEffect = 'copy';
@@ -3341,15 +3782,15 @@ export const AcrylicCustomizerPage: React.FC = () => {
         isOpen={showRoomView}
         onClose={() => setShowRoomView(false)}
         productDimensionLabel={currentDimensionLabel}
+        productId={selectedProductTypeId}
         productName={selectedProductType.name}
+        shapeId={selectedShapeId}
         shapeName={currentShape.name}
         widthInches={effectiveWidthInches}
         heightInches={effectiveHeightInches}
-        renderProduct={() => (
-          <div className="w-full flex items-center justify-center">
-            {renderProductCanvas(true)}
-          </div>
-        )}
+        initialRoomState={roomViewState}
+        onRoomStateChange={setRoomViewState}
+        renderProduct={(isRoomView) => renderProductCanvas(isRoomView)}
       />
 
     </div>

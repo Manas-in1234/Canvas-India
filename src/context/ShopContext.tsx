@@ -128,12 +128,15 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const saved = localStorage.getItem('ci_cart');
       if (saved) {
-        const parsed: CartItem[] = JSON.parse(saved);
-        // Ensure every item has an id
-        return parsed.map((item) => ({
-          ...item,
-          id: item.id || `${item.product.id}-${item.size || 'std'}-${item.finish || 'std'}`
-        }));
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .filter((item): item is CartItem => Boolean(item && item.product && item.product.id))
+            .map((item) => ({
+              ...item,
+              id: item.id || `${item.product.id}-${item.size || 'std'}-${item.finish || 'std'}`
+            }));
+        }
       }
     } catch {
       // fallback

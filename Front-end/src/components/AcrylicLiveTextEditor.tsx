@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   X,
   Type,
@@ -43,6 +43,14 @@ export const AcrylicLiveTextEditor: React.FC<AcrylicLiveTextEditorProps> = ({
   onDeleteText,
   onClose
 }) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (activeText?.id && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [activeText?.id]);
+
   if (!activeText) return null;
 
   return (
@@ -99,6 +107,7 @@ export const AcrylicLiveTextEditor: React.FC<AcrylicLiveTextEditorProps> = ({
             Text / Captions / Lyrics
           </label>
           <textarea
+            ref={textareaRef}
             rows={2}
             value={activeText.text}
             onChange={(e) => onUpdateText({ text: e.target.value })}
