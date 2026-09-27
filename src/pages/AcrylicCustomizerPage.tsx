@@ -908,10 +908,16 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const deltaX = e.clientX - dragStartRef.current.x;
     const deltaY = e.clientY - dragStartRef.current.y;
     const targetIdx = dragStartRef.current.panelIdx;
+    // Capture these now: pointermove is a lower-priority ("continuous") event in
+    // React's scheduler, so this state update can be deferred and flushed after a
+    // later pointerup has already cleared dragStartRef.current to null. Reading the
+    // ref again inside the updater below would then throw on a null dereference.
+    const initialPanX = dragStartRef.current.initialPanX;
+    const initialPanY = dragStartRef.current.initialPanY;
 
     updateFrame(targetIdx, (curr) => {
-      const rawPanX = dragStartRef.current!.initialPanX + deltaX;
-      const rawPanY = dragStartRef.current!.initialPanY + deltaY;
+      const rawPanX = initialPanX + deltaX;
+      const rawPanY = initialPanY + deltaY;
       const { panX, panY } = clampPanForFrame(targetIdx, rawPanX, rawPanY, curr.scale, curr.rotation);
       return { ...curr, panX, panY };
     });
@@ -978,6 +984,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
       const dy = moveEv.clientY - textDragRef.current.y;
       const percentX = (dx / textDragRef.current.rect.width) * 100;
       const percentY = (dy / textDragRef.current.rect.height) * 100;
+      // Capture now: this state update can be deferred by React's scheduler and
+      // flushed after a later pointerup has already cleared textDragRef to null.
+      const initialOffset = textDragRef.current.initialOffset;
 
       updateFrame(panelIdx, (curr) => ({
         ...curr,
@@ -985,8 +994,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
           t.id === textId
             ? {
                 ...t,
-                x: Math.max(-48, Math.min(48, textDragRef.current!.initialOffset.x + percentX)),
-                y: Math.max(-48, Math.min(48, textDragRef.current!.initialOffset.y + percentY))
+                x: Math.max(-48, Math.min(48, initialOffset.x + percentX)),
+                y: Math.max(-48, Math.min(48, initialOffset.y + percentY))
               }
             : t
         )
@@ -1035,6 +1044,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
       const dy = moveEv.clientY - clipartDragRef.current.y;
       const percentX = (dx / clipartDragRef.current.rect.width) * 100;
       const percentY = (dy / clipartDragRef.current.rect.height) * 100;
+      // Capture now: this state update can be deferred by React's scheduler and
+      // flushed after a later pointerup has already cleared clipartDragRef to null.
+      const initialOffset = clipartDragRef.current.initialOffset;
 
       updateFrame(panelIdx, (curr) => ({
         ...curr,
@@ -1042,8 +1054,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
           c.id === clipId
             ? {
                 ...c,
-                x: Math.max(-48, Math.min(48, textDragRef.current ? 0 : clipartDragRef.current!.initialOffset.x + percentX)),
-                y: Math.max(-48, Math.min(48, textDragRef.current ? 0 : clipartDragRef.current!.initialOffset.y + percentY))
+                x: Math.max(-48, Math.min(48, initialOffset.x + percentX)),
+                y: Math.max(-48, Math.min(48, initialOffset.y + percentY))
               }
             : c
         )
