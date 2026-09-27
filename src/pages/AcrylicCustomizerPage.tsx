@@ -562,6 +562,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const dragStartRef = useRef<{ x: number; y: number; initialPanX: number; initialPanY: number; panelIdx: number } | null>(null);
   const textDragRef = useRef<{ x: number; y: number; initialOffset: { x: number; y: number }; rect: DOMRect } | null>(null);
   const clipartDragRef = useRef<{ x: number; y: number; initialOffset: { x: number; y: number }; rect: DOMRect } | null>(null);
+  const frameElsRef = useRef<Record<number, HTMLDivElement>>({});
+  const wheelBoundNodesRef = useRef<WeakSet<HTMLDivElement>>(new WeakSet());
 
   // File Inputs
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -799,26 +801,65 @@ export const AcrylicCustomizerPage: React.FC = () => {
     });
   };
 
+  // Compute how far the image can be panned in each axis before its
+  // object-fit: cover box would stop fully covering the frame (i.e. before
+  // blank space would show through). Returns 0/0 when we don't have enough
+  // information (no natural size) to compute safe bounds.
+  const getPanBounds = (panelIdx: number, scale: number, rotation: number) => {
+    const frame = panelImages[panelIdx];
+    const img = frame?.uploadedImage;
+    const container = frameElsRef.current[panelIdx];
+    if (!img?.naturalWidth || !img?.naturalHeight || !container) {
+      return { maxX: 0, maxY: 0 };
+    }
+    const rect = container.getBoundingClientRect();
+    if (!rect.width || !rect.height) return { maxX: 0, maxY: 0 };
+
+    const rotated = ((rotation || 0) / 90) % 2 !== 0;
+    const natW = rotated ? img.naturalHeight : img.naturalWidth;
+    const natH = rotated ? img.naturalWidth : img.naturalHeight;
+
+    const coverScale = Math.max(rect.width / natW, rect.height / natH);
+    const renderedW = natW * coverScale * (scale || 1);
+    const renderedH = natH * coverScale * (scale || 1);
+
+    return {
+      maxX: Math.max(0, (renderedW - rect.width) / 2),
+      maxY: Math.max(0, (renderedH - rect.height) / 2)
+    };
+  };
+
+  const clampPanForFrame = (panelIdx: number, panX: number, panY: number, scale: number, rotation: number) => {
+    const { maxX, maxY } = getPanBounds(panelIdx, scale, rotation);
+    return {
+      panX: maxX > 0 ? Math.max(-maxX, Math.min(maxX, panX)) : 0,
+      panY: maxY > 0 ? Math.max(-maxY, Math.min(maxY, panY)) : 0
+    };
+  };
+
   // Image Transformations (Per Active Frame)
   const handleZoomIn = () => {
-    updateFrame(activePanelIndex, (curr) => ({
-      ...curr,
-      scale: Math.min(curr.scale + 0.15, 3.5)
-    }));
+    updateFrame(activePanelIndex, (curr) => {
+      const scale = Math.min(curr.scale + 0.15, 3.5);
+      const { panX, panY } = clampPanForFrame(activePanelIndex, curr.panX, curr.panY, scale, curr.rotation);
+      return { ...curr, scale, panX, panY };
+    });
   };
 
   const handleZoomOut = () => {
-    updateFrame(activePanelIndex, (curr) => ({
-      ...curr,
-      scale: Math.max(curr.scale - 0.15, 0.4)
-    }));
+    updateFrame(activePanelIndex, (curr) => {
+      const scale = Math.max(curr.scale - 0.15, 0.4);
+      const { panX, panY } = clampPanForFrame(activePanelIndex, curr.panX, curr.panY, scale, curr.rotation);
+      return { ...curr, scale, panX, panY };
+    });
   };
 
   const handleRotate = () => {
-    updateFrame(activePanelIndex, (curr) => ({
-      ...curr,
-      rotation: (curr.rotation + 90) % 360
-    }));
+    updateFrame(activePanelIndex, (curr) => {
+      const rotation = (curr.rotation + 90) % 360;
+      const { panX, panY } = clampPanForFrame(activePanelIndex, curr.panX, curr.panY, curr.scale, rotation);
+      return { ...curr, rotation, panX, panY };
+    });
   };
 
   const handleResetImage = () => {
@@ -868,11 +909,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const deltaY = e.clientY - dragStartRef.current.y;
     const targetIdx = dragStartRef.current.panelIdx;
 
-    updateFrame(targetIdx, (curr) => ({
-      ...curr,
-      panX: dragStartRef.current!.initialPanX + deltaX,
-      panY: dragStartRef.current!.initialPanY + deltaY
-    }));
+    updateFrame(targetIdx, (curr) => {
+      const rawPanX = dragStartRef.current!.initialPanX + deltaX;
+      const rawPanY = dragStartRef.current!.initialPanY + deltaY;
+      const { panX, panY } = clampPanForFrame(targetIdx, rawPanX, rawPanY, curr.scale, curr.rotation);
+      return { ...curr, panX, panY };
+    });
   };
 
   const handleImagePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -885,17 +927,24 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
   };
 
-  // Wheel Zoom Listener Ref Callback
+  // Wheel Zoom Listener Ref Callback. Uses a WeakSet keyed on the actual DOM
+  // node so the listener is bound exactly once per node, instead of being
+  // re-added (and leaked, since callback refs are recreated every render)
+  // on every re-render while the user is actively dragging/zooming.
   const registerWheelRef = (panelIdx: number) => (el: HTMLDivElement | null) => {
     if (!el) return;
+    frameElsRef.current[panelIdx] = el;
+    if (wheelBoundNodesRef.current.has(el)) return;
+    wheelBoundNodesRef.current.add(el);
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       e.stopPropagation();
       const zoomFactor = e.deltaY < 0 ? 0.08 : -0.08;
-      updateFrame(panelIdx, (curr) => ({
-        ...curr,
-        scale: Math.max(0.4, Math.min(curr.scale + zoomFactor, 3.5))
-      }));
+      updateFrame(panelIdx, (curr) => {
+        const scale = Math.max(0.4, Math.min(curr.scale + zoomFactor, 3.5));
+        const { panX, panY } = clampPanForFrame(panelIdx, curr.panX, curr.panY, scale, curr.rotation);
+        return { ...curr, scale, panX, panY };
+      });
     };
     el.addEventListener('wheel', handleWheel, { passive: false });
   };
