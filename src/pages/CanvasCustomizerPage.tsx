@@ -160,11 +160,13 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Selected Canvas Product Type
   const [selectedProductTypeId, setSelectedProductTypeId] = useState<string>(() => {
     const key = (catalogProduct?.slug || catalogProduct?.id || catalogProduct?.name || '').toLowerCase();
+    if (key.includes('block')) return 'canvas-photo-block';
     if (key.includes('wall') || key.includes('display')) return 'canvas-wall-art';
     if (key.includes('collage')) return 'canvas-collage';
     if (key.includes('split')) return 'canvas-split';
-    if (key.includes('pano')) return 'canvas-panoramic';
-    return 'canvas-classic';
+    if (key.includes('signage')) return 'canvas-signage';
+    if (key.includes('panel')) return 'canvas-photo-panel';
+    return 'canvas-photo-panel';
   });
 
   const selectedProductType = useMemo(() => {

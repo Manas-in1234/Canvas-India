@@ -84,7 +84,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
   const handleStartCreatingCanvas = () => {
     const first = allProducts.find((p) => p.categorySlug === 'canvas');
-    navigate(`/customize/canvas/${first?.slug || first?.id || 'canvas-classic'}`);
+    navigate(`/customize/canvas/${first?.slug || first?.id || 'canvas-photo-panel'}`);
   };
 
   const scrollRow = (ref: React.RefObject<HTMLDivElement>, dir: 1 | -1) => {

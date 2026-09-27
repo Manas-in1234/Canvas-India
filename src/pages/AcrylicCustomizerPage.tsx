@@ -2074,7 +2074,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               <div className="flex items-center border-b border-stone-200 text-xs font-black uppercase tracking-wider shrink-0 bg-stone-100">
                 <button
                   type="button"
-                  onClick={() => navigate('/customize/canvas/canvas-classic')}
+                  onClick={() => navigate('/customize/canvas/canvas-photo-panel')}
                   className="flex-1 text-center py-3 bg-stone-100 text-stone-500 hover:text-[#0E4A93] hover:bg-stone-50 border-b-2 border-transparent transition-colors cursor-pointer font-bold flex items-center justify-center gap-1.5"
                 >
                   CANVAS

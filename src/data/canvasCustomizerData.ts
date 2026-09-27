@@ -117,9 +117,24 @@ const ALL_CANVAS_SHAPE_IDS = [
 
 export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
   {
-    id: 'canvas-classic',
-    name: 'Classic Canvas Print',
+    id: 'canvas-photo-block',
+    name: 'Canvas Photo Block',
     startingPrice: 499.0,
+    image: '',
+    iconType: 'block',
+    panelsCount: 1,
+    description: 'Freestanding tabletop canvas block on a solid wood easel base.',
+    defaultSizeOptionId: 'sq-4x4',
+    defaultShape: 'shape-square',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'easel-back',
+    defaultThicknessId: 'thick-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+  },
+  {
+    id: 'canvas-photo-panel',
+    name: 'Canvas Photo Panel',
+    startingPrice: 355.0,
     image: '',
     iconType: 'panel',
     panelsCount: 1,
@@ -147,9 +162,24 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
   {
+    id: 'canvas-print',
+    name: 'Canvas Print',
+    startingPrice: 355.0,
+    image: '',
+    iconType: 'print',
+    panelsCount: 1,
+    description: 'Vibrant direct pigment print on premium stretched canvas.',
+    defaultSizeOptionId: 'sq-8x8',
+    defaultShape: 'shape-landscape',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+  },
+  {
     id: 'canvas-collage',
     name: 'Canvas Collage',
-    startingPrice: 850.0,
+    startingPrice: 426.0,
     image: '',
     iconType: 'collage',
     panelsCount: 4,
@@ -164,7 +194,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
   {
     id: 'canvas-split',
     name: 'Canvas Split Panel',
-    startingPrice: 1850.0,
+    startingPrice: 674.5,
     image: '',
     iconType: 'split',
     panelsCount: 3,
@@ -177,18 +207,18 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
   {
-    id: 'canvas-panoramic',
-    name: 'Panoramic Canvas Print',
-    startingPrice: 1499.0,
+    id: 'canvas-signage',
+    name: 'Canvas Signage',
+    startingPrice: 799.0,
     image: '',
-    iconType: 'print',
+    iconType: 'signage',
     panelsCount: 1,
-    description: 'Wide-format panoramic canvas for landscapes and skylines.',
-    defaultSizeOptionId: 'pan-12x36',
-    defaultShape: 'shape-landscape',
+    description: 'Professional logo and nameplate display on rigid mounted canvas.',
+    defaultSizeOptionId: 'rec-12x18',
+    defaultShape: 'shape-rectangle',
     defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'hooks-hanging',
-    defaultThicknessId: 'thin-gallery',
+    defaultThicknessId: 'thick-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   }
 ];
