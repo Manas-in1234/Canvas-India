@@ -1,4 +1,5 @@
 import { Product, CategoryConfig } from '../types';
+import { CORK_CATALOG_PRODUCTS } from './corkCatalog';
 
 export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
   canvas: {
@@ -106,32 +107,31 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
   cork: {
     id: 'cork',
     slug: 'cork',
-    title: 'Cork Products & Cork Décor',
+    title: 'Cork Yoga & Wellness Products',
     shortTitle: 'Cork Products',
-    seoTitle: 'Cork Products & Décor | Canvas India',
-    description: 'Natural-looking cork products combining warmth, texture and everyday functionality.',
-    heroImage: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=1200&auto=format&fit=crop&q=80',
+    seoTitle: 'Cork Yoga & Wellness Products | Canvas India',
+    description: 'Eco-friendly cork yoga and wellness products. Cork is renewable, harvested from the bark of cork oak trees every 9–12 years. Lightweight, water-resistant, and durable. Naturally antimicrobial and biodegradable.',
+    heroImage: '/assets/products/cork/9C-YA1/9c-ya1(1).png',
     subcategories: [
       'All',
-      'Cork Boards',
-      'Notice Boards',
-      'Pin Boards',
-      'Decorative Cork Panels',
-      'Office Organization Boards',
-      'Kids Learning Boards',
-      'Memory Boards',
-      'Photo Display Boards',
-      'Creative Wall Décor',
-      'Customized Cork Products'
+      'Yoga Mats',
+      'Yoga Bricks',
+      'Yoga Rollers',
+      'Yoga Balls',
+      'Yoga Wedges',
+      'Massage Sets',
+      'Knee Pads',
+      'Yoga Bags'
     ],
     features: [
-      '100% natural, sustainable regenerative cork bark',
-      'Self-healing micro-grain surface',
-      'Direct UV high-definition print graphics',
-      'Thermal insulation and acoustic dampening'
+      'Improves grip when wet',
+      'Durable and long-lasting',
+      'Eco-friendly and sustainable',
+      'Antimicrobial (no odor buildup)',
+      'Hypoallergenic and chemical-free'
     ],
-    ctaText: 'Customize Cork Board',
-    ctaType: 'customize'
+    ctaText: 'Shop Cork Yoga Products',
+    ctaType: 'shop'
   },
   'yoga-fitness': {
     id: 'yoga-fitness',
@@ -2234,241 +2234,9 @@ export const ALL_PRODUCTS: Product[] = [
   },
 
   // ==========================================
-  // 4. CORK CATEGORY (8 Demo Products)
+  // 4. CORK YOGA & WELLNESS (15 catalog products)
   // ==========================================
-  {
-    id: 'crk-1',
-    name: 'Classic Cork Board',
-    slug: 'classic-cork-board',
-    category: 'Cork',
-    categorySlug: 'cork',
-    subcategory: 'Cork Boards',
-    image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600&auto=format&fit=crop&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=900&auto=format&fit=crop&q=80'
-    ],
-    price: 899,
-    originalPrice: 1199,
-    compareAtPrice: 1199,
-    discountPercent: 25,
-    rating: null,
-    reviewsCount: 0,
-    badge: 'New',
-    description: 'High-density 8mm natural Portuguese cork board with self-healing grain and matching natural pin accessories.',
-    shortDescription: 'Self-healing 8mm natural cork bulletin board.',
-    material: '8mm High-Density Natural Cork Sheet',
-    sizes: ['12x18 inch', '18x24 inch', '24x36 inch'],
-    finishes: ['Natural Cork', 'Solid Pine Wood Frame', 'Dark Roast Cork'],
-    customizationAvailable: true,
-    tags: ['cork', 'board', 'pinboard', 'office'],
-    stockStatus: 'In Stock',
-    applications: ['Home Office', 'Study Desk', 'Kitchen Organizer'],
-    isDemoData: true
-  },
-  {
-    id: 'crk-2',
-    name: 'Office Pin Board',
-    slug: 'office-pin-board',
-    category: 'Cork',
-    categorySlug: 'cork',
-    subcategory: 'Notice Boards',
-    image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=600&auto=format&fit=crop&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=900&auto=format&fit=crop&q=80'
-    ],
-    price: 1299,
-    originalPrice: 1699,
-    compareAtPrice: 1699,
-    discountPercent: 24,
-    rating: null,
-    reviewsCount: 0,
-    badge: 'New',
-    description: 'Commercial notice and pin board encased in anodized aluminum with corner safety caps for office environments.',
-    shortDescription: 'Heavy-duty notice board with aluminum frame.',
-    material: 'Natural Cork on Acoustic Backing Board',
-    sizes: ['18x24 inch', '24x36 inch', '36x48 inch'],
-    finishes: ['Anodized Aluminum Frame', 'Matte Black Aluminum'],
-    customizationAvailable: true,
-    tags: ['office', 'pin board', 'cork', 'notice board'],
-    stockStatus: 'In Stock',
-    applications: ['Office Workrooms', 'School Staff Rooms', 'Reception'],
-    isDemoData: true
-  },
-  {
-    id: 'crk-3',
-    name: 'Kids Learning Cork Board',
-    slug: 'kids-learning-cork-board',
-    category: 'Cork',
-    categorySlug: 'cork',
-    subcategory: 'Kids Learning Boards',
-    image: 'https://images.unsplash.com/photo-1507646227500-4d389b0012be?w=600&auto=format&fit=crop&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1507646227500-4d389b0012be?w=900&auto=format&fit=crop&q=80'
-    ],
-    price: 999,
-    originalPrice: 1399,
-    compareAtPrice: 1399,
-    discountPercent: 28,
-    rating: null,
-    reviewsCount: 0,
-    badge: 'New',
-    description: 'Fun, colorful printed cork surface featuring world maps, alphabets, and activity calendars for children.',
-    shortDescription: 'Printed educational cork board for homework & artwork.',
-    material: 'Natural Non-Toxic Cork & Pine Frame',
-    sizes: ['12x18 inch', '18x24 inch'],
-    finishes: ['World Map Print', 'Activity Planner Grid', 'Plain Natural'],
-    customizationAvailable: true,
-    tags: ['kids', 'learning', 'cork', 'board'],
-    stockStatus: 'In Stock',
-    applications: ['Kids Study Room', 'Classrooms', 'Playrooms'],
-    isDemoData: true
-  },
-  {
-    id: 'crk-4',
-    name: 'Memory Photo Cork Board',
-    slug: 'memory-photo-cork-board',
-    category: 'Cork',
-    categorySlug: 'cork',
-    subcategory: 'Memory Boards',
-    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600&auto=format&fit=crop&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=900&auto=format&fit=crop&q=80'
-    ],
-    price: 1199,
-    originalPrice: 1599,
-    compareAtPrice: 1599,
-    discountPercent: 25,
-    rating: null,
-    reviewsCount: 0,
-    badge: 'New',
-    description: 'Pin vacation polaroids, tickets, and love notes on a customized printed cork background with your family monogram.',
-    shortDescription: 'Customized memory display cork board for polaroids & tickets.',
-    material: 'High-Density Fine-Grain Cork',
-    sizes: ['12x18 inch', '16x24 inch', '24x36 inch'],
-    finishes: ['Monogram Printed', 'Travel Map Background', 'Minimal Frame'],
-    customizationAvailable: true,
-    tags: ['memory', 'photo', 'cork', 'travel'],
-    stockStatus: 'In Stock',
-    applications: ['Bedrooms', 'Hallways', 'Living Room Memo Walls'],
-    isDemoData: true
-  },
-  {
-    id: 'crk-5',
-    name: 'Decorative Cork Panel',
-    slug: 'decorative-cork-panel',
-    category: 'Cork',
-    categorySlug: 'cork',
-    subcategory: 'Decorative Cork Panels',
-    image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600&auto=format&fit=crop&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=900&auto=format&fit=crop&q=80'
-    ],
-    price: 1499,
-    originalPrice: 1999,
-    compareAtPrice: 1999,
-    discountPercent: 25,
-    rating: null,
-    reviewsCount: 0,
-    badge: 'New',
-    description: 'Acoustic decorative cork wall panels offering natural wood warmth, sound buffering, and textured tactile charm.',
-    shortDescription: 'Textured acoustic decorative cork wall panel.',
-    material: 'Natural Bark Cork on Acoustic Felt',
-    sizes: ['Set of 6 Hexagons (8 inch each)', '24x24 inch Tiles', '18x36 inch Panel'],
-    finishes: ['Natural Raw', 'Dark Smoked', 'Geometric Dual-Tone'],
-    customizationAvailable: true,
-    tags: ['decor', 'cork', 'acoustic', 'panel'],
-    stockStatus: 'In Stock',
-    applications: ['Podcast Studio', 'Living Room Feature Wall', 'Home Theater'],
-    isDemoData: true
-  },
-  {
-    id: 'crk-6',
-    name: 'Custom Shape Cork Board',
-    slug: 'custom-shape-cork-board',
-    category: 'Cork',
-    categorySlug: 'cork',
-    subcategory: 'Creative Wall Décor',
-    image: 'https://images.unsplash.com/photo-1582561424760-0321d75e81fa?w=600&auto=format&fit=crop&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1582561424760-0321d75e81fa?w=900&auto=format&fit=crop&q=80'
-    ],
-    price: 1399,
-    originalPrice: 1799,
-    compareAtPrice: 1799,
-    discountPercent: 22,
-    rating: null,
-    reviewsCount: 0,
-    badge: 'New',
-    description: 'CNC laser-cut custom silhouette cork shapes including India maps, world continents, hearts, and company logos.',
-    shortDescription: 'Precision laser-cut silhouette cork board in custom shapes.',
-    material: '10mm Precision CNC Laser Cut Cork',
-    sizes: ['18x18 inch', '24x24 inch', 'Custom Dimensions'],
-    finishes: ['India Map Contour', 'Hexagon Modular', 'World Map Silhouette'],
-    customizationAvailable: true,
-    tags: ['custom shape', 'cork', 'laser cut', 'map'],
-    stockStatus: 'In Stock',
-    applications: ['Living Rooms', 'Startup Lounges', 'Travel Agency Offices'],
-    isDemoData: true
-  },
-  {
-    id: 'crk-7',
-    name: 'Creative Wall Cork Display',
-    slug: 'creative-wall-cork-display',
-    category: 'Cork',
-    categorySlug: 'cork',
-    subcategory: 'Photo Display Boards',
-    image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=600&auto=format&fit=crop&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1544816155-12df9643f363?w=900&auto=format&fit=crop&q=80'
-    ],
-    price: 1099,
-    originalPrice: 1499,
-    compareAtPrice: 1499,
-    discountPercent: 26,
-    rating: null,
-    reviewsCount: 0,
-    badge: 'New',
-    description: 'Multi-functional cork display with built-in photo clips, brass pushpins, and magnetic accessory strip.',
-    shortDescription: 'Multi-functional cork board with clips and pin strips.',
-    material: '8mm Natural Cork with Metal Accents',
-    sizes: ['12x24 inch', '16x32 inch'],
-    finishes: ['White Pine Frame', 'Warm Teak Frame'],
-    customizationAvailable: true,
-    tags: ['display', 'cork', 'creative', 'organizer'],
-    stockStatus: 'In Stock',
-    applications: ['Kitchen Memo Center', 'Entryway', 'Home Studio'],
-    isDemoData: true
-  },
-  {
-    id: 'crk-8',
-    name: 'Personalized Cork Board',
-    slug: 'personalized-cork-board',
-    category: 'Cork',
-    categorySlug: 'cork',
-    subcategory: 'Customized Cork Products',
-    image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=900&auto=format&fit=crop&q=80'
-    ],
-    price: 1199,
-    originalPrice: 1599,
-    compareAtPrice: 1599,
-    discountPercent: 25,
-    rating: null,
-    reviewsCount: 0,
-    badge: 'New',
-    description: 'Direct UV printed personalized family surname, wedding date, or inspirational office slogan permanently sealed onto cork.',
-    shortDescription: 'Personalized name and monogram printed natural cork board.',
-    material: '8mm Portuguese Cork & Pine Wood',
-    sizes: ['12x18 inch', '18x24 inch', '24x36 inch'],
-    finishes: ['Custom Name Printed', 'Plain Cork with Engraved Frame'],
-    customizationAvailable: true,
-    uploadRequired: true,
-    tags: ['personalized', 'cork', 'custom name', 'gift'],
-    stockStatus: 'In Stock',
-    applications: ['Family Foyer', 'Home Office', 'Gift'],
-    isDemoData: true
-  },
+  ...CORK_CATALOG_PRODUCTS,
 
   // ==========================================
   // 5. YOGA & FITNESS CATEGORY (8 Demo Products)
@@ -2858,35 +2626,6 @@ export const ALL_PRODUCTS: Product[] = [
     tags: ['bedroom', 'decor', 'canvas', 'sunset'],
     stockStatus: 'In Stock',
     applications: ['Master Bed Headboard', 'Dresser Wall'],
-    isDemoData: true
-  },
-  {
-    id: 'dec-6',
-    name: 'Decorative Cork Wall Panel',
-    slug: 'decorative-cork-wall-panel',
-    category: 'Home Décor',
-    categorySlug: 'home-decor',
-    subcategory: 'Cork Décor',
-    image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600&auto=format&fit=crop&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=900&auto=format&fit=crop&q=80'
-    ],
-    price: 1499,
-    originalPrice: 1999,
-    compareAtPrice: 1999,
-    discountPercent: 25,
-    rating: null,
-    reviewsCount: 0,
-    badge: 'New',
-    description: 'Natural eco cork panels combining sound dampening acoustic comfort with earthy, organic interior style.',
-    shortDescription: 'Natural acoustic cork accent panel for home interiors.',
-    material: 'Natural Portuguese Cork on Acoustic Layer',
-    sizes: ['18x24 inch', 'Set of 6 Hexagonal Tiles'],
-    finishes: ['Natural Cork', 'Geometric Screenprint'],
-    customizationAvailable: true,
-    tags: ['cork', 'decor', 'acoustic', 'earthy'],
-    stockStatus: 'In Stock',
-    applications: ['Home Studio', 'Living Room Nook', 'Workstation'],
     isDemoData: true
   },
   {
@@ -3928,3 +3667,4 @@ export const ALL_PRODUCTS: Product[] = [
 ];
 
 export const ALL_CATALOG_PRODUCTS: Product[] = ALL_PRODUCTS;
+
