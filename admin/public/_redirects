@@ -1,0 +1,12 @@
+# Static export builds one placeholder shell per dynamic detail route (the
+# actual id is resolved client-side from the API, never at build time) — map
+# any real id under these paths to that shell so Cloudflare Pages serves it
+# instead of a 404.
+/orders/*           /orders/placeholder           200
+/customers/*        /customers/placeholder        200
+/products/*         /products/placeholder         200
+/ndr/*              /ndr/placeholder              200
+/roles/*            /roles/placeholder            200
+/segments/*         /segments/placeholder         200
+/artwork/*          /artwork/placeholder          200
+/production/jobs/*  /production/jobs/placeholder  200
