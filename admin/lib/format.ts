@@ -11,6 +11,18 @@ export function formatCurrency(value: string): string {
   }).format(amount);
 }
 
+// Analytics summaries return plain numbers (not Decimal-as-string like
+// Order/Product fields) — a separate formatter avoids silently mis-handling
+// either shape.
+export function formatCurrencyNumber(value: number): string {
+  if (Number.isNaN(value)) return String(value);
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
 export function formatDate(value: string): string {
   return new Date(value).toLocaleString('en-IN', {
     dateStyle: 'medium',
