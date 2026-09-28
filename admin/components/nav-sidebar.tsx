@@ -23,6 +23,8 @@ import {
   ShieldCheck,
   Palette,
   BarChart3,
+  Sparkles,
+  UsersRound,
   Settings,
   LogOut,
 } from 'lucide-react';
@@ -90,6 +92,8 @@ const NAV_SECTIONS: NavSection[] = [
         icon: ShoppingBag,
         requiredPermissions: ['abandoned_carts.view'],
       },
+      { href: '/promotions', label: 'Promotions', icon: Sparkles, requiredPermissions: ['promotions.view'] },
+      { href: '/segments', label: 'Segments', icon: UsersRound, requiredPermissions: ['segments.view'] },
     ],
   },
   {

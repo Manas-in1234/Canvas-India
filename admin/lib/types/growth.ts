@@ -56,6 +56,63 @@ export interface CreateCampaignInput {
   endsAt?: string;
 }
 
+export type PromotionType = 'AUTOMATIC_DISCOUNT' | 'BUY_X_GET_Y' | 'TIERED_DISCOUNT' | 'FREE_SHIPPING';
+
+export interface Promotion {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  promotionType: PromotionType;
+  discountType: DiscountType;
+  value: string;
+  isActive: boolean;
+  isStackable: boolean;
+  startsAt: string;
+  endsAt: string;
+  priority: number;
+}
+
+export interface CreatePromotionInput {
+  name: string;
+  slug: string;
+  description?: string;
+  promotionType?: PromotionType;
+  discountType: DiscountType;
+  value: number;
+  startsAt: string;
+  endsAt: string;
+  isActive?: boolean;
+}
+
+export type SegmentType = 'MANUAL' | 'DYNAMIC';
+
+export interface CustomerSegment {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  type: SegmentType;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface SegmentMember {
+  customer: { id: string; name: string; email: string | null; phone: string | null; isGuest: boolean };
+}
+
+export interface CustomerSegmentDetail extends CustomerSegment {
+  members: SegmentMember[];
+}
+
+export interface CreateSegmentInput {
+  name: string;
+  slug: string;
+  description?: string;
+  type?: SegmentType;
+  isActive?: boolean;
+}
+
 export interface AbandonedCart {
   id: string;
   cartId: string;
