@@ -192,9 +192,16 @@ export const Header: React.FC<HeaderProps> = ({
   const [allCatMenuPos, setAllCatMenuPos] = useState<{ top: number; left: number } | null>(null);
   const [megaMenuPos, setMegaMenuPos] = useState<{ top: number; left: number } | null>(null);
 
-  // Category bar shopping categories (Excludes Bulk Order, which sits in the main header after Cart)
+  // Category bar shopping categories (Excludes Bulk Order, Posters, Custom Prints, Home Decor, and Yoga & Fitness which sits inside Cork)
   const CATEGORY_BAR_ITEMS = useMemo(() => {
-    return PRIMARY_CATEGORIES.filter((cat) => cat.slug !== 'bulk-order' && cat.slug !== 'posters' && cat.slug !== 'custom-prints');
+    return PRIMARY_CATEGORIES.filter(
+      (cat) =>
+        cat.slug !== 'bulk-order' &&
+        cat.slug !== 'posters' &&
+        cat.slug !== 'custom-prints' &&
+        cat.slug !== 'home-decor' &&
+        cat.slug !== 'yoga-fitness'
+    );
   }, []);
 
   // Close open dropdown menus on scroll or resize to prevent detached floating elements
@@ -356,6 +363,7 @@ export const Header: React.FC<HeaderProps> = ({
       case 'palette': return <Palette className="w-3.5 h-3.5 text-[#0E4A93]" />;
       case 'layers': return <Layers className="w-3.5 h-3.5 text-[#0E4A93]" />;
       case 'circleDot': return <CircleDot className="w-3.5 h-3.5 text-[#0E4A93]" />;
+      case 'activity': return <Activity className="w-3.5 h-3.5 text-[#0E4A93]" />;
       case 'printer': return <Printer className="w-3.5 h-3.5 text-[#0E4A93]" />;
       case 'package': return <Package className="w-3.5 h-3.5 text-[#0E4A93]" />;
       case 'building': return <Building2 className="w-3.5 h-3.5 text-[#0E4A93]" />;
