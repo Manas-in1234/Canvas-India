@@ -214,48 +214,12 @@ const SIZE_OPTIONS: SizeOption[] = [
   },
   // Classic Canvas Print
   {
-    id: 'classic-8x10',
-    productTypeId: 'canvas-classic',
-    label: 'Canvas: 8" × 10"',
-    dimensionsSummary: '8" × 10"',
-    price: 499.0,
-    categories: ['RECOMMENDED', 'SMALL'],
-    panels: [{ id: 'p0', label: 'Canvas', dimension: '8" × 10"', widthRatio: 8, heightRatio: 10 }]
-  },
-  {
-    id: 'classic-12x18',
-    productTypeId: 'canvas-classic',
-    label: 'Canvas: 12" × 18"',
-    dimensionsSummary: '12" × 18"',
-    price: 899.0,
-    categories: ['RECOMMENDED'],
-    panels: [{ id: 'p0', label: 'Canvas', dimension: '12" × 18"', widthRatio: 18, heightRatio: 12 }]
-  },
-  {
-    id: 'classic-16x24',
-    productTypeId: 'canvas-classic',
-    label: 'Canvas: 16" × 24"',
-    dimensionsSummary: '16" × 24"',
-    price: 1499.0,
-    categories: ['RECOMMENDED', 'LARGE'],
-    panels: [{ id: 'p0', label: 'Canvas', dimension: '16" × 24"', widthRatio: 24, heightRatio: 16 }]
-  },
-  {
-    id: 'classic-24x36',
-    productTypeId: 'canvas-classic',
-    label: 'Canvas: 24" × 36"',
-    dimensionsSummary: '24" × 36"',
-    price: 2299.0,
-    categories: ['RECOMMENDED', 'LARGE'],
-    panels: [{ id: 'p0', label: 'Canvas', dimension: '24" × 36"', widthRatio: 36, heightRatio: 24 }]
-  },
-  {
     id: 'classic-10x10',
     productTypeId: 'canvas-classic',
     label: 'Canvas: 10" × 10"',
     dimensionsSummary: '10" × 10"',
     price: 699.0,
-    categories: ['SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE'],
     panels: [{ id: 'p0', label: 'Canvas', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }]
   },
   {
@@ -264,7 +228,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Canvas: 16" × 16"',
     dimensionsSummary: '16" × 16"',
     price: 1299.0,
-    categories: ['SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE'],
     panels: [{ id: 'p0', label: 'Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
   },
   {
@@ -273,7 +237,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Canvas: 18" × 18"',
     dimensionsSummary: '18" × 18"',
     price: 1599.0,
-    categories: ['SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE'],
     panels: [{ id: 'p0', label: 'Canvas', dimension: '18" × 18"', widthRatio: 18, heightRatio: 18 }]
   },
   {
@@ -282,7 +246,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Canvas: 20" × 20"',
     dimensionsSummary: '20" × 20"',
     price: 1899.0,
-    categories: ['SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE'],
     panels: [{ id: 'p0', label: 'Canvas', dimension: '20" × 20"', widthRatio: 20, heightRatio: 20 }]
   },
   // Panoramic Canvas Print
