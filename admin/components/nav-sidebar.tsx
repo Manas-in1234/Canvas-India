@@ -11,6 +11,11 @@ import {
   Warehouse,
   Truck,
   AlertTriangle,
+  Factory,
+  LayoutGrid,
+  Wrench,
+  Layers,
+  Boxes as BatchIcon,
   Settings,
   LogOut,
 } from 'lucide-react';
@@ -26,19 +31,50 @@ interface NavLink {
   requiredPermissions: string[];
 }
 
+interface NavSection {
+  label: string | null;
+  links: NavLink[];
+}
+
 // Every entry names the exact permission the corresponding backend endpoint
 // requires (per the API survey) — a link never appears for a role that
 // couldn't actually use the page behind it.
-const NAV_LINKS: NavLink[] = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard, requiredPermissions: [] },
-  { href: '/orders', label: 'Orders', icon: ShoppingCart, requiredPermissions: ['orders.view'] },
-  { href: '/products', label: 'Products', icon: Package, requiredPermissions: ['products.view'] },
-  { href: '/customers', label: 'Customers', icon: Users, requiredPermissions: ['customers.view'] },
-  { href: '/inventory', label: 'Inventory', icon: Boxes, requiredPermissions: ['inventory.view'] },
-  { href: '/warehouses', label: 'Warehouses', icon: Warehouse, requiredPermissions: ['warehouses.view'] },
-  { href: '/shipments', label: 'Shipments', icon: Truck, requiredPermissions: ['shipping.view'] },
-  { href: '/ndr', label: 'NDR Cases', icon: AlertTriangle, requiredPermissions: ['ndr.view'] },
-  { href: '/settings', label: 'Settings', icon: Settings, requiredPermissions: [] },
+const NAV_SECTIONS: NavSection[] = [
+  {
+    label: null,
+    links: [{ href: '/', label: 'Dashboard', icon: LayoutDashboard, requiredPermissions: [] }],
+  },
+  {
+    label: 'Commerce',
+    links: [
+      { href: '/orders', label: 'Orders', icon: ShoppingCart, requiredPermissions: ['orders.view'] },
+      { href: '/products', label: 'Products', icon: Package, requiredPermissions: ['products.view'] },
+      { href: '/customers', label: 'Customers', icon: Users, requiredPermissions: ['customers.view'] },
+    ],
+  },
+  {
+    label: 'Fulfillment',
+    links: [
+      { href: '/inventory', label: 'Inventory', icon: Boxes, requiredPermissions: ['inventory.view'] },
+      { href: '/warehouses', label: 'Warehouses', icon: Warehouse, requiredPermissions: ['warehouses.view'] },
+      { href: '/shipments', label: 'Shipments', icon: Truck, requiredPermissions: ['shipping.view'] },
+      { href: '/ndr', label: 'NDR Cases', icon: AlertTriangle, requiredPermissions: ['ndr.view'] },
+    ],
+  },
+  {
+    label: 'Production',
+    links: [
+      { href: '/production/board', label: 'Board', icon: LayoutGrid, requiredPermissions: ['production.view'] },
+      { href: '/production/jobs', label: 'Jobs', icon: Factory, requiredPermissions: ['production.view'] },
+      { href: '/production/machines', label: 'Machines', icon: Wrench, requiredPermissions: ['machines.view'] },
+      { href: '/production/materials', label: 'Materials', icon: Layers, requiredPermissions: ['materials.view'] },
+      { href: '/production/batches', label: 'Batches', icon: BatchIcon, requiredPermissions: ['production.view'] },
+    ],
+  },
+  {
+    label: null,
+    links: [{ href: '/settings', label: 'Settings', icon: Settings, requiredPermissions: [] }],
+  },
 ];
 
 export function NavSidebar() {
@@ -52,22 +88,36 @@ export function NavSidebar() {
         <span className="font-semibold">CanvasChamp Admin</span>
       </div>
 
-      <nav className="flex-1 space-y-1 p-3">
-        {NAV_LINKS.filter((link) => hasAllPermissions(link.requiredPermissions)).map((link) => {
-          const Icon = link.icon;
-          const isActive = pathname === link.href;
+      <nav className="flex-1 space-y-4 overflow-y-auto p-3">
+        {NAV_SECTIONS.map((section, idx) => {
+          const visibleLinks = section.links.filter((link) => hasAllPermissions(link.requiredPermissions));
+          if (visibleLinks.length === 0) return null;
+
           return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                isActive ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:bg-muted',
+            <div key={section.label ?? `section-${idx}`} className="space-y-1">
+              {section.label && (
+                <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  {section.label}
+                </div>
               )}
-            >
-              <Icon className="h-4 w-4" />
-              {link.label}
-            </Link>
+              {visibleLinks.map((link) => {
+                const Icon = link.icon;
+                const isActive = pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={cn(
+                      'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                      isActive ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:bg-muted',
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
           );
         })}
       </nav>

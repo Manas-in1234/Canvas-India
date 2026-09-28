@@ -31,6 +31,17 @@ const STATUS_STYLES: Record<string, string> = {
   // Product status
   ACTIVE: 'bg-emerald-100 text-emerald-800',
   ARCHIVED: 'bg-stone-200 text-stone-700',
+  // Production job / stage status
+  QUEUED: 'bg-muted text-muted-foreground',
+  IN_PROGRESS: 'bg-blue-100 text-blue-800',
+  ON_HOLD: 'bg-orange-100 text-orange-800',
+  PASSED: 'bg-emerald-100 text-emerald-800',
+  SKIPPED: 'bg-stone-200 text-stone-700',
+  // Machine status
+  AVAILABLE: 'bg-emerald-100 text-emerald-800',
+  RUNNING: 'bg-blue-100 text-blue-800',
+  MAINTENANCE: 'bg-amber-100 text-amber-800',
+  OFFLINE: 'bg-stone-200 text-stone-700',
 };
 
 export function StatusBadge({ status }: { status: string }) {
