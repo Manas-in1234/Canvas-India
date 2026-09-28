@@ -21,6 +21,7 @@ import {
   ShoppingBag,
   UserCog,
   ShieldCheck,
+  Palette,
   Settings,
   LogOut,
 } from 'lucide-react';
@@ -69,6 +70,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     label: 'Production',
     links: [
+      { href: '/artwork', label: 'Artwork Review', icon: Palette, requiredPermissions: ['artwork.view'] },
       { href: '/production/board', label: 'Board', icon: LayoutGrid, requiredPermissions: ['production.view'] },
       { href: '/production/jobs', label: 'Jobs', icon: Factory, requiredPermissions: ['production.view'] },
       { href: '/production/machines', label: 'Machines', icon: Wrench, requiredPermissions: ['machines.view'] },

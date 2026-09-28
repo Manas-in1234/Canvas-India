@@ -26,6 +26,19 @@ export class ArtworkService {
     return artwork;
   }
 
+  /**
+   * Lists artwork for the admin review queue. No listing endpoint existed
+   * before this — a reviewer had no way to see what was awaiting review
+   * without already knowing an artwork's id.
+   */
+  findAll(status?: string) {
+    return this.prisma.artwork.findMany({
+      where: status ? { status: status as never } : undefined,
+      include: { designVersion: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   /** Kicks off pre-flight (scope §27-29); processing runs off the request path. */
   async create(designVersionId: string) {
     const artwork = await this.prisma.artwork.create({

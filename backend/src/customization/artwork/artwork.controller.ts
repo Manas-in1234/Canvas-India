@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ArtworkService } from './artwork.service.js';
 import { CreateArtworkDto } from './dto/create-artwork.dto.js';
 import { ReviewArtworkDto } from './dto/review-artwork.dto.js';
@@ -12,6 +12,12 @@ import type { AuthenticatedUser } from '../../auth/types/authenticated-user.js';
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ArtworkController {
   constructor(private readonly artworkService: ArtworkService) {}
+
+  @Get()
+  @RequirePermissions('artwork.view')
+  findAll(@Query('status') status?: string) {
+    return this.artworkService.findAll(status);
+  }
 
   @Get(':id')
   @RequirePermissions('artwork.view')
