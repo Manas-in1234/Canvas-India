@@ -80,6 +80,22 @@ export const AcrylicProductShapeConfig: Record<string, string[]> = {
     'shape-rectangle',
     'shape-landscape',
     'shape-portrait'
+  ],
+  'acrylic-split': [
+    'shape-square',
+    'shape-rectangle',
+    'shape-landscape',
+    'shape-portrait'
+  ],
+  'acrylic-signage': [
+    'shape-square',
+    'shape-rectangle',
+    'shape-landscape',
+    'shape-portrait',
+    'shape-circle',
+    'shape-oval',
+    'shape-rounded-rect',
+    'shape-hexagon'
   ]
 };
 
@@ -102,7 +118,9 @@ export const AcrylicHardwareConfig: Record<string, string[]> = {
   'acrylic-photo-panel': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-wall-art': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-print': ALL_ACRYLIC_HARDWARE_IDS,
-  'acrylic-collage': ALL_ACRYLIC_HARDWARE_IDS
+  'acrylic-collage': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-split': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-signage': ALL_ACRYLIC_HARDWARE_IDS
 };
 
 export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
@@ -205,6 +223,46 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-collage'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-collage']
+  },
+  {
+    id: 'acrylic-split',
+    name: 'Acrylic Split Panel',
+    price: 674.50,
+    startingPrice: 674.50,
+    image: '/assets/customizer/acrylic/layouts/layout-2-split.svg',
+    iconType: 'split',
+    defaultLayout: 'twoSplit',
+    defaultLayoutId: 'layout-2-split',
+    defaultShape: 'shape-landscape',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-split'],
+    imageSlots: 2,
+    panelsCount: 2,
+    description: 'Photograph split seamlessly across a dual-panel acrylic display.',
+    defaultSizeOptionId: 'shape-landscape-12x8',
+    defaultHardwareId: 'ready-to-hang',
+    defaultThicknessId: '5mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-split'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-split']
+  },
+  {
+    id: 'acrylic-signage',
+    name: 'Acrylic Signage',
+    price: 799.00,
+    startingPrice: 799.00,
+    image: '/images/acrylic/shapes/rectangle.svg',
+    iconType: 'signage',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-rectangle',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-signage'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Professional architectural logo and nameplate display with standoff bolts.',
+    defaultSizeOptionId: 'shape-rectangle-12x8',
+    defaultHardwareId: 'standoff-mounts',
+    defaultThicknessId: '5mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-signage'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-signage']
   }
 ];
 

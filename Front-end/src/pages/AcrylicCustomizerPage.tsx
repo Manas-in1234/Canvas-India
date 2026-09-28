@@ -194,7 +194,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const hasUserSelectedCustomShapeRef = useRef<boolean>(false);
   const hasUserSelectedCustomLayoutRef = useRef<boolean>(false);
 
-  // Resolve initial Acrylic Product ID from URL param or catalog product (strictly within the 5 Acrylic products)
+  // Resolve initial Acrylic Product ID from URL param or catalog product (within all 7 Acrylic products)
   const resolveProductTypeId = (urlId?: string, catProd?: { id?: string; slug?: string; name?: string }): string => {
     const directMatch = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === urlId);
     if (directMatch) return directMatch.id;
@@ -202,6 +202,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
     if (key.includes('block')) return 'acrylic-photo-block';
     if (key.includes('wall') || key.includes('display')) return 'acrylic-wall-art';
     if (key.includes('collage')) return 'acrylic-collage';
+    if (key.includes('split') || key.includes('triptych')) return 'acrylic-split';
+    if (key.includes('sign')) return 'acrylic-signage';
     if (key.includes('print') && !key.includes('panel')) return 'acrylic-print';
     if (key.includes('panel')) return 'acrylic-photo-panel';
     return 'acrylic-photo-panel';
@@ -1546,16 +1548,17 @@ export const AcrylicCustomizerPage: React.FC = () => {
     // 1. Update selected product state (updates card checkmark, header title, and price)
     setSelectedProductTypeId(pt.id);
 
-    // 2. Apply the product's default layout (always 4-grid for Acrylic Collage; preserve manual layout between non-collage products)
+    // 2. Apply the product's default layout (4-grid for Acrylic Collage, 2-split for Acrylic Split Panel; preserve manual layout between single-panel products)
+    const isMultiSlotProduct = (id: string) => id === 'acrylic-collage' || id === 'acrylic-split';
     const shouldApplyDefaultLayout =
-      pt.id === 'acrylic-collage' ||
-      selectedProductTypeId === 'acrylic-collage' ||
+      isMultiSlotProduct(pt.id) ||
+      isMultiSlotProduct(selectedProductTypeId) ||
       !hasUserSelectedCustomLayoutRef.current;
     const nextLayoutId = shouldApplyDefaultLayout
       ? (pt.defaultLayoutId || 'layout-1-single')
       : selectedLayoutId;
     setSelectedLayoutId(nextLayoutId);
-    if (pt.id === 'acrylic-collage') {
+    if (isMultiSlotProduct(pt.id)) {
       hasUserSelectedCustomLayoutRef.current = false;
     }
 
@@ -1577,14 +1580,18 @@ export const AcrylicCustomizerPage: React.FC = () => {
       setSelectedShapeId(nextShapeId);
     }
 
-    // 4. Validate hardware compatibility for the newly selected product
+    // 4. Apply product-specific default hardware and thickness (validated against compatible hardware)
     const allowedHardware = getCompatibleHardwareForProduct(pt.id);
-    const normalizedHw = normalizeAcrylicHardwareId(selectedHardwareId);
-    if (!allowedHardware.some((h) => h.id === normalizedHw)) {
-      const nextHwId = normalizeAcrylicHardwareId(pt.defaultHardwareId || allowedHardware[0]?.id || 'hooks-hanging');
-      setSelectedHardwareId(nextHwId);
-    } else if (normalizedHw !== selectedHardwareId) {
-      setSelectedHardwareId(normalizedHw);
+    const defaultHwNormalized = normalizeAcrylicHardwareId(pt.defaultHardwareId || allowedHardware[0]?.id || 'hooks-hanging');
+    if (allowedHardware.some((h) => h.id === defaultHwNormalized)) {
+      setSelectedHardwareId(defaultHwNormalized);
+    } else {
+      const normalizedHw = normalizeAcrylicHardwareId(selectedHardwareId);
+      if (!allowedHardware.some((h) => h.id === normalizedHw)) {
+        setSelectedHardwareId(allowedHardware[0]?.id || 'hooks-hanging');
+      } else if (normalizedHw !== selectedHardwareId) {
+        setSelectedHardwareId(normalizedHw);
+      }
     }
     if (pt.defaultThicknessId) {
       setSelectedThicknessId(pt.defaultThicknessId);
