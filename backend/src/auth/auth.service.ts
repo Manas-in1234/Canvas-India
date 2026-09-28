@@ -10,7 +10,7 @@ import type { AuthenticatedUser } from './types/authenticated-user.js';
 export interface LoginResult {
   accessToken: string;
   refreshToken: string;
-  user: Pick<AuthenticatedUser, 'id' | 'email' | 'roleName'>;
+  user: AuthenticatedUser;
 }
 
 @Injectable()
@@ -25,7 +25,7 @@ export class AuthService {
   async login(email: string, password: string, userAgent?: string, ipAddress?: string): Promise<LoginResult> {
     const adminUser = await this.prisma.adminUser.findUnique({
       where: { email },
-      include: { role: true },
+      include: { role: { include: { permissions: { include: { permission: true } } } } },
     });
 
     if (!adminUser || !adminUser.isActive) {
@@ -62,7 +62,13 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      user: { id: adminUser.id, email: adminUser.email, roleName: adminUser.role.name },
+      user: {
+        id: adminUser.id,
+        email: adminUser.email,
+        roleId: adminUser.roleId,
+        roleName: adminUser.role.name,
+        permissions: adminUser.role.permissions.map((rp) => rp.permission.key),
+      },
     };
   }
 
@@ -103,6 +109,41 @@ export class AuthService {
 
     const accessToken = await this.signAccessToken(matchedSession.adminUserId);
     return { accessToken, refreshToken: newRefreshToken };
+  }
+
+  /**
+   * Changes the caller's own password. Requires the current password (not
+   * just a valid access token) so a hijacked-but-not-yet-expired session
+   * can't silently lock the real owner out. Revokes every other session on
+   * success — a password change should invalidate tokens issued under the
+   * old credential, not just future logins.
+   */
+  async changePassword(adminUserId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const adminUser = await this.prisma.adminUser.findUniqueOrThrow({ where: { id: adminUserId } });
+
+    const currentValid = await argon2.verify(adminUser.passwordHash, currentPassword);
+    if (!currentValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    const newPasswordHash = await argon2.hash(newPassword);
+
+    await this.prisma.adminUser.update({
+      where: { id: adminUserId },
+      data: { passwordHash: newPasswordHash },
+    });
+
+    await this.prisma.session.updateMany({
+      where: { adminUserId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    await this.auditService.record({
+      adminUserId,
+      action: 'PASSWORD_CHANGE',
+      entityType: 'AdminUser',
+      entityId: adminUserId,
+    });
   }
 
   async logout(refreshToken: string): Promise<void> {
