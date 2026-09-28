@@ -16,6 +16,9 @@ import {
   Wrench,
   Layers,
   Boxes as BatchIcon,
+  Tag,
+  Megaphone,
+  ShoppingBag,
   Settings,
   LogOut,
 } from 'lucide-react';
@@ -69,6 +72,19 @@ const NAV_SECTIONS: NavSection[] = [
       { href: '/production/machines', label: 'Machines', icon: Wrench, requiredPermissions: ['machines.view'] },
       { href: '/production/materials', label: 'Materials', icon: Layers, requiredPermissions: ['materials.view'] },
       { href: '/production/batches', label: 'Batches', icon: BatchIcon, requiredPermissions: ['production.view'] },
+    ],
+  },
+  {
+    label: 'Growth',
+    links: [
+      { href: '/discounts', label: 'Discounts', icon: Tag, requiredPermissions: ['discounts.view'] },
+      { href: '/campaigns', label: 'Campaigns', icon: Megaphone, requiredPermissions: ['campaigns.view'] },
+      {
+        href: '/abandoned-carts',
+        label: 'Abandoned Carts',
+        icon: ShoppingBag,
+        requiredPermissions: ['abandoned_carts.view'],
+      },
     ],
   },
   {
