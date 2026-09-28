@@ -22,6 +22,7 @@ import {
   UserCog,
   ShieldCheck,
   Palette,
+  BarChart3,
   Settings,
   LogOut,
 } from 'lucide-react';
@@ -89,6 +90,12 @@ const NAV_SECTIONS: NavSection[] = [
         icon: ShoppingBag,
         requiredPermissions: ['abandoned_carts.view'],
       },
+    ],
+  },
+  {
+    label: null,
+    links: [
+      { href: '/analytics', label: 'Analytics', icon: BarChart3, requiredPermissions: ['analytics.view'] },
     ],
   },
   {
