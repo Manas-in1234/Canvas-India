@@ -19,6 +19,8 @@ import {
   Tag,
   Megaphone,
   ShoppingBag,
+  UserCog,
+  ShieldCheck,
   Settings,
   LogOut,
 } from 'lucide-react';
@@ -85,6 +87,13 @@ const NAV_SECTIONS: NavSection[] = [
         icon: ShoppingBag,
         requiredPermissions: ['abandoned_carts.view'],
       },
+    ],
+  },
+  {
+    label: 'Administration',
+    links: [
+      { href: '/users', label: 'Admin Users', icon: UserCog, requiredPermissions: ['users.view'] },
+      { href: '/roles', label: 'Roles', icon: ShieldCheck, requiredPermissions: ['roles.view'] },
     ],
   },
   {
