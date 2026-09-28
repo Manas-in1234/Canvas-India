@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ShopProvider } from './context/ShopContext';
 import { RootLayout } from './components/RootLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 import { HomePage } from './pages/HomePage';
 import { CategoryPage } from './pages/CategoryPage';
@@ -39,8 +40,9 @@ import { OrderSuccessPage } from './pages/OrderSuccessPage';
 
 export function App() {
   return (
-    <AuthProvider>
-      <ShopProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ShopProvider>
         <Routes>
           {/* Dedicated Full-Screen Acrylic Customizer */}
           <Route path="/customize/acrylic/:productId" element={<AcrylicCustomizerPage />} />
@@ -134,6 +136,7 @@ export function App() {
         </Routes>
       </ShopProvider>
     </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -3,16 +3,19 @@ import { Link } from 'react-router-dom';
 import {
   Menu,
   ChevronLeft,
+  ChevronRight,
   ShoppingCart,
   Check,
   ZoomIn,
   ZoomOut,
+  RotateCcw,
   RotateCw,
   RefreshCw,
   Save,
   Type,
   Smile,
   Eye,
+  Box,
   Trash2
 } from 'lucide-react';
 
@@ -21,7 +24,7 @@ import {
 // ============================================================================
 
 export interface CustomizerHeaderProps {
-  productName: string;
+  productName?: string;
   backToPath?: string;
   backLink?: string;
   backToLabel?: string;
@@ -36,7 +39,6 @@ export interface CustomizerHeaderProps {
 }
 
 export const CustomizerHeader: React.FC<CustomizerHeaderProps> = ({
-  productName,
   backToPath,
   backLink,
   backToLabel,
@@ -56,7 +58,7 @@ export const CustomizerHeader: React.FC<CustomizerHeaderProps> = ({
 
   return (
     <header className="h-14 bg-[#0E4A93] text-white flex items-center justify-between px-3 sm:px-6 shadow-md z-30 shrink-0">
-      {/* LEFT: Menu / Back / Logo / Customizer */}
+      {/* LEFT: [MENU] [BACK TO CANVAS / ACRYLIC] | [CANVAS INDIA LOGO] */}
       <div className="flex items-center gap-2 sm:gap-3">
         <button
           type="button"
@@ -88,9 +90,6 @@ export const CustomizerHeader: React.FC<CustomizerHeaderProps> = ({
             alt="Canvas India"
             className="h-7 sm:h-8 md:h-9 w-auto object-contain block select-none"
           />
-          <span className="text-white font-bold text-xs tracking-wider uppercase inline-block border-l border-white/20 pl-2">
-            {productName}
-          </span>
         </Link>
       </div>
 
@@ -302,7 +301,7 @@ export const CustomizerOptionCard: React.FC<CustomizerOptionCardProps> = ({
 };
 
 // ============================================================================
-// 5. SHARED WORKSPACE TOP TOOLBAR
+// 5. SHARED WORKSPACE TOP TOOLBAR (SAVE, ADD TEXT, ADD CLIPART, ROOM, 3D, 360)
 // ============================================================================
 
 export interface CustomizerToolbarExtraAction {
@@ -310,16 +309,18 @@ export interface CustomizerToolbarExtraAction {
   label: string;
   icon: React.ElementType;
   active?: boolean;
+  disabled?: boolean;
   onClick: () => void;
   title?: string;
 }
 
 export interface CustomizerTopToolbarProps {
-  onZoomIn: () => void;
-  onZoomOut: () => void;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
   onRotate?: () => void;
   onRotate90?: () => void;
-  onReset: () => void;
+  onReset?: () => void;
+  hideImageControls?: boolean;
   productSummary?: {
     productName: string;
     shapeName: string;
@@ -337,6 +338,11 @@ export interface CustomizerTopToolbarProps {
   onOpenRoomView?: () => void;
   onToggleRoomView?: () => void;
   isRoomViewActive?: boolean;
+  isRoomViewDisabled?: boolean;
+  onOpen3DView?: () => void;
+  is3DViewActive?: boolean;
+  onOpen360View?: () => void;
+  is360ViewActive?: boolean;
   extraActions?: CustomizerToolbarExtraAction[];
   canDeleteSelectedItem?: boolean;
   hasSelectedItem?: boolean;
@@ -344,13 +350,6 @@ export interface CustomizerTopToolbarProps {
 }
 
 export const CustomizerTopToolbar: React.FC<CustomizerTopToolbarProps> = ({
-  onZoomIn,
-  onZoomOut,
-  onRotate,
-  onRotate90,
-  onReset,
-  productSummary,
-  summaryBadgeText,
   onSave,
   onToggleText,
   isTextActive,
@@ -361,77 +360,58 @@ export const CustomizerTopToolbar: React.FC<CustomizerTopToolbarProps> = ({
   onOpenRoomView,
   onToggleRoomView,
   isRoomViewActive = false,
+  isRoomViewDisabled = false,
+  onOpen3DView,
+  is3DViewActive = false,
+  onOpen360View,
+  is360ViewActive = false,
   extraActions = [],
   canDeleteSelectedItem,
   hasSelectedItem,
   onDeleteSelectedItem
 }) => {
-  const handleRotate = onRotate || onRotate90;
   const textActive = Boolean(isTextActive ?? showTextPopover);
   const clipartActive = Boolean(isClipartActive ?? showClipartPopover);
   const handleRoomView = onOpenRoomView || onToggleRoomView;
   const showDelete = Boolean(canDeleteSelectedItem ?? hasSelectedItem);
 
+  const builtInPreviewActions: CustomizerToolbarExtraAction[] = [];
+  if (onOpen3DView) {
+    builtInPreviewActions.push({
+      id: 'shared-3d-view',
+      label: '3D VIEW',
+      icon: Box,
+      active: is3DViewActive,
+      disabled: isRoomViewDisabled,
+      title: isRoomViewDisabled
+        ? 'Upload an image first to enable 3D View'
+        : 'Inspect physical 3D product perspective',
+      onClick: onOpen3DView
+    });
+  }
+  if (onOpen360View) {
+    builtInPreviewActions.push({
+      id: 'shared-360-view',
+      label: '360° VIEW',
+      icon: RotateCw,
+      active: is360ViewActive,
+      disabled: isRoomViewDisabled,
+      title: isRoomViewDisabled
+        ? 'Upload an image first to enable 360° View'
+        : 'Interactive 360° rotating product preview',
+      onClick: onOpen360View
+    });
+  }
+
+  const allExtraActions = [...builtInPreviewActions, ...extraActions];
+
   return (
     <div className="h-12 bg-white border-b border-stone-200 px-3 sm:px-4 flex items-center justify-between shrink-0 z-20 overflow-x-auto">
-      {/* Left Image Manipulation Tools + Active Configuration Summary */}
-      <div className="flex items-center gap-1.5 shrink-0">
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={onZoomIn}
-            className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
-            title="Zoom In"
-          >
-            <ZoomIn className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onZoomOut}
-            className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
-            title="Zoom Out"
-          >
-            <ZoomOut className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={handleRotate}
-            className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
-            title="Rotate 90°"
-          >
-            <RotateCw className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onReset}
-            className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
-            title="Reset Image"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-        </div>
+      {/* Left Spacer (No Zoom/Rotate or duplicate product info in top toolbar) */}
+      <div className="flex items-center gap-1.5 shrink-0" />
 
-        {productSummary ? (
-          <div className="hidden lg:flex items-center gap-1.5 pl-2 ml-1 border-l border-stone-200 text-[11px] font-bold text-stone-600">
-            <span className="text-[#0E4A93]">{productSummary.productName}</span>
-            <span className="text-stone-300">•</span>
-            <span>{productSummary.shapeName}</span>
-            <span className="text-stone-300">•</span>
-            <span className="bg-stone-100 text-stone-800 px-2 py-0.5 rounded">
-              {productSummary.dimensionLabel}
-            </span>
-            <span className="text-stone-300">•</span>
-            <span className="text-stone-500">{productSummary.hardwareName}</span>
-          </div>
-        ) : summaryBadgeText ? (
-          <div className="hidden lg:flex items-center gap-1.5 pl-2 ml-1 border-l border-stone-200 text-[11px] font-bold text-stone-600">
-            <span className="text-[#0E4A93]">{summaryBadgeText}</span>
-          </div>
-        ) : null}
-      </div>
-
-      {/* Right: [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW, + Extra Canvas Actions] */}
-      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      {/* Right: [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW, 3D VIEW, 360° VIEW] */}
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
         {/* SAVE */}
         <button
           type="button"
@@ -476,31 +456,46 @@ export const CustomizerTopToolbar: React.FC<CustomizerTopToolbarProps> = ({
         {/* ROOM VIEW */}
         <button
           type="button"
-          onClick={handleRoomView}
-          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
-            isRoomViewActive
-              ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
-              : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
+          disabled={isRoomViewDisabled}
+          aria-disabled={isRoomViewDisabled}
+          onClick={() => {
+            if (isRoomViewDisabled) return;
+            handleRoomView?.();
+          }}
+          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs ${
+            isRoomViewDisabled
+              ? 'bg-stone-100 text-stone-400 border-stone-200 opacity-50 cursor-not-allowed'
+              : isRoomViewActive
+              ? 'bg-[#0E4A93] text-white border-[#0E4A93] cursor-pointer'
+              : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400 cursor-pointer'
           }`}
-          title="Preview on realistic wall"
+          title={isRoomViewDisabled ? 'Upload an image first to enable Room View' : 'Preview on realistic wall'}
         >
           <Eye className="w-3.5 h-3.5" />
           <span>ROOM VIEW</span>
         </button>
 
-        {/* Extra controls (e.g. 3D VIEW, 360° VIEW in Canvas) */}
-        {extraActions.map((act) => {
+        {/* 3D VIEW & 360° VIEW (and any additional actions) */}
+        {allExtraActions.map((act) => {
           const Icon = act.icon;
+          const isDisabled = Boolean(act.disabled);
           return (
             <button
               key={act.id || act.label}
               type="button"
-              onClick={act.onClick}
-              title={act.title || act.label}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
-                act.active
-                  ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
-                  : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
+              disabled={isDisabled}
+              aria-disabled={isDisabled}
+              onClick={() => {
+                if (isDisabled) return;
+                act.onClick();
+              }}
+              title={isDisabled ? `Upload an image first to enable ${act.label}` : act.title || act.label}
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs ${
+                isDisabled
+                  ? 'bg-stone-100 text-stone-400 border-stone-200 opacity-50 cursor-not-allowed'
+                  : act.active
+                  ? 'bg-[#0E4A93] text-white border-[#0E4A93] cursor-pointer'
+                  : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400 cursor-pointer'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -520,6 +515,222 @@ export const CustomizerTopToolbar: React.FC<CustomizerTopToolbarProps> = ({
             <Trash2 className="w-4 h-4" />
           </button>
         )}
+      </div>
+    </div>
+  );
+};
+
+export const CustomizerWorkspaceHeader = CustomizerTopToolbar;
+
+// ============================================================================
+// 6. SHARED PREVIEW CONTROLS (Dynamic Size Pill + [ − ] [ + ] [ ↶ ] [ ↷ ])
+// ============================================================================
+
+export interface CustomizerPreviewControlsProps {
+  sizeLabel: string;
+  onZoomOut: () => void;
+  onZoomIn: () => void;
+  onRotateLeft: () => void;
+  onRotateRight: () => void;
+  extraControls?: React.ReactNode;
+  bottomSlot?: React.ReactNode;
+}
+
+export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps> = ({
+  sizeLabel,
+  onZoomOut,
+  onZoomIn,
+  onRotateLeft,
+  onRotateRight,
+  extraControls,
+  bottomSlot
+}) => {
+  return (
+    <div className="flex flex-col items-center justify-center w-full select-none">
+      {/* Dynamic Size Indicator directly below the Product Preview */}
+      <div
+        data-testid="customizer-size-indicator"
+        className="mt-3 inline-flex items-center justify-center px-3 py-1 rounded-full border border-stone-300 bg-white text-xs font-extrabold text-stone-700 shadow-xs"
+      >
+        {sizeLabel}
+      </div>
+
+      {/* Image Controls: [ − ] [ + ] [ ↶ ] [ ↷ ] directly below the Size Indicator */}
+      <div
+        data-testid="customizer-preview-controls"
+        className="mt-2 inline-flex items-center justify-center gap-1.5 bg-white/95 backdrop-blur-xs px-2.5 py-1.5 rounded-xl shadow-xs border border-stone-200"
+      >
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onZoomOut();
+          }}
+          className="p-1.5 rounded-lg hover:bg-stone-100 active:bg-stone-200 text-stone-700 hover:text-[#0E4A93] border border-stone-200 transition-colors cursor-pointer"
+          title="Zoom Out"
+          aria-label="Zoom Out"
+        >
+          <ZoomOut className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onZoomIn();
+          }}
+          className="p-1.5 rounded-lg hover:bg-stone-100 active:bg-stone-200 text-stone-700 hover:text-[#0E4A93] border border-stone-200 transition-colors cursor-pointer"
+          title="Zoom In"
+          aria-label="Zoom In"
+        >
+          <ZoomIn className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRotateLeft();
+          }}
+          className="p-1.5 rounded-lg hover:bg-stone-100 active:bg-stone-200 text-stone-700 hover:text-[#0E4A93] border border-stone-200 transition-colors cursor-pointer"
+          title="Rotate Left"
+          aria-label="Rotate Left"
+        >
+          <RotateCcw className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRotateRight();
+          }}
+          className="p-1.5 rounded-lg hover:bg-stone-100 active:bg-stone-200 text-stone-700 hover:text-[#0E4A93] border border-stone-200 transition-colors cursor-pointer"
+          title="Rotate Right"
+          aria-label="Rotate Right"
+        >
+          <RotateCw className="w-4 h-4" />
+        </button>
+        {extraControls}
+      </div>
+
+      {/* Optional Bottom Status / Material / Remove Photo Slot */}
+      {bottomSlot && <div className="mt-2.5 flex justify-center w-full">{bottomSlot}</div>}
+    </div>
+  );
+};
+
+// ============================================================================
+// 7. SHARED PREVIEW AREA (Wraps Product Preview + Shared Preview Controls)
+// ============================================================================
+
+export interface CustomizerPreviewAreaProps {
+  children: React.ReactNode;
+  sizeLabel: string;
+  onZoomOut: () => void;
+  onZoomIn: () => void;
+  onRotateLeft: () => void;
+  onRotateRight: () => void;
+  extraControls?: React.ReactNode;
+  bottomSlot?: React.ReactNode;
+  prevStep?: { label: string; disabled: boolean; onClick: () => void };
+  nextStep?: { label: string; disabled: boolean; onClick: () => void };
+  onPointerMove?: (e: React.PointerEvent<HTMLDivElement>) => void;
+  onPointerUp?: (e: React.PointerEvent<HTMLDivElement>) => void;
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onDragOver?: (e: React.DragEvent<HTMLDivElement>) => void;
+  onDragLeave?: (e: React.DragEvent<HTMLDivElement>) => void;
+  onDrop?: (e: React.DragEvent<HTMLDivElement>) => void;
+}
+
+export const CustomizerPreviewArea: React.FC<CustomizerPreviewAreaProps> = ({
+  children,
+  sizeLabel,
+  onZoomOut,
+  onZoomIn,
+  onRotateLeft,
+  onRotateRight,
+  extraControls,
+  bottomSlot,
+  prevStep,
+  nextStep,
+  onPointerMove,
+  onPointerUp,
+  onClick,
+  onDragOver,
+  onDragLeave,
+  onDrop
+}) => {
+  return (
+    <div
+      className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden overflow-y-auto"
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onClick={onClick}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+    >
+      {/* Subtle Studio Grid Background */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-45"
+        style={{
+          backgroundImage:
+            'linear-gradient(#CBD5E1 1px, transparent 1px), linear-gradient(90deg, #CBD5E1 1px, transparent 1px)',
+          backgroundSize: '24px 24px'
+        }}
+      />
+
+      {/* Optional Left Chevron Button: Prev Step */}
+      {prevStep && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            prevStep.onClick();
+          }}
+          disabled={prevStep.disabled}
+          className={`hidden lg:flex flex-col items-center justify-center absolute left-5 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-stone-700 hover:text-stone-950 p-3 rounded-xl shadow-md border border-stone-200 transition-all group z-20 ${
+            prevStep.disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
+          }`}
+        >
+          <ChevronLeft className="w-5 h-5 text-stone-500 group-hover:-translate-x-0.5 transition-transform" />
+          <span className="text-[9px] font-black tracking-tight uppercase mt-0.5 max-w-[64px] leading-tight">
+            {prevStep.label}
+          </span>
+        </button>
+      )}
+
+      {/* Optional Right Chevron Button: Next Step */}
+      {nextStep && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            nextStep.onClick();
+          }}
+          disabled={nextStep.disabled}
+          className={`hidden lg:flex flex-col items-center justify-center absolute right-5 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-stone-700 hover:text-stone-950 p-3 rounded-xl shadow-md border border-stone-200 transition-all group z-20 ${
+            nextStep.disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
+          }`}
+        >
+          <ChevronRight className="w-5 h-5 text-stone-500 group-hover:translate-x-0.5 transition-transform" />
+          <span className="text-[9px] font-black tracking-tight uppercase mt-0.5 max-w-[64px] leading-tight">
+            {nextStep.label}
+          </span>
+        </button>
+      )}
+
+      {/* Product Preview + Shared Size Indicator + [ − ] [ + ] [ ↶ ] [ ↷ ] Controls */}
+      <div className="relative z-10 flex flex-col items-center justify-center max-w-2xl w-full">
+        {children}
+
+        <CustomizerPreviewControls
+          sizeLabel={sizeLabel}
+          onZoomOut={onZoomOut}
+          onZoomIn={onZoomIn}
+          onRotateLeft={onRotateLeft}
+          onRotateRight={onRotateRight}
+          extraControls={extraControls}
+          bottomSlot={bottomSlot}
+        />
       </div>
     </div>
   );

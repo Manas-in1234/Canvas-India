@@ -249,9 +249,12 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
       }
     }
 
-    // Split panel products span wider horizontally across multiple panels
+    // Split panel and panoramic products span wider horizontally across multiple panels
     const isSplitProduct =
-      productId === 'acrylic-split' || productId === 'acrylic-split-panel';
+      productId === 'acrylic-split' ||
+      productId === 'acrylic-split-panel' ||
+      productId === 'canvas-split' ||
+      productId === 'canvas-panoramic';
     const maxInches = Math.max(effW, effH) * (isSplitProduct ? 1.08 : 1);
 
     // Room-scale mapping:
@@ -592,7 +595,7 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
             />
           )}
 
-          {/* Fixed-Size Draggable Acrylic Product */}
+          {/* Fixed-Size Draggable ProductObject (Frame + Artwork + Border + Overlays Locked Together) */}
           <div
             onPointerDown={handleProductPointerDown}
             onPointerMove={handleProductPointerMove}
@@ -615,7 +618,9 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
                 : 'cursor-grab hover:ring-2 hover:ring-[#0E4A93]/70 rounded-md'
             }`}
           >
-            {renderProduct(true)}
+            <div className="absolute inset-0 w-full h-full pointer-events-none select-none flex items-center justify-center">
+              {renderProduct(true)}
+            </div>
           </div>
         </div>
 

@@ -11,6 +11,7 @@ import {
   Upload,
   ZoomIn, 
   ZoomOut, 
+  RotateCcw,
   RotateCw, 
   RefreshCw, 
   Type, 
@@ -25,6 +26,7 @@ import {
   Trash2, 
   Move,
   Eye,
+  Box,
   Crop,
   Grid,
   Search,
@@ -91,6 +93,11 @@ import { AcrylicClipartModal, ClipartElement } from '../components/AcrylicClipar
 import { AcrylicRoomViewModal, RoomPlacementState } from '../components/AcrylicRoomViewModal';
 import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
 import { CustomizerProductSelector } from '../components/CustomizerProductSelector';
+import {
+  CustomizerHeader,
+  CustomizerTopToolbar,
+  CustomizerPreviewArea
+} from '../components/CustomizerUiShell';
 import { ClipartItem } from '../data/acrylicClipartData';
 
 // ============================================================================
@@ -424,6 +431,17 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // Uploaded Photos session gallery
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
 
+  // Single source of truth for whether at least ONE valid customer image is currently uploaded
+  const hasUploadedImage = useMemo(() => {
+    const anySlotHasImage = Object.values(panelImages).some(
+      (p) => Boolean(p?.imageUrl && p.imageUrl.trim().length > 0)
+    );
+    const anyTrayHasImage = uploadedPhotos.some(
+      (url) => Boolean(url && url.trim().length > 0)
+    );
+    return anySlotHasImage || anyTrayHasImage;
+  }, [panelImages, uploadedPhotos]);
+
   // Room View state
   const [showRoomView, setShowRoomView] = useState<boolean>(false);
   const [roomViewState, setRoomViewState] = useState<RoomPlacementState>({
@@ -432,6 +450,90 @@ export const AcrylicCustomizerPage: React.FC = () => {
     productRoomX: 0.22,
     productRoomY: 0.33
   });
+
+  // Automatically close Room View if all uploaded photos are removed
+  useEffect(() => {
+    if (!hasUploadedImage && showRoomView) {
+      setShowRoomView(false);
+    }
+  }, [hasUploadedImage, showRoomView]);
+
+  // Remove a specific uploaded photo from the tray and clear any slots displaying it
+  const handleRemoveUploadedPhoto = (photoUrl: string, photoIdx: number) => {
+    const nextUploaded = uploadedPhotos.filter((_, idx) => idx !== photoIdx);
+    const stillHasUrl = nextUploaded.includes(photoUrl);
+    setUploadedPhotos(nextUploaded);
+
+    if (!stillHasUrl) {
+      const fallbackUrl = nextUploaded[0] || null;
+      setPanelImages((prev) => {
+        const next: Record<number, PanelImageState> = { ...prev };
+        Object.keys(next).forEach((k) => {
+          const slotIdx = Number(k);
+          if (next[slotIdx]?.imageUrl === photoUrl) {
+            next[slotIdx] = {
+              ...next[slotIdx],
+              imageUrl: slotIdx === 0 && nextUploaded.length === 1 ? fallbackUrl : null,
+              uploadedImage: null,
+              panX: 0,
+              panY: 0,
+              scale: 1,
+              rotation: 0
+            };
+          }
+        });
+        return next;
+      });
+    }
+  };
+
+  // Remove photo from a specific Acrylic slot (and from uploadedPhotos if no other slot uses it)
+  const handleRemoveSlotPhoto = (panelIdx: number) => {
+    const removedUrl = panelImages[panelIdx]?.imageUrl;
+    setPanelImages((prev) => {
+      const current = prev[panelIdx] || createDefaultPanelState(null);
+      const next: Record<number, PanelImageState> = {
+        ...prev,
+        [panelIdx]: {
+          ...current,
+          imageUrl: null,
+          uploadedImage: null,
+          panX: 0,
+          panY: 0,
+          scale: 1,
+          rotation: 0
+        }
+      };
+      const usedElsewhere = Object.keys(next).some(
+        (k) => Number(k) !== panelIdx && next[Number(k)]?.imageUrl === removedUrl
+      );
+      if (removedUrl && !usedElsewhere) {
+        setUploadedPhotos((curr) => curr.filter((u) => u !== removedUrl));
+      }
+      return next;
+    });
+  };
+
+  // Clear all uploaded photos from both the tray and all Acrylic slots
+  const handleClearAllUploadedPhotos = () => {
+    setUploadedPhotos([]);
+    setPanelImages((prev) => {
+      const next: Record<number, PanelImageState> = {};
+      Object.keys(prev).forEach((k) => {
+        const slotIdx = Number(k);
+        next[slotIdx] = {
+          ...prev[slotIdx],
+          imageUrl: null,
+          uploadedImage: null,
+          panX: 0,
+          panY: 0,
+          scale: 1,
+          rotation: 0
+        };
+      });
+      return next;
+    });
+  };
 
   // Add Text Editor Popover State
   const [showTextModal, setShowTextModal] = useState<boolean>(false);
@@ -678,6 +780,61 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const dragStartRef = useRef<{ x: number; y: number; initialPanX: number; initialPanY: number; panelIdx: number } | null>(null);
   const textDragRef = useRef<{ x: number; y: number; initialOffset: { x: number; y: number }; rect: DOMRect } | null>(null);
   const clipartDragRef = useRef<{ x: number; y: number; initialOffset: { x: number; y: number }; rect: DOMRect } | null>(null);
+  const frameElsRef = useRef<Record<number, HTMLDivElement | null>>({});
+  const wheelBoundNodesRef = useRef<WeakSet<HTMLDivElement>>(new WeakSet());
+  const imageDimsRef = useRef<Record<number, { naturalWidth: number; naturalHeight: number }>>({});
+
+  // Compute how far an image at (scale, rotation, fitMode) may be panned inside its slot element
+  const getPanBounds = (panelIdx: number, curr: PanelImageState, nextScale = curr.scale, nextRotation = curr.rotation, nextFitMode = curr.fitMode) => {
+    const el = frameElsRef.current[panelIdx];
+    const W = el?.clientWidth || 320;
+    const H = el?.clientHeight || 320;
+    const nat = curr.uploadedImage || imageDimsRef.current[panelIdx];
+    const natW = nat?.naturalWidth || W;
+    const natH = nat?.naturalHeight || H;
+    const imgRatio = Math.max(0.05, natW / Math.max(1, natH));
+    const slotRatio = Math.max(0.05, W / Math.max(1, H));
+
+    let renderedW = W;
+    let renderedH = H;
+    if (nextFitMode === 'contain') {
+      if (imgRatio > slotRatio) {
+        renderedW = W;
+        renderedH = W / imgRatio;
+      } else {
+        renderedH = H;
+        renderedW = H * imgRatio;
+      }
+    }
+
+    const s = Math.max(0.4, nextScale || 1);
+    const rot = (((nextRotation || 0) % 360) + 360) % 360;
+    const swapped = rot === 90 || rot === 270;
+    const effW = (swapped ? renderedH : renderedW) * s;
+    const effH = (swapped ? renderedW : renderedH) * s;
+
+    const minVisibleX = Math.min(W, effW) * 0.25;
+    const minVisibleY = Math.min(H, effH) * 0.25;
+    const maxPanX = Math.max(Math.abs(effW - W) / 2, (W + effW) / 2 - minVisibleX);
+    const maxPanY = Math.max(Math.abs(effH - H) / 2, (H + effH) / 2 - minVisibleY);
+    return { maxPanX, maxPanY };
+  };
+
+  const clampPanForFrame = (
+    panelIdx: number,
+    curr: PanelImageState,
+    panX: number,
+    panY: number,
+    nextScale = curr.scale,
+    nextRotation = curr.rotation,
+    nextFitMode = curr.fitMode
+  ) => {
+    const { maxPanX, maxPanY } = getPanBounds(panelIdx, curr, nextScale, nextRotation, nextFitMode);
+    return {
+      panX: Math.max(-maxPanX, Math.min(maxPanX, panX)),
+      panY: Math.max(-maxPanY, Math.min(maxPanY, panY))
+    };
+  };
 
   // File Inputs
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -950,25 +1107,38 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Image Transformations (Per Active Frame)
   const handleZoomIn = () => {
-    updateFrame(activePanelIndex, (curr) => ({
-      ...curr,
-      scale: Math.min(curr.scale + 0.15, 3.5)
-    }));
+    updateFrame(activePanelIndex, (curr) => {
+      const nextScale = Math.min(curr.scale + 0.15, 3.5);
+      const clamped = clampPanForFrame(activePanelIndex, curr, curr.panX || 0, curr.panY || 0, nextScale);
+      return { ...curr, scale: nextScale, ...clamped };
+    });
   };
 
   const handleZoomOut = () => {
-    updateFrame(activePanelIndex, (curr) => ({
-      ...curr,
-      scale: Math.max(curr.scale - 0.15, 0.4)
-    }));
+    updateFrame(activePanelIndex, (curr) => {
+      const nextScale = Math.max(curr.scale - 0.15, 0.4);
+      const clamped = clampPanForFrame(activePanelIndex, curr, curr.panX || 0, curr.panY || 0, nextScale);
+      return { ...curr, scale: nextScale, ...clamped };
+    });
   };
 
-  const handleRotate = () => {
-    updateFrame(activePanelIndex, (curr) => ({
-      ...curr,
-      rotation: (curr.rotation + 90) % 360
-    }));
+  const handleRotateLeft = () => {
+    updateFrame(activePanelIndex, (curr) => {
+      const nextRotation = (curr.rotation - 90 + 360) % 360;
+      const clamped = clampPanForFrame(activePanelIndex, curr, curr.panX || 0, curr.panY || 0, curr.scale, nextRotation);
+      return { ...curr, rotation: nextRotation, ...clamped };
+    });
   };
+
+  const handleRotateRight = () => {
+    updateFrame(activePanelIndex, (curr) => {
+      const nextRotation = (curr.rotation + 90) % 360;
+      const clamped = clampPanForFrame(activePanelIndex, curr, curr.panX || 0, curr.panY || 0, curr.scale, nextRotation);
+      return { ...curr, rotation: nextRotation, ...clamped };
+    });
+  };
+
+  const handleRotate = handleRotateRight;
 
   const handleResetImage = () => {
     updateFrame(activePanelIndex, (curr) => ({
@@ -1013,14 +1183,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const handleImagePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging || !dragStartRef.current) return;
     e.preventDefault();
-    const deltaX = e.clientX - dragStartRef.current.x;
-    const deltaY = e.clientY - dragStartRef.current.y;
-    const targetIdx = dragStartRef.current.panelIdx;
+    const { x, y, initialPanX, initialPanY, panelIdx: targetIdx } = dragStartRef.current;
+    const rawPanX = initialPanX + (e.clientX - x);
+    const rawPanY = initialPanY + (e.clientY - y);
 
     updateFrame(targetIdx, (curr) => ({
       ...curr,
-      panX: dragStartRef.current!.initialPanX + deltaX,
-      panY: dragStartRef.current!.initialPanY + deltaY
+      ...clampPanForFrame(targetIdx, curr, rawPanX, rawPanY)
     }));
   };
 
@@ -1034,17 +1203,20 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
   };
 
-  // Wheel Zoom Listener Ref Callback
+  // Wheel Zoom Listener Ref Callback (idempotent per DOM node to prevent duplicate listeners on re-render)
   const registerWheelRef = (panelIdx: number) => (el: HTMLDivElement | null) => {
-    if (!el) return;
+    frameElsRef.current[panelIdx] = el;
+    if (!el || wheelBoundNodesRef.current.has(el)) return;
+    wheelBoundNodesRef.current.add(el);
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       e.stopPropagation();
       const zoomFactor = e.deltaY < 0 ? 0.08 : -0.08;
-      updateFrame(panelIdx, (curr) => ({
-        ...curr,
-        scale: Math.max(0.4, Math.min(curr.scale + zoomFactor, 3.5))
-      }));
+      updateFrame(panelIdx, (curr) => {
+        const nextScale = Math.max(0.4, Math.min(curr.scale + zoomFactor, 3.5));
+        const clamped = clampPanForFrame(panelIdx, curr, curr.panX || 0, curr.panY || 0, nextScale);
+        return { ...curr, scale: nextScale, ...clamped };
+      });
     };
     el.addEventListener('wheel', handleWheel, { passive: false });
   };
@@ -1074,21 +1246,16 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
     const onMove = (moveEv: PointerEvent) => {
       if (!textDragRef.current) return;
-      const dx = moveEv.clientX - textDragRef.current.x;
-      const dy = moveEv.clientY - textDragRef.current.y;
-      const percentX = (dx / textDragRef.current.rect.width) * 100;
-      const percentY = (dy / textDragRef.current.rect.height) * 100;
+      const { x, y, initialOffset, rect: r } = textDragRef.current;
+      const percentX = ((moveEv.clientX - x) / Math.max(1, r.width)) * 100;
+      const percentY = ((moveEv.clientY - y) / Math.max(1, r.height)) * 100;
+      const nextX = Math.max(-48, Math.min(48, initialOffset.x + percentX));
+      const nextY = Math.max(-48, Math.min(48, initialOffset.y + percentY));
 
       updateFrame(panelIdx, (curr) => ({
         ...curr,
         textElements: curr.textElements.map((t) =>
-          t.id === textId
-            ? {
-                ...t,
-                x: Math.max(-48, Math.min(48, textDragRef.current!.initialOffset.x + percentX)),
-                y: Math.max(-48, Math.min(48, textDragRef.current!.initialOffset.y + percentY))
-              }
-            : t
+          t.id === textId ? { ...t, x: nextX, y: nextY } : t
         )
       }));
     };
@@ -1131,21 +1298,16 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
     const onMove = (moveEv: PointerEvent) => {
       if (!clipartDragRef.current) return;
-      const dx = moveEv.clientX - clipartDragRef.current.x;
-      const dy = moveEv.clientY - clipartDragRef.current.y;
-      const percentX = (dx / clipartDragRef.current.rect.width) * 100;
-      const percentY = (dy / clipartDragRef.current.rect.height) * 100;
+      const { x, y, initialOffset, rect: r } = clipartDragRef.current;
+      const percentX = ((moveEv.clientX - x) / Math.max(1, r.width)) * 100;
+      const percentY = ((moveEv.clientY - y) / Math.max(1, r.height)) * 100;
+      const nextX = Math.max(-48, Math.min(48, initialOffset.x + percentX));
+      const nextY = Math.max(-48, Math.min(48, initialOffset.y + percentY));
 
       updateFrame(panelIdx, (curr) => ({
         ...curr,
         clipartElements: curr.clipartElements.map((c) =>
-          c.id === clipId
-            ? {
-                ...c,
-                x: Math.max(-48, Math.min(48, textDragRef.current ? 0 : clipartDragRef.current!.initialOffset.x + percentX)),
-                y: Math.max(-48, Math.min(48, textDragRef.current ? 0 : clipartDragRef.current!.initialOffset.y + percentY))
-              }
-            : c
+          c.id === clipId ? { ...c, x: nextX, y: nextY } : c
         )
       }));
     };
@@ -1424,6 +1586,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
     } else if (normalizedHw !== selectedHardwareId) {
       setSelectedHardwareId(normalizedHw);
     }
+    if (pt.defaultThicknessId) {
+      setSelectedThicknessId(pt.defaultThicknessId);
+    }
 
     // 5. Preserve uploaded images non-destructively across slot count changes
     setPanelImages((prev) => {
@@ -1573,9 +1738,14 @@ export const AcrylicCustomizerPage: React.FC = () => {
       finalPrice
     };
 
-    localStorage.setItem(`canvas_india_acrylic_custom_${productId}`, JSON.stringify(designPayload));
-    setSaveToast('Custom design saved to browser successfully!');
-    setTimeout(() => setSaveToast(null), 3500);
+    try {
+      localStorage.setItem(`canvas_india_acrylic_custom_${productId}`, JSON.stringify(designPayload));
+      setSaveToast('Custom design saved to browser successfully!');
+      setTimeout(() => setSaveToast(null), 3500);
+    } catch {
+      setValidationWarning('Design is too large to save in browser storage (try smaller images).');
+      setTimeout(() => setValidationWarning(null), 4000);
+    }
   };
 
   // Add to Cart with ShopContext typing (stores full non-empty configuration)
@@ -1989,12 +2159,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // ============================================================================
   // RENDER A SINGLE NORMALIZED LAYOUT SLOT (Inside the Outer Product Boundary)
   // ============================================================================
-  const renderLayoutSlot = (slot: LayoutSlotDefinition, totalSlots: number) => {
+  const renderLayoutSlot = (slot: LayoutSlotDefinition, totalSlots: number, isRoomView = false) => {
     const panelIdx = slot.slotIndex;
     const frame = panelImages[panelIdx] || createDefaultPanelState(null);
-    const isActive = activePanelIndex === panelIdx;
+    const isActive = !isRoomView && activePanelIndex === panelIdx;
     const isTargetEmpty = !frame.imageUrl;
-    const isDragOverThisSlot = dragOverPanelIndex === panelIdx;
+    const isDragOverThisSlot = !isRoomView && dragOverPanelIndex === panelIdx;
 
     const filterCss =
       frame.filter === 'sepia'
@@ -2002,6 +2172,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
         : frame.filter === 'grayscale'
         ? 'grayscale(100%) contrast(1.05)'
         : 'none';
+
+    // In Room View, express panX/panY as a locked percentage of the main workspace slot so the crop stays 100% locked
+    const mainSlotEl = frameElsRef.current[panelIdx];
+    const mainSlotW = mainSlotEl?.clientWidth || 380;
+    const mainSlotH = mainSlotEl?.clientHeight || 380;
+    const lockedPanXPct = ((frame.panX || 0) / Math.max(1, mainSlotW)) * 100;
+    const lockedPanYPct = ((frame.panY || 0) / Math.max(1, mainSlotH)) * 100;
 
     return (
       <div
@@ -2015,43 +2192,61 @@ export const AcrylicCustomizerPage: React.FC = () => {
           boxSizing: 'border-box',
           padding: totalSlots > 1 ? '2.5px' : '0px'
         }}
-        className="transition-all duration-200"
+        className={isRoomView ? 'pointer-events-none select-none' : 'transition-all duration-200'}
       >
         <div
-          onClick={(e) => {
-            e.stopPropagation();
-            setActivePanelIndex(panelIdx);
-            setSelectedElement({ type: 'image', panelIndex: panelIdx });
-            if (isTargetEmpty) {
-              handleEmptyFrameClick(panelIdx);
-            }
-          }}
-          onDragOver={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            e.dataTransfer.dropEffect = 'copy';
-            if (dragOverPanelIndex !== panelIdx) {
-              setDragOverPanelIndex(panelIdx);
-            }
-          }}
-          onDragLeave={(e) => {
-            if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-            setDragOverPanelIndex((curr) => (curr === panelIdx ? null : curr));
-          }}
-          onDrop={(e) => {
-            handlePanelSlotDrop(e, panelIdx);
-          }}
+          onClick={
+            isRoomView
+              ? undefined
+              : (e) => {
+                  e.stopPropagation();
+                  setActivePanelIndex(panelIdx);
+                  setSelectedElement({ type: 'image', panelIndex: panelIdx });
+                  if (isTargetEmpty) {
+                    handleEmptyFrameClick(panelIdx);
+                  }
+                }
+          }
+          onDragOver={
+            isRoomView
+              ? undefined
+              : (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  e.dataTransfer.dropEffect = 'copy';
+                  if (dragOverPanelIndex !== panelIdx) {
+                    setDragOverPanelIndex(panelIdx);
+                  }
+                }
+          }
+          onDragLeave={
+            isRoomView
+              ? undefined
+              : (e) => {
+                  if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                  setDragOverPanelIndex((curr) => (curr === panelIdx ? null : curr));
+                }
+          }
+          onDrop={
+            isRoomView
+              ? undefined
+              : (e) => {
+                  handlePanelSlotDrop(e, panelIdx);
+                }
+          }
           className={`acrylic-frame-container relative w-full h-full overflow-hidden select-none transition-all ${
             totalSlots > 1 ? 'rounded-[4px]' : ''
           } ${
-            isDragOverThisSlot
+            isRoomView
+              ? 'pointer-events-none z-10'
+              : isDragOverThisSlot
               ? 'ring-2 ring-inset ring-[#0E4A93] bg-blue-50/40 z-30'
               : isActive
               ? 'ring-2 ring-inset ring-[#0E4A93] z-20'
               : totalSlots > 1
               ? 'ring-1 ring-inset ring-stone-200/90 hover:ring-stone-400 z-10'
               : 'z-10'
-          } ${isTargetEmpty ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
+          } ${isRoomView ? '' : isTargetEmpty ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
         >
           {/* Dynamic Drop Overlay when dragging an image over this slot */}
           {isDragOverThisSlot && (
@@ -2063,8 +2258,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           )}
 
-          {/* Active Filter Badge */}
-          {frame.imageUrl && frame.filter !== 'original' && (
+          {/* Active Filter Badge (Workspace Only) */}
+          {!isRoomView && frame.imageUrl && frame.filter !== 'original' && (
             <div className="absolute bottom-2 right-2 bg-[#0E4A93]/85 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-sm z-30 pointer-events-none">
               {frame.filter}
             </div>
@@ -2073,26 +2268,41 @@ export const AcrylicCustomizerPage: React.FC = () => {
           {/* Slot Image or Clean Empty Upload Icon */}
           {frame.imageUrl ? (
             <div
-              ref={registerWheelRef(panelIdx)}
-              onPointerDown={(e) => handleImagePointerDown(e, panelIdx)}
-              onPointerMove={handleImagePointerMove}
-              onPointerUp={handleImagePointerUp}
-              onPointerCancel={handleImagePointerUp}
+              ref={isRoomView ? undefined : registerWheelRef(panelIdx)}
+              onPointerDown={isRoomView ? undefined : (e) => handleImagePointerDown(e, panelIdx)}
+              onPointerMove={isRoomView ? undefined : handleImagePointerMove}
+              onPointerUp={isRoomView ? undefined : handleImagePointerUp}
+              onPointerCancel={isRoomView ? undefined : handleImagePointerUp}
               style={{ touchAction: 'none' }}
               className={`w-full h-full relative overflow-hidden flex items-center justify-center bg-white select-none ${
-                isDragging && activePanelIndex === panelIdx ? 'cursor-grabbing' : 'cursor-grab'
+                isRoomView
+                  ? 'pointer-events-none'
+                  : isDragging && activePanelIndex === panelIdx
+                  ? 'cursor-grabbing'
+                  : 'cursor-grab'
               }`}
             >
               <img
                 src={frame.imageUrl}
                 alt={slot.label}
                 draggable={false}
+                onLoad={(ev) => {
+                  const imgEl = ev.currentTarget;
+                  if (imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0) {
+                    imageDimsRef.current[panelIdx] = {
+                      naturalWidth: imgEl.naturalWidth,
+                      naturalHeight: imgEl.naturalHeight
+                    };
+                  }
+                }}
                 style={{
-                  transform: `translate3d(${frame.panX || 0}px, ${frame.panY || 0}px, 0) scale(${frame.scale || 1}) rotate(${frame.rotation || 0}deg)`,
+                  transform: isRoomView
+                    ? `translate3d(${lockedPanXPct}%, ${lockedPanYPct}%, 0) scale(${frame.scale || 1}) rotate(${frame.rotation || 0}deg)`
+                    : `translate3d(${frame.panX || 0}px, ${frame.panY || 0}px, 0) scale(${frame.scale || 1}) rotate(${frame.rotation || 0}deg)`,
                   transformOrigin: 'center center',
                   filter: filterCss,
                   objectFit: frame.fitMode === 'contain' ? 'contain' : 'cover',
-                  transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+                  transition: isRoomView || isDragging ? 'none' : 'transform 0.1s ease-out'
                 }}
                 className="max-w-none w-full h-full pointer-events-none select-none"
               />
@@ -2103,7 +2313,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               <div className="w-10 h-10 rounded-full bg-white shadow-xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:border-[#0E4A93]/40 group-hover:scale-110 transition-all">
                 <Upload className="w-4 h-4 stroke-[2.2]" />
               </div>
-              {draggingPhotoIndex !== null && !isDragOverThisSlot && (
+              {!isRoomView && draggingPhotoIndex !== null && !isDragOverThisSlot && (
                 <span className="text-[10px] font-bold text-[#0E4A93] animate-pulse mt-1">
                   Drop photo
                 </span>
@@ -2116,6 +2326,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
             if (!txt.text || txt.text.trim().length === 0) return null;
 
             const isTextSelected =
+              !isRoomView &&
               selectedElement.type === 'text' &&
               selectedElement.panelIndex === panelIdx &&
               selectedElement.elementId === txt.id;
@@ -2123,31 +2334,43 @@ export const AcrylicCustomizerPage: React.FC = () => {
             return (
               <div
                 key={txt.id}
-                onPointerDown={(e) => {
-                  e.stopPropagation();
-                  const frameEl = (e.currentTarget as HTMLElement).closest('.acrylic-frame-container');
-                  const rect = frameEl?.getBoundingClientRect() || (e.currentTarget as HTMLElement).getBoundingClientRect();
-                  startTextDrag(e, panelIdx, txt.id, rect);
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActivePanelIndex(panelIdx);
-                  setSelectedElement({ type: 'text', panelIndex: panelIdx, elementId: txt.id });
-                  setShowTextModal(true);
-                }}
-                onDoubleClick={(e) => {
-                  e.stopPropagation();
-                  setActivePanelIndex(panelIdx);
-                  setSelectedElement({ type: 'text', panelIndex: panelIdx, elementId: txt.id });
-                  setShowTextModal(true);
-                }}
+                onPointerDown={
+                  isRoomView
+                    ? undefined
+                    : (e) => {
+                        e.stopPropagation();
+                        const frameEl = (e.currentTarget as HTMLElement).closest('.acrylic-frame-container');
+                        const rect = frameEl?.getBoundingClientRect() || (e.currentTarget as HTMLElement).getBoundingClientRect();
+                        startTextDrag(e, panelIdx, txt.id, rect);
+                      }
+                }
+                onClick={
+                  isRoomView
+                    ? undefined
+                    : (e) => {
+                        e.stopPropagation();
+                        setActivePanelIndex(panelIdx);
+                        setSelectedElement({ type: 'text', panelIndex: panelIdx, elementId: txt.id });
+                        setShowTextModal(true);
+                      }
+                }
+                onDoubleClick={
+                  isRoomView
+                    ? undefined
+                    : (e) => {
+                        e.stopPropagation();
+                        setActivePanelIndex(panelIdx);
+                        setSelectedElement({ type: 'text', panelIndex: panelIdx, elementId: txt.id });
+                        setShowTextModal(true);
+                      }
+                }
                 style={{
                   position: 'absolute',
                   left: `${50 + txt.x}%`,
                   top: `${50 + txt.y}%`,
                   transform: `translate(-50%, -50%) rotate(${txt.rotation || 0}deg)`,
                   fontFamily: txt.fontFamily,
-                  fontSize: `${txt.fontSize}px`,
+                  fontSize: isRoomView ? `${Math.max(8, Math.round(txt.fontSize * 0.42))}px` : `${txt.fontSize}px`,
                   fontWeight: txt.fontWeight || 'bold',
                   color: txt.color,
                   textAlign: txt.alignment,
@@ -2159,10 +2382,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
                       ? '0 1px 4px rgba(0,0,0,0.45)'
                       : 'none'
                 }}
-                className={`z-30 cursor-move px-2.5 py-1 select-none transition-all rounded-lg ${
-                  isTextSelected
-                    ? 'ring-2 ring-[#0E4A93] bg-black/45 backdrop-blur-xs shadow-xl'
-                    : 'hover:ring-1 hover:ring-white/80'
+                className={`z-30 px-2.5 py-1 select-none transition-all rounded-lg ${
+                  isRoomView
+                    ? 'pointer-events-none'
+                    : isTextSelected
+                    ? 'cursor-move ring-2 ring-[#0E4A93] bg-black/45 backdrop-blur-xs shadow-xl'
+                    : 'cursor-move hover:ring-1 hover:ring-white/80'
                 }`}
               >
                 {txt.text}
@@ -2173,6 +2398,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           {/* Draggable & Editable Clipart Elements for this Slot */}
           {frame.clipartElements?.map((clip) => {
             const isClipSelected =
+              !isRoomView &&
               selectedElement.type === 'clipart' &&
               selectedElement.panelIndex === panelIdx &&
               selectedElement.elementId === clip.id;
@@ -2180,28 +2406,38 @@ export const AcrylicCustomizerPage: React.FC = () => {
             return (
               <div
                 key={clip.id}
-                onPointerDown={(e) => {
-                  e.stopPropagation();
-                  const frameEl = (e.currentTarget as HTMLElement).closest('.acrylic-frame-container');
-                  const rect = frameEl?.getBoundingClientRect() || (e.currentTarget as HTMLElement).getBoundingClientRect();
-                  startClipartDrag(e, panelIdx, clip.id, rect);
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActivePanelIndex(panelIdx);
-                  setSelectedElement({ type: 'clipart', panelIndex: panelIdx, elementId: clip.id });
-                }}
+                onPointerDown={
+                  isRoomView
+                    ? undefined
+                    : (e) => {
+                        e.stopPropagation();
+                        const frameEl = (e.currentTarget as HTMLElement).closest('.acrylic-frame-container');
+                        const rect = frameEl?.getBoundingClientRect() || (e.currentTarget as HTMLElement).getBoundingClientRect();
+                        startClipartDrag(e, panelIdx, clip.id, rect);
+                      }
+                }
+                onClick={
+                  isRoomView
+                    ? undefined
+                    : (e) => {
+                        e.stopPropagation();
+                        setActivePanelIndex(panelIdx);
+                        setSelectedElement({ type: 'clipart', panelIndex: panelIdx, elementId: clip.id });
+                      }
+                }
                 style={{
                   position: 'absolute',
                   left: `${50 + clip.x}%`,
                   top: `${50 + clip.y}%`,
-                  transform: `translate(-50%, -50%) scale(${clip.scale}) rotate(${clip.rotation}deg)`,
+                  transform: `translate(-50%, -50%) scale(${isRoomView ? clip.scale * 0.45 : clip.scale}) rotate(${clip.rotation}deg)`,
                   color: clip.color || '#D4AF37'
                 }}
-                className={`z-30 cursor-move p-1.5 select-none rounded-xl transition-all flex items-center justify-center ${
-                  isClipSelected
-                    ? 'ring-2 ring-[#0E4A93] bg-black/45 backdrop-blur-xs shadow-xl'
-                    : 'hover:ring-1 hover:ring-white/80'
+                className={`z-30 p-1.5 select-none rounded-xl transition-all flex items-center justify-center ${
+                  isRoomView
+                    ? 'pointer-events-none'
+                    : isClipSelected
+                    ? 'cursor-move ring-2 ring-[#0E4A93] bg-black/45 backdrop-blur-xs shadow-xl'
+                    : 'cursor-move hover:ring-1 hover:ring-white/80'
                 }`}
               >
                 {clip.svgPath ? (
@@ -2246,7 +2482,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
     return (
       <div
-        className={`relative w-full ${isRoomView ? 'h-full' : ''} flex items-center justify-center transition-all duration-300`}
+        className={`relative w-full ${isRoomView ? 'h-full pointer-events-none select-none' : ''} flex items-center justify-center transition-all duration-300`}
         style={
           isRoomView
             ? {
@@ -2275,7 +2511,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
         >
           {/* Normalized Layout Slots Inside the Outer Acrylic Shape */}
           <div className="absolute inset-0 w-full h-full bg-stone-200/70">
-            {layoutSlots.map((slot) => renderLayoutSlot(slot, layoutSlots.length))}
+            {layoutSlots.map((slot) => renderLayoutSlot(slot, layoutSlots.length, isRoomView))}
           </div>
 
           {/* Design Overlay Layer */}
@@ -2343,61 +2579,14 @@ export const AcrylicCustomizerPage: React.FC = () => {
         }}
       />
 
-      {/* 1. CUSTOMIZER BLUE HEADER WITH ORIGINAL LOGO */}
-      <header className="h-14 bg-[#0E4A93] text-white flex items-center justify-between px-3 sm:px-6 shadow-md z-30 shrink-0">
-        
-        {/* LEFT: Menu / Back / Logo / Customizer */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            type="button"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-1.5 hover:bg-white/10 rounded-lg text-white transition-colors cursor-pointer"
-            title="Navigation Menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-          
-          <Link
-            to="/acrylic"
-            className="flex items-center gap-1 text-xs font-semibold text-white/90 hover:text-white bg-white/10 hover:bg-white/15 px-2.5 py-1.5 rounded-md transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Back to Acrylic</span>
-          </Link>
-          
-          <div className="h-5 w-[1px] bg-white/20 mx-1 hidden sm:block" />
-          
-          <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity focus:outline-none" title="Canvas India">
-            <img 
-              src="/canvas-india-official-logo.png" 
-              alt="Canvas India" 
-              className="h-7 sm:h-8 md:h-9 w-auto object-contain block select-none" 
-            />
-            <span className="text-white font-bold text-xs tracking-wider uppercase inline-block border-l border-white/20 pl-2">
-              {selectedProductType.name}
-            </span>
-          </Link>
-        </div>
-
-        {/* RIGHT: Price Display + Add to Cart Button */}
-        <div className="flex items-center gap-3">
-          <div className="text-right block">
-            <div className="text-[10px] text-white/70 uppercase font-semibold">Total Price</div>
-            <div className="text-lg font-black text-white leading-tight">
-              ₹{finalPrice.toLocaleString('en-IN')}
-            </div>
-          </div>
-          
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            className="flex items-center gap-2 bg-[#E8752A] hover:bg-[#d4651e] text-white text-xs sm:text-sm font-bold px-4 sm:px-5 py-2 rounded-lg shadow-md transition-all transform active:scale-95 cursor-pointer"
-          >
-            <ShoppingCart className="w-4 h-4" />
-            <span>Add to Cart</span>
-          </button>
-        </div>
-      </header>
+      {/* 1. SHARED CUSTOMIZER BLUE HEADER (No product name in header) */}
+      <CustomizerHeader
+        backLink="/acrylic"
+        backLabel="Back to Acrylic"
+        totalPrice={finalPrice}
+        onAddToCart={handleAddToCart}
+        onMenuClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      />
 
       {/* Mobile Slide-Over Navigation Drawer */}
       {isMobileMenuOpen && (
@@ -2703,15 +2892,20 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Uploaded Photos Gallery with Drag-and-Drop & Click-to-Apply */}
+              {/* Uploaded Photos Gallery with Drag-and-Drop, Click-to-Apply & Remove */}
               {uploadedPhotos.length > 0 && (
                 <div className="space-y-2 pt-2 border-t border-stone-100">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-stone-700">Uploaded Photos ({uploadedPhotos.length}):</span>
-                    <span className="text-[11px] font-semibold text-[#0E4A93] flex items-center gap-1">
-                      <Move className="w-3 h-3" />
-                      <span>Drag to frame or click</span>
-                    </span>
+                    <button
+                      type="button"
+                      onClick={handleClearAllUploadedPhotos}
+                      className="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
+                      title="Remove all uploaded photos"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Clear All</span>
+                    </button>
                   </div>
                   <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto p-1 bg-stone-50 rounded-xl border border-stone-200">
                     {uploadedPhotos.map((photo, pIdx) => {
@@ -2748,6 +2942,19 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-xs text-white p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                             <Move className="w-2.5 h-2.5" />
                           </div>
+                          {/* Remove Photo Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveUploadedPhoto(photo, pIdx);
+                            }}
+                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-rose-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10"
+                            title="Remove photo"
+                            aria-label="Remove photo"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
                         </div>
                       );
                     })}
@@ -3523,135 +3730,25 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
         </section>
 
-        {/* CENTER / MAIN WORKSPACE */}
-        <main className="flex-1 flex flex-col bg-[#F8FAFC] relative overflow-hidden">
+        {/* CENTER / MAIN WORKSPACE (Shared Customizer Workspace Shell) */}
+        <main className="flex-1 flex flex-col bg-[#E2E8F0]/60 relative overflow-hidden">
           
-          {/* TOP-RIGHT TOOLBAR ABOVE WORKSPACE */}
-          <div className="h-12 bg-white border-b border-stone-200 px-3 sm:px-4 flex items-center justify-between shrink-0 z-20 overflow-x-auto">
-            
-            {/* Left Image Manipulation Tools + Active Configuration Summary */}
-            <div className="flex items-center gap-1.5 shrink-0">
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={handleZoomIn}
-                  className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
-                  title="Zoom In"
-                >
-                  <ZoomIn className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleZoomOut}
-                  className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
-                  title="Zoom Out"
-                >
-                  <ZoomOut className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleRotate}
-                  className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
-                  title="Rotate 90°"
-                >
-                  <RotateCw className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleResetImage}
-                  className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer"
-                  title="Reset Image"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="hidden lg:flex items-center gap-1.5 pl-2 ml-1 border-l border-stone-200 text-[11px] font-bold text-stone-600">
-                <span className="text-[#0E4A93]">{selectedProductType.name}</span>
-                <span className="text-stone-300">•</span>
-                <span>{currentShape.name}</span>
-                <span className="text-stone-300">•</span>
-                <span className="bg-stone-100 text-stone-800 px-2 py-0.5 rounded">{currentDimensionLabel}</span>
-                <span className="text-stone-300">•</span>
-                <span className="text-stone-500">
-                  {compatibleHardware.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware'}
-                </span>
-              </div>
-            </div>
-
-            {/* Right: [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW]  */}
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              
-              {/* SAVE */}
-              <button
-                type="button"
-                onClick={handleSaveDesign}
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 rounded-lg text-xs font-bold transition-all shadow-2xs hover:border-stone-400 cursor-pointer"
-                title="Save design to browser"
-              >
-                <Save className="w-3.5 h-3.5 text-[#0E4A93]" />
-                <span>SAVE</span>
-              </button>
-
-              {/* ADD TEXT */}
-              <button
-                type="button"
-                onClick={handleAddNewText}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
-                  showTextModal
-                    ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
-                    : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
-                }`}
-                title="Add custom typography with live real-time editing"
-              >
-                <Type className="w-3.5 h-3.5" />
-                <span>ADD TEXT</span>
-              </button>
-
-              {/* ADD CLIPART */}
-              <button
-                type="button"
-                onClick={() => setShowClipartModal(!showClipartModal)}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
-                  showClipartModal
-                    ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
-                    : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
-                }`}
-                title="Add clipart and stickers"
-              >
-                <Smile className="w-3.5 h-3.5" />
-                <span>ADD CLIPART</span>
-              </button>
-
-              {/* ROOM VIEW */}
-              <button
-                type="button"
-                onClick={() => setShowRoomView(true)}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
-                  showRoomView
-                    ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
-                    : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
-                }`}
-                title="Preview on realistic wall"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>ROOM VIEW</span>
-              </button>
-
-              {/* Delete Selected Element (Text/Clipart) */}
-              {selectedElement.type !== 'image' && (
-                <button
-                  type="button"
-                  onClick={handleDeleteSelectedElement}
-                  className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors cursor-pointer ml-1"
-                  title="Delete Selected Item"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-
-            </div>
-          </div>
+          {/* SHARED TOP WORKSPACE TOOLBAR: [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW] */}
+          <CustomizerTopToolbar
+            onSave={handleSaveDesign}
+            isTextActive={showTextModal}
+            onToggleText={handleAddNewText}
+            isClipartActive={showClipartModal}
+            onToggleClipart={() => setShowClipartModal(!showClipartModal)}
+            isRoomViewActive={showRoomView}
+            isRoomViewDisabled={!hasUploadedImage}
+            onOpenRoomView={() => {
+              if (!hasUploadedImage) return;
+              setShowRoomView(true);
+            }}
+            canDeleteSelectedItem={selectedElement.type !== 'image'}
+            onDeleteSelectedItem={handleDeleteSelectedElement}
+          />
 
           {/* LIVE REAL-TIME TEXT EDITOR COMPONENT */}
           {showTextModal && activeTextElement && (
@@ -3675,8 +3772,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
             onDeleteClipart={handleDeleteActiveClipart}
           />
 
-          {/* INTERACTIVE WORKSPACE CANVAS */}
-          <div 
+          {/* SHARED INTERACTIVE WORKSPACE PREVIEW AREA + DYNAMIC SIZE PILL + [ − ] [ + ] [ ↶ ] [ ↷ ] */}
+          <CustomizerPreviewArea
+            sizeLabel={currentDimensionLabel}
+            onZoomOut={handleZoomOut}
+            onZoomIn={handleZoomIn}
+            onRotateLeft={handleRotateLeft}
+            onRotateRight={handleRotateRight}
             onClick={() => {
               pruneEmptyTextElements();
               setShowTextModal(false);
@@ -3694,84 +3796,83 @@ export const AcrylicCustomizerPage: React.FC = () => {
             onDrop={(e) => {
               handlePanelSlotDrop(e, activePanelIndex);
             }}
-            className="flex-1 overflow-auto flex flex-col items-center justify-center p-4 sm:p-8 relative bg-radial from-slate-100 via-slate-200/50 to-slate-200"
+            extraControls={
+              activeFrameState.imageUrl ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateFrame(activePanelIndex, (curr) => {
+                        const nextFitMode: 'contain' | 'cover' = curr.fitMode === 'cover' ? 'contain' : 'cover';
+                        const clamped = clampPanForFrame(activePanelIndex, curr, curr.panX || 0, curr.panY || 0, curr.scale, curr.rotation, nextFitMode);
+                        return { ...curr, fitMode: nextFitMode, ...clamped };
+                      });
+                    }}
+                    className="px-2 py-1 rounded-lg hover:bg-stone-100 text-stone-700 hover:text-[#0E4A93] border border-stone-200 text-[11px] font-bold transition-colors cursor-pointer"
+                    title="Toggle between complete uncropped fit and full shape cover"
+                  >
+                    {activeFrameState.fitMode === 'cover' ? 'Fit' : 'Fill'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleResetImage();
+                    }}
+                    className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-700 hover:text-amber-700 border border-stone-200 transition-colors cursor-pointer"
+                    title="Reset position, zoom & rotation"
+                    aria-label="Reset Image"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
+                </>
+              ) : undefined
+            }
+            bottomSlot={
+              <div className="flex flex-wrap items-center justify-center gap-2.5 text-[11px] font-bold text-stone-600 bg-white/90 backdrop-blur-xs px-4 py-1.5 rounded-full shadow-xs border border-stone-200/80">
+                <span>
+                  Product: <strong className="text-stone-900">{selectedProductType.name}</strong>
+                </span>
+                <span>•</span>
+                <span>
+                  Shape: <strong className="text-stone-900">{currentShape.name}</strong>
+                </span>
+                <span>•</span>
+                <span>
+                  Hardware:{' '}
+                  <strong className="text-stone-900">
+                    {compatibleHardware.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware'}
+                  </strong>
+                </span>
+                {layoutSlots.length > 1 && (
+                  <>
+                    <span>•</span>
+                    <span className="text-[#0E4A93] font-extrabold">Slot {activePanelIndex + 1}</span>
+                  </>
+                )}
+                {activeFrameState.imageUrl && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveSlotPhoto(activePanelIndex);
+                    }}
+                    className="px-2.5 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-[10px] font-extrabold rounded-full transition-colors cursor-pointer inline-flex items-center gap-1 uppercase tracking-wider"
+                    title="Remove photo from active slot"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span>Remove Photo</span>
+                  </button>
+                )}
+              </div>
+            }
           >
-            
             {/* Acrylic Product Frame Wrapper */}
             <div className="relative max-w-2xl w-full flex items-center justify-center transition-all duration-300">
               {renderProductCanvas(false)}
             </div>
-
-            {/* Compact Floating Image Editor Controls Bar for Active Slot */}
-            {activeFrameState.imageUrl && (
-              <div className="mt-4 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-xl shadow-lg border border-stone-200/90 flex items-center gap-2.5 z-30 select-none animate-in fade-in slide-in-from-bottom-2">
-                {layoutSlots.length > 1 && (
-                  <div className="text-[11px] font-bold text-stone-700 pr-2 border-r border-stone-200">
-                    Slot {activePanelIndex + 1}
-                  </div>
-                )}
-
-                {/* Containment Mode: [ Fit / Fill ] */}
-                <button
-                  type="button"
-                  onClick={() => updateFrame(activePanelIndex, (curr) => ({
-                    ...curr,
-                    fitMode: curr.fitMode === 'cover' ? 'contain' : 'cover'
-                  }))}
-                  className="flex items-center gap-1 text-xs font-bold text-stone-700 hover:text-[#0E4A93] bg-stone-100 hover:bg-stone-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
-                  title="Toggle between complete uncropped fit and full shape cover"
-                >
-                  <span>{activeFrameState.fitMode === 'cover' ? 'Fit (Contain)' : 'Fill (Cover)'}</span>
-                </button>
-
-                {/* Zoom Controls: [ − ] [ 1.00x ] [ + ] */}
-                <div className="flex items-center gap-1 bg-stone-100 px-1.5 py-0.5 rounded-lg">
-                  <button
-                    type="button"
-                    onClick={handleZoomOut}
-                    className="w-6 h-6 rounded flex items-center justify-center hover:bg-white text-stone-700 hover:text-stone-900 transition-colors font-bold text-sm cursor-pointer"
-                    title="Zoom Out (or wheel down)"
-                  >
-                    −
-                  </button>
-                  <span className="text-[11px] font-extrabold text-stone-800 min-w-[36px] text-center">
-                    {(activeFrameState.scale || 1).toFixed(2)}x
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleZoomIn}
-                    className="w-6 h-6 rounded flex items-center justify-center hover:bg-white text-stone-700 hover:text-stone-900 transition-colors font-bold text-sm cursor-pointer"
-                    title="Zoom In (or wheel up)"
-                  >
-                    +
-                  </button>
-                </div>
-
-                {/* Rotate Button */}
-                <button
-                  type="button"
-                  onClick={handleRotate}
-                  className="flex items-center gap-1 text-xs font-bold text-stone-700 hover:text-[#0E4A93] bg-stone-100 hover:bg-stone-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
-                  title="Rotate 90°"
-                >
-                  <RotateCw className="w-3.5 h-3.5" />
-                  <span>Rotate</span>
-                </button>
-
-                {/* Reset Button */}
-                <button
-                  type="button"
-                  onClick={handleResetImage}
-                  className="flex items-center gap-1 text-xs font-bold text-stone-700 hover:text-amber-700 bg-stone-100 hover:bg-amber-50 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
-                  title="Reset position, zoom & rotation"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Reset</span>
-                </button>
-              </div>
-            )}
-
-          </div>
+          </CustomizerPreviewArea>
 
         </main>
 
@@ -3779,7 +3880,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
       {/* REALISTIC ROOM VIEW MODAL */}
       <AcrylicRoomViewModal
-        isOpen={showRoomView}
+        isOpen={showRoomView && hasUploadedImage}
         onClose={() => setShowRoomView(false)}
         productDimensionLabel={currentDimensionLabel}
         productId={selectedProductTypeId}
