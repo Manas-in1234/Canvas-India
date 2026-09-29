@@ -118,8 +118,17 @@ interface CanvasProductType {
   defaultSizeOptionId: string;
 }
 
-// Strictly Canvas-only products (no acrylic, wood, or metal)
+// Strictly Canvas-only products (7 products matching Acrylic customizer product types)
 const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
+  {
+    id: 'canvas-photo-block',
+    name: 'Canvas Photo Block',
+    startingPrice: 499.0,
+    iconType: 'block',
+    panelsCount: 1,
+    description: 'Freestanding tabletop 3D canvas block on a solid wood easel base.',
+    defaultSizeOptionId: 'classic-10x10'
+  },
   {
     id: 'canvas-classic',
     name: 'Classic Canvas Print',
@@ -127,7 +136,7 @@ const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     iconType: 'panel',
     panelsCount: 1,
     description: 'Stretched 380 GSM cotton canvas on a solid pine frame.',
-    defaultSizeOptionId: 'classic-8x10'
+    defaultSizeOptionId: 'classic-10x10'
   },
   {
     id: 'canvas-wall-art',
@@ -139,13 +148,13 @@ const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'wd-3p-12x18-10x8'
   },
   {
-    id: 'canvas-split',
-    name: 'Canvas Split Panel',
-    startingPrice: 1850.0,
-    iconType: 'split',
-    panelsCount: 3,
-    description: 'Panoramic photograph split seamlessly across 3 triptych panels.',
-    defaultSizeOptionId: 'split-3p-36x24'
+    id: 'canvas-panoramic',
+    name: 'Panoramic Canvas Print',
+    startingPrice: 1499.0,
+    iconType: 'print',
+    panelsCount: 1,
+    description: 'Wide-format panoramic canvas for landscapes and skylines.',
+    defaultSizeOptionId: 'pano-30x12'
   },
   {
     id: 'canvas-collage',
@@ -157,13 +166,22 @@ const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'col-4p-12x12'
   },
   {
-    id: 'canvas-panoramic',
-    name: 'Panoramic Canvas Print',
-    startingPrice: 1499.0,
-    iconType: 'print',
+    id: 'canvas-split',
+    name: 'Canvas Split Panel',
+    startingPrice: 1850.0,
+    iconType: 'split',
+    panelsCount: 3,
+    description: 'Panoramic photograph split seamlessly across 3 triptych panels.',
+    defaultSizeOptionId: 'split-3p-36x24'
+  },
+  {
+    id: 'canvas-signage',
+    name: 'Canvas Signage',
+    startingPrice: 799.0,
+    iconType: 'signage',
     panelsCount: 1,
-    description: 'Wide-format panoramic canvas for landscapes and skylines.',
-    defaultSizeOptionId: 'pano-30x12'
+    description: 'Professional logo, banner and nameplate display on rigid canvas.',
+    defaultSizeOptionId: 'classic-10x10'
   }
 ];
 
@@ -773,14 +791,16 @@ export const CanvasCustomizerPage: React.FC = () => {
   const prevTab = TOOLBAR_ITEMS[Math.max(0, activeTabIndex - 1)];
   const nextTab = TOOLBAR_ITEMS[Math.min(TOOLBAR_ITEMS.length - 1, activeTabIndex + 1)];
 
-  // Selected Canvas Product Type (supports all 5 Canvas products via route param or sidebar switcher)
+  // Selected Canvas Product Type (supports all 7 Canvas products via route param or sidebar switcher)
   const resolveCanvasProductTypeId = (rawId?: string, catProd?: typeof catalogProduct): string => {
     const key = (rawId || catProd?.slug || catProd?.id || catProd?.name || '').toLowerCase();
     if (CANVAS_PRODUCT_TYPES.some((pt) => pt.id === key)) return key;
+    if (key.includes('block') || key.includes('desk') || key.includes('easel')) return 'canvas-photo-block';
     if (key.includes('wall') || key.includes('display')) return 'canvas-wall-art';
     if (key.includes('collage')) return 'canvas-collage';
     if (key.includes('split')) return 'canvas-split';
     if (key.includes('panoramic') || key.includes('landscape')) return 'canvas-panoramic';
+    if (key.includes('sign') || key.includes('banner')) return 'canvas-signage';
     return 'canvas-classic';
   };
 
