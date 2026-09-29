@@ -1,18 +1,19 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import type { Queue } from 'bullmq';
+import { BadRequestException, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { StorageService } from './storage.service.js';
-import { IMAGE_PROCESSING_QUEUE, type ImageProcessingJobData } from '../queue/queue-names.js';
+import sharp from 'sharp';
 
 const MAX_FILE_SIZE_BYTES = 40 * 1024 * 1024; // 40 MB
+const THUMBNAIL_MAX_DIMENSION = 300;
+const PREVIEW_MAX_DIMENSION = 1600;
 
 @Injectable()
 export class AssetsService {
+  private readonly logger = new Logger(AssetsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
-    @InjectQueue(IMAGE_PROCESSING_QUEUE) private readonly imageQueue: Queue<ImageProcessingJobData>,
   ) {}
 
   /**
@@ -45,9 +46,8 @@ export class AssetsService {
   }
 
   /**
-   * Client confirms the direct upload completed; this enqueues thumbnail/
-   * preview generation and returns immediately (scope §84 — the API must not
-   * block on image processing).
+   * Client confirms the direct upload completed; this processes thumbnail/
+   * preview generation synchronously.
    */
   async confirmUpload(assetId: string) {
     const asset = await this.prisma.asset.findUnique({ where: { id: assetId } });
@@ -56,9 +56,65 @@ export class AssetsService {
     }
 
     await this.prisma.asset.update({ where: { id: assetId }, data: { uploadStatus: 'PROCESSING' } });
-    await this.imageQueue.add('process', { assetId });
 
-    return { assetId, status: 'PROCESSING' };
+    try {
+      const original = await this.storageService.getObjectBuffer(asset.storageKey);
+      const metadata = await sharp(original).metadata();
+
+      const thumbnailBuffer = await sharp(original)
+        .resize(THUMBNAIL_MAX_DIMENSION, THUMBNAIL_MAX_DIMENSION, { fit: 'inside' })
+        .toBuffer();
+      const previewBuffer = await sharp(original)
+        .resize(PREVIEW_MAX_DIMENSION, PREVIEW_MAX_DIMENSION, { fit: 'inside' })
+        .toBuffer();
+
+      const thumbnailKey = this.storageService.buildStorageKey(asset.ownerType, asset.ownerId, 'thumbnail.jpg');
+      const previewKey = this.storageService.buildStorageKey(asset.ownerType, asset.ownerId, 'preview.jpg');
+
+      await this.storageService.putObjectBuffer(thumbnailKey, thumbnailBuffer, 'image/jpeg');
+      await this.storageService.putObjectBuffer(previewKey, previewBuffer, 'image/jpeg');
+
+      await this.prisma.$transaction([
+        this.prisma.asset.update({
+          where: { id: assetId },
+          data: {
+            width: metadata.width,
+            height: metadata.height,
+            uploadStatus: 'READY',
+          },
+        }),
+        this.prisma.asset.create({
+          data: {
+            ownerType: asset.ownerType,
+            ownerId: asset.ownerId,
+            storageKey: thumbnailKey,
+            fileName: 'thumbnail.jpg',
+            mimeType: 'image/jpeg',
+            fileSize: thumbnailBuffer.byteLength,
+            assetType: 'THUMBNAIL',
+            uploadStatus: 'READY',
+          },
+        }),
+        this.prisma.asset.create({
+          data: {
+            ownerType: asset.ownerType,
+            ownerId: asset.ownerId,
+            storageKey: previewKey,
+            fileName: 'preview.jpg',
+            mimeType: 'image/jpeg',
+            fileSize: previewBuffer.byteLength,
+            assetType: 'PREVIEW',
+            uploadStatus: 'READY',
+          },
+        }),
+      ]);
+
+      return { assetId, status: 'READY' };
+    } catch (error) {
+      this.logger.error(`Image processing failed for asset ${assetId}`, error as Error);
+      await this.prisma.asset.update({ where: { id: assetId }, data: { uploadStatus: 'FAILED' } });
+      throw error;
+    }
   }
 
   async findOne(id: string) {

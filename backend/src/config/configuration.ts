@@ -2,7 +2,6 @@ export interface AppConfig {
   port: number;
   nodeEnv: string;
   databaseUrl: string;
-  redisUrl: string;
   jwt: {
     accessSecret: string;
     accessExpiresIn: string;
@@ -28,7 +27,6 @@ export default (): AppConfig => ({
   port: parseInt(process.env.PORT ?? '4000', 10),
   nodeEnv: process.env.NODE_ENV ?? 'development',
   databaseUrl: process.env.DATABASE_URL ?? '',
-  redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET ?? '',
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '15m',

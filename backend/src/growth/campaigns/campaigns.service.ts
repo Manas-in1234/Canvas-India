@@ -7,7 +7,7 @@ import {
 import { PrismaService } from '../../database/prisma.service.js';
 import { AuditService } from '../../audit/audit.service.js';
 import { CustomerSegmentsService } from '../customer-segments/customer-segments.service.js';
-import { CampaignStatus, CreateCampaignDto } from './dto/create-campaign.dto.js';
+import { CreateCampaignDto } from './dto/create-campaign.dto.js';
 import { UpdateCampaignDto } from './dto/update-campaign.dto.js';
 import { ChangeCampaignStatusDto } from './dto/change-campaign-status.dto.js';
 import { Prisma } from '../../generated/prisma/client.js';
