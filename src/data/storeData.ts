@@ -513,7 +513,7 @@ export interface MegaMenuItem {
 
 export interface MegaMenuGroup {
   title: string;
-  iconType: 'heart' | 'sparkles' | 'palette' | 'layers' | 'circleDot' | 'printer' | 'package' | 'building' | 'sliders' | 'gift';
+  iconType: 'heart' | 'sparkles' | 'palette' | 'layers' | 'circleDot' | 'printer' | 'package' | 'building' | 'sliders' | 'gift' | 'activity';
   items: MegaMenuItem[];
 }
 
