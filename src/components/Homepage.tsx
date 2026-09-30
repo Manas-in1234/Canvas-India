@@ -113,6 +113,40 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           }}
         />
         <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent" />
+
+        {/* Hanging Stitched Leather Special Price Tag (Top Center) */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center select-none pointer-events-none">
+          {/* Wall Pin / Nail */}
+          <div className="w-3.5 h-3.5 rounded-full bg-stone-800 shadow-md border-2 border-stone-400 z-20 flex items-center justify-center">
+            <div className="w-1 h-1 rounded-full bg-stone-300" />
+          </div>
+
+          {/* Hanging String Lines */}
+          <div className="relative w-10 h-9 -mt-1 z-10">
+            <svg className="w-full h-full" viewBox="0 0 40 36" fill="none">
+              <path d="M20 0 L5 36" stroke="#5C3214" strokeWidth="2" strokeLinecap="round" />
+              <path d="M20 0 L35 36" stroke="#5C3214" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          {/* Stitched Circular Orange Leather Badge */}
+          <div className="ci-float -mt-1.5 w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#EA580C] via-[#DC2626] to-[#9A3412] text-white flex flex-col items-center justify-center p-2 shadow-2xl shadow-orange-950/50 border-4 border-[#78350F] relative overflow-hidden">
+            {/* Metal Grommet Hole */}
+            <div className="absolute top-1.5 w-3 h-3 rounded-full bg-stone-300 border-2 border-stone-600 shadow-inner z-10" />
+
+            {/* Dashed Stitched Inner Ring */}
+            <div className="absolute inset-1.5 rounded-full border-2 border-dashed border-amber-200/60 pointer-events-none" />
+
+            {/* Badge Text Content */}
+            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-amber-200 mt-2.5 leading-none drop-shadow-xs">
+              SPECIAL PRICE
+            </span>
+            <span className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-md mt-0.5 leading-none">
+              20% OFF
+            </span>
+          </div>
+        </div>
+
         <Container className="relative py-14 sm:py-16 lg:py-20 lg:min-h-[540px] flex items-center">
           <div className="max-w-xl">
             <div className="flex items-center gap-3 text-[11px] sm:text-xs tracking-[0.3em] text-stone-600 font-semibold uppercase">
@@ -243,40 +277,6 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                   <div className="w-full h-px bg-amber-200/20" />
                 </div>
 
-                {/* ========================================================================= */}
-                {/* HANGING STITCHED LEATHER SPECIAL PRICE TAG / BADGE */}
-                {/* ========================================================================= */}
-                <div className="absolute top-4 left-16 sm:top-6 sm:left-24 z-30 flex flex-col items-center select-none group/tag cursor-pointer">
-                  {/* Wall Pin / Nail */}
-                  <div className="w-3.5 h-3.5 rounded-full bg-stone-800 shadow-md border-2 border-stone-400 z-20 flex items-center justify-center">
-                    <div className="w-1 h-1 rounded-full bg-stone-300" />
-                  </div>
-                  
-                  {/* Hanging String Lines */}
-                  <div className="relative w-10 h-9 -mt-1 pointer-events-none z-10">
-                    <svg className="w-full h-full" viewBox="0 0 40 36" fill="none">
-                      <path d="M20 0 L5 36" stroke="#5C3214" strokeWidth="2" strokeLinecap="round" />
-                      <path d="M20 0 L35 36" stroke="#5C3214" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  </div>
-
-                  {/* Stitched Circular Orange Leather Badge */}
-                  <div className="-mt-1.5 w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#EA580C] via-[#DC2626] to-[#9A3412] text-white flex flex-col items-center justify-center p-2 shadow-2xl shadow-orange-950/50 border-4 border-[#78350F] relative overflow-hidden group-hover/tag:rotate-6 group-hover/tag:scale-105 transition-all duration-300">
-                    {/* Metal Grommet Hole */}
-                    <div className="absolute top-1.5 w-3 h-3 rounded-full bg-stone-300 border-2 border-stone-600 shadow-inner z-10" />
-                    
-                    {/* Dashed Stitched Inner Ring */}
-                    <div className="absolute inset-1.5 rounded-full border-2 border-dashed border-amber-200/60 pointer-events-none" />
-                    
-                    {/* Badge Text Content */}
-                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-amber-200 mt-2.5 leading-none drop-shadow-xs">
-                      SPECIAL PRICE
-                    </span>
-                    <span className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-md mt-0.5 leading-none">
-                      20% OFF
-                    </span>
-                  </div>
-                </div>
 
               </div>
 
