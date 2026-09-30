@@ -1,5 +1,9 @@
 name = "canvas-india"
-compatibility_date = "2026-01-01"
+compatibility_date = "2024-09-25"
+pages_build_output_dir = "./dist"
+
+[vars]
+NODE_VERSION = "20.18.0"
 
 [assets]
 directory = "./dist"
