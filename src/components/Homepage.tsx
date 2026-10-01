@@ -87,6 +87,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   const navigate = useNavigate();
   const carouselRef = useRef<HTMLDivElement>(null);
   const testiRef = useRef<HTMLDivElement>(null);
+  const categoryRowRef = useRef<HTMLDivElement>(null);
 
   const handleStartCreatingCanvas = () => {
     const first = allProducts.find((p) => p.categorySlug === 'canvas');
@@ -202,37 +203,62 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       {/* SHOP BY CATEGORY */}
       <section id="shop-categories" className="py-12 sm:py-16 bg-[#FDFCF8]">
         <Container>
-          <div className="text-center mb-10">
-            <div className="flex items-center justify-center gap-4">
-              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Shop by Category</h2>
-              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+          <div className="flex items-end justify-between gap-4 mb-8">
+            <div>
+              <div className="flex items-center gap-4">
+                <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+                <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Shop by Category</h2>
+              </div>
+              <p className="text-sm mt-2 text-[#567477]">Explore our wide range of creative handmade products</p>
             </div>
-            <p className="text-sm mt-2 text-[#567477]">Explore our wide range of creative handmade products</p>
+            <button
+              type="button"
+              onClick={() => navigate('/categories')}
+              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer shrink-0"
+            >
+              View All <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {CATEGORY_CARDS.map((c) => (
-              <button
-                key={c.slug}
-                type="button"
-                onClick={() => onSelectCategory(c.slug)}
-                className="group flex flex-col text-left cursor-pointer focus:outline-none"
-              >
-                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-4 bg-stone-100 shadow-sm">
-                  <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                </div>
-                <div className="flex items-start justify-between gap-2 px-1">
-                  <div>
-                    <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1">{c.name}</h3>
-                    <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">{c.sub}</p>
+
+          <div className="flex items-center gap-3">
+            <button type="button" aria-label="Previous categories" onClick={() => scrollRow(categoryRowRef, -1)} className={arrowBtn}>
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <div ref={categoryRowRef} className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+              {CATEGORY_CARDS.map((c) => (
+                <button
+                  key={c.slug}
+                  type="button"
+                  onClick={() => onSelectCategory(c.slug)}
+                  className="group snap-start shrink-0 w-[44%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
+                >
+                  <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-4 bg-stone-100 shadow-sm">
+                    <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
-                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <div className="flex items-start justify-between gap-2 px-1">
+                    <div>
+                      <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1">{c.name}</h3>
+                      <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">{c.sub}</p>
+                    </div>
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
+                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
+            <button type="button" aria-label="Next categories" onClick={() => scrollRow(categoryRowRef, 1)} className={arrowBtn}>
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
+
+          <button
+            type="button"
+            onClick={() => navigate('/categories')}
+            className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+          >
+            View All Categories <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </Container>
       </section>
 
