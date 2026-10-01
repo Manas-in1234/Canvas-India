@@ -1,5 +1,6 @@
 import { Product, CategoryConfig } from '../types';
 import { CORK_CATALOG_PRODUCTS } from './corkCatalog';
+import { CATALOGUE_PRODUCTS } from './catalogueProducts';
 
 export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
   canvas: {
@@ -3764,7 +3765,12 @@ export const ALL_PRODUCTS: Product[] = [
     stockStatus: 'In Stock',
     applications: ['Franchise Stores', 'Popup Outlets', 'Showrooms'],
     isDemoData: true
-  }
+  },
+
+  // ==========================================
+  // Print World Catalogue — 300 products across 6 new categories
+  // ==========================================
+  ...CATALOGUE_PRODUCTS,
 
 ];
 

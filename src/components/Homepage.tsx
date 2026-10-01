@@ -33,6 +33,12 @@ const CATEGORY_CARDS = [
   { name: 'Canvas & Boards', sub: 'For Every Art Idea', price: 399, slug: 'canvas', image: u('photo-1579783902614-a3fb3927b675'), grad: 'from-[#7C3AED]/90', chip: 'bg-[#EC4899]' },
   { name: 'Cork Products', sub: 'Natural | Durable | Stylish', price: 449, slug: 'cork', image: u('photo-1586075010923-2dd4570fb338'), grad: 'from-[#B45309]/90', chip: 'bg-[#F59E0B]' },
   { name: 'Personalized Gifts', sub: 'Make it Uniquely Yours', price: 299, slug: 'gifts', image: u('photo-1513151233558-d860c5398176'), grad: 'from-[#BE185D]/90', chip: 'bg-[#0E4A93]' },
+  { name: 'Devotional Art', sub: 'Spiritual Prints for Every Home', price: 249, slug: 'devotional-art', image: '/assets/catalogue/devotional-art/G-A_001.jpg', grad: 'from-[#9A3412]/90', chip: 'bg-[#EA580C]' },
+  { name: 'Scenery & Landscape Art', sub: 'Bring the Outdoors In', price: 249, slug: 'scenery-landscape-art', image: '/assets/catalogue/scenery-landscape-art/S-A_010.jpg', grad: 'from-[#0F766E]/90', chip: 'bg-[#059669]' },
+  { name: 'Tribal & Ethnic Art', sub: 'Bold, Earthy Statement Pieces', price: 249, slug: 'tribal-ethnic-art', image: '/assets/catalogue/tribal-ethnic-art/A-A_006.jpg', grad: 'from-[#7C2D12]/90', chip: 'bg-[#B45309]' },
+  { name: 'Line Art', sub: 'Minimal Monochrome Prints', price: 249, slug: 'line-art', image: '/assets/catalogue/line-art/L-A_010.jpg', grad: 'from-[#1F2937]/90', chip: 'bg-[#374151]' },
+  { name: 'Motivational Posters', sub: 'Quotes That Keep You Going', price: 249, slug: 'motivational-posters', image: '/assets/catalogue/motivational-posters/M-A_030.jpg', grad: 'from-[#B91C1C]/90', chip: 'bg-[#DC2626]' },
+  { name: 'Cork Art Patterns', sub: 'Textured Natural Finishes', price: 249, slug: 'cork-art-patterns', image: '/assets/catalogue/cork-art-patterns/C-A_003.jpg', grad: 'from-[#92400E]/90', chip: 'bg-[#B45309]' },
 ];
 
 const OCCASIONS = [

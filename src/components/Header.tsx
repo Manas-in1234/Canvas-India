@@ -107,48 +107,6 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80',
     description: 'Office branding, corporate kits & GST billing',
   },
-  {
-    name: 'Devotional Art',
-    slug: 'devotional-art',
-    route: '/devotional-art',
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
-    description: 'God, spiritual and religious print art',
-  },
-  {
-    name: 'Scenery & Landscape Art',
-    slug: 'scenery-landscape-art',
-    route: '/scenery-landscape-art',
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
-    description: 'Nature, seascape and landscape prints',
-  },
-  {
-    name: 'Tribal & Ethnic Art',
-    slug: 'tribal-ethnic-art',
-    route: '/tribal-ethnic-art',
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
-    description: 'Aboriginal, tribal and ethnic-pattern print art',
-  },
-  {
-    name: 'Line Art',
-    slug: 'line-art',
-    route: '/line-art',
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
-    description: 'Minimal monochrome line-art prints',
-  },
-  {
-    name: 'Motivational Posters',
-    slug: 'motivational-posters',
-    route: '/motivational-posters',
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
-    description: 'Motivational quote and typography posters',
-  },
-  {
-    name: 'Cork Art Patterns',
-    slug: 'cork-art-patterns',
-    route: '/cork-art-patterns',
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
-    description: 'Textured cork-finish pattern prints',
-  },
 ];
 
 export const Header: React.FC<HeaderProps> = ({
@@ -212,14 +170,22 @@ export const Header: React.FC<HeaderProps> = ({
 
   // Category bar shopping categories (Excludes Bulk Order, Posters, Custom Prints, Home Decor, and Yoga & Fitness which sits inside Cork)
   const CATEGORY_BAR_ITEMS = useMemo(() => {
-    return PRIMARY_CATEGORIES.filter(
-      (cat) =>
-        cat.slug !== 'bulk-order' &&
-        cat.slug !== 'posters' &&
-        cat.slug !== 'custom-prints' &&
-        cat.slug !== 'home-decor' &&
-        cat.slug !== 'yoga-fitness'
-    );
+    const excluded = new Set([
+      'bulk-order',
+      'posters',
+      'custom-prints',
+      'home-decor',
+      'yoga-fitness',
+      // Print World catalogue categories live in the "Shop by Category"
+      // homepage section, not the navbar
+      'devotional-art',
+      'scenery-landscape-art',
+      'tribal-ethnic-art',
+      'line-art',
+      'motivational-posters',
+      'cork-art-patterns',
+    ]);
+    return PRIMARY_CATEGORIES.filter((cat) => !excluded.has(cat.slug));
   }, []);
 
   // Close open dropdown menus on scroll or resize to prevent detached floating elements
