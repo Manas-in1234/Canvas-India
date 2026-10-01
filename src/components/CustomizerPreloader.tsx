@@ -21,10 +21,9 @@ export const PRELOADER_MIN_MS = 4000;
  * the viewport (a transformed ancestor anywhere in the customizer tree would
  * otherwise re-anchor `position: fixed`).
  *
- * The clip's own white background is stretched to fill the entire screen and
- * blurred (a scaled-up copy behind a sharp, normal-size copy of the same
- * clip), instead of a small bordered card - so the "background" people see
- * is the video's own backdrop, full-bleed and soft, not the live page.
+ * Plain full-screen white background matching the clip's own backdrop
+ * exactly, with the clip centered on top at its normal size - no blur, no
+ * stretching, no mismatch.
  *
  * The video itself always plays at its native 1x rate (never sped up or
  * slowed down) - it's the `active` flag that is "synced to internet speed":
@@ -37,13 +36,11 @@ export const CustomizerPreloader: React.FC<CustomizerPreloaderProps> = ({ active
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] overflow-hidden animate-in fade-in duration-150"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-white animate-in fade-in duration-150"
       role="status"
       aria-live="polite"
       aria-label="Loading"
     >
-      {/* Full-bleed, blurred, scaled-up copy - this is the clip's own white
-          background stretched to fill the whole screen */}
       <video
         src="/assets/preloader/customizer-preloader.mp4"
         autoPlay
@@ -51,21 +48,8 @@ export const CustomizerPreloader: React.FC<CustomizerPreloaderProps> = ({ active
         muted
         playsInline
         preload="auto"
-        className="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl"
+        className="w-64 h-64 sm:w-80 sm:h-80 object-contain"
       />
-
-      {/* Sharp, normal-size copy of the same clip on top, for the readable logo */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <video
-          src="/assets/preloader/customizer-preloader.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          className="w-56 h-56 sm:w-72 sm:h-72 object-contain drop-shadow-xl"
-        />
-      </div>
     </div>,
     document.body
   );
