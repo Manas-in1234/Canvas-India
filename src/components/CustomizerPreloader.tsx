@@ -22,8 +22,11 @@ export const PRELOADER_MIN_MS = 4000;
  * otherwise re-anchor `position: fixed`).
  *
  * Plain full-screen white background matching the clip's own backdrop
- * exactly, with the clip centered on top at its normal size - no blur, no
- * stretching, no mismatch.
+ * exactly, with the clip centered on top at its normal size. A second,
+ * moderately-scaled and blurred copy sits directly behind it as a soft,
+ * contained glow - not stretched to fill the screen (that smeared the logo
+ * into color blobs instead of reading as a glow), just enough blur radius
+ * to add a bit of depth immediately around the sharp logo.
  *
  * The video itself always plays at its native 1x rate (never sped up or
  * slowed down) - it's the `active` flag that is "synced to internet speed":
@@ -41,15 +44,28 @@ export const CustomizerPreloader: React.FC<CustomizerPreloaderProps> = ({ active
       aria-live="polite"
       aria-label="Loading"
     >
-      <video
-        src="/assets/preloader/customizer-preloader.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="auto"
-        className="w-64 h-64 sm:w-80 sm:h-80 object-contain"
-      />
+      <div className="relative flex items-center justify-center">
+        {/* Soft contained glow - same clip, scaled up slightly and blurred,
+            sitting directly behind the sharp copy */}
+        <video
+          src="/assets/preloader/customizer-preloader.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="absolute inset-0 w-64 h-64 sm:w-80 sm:h-80 object-contain scale-125 blur-xl opacity-60"
+        />
+        <video
+          src="/assets/preloader/customizer-preloader.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="relative w-64 h-64 sm:w-80 sm:h-80 object-contain"
+        />
+      </div>
     </div>,
     document.body
   );
