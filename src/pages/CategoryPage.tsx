@@ -391,6 +391,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
                 onToggleWishlist={onToggleWishlist}
                 onAddToCart={onAddToCart}
                 onCustomize={onOpenCustomize}
+                variant="listing"
               />
             ))}
           </div>

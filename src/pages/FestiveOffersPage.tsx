@@ -81,6 +81,7 @@ export const FestiveOffersPage: React.FC = () => {
                   onToggleWishlist={onToggleWishlist}
                   onAddToCart={onAddToCart}
                   onCustomize={onOpenCustomize}
+                  variant="listing"
                 />
               ))}
             </div>
