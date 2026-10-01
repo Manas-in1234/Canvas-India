@@ -348,6 +348,108 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     ],
     ctaText: 'Shop Photo Frames',
     ctaType: 'shop'
+  },
+  'devotional-art': {
+    id: 'devotional-art',
+    slug: 'devotional-art',
+    title: 'Devotional Art',
+    shortTitle: 'Devotional Art',
+    seoTitle: 'Devotional Art Prints | Canvas India',
+    description: 'God, spiritual and religious print art for home shrines, pooja rooms and devotional corners.',
+    heroImage: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&auto=format&fit=crop&q=80',
+    subcategories: ['All'],
+    features: [
+      'Premium archival print quality',
+      'Available across canvas, acrylic and poster formats',
+      'Custom sizes on request'
+    ],
+    ctaText: 'Shop Devotional Art',
+    ctaType: 'shop'
+  },
+  'scenery-landscape-art': {
+    id: 'scenery-landscape-art',
+    slug: 'scenery-landscape-art',
+    title: 'Scenery & Landscape Art',
+    shortTitle: 'Scenery & Landscape',
+    seoTitle: 'Scenery & Landscape Art Prints | Canvas India',
+    description: 'Nature, seascape and landscape print art to bring the outdoors onto your walls.',
+    heroImage: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&auto=format&fit=crop&q=80',
+    subcategories: ['All'],
+    features: [
+      'Premium archival print quality',
+      'Available across canvas, acrylic and poster formats',
+      'Custom sizes on request'
+    ],
+    ctaText: 'Shop Scenery & Landscape Art',
+    ctaType: 'shop'
+  },
+  'tribal-ethnic-art': {
+    id: 'tribal-ethnic-art',
+    slug: 'tribal-ethnic-art',
+    title: 'Tribal & Ethnic Art',
+    shortTitle: 'Tribal & Ethnic Art',
+    seoTitle: 'Tribal & Ethnic Art Prints | Canvas India',
+    description: 'Aboriginal, tribal and ethnic-pattern print art with bold, earthy character.',
+    heroImage: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&auto=format&fit=crop&q=80',
+    subcategories: ['All'],
+    features: [
+      'Premium archival print quality',
+      'Available across canvas, acrylic and poster formats',
+      'Custom sizes on request'
+    ],
+    ctaText: 'Shop Tribal & Ethnic Art',
+    ctaType: 'shop'
+  },
+  'line-art': {
+    id: 'line-art',
+    slug: 'line-art',
+    title: 'Line Art',
+    shortTitle: 'Line Art',
+    seoTitle: 'Line Art Prints | Canvas India',
+    description: 'Minimal monochrome line-art prints for a clean, modern wall.',
+    heroImage: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&auto=format&fit=crop&q=80',
+    subcategories: ['All'],
+    features: [
+      'Premium archival print quality',
+      'Available across canvas, acrylic and poster formats',
+      'Custom sizes on request'
+    ],
+    ctaText: 'Shop Line Art',
+    ctaType: 'shop'
+  },
+  'motivational-posters': {
+    id: 'motivational-posters',
+    slug: 'motivational-posters',
+    title: 'Motivational Posters',
+    shortTitle: 'Motivational Posters',
+    seoTitle: 'Motivational Posters | Canvas India',
+    description: 'Motivational quote and typography posters for home, office and study spaces.',
+    heroImage: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&auto=format&fit=crop&q=80',
+    subcategories: ['All'],
+    features: [
+      'Premium archival print quality',
+      'Available across canvas, acrylic and poster formats',
+      'Custom sizes on request'
+    ],
+    ctaText: 'Shop Motivational Posters',
+    ctaType: 'shop'
+  },
+  'cork-art-patterns': {
+    id: 'cork-art-patterns',
+    slug: 'cork-art-patterns',
+    title: 'Cork Art Patterns',
+    shortTitle: 'Cork Art Patterns',
+    seoTitle: 'Cork Art Pattern Prints | Canvas India',
+    description: 'Textured cork-finish pattern prints, from geometric motifs to natural wood-grain designs.',
+    heroImage: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&auto=format&fit=crop&q=80',
+    subcategories: ['All'],
+    features: [
+      'Premium archival print quality',
+      'Available across canvas, acrylic and poster formats',
+      'Custom sizes on request'
+    ],
+    ctaText: 'Shop Cork Art Patterns',
+    ctaType: 'shop'
   }
 };
 

@@ -34,6 +34,12 @@ export const HomePage: React.FC = () => {
     'corporate-orders': '/corporate-orders',
     'corporate': '/corporate-orders',
     'corporate-printing': '/corporate-orders',
+    'devotional-art': '/devotional-art',
+    'scenery-landscape-art': '/scenery-landscape-art',
+    'tribal-ethnic-art': '/tribal-ethnic-art',
+    'line-art': '/line-art',
+    'motivational-posters': '/motivational-posters',
+    'cork-art-patterns': '/cork-art-patterns',
   };
 
   const handleSelectCategory = (slug: string, sub?: string) => {

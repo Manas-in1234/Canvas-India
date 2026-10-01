@@ -956,7 +956,7 @@ export interface PrimaryCategoryItem {
   id: string;
   name: string;
   slug: string;
-  iconName: 'Palette' | 'Layers' | 'CircleDot' | 'Printer' | 'Gift' | 'Package' | 'Building2' | 'Image' | 'Activity' | 'Home';
+  iconName: 'Palette' | 'Layers' | 'CircleDot' | 'Printer' | 'Gift' | 'Package' | 'Building2' | 'Image' | 'Activity' | 'Home' | 'Sparkles' | 'Mountain' | 'Globe' | 'PenTool' | 'Quote' | 'Shapes';
   startingPrice: number;
   image: string;
   description: string;
@@ -1052,6 +1052,60 @@ export const PRIMARY_CATEGORIES: PrimaryCategoryItem[] = [
     startingPrice: 499,
     image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80',
     description: 'B2B office art, employee welcome kits and GST invoicing',
+  },
+  {
+    id: 'cat-devotional',
+    name: 'Devotional Art',
+    slug: 'devotional-art',
+    iconName: 'Sparkles',
+    startingPrice: 249,
+    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    description: 'God, spiritual and religious print art for home and pooja spaces',
+  },
+  {
+    id: 'cat-scenery',
+    name: 'Scenery & Landscape Art',
+    slug: 'scenery-landscape-art',
+    iconName: 'Mountain',
+    startingPrice: 249,
+    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    description: 'Nature, seascape and landscape prints for every wall',
+  },
+  {
+    id: 'cat-tribal',
+    name: 'Tribal & Ethnic Art',
+    slug: 'tribal-ethnic-art',
+    iconName: 'Globe',
+    startingPrice: 249,
+    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    description: 'Aboriginal, tribal and ethnic-pattern print art',
+  },
+  {
+    id: 'cat-lineart',
+    name: 'Line Art',
+    slug: 'line-art',
+    iconName: 'PenTool',
+    startingPrice: 249,
+    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    description: 'Minimal monochrome line-art prints',
+  },
+  {
+    id: 'cat-motivational',
+    name: 'Motivational Posters',
+    slug: 'motivational-posters',
+    iconName: 'Quote',
+    startingPrice: 249,
+    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    description: 'Motivational quote and typography posters for home and office',
+  },
+  {
+    id: 'cat-cork-art',
+    name: 'Cork Art Patterns',
+    slug: 'cork-art-patterns',
+    iconName: 'Shapes',
+    startingPrice: 249,
+    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    description: 'Textured cork-finish pattern prints',
   },
 ];
 

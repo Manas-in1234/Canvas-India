@@ -113,6 +113,14 @@ export function App() {
             <Route path="/wall-art" element={<CategoryPage categorySlug="wall-art" />} />
             <Route path="/photo-frames" element={<CategoryPage categorySlug="photo-frames" />} />
 
+            {/* New print-design categories from Print World catalogue */}
+            <Route path="/devotional-art" element={<CategoryPage categorySlug="devotional-art" />} />
+            <Route path="/scenery-landscape-art" element={<CategoryPage categorySlug="scenery-landscape-art" />} />
+            <Route path="/tribal-ethnic-art" element={<CategoryPage categorySlug="tribal-ethnic-art" />} />
+            <Route path="/line-art" element={<CategoryPage categorySlug="line-art" />} />
+            <Route path="/motivational-posters" element={<CategoryPage categorySlug="motivational-posters" />} />
+            <Route path="/cork-art-patterns" element={<CategoryPage categorySlug="cork-art-patterns" />} />
+
             {/* Solutions for Designers & Architects */}
             <Route path="/designers-architects" element={<DesignersArchitectsPage />} />
 

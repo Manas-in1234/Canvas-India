@@ -27,6 +27,11 @@ import {
   Activity,
   LogOut,
   MapPin,
+  Mountain,
+  Globe,
+  PenTool,
+  Quote,
+  Shapes,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Product } from '../types';
@@ -102,6 +107,48 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80',
     description: 'Office branding, corporate kits & GST billing',
   },
+  {
+    name: 'Devotional Art',
+    slug: 'devotional-art',
+    route: '/devotional-art',
+    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    description: 'God, spiritual and religious print art',
+  },
+  {
+    name: 'Scenery & Landscape Art',
+    slug: 'scenery-landscape-art',
+    route: '/scenery-landscape-art',
+    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    description: 'Nature, seascape and landscape prints',
+  },
+  {
+    name: 'Tribal & Ethnic Art',
+    slug: 'tribal-ethnic-art',
+    route: '/tribal-ethnic-art',
+    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    description: 'Aboriginal, tribal and ethnic-pattern print art',
+  },
+  {
+    name: 'Line Art',
+    slug: 'line-art',
+    route: '/line-art',
+    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    description: 'Minimal monochrome line-art prints',
+  },
+  {
+    name: 'Motivational Posters',
+    slug: 'motivational-posters',
+    route: '/motivational-posters',
+    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    description: 'Motivational quote and typography posters',
+  },
+  {
+    name: 'Cork Art Patterns',
+    slug: 'cork-art-patterns',
+    route: '/cork-art-patterns',
+    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    description: 'Textured cork-finish pattern prints',
+  },
 ];
 
 export const Header: React.FC<HeaderProps> = ({
@@ -137,6 +184,12 @@ export const Header: React.FC<HeaderProps> = ({
     if (path === '/corporate-orders' || path === '/corporate') return 'corporate-orders';
     if (path === '/bulk-order' || path === '/bulk-orders') return 'bulk-order';
     if (path === '/designers-architects') return 'designers-architects';
+    if (path === '/devotional-art') return 'devotional-art';
+    if (path === '/scenery-landscape-art') return 'scenery-landscape-art';
+    if (path === '/tribal-ethnic-art') return 'tribal-ethnic-art';
+    if (path === '/line-art') return 'line-art';
+    if (path === '/motivational-posters') return 'motivational-posters';
+    if (path === '/cork-art-patterns') return 'cork-art-patterns';
     return '';
   }, [location.pathname]);
   const [activeMegaMenu, setActiveMegaMenu] = useState<string | null>(null);
@@ -197,6 +250,12 @@ export const Header: React.FC<HeaderProps> = ({
       case 'Image': return ImageIcon;
       case 'Activity': return Activity;
       case 'Home': return HomeIcon;
+      case 'Sparkles': return Sparkles;
+      case 'Mountain': return Mountain;
+      case 'Globe': return Globe;
+      case 'PenTool': return PenTool;
+      case 'Quote': return Quote;
+      case 'Shapes': return Shapes;
       default: return Sliders;
     }
   };

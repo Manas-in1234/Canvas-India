@@ -84,7 +84,9 @@ export const RootLayout: React.FC = () => {
     const categoryRoutes = [
       'acrylic', 'posters', 'cork', 'yoga-fitness',
       'home-decor', 'custom-prints', 'gifts', 'bulk-order', 'corporate-orders', 'designers-architects',
-      'wall-art', 'photo-frames'
+      'wall-art', 'photo-frames',
+      'devotional-art', 'scenery-landscape-art', 'tribal-ethnic-art', 'line-art',
+      'motivational-posters', 'cork-art-patterns'
     ];
     if (categoryRoutes.includes(slug)) {
       navigate(`/${slug}`);
