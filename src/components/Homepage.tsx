@@ -115,14 +115,14 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent" />
 
         {/* Hanging Stitched Leather Special Price Tag (Top Center) */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center select-none pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center select-none">
           {/* Wall Pin / Nail */}
-          <div className="w-3.5 h-3.5 rounded-full bg-stone-800 shadow-md border-2 border-stone-400 z-20 flex items-center justify-center">
+          <div className="w-3.5 h-3.5 rounded-full bg-stone-800 shadow-md border-2 border-stone-400 z-20 flex items-center justify-center pointer-events-none">
             <div className="w-1 h-1 rounded-full bg-stone-300" />
           </div>
 
           {/* Hanging String Lines */}
-          <div className="relative w-10 h-9 -mt-1 z-10">
+          <div className="relative w-10 h-9 -mt-1 z-10 pointer-events-none">
             <svg className="w-full h-full" viewBox="0 0 40 36" fill="none">
               <path d="M20 0 L5 36" stroke="#5C3214" strokeWidth="2" strokeLinecap="round" />
               <path d="M20 0 L35 36" stroke="#5C3214" strokeWidth="2" strokeLinecap="round" />
@@ -130,7 +130,12 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           </div>
 
           {/* Stitched Circular Orange Leather Badge */}
-          <div className="ci-float -mt-1.5 w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#EA580C] via-[#DC2626] to-[#9A3412] text-white flex flex-col items-center justify-center p-2 shadow-2xl shadow-orange-950/50 border-4 border-[#78350F] relative overflow-hidden">
+          <button
+            type="button"
+            onClick={() => onSelectCategory('gifts')}
+            aria-label="View festive offers"
+            className="ci-float -mt-1.5 w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#EA580C] via-[#DC2626] to-[#9A3412] text-white flex flex-col items-center justify-center p-2 shadow-2xl shadow-orange-950/50 border-4 border-[#78350F] relative overflow-hidden cursor-pointer hover:scale-105 hover:shadow-orange-900/60 transition-transform duration-300"
+          >
             {/* Metal Grommet Hole */}
             <div className="absolute top-1.5 w-3 h-3 rounded-full bg-stone-300 border-2 border-stone-600 shadow-inner z-10" />
 
@@ -144,7 +149,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             <span className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-md mt-0.5 leading-none">
               20% OFF
             </span>
-          </div>
+          </button>
         </div>
 
         <Container className="relative py-14 sm:py-16 lg:py-20 lg:min-h-[540px] flex items-center">
