@@ -75,39 +75,11 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     description: 'High-gloss 5mm crystal clear acrylic glass prints',
   },
   {
-    name: 'Posters & Custom Wall Graphics',
-    slug: 'posters',
-    route: '/posters',
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
-    description: 'Custom posters and commercial wall graphics',
-  },
-  {
     name: 'Cork',
     slug: 'cork',
     route: '/cork',
     image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=400&auto=format&fit=crop&q=80',
     description: 'Natural 8mm eco-friendly cork pinboards',
-  },
-  {
-    name: 'Yoga & Fitness',
-    slug: 'yoga-fitness',
-    route: '/yoga-fitness',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&auto=format&fit=crop&q=80',
-    description: 'Customized yoga mats and wellness gear',
-  },
-  {
-    name: 'Home Décor',
-    slug: 'home-decor',
-    route: '/home-decor',
-    image: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=400&auto=format&fit=crop&q=80',
-    description: 'Curated decorative and interior wall collections',
-  },
-  {
-    name: 'Custom Prints',
-    slug: 'custom-prints',
-    route: '/custom-prints',
-    image: 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=400&auto=format&fit=crop&q=80',
-    description: 'Personalized prints with custom sizes & photos',
   },
   {
     name: 'Gifts & Occasions',
@@ -129,13 +101,6 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     route: '/corporate-orders',
     image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80',
     description: 'Office branding, corporate kits & GST billing',
-  },
-  {
-    name: 'Designers & Architects',
-    slug: 'designers-architects',
-    route: '/designers-architects',
-    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&auto=format&fit=crop&q=80',
-    description: 'Turnkey interior wall solutions for trade professionals',
   },
 ];
 
@@ -771,7 +736,7 @@ export const Header: React.FC<HeaderProps> = ({
                         <Grid className="w-3.5 h-3.5 text-[#0E4A93]" />
                         <span>Print Categories</span>
                       </span>
-                      <span className="text-[10px] font-semibold text-stone-400">11 Categories</span>
+                      <span className="text-[10px] font-semibold text-stone-400">{ALL_CATEGORIES_MENU_ITEMS.length} Categories</span>
                     </div>
                     
                     <div className="py-1 space-y-0.5 max-h-[420px] overflow-y-auto scrollbar-none">
