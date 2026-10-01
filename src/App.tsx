@@ -26,6 +26,7 @@ import { AcrylicCustomizerPage } from './pages/AcrylicCustomizerPage';
 import { AllCategoriesPage } from './pages/AllCategoriesPage';
 import { CanvasCustomizerPage } from './pages/CanvasCustomizerPage';
 import { MobileUploadPage } from './pages/MobileUploadPage';
+import { FestiveOffersPage } from './pages/FestiveOffersPage';
 
 // Auth & Checkout Pages
 import { SignUpPage } from './pages/SignUpPage';
@@ -99,6 +100,9 @@ export function App() {
             <Route path="/home-decor" element={<CategoryPage categorySlug="home-decor" />} />
             <Route path="/custom-prints" element={<CategoryPage categorySlug="custom-prints" />} />
             <Route path="/gifts" element={<CategoryPage categorySlug="gifts" />} />
+
+            {/* Festive Offers landing page */}
+            <Route path="/festive-offers" element={<FestiveOffersPage />} />
 
             <Route path="/bulk-order" element={<CategoryPage categorySlug="bulk-order" />} />
             <Route path="/bulk-orders" element={<CategoryPage categorySlug="bulk-order" />} />
