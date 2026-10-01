@@ -1014,7 +1014,7 @@ export const PRIMARY_CATEGORIES: PrimaryCategoryItem[] = [
     slug: 'devotional-art',
     iconName: 'Sparkles',
     startingPrice: 249,
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    image: '/assets/catalogue/devotional-art/G-A_001.jpg',
     description: 'God, spiritual and religious print art for home and pooja spaces',
   },
   {
@@ -1023,7 +1023,7 @@ export const PRIMARY_CATEGORIES: PrimaryCategoryItem[] = [
     slug: 'scenery-landscape-art',
     iconName: 'Mountain',
     startingPrice: 249,
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    image: '/assets/catalogue/scenery-landscape-art/S-A_010.jpg',
     description: 'Nature, seascape and landscape prints for every wall',
   },
   {
@@ -1032,7 +1032,7 @@ export const PRIMARY_CATEGORIES: PrimaryCategoryItem[] = [
     slug: 'tribal-ethnic-art',
     iconName: 'Globe',
     startingPrice: 249,
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    image: '/assets/catalogue/tribal-ethnic-art/A-A_006.jpg',
     description: 'Aboriginal, tribal and ethnic-pattern print art',
   },
   {
@@ -1041,7 +1041,7 @@ export const PRIMARY_CATEGORIES: PrimaryCategoryItem[] = [
     slug: 'line-art',
     iconName: 'PenTool',
     startingPrice: 249,
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    image: '/assets/catalogue/line-art/L-A_010.jpg',
     description: 'Minimal monochrome line-art prints',
   },
   {
@@ -1050,7 +1050,7 @@ export const PRIMARY_CATEGORIES: PrimaryCategoryItem[] = [
     slug: 'motivational-posters',
     iconName: 'Quote',
     startingPrice: 249,
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    image: '/assets/catalogue/motivational-posters/M-A_030.jpg',
     description: 'Motivational quote and typography posters for home and office',
   },
   {
@@ -1059,7 +1059,7 @@ export const PRIMARY_CATEGORIES: PrimaryCategoryItem[] = [
     slug: 'cork-art-patterns',
     iconName: 'Shapes',
     startingPrice: 249,
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
+    image: '/assets/catalogue/cork-art-patterns/C-A_003.jpg',
     description: 'Textured cork-finish pattern prints',
   },
 ];

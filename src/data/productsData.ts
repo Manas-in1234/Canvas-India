@@ -357,7 +357,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     shortTitle: 'Devotional Art',
     seoTitle: 'Devotional Art Prints | Canvas India',
     description: 'God, spiritual and religious print art for home shrines, pooja rooms and devotional corners.',
-    heroImage: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&auto=format&fit=crop&q=80',
+    heroImage: '/assets/catalogue/devotional-art/G-A_002.jpg',
     subcategories: ['All'],
     features: [
       'Premium archival print quality',
@@ -374,7 +374,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     shortTitle: 'Scenery & Landscape',
     seoTitle: 'Scenery & Landscape Art Prints | Canvas India',
     description: 'Nature, seascape and landscape print art to bring the outdoors onto your walls.',
-    heroImage: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&auto=format&fit=crop&q=80',
+    heroImage: '/assets/catalogue/scenery-landscape-art/S-A_011.jpg',
     subcategories: ['All'],
     features: [
       'Premium archival print quality',
@@ -391,7 +391,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     shortTitle: 'Tribal & Ethnic Art',
     seoTitle: 'Tribal & Ethnic Art Prints | Canvas India',
     description: 'Aboriginal, tribal and ethnic-pattern print art with bold, earthy character.',
-    heroImage: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&auto=format&fit=crop&q=80',
+    heroImage: '/assets/catalogue/tribal-ethnic-art/A-A_007.jpg',
     subcategories: ['All'],
     features: [
       'Premium archival print quality',
@@ -408,7 +408,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     shortTitle: 'Line Art',
     seoTitle: 'Line Art Prints | Canvas India',
     description: 'Minimal monochrome line-art prints for a clean, modern wall.',
-    heroImage: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&auto=format&fit=crop&q=80',
+    heroImage: '/assets/catalogue/line-art/L-A_011.jpg',
     subcategories: ['All'],
     features: [
       'Premium archival print quality',
@@ -425,7 +425,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     shortTitle: 'Motivational Posters',
     seoTitle: 'Motivational Posters | Canvas India',
     description: 'Motivational quote and typography posters for home, office and study spaces.',
-    heroImage: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&auto=format&fit=crop&q=80',
+    heroImage: '/assets/catalogue/motivational-posters/M-A_031.jpg',
     subcategories: ['All'],
     features: [
       'Premium archival print quality',
@@ -442,7 +442,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     shortTitle: 'Cork Art Patterns',
     seoTitle: 'Cork Art Pattern Prints | Canvas India',
     description: 'Textured cork-finish pattern prints, from geometric motifs to natural wood-grain designs.',
-    heroImage: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&auto=format&fit=crop&q=80',
+    heroImage: '/assets/catalogue/cork-art-patterns/C-A_004.jpg',
     subcategories: ['All'],
     features: [
       'Premium archival print quality',
