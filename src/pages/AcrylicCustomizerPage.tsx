@@ -93,6 +93,7 @@ import { AcrylicClipartModal, ClipartElement } from '../components/AcrylicClipar
 import { AcrylicRoomViewModal, RoomPlacementState } from '../components/AcrylicRoomViewModal';
 import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
 import { CustomizerProductSelector } from '../components/CustomizerProductSelector';
+import { CustomizerPreloader } from '../components/CustomizerPreloader';
 import {
   CustomizerHeader,
   CustomizerTopToolbar,
@@ -189,6 +190,39 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Active Left Toolbar Tab
   const [activeTab, setActiveTab] = useState<ToolbarTab>('PRODUCTS');
+
+  // Preloader overlay: visible for real async work (image reads) for however
+  // long that actually takes, plus a short minimum so the brief, instant
+  // section switches still get a visible (but not artificially stretched) beat.
+  const [preloaderActive, setPreloaderActive] = useState(false);
+  const preloaderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const preloaderPendingRef = useRef(0);
+
+  const beginPreloader = () => {
+    preloaderPendingRef.current += 1;
+    if (preloaderTimerRef.current) {
+      clearTimeout(preloaderTimerRef.current);
+      preloaderTimerRef.current = null;
+    }
+    setPreloaderActive(true);
+  };
+  const endPreloader = (minMs: number = 0) => {
+    const release = () => {
+      preloaderPendingRef.current = Math.max(0, preloaderPendingRef.current - 1);
+      if (preloaderPendingRef.current === 0) setPreloaderActive(false);
+    };
+    if (minMs > 0) {
+      preloaderTimerRef.current = setTimeout(release, minMs);
+    } else {
+      release();
+    }
+  };
+
+  const handleSelectTab = (tabId: ToolbarTab) => {
+    setActiveTab(tabId);
+    beginPreloader();
+    endPreloader(550);
+  };
 
   // Track whether the user has explicitly selected a custom shape or layout in the SHAPES / LAYOUTS tabs
   const hasUserSelectedCustomShapeRef = useRef<boolean>(false);
@@ -1001,6 +1035,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
 
     const reader = new FileReader();
+    // Preloader stays visible for exactly as long as this real read takes -
+    // genuinely scales with file size / device speed, loops longer if slow.
+    beginPreloader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
       if (result) {
@@ -1030,6 +1067,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           setActivePanelIndex(targetIdx);
           setSelectedElement({ type: 'image', panelIndex: targetIdx });
           setValidationWarning(null);
+          endPreloader(300);
         };
         img.onerror = () => {
           updateFrame(targetIdx, (curr) => ({
@@ -1042,16 +1080,23 @@ export const AcrylicCustomizerPage: React.FC = () => {
             fitMode: 'contain'
           }));
           setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
+          endPreloader();
         };
         img.src = result;
+      } else {
+        endPreloader();
       }
     };
+    reader.onerror = () => endPreloader();
     reader.readAsDataURL(file);
   };
 
   // Multiple files upload to session gallery
   const handleGalleryUpload = (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    // Preloader stays visible for exactly as long as all these reads take -
+    // genuinely scales with file size/count and device speed.
+    beginPreloader();
     const readers: Promise<{ result: string; file: File; naturalWidth: number; naturalHeight: number; aspectRatio: number } | null>[] = [];
 
     Array.from(files).forEach((file) => {
@@ -1104,6 +1149,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           fitMode: 'contain'
         }));
       }
+      endPreloader(300);
     });
   };
 
@@ -2564,7 +2610,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   return (
     <div className="w-full h-screen flex flex-col bg-[#F1F5F9] font-sans antialiased overflow-hidden select-none">
-      
+      <CustomizerPreloader active={preloaderActive} />
+
       {/* Hidden File Pickers */}
       <input
         ref={fileInputRef}
@@ -2686,7 +2733,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleSelectTab(item.id)}
                 className={`flex flex-col items-center justify-center w-full py-3 px-1 text-center transition-all cursor-pointer ${
                   isActive
                     ? 'bg-white text-[#0E4A93] shadow-md font-extrabold'

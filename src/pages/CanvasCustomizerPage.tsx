@@ -48,6 +48,7 @@ import {
   ACRYLIC_BORDER_COLORS
 } from '../data/acrylicCustomizerData';
 import { CustomizerProductSelector } from '../components/CustomizerProductSelector';
+import { CustomizerPreloader } from '../components/CustomizerPreloader';
 import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
 import { AcrylicRoomViewModal, RoomPlacementState } from '../components/AcrylicRoomViewModal';
 import {
@@ -791,6 +792,39 @@ export const CanvasCustomizerPage: React.FC = () => {
   const prevTab = TOOLBAR_ITEMS[Math.max(0, activeTabIndex - 1)];
   const nextTab = TOOLBAR_ITEMS[Math.min(TOOLBAR_ITEMS.length - 1, activeTabIndex + 1)];
 
+  // Preloader overlay: visible for real async work (image reads) for however
+  // long that actually takes, plus a short minimum so the brief, instant
+  // section switches still get a visible (but not artificially stretched) beat.
+  const [preloaderActive, setPreloaderActive] = useState(false);
+  const preloaderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const preloaderPendingRef = useRef(0);
+
+  const beginPreloader = () => {
+    preloaderPendingRef.current += 1;
+    if (preloaderTimerRef.current) {
+      clearTimeout(preloaderTimerRef.current);
+      preloaderTimerRef.current = null;
+    }
+    setPreloaderActive(true);
+  };
+  const endPreloader = (minMs: number = 0) => {
+    const release = () => {
+      preloaderPendingRef.current = Math.max(0, preloaderPendingRef.current - 1);
+      if (preloaderPendingRef.current === 0) setPreloaderActive(false);
+    };
+    if (minMs > 0) {
+      preloaderTimerRef.current = setTimeout(release, minMs);
+    } else {
+      release();
+    }
+  };
+
+  const handleSelectTab = (tabId: ToolbarTab) => {
+    setActiveTab(tabId);
+    beginPreloader();
+    endPreloader(550);
+  };
+
   // Selected Canvas Product Type (supports all 7 Canvas products via route param or sidebar switcher)
   const resolveCanvasProductTypeId = (rawId?: string, catProd?: typeof catalogProduct): string => {
     const key = (rawId || catProd?.slug || catProd?.id || catProd?.name || '').toLowerCase();
@@ -1142,6 +1176,9 @@ export const CanvasCustomizerPage: React.FC = () => {
 
       const target = startIdx + i;
       const reader = new FileReader();
+      // Preloader stays visible for exactly as long as this real read takes -
+      // genuinely scales with file size / device speed, loops longer if slow.
+      beginPreloader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
         if (result) {
@@ -1153,7 +1190,9 @@ export const CanvasCustomizerPage: React.FC = () => {
           }
           setValidationWarning(null);
         }
+        endPreloader(300);
       };
+      reader.onerror = () => endPreloader();
       reader.readAsDataURL(file);
     });
   };
@@ -1618,6 +1657,7 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   return (
     <div className="w-full h-screen flex flex-col bg-[#F1F5F9] text-stone-900 font-manrope overflow-hidden select-none">
+      <CustomizerPreloader active={preloaderActive} />
       {/* SVG ClipPath Mask Definitions for non-rectangular canvas shapes */}
       <svg width="0" height="0" className="absolute pointer-events-none opacity-0" aria-hidden="true">
         <defs>
@@ -1736,7 +1776,7 @@ export const CanvasCustomizerPage: React.FC = () => {
         <CustomizerSidebar
           items={TOOLBAR_ITEMS}
           activeTab={activeTab}
-          onSelectTab={setActiveTab}
+          onSelectTab={handleSelectTab}
         />
 
         {/* COLUMN 2: CONFIGURATION PANEL */}
@@ -2895,12 +2935,12 @@ export const CanvasCustomizerPage: React.FC = () => {
             prevStep={{
               label: prevTab.label,
               disabled: activeTabIndex === 0,
-              onClick: () => setActiveTab(prevTab.id)
+              onClick: () => handleSelectTab(prevTab.id)
             }}
             nextStep={{
               label: nextTab.label,
               disabled: activeTabIndex === TOOLBAR_ITEMS.length - 1,
-              onClick: () => setActiveTab(nextTab.id)
+              onClick: () => handleSelectTab(nextTab.id)
             }}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
