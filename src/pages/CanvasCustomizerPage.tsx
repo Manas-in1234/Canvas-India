@@ -48,7 +48,7 @@ import {
   ACRYLIC_BORDER_COLORS
 } from '../data/acrylicCustomizerData';
 import { CustomizerProductSelector } from '../components/CustomizerProductSelector';
-import { CustomizerPreloader } from '../components/CustomizerPreloader';
+import { CustomizerPreloader, PRELOADER_MIN_MS } from '../components/CustomizerPreloader';
 import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
 import { AcrylicRoomViewModal, RoomPlacementState } from '../components/AcrylicRoomViewModal';
 import {
@@ -822,7 +822,7 @@ export const CanvasCustomizerPage: React.FC = () => {
   const handleSelectTab = (tabId: ToolbarTab) => {
     setActiveTab(tabId);
     beginPreloader();
-    endPreloader(550);
+    endPreloader(PRELOADER_MIN_MS);
   };
 
   // Selected Canvas Product Type (supports all 7 Canvas products via route param or sidebar switcher)
@@ -1190,7 +1190,7 @@ export const CanvasCustomizerPage: React.FC = () => {
           }
           setValidationWarning(null);
         }
-        endPreloader(300);
+        endPreloader(PRELOADER_MIN_MS);
       };
       reader.onerror = () => endPreloader();
       reader.readAsDataURL(file);

@@ -5,6 +5,15 @@ interface CustomizerPreloaderProps {
 }
 
 /**
+ * The clip's own natural length (ms). The overlay is never hidden before this
+ * elapses, even if the underlying work finishes instantly - a fast
+ * connection means "play the standard loop once, at normal speed", not
+ * "skip/cut the clip short". It only stays up longer than this when the
+ * real async work genuinely takes longer.
+ */
+export const PRELOADER_MIN_MS = 4000;
+
+/**
  * Full-screen branded loading overlay for the Canvas/Acrylic customizers.
  *
  * The video itself always plays at its native 1x rate (never sped up or

@@ -93,7 +93,7 @@ import { AcrylicClipartModal, ClipartElement } from '../components/AcrylicClipar
 import { AcrylicRoomViewModal, RoomPlacementState } from '../components/AcrylicRoomViewModal';
 import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
 import { CustomizerProductSelector } from '../components/CustomizerProductSelector';
-import { CustomizerPreloader } from '../components/CustomizerPreloader';
+import { CustomizerPreloader, PRELOADER_MIN_MS } from '../components/CustomizerPreloader';
 import {
   CustomizerHeader,
   CustomizerTopToolbar,
@@ -221,7 +221,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const handleSelectTab = (tabId: ToolbarTab) => {
     setActiveTab(tabId);
     beginPreloader();
-    endPreloader(550);
+    endPreloader(PRELOADER_MIN_MS);
   };
 
   // Track whether the user has explicitly selected a custom shape or layout in the SHAPES / LAYOUTS tabs
@@ -1067,7 +1067,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           setActivePanelIndex(targetIdx);
           setSelectedElement({ type: 'image', panelIndex: targetIdx });
           setValidationWarning(null);
-          endPreloader(300);
+          endPreloader(PRELOADER_MIN_MS);
         };
         img.onerror = () => {
           updateFrame(targetIdx, (curr) => ({
@@ -1149,7 +1149,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           fitMode: 'contain'
         }));
       }
-      endPreloader(300);
+      endPreloader(PRELOADER_MIN_MS);
     });
   };
 
