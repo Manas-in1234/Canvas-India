@@ -34,20 +34,22 @@ export const CustomizerPreloader: React.FC<CustomizerPreloaderProps> = ({ active
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/25 backdrop-blur-md animate-in fade-in duration-150"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/10 backdrop-blur-[2px] animate-in fade-in duration-150"
       role="status"
       aria-live="polite"
       aria-label="Loading"
     >
-      <video
-        src="/assets/preloader/customizer-preloader.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="auto"
-        className="w-56 h-56 sm:w-72 sm:h-72 object-contain rounded-2xl shadow-2xl"
-      />
+      <div className="bg-white rounded-2xl shadow-2xl p-4 flex items-center justify-center">
+        <video
+          src="/assets/preloader/customizer-preloader.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="w-40 h-40 sm:w-48 sm:h-48 object-contain"
+        />
+      </div>
     </div>,
     document.body
   );
