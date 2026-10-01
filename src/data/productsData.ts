@@ -1,6 +1,7 @@
 import { Product, CategoryConfig } from '../types';
 import { CORK_CATALOG_PRODUCTS } from './corkCatalog';
 import { CATALOGUE_PRODUCTS } from './catalogueProducts';
+import { CATALOGUE_CANVAS_ACRYLIC_PRODUCTS } from './catalogueCanvasAcrylicProducts';
 
 export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
   canvas: {
@@ -3771,6 +3772,12 @@ export const ALL_PRODUCTS: Product[] = [
   // Print World Catalogue — 300 products across 6 new categories
   // ==========================================
   ...CATALOGUE_PRODUCTS,
+
+  // ==========================================
+  // Print World Catalogue designs (non-cork), also offered as Canvas and
+  // Acrylic products — 550 products (275 designs x 2 materials)
+  // ==========================================
+  ...CATALOGUE_CANVAS_ACRYLIC_PRODUCTS,
 
 ];
 
