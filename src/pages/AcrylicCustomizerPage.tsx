@@ -2744,7 +2744,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                   Upload Photos
                 </h3>
                 <p className="text-[11px] text-stone-500">
-                  Add high-resolution photos from your computer or scan the QR code to upload directly from your mobile phone.
+                  Add high-resolution photos from your PC or laptop or scan the QR code to upload directly from your mobile phone.
                 </p>
               </div>
 
