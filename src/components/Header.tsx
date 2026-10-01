@@ -171,11 +171,6 @@ export const Header: React.FC<HeaderProps> = ({
   // Category bar shopping categories (Excludes Bulk Order, Posters, Custom Prints, Home Decor, and Yoga & Fitness which sits inside Cork)
   const CATEGORY_BAR_ITEMS = useMemo(() => {
     const excluded = new Set([
-      'bulk-order',
-      'posters',
-      'custom-prints',
-      'home-decor',
-      'yoga-fitness',
       // Print World catalogue categories live in the "Shop by Category"
       // homepage section, not the navbar
       'devotional-art',

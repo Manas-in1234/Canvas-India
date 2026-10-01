@@ -147,13 +147,8 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
             <ul className="space-y-2 text-stone-400 text-xs">
               <li><Link to="/canvas" className="hover:text-white transition-colors">Canvas Frames</Link></li>
               <li><Link to="/acrylic" className="hover:text-white transition-colors">Acrylic Wall Art</Link></li>
-              <li><Link to="/posters" className="hover:text-white transition-colors">Posters &amp; Wall Graphics</Link></li>
-              <li><Link to="/cork" className="hover:text-white transition-colors">Natural Cork Prints</Link></li>
-              <li><Link to="/yoga-fitness" className="hover:text-white transition-colors">Custom Yoga Mats</Link></li>
-              <li><Link to="/home-decor" className="hover:text-white transition-colors">Designer Home Décor</Link></li>
-              <li><Link to="/custom-prints" className="hover:text-white transition-colors">Custom Photo Prints</Link></li>
+              <li><Link to="/cork" className="hover:text-white transition-colors">Natural Cork Prints &amp; Yoga Mats</Link></li>
               <li><Link to="/gifts" className="hover:text-white transition-colors">Gifts &amp; Celebrations</Link></li>
-              <li><Link to="/bulk-order" className="hover:text-white transition-colors">Bulk Orders &amp; Wholesale</Link></li>
               <li><Link to="/corporate-orders" className="hover:text-white transition-colors">Corporate Branding</Link></li>
             </ul>
           </div>

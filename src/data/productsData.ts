@@ -2342,14 +2342,14 @@ export const ALL_PRODUCTS: Product[] = [
   ...CORK_CATALOG_PRODUCTS,
 
   // ==========================================
-  // 5. YOGA & FITNESS CATEGORY (8 Demo Products)
+  // 5. YOGA & FITNESS (8 Demo Products) — merged into Cork category
   // ==========================================
   {
     id: 'yog-1',
     name: 'Classic Yoga Mat',
     slug: 'classic-yoga-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Yoga Mats',
     image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&auto=format&fit=crop&q=80',
     images: [
@@ -2378,7 +2378,7 @@ export const ALL_PRODUCTS: Product[] = [
     name: 'Premium Yoga Mat',
     slug: 'premium-yoga-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Yoga Mats',
     image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&auto=format&fit=crop&q=80',
     images: [
@@ -2407,7 +2407,7 @@ export const ALL_PRODUCTS: Product[] = [
     name: 'Personalized Yoga Mat',
     slug: 'personalized-yoga-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Customized Yoga Mats',
     image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&auto=format&fit=crop&q=80',
     images: [
@@ -2437,7 +2437,7 @@ export const ALL_PRODUCTS: Product[] = [
     name: 'Branded Yoga Mat',
     slug: 'branded-yoga-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Branded Yoga Mats',
     image: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=600&auto=format&fit=crop&q=80',
     images: [
@@ -2467,7 +2467,7 @@ export const ALL_PRODUCTS: Product[] = [
     name: 'Corporate Wellness Yoga Mat',
     slug: 'corporate-wellness-yoga-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Corporate Wellness',
     image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&auto=format&fit=crop&q=80',
     images: [
@@ -2497,7 +2497,7 @@ export const ALL_PRODUCTS: Product[] = [
     name: 'Yoga Studio Mat',
     slug: 'yoga-studio-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Yoga Mats',
     image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&auto=format&fit=crop&q=80',
     images: [
@@ -2526,7 +2526,7 @@ export const ALL_PRODUCTS: Product[] = [
     name: 'Fitness Event Mat',
     slug: 'fitness-event-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Event Fitness Products',
     image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&auto=format&fit=crop&q=80',
     images: [
@@ -2556,7 +2556,7 @@ export const ALL_PRODUCTS: Product[] = [
     name: 'Custom Printed Yoga Mat',
     slug: 'custom-printed-yoga-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Customized Yoga Mats',
     image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&auto=format&fit=crop&q=80',
     images: [
