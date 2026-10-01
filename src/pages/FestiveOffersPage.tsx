@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Sparkles, Gift, Clock, Percent } from 'lucide-react';
+import { Sparkles, Gift, Clock, Percent } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
 
@@ -59,23 +59,6 @@ export const FestiveOffersPage: React.FC = () => {
           <p className="text-base sm:text-lg text-stone-600 max-w-xl mx-auto leading-relaxed">
             Celebrate the season with flat 20% off on canvas prints, acrylic frames, cork decor and personalized gifts.
           </p>
-
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => onOpenCustomize()}
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#0E4A93] hover:bg-[#0B3B77] text-white text-sm font-bold shadow-lg shadow-blue-900/20 transition cursor-pointer"
-            >
-              Claim 20% OFF &amp; Customize <ArrowRight className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/search')}
-              className="px-8 py-3.5 rounded-full bg-white hover:bg-stone-100 text-stone-800 border border-stone-300 text-sm font-bold shadow-xs transition cursor-pointer"
-            >
-              Browse All Products
-            </button>
-          </div>
         </Container>
       </section>
 
