@@ -57,9 +57,9 @@ export const CustomizerHeader: React.FC<CustomizerHeaderProps> = ({
   const handlePrice = onClickPrice || onPriceClick;
 
   return (
-    <header className="relative h-14 bg-[#0E4A93] text-white flex items-center justify-between px-3 sm:px-6 shadow-md z-30 shrink-0">
+    <header className="h-14 bg-[#0E4A93] text-white flex items-center gap-2 px-3 sm:px-6 shadow-md z-30 shrink-0">
       {/* LEFT: [MENU] [BACK TO CANVAS / ACRYLIC] */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <button
           type="button"
           onClick={handleMenu}
@@ -79,29 +79,33 @@ export const CustomizerHeader: React.FC<CustomizerHeaderProps> = ({
         </Link>
       </div>
 
-      {/* CENTER: CANVAS INDIA LOGO - centered across the full header width */}
-      <Link
-        to="/"
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 hover:opacity-90 transition-opacity focus:outline-none"
-        title="Canvas India"
-      >
-        <img
-          src="/canvas-india-official-logo.png"
-          alt="Canvas India"
-          className="h-7 sm:h-8 md:h-9 w-auto object-contain block select-none"
-        />
-      </Link>
+      {/* CENTER: CANVAS INDIA LOGO - a real flex column (not absolute) so it
+          always has its own reserved space and can never overlap the left/
+          right groups, however wide they are on a given screen. */}
+      <div className="flex-1 min-w-0 flex items-center justify-center">
+        <Link
+          to="/"
+          className="flex items-center gap-2 hover:opacity-90 transition-opacity focus:outline-none min-w-0"
+          title="Canvas India"
+        >
+          <img
+            src="/canvas-india-official-logo.png"
+            alt="Canvas India"
+            className="h-6 sm:h-8 md:h-9 w-auto max-w-[90px] sm:max-w-none object-contain block select-none"
+          />
+        </Link>
+      </div>
 
       {/* RIGHT: Price Display + Add to Cart Button */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <div className="relative">
           <div
             onClick={handlePrice}
             className={`text-right block ${handlePrice ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
             title={handlePrice ? 'Click to view price breakdown' : undefined}
           >
-            <div className="text-[10px] text-white/70 uppercase font-semibold">Total Price</div>
-            <div className="text-lg font-black text-white leading-tight">
+            <div className="text-[9px] sm:text-[10px] text-white/70 uppercase font-semibold whitespace-nowrap">Total Price</div>
+            <div className="text-sm sm:text-lg font-black text-white leading-tight whitespace-nowrap">
               ₹{totalPrice.toLocaleString('en-IN')}
             </div>
           </div>
@@ -111,10 +115,10 @@ export const CustomizerHeader: React.FC<CustomizerHeaderProps> = ({
         <button
           type="button"
           onClick={onAddToCart}
-          className="flex items-center gap-2 bg-[#E8752A] hover:bg-[#d4651e] text-white text-xs sm:text-sm font-bold px-4 sm:px-5 py-2 rounded-lg shadow-md transition-all transform active:scale-95 cursor-pointer"
+          className="flex items-center gap-1.5 sm:gap-2 bg-[#E8752A] hover:bg-[#d4651e] text-white text-xs sm:text-sm font-bold px-2.5 sm:px-5 py-2 rounded-lg shadow-md transition-all transform active:scale-95 cursor-pointer whitespace-nowrap"
         >
-          <ShoppingCart className="w-4 h-4" />
-          <span>Add to Cart</span>
+          <ShoppingCart className="w-4 h-4 shrink-0" />
+          <span className="hidden sm:inline">Add to Cart</span>
         </button>
       </div>
     </header>
