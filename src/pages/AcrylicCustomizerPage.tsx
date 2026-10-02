@@ -228,19 +228,22 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const hasUserSelectedCustomShapeRef = useRef<boolean>(false);
   const hasUserSelectedCustomLayoutRef = useRef<boolean>(false);
 
-  // Resolve initial Acrylic Product ID from URL param or catalog product (within all 7 Acrylic products)
+  // Resolve initial Acrylic Product ID from URL param or catalog product (within all 10 Acrylic products)
   const resolveProductTypeId = (urlId?: string, catProd?: { id?: string; slug?: string; name?: string }): string => {
     const directMatch = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === urlId);
     if (directMatch) return directMatch.id;
     const key = (urlId || catProd?.slug || catProd?.id || catProd?.name || '').toLowerCase();
-    if (key.includes('block')) return 'acrylic-photo-block';
-    if (key.includes('wall') || key.includes('display')) return 'acrylic-wall-art';
-    if (key.includes('collage')) return 'acrylic-collage';
+    if (key.includes('word') || key.includes('art')) return 'acrylic-word-art';
+    if (key.includes('bus') || key.includes('roll')) return 'acrylic-bus-roll';
+    if (key.includes('quote')) return 'acrylic-quotes';
+    if (key.includes('digital') || key.includes('paint')) return 'acrylic-digital';
+    if (key.includes('lyric') || key.includes('song')) return 'acrylic-lyric';
+    if (key.includes('mosaic')) return 'acrylic-mosaic';
     if (key.includes('split') || key.includes('triptych')) return 'acrylic-split';
-    if (key.includes('sign')) return 'acrylic-signage';
-    if (key.includes('print') && !key.includes('panel')) return 'acrylic-print';
-    if (key.includes('panel')) return 'acrylic-photo-panel';
-    return 'acrylic-photo-panel';
+    if (key.includes('collage')) return 'acrylic-collage';
+    if (key.includes('wall') || key.includes('display')) return 'acrylic-wall-art';
+    if (key.includes('print') || key.includes('block') || key.includes('panel') || key.includes('sign')) return 'acrylic-print';
+    return 'acrylic-print';
   };
 
   // Selected Acrylic Product Type (Single source of truth for selected Acrylic product)
@@ -1629,7 +1632,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
     setSelectedProductTypeId(pt.id);
 
     // 2. Apply the product's default layout (4-grid for Acrylic Collage, 2-split for Acrylic Split Panel; preserve manual layout between single-panel products)
-    const isMultiSlotProduct = (id: string) => id === 'acrylic-collage' || id === 'acrylic-split';
+    const isMultiSlotProduct = (id: string) =>
+      id === 'acrylic-collage' || id === 'acrylic-split' || id === 'acrylic-wall-art' || id === 'acrylic-mosaic';
     const shouldApplyDefaultLayout =
       isMultiSlotProduct(pt.id) ||
       isMultiSlotProduct(selectedProductTypeId) ||
@@ -2630,17 +2634,42 @@ export const AcrylicCustomizerPage: React.FC = () => {
     );
   };
 
-  // Primary Toolbar items: EXACT 8 ITEMS IN ORDER
-  const toolbarItems: { id: ToolbarTab; label: string; icon: React.ElementType }[] = [
-    { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
-    { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud },
-    { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
-    { id: 'SHAPES', label: 'SHAPES', icon: Shapes },
-    { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers },
-    { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
-    { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
-    { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
-  ];
+  // Dynamic Product Capabilities for the active Acrylic product
+  const productCapabilities = selectedProductType?.capabilities || {
+    products: true,
+    upload: true,
+    sizes: true,
+    shapes: true,
+    layouts: false,
+    wrap: true,
+    hardware: true,
+    options: true
+  };
+
+  // Primary Toolbar items: dynamically filtered by selected product capabilities
+  const toolbarItems = useMemo<{ id: ToolbarTab; label: string; icon: React.ElementType }[]>(() => {
+    const items: { id: ToolbarTab; label: string; icon: React.ElementType; enabled: boolean }[] = [
+      { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid, enabled: productCapabilities.products !== false },
+      { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud, enabled: productCapabilities.upload !== false },
+      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: productCapabilities.sizes !== false },
+      { id: 'SHAPES', label: 'SHAPES', icon: Shapes, enabled: productCapabilities.shapes === true },
+      { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: productCapabilities.layouts === true },
+      { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
+      { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal, enabled: productCapabilities.hardware !== false },
+      { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false }
+    ];
+    return items.filter((item) => item.enabled);
+  }, [productCapabilities]);
+
+  // If the active tab is not supported by the currently selected product, safely revert to PRODUCTS
+  useEffect(() => {
+    const isCurrentTabSupported = toolbarItems.some(
+      (item) => item.id === activeTab || (item.id === 'SHAPES' && activeTab === 'SHAPE')
+    );
+    if (!isCurrentTabSupported) {
+      setActiveTab('PRODUCTS');
+    }
+  }, [toolbarItems, activeTab]);
 
   return (
     <div className="w-full h-screen flex flex-col bg-[#F1F5F9] font-sans antialiased overflow-hidden select-none">
@@ -3326,7 +3355,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
               {layoutSubTab === 'LAYOUTS' && (
                 <div className="space-y-2">
                   <div className="grid grid-cols-2 gap-2">
-                    {LAYOUT_PRESETS.slice(0, 7).map((layout) => {
+                    {(selectedProductType?.supportedLayoutIds && selectedProductType.supportedLayoutIds.length > 0
+                      ? LAYOUT_PRESETS.filter((l) => selectedProductType.supportedLayoutIds!.includes(l.id))
+                      : LAYOUT_PRESETS.slice(0, 7)
+                    ).map((layout) => {
                       const isSelected = selectedLayoutId === layout.id;
                       const previewSlots = getLayoutSlots(layout.layoutType, productAspectRatio);
                       const clampedRatio = Math.max(0.78, Math.min(1.35, productAspectRatio));

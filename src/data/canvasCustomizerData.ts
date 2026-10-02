@@ -60,7 +60,9 @@ export type {
 export {
   ACRYLIC_BACKGROUNDS as CANVAS_BACKGROUNDS,
   ACRYLIC_BORDER_WIDTHS as CANVAS_BORDER_WIDTHS,
-  ACRYLIC_BORDER_COLORS as CANVAS_BORDER_COLORS
+  ACRYLIC_BORDER_COLORS as CANVAS_BORDER_COLORS,
+  ACRYLIC_BORDER_WIDTHS,
+  ACRYLIC_BORDER_COLORS
 } from './acrylicCustomizerData';
 
 export type { ClipartItem } from './acrylicClipartData';
@@ -75,10 +77,26 @@ const swapMaterialWord = (text: string): string =>
 
 export type CanvasShapeOption = AcrylicShapeOption;
 
-export const CANVAS_SHAPES: CanvasShapeOption[] = ACRYLIC_SHAPES.map((shape) => ({
-  ...shape,
-  description: swapMaterialWord(shape.description)
-}));
+export const CANVAS_SHAPES: CanvasShapeOption[] = [
+  ...ACRYLIC_SHAPES.map((shape) => ({
+    ...shape,
+    description: swapMaterialWord(shape.description)
+  })),
+  {
+    id: 'shape-triangle',
+    shapeType: 'triangle' as any,
+    name: 'Triangle',
+    category: 'special',
+    description: 'Striking triangular format for dynamic and modern layouts.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-none',
+    clipPathStyle: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+    isSingleDimension: true,
+    image: '',
+    priceAddon: 150
+  }
+];
 
 // ----------------------------------------------------------------------------
 // DESIGN TEMPLATES GALLERY: reuse layout/border geometry, swap description text
@@ -92,14 +110,46 @@ export const CANVAS_TEMPLATES: CanvasTemplateItem[] = ACRYLIC_TEMPLATES.map((tmp
 }));
 
 // ----------------------------------------------------------------------------
-// PRODUCT CATALOG (Canvas-specific)
+// PRODUCT CATALOG (Canvas-specific - 16 Products from Reference Screenshot)
 // ----------------------------------------------------------------------------
+export type CanvasProductIconType =
+  | 'block'
+  | 'panel'
+  | 'wall'
+  | 'print'
+  | 'collage'
+  | 'split'
+  | 'signage'
+  | 'round'
+  | 'triangle'
+  | 'heart'
+  | 'oval'
+  | 'hexagon'
+  | 'mosaic'
+  | 'lyric'
+  | 'painting'
+  | 'quotes'
+  | 'bus-roll'
+  | 'banner'
+  | 'pop-art';
+
+export interface CanvasProductCapabilities {
+  products?: boolean;
+  upload?: boolean;
+  sizes?: boolean;
+  shapes?: boolean;
+  layouts?: boolean;
+  wrap?: boolean;
+  hardware?: boolean;
+  options?: boolean;
+}
+
 export interface CanvasProductType {
   id: string;
   name: string;
   startingPrice: number;
   image: string;
-  iconType: 'block' | 'panel' | 'wall' | 'print' | 'collage' | 'split' | 'signage';
+  iconType: CanvasProductIconType;
   panelsCount: number;
   description: string;
   defaultSizeOptionId: string;
@@ -108,14 +158,272 @@ export interface CanvasProductType {
   defaultHardwareId: string;
   defaultThicknessId: string;
   supportedShapeIds?: string[];
+  capabilities?: CanvasProductCapabilities;
+  supportedLayoutIds?: string[];
 }
 
 const ALL_CANVAS_SHAPE_IDS = [
   'shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait',
-  'shape-circle', 'shape-oval', 'shape-rounded-rect', 'shape-heart', 'shape-hexagon'
+  'shape-circle', 'shape-oval', 'shape-rounded-rect', 'shape-heart', 'shape-hexagon', 'shape-triangle'
 ];
 
 export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
+  {
+    id: 'canvas-single',
+    name: 'Single Print',
+    startingPrice: 99.0,
+    image: '',
+    iconType: 'print',
+    panelsCount: 1,
+    description: 'Classic single canvas print stretched over precision-milled wood frames.',
+    defaultSizeOptionId: 'sq-8x8',
+    defaultShape: 'shape-rectangle',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+  },
+  {
+    id: 'canvas-round',
+    name: 'Round Canvas',
+    startingPrice: 721.27,
+    image: '',
+    iconType: 'round',
+    panelsCount: 1,
+    description: 'Curved circular canvas stretched on precision round wood stretcher.',
+    defaultSizeOptionId: 'sq-8x8',
+    defaultShape: 'shape-circle',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ['shape-circle', ...ALL_CANVAS_SHAPE_IDS]
+  },
+  {
+    id: 'canvas-triangle',
+    name: 'Triangle Canvas',
+    startingPrice: 1250.79,
+    image: '',
+    iconType: 'triangle',
+    panelsCount: 1,
+    description: 'Geometric 3-sided triangle canvas for modern geometric wall galleries.',
+    defaultSizeOptionId: 'sq-8x8',
+    defaultShape: 'shape-triangle',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ['shape-triangle', ...ALL_CANVAS_SHAPE_IDS]
+  },
+  {
+    id: 'canvas-heart',
+    name: 'Heart Canvas',
+    startingPrice: 1854.68,
+    image: '',
+    iconType: 'heart',
+    panelsCount: 1,
+    description: 'Romantic heart-shaped canvas for wedding, couple, and family portraits.',
+    defaultSizeOptionId: 'sq-8x8',
+    defaultShape: 'shape-heart',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ['shape-heart', ...ALL_CANVAS_SHAPE_IDS]
+  },
+  {
+    id: 'canvas-oval',
+    name: 'Oval Canvas',
+    startingPrice: 1380.67,
+    image: '',
+    iconType: 'oval',
+    panelsCount: 1,
+    description: 'Graceful elliptical canvas silhouette for timeless wall art.',
+    defaultSizeOptionId: 'sq-8x8',
+    defaultShape: 'shape-oval',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ['shape-oval', ...ALL_CANVAS_SHAPE_IDS]
+  },
+  {
+    id: 'canvas-wall-art',
+    name: 'Wall Display',
+    startingPrice: 856.90,
+    image: '',
+    iconType: 'wall',
+    panelsCount: 3,
+    description: 'Multi-panel gallery wall display for striking home and office focal points.',
+    defaultSizeOptionId: 'rec-12x18',
+    defaultShape: 'shape-rectangle',
+    defaultLayoutId: 'layout-3-collage',
+    defaultHardwareId: 'sawtooth-hanger',
+    defaultThicknessId: 'thick-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+  },
+  {
+    id: 'canvas-collage',
+    name: 'Photo Collage',
+    startingPrice: 148.50,
+    image: '',
+    iconType: 'collage',
+    panelsCount: 4,
+    description: 'Multiple cherished photographs arranged creatively on a single canvas.',
+    defaultSizeOptionId: 'sq-12x12',
+    defaultShape: 'shape-square',
+    defaultLayoutId: 'layout-4-grid',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+  },
+  {
+    id: 'canvas-hexagon',
+    name: 'Hexagon Prints',
+    startingPrice: 449.0,
+    image: '',
+    iconType: 'hexagon',
+    panelsCount: 1,
+    description: 'Geometric 6-sided honeycomb canvas prints for modular wall clusters.',
+    defaultSizeOptionId: 'sq-8x8',
+    defaultShape: 'shape-hexagon',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ['shape-hexagon', ...ALL_CANVAS_SHAPE_IDS]
+  },
+  {
+    id: 'canvas-split',
+    name: 'Split Canvas',
+    startingPrice: 188.10,
+    image: '',
+    iconType: 'split',
+    panelsCount: 3,
+    description: 'Panoramic photo split seamlessly across 3 triptych canvas panels.',
+    defaultSizeOptionId: 'pan-12x36',
+    defaultShape: 'shape-landscape',
+    defaultLayoutId: 'layout-3-collage',
+    defaultHardwareId: 'sawtooth-hanger',
+    defaultThicknessId: 'thick-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+  },
+  {
+    id: 'canvas-mosaic',
+    name: 'Photo Mosaic',
+    startingPrice: 148.50,
+    image: '',
+    iconType: 'mosaic',
+    panelsCount: 4,
+    description: 'Intricate mosaic grid pattern blending dozens of micro photos into one artwork.',
+    defaultSizeOptionId: 'sq-12x12',
+    defaultShape: 'shape-square',
+    defaultLayoutId: 'layout-4-grid',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+  },
+  {
+    id: 'canvas-lyric',
+    name: 'Lyric on Canvas',
+    startingPrice: 148.50,
+    image: '',
+    iconType: 'lyric',
+    panelsCount: 1,
+    description: 'Your favorite song lyrics, vows, or poems printed with photo art on canvas.',
+    defaultSizeOptionId: 'sq-8x8',
+    defaultShape: 'shape-portrait',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+  },
+  {
+    id: 'canvas-digital-painting',
+    name: 'Digital Painting',
+    startingPrice: 2598.0,
+    image: '',
+    iconType: 'painting',
+    panelsCount: 1,
+    description: 'Hand-crafted digital painting effect rendered onto authentic woven canvas.',
+    defaultSizeOptionId: 'rec-12x18',
+    defaultShape: 'shape-portrait',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'ready-to-hang',
+    defaultThicknessId: 'thick-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+  },
+  {
+    id: 'canvas-quotes',
+    name: 'Quotes on Canvas',
+    startingPrice: 99.0,
+    image: '',
+    iconType: 'quotes',
+    panelsCount: 1,
+    description: 'Inspirational quotes and typography styled on gallery-grade canvas.',
+    defaultSizeOptionId: 'sq-8x8',
+    defaultShape: 'shape-square',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+  },
+  {
+    id: 'canvas-bus-roll',
+    name: 'Bus Roll',
+    startingPrice: 705.60,
+    image: '',
+    iconType: 'bus-roll',
+    panelsCount: 1,
+    description: 'Vintage destination roll and transit-style typography art on canvas.',
+    defaultSizeOptionId: 'pan-12x36',
+    defaultShape: 'shape-portrait',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+  },
+  {
+    id: 'canvas-banner',
+    name: 'Canvas Banner',
+    startingPrice: 399.0,
+    image: '',
+    iconType: 'banner',
+    panelsCount: 1,
+    description: 'Hanging fabric canvas banner with natural wood magnetic hanger bars.',
+    defaultSizeOptionId: 'rec-12x18',
+    defaultShape: 'shape-portrait',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: 'hanging-canvas',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+  },
+  {
+    id: 'canvas-pop-art',
+    name: 'Pop Art',
+    startingPrice: 598.0,
+    image: '',
+    iconType: 'pop-art',
+    panelsCount: 1,
+    description: 'Bold Andy Warhol and Lichtenstein-inspired colorful pop art portrait.',
+    defaultSizeOptionId: 'sq-12x12',
+    defaultShape: 'shape-square',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+  },
+  // Backward compatibility aliases
+  {
+    id: 'canvas-classic',
+    name: 'Classic Canvas Print',
+    startingPrice: 99.0,
+    image: '',
+    iconType: 'print',
+    panelsCount: 1,
+    description: 'Stretched 380 GSM cotton canvas on a solid pine wood frame.',
+    defaultSizeOptionId: 'sq-8x8',
+    defaultShape: 'shape-rectangle',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'hooks-hanging',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+  },
   {
     id: 'canvas-photo-block',
     name: 'Canvas Photo Block',
@@ -147,63 +455,18 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
   {
-    id: 'canvas-wall-art',
-    name: 'Canvas Wall Art',
-    startingPrice: 1999.0,
-    image: '',
-    iconType: 'wall',
-    panelsCount: 3,
-    description: 'Multi-panel gallery wall display for striking home and office focal points.',
-    defaultSizeOptionId: 'rec-12x18',
-    defaultShape: 'shape-rectangle',
-    defaultLayoutId: 'layout-3-collage',
-    defaultHardwareId: 'sawtooth-hanger',
-    defaultThicknessId: 'thick-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
-  },
-  {
-    id: 'canvas-print',
-    name: 'Canvas Print',
-    startingPrice: 355.0,
+    id: 'canvas-panoramic',
+    name: 'Panoramic Canvas Print',
+    startingPrice: 1499.0,
     image: '',
     iconType: 'print',
     panelsCount: 1,
-    description: 'Vibrant direct pigment print on premium stretched canvas.',
-    defaultSizeOptionId: 'sq-8x8',
+    description: 'Wide-format panoramic canvas for landscapes and skylines.',
+    defaultSizeOptionId: 'pan-12x36',
     defaultShape: 'shape-landscape',
     defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'hooks-hanging',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
-  },
-  {
-    id: 'canvas-collage',
-    name: 'Canvas Collage',
-    startingPrice: 426.0,
-    image: '',
-    iconType: 'collage',
-    panelsCount: 4,
-    description: 'Multiple cherished photographs printed together on one canvas.',
-    defaultSizeOptionId: 'sq-12x12',
-    defaultShape: 'shape-square',
-    defaultLayoutId: 'layout-4-grid',
-    defaultHardwareId: 'hooks-hanging',
-    defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
-  },
-  {
-    id: 'canvas-split',
-    name: 'Canvas Split Panel',
-    startingPrice: 674.5,
-    image: '',
-    iconType: 'split',
-    panelsCount: 3,
-    description: 'Panoramic photograph split seamlessly across 3 triptych panels.',
-    defaultSizeOptionId: 'pan-12x36',
-    defaultShape: 'shape-landscape',
-    defaultLayoutId: 'layout-3-collage',
-    defaultHardwareId: 'sawtooth-hanger',
-    defaultThicknessId: 'thick-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
   {
@@ -222,6 +485,32 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   }
 ];
+
+export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProductCapabilities {
+  if (pt.capabilities) return pt.capabilities;
+  const isMultiPanel =
+    pt.panelsCount > 1 ||
+    pt.id === 'canvas-collage' ||
+    pt.id === 'canvas-mosaic' ||
+    pt.id === 'canvas-split' ||
+    pt.id === 'canvas-wall-art' ||
+    pt.id === 'canvas-display';
+  const isCustomGeometry = ['canvas-round', 'canvas-triangle', 'canvas-heart', 'canvas-oval', 'canvas-hexagon'].includes(pt.id);
+  const isTextArt = ['canvas-lyric', 'canvas-quotes', 'canvas-bus-roll'].includes(pt.id);
+  const isBanner = pt.id === 'canvas-banner';
+  const isPanoramic = pt.id === 'canvas-panoramic';
+
+  return {
+    products: true,
+    upload: true,
+    sizes: true,
+    shapes: !isBanner && !isPanoramic && (pt.panelsCount === 1 || isCustomGeometry),
+    layouts: isMultiPanel || isTextArt,
+    wrap: !isBanner,
+    hardware: true,
+    options: true
+  };
+}
 
 // ----------------------------------------------------------------------------
 // HARDWARE, DISPLAY, FINISH (Canvas-specific - mirrors HardwareOption/
@@ -334,6 +623,7 @@ export const CANVAS_FINISH_OPTIONS: FinishOption[] = [
 export interface CanvasEdgeWrap {
   id: string;
   name: string;
+  label: string;
   price: number;
   description: string;
   image: string;
@@ -346,6 +636,7 @@ export const CANVAS_EDGE_WRAPS: CanvasEdgeWrap[] = [
   {
     id: 'full-bleed',
     name: 'Image Wrap',
+    label: 'Image Wrap',
     price: 0,
     description: 'Your photo continues seamlessly around the side edges of the stretcher frame.',
     image: '/assets/customizer/acrylic/wraps/full-bleed.svg',
@@ -355,6 +646,7 @@ export const CANVAS_EDGE_WRAPS: CanvasEdgeWrap[] = [
   {
     id: 'clear-edge',
     name: 'Mirror Wrap',
+    label: 'Mirror Wrap',
     price: 0,
     description: 'Edge pixels are mirrored around the sides so no part of your photo is lost.',
     image: '/assets/customizer/acrylic/wraps/clear-edge.svg',
@@ -364,6 +656,7 @@ export const CANVAS_EDGE_WRAPS: CanvasEdgeWrap[] = [
   {
     id: 'white-border',
     name: 'White Border Wrap',
+    label: 'White Border Wrap',
     price: 120.0,
     description: '18px studio white border framing the photograph.',
     image: '/assets/customizer/acrylic/wraps/white-border.svg',
@@ -373,6 +666,7 @@ export const CANVAS_EDGE_WRAPS: CanvasEdgeWrap[] = [
   {
     id: 'black-border',
     name: 'Black Border Wrap',
+    label: 'Black Border Wrap',
     price: 120.0,
     description: '18px gallery black border framing the photograph.',
     image: '/assets/customizer/acrylic/wraps/black-border.svg',
@@ -382,6 +676,7 @@ export const CANVAS_EDGE_WRAPS: CanvasEdgeWrap[] = [
   {
     id: 'no-wrap',
     name: 'Solid Color Wrap',
+    label: 'Solid Color Wrap',
     price: 0,
     description: 'Clean solid-color edges around the stretched canvas sides.',
     image: '/assets/customizer/acrylic/wraps/no-wrap.svg',
@@ -394,14 +689,23 @@ export const CANVAS_WRAP_OPTIONS = CANVAS_EDGE_WRAPS;
 
 // ----------------------------------------------------------------------------
 // OPTIONS tab: wrap depth (replaces acrylic "thickness") and material grade
-// (replaces acrylic "paper backing") - both kept as flat {id, label, price}
-// so the page code that renders them is unchanged.
+// (replaces acrylic "paper backing")
 // ----------------------------------------------------------------------------
-export const CANVAS_THICKNESS_OPTIONS = [
-  { id: 'canvas-lite', label: '0.5" Canvas Lite (Slim Stretcher)', price: 0 },
-  { id: 'thin-gallery', label: '0.75" Thin Gallery Wrap', price: 130.0 },
-  { id: 'thick-gallery', label: '1.5" Thick Gallery Wrap (Museum Quality)', price: 155.0 },
-  { id: 'hanging-canvas', label: 'Unframed Rolled Canvas', price: 85.0 }
+export interface CanvasThicknessOption {
+  id: string;
+  label: string;
+  name?: string;
+  price: number;
+  depthPx: number;
+  description?: string;
+  badge?: string;
+}
+
+export const CANVAS_THICKNESS_OPTIONS: CanvasThicknessOption[] = [
+  { id: 'canvas-lite', label: '0.5" Canvas Lite (Slim Stretcher)', name: '0.5" Canvas Lite', price: 0, depthPx: 16, description: 'Ultra slim & lightweight, economical mount', badge: 'Popular' },
+  { id: 'thin-gallery', label: '0.75" Thin Gallery Wrap', name: '0.75" Thin Gallery Wrap', price: 130.0, depthPx: 26, description: 'Standard modern gallery profile' },
+  { id: 'thick-gallery', label: '1.5" Thick Gallery Wrap (Museum Quality)', name: '1.5" Thick Gallery Wrap', price: 155.0, depthPx: 44, description: 'Museum-grade premium deep projection', badge: 'Museum Depth' },
+  { id: 'hanging-canvas', label: 'Unframed Rolled Canvas', name: 'Unframed Rolled Canvas', price: 85.0, depthPx: 8, description: 'Flexible unmounted rolled canvas or hanging bar' }
 ];
 
 export const CANVAS_PAPER_OPTIONS = [
