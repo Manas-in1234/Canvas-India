@@ -57,8 +57,8 @@ export const CustomizerHeader: React.FC<CustomizerHeaderProps> = ({
   const handlePrice = onClickPrice || onPriceClick;
 
   return (
-    <header className="h-14 bg-[#0E4A93] text-white flex items-center justify-between px-3 sm:px-6 shadow-md z-30 shrink-0">
-      {/* LEFT: [MENU] [BACK TO CANVAS / ACRYLIC] | [CANVAS INDIA LOGO] */}
+    <header className="relative h-14 bg-[#0E4A93] text-white flex items-center justify-between px-3 sm:px-6 shadow-md z-30 shrink-0">
+      {/* LEFT: [MENU] [BACK TO CANVAS / ACRYLIC] */}
       <div className="flex items-center gap-2 sm:gap-3">
         <button
           type="button"
@@ -77,21 +77,20 @@ export const CustomizerHeader: React.FC<CustomizerHeaderProps> = ({
           <ChevronLeft className="w-4 h-4" />
           <span className="hidden sm:inline">{resolvedBackLabel}</span>
         </Link>
-
-        <div className="h-5 w-[1px] bg-white/20 mx-1 hidden sm:block" />
-
-        <Link
-          to="/"
-          className="flex items-center gap-2 hover:opacity-90 transition-opacity focus:outline-none"
-          title="Canvas India"
-        >
-          <img
-            src="/canvas-india-official-logo.png"
-            alt="Canvas India"
-            className="h-7 sm:h-8 md:h-9 w-auto object-contain block select-none"
-          />
-        </Link>
       </div>
+
+      {/* CENTER: CANVAS INDIA LOGO - centered across the full header width */}
+      <Link
+        to="/"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 hover:opacity-90 transition-opacity focus:outline-none"
+        title="Canvas India"
+      >
+        <img
+          src="/canvas-india-official-logo.png"
+          alt="Canvas India"
+          className="h-7 sm:h-8 md:h-9 w-auto object-contain block select-none"
+        />
+      </Link>
 
       {/* RIGHT: Price Display + Add to Cart Button */}
       <div className="flex items-center gap-3">
