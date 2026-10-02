@@ -25,6 +25,15 @@ const CANVAS_SIZE = 480;
 const WHITE_CUTOFF = 235;
 const WHITE_FADE_FLOOR = 195;
 
+// The source clip's first ~1s draws the "C" ring in from nothing (just the
+// "i" alone at the very start). Since the video restarts from 0 every time
+// the preloader mounts, that bare-"i" intro would show at the start of every
+// single loading moment. Instead, jump straight past it and loop only the
+// "ring fully drawn" portion of the clip, so the full mark is visible for
+// the entire time the preloader is up.
+const RING_DRAWN_AT = 1.8; // seconds - ring is fully drawn and holding here
+const LOOP_RESTART_MARGIN = 0.15; // seconds before the end to jump back
+
 /**
  * Branded loading indicator for the Canvas/Acrylic customizers.
  *
@@ -55,6 +64,29 @@ export const CustomizerPreloader: React.FC<CustomizerPreloaderProps> = ({ active
 
     canvas.width = CANVAS_SIZE;
     canvas.height = CANVAS_SIZE;
+
+    // Jump straight past the "ring not drawn yet" intro, and loop only the
+    // portion where the full mark is visible.
+    const seekPastIntro = () => {
+      if (video.duration && video.currentTime < RING_DRAWN_AT) {
+        video.currentTime = RING_DRAWN_AT;
+      }
+    };
+    const onTimeUpdate = () => {
+      if (video.duration && video.currentTime >= video.duration - LOOP_RESTART_MARGIN) {
+        video.currentTime = RING_DRAWN_AT;
+      }
+    };
+    // Fallback in case timeupdate's granularity ever misses the restart
+    // window and the clip actually reaches its end (no `loop` attribute).
+    const onEnded = () => {
+      video.currentTime = RING_DRAWN_AT;
+      video.play().catch(() => {});
+    };
+    video.addEventListener('loadedmetadata', seekPastIntro);
+    video.addEventListener('timeupdate', onTimeUpdate);
+    video.addEventListener('ended', onEnded);
+    if (video.readyState >= 1) seekPastIntro();
 
     const draw = () => {
       if (video.readyState >= 2 && video.videoWidth > 0) {
@@ -87,6 +119,9 @@ export const CustomizerPreloader: React.FC<CustomizerPreloaderProps> = ({ active
 
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      video.removeEventListener('loadedmetadata', seekPastIntro);
+      video.removeEventListener('timeupdate', onTimeUpdate);
+      video.removeEventListener('ended', onEnded);
     };
   }, [active]);
 
@@ -100,11 +135,13 @@ export const CustomizerPreloader: React.FC<CustomizerPreloaderProps> = ({ active
       aria-label="Loading"
     >
       {/* Hidden source video - only the keyed canvas below is shown */}
+      {/* No `loop` attribute - looping is handled manually above, jumping
+          back to RING_DRAWN_AT instead of 0, so the native loop-to-start
+          behavior doesn't race with it. */}
       <video
         ref={videoRef}
         src="/assets/preloader/customizer-preloader.mp4"
         autoPlay
-        loop
         muted
         playsInline
         preload="auto"
