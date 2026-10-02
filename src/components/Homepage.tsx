@@ -110,16 +110,17 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#F7F1E5] border-b border-stone-200/60">
+        {/* Desktop/tablet: full-bleed masked image behind the text (unchanged) */}
         <img
           src="/hero-scene.jpg"
           alt="Canvas painting, frame, cork coaster and paints on a sunlit table"
-          className="absolute right-0 top-0 h-full w-full lg:w-[60%] object-cover object-left lg:object-center"
+          className="hidden lg:block absolute right-0 top-0 h-full w-[60%] object-cover object-center"
           style={{
             maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
             WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
           }}
         />
-        <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent" />
+        <div className="hidden lg:block absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent" />
 
         {/* Hanging Stitched Leather Special Price Tag (Top Center) */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center select-none">
@@ -141,7 +142,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             type="button"
             onClick={() => navigate('/festive-offers')}
             aria-label="View festive offers"
-            className="ci-float -mt-1.5 w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#EA580C] via-[#DC2626] to-[#9A3412] text-white flex flex-col items-center justify-center p-2 shadow-2xl shadow-orange-950/50 border-4 border-[#78350F] relative overflow-hidden cursor-pointer hover:scale-105 hover:shadow-orange-900/60 transition-transform duration-300"
+            className="ci-float -mt-1.5 w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#EA580C] via-[#DC2626] to-[#9A3412] text-white flex flex-col items-center justify-center p-2 shadow-2xl shadow-orange-950/50 border-4 border-[#78350F] relative overflow-hidden cursor-pointer hover:scale-105 hover:shadow-orange-900/60 transition-transform duration-300"
           >
             {/* Metal Grommet Hole */}
             <div className="absolute top-1.5 w-3 h-3 rounded-full bg-stone-300 border-2 border-stone-600 shadow-inner z-10" />
@@ -150,16 +151,16 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             <div className="absolute inset-1.5 rounded-full border-2 border-dashed border-amber-200/60 pointer-events-none" />
 
             {/* Badge Text Content */}
-            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-amber-200 mt-2.5 leading-none drop-shadow-xs">
+            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-amber-200 mt-2 sm:mt-2.5 leading-none drop-shadow-xs">
               SPECIAL PRICE
             </span>
-            <span className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-md mt-0.5 leading-none">
+            <span className="text-lg sm:text-2xl font-black tracking-tight text-white drop-shadow-md mt-0.5 leading-none">
               20% OFF
             </span>
           </button>
         </div>
 
-        <Container className="relative py-14 sm:py-16 lg:py-20 lg:min-h-[540px] flex items-center">
+        <Container className="relative pt-28 pb-14 sm:pt-16 sm:pb-16 lg:py-20 lg:min-h-[540px] flex items-center">
           <div className="max-w-xl">
             <div className="flex items-center gap-3 text-[11px] sm:text-xs tracking-[0.3em] text-stone-600 font-semibold uppercase">
               <span>ART / CRAFT / HOME DECOR</span>
@@ -182,8 +183,18 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               </button>
             </div>
 
+            {/* Mobile/tablet only: contained image below the text, in normal
+                flow (no overlay/mask) so nothing ever sits on top of it */}
+            <div className="lg:hidden mt-8 rounded-2xl overflow-hidden shadow-md aspect-[16/10]">
+              <img
+                src="/hero-scene.jpg"
+                alt="Canvas painting, frame, cork coaster and paints on a sunlit table"
+                className="w-full h-full object-cover"
+              />
+            </div>
+
             {/* In-hero feature highlights */}
-            <div className="mt-10 pt-6 border-t border-stone-300/60 grid grid-cols-2 sm:grid-cols-4 gap-3 text-[#0E4A93]">
+            <div className="mt-8 lg:mt-10 pt-6 border-t border-stone-300/60 grid grid-cols-2 sm:grid-cols-4 gap-3 text-[#0E4A93]">
               {[
                 { icon: Truck, t: 'Free Delivery' },
                 { icon: BadgeCheck, t: 'Quality Products' },
@@ -221,23 +232,29 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           </div>
 
           <div className="flex items-center gap-3">
-            <button type="button" aria-label="Previous categories" onClick={() => scrollRow(categoryRowRef, -1)} className={arrowBtn}>
-              <ChevronLeft className="w-5 h-5" />
-            </button>
+            {/* Nav arrows: desktop/tablet only - mobile scrolls by swipe, and
+                hiding these frees up width so cards aren't cramped. Wrapped
+                (rather than adding `hidden` next to arrowBtn's own `flex`)
+                so there's no same-breakpoint display-utility conflict. */}
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Previous categories" onClick={() => scrollRow(categoryRowRef, -1)} className={arrowBtn}>
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+            </div>
             <div ref={categoryRowRef} className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
               {CATEGORY_CARDS.map((c) => (
                 <button
                   key={c.slug}
                   type="button"
                   onClick={() => onSelectCategory(c.slug)}
-                  className="group snap-start shrink-0 w-[44%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
+                  className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
                 >
                   <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-4 bg-stone-100 shadow-sm">
                     <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <div className="flex items-start justify-between gap-2 px-1">
-                    <div>
-                      <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1">{c.name}</h3>
+                    <div className="min-w-0">
+                      <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1 truncate">{c.name}</h3>
                       <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">{c.sub}</p>
                     </div>
                     <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
@@ -247,9 +264,11 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 </button>
               ))}
             </div>
-            <button type="button" aria-label="Next categories" onClick={() => scrollRow(categoryRowRef, 1)} className={arrowBtn}>
-              <ChevronRight className="w-5 h-5" />
-            </button>
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Next categories" onClick={() => scrollRow(categoryRowRef, 1)} className={arrowBtn}>
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           <button
