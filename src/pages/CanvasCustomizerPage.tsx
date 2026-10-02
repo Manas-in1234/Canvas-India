@@ -59,6 +59,8 @@ import { CustomizerProductSelector } from '../components/CustomizerProductSelect
 import { CustomizerPreloader, PRELOADER_MIN_MS } from '../components/CustomizerPreloader';
 import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
 import { AcrylicRoomViewModal, RoomPlacementState } from '../components/AcrylicRoomViewModal';
+import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
+import { getProductSizeShapeOptions, getSizesForProductAndShape } from '../data/productSizeShapeConfig';
 import {
   CustomizerHeader,
   CustomizerSidebar,
@@ -75,9 +77,10 @@ import {
 type ToolbarTab =
   | 'PRODUCTS'
   | 'UPLOAD'
+  | 'SHAPES'
+  | 'SHAPE'
   | 'SELECT SIZE'
   | 'LAYOUTS & DESIGNS'
-  | 'SHAPE'
   | 'WRAP & BORDER'
   | 'HARDWARE & FINISH'
   | 'OPTIONS';
@@ -85,9 +88,9 @@ type ToolbarTab =
 const TOOLBAR_ITEMS: { id: ToolbarTab; label: string; icon: React.ElementType }[] = [
   { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
   { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud },
+  { id: 'SHAPES', label: 'SHAPES', icon: Shapes },
   { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
   { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers },
-  { id: 'SHAPE', label: 'SHAPE', icon: Shapes },
   { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
   { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
   { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
@@ -115,9 +118,7 @@ const getFilterCss = (filter: ColorFilterType): string => {
       return 'none';
   }
 };
-type SizeCategory = 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL';
-
-
+type SizeCategory = 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL' | 'MULTI_PANEL' | 'RECTANGLE';
 
 interface SizeOption {
   id: string;
@@ -126,6 +127,11 @@ interface SizeOption {
   dimensionsSummary: string;
   price: number;
   categories: SizeCategory[];
+  widthInches?: number;
+  heightInches?: number;
+  panelsCount?: number;
+  arrangement?: string;
+  diagramType?: string;
   panels: Array<{
     id: string;
     label: string;
@@ -751,9 +757,9 @@ const WRAP_OPTIONS = CANVAS_WRAP_OPTIONS;
 const THICKNESS_OPTIONS = CANVAS_THICKNESS_OPTIONS;
 
 const HARDWARE_OPTIONS = [
+  { id: 'no-hooks', label: 'No Hooks', price: 0 },
   { id: 'hooks-hanging', label: 'Hooks for Hanging', price: 0 },
   { id: 'ready-to-hang', label: 'Ready to Hang', price: 0 },
-  { id: 'no-hooks', label: 'No Hooks', price: 0 },
   { id: 'sawtooth-hanger', label: 'Sawtooth Hanger', price: 25 },
   { id: 'easel-back', label: 'Easel Back', price: 49 },
   { id: 'nail-free-hook', label: 'Nail Free Hook', price: 49 }
@@ -1090,6 +1096,9 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   const handleSelectTab = (tabId: ToolbarTab) => {
     setActiveTab(tabId);
+    if (tabId === 'SELECT SIZE') {
+      setIsSizeShapeModalOpen(true);
+    }
     beginPreloader();
     endPreloader(PRELOADER_MIN_MS);
   };
@@ -1140,13 +1149,14 @@ export const CanvasCustomizerPage: React.FC = () => {
   }, [selectedProductType]);
 
   // Primary Toolbar items: dynamically filtered by selected product capabilities
+  // EXACT ORDER: 1. PRODUCTS, 2. UPLOAD, 3. SHAPES, 4. SELECT SIZE, 5. LAYOUTS & DESIGNS, 6. WRAP & BORDER, 7. HARDWARE & FINISH, 8. OPTIONS
   const toolbarItems = useMemo<{ id: ToolbarTab; label: string; icon: React.ElementType }[]>(() => {
     const items: { id: ToolbarTab; label: string; icon: React.ElementType; enabled: boolean }[] = [
       { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid, enabled: productCapabilities.products !== false },
       { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud, enabled: productCapabilities.upload !== false },
+      { id: 'SHAPES', label: 'SHAPES', icon: Shapes, enabled: productCapabilities.shapes === true },
       { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: productCapabilities.sizes !== false },
       { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: productCapabilities.layouts === true },
-      { id: 'SHAPE', label: 'SHAPE', icon: Shapes, enabled: productCapabilities.shapes === true },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
       { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal, enabled: productCapabilities.hardware !== false },
       { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false }
@@ -1156,29 +1166,51 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // If the active tab is not supported by the currently selected product, safely revert to PRODUCTS
   useEffect(() => {
-    const isCurrentTabSupported = toolbarItems.some((item) => item.id === activeTab);
+    const isCurrentTabSupported = toolbarItems.some(
+      (item) => item.id === activeTab || (item.id === 'SHAPES' && activeTab === 'SHAPE') || (item.id === 'SHAPE' && activeTab === 'SHAPES')
+    );
     if (!isCurrentTabSupported) {
       setActiveTab('PRODUCTS');
     }
   }, [toolbarItems, activeTab]);
 
-  const activeTabIndex = Math.max(0, toolbarItems.findIndex((t) => t.id === activeTab));
+  const activeTabIndex = Math.max(0, toolbarItems.findIndex((t) => t.id === activeTab || (t.id === 'SHAPES' && activeTab === 'SHAPE')));
   const prevTab = toolbarItems[Math.max(0, activeTabIndex - 1)] || toolbarItems[0];
   const nextTab = toolbarItems[Math.min(toolbarItems.length - 1, activeTabIndex + 1)] || toolbarItems[toolbarItems.length - 1];
 
-  // Available size options for the current product type
+  // SHAPE tab state
+  const [selectedShapeId, setSelectedShapeId] = useState<string>('shape-rectangle');
+  const [shapeFilterCategory, setShapeFilterCategory] = useState<'ALL' | 'BASIC' | 'SPECIAL' | 'DECORATIVE'>('ALL');
+
+  const currentShape = useMemo<CanvasShapeOption>(() => {
+    return CANVAS_SHAPES.find((s) => s.id === selectedShapeId) || CANVAS_SHAPES[0];
+  }, [selectedShapeId]);
+
+  // Available size options for the current product type and active shape (from centralized productSizeShapeConfig)
   const availableSizeOptions = useMemo(() => {
-    const list = SIZE_OPTIONS.filter((s) => s.productTypeId === selectedProductTypeId);
-    if (list.length > 0) return list;
-    return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-classic' || s.productTypeId === 'canvas-single');
-  }, [selectedProductTypeId]);
+    const configOptions = getSizesForProductAndShape(selectedProductTypeId, selectedShapeId, 'canvas').map((opt) => ({
+      id: opt.id,
+      productTypeId: selectedProductTypeId,
+      label: opt.label,
+      dimensionsSummary: opt.dimensionsSummary,
+      price: opt.price,
+      categories: [opt.category as SizeCategory],
+      widthInches: opt.widthInches,
+      heightInches: opt.heightInches,
+      panelsCount: opt.panelsCount,
+      arrangement: opt.arrangement,
+      diagramType: opt.diagramType,
+      panels: opt.panels || [{ id: 'p0', label: 'Canvas', dimension: opt.dimensionsSummary, widthRatio: opt.widthInches, heightRatio: opt.heightInches }]
+    }));
+    return configOptions.length > 0 ? configOptions : SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-classic' || s.productTypeId === 'canvas-single');
+  }, [selectedProductTypeId, selectedShapeId]);
 
   // Selected Size Option
-  const [selectedSizeId, setSelectedSizeId] = useState<string>(() => availableSizeOptions[0]?.id || 'classic-8x10');
+  const [selectedSizeId, setSelectedSizeId] = useState<string>(() => availableSizeOptions[0]?.id || 'shape-rectangle-10x8');
 
   useEffect(() => {
     if (!availableSizeOptions.some((s) => s.id === selectedSizeId)) {
-      setSelectedSizeId(availableSizeOptions[0]?.id || 'classic-8x10');
+      setSelectedSizeId(availableSizeOptions[0]?.id || 'shape-rectangle-10x8');
     }
   }, [availableSizeOptions, selectedSizeId]);
 
@@ -1224,14 +1256,6 @@ export const CanvasCustomizerPage: React.FC = () => {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [expandedLayoutId, setExpandedLayoutId] = useState<string | null>('layout-1');
 
-  // SHAPE tab
-  const [selectedShapeId, setSelectedShapeId] = useState<string>('shape-rectangle');
-  const [shapeFilterCategory, setShapeFilterCategory] = useState<'ALL' | 'BASIC' | 'SPECIAL' | 'DECORATIVE'>('ALL');
-
-  const currentShape = useMemo<CanvasShapeOption>(() => {
-    return CANVAS_SHAPES.find((s) => s.id === selectedShapeId) || CANVAS_SHAPES[0];
-  }, [selectedShapeId]);
-
   const filteredLayoutPresets = useMemo(() => {
     if (selectedProductType?.supportedLayoutIds && selectedProductType.supportedLayoutIds.length > 0) {
       return LAYOUT_PRESETS.filter((l) => selectedProductType.supportedLayoutIds!.includes(l.id));
@@ -1255,10 +1279,13 @@ export const CanvasCustomizerPage: React.FC = () => {
   const [selectedBorderColor, setSelectedBorderColor] = useState<string>('#FFFFFF');
   const [selectedFrameId, setSelectedFrameId] = useState<string>('no-frame');
 
-  // HARDWARE & FINISH tab
+  // HARDWARE & FINISH tab: Strictly defaults to "No Hooks" (no-hooks) across all products
   const [selectedThicknessId, setSelectedThicknessId] = useState<string>('thin-gallery');
-  const [selectedHardwareId, setSelectedHardwareId] = useState<string>('hooks-hanging');
+  const [selectedHardwareId, setSelectedHardwareId] = useState<string>('no-hooks');
   const [selectedDisplayOptionId, setSelectedDisplayOptionId] = useState<string>('open-back');
+
+  // Select Size & Shape Modal State
+  const [isSizeShapeModalOpen, setIsSizeShapeModalOpen] = useState<boolean>(false);
 
   // Automatically sync default shape, hardware, and thickness when product selection changes
   useEffect(() => {
@@ -1293,10 +1320,8 @@ export const CanvasCustomizerPage: React.FC = () => {
       setSelectedSizeId(matchingSizes[0].id);
     }
 
-    // 3. Apply default hardware & thickness
-    if (pt.defaultHardwareId) {
-      setSelectedHardwareId(pt.defaultHardwareId);
-    }
+    // 3. Apply default hardware & thickness (strictly no-hooks default)
+    setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
     if (pt.defaultThicknessId) {
       setSelectedThicknessId(pt.defaultThicknessId);
     }
@@ -1305,6 +1330,60 @@ export const CanvasCustomizerPage: React.FC = () => {
     if (pt.defaultLayoutId) {
       setExpandedLayoutId(pt.defaultLayoutId);
     }
+
+    // 5. Immediately open the "Select size & shape" popup modal
+    setIsSizeShapeModalOpen(true);
+  };
+
+  // Handler for applied selection from SelectSizeShapeModal
+  const handleApplySizeAndShape = (config: {
+    shapeId: string;
+    sizeId: string;
+    widthInches: number;
+    heightInches: number;
+    price: number;
+    label: string;
+    isCustom?: boolean;
+    arrangement?: string;
+    panelsCount?: number;
+    panels?: any[];
+  }) => {
+    if (config.isCustom) {
+      setIsCustomSize(true);
+      setCustomWidth(config.widthInches);
+      setCustomHeight(config.heightInches);
+      setSelectedShapeId(config.shapeId);
+    } else {
+      setIsCustomSize(false);
+      setSelectedShapeId(config.shapeId);
+      setSelectedSizeId(config.sizeId);
+
+      if (config.arrangement) {
+        if (config.arrangement === 'threeCollage' || config.arrangement === 'threeSplit') {
+          setExpandedLayoutId('layout-3-collage');
+        } else if (config.arrangement === 'fourGrid') {
+          setExpandedLayoutId('layout-4-grid');
+        }
+      }
+    }
+
+    // Uploaded customer images remain attached and refitted cleanly
+    setPanelImages((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((k) => {
+        const idx = Number(k);
+        if (next[idx]?.imageUrl) {
+          next[idx] = {
+            ...next[idx],
+            scale: 1,
+            panX: 0,
+            panY: 0,
+            fitMode: 'contain'
+          };
+        }
+      });
+      return next;
+    });
   };
 
   // OPTIONS tab
@@ -1317,6 +1396,17 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Material Variant (from Change Material modal)
   const [selectedMaterialId, setSelectedMaterialId] = useState<string>('standard-cotton');
   const [materialModalOpen, setMaterialModalOpen] = useState<boolean>(false);
+
+  // Dedicated Lyric Canvas State (for canvas-lyric product typography overlay)
+  const [lyricTitle, setLyricTitle] = useState<string>('PERFECT');
+  const [lyricArtist, setLyricArtist] = useState<string>('ED SHEERAN');
+  const [lyricText, setLyricText] = useState<string>(
+    "Baby, I'm dancing in the dark\nWith you between my arms\nBarefoot on the grass\nListening to our favorite song\nWhen you said you looked a mess\nI whispered underneath my breath\nYou heard it, darling\nYou look perfect tonight"
+  );
+  const [lyricFontFamily, setLyricFontFamily] = useState<'serif' | 'script' | 'sans' | 'cinzel'>('serif');
+  const [lyricTextColor, setLyricTextColor] = useState<string>('#FFFFFF');
+  const [lyricTemplate, setLyricTemplate] = useState<'center-minimal' | 'music-player' | 'elegant-script' | 'split-card'>('center-minimal');
+  const [lyricOverlayDarkness, setLyricOverlayDarkness] = useState<number>(35);
 
   // Creative Tools State
   // Free-form text + clipart: any number of items, each draggable anywhere on the print
@@ -2038,7 +2128,7 @@ export const CanvasCustomizerPage: React.FC = () => {
       calculatedPrice: totalPrice,
       material: MATERIAL_VARIANTS.find((m) => m.id === selectedMaterialId)?.name || 'Standard 280 GSM Cotton Canvas',
       style: selectedProductType.name,
-      base: HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label || 'Hooks for Hanging',
+      base: HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label || 'No Hooks',
       customizationDetails: {
         productTypeId: selectedProductTypeId,
         sizeId: selectedSizeId,
@@ -2133,6 +2223,514 @@ export const CanvasCustomizerPage: React.FC = () => {
     </div>
   );
 
+  // Split Product: Single continuous image sliced across physical canvas panels
+  const renderContinuousSplitCanvas = () => {
+    const splitPanels = currentSizeOption.panels && currentSizeOption.panels.length >= 2
+      ? currentSizeOption.panels
+      : [
+          { id: 'p0', label: 'Left', dimension: '12" × 24"', widthRatio: 12, heightRatio: 24 },
+          { id: 'p1', label: 'Center', dimension: '12" × 24"', widthRatio: 12, heightRatio: 24 },
+          { id: 'p2', label: 'Right', dimension: '12" × 24"', widthRatio: 12, heightRatio: 24 }
+        ];
+    const N = splitPanels.length;
+    const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
+    const master = panelImages[0] || createDefaultPanel();
+    const gapPx = 12;
+
+    return (
+      <div className="w-full max-w-2xl mx-auto my-auto p-4 flex flex-col items-center select-none">
+        <div
+          className="relative flex items-center justify-center w-full"
+          style={{
+            gap: `${gapPx}px`,
+            filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.22)) drop-shadow(0 8px 10px rgba(0, 0, 0, 0.12))'
+          }}
+        >
+          {splitPanels.map((pSpec, i) => {
+            const panelAspect = `${pSpec.widthRatio || 12} / ${pSpec.heightRatio || 24}`;
+            return (
+              <div
+                key={pSpec.id || i}
+                {...panelHandlers(0)}
+                style={{
+                  flex: 1,
+                  aspectRatio: panelAspect,
+                  boxShadow: '4px 6px 0px rgba(203, 213, 225, 0.8), 0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                }}
+                className={`relative bg-stone-100 rounded-lg overflow-hidden transition-all group ${
+                  masterImage ? 'cursor-grab active:cursor-grabbing ring-1 ring-black/10' : 'cursor-pointer hover:border-[#0E4A93]'
+                }`}
+                onClick={() => {
+                  if (!masterImage) fileInputRef.current?.click();
+                }}
+              >
+                {/* 3D Stretcher Edge Visual on each panel */}
+                <div
+                  className="absolute inset-0 pointer-events-none z-20 rounded-lg"
+                  style={{
+                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.4), inset 2px 2px 4px rgba(0,0,0,0.15)'
+                  }}
+                />
+
+                {masterImage ? (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: `calc(-${i * 100}% - ${i * gapPx}px)`,
+                      width: `calc(${N * 100}% + ${(N - 1) * gapPx}px)`,
+                      height: '100%',
+                      pointerEvents: 'none'
+                    }}
+                  >
+                    <img
+                      src={masterImage}
+                      alt={`Split Panel ${i + 1}`}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
+                        transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                        filter: getFilterCss(master.filter),
+                        transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                      }}
+                      className="pointer-events-none"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-stone-50/90 group-hover:bg-blue-50/40 transition-colors">
+                    <div className="w-9 h-9 rounded-full bg-white shadow-xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-110 transition-all mb-1">
+                      <Upload className="w-4 h-4 stroke-[2.2]" />
+                    </div>
+                    <span className="text-[10px] font-bold text-stone-600 group-hover:text-[#0E4A93]">
+                      Panel {i + 1}
+                    </span>
+                    <span className="text-[9px] text-stone-400">
+                      {pSpec.dimension}
+                    </span>
+                  </div>
+                )}
+
+                {/* Panel Dimension Tag */}
+                <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[8.5px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
+                  {pSpec.dimension || `Panel ${i + 1}`}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-[11px] font-semibold text-stone-500 mt-3 text-center">
+          1 Photo Split Continuously Across {N} Physical Panels • Drag photo to pan, use toolbar to Zoom/Rotate/Fill/Fix
+        </p>
+      </div>
+    );
+  };
+
+  // Dedicated Lyric Canvas Typography Overlay (for canvas-lyric)
+  const renderLyricOverlay = (scaleFactor: number = 1) => {
+    const fontFamilies: Record<string, string> = {
+      serif: 'Georgia, Cambria, "Times New Roman", serif',
+      script: '"Brush Script MT", "Caveat", "Dancing Script", cursive',
+      sans: 'system-ui, -apple-system, Montserrat, sans-serif',
+      cinzel: 'Cinzel, Georgia, serif'
+    };
+    const resolvedFont = fontFamilies[lyricFontFamily] || fontFamilies.serif;
+
+    return (
+      <div
+        className="absolute inset-0 z-25 flex flex-col justify-end p-4 sm:p-6 pointer-events-none select-none"
+        style={{
+          background: `linear-gradient(to top, rgba(0,0,0,${lyricOverlayDarkness / 100}) 0%, rgba(0,0,0,${(lyricOverlayDarkness / 100) * 0.45}) 60%, transparent 100%)`,
+          color: lyricTextColor,
+          fontFamily: resolvedFont
+        }}
+      >
+        {lyricTemplate === 'music-player' ? (
+          <div className="space-y-2 max-w-full drop-shadow-md">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0">
+                <span className="text-xs">▶</span>
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-black tracking-wide truncate uppercase">{lyricTitle || 'Song Title'}</div>
+                <div className="text-[11px] font-semibold opacity-90 truncate">{lyricArtist || 'Artist Name'}</div>
+              </div>
+            </div>
+            <div className="w-full h-1 bg-white/30 rounded-full overflow-hidden my-1">
+              <div className="w-2/5 h-full bg-white rounded-full" />
+            </div>
+            <div className="text-[11px] leading-relaxed whitespace-pre-line opacity-95 max-h-36 overflow-hidden">
+              {lyricText}
+            </div>
+          </div>
+        ) : lyricTemplate === 'elegant-script' ? (
+          <div className="text-center space-y-1.5 drop-shadow-lg my-auto">
+            <div className="text-xl sm:text-2xl font-normal italic tracking-wide">{lyricTitle || 'Perfect'}</div>
+            <div className="w-16 h-[1px] bg-current mx-auto opacity-70 my-1" />
+            <div className="text-[10px] sm:text-xs font-light tracking-widest uppercase opacity-80">{lyricArtist || 'Ed Sheeran'}</div>
+            <div className="text-xs sm:text-sm italic leading-relaxed whitespace-pre-line opacity-95 mt-2 max-h-40 overflow-hidden">
+              {lyricText}
+            </div>
+          </div>
+        ) : lyricTemplate === 'split-card' ? (
+          <div className="bg-black/50 backdrop-blur-xs p-3.5 rounded-xl border border-white/20 space-y-1.5 drop-shadow-md">
+            <div className="flex justify-between items-baseline border-b border-white/20 pb-1">
+              <span className="text-xs font-black tracking-wider uppercase">{lyricTitle}</span>
+              <span className="text-[10px] opacity-80">{lyricArtist}</span>
+            </div>
+            <div className="text-[10px] leading-relaxed whitespace-pre-line opacity-90 max-h-32 overflow-hidden">
+              {lyricText}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center space-y-1.5 drop-shadow-md mb-2">
+            <div className="text-xs sm:text-sm font-black tracking-widest uppercase">{lyricTitle || 'Song Title'}</div>
+            <div className="text-[10px] tracking-wider uppercase opacity-80">{lyricArtist || 'Artist Name'}</div>
+            <div className="w-12 h-[1px] bg-current mx-auto opacity-60 my-1" />
+            <div className="text-[11px] sm:text-xs leading-relaxed whitespace-pre-line font-medium opacity-95 max-h-36 overflow-hidden">
+              {lyricText}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Photo Mosaic (canvas-mosaic): Multi-tile grid geometry with physical seams and live size updates
+  const renderMosaicCanvas = () => {
+    const tilePanels = currentSizeOption.panels && currentSizeOption.panels.length > 0
+      ? currentSizeOption.panels
+      : Array.from({ length: 4 }, (_, i) => ({ id: `p${i}`, label: `Tile ${i + 1}`, dimension: '6" × 6"', widthRatio: 6, heightRatio: 6 }));
+    const count = tilePanels.length;
+    const colsClass = count === 4 ? 'grid-cols-2' : count === 6 ? 'grid-cols-3' : count === 9 ? 'grid-cols-3' : count === 16 ? 'grid-cols-4' : 'grid-cols-2';
+    const aspectClass = count === 6 ? 'aspect-[18/12]' : 'aspect-square';
+    const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
+
+    const totalCols = count === 4 ? 2 : count === 6 ? 3 : count === 9 ? 3 : 4;
+    const totalRows = count === 4 ? 2 : count === 6 ? 2 : count === 9 ? 3 : 4;
+
+    return (
+      <div className="w-full max-w-xl mx-auto my-auto p-4 flex flex-col items-center select-none">
+        <div
+          className={`grid ${colsClass} gap-2 sm:gap-2.5 w-full ${aspectClass} p-3 bg-stone-100/90 rounded-2xl border-2 border-stone-300 shadow-2xl`}
+          style={{
+            maxWidth: count === 6 ? '32rem' : '26rem',
+            boxShadow: '6px 8px 0px #CBD5E1, 0 25px 50px -12px rgba(15, 23, 42, 0.35)'
+          }}
+        >
+          {tilePanels.map((pSpec, i) => {
+            const panel = panelImages[i];
+            const hasIndividualPhoto = Boolean(panel?.imageUrl);
+            const displayPhoto = hasIndividualPhoto ? panel.imageUrl : masterImage;
+            const isTarget = activePanelIndex === i;
+
+            const colIdx = i % totalCols;
+            const rowIdx = Math.floor(i / totalCols);
+
+            return (
+              <div
+                key={pSpec.id || i}
+                {...panelHandlers(i)}
+                onWheel={handleWheel}
+                className={`relative w-full h-full bg-white rounded-lg overflow-hidden transition-all cursor-pointer group border-2 ${
+                  isTarget
+                    ? 'border-[#0E4A93] shadow-lg ring-2 ring-[#0E4A93]/40 z-20'
+                    : 'border-stone-200 hover:border-stone-400 shadow-xs'
+                }`}
+                style={{
+                  boxShadow: '2px 3px 0px #CBD5E1, 0 6px 12px -2px rgba(15, 23, 42, 0.12)'
+                }}
+              >
+                {dragOverPanel === i && (
+                  <div className="absolute inset-0 z-30 bg-[#E8752A]/25 border-4 border-dashed border-[#E8752A] pointer-events-none" />
+                )}
+
+                {displayPhoto ? (
+                  <div className="w-full h-full overflow-hidden relative">
+                    {hasIndividualPhoto ? (
+                      <img
+                        src={panel.imageUrl!}
+                        alt={`Tile ${i + 1}`}
+                        style={{
+                          transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                          filter: getFilterCss(panel.filter),
+                          objectFit: panel.fitMode === 'contain' ? 'contain' : 'cover'
+                        }}
+                        className="w-full h-full pointer-events-none"
+                      />
+                    ) : (
+                      <div
+                        className="w-full h-full pointer-events-none"
+                        style={{
+                          backgroundImage: `url(${displayPhoto})`,
+                          backgroundSize: `${totalCols * 100}% ${totalRows * 100}%`,
+                          backgroundPosition: `${(colIdx / (totalCols - 1 || 1)) * 100}% ${(rowIdx / (totalRows - 1 || 1)) * 100}%`,
+                          backgroundRepeat: 'no-repeat'
+                        }}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50 hover:bg-stone-100 transition-colors p-1 text-center">
+                    <div className="w-6 h-6 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-0.5">
+                      <Upload className="w-3 h-3 stroke-[2.2]" />
+                    </div>
+                    <span className="text-[9px] font-bold text-stone-600">Tile {i + 1}</span>
+                    <span className="text-[8px] text-stone-400">{pSpec.dimension || '6"×6"'}</span>
+                  </div>
+                )}
+
+                <div className="absolute bottom-1 left-1 bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold px-1 py-0.5 rounded z-20 pointer-events-none">
+                  {pSpec.dimension || `Tile ${i + 1}`}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-[11px] font-semibold text-stone-500 mt-2.5 text-center">
+          Photo Mosaic • {count} Canvas Tiles Grid • Upload 1 photo to tile across seams, or click individual tiles to customize
+        </p>
+      </div>
+    );
+  };
+
+  // Wall Display (canvas-wall-art): Multi-panel gallery collection with physical 3D canvas bevels
+  const renderWallDisplayCanvas = () => {
+    const wallPanels = currentSizeOption.panels && currentSizeOption.panels.length > 0
+      ? currentSizeOption.panels
+      : [
+          { id: 'p0', label: 'Left Wing', dimension: '10" × 8"', widthRatio: 8, heightRatio: 10 },
+          { id: 'p1', label: 'Center Large', dimension: '16" × 20"', widthRatio: 16, heightRatio: 20 },
+          { id: 'p2', label: 'Right Wing', dimension: '10" × 8"', widthRatio: 8, heightRatio: 10 }
+        ];
+
+    const isTriptych = currentSizeOption.diagramType === 'wall-display-triptych';
+    const isThreeSplit = currentSizeOption.arrangement === 'threeSplit' || currentSizeOption.diagramType === 'wall-display-3b';
+    const isThreeCollage = currentSizeOption.arrangement === 'threeCollage' || currentSizeOption.diagramType === 'wall-display-3a';
+    const isFivePiece = wallPanels.length === 5 || currentSizeOption.diagramType === 'wall-display-5piece';
+    const isTiered = currentSizeOption.diagramType === 'wall-display-tiered';
+
+    const renderPanelSlot = (idx: number, customAspect?: string, extraClass: string = '') => {
+      const pSpec = wallPanels[idx] || { id: `p${idx}`, label: `Panel ${idx + 1}`, dimension: '' };
+      const panel = panelImages[idx] || createDefaultPanel();
+      const isTarget = activePanelIndex === idx;
+
+      return (
+        <div
+          key={pSpec.id || idx}
+          {...panelHandlers(idx)}
+          onWheel={handleWheel}
+          style={{
+            boxShadow: '4px 6px 0px #CBD5E1, 0 20px 25px -5px rgba(15, 23, 42, 0.25)'
+          }}
+          className={`relative bg-white rounded-lg overflow-hidden transition-all cursor-pointer group border-2 ${
+            customAspect ? customAspect : ''
+          } ${extraClass} ${
+            isTarget
+              ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/40 z-20'
+              : 'border-stone-300 hover:border-stone-400'
+          }`}
+        >
+          {dragOverPanel === idx && (
+            <div className="absolute inset-0 z-30 bg-[#E8752A]/25 border-4 border-dashed border-[#E8752A] pointer-events-none" />
+          )}
+
+          {panel.imageUrl ? (
+            <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
+              <img
+                src={panel.imageUrl}
+                alt={pSpec.label || `Panel ${idx + 1}`}
+                style={{
+                  transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                  filter: getFilterCss(panel.filter),
+                  objectFit: panel.fitMode === 'contain' ? 'contain' : 'cover',
+                  transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                }}
+                className="max-w-none w-full h-full pointer-events-none"
+              />
+            </div>
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50/90 hover:bg-stone-100 transition-colors p-2 text-center">
+              <div className="w-7 h-7 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-1">
+                <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
+              </div>
+              <span className="text-[10px] font-bold text-stone-600">{pSpec.label || `Panel ${idx + 1}`}</span>
+              {pSpec.dimension && <span className="text-[9px] text-stone-400">{pSpec.dimension}</span>}
+            </div>
+          )}
+
+          {pSpec.dimension && (
+            <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
+              {pSpec.dimension}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    if (wallPanels.length === 3 && (isThreeSplit || isTriptych)) {
+      return (
+        <div className="flex items-center justify-center gap-3 sm:gap-4 w-full max-w-2xl mx-auto my-auto p-4 select-none">
+          {isTriptych ? (
+            [0, 1, 2].map((idx) => (
+              <div key={idx} className="flex-1 max-w-[170px]">
+                {renderPanelSlot(idx, 'aspect-[12/24]')}
+              </div>
+            ))
+          ) : (
+            <>
+              <div className="flex-1 max-w-[140px] self-center">
+                {renderPanelSlot(0, 'aspect-[8/10]')}
+              </div>
+              <div className="flex-[1.4] max-w-[200px]">
+                {renderPanelSlot(1, 'aspect-[16/20]')}
+              </div>
+              <div className="flex-1 max-w-[140px] self-center">
+                {renderPanelSlot(2, 'aspect-[8/10]')}
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    if (wallPanels.length === 3 && isThreeCollage) {
+      return (
+        <div className="flex flex-col items-center gap-3 w-full max-w-md mx-auto my-auto p-4 select-none">
+          <div className="w-full">
+            {renderPanelSlot(0, 'aspect-[18/12]')}
+          </div>
+          <div className="grid grid-cols-2 gap-3 w-full">
+            {renderPanelSlot(1, 'aspect-[8/10]')}
+            {renderPanelSlot(2, 'aspect-[8/10]')}
+          </div>
+        </div>
+      );
+    }
+
+    if (isFivePiece) {
+      return (
+        <div className="flex items-center justify-center gap-2 sm:gap-2.5 w-full max-w-3xl mx-auto my-auto p-3 select-none">
+          <div className="flex-1 max-w-[100px] self-center">{renderPanelSlot(3, 'aspect-[8/10]')}</div>
+          <div className="flex-[1.2] max-w-[125px] self-center">{renderPanelSlot(1, 'aspect-[12/18]')}</div>
+          <div className="flex-[1.5] max-w-[160px]">{renderPanelSlot(0, 'aspect-[18/24]')}</div>
+          <div className="flex-[1.2] max-w-[125px] self-center">{renderPanelSlot(2, 'aspect-[12/18]')}</div>
+          <div className="flex-1 max-w-[100px] self-center">{renderPanelSlot(4, 'aspect-[8/10]')}</div>
+        </div>
+      );
+    }
+
+    if (isTiered) {
+      return (
+        <div className="grid grid-cols-4 gap-2.5 items-end w-full max-w-2xl mx-auto my-auto p-4 select-none">
+          {renderPanelSlot(0, 'aspect-[8/10]')}
+          {renderPanelSlot(1, 'aspect-[11/14]')}
+          {renderPanelSlot(2, 'aspect-[16/20]')}
+          {renderPanelSlot(3, 'aspect-[8/10]')}
+        </div>
+      );
+    }
+
+    if (wallPanels.length === 4) {
+      return (
+        <div className="grid grid-cols-2 gap-3 w-full max-w-md mx-auto my-auto p-4 select-none">
+          {renderPanelSlot(0, 'aspect-square')}
+          {renderPanelSlot(1, 'aspect-square')}
+          {renderPanelSlot(2, 'aspect-square')}
+          {renderPanelSlot(3, 'aspect-square')}
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full max-w-xl mx-auto my-auto p-4 select-none">
+        {wallPanels.map((_, idx) => renderPanelSlot(idx, 'aspect-square'))}
+      </div>
+    );
+  };
+
+  // Photo Collage (canvas-collage): Single canvas frame containing internal photo slots
+  // 3 photos renders 1 large top photo + 2 smaller bottom photos (NEVER 3 vertical columns!)
+  const renderCollageCanvas = () => {
+    const renderCollageSlot = (panelIdx: number) => {
+      const panel = panelImages[panelIdx] || createDefaultPanel();
+      const panelSpec = panels[panelIdx];
+      const isTarget = activePanelIndex === panelIdx;
+
+      return (
+        <div
+          key={panelIdx}
+          {...panelHandlers(panelIdx)}
+          className={`relative w-full h-full min-h-[110px] bg-stone-50 rounded-lg overflow-hidden transition-all cursor-pointer group ${
+            isTarget
+              ? 'ring-2 ring-inset ring-[#0E4A93] z-20 shadow-md'
+              : 'border border-stone-200/90 hover:border-stone-300'
+          }`}
+        >
+          {dragOverPanel === panelIdx && (
+            <div className="absolute inset-0 z-30 bg-blue-500/20 border-2 border-dashed border-[#0E4A93] pointer-events-none" />
+          )}
+          {panel.imageUrl ? (
+            <img
+              src={panel.imageUrl}
+              alt={`Slot ${panelIdx + 1}`}
+              style={{
+                transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                filter: getFilterCss(panel.filter),
+                transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+              }}
+              className="w-full h-full object-cover pointer-events-none"
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50 hover:bg-stone-100 transition-colors p-2 text-center">
+              <div className="w-7 h-7 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-1">
+                <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
+              </div>
+              <span className="text-[10px] font-bold text-stone-600 group-hover:text-[#0E4A93]">
+                Slot {panelIdx + 1} {panelSpec?.dimension ? `(${panelSpec.dimension})` : ''}
+              </span>
+              <span className="text-[9px] text-stone-400">Click to upload</span>
+            </div>
+          )}
+          {panelSpec?.dimension && (
+            <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
+              {panelSpec.dimension}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    return (
+      <div
+        className="relative rounded-2xl bg-white p-2.5 sm:p-3 overflow-hidden transition-all cursor-pointer shadow-2xl border-2 border-stone-300 mx-auto my-auto"
+        style={{
+          aspectRatio: panels.length === 2 ? '16/10' : panels.length === 3 ? '16/12' : '1/1',
+          width: `min(27rem, calc(48vh * ${panels.length === 2 ? 1.6 : panels.length === 3 ? 1.33 : 1}))`,
+          maxWidth: '100%',
+          boxShadow: '5px 7px 0px #CBD5E1, 0 25px 50px -12px rgba(15, 23, 42, 0.38)'
+        }}
+      >
+        {panels.length === 3 ? (
+          // 1 large top photo + 2 smaller bottom photos (NEVER 3 vertical columns!)
+          <div className="flex flex-col gap-2 w-full h-full">
+            <div className="flex-[1.35] w-full min-h-0">
+              {renderCollageSlot(0)}
+            </div>
+            <div className="flex-1 w-full min-h-0 grid grid-cols-2 gap-2">
+              {renderCollageSlot(1)}
+              {renderCollageSlot(2)}
+            </div>
+          </div>
+        ) : (
+          <div className={`grid ${panels.length === 2 ? 'grid-cols-2' : panels.length === 9 ? 'grid-cols-3' : 'grid-cols-2'} gap-2 w-full h-full`}>
+            {panels.map((_, panelIdx) => renderCollageSlot(panelIdx))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="w-full h-screen flex flex-col bg-[#F1F5F9] text-stone-900 font-manrope overflow-hidden select-none">
       <CustomizerPreloader active={preloaderActive} />
@@ -2219,7 +2817,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                   <span className="font-bold text-stone-900">+₹{WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.price}</span>
                 </div>
               )}
-              {selectedHardwareId !== 'hooks-hanging' && (
+              {selectedHardwareId !== 'no-hooks' && (
                 <div className="flex justify-between">
                   <span>Hardware:</span>
                   <span className="font-bold text-stone-900">+₹{HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price}</span>
@@ -2259,20 +2857,22 @@ export const CanvasCustomizerPage: React.FC = () => {
 
         {/* COLUMN 2: CONFIGURATION PANEL */}
         <CustomizerPanel
-          title={activeTab === 'SHAPE' ? 'SHAPES' : activeTab}
+          title={activeTab === 'SHAPES' || activeTab === 'SHAPE' ? 'SHAPES' : activeTab}
           metaText={
             activeTab === 'PRODUCTS'
               ? `${CANVAS_PRODUCT_TYPES.length} Styles`
               : activeTab === 'UPLOAD'
               ? `${uploadedPhotos.length} Photos`
+              : activeTab === 'SHAPES' || activeTab === 'SHAPE'
+              ? `${filteredShapes.length} Shapes`
               : activeTab === 'SELECT SIZE'
               ? `${availableSizeOptions.length + (canUseCustomSize ? 1 : 0)} Options`
               : activeTab === 'LAYOUTS & DESIGNS'
-              ? layoutSubTab === 'LAYOUTS'
+              ? selectedProductTypeId === 'canvas-lyric'
+                ? 'Lyrics & Typography'
+                : layoutSubTab === 'LAYOUTS'
                 ? `${filteredLayoutPresets.length} Layouts`
                 : `${DESIGN_TEMPLATE_CATEGORIES.length} Categories`
-              : activeTab === 'SHAPE'
-              ? `${filteredShapes.length} Shapes`
               : activeTab === 'WRAP & BORDER'
               ? `${WRAP_OPTIONS.length} Options`
               : activeTab === 'HARDWARE & FINISH'
@@ -2442,8 +3042,15 @@ export const CanvasCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Active Panel Target Selector for Multi-Panel Layouts */}
-              {panels.length > 1 && (
+              {/* Split Canvas single image notification */}
+              {selectedProductTypeId === 'canvas-split' && (
+                <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 text-xs font-semibold text-[#0E4A93]">
+                  Upload 1 photo — it is divided seamlessly across the {panels.length || 3} physical canvas panels.
+                </div>
+              )}
+
+              {/* Active Panel Target Selector for Multi-Panel Layouts (Collage / Mosaic / Wall Art) */}
+              {panels.length > 1 && selectedProductTypeId !== 'canvas-split' && (
                 <div className="space-y-2 bg-stone-50 p-3 rounded-xl border border-stone-200">
                   <div className="text-xs font-extrabold text-stone-700">Target Slot for Next Photo:</div>
                   <div className="flex flex-wrap gap-1.5">
@@ -2523,10 +3130,87 @@ export const CanvasCustomizerPage: React.FC = () => {
             </div>
           )}
 
+          {/* -------------------------------- SHAPES -------------------------------- */}
+          {(activeTab === 'SHAPES' || activeTab === 'SHAPE') && (
+            <div className="p-4 space-y-3">
+              {!shapeApplies ? (
+                <div className="p-4 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-600 space-y-2">
+                  <p>
+                    Laser-cut shapes are only available on single-panel canvases. Switch to <strong>Classic Canvas Print</strong> or{' '}
+                    <strong>Panoramic Canvas Print</strong> under Products to choose a shape.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Category Filter Pills (Identical to Acrylic Customizer) */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {SHAPE_FILTER_TABS.map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setShapeFilterCategory(tab.id)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                          shapeFilterCategory === tab.id
+                            ? 'bg-[#0E4A93] text-white shadow-xs'
+                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Shape Cards Grid (Identical to Acrylic Customizer) */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                    {filteredShapes.map((shape) => {
+                      const isSelected = selectedShapeId === shape.id;
+                      return (
+                        <CustomizerOptionCard
+                          key={shape.id}
+                          selected={isSelected}
+                          onClick={() => {
+                            setSelectedShapeId(shape.id);
+                            setIsSizeShapeModalOpen(true);
+                          }}
+                          title={shape.name}
+                          priceText={shape.priceAddon === 0 ? 'Included' : `+₹${shape.priceAddon}`}
+                          previewHeightClass="h-16 p-1.5"
+                          preview={
+                            <div className="w-full h-full flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                              <AcrylicShapePreview
+                                shape={shape.shapeType}
+                                selected={isSelected}
+                              />
+                            </div>
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {/* --------------------------- SELECT SIZE ---------------------------- */}
           {activeTab === 'SELECT SIZE' && (
             <div className="p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              {/* Quick Trigger for the Select Size & Shape Modal */}
+              <div className="flex items-center justify-between p-3.5 bg-blue-50/80 rounded-xl border border-blue-200">
+                <div className="text-xs">
+                  <span className="font-black text-[#0E4A93] uppercase tracking-wide">Select Size & Shape</span>
+                  <p className="text-stone-600 text-[11px] mt-0.5">Explore recommended sizes, shapes, and multi-piece arrangements</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSizeShapeModalOpen(true)}
+                  className="px-3.5 py-1.5 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg transition-colors shadow-xs cursor-pointer"
+                >
+                  Open Popup
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {availableSizeOptions.map((opt) => {
                   const isSelected = !isCustomSize && selectedSizeId === opt.id;
                   return (
@@ -2540,7 +3224,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                       title={opt.label}
                       subtitle={opt.dimensionsSummary}
                       priceText={`₹${opt.price.toLocaleString('en-IN')}`}
-                      previewHeightClass="h-24 p-2"
+                      previewHeightClass="h-14 p-1.5"
                       preview={renderSizePreview(opt, isSelected)}
                     />
                   );
@@ -2627,163 +3311,275 @@ export const CanvasCustomizerPage: React.FC = () => {
           {/* ------------------------ LAYOUTS & DESIGNS ------------------------- */}
           {activeTab === 'LAYOUTS & DESIGNS' && (
             <div className="p-4 space-y-4">
-              {/* Sub-tab toggle matching Acrylic pill filter style */}
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  { id: 'LAYOUTS' as const, label: 'Layouts' },
-                  { id: 'DESIGNS' as const, label: 'Design Templates' }
-                ].map((sub) => (
-                  <button
-                    key={sub.id}
-                    type="button"
-                    onClick={() => setLayoutSubTab(sub.id)}
-                    className={`flex-1 px-3 py-2 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
-                      layoutSubTab === sub.id
-                        ? 'bg-[#0E4A93] text-white shadow-xs'
-                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                    }`}
-                  >
-                    {sub.label}
-                  </button>
-                ))}
-              </div>
-
-              {layoutSubTab === 'LAYOUTS' && (
-                <div className="space-y-3">
-                  <p className="text-xs text-stone-500">
-                    Choose a single-photo or multi-photo layout arrangement. Selecting a layout automatically adjusts your canvas panels.
-                  </p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {filteredLayoutPresets.map((preset) => {
-                      const isSelected = selectedProductTypeId === preset.productTypeId && selectedSizeId === preset.sizeId;
-                      return (
-                        <CustomizerOptionCard
-                          key={preset.id}
-                          selected={isSelected}
-                          onClick={() => {
-                            setExpandedLayoutId(preset.id);
-                            handleSelectLayoutPreset(preset);
-                          }}
-                          title={preset.label}
-                          previewHeightClass="h-28 p-2"
-                          preview={<div className="w-full">{renderLayoutThumbnail(preset.arrangement)}</div>}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {layoutSubTab === 'DESIGNS' && (
-                <div className="space-y-3">
-                  <div className="relative">
-                    <select
-                      value={designCategory}
-                      onChange={(e) => setDesignCategory(e.target.value)}
-                      className="w-full pl-3 pr-8 py-2.5 bg-white border border-stone-200 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] appearance-none shadow-2xs"
-                    >
-                      {DESIGN_TEMPLATE_CATEGORIES.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-stone-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              {selectedProductTypeId === 'canvas-lyric' ? (
+                <div className="space-y-4">
+                  <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 text-xs text-[#0E4A93]">
+                    <div className="font-extrabold uppercase tracking-wide">Lyric & Typography Canvas</div>
+                    <p className="text-[11px] text-stone-600 mt-0.5">Customize your song title, artist, and lyrics below. Live preview updates on the canvas.</p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    {DESIGN_TEMPLATES.filter((t) => t.category === designCategory).map((tpl) => {
-                      const isSelected = selectedTemplateId === tpl.id;
-                      return (
-                        <CustomizerOptionCard
+                  {/* Template Style */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Typography Layout</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: 'center-minimal' as const, label: 'Center Minimal', desc: 'Centered classic typography' },
+                        { id: 'music-player' as const, label: 'Spotify Style', desc: 'Player icon & progress bar' },
+                        { id: 'elegant-script' as const, label: 'Elegant Script', desc: 'Handwritten romantic vibe' },
+                        { id: 'split-card' as const, label: 'Lyric Card', desc: 'Frosted card with header' }
+                      ].map((tpl) => (
+                        <button
                           key={tpl.id}
-                          selected={isSelected}
-                          onClick={() => handleApplyTemplate(tpl)}
-                          title={tpl.name}
-                          subtitle={tpl.category}
-                          previewHeightClass="h-28 p-0"
-                          preview={
-                            <div className={`relative w-full h-full flex flex-col items-center justify-center p-2.5 ${tpl.swatchClass}`}>
-                              {renderDecorSvg(tpl.decor, tpl.accent, 'absolute inset-0 w-full h-full pointer-events-none')}
-                              <div className="relative w-12 h-12 rounded-md bg-white/80 border border-black/10 shadow-xs" />
-                            </div>
-                          }
-                        />
-                      );
-                    })}
+                          type="button"
+                          onClick={() => setLyricTemplate(tpl.id)}
+                          className={`p-2.5 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                            lyricTemplate === tpl.id
+                              ? 'border-[#0E4A93] bg-blue-50/30 text-[#0E4A93] shadow-xs'
+                              : 'border-stone-200 text-stone-700 bg-white hover:border-stone-300'
+                          }`}
+                        >
+                          <div className="text-xs font-black">{tpl.label}</div>
+                          <div className="text-[10px] text-stone-500 mt-0.5">{tpl.desc}</div>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  {selectedTemplateId && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedTemplateId(null);
-                        setTextItems((prev) => prev.filter((t) => t.id !== 'tpl-text'));
-                      }}
-                      className="w-full py-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-center text-xs cursor-pointer transition-colors"
-                    >
-                      Remove Design / Template
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+                  {/* Quick Preset Songs */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-stone-600 uppercase">Popular Song Presets</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        {
+                          title: 'PERFECT',
+                          artist: 'ED SHEERAN',
+                          text: "Baby, I'm dancing in the dark\nWith you between my arms\nBarefoot on the grass\nListening to our favorite song\nWhen you said you looked a mess\nI whispered underneath my breath\nYou heard it, darling\nYou look perfect tonight"
+                        },
+                        {
+                          title: 'A THOUSAND YEARS',
+                          artist: 'CHRISTINA PERRI',
+                          text: "Heart beats fast\nColors and promises\nHow to be brave?\nHow can I love when I'm afraid to fall?\nI have died every day waiting for you\nDarling, don't be afraid\nI have loved you for a thousand years\nI'll love you for a thousand more"
+                        },
+                        {
+                          title: 'ALL OF ME',
+                          artist: 'JOHN LEGEND',
+                          text: "'Cause all of me\nLoves all of you\nLove your curves and all your edges\nAll your perfect imperfections\nGive your all to me\nI'll give my all to you\nYou're my end and my beginning\nEven when I lose I'm winning"
+                        },
+                        {
+                          title: 'WEDDING VOWS',
+                          artist: 'FOREVER & ALWAYS',
+                          text: "I promise to love you unconditionally,\nTo support your dreams as my own,\nTo laugh with you in joy,\nAnd hold your hand through every storm.\nToday and for all our tomorrows,\nMy heart is yours."
+                        }
+                      ].map((song) => (
+                        <button
+                          key={song.title}
+                          type="button"
+                          onClick={() => {
+                            setLyricTitle(song.title);
+                            setLyricArtist(song.artist);
+                            setLyricText(song.text);
+                          }}
+                          className="px-2.5 py-1 bg-stone-100 hover:bg-[#0E4A93] hover:text-white rounded-lg text-[10px] font-bold text-stone-700 transition-colors cursor-pointer"
+                        >
+                          {song.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-          {/* -------------------------------- SHAPE -------------------------------- */}
-          {activeTab === 'SHAPE' && (
-            <div className="p-4 space-y-3">
-              {!shapeApplies ? (
-                <div className="p-4 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-600 space-y-2">
-                  <p>
-                    Laser-cut shapes are only available on single-panel canvases. Switch to <strong>Classic Canvas Print</strong> or{' '}
-                    <strong>Panoramic Canvas Print</strong> under Products to choose a shape.
-                  </p>
+                  {/* Song Title & Artist Inputs */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Song / Vow Title</label>
+                      <input
+                        type="text"
+                        value={lyricTitle}
+                        onChange={(e) => setLyricTitle(e.target.value)}
+                        placeholder="e.g. Perfect"
+                        className="w-full px-2.5 py-1.5 text-xs font-bold border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Artist / Couple Name</label>
+                      <input
+                        type="text"
+                        value={lyricArtist}
+                        onChange={(e) => setLyricArtist(e.target.value)}
+                        placeholder="e.g. Ed Sheeran"
+                        className="w-full px-2.5 py-1.5 text-xs font-bold border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Lyrics Textarea */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Lyrics / Text</label>
+                    <textarea
+                      rows={5}
+                      value={lyricText}
+                      onChange={(e) => setLyricText(e.target.value)}
+                      placeholder="Paste your favorite lyrics or personal vows here..."
+                      className="w-full px-2.5 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93] resize-y"
+                    />
+                  </div>
+
+                  {/* Font & Color */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Typography Font</label>
+                      <select
+                        value={lyricFontFamily}
+                        onChange={(e) => setLyricFontFamily(e.target.value as any)}
+                        className="w-full px-2.5 py-1.5 text-xs font-bold bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93]"
+                      >
+                        <option value="serif">Playfair Serif</option>
+                        <option value="script">Dancing Script</option>
+                        <option value="sans">Montserrat Sans</option>
+                        <option value="cinzel">Cinzel Classic</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Text Color</label>
+                      <div className="flex gap-2 pt-1">
+                        {[
+                          { hex: '#FFFFFF', name: 'White' },
+                          { hex: '#FEF08A', name: 'Soft Gold' },
+                          { hex: '#F5EBE0', name: 'Cream' },
+                          { hex: '#1E293B', name: 'Charcoal' }
+                        ].map((c) => (
+                          <button
+                            key={c.hex}
+                            type="button"
+                            onClick={() => setLyricTextColor(c.hex)}
+                            style={{ backgroundColor: c.hex }}
+                            title={c.name}
+                            className={`w-6 h-6 rounded-full border-2 transition-transform cursor-pointer ${
+                              lyricTextColor === c.hex ? 'border-[#0E4A93] scale-110 shadow-sm' : 'border-stone-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Background Scrim Darkness */}
+                  <div>
+                    <div className="flex justify-between text-[11px] font-bold text-stone-700 uppercase mb-1">
+                      <span>Overlay Contrast</span>
+                      <span>{lyricOverlayDarkness}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={10}
+                      max={80}
+                      value={lyricOverlayDarkness}
+                      onChange={(e) => setLyricOverlayDarkness(Number(e.target.value))}
+                      className="w-full h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-[#0E4A93]"
+                    />
+                  </div>
                 </div>
               ) : (
                 <>
-                  {/* Category Filter Pills (Identical to Acrylic Customizer) */}
+                  {/* Sub-tab toggle matching Acrylic pill filter style */}
                   <div className="flex flex-wrap gap-1.5">
-                    {SHAPE_FILTER_TABS.map((tab) => (
+                    {[
+                      { id: 'LAYOUTS' as const, label: 'Layouts' },
+                      { id: 'DESIGNS' as const, label: 'Design Templates' }
+                    ].map((sub) => (
                       <button
-                        key={tab.id}
+                        key={sub.id}
                         type="button"
-                        onClick={() => setShapeFilterCategory(tab.id)}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                          shapeFilterCategory === tab.id
+                        onClick={() => setLayoutSubTab(sub.id)}
+                        className={`flex-1 px-3 py-2 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
+                          layoutSubTab === sub.id
                             ? 'bg-[#0E4A93] text-white shadow-xs'
                             : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                         }`}
                       >
-                        {tab.label}
+                        {sub.label}
                       </button>
                     ))}
                   </div>
 
-                  {/* Shape Cards Grid (Identical to Acrylic Customizer) */}
-                  <div className="grid grid-cols-2 gap-3 pt-1">
-                    {filteredShapes.map((shape) => {
-                      const isSelected = selectedShapeId === shape.id;
-                      return (
-                        <CustomizerOptionCard
-                          key={shape.id}
-                          selected={isSelected}
-                          onClick={() => setSelectedShapeId(shape.id)}
-                          title={shape.name}
-                          priceText={shape.priceAddon === 0 ? 'Included' : `+₹${shape.priceAddon}`}
-                          previewHeightClass="h-20 p-2"
-                          preview={
-                            <div className="w-full h-full flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                              <AcrylicShapePreview
-                                shape={shape.shapeType}
-                                selected={isSelected}
-                              />
-                            </div>
-                          }
-                        />
-                      );
-                    })}
-                  </div>
+                  {layoutSubTab === 'LAYOUTS' && (
+                    <div className="space-y-3">
+                      <p className="text-xs text-stone-500">
+                        Choose a single-photo or multi-photo layout arrangement. Selecting a layout automatically adjusts your canvas panels.
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {filteredLayoutPresets.map((preset) => {
+                          const isSelected = selectedProductTypeId === preset.productTypeId && selectedSizeId === preset.sizeId;
+                          return (
+                            <CustomizerOptionCard
+                              key={preset.id}
+                              selected={isSelected}
+                              onClick={() => {
+                                setExpandedLayoutId(preset.id);
+                                handleSelectLayoutPreset(preset);
+                              }}
+                              title={preset.label}
+                              previewHeightClass="h-28 p-2"
+                              preview={<div className="w-full">{renderLayoutThumbnail(preset.arrangement)}</div>}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {layoutSubTab === 'DESIGNS' && (
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <select
+                          value={designCategory}
+                          onChange={(e) => setDesignCategory(e.target.value)}
+                          className="w-full pl-3 pr-8 py-2.5 bg-white border border-stone-200 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] appearance-none shadow-2xs"
+                        >
+                          {DESIGN_TEMPLATE_CATEGORIES.map((cat) => (
+                            <option key={cat} value={cat}>
+                              {cat}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-4 h-4 text-stone-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        {DESIGN_TEMPLATES.filter((t) => t.category === designCategory).map((tpl) => {
+                          const isSelected = selectedTemplateId === tpl.id;
+                          return (
+                            <CustomizerOptionCard
+                              key={tpl.id}
+                              selected={isSelected}
+                              onClick={() => handleApplyTemplate(tpl)}
+                              title={tpl.name}
+                              subtitle={tpl.category}
+                              previewHeightClass="h-28 p-0"
+                              preview={
+                                <div className={`relative w-full h-full flex flex-col items-center justify-center p-2.5 ${tpl.swatchClass}`}>
+                                  {renderDecorSvg(tpl.decor, tpl.accent, 'absolute inset-0 w-full h-full pointer-events-none')}
+                                  <div className="relative w-12 h-12 rounded-md bg-white/80 border border-black/10 shadow-xs" />
+                                </div>
+                              }
+                            />
+                          );
+                        })}
+                      </div>
+
+                      {selectedTemplateId && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedTemplateId(null);
+                            setTextItems((prev) => prev.filter((t) => t.id !== 'tpl-text'));
+                          }}
+                          className="w-full py-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-center text-xs cursor-pointer transition-colors"
+                        >
+                          Remove Design / Template
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -2798,7 +3594,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                   <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">1. Edge Wrap Style</label>
                   <span className="text-[11px] font-bold text-[#0E4A93]">{WRAP_OPTIONS.length} styles</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {WRAP_OPTIONS.map((w) => {
                     const isSelected = selectedWrapId === w.id;
                     return (
@@ -2808,10 +3604,10 @@ export const CanvasCustomizerPage: React.FC = () => {
                         onClick={() => setSelectedWrapId(w.id)}
                         title={w.name}
                         priceText={w.price === 0 ? 'Included' : `+₹${w.price}`}
-                        previewHeightClass="h-20 p-2"
+                        previewHeightClass="h-16 p-1.5"
                         preview={
-                          <div className="w-14 h-14 mx-auto relative flex items-center justify-center">
-                            <div className="w-12 h-12 rounded border border-stone-300 relative overflow-hidden bg-stone-100 flex items-center justify-center">
+                          <div className="w-12 h-12 mx-auto relative flex items-center justify-center">
+                            <div className="w-10 h-10 rounded border border-stone-300 relative overflow-hidden bg-stone-100 flex items-center justify-center">
                               {w.id === 'full-bleed' && (
                                 <div className="w-full h-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500" />
                               )}
@@ -2877,7 +3673,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-2.5">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {ACRYLIC_BORDER_WIDTHS.map((bw) => {
                         const isSelected = selectedBorderWidthId === bw.id;
                         const borderPrice = CANVAS_BORDER_WIDTH_PRICES[bw.id] || 0;
@@ -2888,13 +3684,13 @@ export const CanvasCustomizerPage: React.FC = () => {
                             onClick={() => setSelectedBorderWidthId(bw.id)}
                             title={bw.label}
                             priceText={borderPrice === 0 ? 'Free' : `+₹${borderPrice}`}
-                            previewHeightClass="h-16 p-2"
+                            previewHeightClass="h-14 p-1.5"
                             preview={
                               <div
-                                className="w-10 h-10 rounded-xs shadow-2xs"
+                                className="w-9 h-9 rounded-xs shadow-2xs"
                                 style={{
                                   backgroundColor: bw.widthPx === 0 ? 'transparent' : selectedBorderColor,
-                                  padding: `${Math.min(bw.widthPx, 10)}px`
+                                  padding: `${Math.min(bw.widthPx, 8)}px`
                                 }}
                               >
                                 <div className="w-full h-full rounded-xs bg-gradient-to-br from-sky-200 to-emerald-200" />
@@ -2936,7 +3732,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                     An outer frame is only available on single-panel canvases. Switch to Classic or Panoramic Canvas under Products.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {FRAME_OPTIONS.map((f) => {
                       const isSelected = selectedFrameId === f.id;
                       return (
@@ -2946,10 +3742,10 @@ export const CanvasCustomizerPage: React.FC = () => {
                           onClick={() => setSelectedFrameId(f.id)}
                           title={f.name}
                           priceText={f.price === 0 ? 'Free' : `+₹${f.price.toFixed(0)}`}
-                          previewHeightClass="h-20 p-2"
+                          previewHeightClass="h-16 p-1.5"
                           preview={
                             <div
-                              className="w-12 h-12 rounded mx-auto p-1.5 shadow-2xs"
+                              className="w-10 h-10 rounded mx-auto p-1 shadow-2xs"
                               style={
                                 f.id === 'no-frame'
                                   ? {
@@ -2981,7 +3777,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                   <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">1. Canvas Stretcher Thickness</label>
                   <span className="text-[11px] font-bold text-[#0E4A93]">{THICKNESS_OPTIONS.length} options</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {THICKNESS_OPTIONS.map((th) => {
                     const isSelected = selectedThicknessId === th.id;
                     return (
@@ -2992,7 +3788,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                         badge={th.badge}
                         title={th.label}
                         priceText={th.price === 0 ? 'Included' : `+₹${th.price}`}
-                        previewHeightClass="h-20 p-2"
+                        previewHeightClass="h-16 p-1.5"
                         preview={renderWrapPreview(th.id)}
                       />
                     );
@@ -3003,7 +3799,7 @@ export const CanvasCustomizerPage: React.FC = () => {
               {/* 2. Hardware Option & Style */}
               <div className="space-y-2.5 pt-3 border-t border-stone-200">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">2. Hardware Option &amp; Style</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {HARDWARE_OPTIONS.map((hw) => {
                     const isSelected = selectedHardwareId === hw.id;
                     return (
@@ -3013,7 +3809,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                         onClick={() => setSelectedHardwareId(hw.id)}
                         title={hw.label}
                         priceText={hw.price === 0 ? 'Free' : `+₹${hw.price}`}
-                        previewHeightClass="h-24 p-2"
+                        previewHeightClass="h-16 p-1.5"
                         preview={renderHardwareIcon(hw.id)}
                       />
                     );
@@ -3566,90 +4362,11 @@ export const CanvasCustomizerPage: React.FC = () => {
                 <span>Click and drag within the print lines to Adjust your Photo.</span>
               </div>
 
-              {/* WALL DISPLAY 3-PIECE LAYOUT */}
-              {selectedProductTypeId === 'canvas-wall-art' && panels.length === 3 && (
-                <div className="flex flex-col items-center gap-2.5 w-full max-w-xs sm:max-w-sm mx-auto my-auto py-1">
-                  <div
-                    {...panelHandlers(0)}
-                    onWheel={handleWheel}
-                    className={`relative w-[85%] aspect-[18/12] bg-white rounded-lg overflow-hidden transition-all cursor-pointer group border-2 ${
-                      activePanelIndex === 0 ? 'border-[#0E4A93] shadow-xl ring-2 ring-[#0E4A93]/30' : 'border-stone-300 shadow-md hover:border-stone-400'
-                    }`}
-                  >
-                    {dragOverPanel === 0 && <div className="absolute inset-0 z-30 bg-[#E8752A]/25 border-4 border-dashed border-[#E8752A] pointer-events-none" />}
-                    {panelImages[0]?.imageUrl ? (
-                      <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
-                        <img
-                          src={panelImages[0].imageUrl}
-                          alt="Panel 1"
-                          style={{
-                            transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                            filter: getFilterCss(panelImages[0].filter),
-                            objectFit: panelImages[0].fitMode === 'contain' ? 'contain' : 'cover',
-                            transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                          }}
-                          className="max-w-none w-full h-full pointer-events-none"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50/80 hover:bg-stone-100/90 transition-colors p-2 text-center">
-                        <div className="w-8 h-8 rounded-full bg-white shadow-xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:border-[#0E4A93]/40 group-hover:scale-110 transition-all mb-1">
-                          <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
-                        </div>
-                        <span className="text-[10px] font-bold text-stone-600">Panel 1 (12&quot; × 18&quot;)</span>
-                        <span className="text-[9px] text-stone-400">Click to upload photo</span>
-                      </div>
-                    )}
-                    <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20">12&quot; × 18&quot;</div>
-                  </div>
+              {/* WALL DISPLAY (Physical Multi-Panel Gallery Wall Layout) */}
+              {selectedProductTypeId === 'canvas-wall-art' && renderWallDisplayCanvas()}
 
-                  <div className="grid grid-cols-2 gap-2.5 w-full">
-                    {[1, 2].map((panelIdx) => (
-                      <div
-                        key={panelIdx}
-                        {...panelHandlers(panelIdx)}
-                        onWheel={handleWheel}
-                        className={`relative w-full aspect-[8/10] bg-white rounded-lg overflow-hidden transition-all cursor-pointer group border-2 ${
-                          activePanelIndex === panelIdx ? 'border-[#0E4A93] shadow-xl ring-2 ring-[#0E4A93]/30' : 'border-stone-300 shadow-md hover:border-stone-400'
-                        }`}
-                      >
-                        {dragOverPanel === panelIdx && <div className="absolute inset-0 z-30 bg-[#E8752A]/25 border-4 border-dashed border-[#E8752A] pointer-events-none" />}
-                        {panelImages[panelIdx]?.imageUrl ? (
-                          <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
-                            <img
-                              src={panelImages[panelIdx].imageUrl!}
-                              alt={`Panel ${panelIdx + 1}`}
-                              style={{
-                                transform: `translate(${panelImages[panelIdx].panX}px, ${panelImages[panelIdx].panY}px) scale(${panelImages[panelIdx].scale}) rotate(${panelImages[panelIdx].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                                filter: getFilterCss(panelImages[panelIdx].filter),
-                                objectFit: panelImages[panelIdx].fitMode === 'contain' ? 'contain' : 'cover',
-                                transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                              }}
-                              className="max-w-none w-full h-full pointer-events-none"
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50/80 hover:bg-stone-100/90 transition-colors p-2 text-center">
-                            <div className="w-7 h-7 rounded-full bg-white shadow-xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:border-[#0E4A93]/40 group-hover:scale-110 transition-all mb-1">
-                              <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
-                            </div>
-                            <span className="text-[10px] font-bold text-stone-600">Panel {panelIdx + 1} (10&quot; × 8&quot;)</span>
-                            <span className="text-[9px] text-stone-400">Click to upload</span>
-                          </div>
-                        )}
-                        <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20">10&quot; × 8&quot;</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* WALL DISPLAY 4-PIECE LAYOUT */}
-              {selectedProductTypeId === 'canvas-wall-art' && panels.length === 4 && (
-                <div className="w-full max-w-xs sm:max-w-sm mx-auto my-auto">
-                  {renderGridPanels([0, 1, 2, 3], 'grid-cols-2')}
-                </div>
-              )}
+              {/* PHOTO MOSAIC (Multi-Tile Mosaic Canvas Grid) */}
+              {selectedProductTypeId === 'canvas-mosaic' && renderMosaicCanvas()}
 
               {/* SINGLE PANEL LAYOUTS (Single Print, Round, Triangle, Heart, Oval, Hexagon, etc.) */}
               {selectedProductTypeId !== 'canvas-wall-art' && selectedProductTypeId !== 'canvas-collage' && selectedProductTypeId !== 'canvas-mosaic' && selectedProductTypeId !== 'canvas-split' && panels.length === 1 && (() => {
@@ -4019,6 +4736,9 @@ export const CanvasCustomizerPage: React.FC = () => {
                               <div className="absolute -bottom-1 left-0 right-0 h-3.5 bg-amber-800 border-t border-amber-900 shadow-md z-30 pointer-events-none" />
                             </>
                           )}
+
+                          {/* Lyric on Canvas typography overlay */}
+                          {selectedProductTypeId === 'canvas-lyric' && renderLyricOverlay()}
                         </div>
                       </div>
                     </div>
@@ -4035,73 +4755,11 @@ export const CanvasCustomizerPage: React.FC = () => {
                 return panelBox;
               })()}
 
-              {/* SPLIT CANVAS (3-Panel Triptych Layout) */}
-              {selectedProductTypeId === 'canvas-split' && panels.length === 3 && (
-                <div className="w-full max-w-xs sm:max-w-sm mx-auto my-auto">
-                  {renderGridPanels([0, 1, 2], 'grid-cols-3')}
-                </div>
-              )}
+              {/* SPLIT CANVAS (Physical Multi-Panel Sliced Layout) */}
+              {selectedProductTypeId === 'canvas-split' && renderContinuousSplitCanvas()}
 
               {/* PHOTO COLLAGE (Single Canvas Frame containing internal Photo Layout Grid) */}
-              {selectedProductTypeId === 'canvas-collage' && (
-                <div
-                  className="relative rounded-2xl bg-white p-2.5 sm:p-3 overflow-hidden transition-all cursor-pointer shadow-2xl border-2 border-stone-300 mx-auto my-auto"
-                  style={{
-                    aspectRatio: panels.length === 2 ? '16/10' : panels.length === 3 ? '18/12' : '1/1',
-                    width: `min(27rem, calc(48vh * ${panels.length === 2 ? 1.6 : panels.length === 3 ? 1.5 : 1}))`,
-                    maxWidth: '100%',
-                    boxShadow: '5px 7px 0px #CBD5E1, 0 25px 50px -12px rgba(15, 23, 42, 0.38)'
-                  }}
-                >
-                  <div className={`grid ${panels.length === 2 ? 'grid-cols-2' : panels.length === 3 ? 'grid-cols-3' : 'grid-cols-2'} gap-2 w-full h-full`}>
-                    {panels.map((panelSpec, panelIdx) => {
-                      const panel = panelImages[panelIdx] || createDefaultPanel();
-                      return (
-                        <div
-                          key={panelIdx}
-                          {...panelHandlers(panelIdx)}
-                          className={`relative w-full h-full min-h-[120px] bg-stone-50 rounded-lg overflow-hidden transition-all cursor-pointer group ${
-                            activePanelIndex === panelIdx
-                              ? 'ring-2 ring-inset ring-[#0E4A93] z-20 shadow-md'
-                              : 'border border-stone-200/90 hover:border-stone-300'
-                          }`}
-                        >
-                          {dragOverPanel === panelIdx && (
-                            <div className="absolute inset-0 z-30 bg-blue-500/20 border-2 border-dashed border-[#0E4A93] pointer-events-none" />
-                          )}
-                          {panel.imageUrl ? (
-                            <img
-                              src={panel.imageUrl}
-                              alt={`Slot ${panelIdx + 1}`}
-                              style={{
-                                transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                                filter: getFilterCss(panel.filter),
-                                transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                              }}
-                              className="w-full h-full object-cover pointer-events-none"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50 hover:bg-stone-100 transition-colors p-2 text-center">
-                              <div className="w-8 h-8 rounded-full bg-white shadow-xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:border-[#0E4A93]/40 group-hover:scale-110 transition-all mb-1">
-                                <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
-                              </div>
-                              <span className="text-[10px] font-bold text-stone-600 group-hover:text-[#0E4A93]">
-                                Slot {panelIdx + 1} {panelSpec?.dimension ? `(${panelSpec.dimension})` : ''}
-                              </span>
-                              <span className="text-[9px] text-stone-400">Click to upload</span>
-                            </div>
-                          )}
-                          {panelSpec?.dimension && (
-                            <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
-                              {panelSpec.dimension}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              {selectedProductTypeId === 'canvas-collage' && renderCollageCanvas()}
 
               {/* Movable text + clipart: drag anywhere on the print */}
               <div className="absolute inset-0 z-30 pointer-events-none">
@@ -4320,17 +4978,81 @@ export const CanvasCustomizerPage: React.FC = () => {
           return (
             <div className="relative w-full h-full overflow-hidden pointer-events-none select-none">
               {panels.length === 1 ? (
-                renderSlotPhoto(0)
-              ) : selectedProductTypeId === 'canvas-wall-art' && panels.length === 3 ? (
-                <div className="w-full h-full flex flex-col gap-1.5 p-1.5 bg-stone-200/80 pointer-events-none">
-                  <div className="flex-[1.35] min-h-0 rounded-xs overflow-hidden shadow-xs">
-                    {renderSlotPhoto(0)}
-                  </div>
-                  <div className="flex-1 min-h-0 grid grid-cols-2 gap-1.5">
-                    <div className="rounded-xs overflow-hidden shadow-xs">{renderSlotPhoto(1)}</div>
-                    <div className="rounded-xs overflow-hidden shadow-xs">{renderSlotPhoto(2)}</div>
-                  </div>
+                <div className="relative w-full h-full">
+                  {renderSlotPhoto(0)}
+                  {selectedProductTypeId === 'canvas-lyric' && renderLyricOverlay(scaleFactor)}
                 </div>
+              ) : selectedProductTypeId === 'canvas-mosaic' ? (
+                <div
+                  className="w-full h-full grid gap-1.5 p-1.5 bg-stone-200/80 pointer-events-none"
+                  style={{
+                    gridTemplateColumns: `repeat(${panels.length === 4 ? 2 : panels.length === 6 ? 3 : panels.length === 9 ? 3 : panels.length === 16 ? 4 : 2}, minmax(0, 1fr))`
+                  }}
+                >
+                  {panels.map((_, i) => (
+                    <div key={i} className="min-h-0 rounded-xs overflow-hidden shadow-xs bg-white">
+                      {panelImages[i]?.imageUrl ? renderSlotPhoto(i) : renderSlotPhoto(0)}
+                    </div>
+                  ))}
+                </div>
+              ) : selectedProductTypeId === 'canvas-wall-art' ? (
+                currentSizeOption.arrangement === 'threeSplit' || currentSizeOption.diagramType === 'wall-display-3b' || currentSizeOption.diagramType === 'wall-display-triptych' ? (
+                  <div className="w-full h-full flex items-center justify-center gap-1.5 p-1.5 bg-stone-200/80 pointer-events-none">
+                    {panels.map((_, i) => (
+                      <div key={i} className={`h-[90%] flex-1 min-h-0 rounded-xs overflow-hidden shadow-xs ${i === 1 && currentSizeOption.diagramType === 'wall-display-3b' ? 'h-full flex-[1.4]' : ''}`}>
+                        {renderSlotPhoto(i)}
+                      </div>
+                    ))}
+                  </div>
+                ) : panels.length === 3 ? (
+                  <div className="w-full h-full flex flex-col gap-1.5 p-1.5 bg-stone-200/80 pointer-events-none">
+                    <div className="flex-[1.35] min-h-0 rounded-xs overflow-hidden shadow-xs">
+                      {renderSlotPhoto(0)}
+                    </div>
+                    <div className="flex-1 min-h-0 grid grid-cols-2 gap-1.5">
+                      <div className="rounded-xs overflow-hidden shadow-xs">{renderSlotPhoto(1)}</div>
+                      <div className="rounded-xs overflow-hidden shadow-xs">{renderSlotPhoto(2)}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className="w-full h-full grid gap-1.5 p-1.5 bg-stone-200/80 pointer-events-none"
+                    style={{
+                      gridTemplateColumns: `repeat(${panels.length === 4 ? 2 : panels.length >= 5 ? 3 : 2}, minmax(0, 1fr))`
+                    }}
+                  >
+                    {panels.map((_, i) => (
+                      <div key={i} className="min-h-0 rounded-xs overflow-hidden shadow-xs">
+                        {renderSlotPhoto(i)}
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : selectedProductTypeId === 'canvas-collage' ? (
+                panels.length === 3 ? (
+                  <div className="w-full h-full flex flex-col gap-1.5 p-1.5 bg-stone-200/80 pointer-events-none">
+                    <div className="flex-[1.35] min-h-0 rounded-xs overflow-hidden shadow-xs">
+                      {renderSlotPhoto(0)}
+                    </div>
+                    <div className="flex-1 min-h-0 grid grid-cols-2 gap-1.5">
+                      <div className="rounded-xs overflow-hidden shadow-xs">{renderSlotPhoto(1)}</div>
+                      <div className="rounded-xs overflow-hidden shadow-xs">{renderSlotPhoto(2)}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className="w-full h-full grid gap-1.5 p-1.5 bg-stone-200/80 pointer-events-none"
+                    style={{
+                      gridTemplateColumns: `repeat(${panels.length === 2 ? 2 : panels.length === 9 ? 3 : 2}, minmax(0, 1fr))`
+                    }}
+                  >
+                    {panels.map((_, i) => (
+                      <div key={i} className="min-h-0 rounded-xs overflow-hidden shadow-xs">
+                        {renderSlotPhoto(i)}
+                      </div>
+                    ))}
+                  </div>
+                )
               ) : (
                 <div
                   className="w-full h-full grid gap-1.5 p-1.5 bg-stone-200/80 pointer-events-none"
@@ -4458,29 +5180,79 @@ export const CanvasCustomizerPage: React.FC = () => {
               heightInches={canvasRoomHeightInches}
               initialRoomState={roomViewState}
               onRoomStateChange={setRoomViewState}
-              renderProduct={() => (
-                <div
-                  className="relative w-full h-full pointer-events-none select-none flex items-center justify-center"
-                  style={{
-                    filter: `drop-shadow(${Math.round(wrapDepthPx * 0.35)}px ${Math.round(
-                      wrapDepthPx * 0.45
-                    )}px 0px rgba(30, 41, 59, 0.55))`
-                  }}
-                >
+              renderProduct={() => {
+                if (selectedProductTypeId === 'canvas-split') {
+                  const splitPanels = currentSizeOption.panels && currentSizeOption.panels.length >= 2
+                    ? currentSizeOption.panels
+                    : [{ id: 'p0', widthRatio: 12, heightRatio: 24 }, { id: 'p1', widthRatio: 12, heightRatio: 24 }, { id: 'p2', widthRatio: 12, heightRatio: 24 }];
+                  const N = splitPanels.length;
+                  const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
+                  const master = panelImages[0] || createDefaultPanel();
+                  const gapPx = 6;
+                  return (
+                    <div className="relative w-full h-full pointer-events-none select-none flex items-center justify-center" style={{ gap: `${gapPx}px` }}>
+                      {splitPanels.map((_, i) => (
+                        <div
+                          key={i}
+                          className="relative h-full rounded-xs bg-white overflow-hidden"
+                          style={{
+                            flex: 1,
+                            filter: `drop-shadow(${Math.round(wrapDepthPx * 0.35)}px ${Math.round(wrapDepthPx * 0.45)}px 0px rgba(30, 41, 59, 0.55))`
+                          }}
+                        >
+                          {masterImage && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: `calc(-${i * 100}% - ${i * gapPx}px)`,
+                                width: `calc(${N * 100}% + ${(N - 1) * gapPx}px)`,
+                                height: '100%'
+                              }}
+                            >
+                              <img
+                                src={masterImage}
+                                alt=""
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
+                                  transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                  filter: getFilterCss(master.filter)
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+
+                return (
                   <div
-                    className={`relative w-full h-full overflow-hidden bg-white pointer-events-none select-none ${
-                      shapeApplies ? currentShape.borderRadiusClass : 'rounded-xs'
-                    }`}
+                    className="relative w-full h-full pointer-events-none select-none flex items-center justify-center"
                     style={{
-                      clipPath: shapeApplies ? currentShape.clipPathStyle : undefined,
-                      WebkitClipPath: shapeApplies ? currentShape.clipPathStyle : undefined,
-                      border: hasOuterFrame && frameColor ? `4px solid ${frameColor}` : undefined
+                      filter: `drop-shadow(${Math.round(wrapDepthPx * 0.35)}px ${Math.round(
+                        wrapDepthPx * 0.45
+                      )}px 0px rgba(30, 41, 59, 0.55))`
                     }}
                   >
-                    {renderCanvasFrontDesign(180)}
+                    <div
+                      className={`relative w-full h-full overflow-hidden bg-white pointer-events-none select-none ${
+                        shapeApplies ? currentShape.borderRadiusClass : 'rounded-xs'
+                      }`}
+                      style={{
+                        clipPath: shapeApplies ? currentShape.clipPathStyle : undefined,
+                        WebkitClipPath: shapeApplies ? currentShape.clipPathStyle : undefined,
+                        border: hasOuterFrame && frameColor ? `4px solid ${frameColor}` : undefined
+                      }}
+                    >
+                      {renderCanvasFrontDesign(180)}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              }}
             />
           );
         }
@@ -5250,6 +6022,21 @@ export const CanvasCustomizerPage: React.FC = () => {
           <div className="flex-1" onClick={() => setMenuOpen(false)} />
         </div>
       )}
+
+      {/* Select Size & Shape Modal */}
+      <SelectSizeShapeModal
+        isOpen={isSizeShapeModalOpen}
+        onClose={() => setIsSizeShapeModalOpen(false)}
+        material="canvas"
+        productId={selectedProductTypeId}
+        productName={selectedProductType.name}
+        currentShapeId={selectedShapeId}
+        currentSizeId={selectedSizeId}
+        isCustomSize={isCustomSize}
+        customWidth={customWidth}
+        customHeight={customHeight}
+        onSelectSizeAndShape={handleApplySizeAndShape}
+      />
     </div>
   );
 };

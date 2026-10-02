@@ -4,6 +4,8 @@
 // Image-first architecture: All options include local image examples
 // ============================================================================
 
+import { STANDARD_SHAPE_SIZES } from './productSizeShapeConfig';
+
 export type ToolbarTab = 
   | 'PRODUCTS' 
   | 'UPLOAD' 
@@ -153,7 +155,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 1,
     description: 'Vibrant direct UV sub-surface print on optical crystal acrylic.',
     defaultSizeOptionId: 'shape-rectangle-12x8',
-    defaultHardwareId: 'standoff-mounts',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-print'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-print'],
@@ -184,7 +186,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 3,
     description: 'Gallery wall display for striking home and office focal points.',
     defaultSizeOptionId: 'shape-rectangle-12x8',
-    defaultHardwareId: 'standoff-mounts',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: '5mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-wall-art'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-wall-art'],
@@ -215,7 +217,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 4,
     description: 'Multiple cherished photographs printed together on acrylic.',
     defaultSizeOptionId: 'shape-square-10x10',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-collage'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-collage'],
@@ -246,7 +248,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 2,
     description: 'Photograph split seamlessly across a dual-panel acrylic display.',
     defaultSizeOptionId: 'shape-landscape-12x8',
-    defaultHardwareId: 'standoff-mounts',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: '5mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-split'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-split'],
@@ -255,7 +257,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       upload: true,
       sizes: true,
       shapes: false,
-      layouts: true,
+      layouts: false,
       wrap: true,
       hardware: true,
       options: true
@@ -277,7 +279,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 4,
     description: 'Intricate mosaic photo grid arranged artistically on optical acrylic.',
     defaultSizeOptionId: 'shape-square-10x10',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-mosaic'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-mosaic'],
@@ -308,7 +310,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 1,
     description: 'Favorite song lyrics, wedding vows, or musical staves printed alongside your photo.',
     defaultSizeOptionId: 'shape-portrait-8x12',
-    defaultHardwareId: 'standoff-mounts',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-lyric'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-lyric'],
@@ -339,7 +341,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 1,
     description: 'Master digital painting portraiture printed in ultra-high depth on optical acrylic.',
     defaultSizeOptionId: 'shape-landscape-12x8',
-    defaultHardwareId: 'standoff-mounts',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: '5mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-digital'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-digital'],
@@ -370,7 +372,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 1,
     description: 'Inspirational quotes, affirmations, and custom typography on optical acrylic.',
     defaultSizeOptionId: 'shape-square-10x10',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-quotes'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-quotes'],
@@ -401,7 +403,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 1,
     description: 'Vintage transit bus-roll destination art printed on high-gloss acrylic panels.',
     defaultSizeOptionId: 'shape-portrait-8x12',
-    defaultHardwareId: 'standoff-mounts',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: '5mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-bus-roll'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-bus-roll'],
@@ -432,7 +434,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 1,
     description: 'Word cloud artwork and custom typographic silhouette on precision acrylic.',
     defaultSizeOptionId: 'shape-heart-12x12',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-word-art'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-word-art'],
@@ -465,6 +467,8 @@ export interface SizeOption {
   price: number;
   aspectClass: string;
   image: string;
+  panelsCount?: number;
+  arrangement?: string;
 }
 
 export const SIZE_OPTIONS: SizeOption[] = [
@@ -1159,6 +1163,13 @@ export interface HardwareOption {
 
 export const HARDWARE_OPTIONS: HardwareOption[] = [
   {
+    id: 'no-hooks',
+    name: 'Without Base / No Hooks',
+    price: 0,
+    description: 'Clean unmounted acrylic panel for custom installation.',
+    image: '/assets/customizer/acrylic/hardware/no-hooks.svg'
+  },
+  {
     id: 'hooks-hanging',
     name: 'Hooks for Hanging',
     price: 0,
@@ -1171,13 +1182,6 @@ export const HARDWARE_OPTIONS: HardwareOption[] = [
     price: 0,
     description: 'Pre-installed recessed French cleat wall hanger.',
     image: '/assets/customizer/acrylic/hardware/ready-to-hang.svg'
-  },
-  {
-    id: 'no-hooks',
-    name: 'Without Base / No Hooks',
-    price: 0,
-    description: 'Clean unmounted acrylic panel for custom installation.',
-    image: '/assets/customizer/acrylic/hardware/no-hooks.svg'
   },
   {
     id: 'sawtooth-hanger',
@@ -1220,12 +1224,12 @@ const HARDWARE_ALIAS_MAP: Record<string, string> = {
 };
 
 export function normalizeAcrylicHardwareId(hardwareId?: string | null): string {
-  if (!hardwareId) return 'hooks-hanging';
+  if (!hardwareId) return 'no-hooks';
   const mapped = HARDWARE_ALIAS_MAP[hardwareId] || hardwareId;
   if (HARDWARE_OPTIONS.some((h) => h.id === mapped)) {
     return mapped;
   }
-  return 'hooks-hanging';
+  return 'no-hooks';
 }
 
 export const normalizeHardwareId = normalizeAcrylicHardwareId;
@@ -2188,58 +2192,19 @@ export function getCompatibleShapesForProduct(productId: string): AcrylicShapeOp
 // ============================================================================
 
 export function getSizesForShape(shapeId: string, productTypeId: string = 'acrylic-photo-panel'): SizeOption[] {
-  const requiredSquareSizes: SizeOption[] = [
-    {
-      id: `${shapeId}-10x10`,
-      productTypeId,
-      category: 'SQUARE',
-      label: '10" × 10"',
-      dimensionsSummary: '10" × 10"',
-      widthInches: 10,
-      heightInches: 10,
-      price: 799,
-      aspectClass: 'aspect-square',
-      image: '/assets/customizer/acrylic/sizes/square.svg'
-    },
-    {
-      id: `${shapeId}-16x16`,
-      productTypeId,
-      category: 'SQUARE',
-      label: '16" × 16"',
-      dimensionsSummary: '16" × 16"',
-      widthInches: 16,
-      heightInches: 16,
-      price: 1799,
-      aspectClass: 'aspect-square',
-      image: '/assets/customizer/acrylic/sizes/square.svg'
-    },
-    {
-      id: `${shapeId}-18x18`,
-      productTypeId,
-      category: 'SQUARE',
-      label: '18" × 18"',
-      dimensionsSummary: '18" × 18"',
-      widthInches: 18,
-      heightInches: 18,
-      price: 2299,
-      aspectClass: 'aspect-square',
-      image: '/assets/customizer/acrylic/sizes/square.svg'
-    },
-    {
-      id: `${shapeId}-20x20`,
-      productTypeId,
-      category: 'SQUARE',
-      label: '20" × 20"',
-      dimensionsSummary: '20" × 20"',
-      widthInches: 20,
-      heightInches: 20,
-      price: 2799,
-      aspectClass: 'aspect-square',
-      image: '/assets/customizer/acrylic/sizes/square.svg'
-    }
-  ];
-
-  return requiredSquareSizes;
+  const rawSizes = STANDARD_SHAPE_SIZES[shapeId] || STANDARD_SHAPE_SIZES['shape-rectangle'] || STANDARD_SHAPE_SIZES['shape-square'];
+  return rawSizes.map((sz) => ({
+    id: `${shapeId}-${sz.width}x${sz.height}`,
+    productTypeId,
+    category: (shapeId === 'shape-square' ? 'SQUARE' : 'RECOMMENDED') as SizeCategory,
+    label: sz.label,
+    dimensionsSummary: sz.label,
+    widthInches: sz.width,
+    heightInches: sz.height,
+    price: sz.acrylicPrice,
+    aspectClass: sz.width === sz.height ? 'aspect-square' : sz.width > sz.height ? 'aspect-[16/10]' : 'aspect-[10/16]',
+    image: sz.width === sz.height ? '/assets/customizer/acrylic/sizes/square.svg' : '/assets/customizer/acrylic/sizes/panoramic.svg'
+  }));
 }
 
 
