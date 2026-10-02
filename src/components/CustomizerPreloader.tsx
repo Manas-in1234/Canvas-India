@@ -21,12 +21,9 @@ export const PRELOADER_MIN_MS = 4000;
  * the viewport (a transformed ancestor anywhere in the customizer tree would
  * otherwise re-anchor `position: fixed`).
  *
- * Plain full-screen white background matching the clip's own backdrop
- * exactly, with the clip centered on top at its normal size. A second,
- * moderately-scaled and blurred copy sits directly behind it as a soft,
- * contained glow - not stretched to fill the screen (that smeared the logo
- * into color blobs instead of reading as a glow), just enough blur radius
- * to add a bit of depth immediately around the sharp logo.
+ * The live page behind the overlay stays visible but lightly blurred
+ * (backdrop-blur, not a solid white fill), with the clip centered on top at
+ * its normal size plus a small contained glow behind it for depth.
  *
  * The video itself always plays at its native 1x rate (never sped up or
  * slowed down) - it's the `active` flag that is "synced to internet speed":
@@ -39,7 +36,7 @@ export const CustomizerPreloader: React.FC<CustomizerPreloaderProps> = ({ active
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-white animate-in fade-in duration-150"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/10 backdrop-blur-sm animate-in fade-in duration-150"
       role="status"
       aria-live="polite"
       aria-label="Loading"
