@@ -179,7 +179,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'sq-8x8',
     defaultShape: 'shape-rectangle',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
@@ -194,7 +194,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'sq-8x8',
     defaultShape: 'shape-circle',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ['shape-circle', ...ALL_CANVAS_SHAPE_IDS]
   },
@@ -209,7 +209,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'sq-8x8',
     defaultShape: 'shape-triangle',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ['shape-triangle', ...ALL_CANVAS_SHAPE_IDS]
   },
@@ -224,7 +224,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'sq-8x8',
     defaultShape: 'shape-heart',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ['shape-heart', ...ALL_CANVAS_SHAPE_IDS]
   },
@@ -239,7 +239,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'sq-8x8',
     defaultShape: 'shape-oval',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ['shape-oval', ...ALL_CANVAS_SHAPE_IDS]
   },
@@ -254,7 +254,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'rec-12x18',
     defaultShape: 'shape-rectangle',
     defaultLayoutId: 'layout-3-collage',
-    defaultHardwareId: 'sawtooth-hanger',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thick-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
@@ -269,7 +269,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'sq-12x12',
     defaultShape: 'shape-square',
     defaultLayoutId: 'layout-4-grid',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
@@ -284,7 +284,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'sq-8x8',
     defaultShape: 'shape-hexagon',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ['shape-hexagon', ...ALL_CANVAS_SHAPE_IDS]
   },
@@ -299,7 +299,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'pan-12x36',
     defaultShape: 'shape-landscape',
     defaultLayoutId: 'layout-3-collage',
-    defaultHardwareId: 'sawtooth-hanger',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thick-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
@@ -314,7 +314,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'sq-12x12',
     defaultShape: 'shape-square',
     defaultLayoutId: 'layout-4-grid',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
@@ -329,7 +329,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'sq-8x8',
     defaultShape: 'shape-portrait',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
@@ -344,7 +344,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'rec-12x18',
     defaultShape: 'shape-portrait',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'ready-to-hang',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thick-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
@@ -359,7 +359,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'sq-8x8',
     defaultShape: 'shape-square',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
@@ -374,7 +374,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'pan-12x36',
     defaultShape: 'shape-portrait',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
@@ -389,7 +389,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'rec-12x18',
     defaultShape: 'shape-portrait',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'hanging-canvas',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
@@ -404,7 +404,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'sq-12x12',
     defaultShape: 'shape-square',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
@@ -420,7 +420,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'sq-8x8',
     defaultShape: 'shape-rectangle',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
@@ -435,7 +435,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'sq-4x4',
     defaultShape: 'shape-square',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'easel-back',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thick-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
@@ -450,7 +450,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'sq-8x8',
     defaultShape: 'shape-rectangle',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
@@ -465,7 +465,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'pan-12x36',
     defaultShape: 'shape-landscape',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   },
@@ -480,7 +480,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultSizeOptionId: 'rec-12x18',
     defaultShape: 'shape-rectangle',
     defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'hooks-hanging',
+    defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thick-gallery',
     supportedShapeIds: ALL_CANVAS_SHAPE_IDS
   }
@@ -488,15 +488,10 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
 
 export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProductCapabilities {
   if (pt.capabilities) return pt.capabilities;
-  const isMultiPanel =
-    pt.panelsCount > 1 ||
-    pt.id === 'canvas-collage' ||
-    pt.id === 'canvas-mosaic' ||
-    pt.id === 'canvas-split' ||
-    pt.id === 'canvas-wall-art' ||
-    pt.id === 'canvas-display';
+  const isSplit = pt.id === 'canvas-split';
+  const isCollageOrMosaic = pt.id === 'canvas-collage' || pt.id === 'canvas-mosaic' || pt.id === 'canvas-wall-art' || pt.id === 'canvas-display';
   const isCustomGeometry = ['canvas-round', 'canvas-triangle', 'canvas-heart', 'canvas-oval', 'canvas-hexagon'].includes(pt.id);
-  const isTextArt = ['canvas-lyric', 'canvas-quotes', 'canvas-bus-roll'].includes(pt.id);
+  const isTextArt = ['canvas-lyric', 'canvas-quotes'].includes(pt.id);
   const isBanner = pt.id === 'canvas-banner';
   const isPanoramic = pt.id === 'canvas-panoramic';
 
@@ -504,8 +499,8 @@ export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProdu
     products: true,
     upload: true,
     sizes: true,
-    shapes: !isBanner && !isPanoramic && (pt.panelsCount === 1 || isCustomGeometry),
-    layouts: isMultiPanel || isTextArt,
+    shapes: !isBanner && !isPanoramic && !isSplit && !isCollageOrMosaic,
+    layouts: (isCollageOrMosaic || isTextArt) && !isSplit,
     wrap: !isBanner,
     hardware: true,
     options: true

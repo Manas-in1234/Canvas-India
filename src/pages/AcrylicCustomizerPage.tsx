@@ -96,10 +96,14 @@ import { CustomizerProductSelector } from '../components/CustomizerProductSelect
 import { CustomizerPreloader, PRELOADER_MIN_MS } from '../components/CustomizerPreloader';
 import {
   CustomizerHeader,
+  CustomizerSidebar,
+  CustomizerPanel,
   CustomizerTopToolbar,
   CustomizerPreviewArea
 } from '../components/CustomizerUiShell';
 import { ClipartItem } from '../data/acrylicClipartData';
+import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
+import { getProductSizeShapeOptions, getSizesForProductAndShape } from '../data/productSizeShapeConfig';
 
 // ============================================================================
 // COMPONENT TYPES
@@ -220,6 +224,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   const handleSelectTab = (tabId: ToolbarTab) => {
     setActiveTab(tabId);
+    if (tabId === 'SELECT SIZE') {
+      setIsSizeShapeModalOpen(true);
+    }
     beginPreloader();
     endPreloader(PRELOADER_MIN_MS);
   };
@@ -324,9 +331,21 @@ export const AcrylicCustomizerPage: React.FC = () => {
     return CURVED_GEOMETRIC_SHAPES.includes(selectedShapeId);
   }, [selectedShapeId]);
 
-  // Dynamic Shape-Specific Sizes
+  // Dynamic Shape-Specific Sizes (shape-aware pipeline from centralized productSizeShapeConfig)
   const shapeSizes = useMemo(() => {
-    return getSizesForShape(selectedShapeId, selectedProductTypeId);
+    const configSizes = getSizesForProductAndShape(selectedProductTypeId, selectedShapeId, 'acrylic');
+    return configSizes.map((opt) => ({
+      id: opt.id,
+      productTypeId: selectedProductTypeId,
+      category: (opt.category === 'MULTI_PANEL' ? 'RECTANGLE' : opt.category) as SizeCategory,
+      label: opt.label,
+      dimensionsSummary: opt.dimensionsSummary,
+      widthInches: opt.widthInches,
+      heightInches: opt.heightInches,
+      price: opt.price,
+      aspectClass: opt.aspectRatio >= 1.2 ? 'aspect-[16/10]' : opt.aspectRatio <= 0.8 ? 'aspect-[10/16]' : 'aspect-square',
+      image: opt.widthInches === opt.heightInches ? '/assets/customizer/acrylic/sizes/square.svg' : '/assets/customizer/acrylic/sizes/panoramic.svg'
+    }));
   }, [selectedShapeId, selectedProductTypeId]);
 
   // Selected Size Option
@@ -381,14 +400,30 @@ export const AcrylicCustomizerPage: React.FC = () => {
     return true;
   };
 
-  const currentSizeOption = useMemo(() => {
+  const currentSizeOption: SizeOption = useMemo(() => {
+    const matchedShapeSize = shapeSizes.find((s) => s.id === selectedSizeId);
+    if (matchedShapeSize) return matchedShapeSize;
+    const configOpt = getProductSizeShapeOptions(selectedProductTypeId, 'acrylic').find((o) => o.id === selectedSizeId);
+    if (configOpt) {
+      return {
+        id: configOpt.id,
+        productTypeId: selectedProductTypeId,
+        category: (configOpt.category === 'MULTI_PANEL' ? 'RECTANGLE' : configOpt.category) as SizeCategory,
+        label: configOpt.label,
+        dimensionsSummary: configOpt.dimensionsSummary,
+        widthInches: configOpt.widthInches,
+        heightInches: configOpt.heightInches,
+        price: configOpt.price,
+        aspectClass: configOpt.aspectRatio >= 1.2 ? 'aspect-[16/10]' : configOpt.aspectRatio <= 0.8 ? 'aspect-[10/16]' : 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/square.svg'
+      };
+    }
     return (
-      shapeSizes.find((s) => s.id === selectedSizeId) ||
       SIZE_OPTIONS.find((s) => s.id === selectedSizeId) ||
       shapeSizes[0] ||
       SIZE_OPTIONS[0]
     );
-  }, [selectedSizeId, shapeSizes]);
+  }, [selectedSizeId, shapeSizes, selectedProductTypeId]);
 
   // Layouts & Designs Subtabs — initialized from selectedProductType's defaultLayoutId
   const [layoutSubTab, setLayoutSubTab] = useState<'LAYOUTS' | 'DESIGNS'>('LAYOUTS');
@@ -439,12 +474,70 @@ export const AcrylicCustomizerPage: React.FC = () => {
     panelIndex: 0
   });
 
-  // Hardware & Finish States (All 7 restored hardware options available)
+  // Hardware & Finish States (Strictly defaults to "No Hooks" for all products)
   const [selectedHardwareId, setSelectedHardwareId] = useState<string>(() => {
     const initProdId = resolveProductTypeId(productId, catalogProduct);
     const initProd = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === initProdId);
-    return normalizeAcrylicHardwareId(initProd?.defaultHardwareId || 'hooks-hanging');
+    return normalizeAcrylicHardwareId(initProd?.defaultHardwareId || 'no-hooks');
   });
+
+  // Select Size & Shape Modal State
+  const [isSizeShapeModalOpen, setIsSizeShapeModalOpen] = useState<boolean>(false);
+
+  // Apply handler for SelectSizeShapeModal in Acrylic Customizer
+  const handleApplySizeAndShape = (config: {
+    shapeId: string;
+    sizeId: string;
+    widthInches: number;
+    heightInches: number;
+    price: number;
+    label: string;
+    isCustom?: boolean;
+    arrangement?: string;
+    panelsCount?: number;
+    panels?: any[];
+  }) => {
+    if (config.isCustom) {
+      setIsCustomSize(true);
+      setCustomWidth(config.widthInches);
+      setCustomHeight(config.heightInches);
+      setCustomWidthInput(String(config.widthInches));
+      setCustomHeightInput(String(config.heightInches));
+      setSelectedShapeId(config.shapeId);
+    } else {
+      setIsCustomSize(false);
+      setSelectedShapeId(config.shapeId);
+      setSelectedSizeId(config.sizeId);
+
+      if (config.arrangement) {
+        if (config.arrangement === 'threeCollage' || config.arrangement === 'threeSplit') {
+          setSelectedLayoutId('layout-3-split');
+        } else if (config.arrangement === 'fourGrid') {
+          setSelectedLayoutId('layout-4-grid');
+        } else if (config.arrangement === 'twoSplit') {
+          setSelectedLayoutId('layout-2-split');
+        }
+      }
+    }
+
+    // Customer photos remain attached and refitted cleanly
+    setPanelImages((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((k) => {
+        const idx = Number(k);
+        if (next[idx]?.imageUrl) {
+          next[idx] = {
+            ...next[idx],
+            scale: 1,
+            panX: 0,
+            panY: 0,
+            fitMode: 'contain'
+          };
+        }
+      });
+      return next;
+    });
+  };
 
   // Normalize hardware ID if any legacy alias is encountered
   useEffect(() => {
@@ -1666,13 +1759,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
     // 4. Apply product-specific default hardware and thickness (validated against compatible hardware)
     const allowedHardware = getCompatibleHardwareForProduct(pt.id);
-    const defaultHwNormalized = normalizeAcrylicHardwareId(pt.defaultHardwareId || allowedHardware[0]?.id || 'hooks-hanging');
+    const defaultHwNormalized = normalizeAcrylicHardwareId(pt.defaultHardwareId || 'no-hooks');
     if (allowedHardware.some((h) => h.id === defaultHwNormalized)) {
       setSelectedHardwareId(defaultHwNormalized);
     } else {
       const normalizedHw = normalizeAcrylicHardwareId(selectedHardwareId);
       if (!allowedHardware.some((h) => h.id === normalizedHw)) {
-        setSelectedHardwareId(allowedHardware[0]?.id || 'hooks-hanging');
+        setSelectedHardwareId(allowedHardware[0]?.id || 'no-hooks');
       } else if (normalizedHw !== selectedHardwareId) {
         setSelectedHardwareId(normalizedHw);
       }
@@ -1732,6 +1825,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
         setSelectedSizeId(targetSize.id);
       }
     }
+
+    // 8. Open the "Select size & shape" popup modal immediately
+    setIsSizeShapeModalOpen(true);
   };
 
   // Switch acrylic shape (updates workspace geometry, aspect ratio, clipping mask, and size orientation)
@@ -1774,6 +1870,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
       const targetSize = matchingOrientationSize || firstOrientationSize || newSizes[0];
       setSelectedSizeId(targetSize.id);
     }
+
+    // Open size & shape modal to confirm or pick size
+    setIsSizeShapeModalOpen(true);
   };
 
   // Switch layout preset (independent of product type and shape selection)
@@ -2247,6 +2346,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
     return frameObj?.borderCss || '';
   }, [selectedFrameId]);
 
+  const getAcrylicFilterCss = (filter?: string) => {
+    if (filter === 'sepia') return 'sepia(0.85) contrast(1.1) brightness(0.95)';
+    if (filter === 'grayscale') return 'grayscale(100%) contrast(1.05)';
+    return 'none';
+  };
+
   // ============================================================================
   // RENDER A SINGLE NORMALIZED LAYOUT SLOT (Inside the Outer Product Boundary)
   // ============================================================================
@@ -2257,12 +2362,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const isTargetEmpty = !frame.imageUrl;
     const isDragOverThisSlot = !isRoomView && dragOverPanelIndex === panelIdx;
 
-    const filterCss =
-      frame.filter === 'sepia'
-        ? 'sepia(0.85) contrast(1.1) brightness(0.95)'
-        : frame.filter === 'grayscale'
-        ? 'grayscale(100%) contrast(1.05)'
-        : 'none';
+    const filterCss = getAcrylicFilterCss(frame.filter);
 
     // In Room View, express panX/panY as a locked percentage of the main workspace slot so the crop stays 100% locked
     const mainSlotEl = frameElsRef.current[panelIdx];
@@ -2571,6 +2671,112 @@ export const AcrylicCustomizerPage: React.FC = () => {
       ? 'drop-shadow(0 28px 34px rgba(15, 23, 42, 0.36)) drop-shadow(0 12px 16px rgba(15, 23, 42, 0.22))'
       : 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.2)) drop-shadow(0 8px 10px rgba(0, 0, 0, 0.1))';
 
+    // SPLIT PRODUCT: 1 photo continuous split across physical optical acrylic panels
+    if (selectedProductTypeId === 'acrylic-split') {
+      const panelCount = (currentSizeOption as any).panelsCount || ((currentSizeOption as any).arrangement === 'twoSplit' ? 2 : (currentSizeOption as any).arrangement === 'fourGrid' ? 4 : 3);
+      const N = panelCount;
+      const masterImage = panelImages[0]?.imageUrl || Object.values(panelImages).find((p) => Boolean(p?.imageUrl))?.imageUrl || null;
+      const master = panelImages[0] || createDefaultPanelState(null);
+      const gapPx = isRoomView ? 8 : 14;
+
+      return (
+        <div
+          className={`relative w-full ${isRoomView ? 'h-full pointer-events-none select-none' : ''} flex items-center justify-center transition-all duration-300`}
+          style={
+            isRoomView
+              ? {
+                  width: '100%',
+                  height: '100%',
+                  gap: `${gapPx}px`
+                }
+              : {
+                  maxWidth: `${boxWidthPx}px`,
+                  aspectRatio: `${effectiveWidthInches} / ${effectiveHeightInches}`,
+                  gap: `${gapPx}px`,
+                  filter: outerFilter
+                }
+          }
+        >
+          {Array.from({ length: N }).map((_, i) => (
+            <div
+              key={i}
+              className={`relative h-full rounded-xl bg-white overflow-hidden select-none transition-all ${
+                !isRoomView && !masterImage ? 'cursor-pointer hover:border-[#0E4A93]' : ''
+              }`}
+              style={{
+                flex: 1,
+                border: '1.5px solid rgba(226, 232, 240, 0.9)',
+                boxShadow: isRoomView ? '0 12px 18px rgba(0,0,0,0.22)' : '0 8px 16px rgba(15, 23, 42, 0.15)'
+              }}
+              onClick={() => {
+                if (!isRoomView && !masterImage) singleFileInputRef.current?.click();
+              }}
+            >
+              {/* Continuous Sliced Photo */}
+              {masterImage ? (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: `calc(-${i * 100}% - ${i * gapPx}px)`,
+                    width: `calc(${N * 100}% + ${(N - 1) * gapPx}px)`,
+                    height: '100%',
+                    pointerEvents: 'none'
+                  }}
+                >
+                  <img
+                    src={masterImage}
+                    alt={`Split Acrylic Panel ${i + 1}`}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
+                      transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg)`,
+                      filter: getAcrylicFilterCss(master.filter)
+                    }}
+                    className="pointer-events-none"
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-stone-50 group-hover:bg-blue-50/40">
+                  <UploadCloud className="w-5 h-5 text-stone-400 mb-1" />
+                  <span className="text-[10px] font-bold text-stone-600">Panel {i + 1}</span>
+                </div>
+              )}
+
+              {/* Optical Acrylic Gloss Overlay */}
+              {selectedFinishId === 'high-gloss' && (
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-transparent pointer-events-none z-25" />
+              )}
+
+              {/* 4 Corner Standoff Mounts on Each Panel */}
+              {['top-left', 'top-right', 'bottom-left', 'bottom-right'].map((pos) => (
+                <div
+                  key={pos}
+                  className={`absolute w-3.5 h-3.5 rounded-full bg-gradient-to-br from-stone-200 to-stone-400 border border-stone-500 shadow-sm pointer-events-none z-30 ${
+                    pos === 'top-left'
+                      ? 'top-2 left-2'
+                      : pos === 'top-right'
+                      ? 'top-2 right-2'
+                      : pos === 'bottom-left'
+                      ? 'bottom-2 left-2'
+                      : 'bottom-2 right-2'
+                  }`}
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-stone-600 mx-auto mt-0.5" />
+                </div>
+              ))}
+
+              {/* Panel label tag */}
+              <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
+                Panel {i + 1} of {N}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
     return (
       <div
         className={`relative w-full ${isRoomView ? 'h-full pointer-events-none select-none' : ''} flex items-center justify-center transition-all duration-300`}
@@ -2651,8 +2857,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const items: { id: ToolbarTab; label: string; icon: React.ElementType; enabled: boolean }[] = [
       { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid, enabled: productCapabilities.products !== false },
       { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud, enabled: productCapabilities.upload !== false },
-      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: productCapabilities.sizes !== false },
       { id: 'SHAPES', label: 'SHAPES', icon: Shapes, enabled: productCapabilities.shapes === true },
+      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: productCapabilities.sizes !== false },
       { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: productCapabilities.layouts === true },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
       { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal, enabled: productCapabilities.hardware !== false },
@@ -2784,56 +2990,36 @@ export const AcrylicCustomizerPage: React.FC = () => {
       {/* MAIN CUSTOMIZER BODY */}
       <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden relative">
         
-        {/* LEFT PRIMARY TOOLBAR (Matches Canvas Customizer width md:w-20 md:min-w-[80px]) */}
-        <aside
-          aria-label="Customizer Tools"
-          className="bg-[#1E293B] text-stone-300 w-full md:w-20 md:min-w-[80px] shrink-0 flex flex-row md:flex-col items-center justify-around md:justify-start md:py-2 z-20 border-b md:border-b-0 md:border-r border-slate-700 overflow-x-auto md:overflow-y-auto no-scrollbar"
-        >
-          {toolbarItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id || (item.id === 'SHAPES' && activeTab === 'SHAPE');
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => handleSelectTab(item.id)}
-                className={`flex flex-col items-center justify-center w-full py-3 px-1 text-center transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-white text-[#0E4A93] shadow-md font-extrabold'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium'
-                }`}
-              >
-                <Icon className={`w-5 h-5 mb-1 stroke-[1.8] ${isActive ? 'text-[#0E4A93]' : 'text-slate-300'}`} />
-                <span className="text-[9px] leading-tight tracking-tight uppercase px-0.5">
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
-        </aside>
+        {/* COLUMN 1: LEFT VERTICAL SIDEBAR */}
+        <CustomizerSidebar
+          items={toolbarItems}
+          activeTab={activeTab === 'SHAPE' ? 'SHAPES' : activeTab}
+          onSelectTab={handleSelectTab}
+        />
 
-        {/* LEFT SECONDARY DRAWER CONTENT (Matches Canvas Customizer width md:w-[400px] lg:w-[440px] with internal scroll) */}
-        <section className="w-full md:w-[400px] lg:w-[440px] bg-white border-b md:border-b-0 md:border-r border-stone-200 flex flex-col z-10 shrink-0 h-72 md:h-full min-h-0 overflow-hidden shadow-sm">
-          
-          {/* Panel Header */}
-          <div className="p-3.5 border-b border-stone-200 bg-stone-50/80 flex items-center justify-between shrink-0">
-            <h2 className="text-xs font-black tracking-wider text-stone-800 uppercase flex items-center gap-1.5">
-              <span>
-                {activeTab === 'SHAPES' || activeTab === 'SHAPE'
-                  ? 'SHAPES'
-                  : activeTab}
-              </span>
-            </h2>
-            <span className="text-[11px] font-semibold text-stone-500">
-              {activeTab === 'PRODUCTS' && `${ACRYLIC_PRODUCT_TYPES.length} Styles`}
-              {(activeTab === 'SHAPES' || activeTab === 'SHAPE') && `${compatibleShapes.length} Shapes`}
-              {activeTab === 'SELECT SIZE' && `${shapeSizes.length + 1} Options`}
-              {activeTab === 'LAYOUTS & DESIGNS' && (layoutSubTab === 'LAYOUTS' ? '7 Layouts' : '11 Categories')}
-              {activeTab === 'WRAP & BORDER' && '5 Options'}
-              {activeTab === 'HARDWARE & FINISH' && `${compatibleHardware.length} Hardware`}
-              {activeTab === 'OPTIONS' && 'Specifications'}
-            </span>
-          </div>
+        {/* COLUMN 2: CONFIGURATION PANEL */}
+        <CustomizerPanel
+          title={activeTab === 'SHAPES' || activeTab === 'SHAPE' ? 'SHAPES' : activeTab}
+          metaText={
+            activeTab === 'PRODUCTS'
+              ? `${ACRYLIC_PRODUCT_TYPES.length} Styles`
+              : activeTab === 'UPLOAD'
+              ? `${uploadedPhotos.length} Photos`
+              : activeTab === 'SHAPES' || activeTab === 'SHAPE'
+              ? `${compatibleShapes.length} Shapes`
+              : activeTab === 'SELECT SIZE'
+              ? `${shapeSizes.length + 1} Options`
+              : activeTab === 'LAYOUTS & DESIGNS'
+              ? layoutSubTab === 'LAYOUTS'
+                ? '7 Layouts'
+                : '11 Categories'
+              : activeTab === 'WRAP & BORDER'
+              ? '5 Options'
+              : activeTab === 'HARDWARE & FINISH'
+              ? `${compatibleHardware.length} Hardware`
+              : 'Specifications'
+          }
+        >
 
           {/* TAB 1: PRODUCTS */}
           {activeTab === 'PRODUCTS' && (
@@ -2886,8 +3072,15 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </button>
               </div>
 
+              {/* Split Acrylic notice */}
+              {selectedProductTypeId === 'acrylic-split' && (
+                <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 text-xs font-semibold text-[#0E4A93]">
+                  Upload 1 photo — it is divided seamlessly across the physical acrylic panels.
+                </div>
+              )}
+
               {/* Multi-slot assignment selector */}
-              {layoutSlots.length > 1 && (
+              {layoutSlots.length > 1 && selectedProductTypeId !== 'acrylic-split' && (
                 <div className="p-2.5 bg-stone-100 rounded-xl space-y-1.5">
                   <div className="text-[11px] font-bold text-stone-700">Assign to Slot:</div>
                   <div className="flex gap-1.5">
@@ -3081,9 +3274,81 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 3: SELECT SIZE */}
+          {/* TAB 3: SHAPES (Product-Specific Compatible Shapes) */}
+          {(activeTab === 'SHAPES' || activeTab === 'SHAPE') && (
+            <div className="flex-1 min-h-0 p-3.5 space-y-3 overflow-y-auto">
+              <div>
+                <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-0.5">
+                  Shapes for {selectedProductType.name}
+                </h3>
+                <p className="text-[10px] text-stone-500">
+                  Showing {compatibleShapes.length} compatible laser-cut shapes for this product.
+                </p>
+              </div>
+
+              {/* Grid of Product-Compatible Shape Cards with SVG Acrylic Shape Previews */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {compatibleShapes.map((shape) => {
+                  const isSelected = selectedShapeId === shape.id;
+
+                  return (
+                    <div
+                      key={shape.id}
+                      onClick={() => handleSelectShape(shape.id)}
+                      className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
+                        isSelected
+                          ? 'border-[#0E4A93] bg-blue-50/25 shadow-sm ring-1 ring-[#0E4A93]/20'
+                          : 'border-stone-200 hover:border-stone-400 bg-white'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      )}
+
+                      <div className="w-full h-16 bg-stone-50/90 flex items-center justify-center p-1.5 overflow-hidden relative">
+                        <div className="w-full h-full flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                          <AcrylicShapePreview
+                            shape={shape.shapeType}
+                            selected={isSelected}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="p-2 bg-white border-t border-stone-100">
+                        <div className="text-xs font-bold text-stone-900 leading-tight truncate">
+                          {shape.name}
+                        </div>
+                        <div className="text-[11px] font-medium text-stone-500 mt-0.5">
+                          {shape.aspectRatio}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: SELECT SIZE */}
           {activeTab === 'SELECT SIZE' && (
             <div className="flex-1 min-h-0 p-3.5 space-y-3.5 overflow-y-auto">
+              {/* Quick Trigger for the Select Size & Shape Modal */}
+              <div className="flex items-center justify-between p-3.5 bg-blue-50/80 rounded-xl border border-blue-200">
+                <div className="text-xs">
+                  <span className="font-black text-[#0E4A93] uppercase tracking-wide">Select Size & Shape</span>
+                  <p className="text-stone-600 text-[11px] mt-0.5">Explore recommended sizes, shapes, and multi-piece arrangements</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSizeShapeModalOpen(true)}
+                  className="px-3.5 py-1.5 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg transition-colors shadow-xs cursor-pointer"
+                >
+                  Open Popup
+                </button>
+              </div>
+
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-stone-800 uppercase tracking-wider">
                   {currentShape.name} Sizes
@@ -3093,7 +3358,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {shapeSizes.map((size) => {
                   const isSelected = !isCustomSize && selectedSizeId === size.id;
                   return (
@@ -3262,63 +3527,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 >
                   Apply Custom Size ({customWidth}&quot; × {customHeight}&quot;)
                 </button>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: SHAPES (Product-Specific Compatible Shapes) */}
-          {(activeTab === 'SHAPES' || activeTab === 'SHAPE') && (
-            <div className="flex-1 min-h-0 p-3.5 space-y-3 overflow-y-auto">
-              <div>
-                <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-0.5">
-                  Shapes for {selectedProductType.name}
-                </h3>
-                <p className="text-[10px] text-stone-500">
-                  Showing {compatibleShapes.length} compatible laser-cut shapes for this product.
-                </p>
-              </div>
-
-              {/* Grid of Product-Compatible Shape Cards with SVG Acrylic Shape Previews */}
-              <div className="grid grid-cols-2 gap-2.5">
-                {compatibleShapes.map((shape) => {
-                  const isSelected = selectedShapeId === shape.id;
-
-                  return (
-                    <div
-                      key={shape.id}
-                      onClick={() => handleSelectShape(shape.id)}
-                      className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
-                        isSelected
-                          ? 'border-[#0E4A93] bg-blue-50/25 shadow-sm ring-1 ring-[#0E4A93]/20'
-                          : 'border-stone-200 hover:border-stone-400 bg-white'
-                      }`}
-                    >
-                      {isSelected && (
-                        <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
-                          <Check className="w-3.5 h-3.5 stroke-[3]" />
-                        </div>
-                      )}
-
-                      <div className="w-full h-20 bg-stone-50/90 flex items-center justify-center p-2 overflow-hidden relative">
-                        <div className="w-full h-full flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                          <AcrylicShapePreview
-                            shape={shape.shapeType}
-                            selected={isSelected}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="p-2 bg-white border-t border-stone-100">
-                        <div className="text-xs font-bold text-stone-900 leading-tight truncate">
-                          {shape.name}
-                        </div>
-                        <div className="text-[11px] font-medium text-stone-500 mt-0.5">
-                          {shape.aspectRatio}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
             </div>
           )}
@@ -3535,7 +3743,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 <div className="text-xs font-black text-stone-800 uppercase tracking-wider mb-2">
                   Wrap & Edge Finish
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {ACRYLIC_WRAP_OPTIONS.map((wrap) => {
                     const isSelected = selectedEdgeWrapId === wrap.id;
                     return (
@@ -3554,7 +3762,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           </div>
                         )}
 
-                        <div className="w-full h-16 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
+                        <div className="w-full h-14 bg-stone-50 flex items-center justify-center p-1.5 overflow-hidden relative">
                           <img 
                             src={wrap.image} 
                             alt={wrap.name} 
@@ -3563,10 +3771,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
                         </div>
 
                         <div className="p-1.5 bg-white border-t border-stone-100 text-center">
-                          <div className="text-xs font-bold text-stone-900 leading-tight">
+                          <div className="text-xs font-bold text-stone-900 leading-tight truncate">
                             {wrap.name}
                           </div>
-                          <div className="text-[10px] font-semibold text-stone-500 mt-0.5">
+                          <div className="text-[10px] font-semibold text-stone-500 mt-0.5 truncate">
                             {wrap.price === 0 ? 'Included' : `+₹${wrap.price}`}
                           </div>
                         </div>
@@ -3580,19 +3788,24 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 <div className="text-xs font-black text-stone-800 uppercase tracking-wider mb-2">
                   Inner Border Width
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {ACRYLIC_BORDER_WIDTHS.map((border) => {
                     const isSelected = selectedBorderWidthId === border.id;
                     return (
                       <div
                         key={border.id}
                         onClick={() => setSelectedBorderWidthId(border.id)}
-                        className={`p-2 rounded-xl border-2 transition-all cursor-pointer text-center ${
+                        className={`p-2 rounded-xl border-2 transition-all cursor-pointer text-center relative ${
                           isSelected
-                            ? 'border-[#0E4A93] bg-blue-50/30'
+                            ? 'border-[#0E4A93] bg-blue-50/30 ring-1 ring-[#0E4A93]/20 shadow-xs'
                             : 'border-stone-200 hover:border-stone-300 bg-white'
                         }`}
                       >
+                        {isSelected && (
+                          <div className="absolute top-1 right-1 w-4 h-4 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-xs">
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          </div>
+                        )}
                         <div className="text-xs font-bold text-stone-900">{border.label}</div>
                         <div className="text-[10px] text-stone-500">{border.widthPx === 0 ? 'No Border' : `${border.widthPx}px`}</div>
                       </div>
@@ -3632,7 +3845,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 <div className="text-xs font-black text-stone-800 uppercase tracking-wider mb-2">
                   Hardware & Hanging
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {HARDWARE_OPTIONS.map((hw) => {
                     const isSelected = selectedHardwareId === hw.id;
                     return (
@@ -3651,7 +3864,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           </div>
                         )}
 
-                        <div className="w-full h-16 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
+                        <div className="w-full h-14 bg-stone-50 flex items-center justify-center p-1.5 overflow-hidden relative">
                           <img 
                             src={hw.image} 
                             alt={hw.name} 
@@ -3660,10 +3873,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
                         </div>
 
                         <div className="p-1.5 bg-white border-t border-stone-100 text-center">
-                          <div className="text-xs font-bold text-stone-900 leading-tight">
+                          <div className="text-xs font-bold text-stone-900 leading-tight truncate">
                             {hw.name}
                           </div>
-                          <div className="text-[10px] font-semibold text-stone-500 mt-0.5">
+                          <div className="text-[10px] font-semibold text-stone-500 mt-0.5 truncate">
                             {hw.price === 0 ? 'Included' : `+₹${hw.price}`}
                           </div>
                         </div>
@@ -3677,7 +3890,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 <div className="text-xs font-black text-stone-800 uppercase tracking-wider mb-2">
                   Surface Finish
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {FINISH_OPTIONS.map((fin) => {
                     const isSelected = selectedFinishId === fin.id;
                     return (
@@ -3696,7 +3909,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           </div>
                         )}
 
-                        <div className="w-full h-16 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
+                        <div className="w-full h-14 bg-stone-50 flex items-center justify-center p-1.5 overflow-hidden relative">
                           <img 
                             src={fin.image} 
                             alt={fin.name} 
@@ -3705,10 +3918,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
                         </div>
 
                         <div className="p-1.5 bg-white border-t border-stone-100 text-center">
-                          <div className="text-xs font-bold text-stone-900 leading-tight">
+                          <div className="text-xs font-bold text-stone-900 leading-tight truncate">
                             {fin.name}
                           </div>
-                          <div className="text-[10px] font-semibold text-stone-500 mt-0.5">
+                          <div className="text-[10px] font-semibold text-stone-500 mt-0.5 truncate">
                             {fin.price === 0 ? 'Included' : `+₹${fin.price}`}
                           </div>
                         </div>
@@ -3722,19 +3935,24 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 <div className="text-xs font-black text-stone-800 uppercase tracking-wider mb-2">
                   Acrylic Thickness
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {THICKNESS_OPTIONS.map((thick) => {
                     const isSelected = selectedThicknessId === thick.id;
                     return (
                       <div
                         key={thick.id}
                         onClick={() => setSelectedThicknessId(thick.id)}
-                        className={`p-2 rounded-xl border-2 transition-all cursor-pointer text-center ${
+                        className={`p-2 rounded-xl border-2 transition-all cursor-pointer text-center relative ${
                           isSelected
-                            ? 'border-[#0E4A93] bg-blue-50/30 shadow-xs'
+                            ? 'border-[#0E4A93] bg-blue-50/30 shadow-xs ring-1 ring-[#0E4A93]/20'
                             : 'border-stone-200 hover:border-stone-300 bg-white'
                         }`}
                       >
+                        {isSelected && (
+                          <div className="absolute top-1 right-1 w-4 h-4 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-xs">
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          </div>
+                        )}
                         <div className="text-xs font-bold text-stone-900">{thick.label}</div>
                         <div className="text-[10px] font-semibold text-stone-500">
                           {thick.price === 0 ? 'Included' : `+₹${thick.price}`}
@@ -3754,7 +3972,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 <div className="text-xs font-black text-stone-800 uppercase tracking-wider mb-2">
                   Frame Moulding
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {FRAME_OPTIONS.map((frm) => {
                     const isSelected = selectedFrameId === frm.id;
                     return (
@@ -3773,7 +3991,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                           </div>
                         )}
 
-                        <div className="w-full h-16 bg-stone-50 flex items-center justify-center p-2 overflow-hidden relative">
+                        <div className="w-full h-14 bg-stone-50 flex items-center justify-center p-1.5 overflow-hidden relative">
                           <img 
                             src={frm.image} 
                             alt={frm.name} 
@@ -3782,10 +4000,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
                         </div>
 
                         <div className="p-1.5 bg-white border-t border-stone-100 text-center">
-                          <div className="text-xs font-bold text-stone-900 leading-tight">
+                          <div className="text-xs font-bold text-stone-900 leading-tight truncate">
                             {frm.name}
                           </div>
-                          <div className="text-[10px] font-semibold text-stone-500 mt-0.5">
+                          <div className="text-[10px] font-semibold text-stone-500 mt-0.5 truncate">
                             {frm.price === 0 ? 'Included' : `+₹${frm.price}`}
                           </div>
                         </div>
@@ -3848,7 +4066,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           )}
 
-        </section>
+        </CustomizerPanel>
 
         {/* CENTER / MAIN WORKSPACE (Shared Customizer Workspace Shell) */}
         <main className="flex-1 flex flex-col bg-[#E2E8F0]/60 relative overflow-hidden">
@@ -3919,7 +4137,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
             extraControls={
               activeFrameState.imageUrl ? (
                 <>
-                  {layoutSlots.length > 1 && (
+                  {layoutSlots.length > 1 && selectedProductTypeId !== 'acrylic-split' && (
                     <div className="text-[11px] font-bold text-stone-700 pr-1.5 border-r border-stone-200">
                       Slot {activePanelIndex + 1}
                     </div>
@@ -3990,7 +4208,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     {compatibleHardware.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware'}
                   </strong>
                 </span>
-                {layoutSlots.length > 1 && (
+                {layoutSlots.length > 1 && selectedProductTypeId !== 'acrylic-split' && (
                   <>
                     <span>•</span>
                     <span className="text-[#0E4A93] font-extrabold">Slot {activePanelIndex + 1}</span>
@@ -4037,6 +4255,21 @@ export const AcrylicCustomizerPage: React.FC = () => {
         initialRoomState={roomViewState}
         onRoomStateChange={setRoomViewState}
         renderProduct={(isRoomView) => renderProductCanvas(isRoomView)}
+      />
+
+      {/* Select Size & Shape Modal */}
+      <SelectSizeShapeModal
+        isOpen={isSizeShapeModalOpen}
+        onClose={() => setIsSizeShapeModalOpen(false)}
+        material="acrylic"
+        productId={selectedProductTypeId}
+        productName={selectedProductType.name}
+        currentShapeId={selectedShapeId}
+        currentSizeId={selectedSizeId}
+        isCustomSize={isCustomSize}
+        customWidth={customWidth}
+        customHeight={customHeight}
+        onSelectSizeAndShape={handleApplySizeAndShape}
       />
 
     </div>
