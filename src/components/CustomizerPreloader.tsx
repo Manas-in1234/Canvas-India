@@ -46,16 +46,22 @@ export const CustomizerPreloader: React.FC<CustomizerPreloaderProps> = ({ active
     >
       <div className="relative flex items-center justify-center">
         {/* Soft contained glow - same clip, scaled up slightly and blurred,
-            sitting directly behind the sharp copy */}
-        <video
-          src="/assets/preloader/customizer-preloader.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          className="absolute inset-0 w-64 h-64 sm:w-80 sm:h-80 object-contain scale-125 blur-xl opacity-60"
-        />
+            sitting directly behind the sharp copy. The blur filter is on this
+            wrapping div, not the <video> itself: CSS filter: blur() applied
+            directly to a playing video element silently fails to render in
+            some browsers (the hardware video-decode compositing path bypasses
+            it), but wrapping it in a blurred div works reliably everywhere. */}
+        <div className="absolute inset-0 scale-125 blur-xl opacity-60 overflow-hidden">
+          <video
+            src="/assets/preloader/customizer-preloader.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="w-64 h-64 sm:w-80 sm:h-80 object-contain"
+          />
+        </div>
         <video
           src="/assets/preloader/customizer-preloader.mp4"
           autoPlay
