@@ -150,7 +150,7 @@ export const RootLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFDF9] text-stone-900 flex flex-col font-manrope selection:bg-[var(--accent-bg)] selection:text-[var(--accent)] pb-14 sm:pb-0">
+    <div className="min-h-screen bg-[#FFFDF9] text-stone-900 flex flex-col font-manrope selection:bg-[var(--accent-bg)] selection:text-[var(--accent)] pb-[calc(4rem_+_env(safe-area-inset-bottom))] sm:pb-0">
 
       {/* Royal Blue Header + White Category Nav */}
       <Header
@@ -178,8 +178,16 @@ export const RootLayout: React.FC = () => {
         onOpenAccount={() => navigate('/account')}
       />
 
-      {/* MOBILE BOTTOM NAVIGATION BAR */}
-      <nav aria-label="Mobile Navigation" className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-stone-200/90 shadow-lg px-2 py-1.5 flex items-center justify-around">
+      {/* MOBILE BOTTOM NAVIGATION BAR - padding-bottom adds the device's own
+          safe-area inset (notch/gesture-bar/home-indicator) on top of the
+          bar's own content height, so it's never cramped under the OS UI on
+          any phone. The page's own bottom padding (below) mirrors the same
+          calc so content clears the bar by the same amount everywhere. */}
+      <nav
+        aria-label="Mobile Navigation"
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-stone-200/90 shadow-lg px-2 pt-1.5 flex items-center justify-around"
+        style={{ paddingBottom: 'calc(0.375rem + env(safe-area-inset-bottom))' }}
+      >
         <Link
           to="/"
           className={`flex flex-col items-center gap-0.5 text-[10px] font-semibold py-1 px-2 cursor-pointer ${pathname === '/' ? 'text-[#0E4A93]' : 'text-stone-600 hover:text-[#0E4A93]'}`}
