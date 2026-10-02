@@ -120,6 +120,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       href: '#materials',
       hasDropdown: true,
       items: [
+        { name: 'Yoga & Fitness Gear', desc: 'Eco-friendly cork yoga mats, bricks & wellness products' },
         { name: 'Archon Cork Board', desc: 'High-density self-healing bulletin board' },
         { name: 'Custom Cork Display', desc: 'Geometric 3D acoustic wall cladding tiles' },
         { name: 'Framed Cork Pinboards', desc: 'Anodized aluminum and hardwood framed' },

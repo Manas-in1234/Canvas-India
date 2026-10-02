@@ -27,6 +27,11 @@ import {
   Activity,
   LogOut,
   MapPin,
+  Mountain,
+  Globe,
+  PenTool,
+  Quote,
+  Shapes,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Product } from '../types';
@@ -75,39 +80,11 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     description: 'High-gloss 5mm crystal clear acrylic glass prints',
   },
   {
-    name: 'Posters & Custom Wall Graphics',
-    slug: 'posters',
-    route: '/posters',
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
-    description: 'Custom posters and commercial wall graphics',
-  },
-  {
     name: 'Cork',
     slug: 'cork',
     route: '/cork',
     image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=400&auto=format&fit=crop&q=80',
     description: 'Natural 8mm eco-friendly cork pinboards',
-  },
-  {
-    name: 'Yoga & Fitness',
-    slug: 'yoga-fitness',
-    route: '/yoga-fitness',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&auto=format&fit=crop&q=80',
-    description: 'Customized yoga mats and wellness gear',
-  },
-  {
-    name: 'Home Décor',
-    slug: 'home-decor',
-    route: '/home-decor',
-    image: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=400&auto=format&fit=crop&q=80',
-    description: 'Curated decorative and interior wall collections',
-  },
-  {
-    name: 'Custom Prints',
-    slug: 'custom-prints',
-    route: '/custom-prints',
-    image: 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=400&auto=format&fit=crop&q=80',
-    description: 'Personalized prints with custom sizes & photos',
   },
   {
     name: 'Gifts & Occasions',
@@ -129,13 +106,6 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     route: '/corporate-orders',
     image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80',
     description: 'Office branding, corporate kits & GST billing',
-  },
-  {
-    name: 'Designers & Architects',
-    slug: 'designers-architects',
-    route: '/designers-architects',
-    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&auto=format&fit=crop&q=80',
-    description: 'Turnkey interior wall solutions for trade professionals',
   },
 ];
 
@@ -172,6 +142,12 @@ export const Header: React.FC<HeaderProps> = ({
     if (path === '/corporate-orders' || path === '/corporate') return 'corporate-orders';
     if (path === '/bulk-order' || path === '/bulk-orders') return 'bulk-order';
     if (path === '/designers-architects') return 'designers-architects';
+    if (path === '/devotional-art') return 'devotional-art';
+    if (path === '/scenery-landscape-art') return 'scenery-landscape-art';
+    if (path === '/tribal-ethnic-art') return 'tribal-ethnic-art';
+    if (path === '/line-art') return 'line-art';
+    if (path === '/motivational-posters') return 'motivational-posters';
+    if (path === '/cork-art-patterns') return 'cork-art-patterns';
     return '';
   }, [location.pathname]);
   const [activeMegaMenu, setActiveMegaMenu] = useState<string | null>(null);
@@ -192,9 +168,19 @@ export const Header: React.FC<HeaderProps> = ({
   const [allCatMenuPos, setAllCatMenuPos] = useState<{ top: number; left: number } | null>(null);
   const [megaMenuPos, setMegaMenuPos] = useState<{ top: number; left: number } | null>(null);
 
-  // Category bar shopping categories (Excludes Bulk Order, which sits in the main header after Cart)
+  // Category bar shopping categories (Excludes Bulk Order, Posters, Custom Prints, Home Decor, and Yoga & Fitness which sits inside Cork)
   const CATEGORY_BAR_ITEMS = useMemo(() => {
-    return PRIMARY_CATEGORIES.filter((cat) => cat.slug !== 'bulk-order' && cat.slug !== 'posters' && cat.slug !== 'custom-prints');
+    const excluded = new Set([
+      // Print World catalogue categories live in the "Shop by Category"
+      // homepage section, not the navbar
+      'devotional-art',
+      'scenery-landscape-art',
+      'tribal-ethnic-art',
+      'line-art',
+      'motivational-posters',
+      'cork-art-patterns',
+    ]);
+    return PRIMARY_CATEGORIES.filter((cat) => !excluded.has(cat.slug));
   }, []);
 
   // Close open dropdown menus on scroll or resize to prevent detached floating elements
@@ -225,6 +211,12 @@ export const Header: React.FC<HeaderProps> = ({
       case 'Image': return ImageIcon;
       case 'Activity': return Activity;
       case 'Home': return HomeIcon;
+      case 'Sparkles': return Sparkles;
+      case 'Mountain': return Mountain;
+      case 'Globe': return Globe;
+      case 'PenTool': return PenTool;
+      case 'Quote': return Quote;
+      case 'Shapes': return Shapes;
       default: return Sliders;
     }
   };
@@ -356,6 +348,7 @@ export const Header: React.FC<HeaderProps> = ({
       case 'palette': return <Palette className="w-3.5 h-3.5 text-[#0E4A93]" />;
       case 'layers': return <Layers className="w-3.5 h-3.5 text-[#0E4A93]" />;
       case 'circleDot': return <CircleDot className="w-3.5 h-3.5 text-[#0E4A93]" />;
+      case 'activity': return <Activity className="w-3.5 h-3.5 text-[#0E4A93]" />;
       case 'printer': return <Printer className="w-3.5 h-3.5 text-[#0E4A93]" />;
       case 'package': return <Package className="w-3.5 h-3.5 text-[#0E4A93]" />;
       case 'building': return <Building2 className="w-3.5 h-3.5 text-[#0E4A93]" />;
@@ -721,15 +714,15 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* ========================================================================= */}
       {/* LAYER 3: WHITE CATEGORY NAVIGATION BAR (52–60px High)                     */}
-      {/* With "All Categories ↓" at far left and 7 primary categories               */}
+      {/* With "All Categories ↓" at far left and primary categories               */}
       {/* ========================================================================= */}
-      <div className="hidden lg:block w-full bg-white border-b border-stone-200 shadow-2xs">
+      <div className="hidden lg:block w-full bg-white border-b border-stone-200/80 shadow-2xs">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10">
-          <nav className="flex items-center justify-center h-[54px] w-full text-xs font-semibold text-[#111827]">
+          <nav className="flex items-center justify-center h-[50px] w-full text-xs font-semibold text-[#111827]">
             
-            <div className="flex items-center gap-1 xl:gap-2 overflow-x-auto scrollbar-none py-1">
+            <div className="flex items-center justify-center gap-1.5 sm:gap-2 lg:gap-3 xl:gap-4 overflow-x-auto scrollbar-none py-1">
               
-              {/* 1. "ALL CATEGORIES" DROPDOWN BUTTON (Far Left) */}
+              {/* 1. "ALL CATEGORIES" DROPDOWN BUTTON */}
               <div
                 ref={allCatRef}
                 className="relative shrink-0"
@@ -737,17 +730,17 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   type="button"
                   onClick={handleToggleAllCategories}
-                  className={`px-3.5 py-2 font-bold rounded-lg transition-colors flex items-center gap-2 cursor-pointer whitespace-nowrap shadow-2xs border ${
+                  className={`px-3 py-1.5 font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap text-xs border ${
                     allCategoriesOpen 
-                      ? 'bg-stone-200 text-[#0E4A93] border-blue-300/70' 
-                      : 'bg-stone-100 hover:bg-stone-200/90 text-[#0E4A93] border-stone-200/80'
+                      ? 'bg-[#0E4A93] text-white border-[#0E4A93] shadow-xs' 
+                      : 'bg-stone-100/90 hover:bg-stone-200/80 text-[#0E4A93] border-stone-200/70'
                   }`}
                   aria-expanded={allCategoriesOpen}
                   aria-haspopup="true"
                 >
-                  <Grid className="w-4 h-4 text-[#0E4A93]" />
+                  <Grid className={`w-3.5 h-3.5 ${allCategoriesOpen ? 'text-white' : 'text-[#0E4A93]'}`} />
                   <span>Print Categories</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-[#0E4A93] transition-transform duration-200 ${allCategoriesOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${allCategoriesOpen ? 'rotate-180 text-white' : 'text-[#0E4A93]'}`} />
                 </button>
 
                 {/* All Categories Dropdown Menu */}
@@ -763,7 +756,7 @@ export const Header: React.FC<HeaderProps> = ({
                         <Grid className="w-3.5 h-3.5 text-[#0E4A93]" />
                         <span>Print Categories</span>
                       </span>
-                      <span className="text-[10px] font-semibold text-stone-400">11 Categories</span>
+                      <span className="text-[10px] font-semibold text-stone-400">{ALL_CATEGORIES_MENU_ITEMS.length} Categories</span>
                     </div>
                     
                     <div className="py-1 space-y-0.5 max-h-[420px] overflow-y-auto scrollbar-none">
@@ -813,11 +806,8 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
 
-              {/* Separator */}
-              <div className="h-5 w-[1px] bg-stone-200 mx-1" />
-
-              {/* 2. SHOPPING CATEGORIES (Exact 9 Categories, Bulk Order moved to main header) */}
-              {CATEGORY_BAR_ITEMS.map((cat, idx) => {
+              {/* 2. SHOPPING CATEGORIES */}
+              {CATEGORY_BAR_ITEMS.map((cat) => {
                 const Icon = getCategoryIcon(cat.iconName);
                 const isActive = activeNav === cat.slug;
                 const isMenuOpen = activeMegaMenu === cat.slug;
@@ -825,10 +815,6 @@ export const Header: React.FC<HeaderProps> = ({
 
                 return (
                   <React.Fragment key={cat.slug}>
-                    {idx > 0 && (
-                      <div className="hidden xl:block h-4 w-[1px] bg-stone-200/80 shrink-0" />
-                    )}
-
                     <div
                       data-mega-menu-trigger={cat.slug}
                       className="relative"
@@ -841,15 +827,15 @@ export const Header: React.FC<HeaderProps> = ({
                       <button
                         type="button"
                         onClick={() => handleNavClick(cat.slug)}
-                        className={`px-2 xl:px-2.5 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap border ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap border ${
                           isActive
-                            ? 'text-[#0E4A93] font-bold bg-blue-50/70 border-blue-200/60 shadow-2xs'
+                            ? 'text-[#0E4A93] font-bold bg-blue-50/80 border-blue-200/60 shadow-2xs'
                             : isMenuOpen
-                              ? 'text-[#0E4A93] font-bold bg-stone-100 border-transparent'
-                              : 'text-[#111827] hover:text-[#0E4A93] hover:bg-stone-50 font-semibold border-transparent'
+                              ? 'text-[#0E4A93] font-bold bg-stone-100/80 border-stone-200/60'
+                              : 'text-stone-700 hover:text-[#0E4A93] hover:bg-stone-100/70 border-transparent'
                         }`}
                       >
-                        <Icon className={`w-3.5 h-3.5 ${
+                        <Icon className={`w-3.5 h-3.5 transition-colors ${
                           isActive || isMenuOpen ? 'text-[#0E4A93]' : 'text-stone-500'
                         }`} strokeWidth={1.9} />
                         <span>{cat.name}</span>

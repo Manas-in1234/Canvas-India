@@ -104,7 +104,9 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
       if (activeSlug === 'photo-frames') {
         return p.finishes?.some((f) => f.toLowerCase().includes('frame')) ?? false;
       }
-      return true;
+      // Default: exact categorySlug match (covers every category not special-cased above,
+      // e.g. the catalogue print categories) instead of showing every product.
+      return p.categorySlug === activeSlug;
     });
   }, [allProducts, activeSlug]);
 
@@ -389,6 +391,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
                 onToggleWishlist={onToggleWishlist}
                 onAddToCart={onAddToCart}
                 onCustomize={onOpenCustomize}
+                variant="listing"
               />
             ))}
           </div>

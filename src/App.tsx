@@ -26,6 +26,7 @@ import { AcrylicCustomizerPage } from './pages/AcrylicCustomizerPage';
 import { AllCategoriesPage } from './pages/AllCategoriesPage';
 import { CanvasCustomizerPage } from './pages/CanvasCustomizerPage';
 import { MobileUploadPage } from './pages/MobileUploadPage';
+import { FestiveOffersPage } from './pages/FestiveOffersPage';
 
 // Auth & Checkout Pages
 import { SignUpPage } from './pages/SignUpPage';
@@ -100,6 +101,9 @@ export function App() {
             <Route path="/custom-prints" element={<CategoryPage categorySlug="custom-prints" />} />
             <Route path="/gifts" element={<CategoryPage categorySlug="gifts" />} />
 
+            {/* Festive Offers landing page */}
+            <Route path="/festive-offers" element={<FestiveOffersPage />} />
+
             <Route path="/bulk-order" element={<CategoryPage categorySlug="bulk-order" />} />
             <Route path="/bulk-orders" element={<CategoryPage categorySlug="bulk-order" />} />
 
@@ -108,6 +112,14 @@ export function App() {
 
             <Route path="/wall-art" element={<CategoryPage categorySlug="wall-art" />} />
             <Route path="/photo-frames" element={<CategoryPage categorySlug="photo-frames" />} />
+
+            {/* New print-design categories from Print World catalogue */}
+            <Route path="/devotional-art" element={<CategoryPage categorySlug="devotional-art" />} />
+            <Route path="/scenery-landscape-art" element={<CategoryPage categorySlug="scenery-landscape-art" />} />
+            <Route path="/tribal-ethnic-art" element={<CategoryPage categorySlug="tribal-ethnic-art" />} />
+            <Route path="/line-art" element={<CategoryPage categorySlug="line-art" />} />
+            <Route path="/motivational-posters" element={<CategoryPage categorySlug="motivational-posters" />} />
+            <Route path="/cork-art-patterns" element={<CategoryPage categorySlug="cork-art-patterns" />} />
 
             {/* Solutions for Designers & Architects */}
             <Route path="/designers-architects" element={<DesignersArchitectsPage />} />

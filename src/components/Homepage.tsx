@@ -33,6 +33,12 @@ const CATEGORY_CARDS = [
   { name: 'Canvas & Boards', sub: 'For Every Art Idea', price: 399, slug: 'canvas', image: u('photo-1579783902614-a3fb3927b675'), grad: 'from-[#7C3AED]/90', chip: 'bg-[#EC4899]' },
   { name: 'Cork Products', sub: 'Natural | Durable | Stylish', price: 449, slug: 'cork', image: u('photo-1586075010923-2dd4570fb338'), grad: 'from-[#B45309]/90', chip: 'bg-[#F59E0B]' },
   { name: 'Personalized Gifts', sub: 'Make it Uniquely Yours', price: 299, slug: 'gifts', image: u('photo-1513151233558-d860c5398176'), grad: 'from-[#BE185D]/90', chip: 'bg-[#0E4A93]' },
+  { name: 'Devotional Art', sub: 'Spiritual Prints for Every Home', price: 249, slug: 'devotional-art', image: '/assets/catalogue/devotional-art/G-A_001.jpg', grad: 'from-[#9A3412]/90', chip: 'bg-[#EA580C]' },
+  { name: 'Scenery & Landscape Art', sub: 'Bring the Outdoors In', price: 249, slug: 'scenery-landscape-art', image: '/assets/catalogue/scenery-landscape-art/S-A_010.jpg', grad: 'from-[#0F766E]/90', chip: 'bg-[#059669]' },
+  { name: 'Tribal & Ethnic Art', sub: 'Bold, Earthy Statement Pieces', price: 249, slug: 'tribal-ethnic-art', image: '/assets/catalogue/tribal-ethnic-art/A-A_006.jpg', grad: 'from-[#7C2D12]/90', chip: 'bg-[#B45309]' },
+  { name: 'Line Art', sub: 'Minimal Monochrome Prints', price: 249, slug: 'line-art', image: '/assets/catalogue/line-art/L-A_010.jpg', grad: 'from-[#1F2937]/90', chip: 'bg-[#374151]' },
+  { name: 'Motivational Posters', sub: 'Quotes That Keep You Going', price: 249, slug: 'motivational-posters', image: '/assets/catalogue/motivational-posters/M-A_030.jpg', grad: 'from-[#B91C1C]/90', chip: 'bg-[#DC2626]' },
+  { name: 'Cork Art Patterns', sub: 'Textured Natural Finishes', price: 249, slug: 'cork-art-patterns', image: '/assets/catalogue/cork-art-patterns/C-A_003.jpg', grad: 'from-[#92400E]/90', chip: 'bg-[#B45309]' },
 ];
 
 const OCCASIONS = [
@@ -81,6 +87,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   const navigate = useNavigate();
   const carouselRef = useRef<HTMLDivElement>(null);
   const testiRef = useRef<HTMLDivElement>(null);
+  const categoryRowRef = useRef<HTMLDivElement>(null);
 
   const handleStartCreatingCanvas = () => {
     const first = allProducts.find((p) => p.categorySlug === 'canvas');
@@ -113,6 +120,45 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           }}
         />
         <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent" />
+
+        {/* Hanging Stitched Leather Special Price Tag (Top Center) */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center select-none">
+          {/* Wall Pin / Nail */}
+          <div className="w-3.5 h-3.5 rounded-full bg-stone-800 shadow-md border-2 border-stone-400 z-20 flex items-center justify-center pointer-events-none">
+            <div className="w-1 h-1 rounded-full bg-stone-300" />
+          </div>
+
+          {/* Hanging String Lines */}
+          <div className="relative w-10 h-9 -mt-1 z-10 pointer-events-none">
+            <svg className="w-full h-full" viewBox="0 0 40 36" fill="none">
+              <path d="M20 0 L5 36" stroke="#5C3214" strokeWidth="2" strokeLinecap="round" />
+              <path d="M20 0 L35 36" stroke="#5C3214" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          {/* Stitched Circular Orange Leather Badge */}
+          <button
+            type="button"
+            onClick={() => navigate('/festive-offers')}
+            aria-label="View festive offers"
+            className="ci-float -mt-1.5 w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#EA580C] via-[#DC2626] to-[#9A3412] text-white flex flex-col items-center justify-center p-2 shadow-2xl shadow-orange-950/50 border-4 border-[#78350F] relative overflow-hidden cursor-pointer hover:scale-105 hover:shadow-orange-900/60 transition-transform duration-300"
+          >
+            {/* Metal Grommet Hole */}
+            <div className="absolute top-1.5 w-3 h-3 rounded-full bg-stone-300 border-2 border-stone-600 shadow-inner z-10" />
+
+            {/* Dashed Stitched Inner Ring */}
+            <div className="absolute inset-1.5 rounded-full border-2 border-dashed border-amber-200/60 pointer-events-none" />
+
+            {/* Badge Text Content */}
+            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-amber-200 mt-2.5 leading-none drop-shadow-xs">
+              SPECIAL PRICE
+            </span>
+            <span className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-md mt-0.5 leading-none">
+              20% OFF
+            </span>
+          </button>
+        </div>
+
         <Container className="relative py-14 sm:py-16 lg:py-20 lg:min-h-[540px] flex items-center">
           <div className="max-w-xl">
             <div className="flex items-center gap-3 text-[11px] sm:text-xs tracking-[0.3em] text-stone-600 font-semibold uppercase">
@@ -157,63 +203,62 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       {/* SHOP BY CATEGORY */}
       <section id="shop-categories" className="py-12 sm:py-16 bg-[#FDFCF8]">
         <Container>
-          <div className="text-center mb-10">
-            <div className="flex items-center justify-center gap-4">
-              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Shop by Category</h2>
-              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+          <div className="flex items-end justify-between gap-4 mb-8">
+            <div>
+              <div className="flex items-center gap-4">
+                <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+                <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Shop by Category</h2>
+              </div>
+              <p className="text-sm mt-2 text-[#567477]">Explore our wide range of creative handmade products</p>
             </div>
-            <p className="text-sm mt-2 text-[#567477]">Explore our wide range of creative handmade products</p>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {CATEGORY_CARDS.map((c) => (
-              <button
-                key={c.slug}
-                type="button"
-                onClick={() => onSelectCategory(c.slug)}
-                className="group flex flex-col text-left cursor-pointer focus:outline-none"
-              >
-                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-4 bg-stone-100 shadow-sm">
-                  <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                </div>
-                <div className="flex items-start justify-between gap-2 px-1">
-                  <div>
-                    <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1">{c.name}</h3>
-                    <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">{c.sub}</p>
-                  </div>
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
-                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* OFFER BANNER */}
-      <section className="relative overflow-hidden bg-gradient-to-r from-[#7C3AED] via-[#DB2777] to-[#F97316] text-white">
-        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 20% 30%, #fff 2px, transparent 3px), radial-gradient(circle at 70% 60%, #fff 2px, transparent 3px), radial-gradient(circle at 90% 20%, #fff 3px, transparent 4px)', backgroundSize: '90px 90px, 120px 120px, 160px 160px' }} />
-        <img
-          src={u('photo-1518199266791-5375a83190b7', 1600)}
-          alt="Happy couple with handcrafted love gift"
-          className="absolute right-0 top-0 h-full w-1/2 object-cover object-center"
-          style={{ maskImage: 'linear-gradient(to right, transparent, black 40%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 40%)', opacity: 0.85 }}
-        />
-        <Container className="relative py-12 sm:py-16">
-          <div className="max-w-lg">
-            <span className="inline-block px-3 py-1 rounded-full bg-white/20 border border-white/40 text-[11px] tracking-[0.25em] font-bold uppercase">Limited Time Offer</span>
-            <h3 className="text-4xl sm:text-5xl font-bold italic mt-3 leading-tight" style={{ fontFamily: SERIF }}>Handcrafted with Love ♡</h3>
-            <p className="text-xl mt-2" style={{ fontFamily: SERIF }}>Special Offers Just for You!</p>
-            <p className="mt-2 text-base text-white/90">Get up to <span className="text-3xl font-black text-amber-300 align-middle">50% OFF</span> on selected products.</p>
             <button
               type="button"
-              onClick={() => navigate('/search')}
-              className="mt-5 px-7 py-3 rounded-full bg-white text-[#DB2777] hover:bg-amber-300 hover:text-[#7C3AED] text-sm font-extrabold inline-flex items-center gap-2 shadow-xl cursor-pointer transition-colors"
+              onClick={() => navigate('/categories')}
+              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer shrink-0"
             >
-              Shop Deals <ArrowRight className="w-4 h-4" />
+              View All <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
+
+          <div className="flex items-center gap-3">
+            <button type="button" aria-label="Previous categories" onClick={() => scrollRow(categoryRowRef, -1)} className={arrowBtn}>
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <div ref={categoryRowRef} className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+              {CATEGORY_CARDS.map((c) => (
+                <button
+                  key={c.slug}
+                  type="button"
+                  onClick={() => onSelectCategory(c.slug)}
+                  className="group snap-start shrink-0 w-[44%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
+                >
+                  <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-4 bg-stone-100 shadow-sm">
+                    <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                  <div className="flex items-start justify-between gap-2 px-1">
+                    <div>
+                      <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1">{c.name}</h3>
+                      <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">{c.sub}</p>
+                    </div>
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
+                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <button type="button" aria-label="Next categories" onClick={() => scrollRow(categoryRowRef, 1)} className={arrowBtn}>
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate('/categories')}
+            className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+          >
+            View All Categories <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </Container>
       </section>
 

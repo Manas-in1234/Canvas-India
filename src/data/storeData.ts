@@ -513,7 +513,7 @@ export interface MegaMenuItem {
 
 export interface MegaMenuGroup {
   title: string;
-  iconType: 'heart' | 'sparkles' | 'palette' | 'layers' | 'circleDot' | 'printer' | 'package' | 'building' | 'sliders' | 'gift';
+  iconType: 'heart' | 'sparkles' | 'palette' | 'layers' | 'circleDot' | 'printer' | 'package' | 'building' | 'sliders' | 'gift' | 'activity';
   items: MegaMenuItem[];
 }
 
@@ -658,35 +658,37 @@ export const MEGA_MENUS_DATA: Record<string, MegaMenuConfig> = {
   },
   cork: {
     id: 'cork',
-    name: 'Cork Yoga & Wellness Products',
+    name: 'Cork & Yoga Fitness',
     groups: [
       {
-        title: 'Cork Yoga Products',
-        iconType: 'circleDot',
+        title: 'Yoga & Fitness Gear',
+        iconType: 'activity',
         items: [
-          { name: 'Yoga Mats', slug: 'cork', description: 'Cork fabric, latex, and rubberized yoga mats' },
-          { name: 'Yoga Bricks', slug: 'cork', description: 'Cork yoga bricks for balance and restorative practice' },
-          { name: 'Yoga Rollers', slug: 'cork', description: 'Cork yoga rollers and peanut rollers' },
-          { name: 'Yoga Balls', slug: 'cork', description: 'Cork yoga balls with natural texture and grip' },
-          { name: 'Yoga Wedges', slug: 'cork', description: 'Cork wedges for wrist and ankle support' },
+          { name: 'Yoga Mats', slug: 'yoga-fitness', description: 'Eco-friendly cork fabric, TPE & natural tree rubber mats' },
+          { name: 'Customized Yoga Mats', slug: 'yoga-fitness', description: 'Monogrammed names, mantras & laser alignment lines' },
+          { name: 'Yoga Bricks & Wedges', slug: 'yoga-fitness', description: 'Cork yoga bricks & wrist/ankle wedges for balance' },
+          { name: 'Yoga Rollers & Massage Sets', slug: 'yoga-fitness', description: 'Cork yoga rollers, peanut rollers & massage balls' },
+          { name: 'Gym & Fitness Products', slug: 'yoga-fitness', description: 'Workout mats, sweat towels & fitness banners' },
         ],
       },
       {
-        title: 'Wellness Accessories',
-        iconType: 'sliders',
+        title: 'Cork Boards & Accessories',
+        iconType: 'circleDot',
         items: [
-          { name: 'Massage Sets', slug: 'cork', description: 'Cork massage roller and foot massage ball sets' },
-          { name: 'Knee Pads', slug: 'cork', description: 'Cork yoga knee pads rubberized with latex' },
-          { name: 'Yoga Bags', slug: 'cork', description: 'Cork yoga bags and yoga kit bags' },
+          { name: 'Archon Cork Board', slug: 'cork', description: 'High-density self-healing natural cork bulletin board' },
+          { name: 'Custom Cork Display', slug: 'cork', description: 'Geometric 3D acoustic cork wall cladding tiles' },
+          { name: 'Framed Cork Pinboards', slug: 'cork', description: 'Anodized aluminum & hardwood framed pinboards' },
+          { name: 'Printed Cork Art Panels', slug: 'cork', description: 'Organic textures with fine pigment graphics' },
+          { name: 'Yoga Bags & Knee Pads', slug: 'cork', description: 'Cork yoga bags and rubberized knee cushion pads' },
         ],
       },
     ],
     promo: {
-      title: 'Cork Yoga & Wellness',
-      tagline: 'Eco-friendly cork yoga products. Lightweight, durable, naturally antimicrobial and biodegradable.',
-      badge: 'Cork Yoga Catalogue 2026',
+      title: 'Cork Yoga & Fitness Collection',
+      tagline: 'Eco-friendly cork yoga products & fitness gear. Lightweight, durable, naturally antimicrobial.',
+      badge: 'Cork Fitness Catalogue 2026',
       image: '/assets/products/cork/9C-YA1/9c-ya1(1).png',
-      buttonText: 'Explore Cork Products',
+      buttonText: 'Explore Cork & Yoga',
       slug: 'cork',
       actionType: 'category',
     },
@@ -954,7 +956,7 @@ export interface PrimaryCategoryItem {
   id: string;
   name: string;
   slug: string;
-  iconName: 'Palette' | 'Layers' | 'CircleDot' | 'Printer' | 'Gift' | 'Package' | 'Building2' | 'Image' | 'Activity' | 'Home';
+  iconName: 'Palette' | 'Layers' | 'CircleDot' | 'Printer' | 'Gift' | 'Package' | 'Building2' | 'Image' | 'Activity' | 'Home' | 'Sparkles' | 'Mountain' | 'Globe' | 'PenTool' | 'Quote' | 'Shapes';
   startingPrice: number;
   image: string;
   description: string;
@@ -980,49 +982,13 @@ export const PRIMARY_CATEGORIES: PrimaryCategoryItem[] = [
     description: 'High-gloss 5mm crystal clear acrylic glass prints',
   },
   {
-    id: 'cat-posters',
-    name: 'Posters & Custom Wall Graphics',
-    slug: 'posters',
-    iconName: 'Image',
-    startingPrice: 249,
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
-    description: 'Custom posters and wall graphics for residential and commercial spaces',
-  },
-  {
     id: 'cat-cork',
     name: 'Cork',
     slug: 'cork',
     iconName: 'CircleDot',
     startingPrice: 449,
     image: '/assets/products/cork/9C-YA1/9c-ya1(1).png',
-    description: 'Eco-friendly cork yoga and wellness products',
-  },
-  {
-    id: 'cat-yoga',
-    name: 'Yoga & Fitness',
-    slug: 'yoga-fitness',
-    iconName: 'Activity',
-    startingPrice: 1199,
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&auto=format&fit=crop&q=80',
-    description: 'Customized yoga mats and wellness products',
-  },
-  {
-    id: 'cat-decor',
-    name: 'Home Décor',
-    slug: 'home-decor',
-    iconName: 'Home',
-    startingPrice: 699,
-    image: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=400&auto=format&fit=crop&q=80',
-    description: 'Curated decorative and personalized interior wall collections',
-  },
-  {
-    id: 'cat-custom',
-    name: 'Custom Prints',
-    slug: 'custom-prints',
-    iconName: 'Printer',
-    startingPrice: 299,
-    image: 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=400&auto=format&fit=crop&q=80',
-    description: 'Create products based on your own design, size and material',
+    description: 'Eco-friendly cork, yoga and wellness products',
   },
   {
     id: 'cat-gifts',
@@ -1034,15 +1000,6 @@ export const PRIMARY_CATEGORIES: PrimaryCategoryItem[] = [
     description: 'Personalized gifts for birthdays, weddings, anniversaries and festivals',
   },
   {
-    id: 'cat-bulk',
-    name: 'Bulk Order',
-    slug: 'bulk-order',
-    iconName: 'Package',
-    startingPrice: 249,
-    image: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?w=400&auto=format&fit=crop&q=80',
-    description: 'Volume discounts for events, schools, artists and resellers',
-  },
-  {
     id: 'cat-corporate',
     name: 'Corporate Orders',
     slug: 'corporate-orders',
@@ -1050,6 +1007,60 @@ export const PRIMARY_CATEGORIES: PrimaryCategoryItem[] = [
     startingPrice: 499,
     image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80',
     description: 'B2B office art, employee welcome kits and GST invoicing',
+  },
+  {
+    id: 'cat-devotional',
+    name: 'Devotional Art',
+    slug: 'devotional-art',
+    iconName: 'Sparkles',
+    startingPrice: 249,
+    image: '/assets/catalogue/devotional-art/G-A_001.jpg',
+    description: 'God, spiritual and religious print art for home and pooja spaces',
+  },
+  {
+    id: 'cat-scenery',
+    name: 'Scenery & Landscape Art',
+    slug: 'scenery-landscape-art',
+    iconName: 'Mountain',
+    startingPrice: 249,
+    image: '/assets/catalogue/scenery-landscape-art/S-A_010.jpg',
+    description: 'Nature, seascape and landscape prints for every wall',
+  },
+  {
+    id: 'cat-tribal',
+    name: 'Tribal & Ethnic Art',
+    slug: 'tribal-ethnic-art',
+    iconName: 'Globe',
+    startingPrice: 249,
+    image: '/assets/catalogue/tribal-ethnic-art/A-A_006.jpg',
+    description: 'Aboriginal, tribal and ethnic-pattern print art',
+  },
+  {
+    id: 'cat-lineart',
+    name: 'Line Art',
+    slug: 'line-art',
+    iconName: 'PenTool',
+    startingPrice: 249,
+    image: '/assets/catalogue/line-art/L-A_010.jpg',
+    description: 'Minimal monochrome line-art prints',
+  },
+  {
+    id: 'cat-motivational',
+    name: 'Motivational Posters',
+    slug: 'motivational-posters',
+    iconName: 'Quote',
+    startingPrice: 249,
+    image: '/assets/catalogue/motivational-posters/M-A_030.jpg',
+    description: 'Motivational quote and typography posters for home and office',
+  },
+  {
+    id: 'cat-cork-art',
+    name: 'Cork Art Patterns',
+    slug: 'cork-art-patterns',
+    iconName: 'Shapes',
+    startingPrice: 249,
+    image: '/assets/catalogue/cork-art-patterns/C-A_003.jpg',
+    description: 'Textured cork-finish pattern prints',
   },
 ];
 

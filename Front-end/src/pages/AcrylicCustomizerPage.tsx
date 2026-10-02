@@ -93,6 +93,7 @@ import { AcrylicClipartModal, ClipartElement } from '../components/AcrylicClipar
 import { AcrylicRoomViewModal, RoomPlacementState } from '../components/AcrylicRoomViewModal';
 import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
 import { CustomizerProductSelector } from '../components/CustomizerProductSelector';
+import { CustomizerPreloader, PRELOADER_MIN_MS } from '../components/CustomizerPreloader';
 import {
   CustomizerHeader,
   CustomizerTopToolbar,
@@ -189,6 +190,39 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Active Left Toolbar Tab
   const [activeTab, setActiveTab] = useState<ToolbarTab>('PRODUCTS');
+
+  // Preloader overlay: visible for real async work (image reads) for however
+  // long that actually takes, plus a short minimum so the brief, instant
+  // section switches still get a visible (but not artificially stretched) beat.
+  const [preloaderActive, setPreloaderActive] = useState(false);
+  const preloaderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const preloaderPendingRef = useRef(0);
+
+  const beginPreloader = () => {
+    preloaderPendingRef.current += 1;
+    if (preloaderTimerRef.current) {
+      clearTimeout(preloaderTimerRef.current);
+      preloaderTimerRef.current = null;
+    }
+    setPreloaderActive(true);
+  };
+  const endPreloader = (minMs: number = 0) => {
+    const release = () => {
+      preloaderPendingRef.current = Math.max(0, preloaderPendingRef.current - 1);
+      if (preloaderPendingRef.current === 0) setPreloaderActive(false);
+    };
+    if (minMs > 0) {
+      preloaderTimerRef.current = setTimeout(release, minMs);
+    } else {
+      release();
+    }
+  };
+
+  const handleSelectTab = (tabId: ToolbarTab) => {
+    setActiveTab(tabId);
+    beginPreloader();
+    endPreloader(PRELOADER_MIN_MS);
+  };
 
   // Track whether the user has explicitly selected a custom shape or layout in the SHAPES / LAYOUTS tabs
   const hasUserSelectedCustomShapeRef = useRef<boolean>(false);
@@ -807,6 +841,15 @@ export const AcrylicCustomizerPage: React.FC = () => {
         renderedH = H;
         renderedW = H * imgRatio;
       }
+    } else {
+      // cover / fill mode
+      if (imgRatio > slotRatio) {
+        renderedH = H;
+        renderedW = H * imgRatio;
+      } else {
+        renderedW = W;
+        renderedH = W / imgRatio;
+      }
     }
 
     const s = Math.max(0.4, nextScale || 1);
@@ -1001,6 +1044,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
 
     const reader = new FileReader();
+    // Preloader stays visible for exactly as long as this real read takes -
+    // genuinely scales with file size / device speed, loops longer if slow.
+    beginPreloader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
       if (result) {
@@ -1030,6 +1076,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           setActivePanelIndex(targetIdx);
           setSelectedElement({ type: 'image', panelIndex: targetIdx });
           setValidationWarning(null);
+          endPreloader(PRELOADER_MIN_MS);
         };
         img.onerror = () => {
           updateFrame(targetIdx, (curr) => ({
@@ -1042,16 +1089,23 @@ export const AcrylicCustomizerPage: React.FC = () => {
             fitMode: 'contain'
           }));
           setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
+          endPreloader();
         };
         img.src = result;
+      } else {
+        endPreloader();
       }
     };
+    reader.onerror = () => endPreloader();
     reader.readAsDataURL(file);
   };
 
   // Multiple files upload to session gallery
   const handleGalleryUpload = (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    // Preloader stays visible for exactly as long as all these reads take -
+    // genuinely scales with file size/count and device speed.
+    beginPreloader();
     const readers: Promise<{ result: string; file: File; naturalWidth: number; naturalHeight: number; aspectRatio: number } | null>[] = [];
 
     Array.from(files).forEach((file) => {
@@ -1104,6 +1158,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           fitMode: 'contain'
         }));
       }
+      endPreloader(PRELOADER_MIN_MS);
     });
   };
 
@@ -1149,6 +1204,31 @@ export const AcrylicCustomizerPage: React.FC = () => {
       panX: 0,
       panY: 0,
       rotation: 0
+    }));
+  };
+
+  // Fill: makes the uploaded image completely cover the product/image frame (visual crop), preserving original image intact
+  const handleFill = (panelIdx = activePanelIndex) => {
+    updateFrame(panelIdx, (curr) => {
+      const nextFitMode: 'contain' | 'cover' = 'cover';
+      const clamped = clampPanForFrame(panelIdx, curr, 0, 0, Math.max(1, curr.scale), curr.rotation, nextFitMode);
+      return {
+        ...curr,
+        fitMode: nextFitMode,
+        panX: clamped.panX,
+        panY: clamped.panY
+      };
+    });
+  };
+
+  // Fix (Fit): fits the complete uncropped original image visually inside the product/image frame without any distortion
+  const handleFix = (panelIdx = activePanelIndex) => {
+    updateFrame(panelIdx, (curr) => ({
+      ...curr,
+      fitMode: 'contain',
+      panX: 0,
+      panY: 0,
+      scale: 1
     }));
   };
 
@@ -2564,7 +2644,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   return (
     <div className="w-full h-screen flex flex-col bg-[#F1F5F9] font-sans antialiased overflow-hidden select-none">
-      
+      <CustomizerPreloader active={preloaderActive} />
+
       {/* Hidden File Pickers */}
       <input
         ref={fileInputRef}
@@ -2686,7 +2767,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleSelectTab(item.id)}
                 className={`flex flex-col items-center justify-center w-full py-3 px-1 text-center transition-all cursor-pointer ${
                   isActive
                     ? 'bg-white text-[#0E4A93] shadow-md font-extrabold'
@@ -2744,7 +2825,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                   Upload Photos
                 </h3>
                 <p className="text-[11px] text-stone-500">
-                  Add high-resolution photos from your computer or scan the QR code to upload directly from your mobile phone.
+                  Add high-resolution photos from your PC or laptop or scan the QR code to upload directly from your mobile phone.
                 </p>
               </div>
 
@@ -3806,21 +3887,46 @@ export const AcrylicCustomizerPage: React.FC = () => {
             extraControls={
               activeFrameState.imageUrl ? (
                 <>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      updateFrame(activePanelIndex, (curr) => {
-                        const nextFitMode: 'contain' | 'cover' = curr.fitMode === 'cover' ? 'contain' : 'cover';
-                        const clamped = clampPanForFrame(activePanelIndex, curr, curr.panX || 0, curr.panY || 0, curr.scale, curr.rotation, nextFitMode);
-                        return { ...curr, fitMode: nextFitMode, ...clamped };
-                      });
-                    }}
-                    className="px-2 py-1 rounded-lg hover:bg-stone-100 text-stone-700 hover:text-[#0E4A93] border border-stone-200 text-[11px] font-bold transition-colors cursor-pointer"
-                    title="Toggle between complete uncropped fit and full shape cover"
-                  >
-                    {activeFrameState.fitMode === 'cover' ? 'Fit' : 'Fill'}
-                  </button>
+                  {layoutSlots.length > 1 && (
+                    <div className="text-[11px] font-bold text-stone-700 pr-1.5 border-r border-stone-200">
+                      Slot {activePanelIndex + 1}
+                    </div>
+                  )}
+
+                  {/* Containment / Fill Controls: [ Fill ] [ Fix ] */}
+                  <div className="inline-flex rounded-lg border border-stone-200 bg-stone-100 p-0.5 gap-0.5">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFill(activePanelIndex);
+                      }}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                        activeFrameState.fitMode === 'cover'
+                          ? 'bg-[#0E4A93] text-white shadow-xs'
+                          : 'text-stone-700 hover:text-[#0E4A93] hover:bg-stone-200'
+                      }`}
+                      title="Fill: make image completely cover the frame area (visual crop)"
+                    >
+                      Fill
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFix(activePanelIndex);
+                      }}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                        activeFrameState.fitMode === 'contain'
+                          ? 'bg-[#0E4A93] text-white shadow-xs'
+                          : 'text-stone-700 hover:text-[#0E4A93] hover:bg-stone-200'
+                      }`}
+                      title="Fix (Fit): fit full uncropped original image inside the product frame"
+                    >
+                      Fix
+                    </button>
+                  </div>
+
                   <button
                     type="button"
                     onClick={(e) => {

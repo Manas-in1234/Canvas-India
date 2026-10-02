@@ -1,5 +1,7 @@
 import { Product, CategoryConfig } from '../types';
 import { CORK_CATALOG_PRODUCTS } from './corkCatalog';
+import { CATALOGUE_PRODUCTS } from './catalogueProducts';
+import { CATALOGUE_CANVAS_ACRYLIC_PRODUCTS } from './catalogueCanvasAcrylicProducts';
 
 export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
   canvas: {
@@ -347,6 +349,108 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
       'Ready-to-hang mounting hardware included'
     ],
     ctaText: 'Shop Photo Frames',
+    ctaType: 'shop'
+  },
+  'devotional-art': {
+    id: 'devotional-art',
+    slug: 'devotional-art',
+    title: 'Devotional Art',
+    shortTitle: 'Devotional Art',
+    seoTitle: 'Devotional Art Prints | Canvas India',
+    description: 'God, spiritual and religious print art for home shrines, pooja rooms and devotional corners.',
+    heroImage: '/assets/catalogue/devotional-art/G-A_002.jpg',
+    subcategories: ['All'],
+    features: [
+      'Premium archival print quality',
+      'Available across canvas, acrylic and poster formats',
+      'Custom sizes on request'
+    ],
+    ctaText: 'Shop Devotional Art',
+    ctaType: 'shop'
+  },
+  'scenery-landscape-art': {
+    id: 'scenery-landscape-art',
+    slug: 'scenery-landscape-art',
+    title: 'Scenery & Landscape Art',
+    shortTitle: 'Scenery & Landscape',
+    seoTitle: 'Scenery & Landscape Art Prints | Canvas India',
+    description: 'Nature, seascape and landscape print art to bring the outdoors onto your walls.',
+    heroImage: '/assets/catalogue/scenery-landscape-art/S-A_011.jpg',
+    subcategories: ['All'],
+    features: [
+      'Premium archival print quality',
+      'Available across canvas, acrylic and poster formats',
+      'Custom sizes on request'
+    ],
+    ctaText: 'Shop Scenery & Landscape Art',
+    ctaType: 'shop'
+  },
+  'tribal-ethnic-art': {
+    id: 'tribal-ethnic-art',
+    slug: 'tribal-ethnic-art',
+    title: 'Tribal & Ethnic Art',
+    shortTitle: 'Tribal & Ethnic Art',
+    seoTitle: 'Tribal & Ethnic Art Prints | Canvas India',
+    description: 'Aboriginal, tribal and ethnic-pattern print art with bold, earthy character.',
+    heroImage: '/assets/catalogue/tribal-ethnic-art/A-A_007.jpg',
+    subcategories: ['All'],
+    features: [
+      'Premium archival print quality',
+      'Available across canvas, acrylic and poster formats',
+      'Custom sizes on request'
+    ],
+    ctaText: 'Shop Tribal & Ethnic Art',
+    ctaType: 'shop'
+  },
+  'line-art': {
+    id: 'line-art',
+    slug: 'line-art',
+    title: 'Line Art',
+    shortTitle: 'Line Art',
+    seoTitle: 'Line Art Prints | Canvas India',
+    description: 'Minimal monochrome line-art prints for a clean, modern wall.',
+    heroImage: '/assets/catalogue/line-art/L-A_011.jpg',
+    subcategories: ['All'],
+    features: [
+      'Premium archival print quality',
+      'Available across canvas, acrylic and poster formats',
+      'Custom sizes on request'
+    ],
+    ctaText: 'Shop Line Art',
+    ctaType: 'shop'
+  },
+  'motivational-posters': {
+    id: 'motivational-posters',
+    slug: 'motivational-posters',
+    title: 'Motivational Posters',
+    shortTitle: 'Motivational Posters',
+    seoTitle: 'Motivational Posters | Canvas India',
+    description: 'Motivational quote and typography posters for home, office and study spaces.',
+    heroImage: '/assets/catalogue/motivational-posters/M-A_031.jpg',
+    subcategories: ['All'],
+    features: [
+      'Premium archival print quality',
+      'Available across canvas, acrylic and poster formats',
+      'Custom sizes on request'
+    ],
+    ctaText: 'Shop Motivational Posters',
+    ctaType: 'shop'
+  },
+  'cork-art-patterns': {
+    id: 'cork-art-patterns',
+    slug: 'cork-art-patterns',
+    title: 'Cork Art Patterns',
+    shortTitle: 'Cork Art Patterns',
+    seoTitle: 'Cork Art Pattern Prints | Canvas India',
+    description: 'Textured cork-finish pattern prints, from geometric motifs to natural wood-grain designs.',
+    heroImage: '/assets/catalogue/cork-art-patterns/C-A_004.jpg',
+    subcategories: ['All'],
+    features: [
+      'Premium archival print quality',
+      'Available across canvas, acrylic and poster formats',
+      'Custom sizes on request'
+    ],
+    ctaText: 'Shop Cork Art Patterns',
     ctaType: 'shop'
   }
 };
@@ -2239,14 +2343,14 @@ export const ALL_PRODUCTS: Product[] = [
   ...CORK_CATALOG_PRODUCTS,
 
   // ==========================================
-  // 5. YOGA & FITNESS CATEGORY (8 Demo Products)
+  // 5. YOGA & FITNESS (8 Demo Products) — merged into Cork category
   // ==========================================
   {
     id: 'yog-1',
     name: 'Classic Yoga Mat',
     slug: 'classic-yoga-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Yoga Mats',
     image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&auto=format&fit=crop&q=80',
     images: [
@@ -2275,7 +2379,7 @@ export const ALL_PRODUCTS: Product[] = [
     name: 'Premium Yoga Mat',
     slug: 'premium-yoga-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Yoga Mats',
     image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&auto=format&fit=crop&q=80',
     images: [
@@ -2304,7 +2408,7 @@ export const ALL_PRODUCTS: Product[] = [
     name: 'Personalized Yoga Mat',
     slug: 'personalized-yoga-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Customized Yoga Mats',
     image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&auto=format&fit=crop&q=80',
     images: [
@@ -2334,7 +2438,7 @@ export const ALL_PRODUCTS: Product[] = [
     name: 'Branded Yoga Mat',
     slug: 'branded-yoga-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Branded Yoga Mats',
     image: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=600&auto=format&fit=crop&q=80',
     images: [
@@ -2364,7 +2468,7 @@ export const ALL_PRODUCTS: Product[] = [
     name: 'Corporate Wellness Yoga Mat',
     slug: 'corporate-wellness-yoga-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Corporate Wellness',
     image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&auto=format&fit=crop&q=80',
     images: [
@@ -2394,7 +2498,7 @@ export const ALL_PRODUCTS: Product[] = [
     name: 'Yoga Studio Mat',
     slug: 'yoga-studio-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Yoga Mats',
     image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&auto=format&fit=crop&q=80',
     images: [
@@ -2423,7 +2527,7 @@ export const ALL_PRODUCTS: Product[] = [
     name: 'Fitness Event Mat',
     slug: 'fitness-event-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Event Fitness Products',
     image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&auto=format&fit=crop&q=80',
     images: [
@@ -2453,7 +2557,7 @@ export const ALL_PRODUCTS: Product[] = [
     name: 'Custom Printed Yoga Mat',
     slug: 'custom-printed-yoga-mat',
     category: 'Yoga & Fitness',
-    categorySlug: 'yoga-fitness',
+    categorySlug: 'cork',
     subcategory: 'Customized Yoga Mats',
     image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&auto=format&fit=crop&q=80',
     images: [
@@ -3662,7 +3766,18 @@ export const ALL_PRODUCTS: Product[] = [
     stockStatus: 'In Stock',
     applications: ['Franchise Stores', 'Popup Outlets', 'Showrooms'],
     isDemoData: true
-  }
+  },
+
+  // ==========================================
+  // Print World Catalogue — 300 products across 6 new categories
+  // ==========================================
+  ...CATALOGUE_PRODUCTS,
+
+  // ==========================================
+  // Print World Catalogue designs (non-cork), also offered as Canvas and
+  // Acrylic products — 550 products (275 designs x 2 materials)
+  // ==========================================
+  ...CATALOGUE_CANVAS_ACRYLIC_PRODUCTS,
 
 ];
 
