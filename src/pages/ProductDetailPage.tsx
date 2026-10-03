@@ -96,14 +96,13 @@ export const ProductDetailPage: React.FC = () => {
     }
   }, [product]);
 
-  // Shape options for this product (canvas products get the full shape range by default)
+  // Shape options for this product. Every wall-hangable category gets the
+  // full shape range by default (yoga mats don't have "shapes" in this sense).
   const availableShapes = useMemo(() => {
     if (!product) return [];
     if (product.shapes && product.shapes.length > 0) return product.shapes;
-    if (product.categorySlug === 'canvas') {
-      return ['Popular', 'Square', 'Rectangle', 'Panoramic', 'Circle', 'Triangle'];
-    }
-    return [];
+    if (product.categorySlug === 'yoga-fitness') return [];
+    return ['Popular', 'Square', 'Rectangle', 'Panoramic', 'Circle', 'Triangle'];
   }, [product]);
 
   // Sync variants when product changes
