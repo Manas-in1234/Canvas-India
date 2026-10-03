@@ -47,11 +47,6 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
         if (!list.includes(img)) list.push(img);
       });
     }
-    // Add additional angles if available
-    if (list.length < 3) {
-      list.push('/assets/acrylic/acrylic-panel-living.jpg');
-      list.push('/assets/acrylic/acrylic-panel-standoff.jpg');
-    }
     return list;
   }, [product]);
 
