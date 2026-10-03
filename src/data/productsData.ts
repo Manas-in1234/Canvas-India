@@ -768,12 +768,9 @@ export const ALL_PRODUCTS: Product[] = [
     image: '/assets/acrylic/acrylic-photo-panel.jpg',
     images: [
       '/assets/acrylic/acrylic-photo-panel.jpg',
-      '/assets/acrylic/acrylic-panel-standoff.jpg',
-      '/assets/acrylic/acrylic-panel-living.jpg'
     ],
     thumbnailImages: [
       '/assets/acrylic/acrylic-photo-panel.jpg',
-      '/assets/acrylic/acrylic-panel-standoff.jpg'
     ],
     price: 1499,
     originalPrice: 2099,
@@ -1057,7 +1054,6 @@ export const ALL_PRODUCTS: Product[] = [
     image: '/assets/acrylic/acrylic-decorative-panel.jpg',
     images: [
       '/assets/acrylic/acrylic-decorative-panel.jpg',
-      '/assets/acrylic/acrylic-panel-living.jpg'
     ],
     thumbnailImages: [
       '/assets/acrylic/acrylic-decorative-panel.jpg'
@@ -1246,7 +1242,6 @@ export const ALL_PRODUCTS: Product[] = [
     image: '/assets/acrylic/acrylic-custom-wall-art.jpg',
     images: [
       '/assets/acrylic/acrylic-custom-wall-art.jpg',
-      '/assets/acrylic/acrylic-panel-standoff.jpg'
     ],
     thumbnailImages: [
       '/assets/acrylic/acrylic-custom-wall-art.jpg'
@@ -1294,8 +1289,8 @@ export const ALL_PRODUCTS: Product[] = [
     shape: 'rectangle',
     shapes: ["rectangle"],
     image: '/images/acrylic/rectangle/rectangle-acrylic-print.svg',
-    images: ["/images/acrylic/rectangle/rectangle-acrylic-print.svg","/assets/acrylic/acrylic-panel-living.jpg","/assets/acrylic/acrylic-panel-standoff.jpg"],
-    thumbnailImages: ["/images/acrylic/rectangle/rectangle-acrylic-print.svg","/assets/acrylic/acrylic-panel-living.jpg"],
+    images: ["/images/acrylic/rectangle/rectangle-acrylic-print.svg"],
+    thumbnailImages: ["/images/acrylic/rectangle/rectangle-acrylic-print.svg"],
     price: 999,
     originalPrice: 1499,
     compareAtPrice: 1499,
@@ -1337,7 +1332,7 @@ export const ALL_PRODUCTS: Product[] = [
     shape: 'square',
     shapes: ["square"],
     image: '/images/acrylic/square/square-acrylic-print.svg',
-    images: ["/images/acrylic/square/square-acrylic-print.svg","/assets/acrylic/acrylic-block-desk.jpg","/assets/acrylic/acrylic-panel-standoff.jpg"],
+    images: ["/images/acrylic/square/square-acrylic-print.svg","/assets/acrylic/acrylic-block-desk.jpg"],
     thumbnailImages: ["/images/acrylic/square/square-acrylic-print.svg"],
     price: 899,
     originalPrice: 1299,
@@ -1380,7 +1375,7 @@ export const ALL_PRODUCTS: Product[] = [
     shape: 'circle',
     shapes: ["circle"],
     image: '/images/acrylic/circle/circle-acrylic-print.svg',
-    images: ["/images/acrylic/circle/circle-acrylic-print.svg","/assets/acrylic/acrylic-panel-living.jpg"],
+    images: ["/images/acrylic/circle/circle-acrylic-print.svg"],
     thumbnailImages: ["/images/acrylic/circle/circle-acrylic-print.svg"],
     price: 1099,
     originalPrice: 1599,
@@ -1595,7 +1590,7 @@ export const ALL_PRODUCTS: Product[] = [
     shape: 'rounded-rectangle',
     shapes: ["rounded-rectangle"],
     image: '/images/acrylic/rounded-rectangle/rounded-rectangle-acrylic-print.svg',
-    images: ["/images/acrylic/rounded-rectangle/rounded-rectangle-acrylic-print.svg","/assets/acrylic/acrylic-panel-living.jpg"],
+    images: ["/images/acrylic/rounded-rectangle/rounded-rectangle-acrylic-print.svg"],
     thumbnailImages: ["/images/acrylic/rounded-rectangle/rounded-rectangle-acrylic-print.svg"],
     price: 1049,
     originalPrice: 1499,
@@ -1767,7 +1762,7 @@ export const ALL_PRODUCTS: Product[] = [
     shape: 'arch',
     shapes: ["arch"],
     image: '/images/acrylic/arch/arch-acrylic-print.svg',
-    images: ["/images/acrylic/arch/arch-acrylic-print.svg","/assets/acrylic/acrylic-panel-living.jpg"],
+    images: ["/images/acrylic/arch/arch-acrylic-print.svg"],
     thumbnailImages: ["/images/acrylic/arch/arch-acrylic-print.svg"],
     price: 1299,
     originalPrice: 1849,
