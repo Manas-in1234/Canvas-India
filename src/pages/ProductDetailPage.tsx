@@ -321,7 +321,7 @@ export const ProductDetailPage: React.FC = () => {
           <div className="lg:col-span-6 xl:col-span-7 flex flex-col gap-4 sticky top-24">
             
             {/* Main Primary Image */}
-            <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-stone-100 shadow-xs group">
+            <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden bg-stone-100 shadow-xs group">
               {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
                 <WallPreview
                   imageSrc={uploadedFile || roomViewSourceImage}

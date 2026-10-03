@@ -25,7 +25,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <div className={`group flex flex-col justify-between text-left select-none ${variant === 'listing' ? 'p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-stone-200/70 hover:border-[#0E4A93]/40 hover:shadow-md transition-all duration-300' : ''}`}>
       <div>
         {/* Product Image linked to /products/:id */}
-        <div className={`relative aspect-square ${variant === 'listing' ? 'w-full rounded-lg sm:rounded-xl' : 'max-h-[170px] w-full rounded-lg'} overflow-hidden bg-stone-100`}>
+        <div className={`relative aspect-[3/4] ${variant === 'listing' ? 'w-full rounded-lg sm:rounded-xl' : 'max-h-[170px] w-full rounded-lg'} overflow-hidden bg-stone-100`}>
           <Link
             to={`/products/${product.id}`}
             className="block w-full h-full cursor-pointer"
