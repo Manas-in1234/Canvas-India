@@ -27,6 +27,7 @@ import { AllCategoriesPage } from './pages/AllCategoriesPage';
 import { CanvasCustomizerPage } from './pages/CanvasCustomizerPage';
 import { MobileUploadPage } from './pages/MobileUploadPage';
 import { FestiveOffersPage } from './pages/FestiveOffersPage';
+import { OccasionPage } from './pages/OccasionPage';
 
 // Auth & Checkout Pages
 import { SignUpPage } from './pages/SignUpPage';
@@ -103,6 +104,7 @@ export function App() {
 
             {/* Festive Offers landing page */}
             <Route path="/festive-offers" element={<FestiveOffersPage />} />
+            <Route path="/occasions/:slug" element={<OccasionPage />} />
 
             <Route path="/bulk-order" element={<CategoryPage categorySlug="bulk-order" />} />
             <Route path="/bulk-orders" element={<CategoryPage categorySlug="bulk-order" />} />

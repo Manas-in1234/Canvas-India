@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight, Truck, BadgeCheck, Headphones, ShieldCheck, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote } from 'lucide-react';
 import { Product } from '../types';
+import { OCCASIONS } from '../data/occasionsData';
 
 export interface HomepageProps {
   onSelectCategory: (slug: string, sub?: string) => void;
@@ -39,15 +40,6 @@ const CATEGORY_CARDS = [
   { name: 'Line Art', sub: 'Minimal Monochrome Prints', price: 249, slug: 'line-art', image: '/assets/catalogue/line-art/L-A_010.jpg', grad: 'from-[#1F2937]/90', chip: 'bg-[#374151]' },
   { name: 'Motivational Posters', sub: 'Quotes That Keep You Going', price: 249, slug: 'motivational-posters', image: '/assets/catalogue/motivational-posters/M-A_030.jpg', grad: 'from-[#B91C1C]/90', chip: 'bg-[#DC2626]' },
   { name: 'Cork Art Patterns', sub: 'Textured Natural Finishes', price: 249, slug: 'cork-art-patterns', image: '/assets/catalogue/cork-art-patterns/C-A_003.jpg', grad: 'from-[#92400E]/90', chip: 'bg-[#B45309]' },
-];
-
-const OCCASIONS = [
-  { name: 'Birthday', emoji: '🎂', image: u('photo-1513151233558-d860c5398176', 800), tint: 'from-[#EC4899]/85' },
-  { name: 'Anniversary', emoji: '💞', image: u('photo-1518199266791-5375a83190b7', 800), tint: 'from-[#E11D48]/85' },
-  { name: 'Wedding', emoji: '💍', image: u('photo-1519741497674-611481863552', 800), tint: 'from-[#7C3AED]/85' },
-  { name: 'Housewarming', emoji: '🏡', image: u('photo-1560448204-e02f11c3d0e2', 800), tint: 'from-[#0E4A93]/85' },
-  { name: 'Diwali', emoji: '🪔', image: u('photo-1605721911519-3dfeb3be25e7', 800), tint: 'from-[#EA580C]/85' },
-  { name: 'Corporate Gifts', emoji: '🎁', image: u('photo-1497215728101-856f4ea42174', 800), tint: 'from-[#0F766E]/85' },
 ];
 
 const TESTIMONIALS = [
@@ -288,12 +280,12 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             {OCCASIONS.map((o) => (
               <button
-                key={o.name}
+                key={o.slug}
                 type="button"
-                onClick={() => onSelectCategory('gifts', o.name)}
+                onClick={() => navigate(`/occasions/${o.slug}`)}
                 className="group relative aspect-[4/5] rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer text-left"
               >
-                <img src={o.image} alt={o.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <img src={o.bannerImage} alt={o.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 <div className={`absolute inset-0 bg-gradient-to-t ${o.tint} via-transparent to-transparent`} />
                 <span className="absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center text-lg shadow">{o.emoji}</span>
                 <div className="absolute bottom-0 left-0 right-0 p-3 text-white font-bold text-sm" style={{ fontFamily: SERIF }}>{o.name}</div>
