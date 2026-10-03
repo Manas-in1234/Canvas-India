@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { 
-  Star, 
-  Heart, 
-  ShoppingBag, 
-  Check, 
-  Truck, 
-  ShieldCheck, 
-  Award, 
-  MapPin, 
-  ChevronRight, 
-  Share2, 
-  Sparkles, 
+import {
+  Star,
+  Heart,
+  ShoppingBag,
+  Check,
+  Truck,
+  ShieldCheck,
+  Award,
+  MapPin,
+  ChevronRight,
+  ChevronLeft,
+  Share2,
+  Sparkles,
   ArrowRight,
   CheckCircle2,
   Upload,
@@ -67,6 +68,10 @@ export const ProductDetailPage: React.FC = () => {
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedFinish, setSelectedFinish] = useState<string>('');
   const [selectedMaterial, setSelectedMaterial] = useState<string>('');
+  const [selectedShape, setSelectedShape] = useState<string>('');
+  const [customWidth, setCustomWidth] = useState<number>(8);
+  const [customHeight, setCustomHeight] = useState<number>(8);
+  const [isCustomSize, setIsCustomSize] = useState<boolean>(false);
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
 
@@ -103,12 +108,26 @@ export const ProductDetailPage: React.FC = () => {
     }
   }, [product]);
 
+  // Shape options for this product (canvas products get the full shape range by default)
+  const availableShapes = useMemo(() => {
+    if (!product) return [];
+    if (product.shapes && product.shapes.length > 0) return product.shapes;
+    if (product.categorySlug === 'canvas') {
+      return ['Popular', 'Square', 'Rectangle', 'Panoramic', 'Circle', 'Triangle'];
+    }
+    return [];
+  }, [product]);
+
   // Sync variants when product changes
   useEffect(() => {
     if (product) {
       setSelectedSize(product.availableSizes?.[0] || product.sizes?.[0] || '12x18 inch');
       setSelectedFinish(product.finishes?.[0] || 'Standard Finish');
       setSelectedMaterial(availableMaterials[0] || 'Standard');
+      setSelectedShape(product.shape || availableShapes[0] || '');
+      setIsCustomSize(false);
+      setCustomWidth(8);
+      setCustomHeight(8);
       setQuantity(1);
       setActiveImageIndex(0);
       setCustomText('');
@@ -126,7 +145,7 @@ export const ProductDetailPage: React.FC = () => {
         // ignore
       }
     }
-  }, [product, availableMaterials]);
+  }, [product, availableMaterials, availableShapes]);
 
   // Gallery images (product primary + any secondary images)
   const galleryImages = useMemo(() => {
@@ -201,6 +220,23 @@ export const ProductDetailPage: React.FC = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleCustomSizeChange = (width: number, height: number) => {
+    setCustomWidth(width);
+    setCustomHeight(height);
+    setIsCustomSize(true);
+    setSelectedSize(`${width}" x ${height}" (Custom)`);
+  };
+
+  const handlePrevImage = () => {
+    setUploadedFile(null);
+    setActiveImageIndex((idx) => (idx - 1 + galleryImages.length) % galleryImages.length);
+  };
+
+  const handleNextImage = () => {
+    setUploadedFile(null);
+    setActiveImageIndex((idx) => (idx + 1) % galleryImages.length);
   };
 
   const handleAddToCartWithVariants = () => {
@@ -328,6 +364,28 @@ export const ProductDetailPage: React.FC = () => {
               >
                 <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
               </button>
+
+              {/* Prev / Next Gallery Navigation Arrows */}
+              {galleryImages.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handlePrevImage}
+                    aria-label="Previous image"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNextImage}
+                    aria-label="Next image"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Gallery Thumbnails */}
@@ -557,21 +615,44 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             )}
 
+            {/* Shape Selector (Canvas products: Popular/Square/Rectangle/Panoramic/Circle/Triangle) */}
+            {availableShapes.length > 0 && (
+              <div className="space-y-2">
+                <span className="font-bold text-xs text-stone-800">{categoryName} Shapes:</span>
+                <div className="grid grid-cols-4 gap-2">
+                  {availableShapes.map((shapeOpt) => (
+                    <button
+                      key={shapeOpt}
+                      type="button"
+                      onClick={() => setSelectedShape(shapeOpt)}
+                      className={`px-2 py-2 text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
+                        selectedShape === shapeOpt
+                          ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
+                          : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
+                      }`}
+                    >
+                      {shapeOpt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* 1. Size Selector */}
             {product.sizes && product.sizes.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-stone-800">1. Available Sizes:</span>
+                  <span className="font-bold text-stone-800">{availableShapes.length > 0 ? `${categoryName} Sizes:` : '1. Available Sizes:'}</span>
                   <span className="text-stone-500 font-medium">{selectedSize}</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   {product.sizes.map((size) => (
                     <button
                       key={size}
                       type="button"
-                      onClick={() => setSelectedSize(size)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-                        selectedSize === size
+                      onClick={() => { setIsCustomSize(false); setSelectedSize(size); }}
+                      className={`px-2 py-2 text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
+                        selectedSize === size && !isCustomSize
                           ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
                           : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
                       }`}
@@ -579,6 +660,30 @@ export const ProductDetailPage: React.FC = () => {
                       {size}
                     </button>
                   ))}
+                </div>
+
+                {/* Custom Size */}
+                <div className="flex items-center gap-2.5 pt-1">
+                  <span className={`text-xs font-semibold ${isCustomSize ? 'text-[#0E4A93]' : 'text-stone-600'}`}>Custom:</span>
+                  <select
+                    value={customWidth}
+                    onChange={(e) => handleCustomSizeChange(Number(e.target.value), customHeight)}
+                    className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border bg-white cursor-pointer focus:outline-none ${isCustomSize ? 'border-[#0E4A93] text-[#0E4A93]' : 'border-stone-300 text-stone-700'}`}
+                  >
+                    {Array.from({ length: 37 }, (_, i) => i + 4).map((n) => (
+                      <option key={n} value={n}>{n}"</option>
+                    ))}
+                  </select>
+                  <span className="text-stone-400 text-xs font-bold">X</span>
+                  <select
+                    value={customHeight}
+                    onChange={(e) => handleCustomSizeChange(customWidth, Number(e.target.value))}
+                    className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border bg-white cursor-pointer focus:outline-none ${isCustomSize ? 'border-[#0E4A93] text-[#0E4A93]' : 'border-stone-300 text-stone-700'}`}
+                  >
+                    {Array.from({ length: 37 }, (_, i) => i + 4).map((n) => (
+                      <option key={n} value={n}>{n}"</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             )}
