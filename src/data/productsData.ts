@@ -502,6 +502,7 @@ export const ALL_PRODUCTS: Product[] = [
     image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=600&auto=format&fit=crop&q=80',
     images: [
       'https://images.unsplash.com/photo-1519741497674-611481863552?w=900&auto=format&fit=crop&q=80',
+      '/assets/products/wall-mockups/cnv-2-living-room.jpg',
       'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=900&auto=format&fit=crop&q=80'
     ],
     price: 1899,
