@@ -159,7 +159,8 @@ export const ProductDetailPage: React.FC = () => {
     if (!product) return [];
     const base = product.images && product.images.length > 0 ? product.images : [product.image];
     if (product.categorySlug === 'yoga-fitness') return base;
-    return [ROOM_VIEW_SENTINEL, ...base];
+    const [first, ...rest] = base;
+    return [first, ROOM_VIEW_SENTINEL, ...rest];
   }, [product]);
 
   // The real product photo used inside the live Room View preview (first non-sentinel image)

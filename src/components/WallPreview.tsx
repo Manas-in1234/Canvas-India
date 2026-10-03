@@ -1,36 +1,51 @@
 import React, { useMemo } from 'react';
 
+interface WallBounds {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+}
+
 interface WallPreviewProps {
   imageSrc: string;
   shape?: string;
   sizeLabel?: string;
   wallImageSrc?: string;
+  wallNaturalAspect?: number;
+  wallBounds?: WallBounds;
   className?: string;
 }
 
-// A clean, warmly-lit living room wall — used as the default backdrop for every
-// live room-view preview so the frame always reads as "actually hanging" rather
-// than pasted on top of an unrelated photo.
-const DEFAULT_WALL = 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1600&auto=format&fit=crop&q=80';
+// Reuses the same proven, clutter-free living-room wall photo and "safe"
+// hanging zone already used by the Acrylic Room View feature — an open wall
+// above the sofa, left of the plants/windows — instead of a random stock shot.
+const DEFAULT_WALL_IMAGE = '/assets/acrylic/acrylic-panel-living.jpg';
+const DEFAULT_WALL_ASPECT = 800 / 600;
+const DEFAULT_WALL_BOUNDS: WallBounds = { minX: 0.08, maxX: 0.77, minY: 0.04, maxY: 0.53 };
 
 function parseAspectRatio(sizeLabel?: string): number {
-  if (!sizeLabel) return 4 / 3;
+  if (!sizeLabel) return 2 / 3;
   const match = sizeLabel.match(/(\d+(?:\.\d+)?)\s*["”]?\s*x\s*(\d+(?:\.\d+)?)/i);
-  if (!match) return 4 / 3;
+  if (!match) return 2 / 3;
   const w = parseFloat(match[1]);
   const h = parseFloat(match[2]);
-  if (!w || !h) return 4 / 3;
+  if (!w || !h) return 2 / 3;
   return w / h;
 }
 
 // Live, reactive "hanging on the wall" preview: re-renders instantly whenever
 // the selected shape, size or product photo changes, instead of relying on a
-// pre-baked static composite image.
+// pre-baked static composite image. The wall photo keeps its true aspect
+// ratio (letterboxed if the surrounding card is a different shape) so the
+// frame is always placed and scaled correctly, never stretched or distorted.
 export const WallPreview: React.FC<WallPreviewProps> = ({
   imageSrc,
   shape = 'rectangle',
   sizeLabel,
-  wallImageSrc,
+  wallImageSrc = DEFAULT_WALL_IMAGE,
+  wallNaturalAspect = DEFAULT_WALL_ASPECT,
+  wallBounds = DEFAULT_WALL_BOUNDS,
   className = '',
 }) => {
   const shapeKey = (shape || '').toLowerCase();
@@ -44,63 +59,64 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
     return parseAspectRatio(sizeLabel);
   }, [shapeKey, isCircle, isTriangle, sizeLabel]);
 
-  // Treat the wall container as roughly square/4:3 and clamp the frame to a
-  // sensible band on both axes so no shape ever overflows its wall photo.
-  const { widthPct, heightPct } = useMemo(() => {
-    const baseHeight = 50;
-    let w = baseHeight * ratio;
-    let h = baseHeight;
-    const MAX = 62;
-    if (w > MAX) {
-      const scale = MAX / w;
-      w *= scale;
-      h *= scale;
+  // Fit the frame (at its target aspect ratio) inside the wall's safe hanging
+  // zone, centered — like object-fit: contain, but for a positioned overlay.
+  const frameBox = useMemo(() => {
+    const boxW = wallBounds.maxX - wallBounds.minX;
+    const boxH = wallBounds.maxY - wallBounds.minY;
+    const boxRatio = boxW / boxH;
+    let w = boxW;
+    let h = boxH;
+    if (ratio >= boxRatio) {
+      w = boxW;
+      h = w / ratio;
+    } else {
+      h = boxH;
+      w = h * ratio;
     }
-    if (h > MAX) {
-      const scale = MAX / h;
-      w *= scale;
-      h *= scale;
-    }
-    return { widthPct: w, heightPct: h };
-  }, [ratio]);
+    const left = wallBounds.minX + (boxW - w) / 2;
+    const top = wallBounds.minY + (boxH - h) / 2;
+    return { left: left * 100, top: top * 100, width: w * 100, height: h * 100 };
+  }, [ratio, wallBounds]);
 
   const clipPath = isTriangle ? 'polygon(50% 0%, 0% 100%, 100% 100%)' : undefined;
 
   return (
-    <div className={`relative w-full h-full overflow-hidden bg-stone-100 ${className}`}>
-      <img
-        src={wallImageSrc || DEFAULT_WALL}
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+    <div className={`relative w-full h-full flex items-center justify-center bg-stone-50 ${className}`}>
+      <div className="relative h-full max-w-full" style={{ aspectRatio: wallNaturalAspect }}>
+        <img
+          src={wallImageSrc}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
 
-      {/* Soft ground shadow under the frame for depth */}
-      <div
-        className="absolute"
-        style={{
-          left: `${50 - widthPct / 2}%`,
-          top: `${52 - heightPct / 2}%`,
-          width: `${widthPct}%`,
-          height: `${heightPct}%`,
-        }}
-      >
         <div
-          className="relative w-full h-full bg-white"
+          className="absolute"
           style={{
-            padding: isTriangle ? 0 : 7,
-            boxShadow: '0 22px 34px -14px rgba(0,0,0,0.5), 0 4px 10px -4px rgba(0,0,0,0.25)',
-            borderRadius: isCircle ? '50%' : 3,
-            clipPath,
+            left: `${frameBox.left}%`,
+            top: `${frameBox.top}%`,
+            width: `${frameBox.width}%`,
+            height: `${frameBox.height}%`,
           }}
         >
           <div
-            className="w-full h-full overflow-hidden"
+            className="relative w-full h-full bg-white"
             style={{
-              borderRadius: isCircle ? '50%' : 0,
+              padding: isTriangle ? 0 : '3%',
+              boxShadow: '0 16px 26px -10px rgba(0,0,0,0.5), 0 3px 8px -3px rgba(0,0,0,0.3)',
+              borderRadius: isCircle ? '50%' : 2,
               clipPath,
             }}
           >
-            <img src={imageSrc} alt="Product on wall preview" className="w-full h-full object-cover" />
+            <div
+              className="w-full h-full overflow-hidden"
+              style={{
+                borderRadius: isCircle ? '50%' : 0,
+                clipPath,
+              }}
+            >
+              <img src={imageSrc} alt="Product on wall preview" className="w-full h-full object-cover" />
+            </div>
           </div>
         </div>
       </div>
