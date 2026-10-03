@@ -19,14 +19,14 @@ interface WallPreviewProps {
   className?: string;
 }
 
-// A minimal, mostly-empty wall photo (light wall, low console, single plant)
-// so a modestly-sized frame reads naturally, the way canvaschamp.in's product
-// gallery shows it — not a large frame dominating a busy, furnished room.
-const DEFAULT_WALL_IMAGE = 'https://images.unsplash.com/photo-1687075197041-91fba1013e1d?w=1200&h=900&fit=crop&q=80';
-const DEFAULT_WALL_ASPECT = 4 / 3;
-// Small, centered zone on the open wall above the console — deliberately
-// tight so the frame stays modest-sized instead of filling the whole photo.
-const DEFAULT_WALL_BOUNDS: WallBounds = { minX: 0.32, maxX: 0.68, minY: 0.08, maxY: 0.4 };
+// Reuses the same vetted, clutter-free living-room wall photo already used by
+// the Acrylic Room View feature — a genuinely plain wall above the sofa, with
+// no window, mirror or artwork behind the hanging zone.
+const DEFAULT_WALL_IMAGE = '/assets/acrylic/acrylic-panel-living.jpg';
+const DEFAULT_WALL_ASPECT = 1000 / 527;
+// Plain wall band above the window strip and sofa — no window, door or decor
+// in this zone at all.
+const DEFAULT_WALL_BOUNDS: WallBounds = { minX: 0.2, maxX: 0.7, minY: 0.04, maxY: 0.28 };
 // After fitting the frame to its zone, shrink it further so it reads like a
 // real small/medium print on a wall rather than a poster filling the space.
 const FRAME_FILL_FACTOR = 0.62;
