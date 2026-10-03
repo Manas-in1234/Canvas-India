@@ -30,10 +30,9 @@ const ORANGE = '#E8752A';
 const u = (id: string, w = 1200) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=90`;
 
 const CATEGORY_CARDS = [
-  { name: 'Acrylic Paints', sub: 'Vibrant Colors | Endless Possibilities', price: 499, slug: 'acrylic', image: u('photo-1513364776144-60967b0f800f'), grad: 'from-[#0E4A93]/90', chip: 'bg-[#E8752A]' },
-  { name: 'Canvas & Boards', sub: 'For Every Art Idea', price: 399, slug: 'canvas', image: u('photo-1579783902614-a3fb3927b675'), grad: 'from-[#7C3AED]/90', chip: 'bg-[#EC4899]' },
+  { name: 'Acrylic Prints', sub: 'Vibrant Colors | Endless Possibilities', price: 499, slug: 'acrylic', image: u('photo-1513364776144-60967b0f800f'), grad: 'from-[#0E4A93]/90', chip: 'bg-[#E8752A]' },
+  { name: 'Canvas & Boards', sub: 'For Every Art Idea', price: 399, slug: 'canvas', image: u('photo-1536924940846-227afb31e2a5'), grad: 'from-[#7C3AED]/90', chip: 'bg-[#EC4899]' },
   { name: 'Cork Products', sub: 'Natural | Durable | Stylish', price: 449, slug: 'cork', image: u('photo-1586075010923-2dd4570fb338'), grad: 'from-[#B45309]/90', chip: 'bg-[#F59E0B]' },
-  { name: 'Personalized Gifts', sub: 'Make it Uniquely Yours', price: 299, slug: 'gifts', image: u('photo-1513151233558-d860c5398176'), grad: 'from-[#BE185D]/90', chip: 'bg-[#0E4A93]' },
   { name: 'Devotional Art', sub: 'Spiritual Prints for Every Home', price: 249, slug: 'devotional-art', image: '/assets/catalogue/devotional-art/G-A_001.jpg', grad: 'from-[#9A3412]/90', chip: 'bg-[#EA580C]' },
   { name: 'Scenery & Landscape Art', sub: 'Bring the Outdoors In', price: 249, slug: 'scenery-landscape-art', image: '/assets/catalogue/scenery-landscape-art/S-A_010.jpg', grad: 'from-[#0F766E]/90', chip: 'bg-[#059669]' },
   { name: 'Tribal & Ethnic Art', sub: 'Bold, Earthy Statement Pieces', price: 249, slug: 'tribal-ethnic-art', image: '/assets/catalogue/tribal-ethnic-art/A-A_006.jpg', grad: 'from-[#7C2D12]/90', chip: 'bg-[#B45309]' },
@@ -206,18 +205,17 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       {/* SHOP BY CATEGORY */}
       <section id="shop-categories" className="py-12 sm:py-16 bg-[#FDFCF8]">
         <Container>
-          <div className="flex items-end justify-between gap-4 mb-8">
-            <div>
-              <div className="flex items-center gap-4">
-                <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
-                <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Shop by Category</h2>
-              </div>
-              <p className="text-sm mt-2 text-[#567477]">Explore our wide range of creative handmade products</p>
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-4">
+              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Shop by Category</h2>
+              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
             </div>
+            <p className="text-sm mt-2 text-[#567477]">Explore our wide range of creative handmade products</p>
             <button
               type="button"
               onClick={() => navigate('/categories')}
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer shrink-0"
+              className="hidden sm:inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
             >
               View All <ArrowRight className="w-3.5 h-3.5" />
             </button>

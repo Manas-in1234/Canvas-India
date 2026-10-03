@@ -216,7 +216,7 @@ export const CanvasCategoryPage: React.FC = () => {
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-3xl overflow-hidden border border-stone-200 shadow-xl bg-stone-100 group aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3]">
                 <img
-                  src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=1200&auto=format&fit=crop&q=80"
+                  src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1200&auto=format&fit=crop&q=80"
                   alt="Canvas Prints and Wall Art in Living Room"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
