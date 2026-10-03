@@ -22,11 +22,12 @@ interface WallPreviewProps {
 // Reuses the same vetted, clutter-free living-room wall photo already used by
 // the Acrylic Room View feature — a genuinely plain wall above the sofa, with
 // no window, mirror or artwork behind the hanging zone.
-const DEFAULT_WALL_IMAGE = '/assets/acrylic/acrylic-panel-living.jpg';
-const DEFAULT_WALL_ASPECT = 1000 / 527;
-// Plain wall band above the window strip and sofa — no window, door or decor
-// in this zone at all.
-const DEFAULT_WALL_BOUNDS: WallBounds = { minX: 0.2, maxX: 0.7, minY: 0.04, maxY: 0.28 };
+const DEFAULT_WALL_IMAGE = 'https://images.unsplash.com/photo-1687075197041-91fba1013e1d?w=1600&q=80';
+const DEFAULT_WALL_ASPECT = 1600 / 900;
+// The genuinely blank stretch of wall on the left side of this photo — the
+// right half has a large bright window panel behind the console, so the
+// hanging zone stays entirely clear of it.
+const DEFAULT_WALL_BOUNDS: WallBounds = { minX: 0.05, maxX: 0.4, minY: 0.05, maxY: 0.52 };
 // After fitting the frame to its zone, shrink it further so it reads like a
 // real small/medium print on a wall rather than a poster filling the space.
 const FRAME_FILL_FACTOR = 0.62;
