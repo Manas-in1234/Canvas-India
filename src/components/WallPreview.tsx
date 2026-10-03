@@ -17,21 +17,35 @@ interface WallPreviewProps {
   className?: string;
 }
 
-// Reuses the same proven, clutter-free living-room wall photo and "safe"
-// hanging zone already used by the Acrylic Room View feature — an open wall
-// above the sofa, left of the plants/windows — instead of a random stock shot.
-const DEFAULT_WALL_IMAGE = '/assets/acrylic/acrylic-panel-living.jpg';
-const DEFAULT_WALL_ASPECT = 800 / 600;
-const DEFAULT_WALL_BOUNDS: WallBounds = { minX: 0.08, maxX: 0.77, minY: 0.04, maxY: 0.53 };
+// A minimal, mostly-empty wall photo (light wall, low console, single plant)
+// so a modestly-sized frame reads naturally, the way canvaschamp.in's product
+// gallery shows it — not a large frame dominating a busy, furnished room.
+const DEFAULT_WALL_IMAGE = 'https://images.unsplash.com/photo-1687075197041-91fba1013e1d?w=1200&h=900&fit=crop&q=80';
+const DEFAULT_WALL_ASPECT = 4 / 3;
+// Small, centered zone on the open wall above the console — deliberately
+// tight so the frame stays modest-sized instead of filling the whole photo.
+const DEFAULT_WALL_BOUNDS: WallBounds = { minX: 0.32, maxX: 0.68, minY: 0.08, maxY: 0.4 };
+// After fitting the frame to its zone, shrink it further so it reads like a
+// real small/medium print on a wall rather than a poster filling the space.
+const FRAME_FILL_FACTOR = 0.62;
+
+const SIZE_PATTERN = /(\d+(?:\.\d+)?)\s*["”]?\s*x\s*(\d+(?:\.\d+)?)/i;
 
 function parseAspectRatio(sizeLabel?: string): number {
   if (!sizeLabel) return 2 / 3;
-  const match = sizeLabel.match(/(\d+(?:\.\d+)?)\s*["”]?\s*x\s*(\d+(?:\.\d+)?)/i);
+  const match = sizeLabel.match(SIZE_PATTERN);
   if (!match) return 2 / 3;
   const w = parseFloat(match[1]);
   const h = parseFloat(match[2]);
   if (!w || !h) return 2 / 3;
   return w / h;
+}
+
+function formatSizeCaption(sizeLabel?: string): string {
+  if (!sizeLabel) return '';
+  const match = sizeLabel.match(SIZE_PATTERN);
+  if (!match) return sizeLabel;
+  return `${match[1]}" X ${match[2]}"`;
 }
 
 // Live, reactive "hanging on the wall" preview: re-renders instantly whenever
@@ -74,6 +88,8 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
       h = boxH;
       w = h * ratio;
     }
+    w *= FRAME_FILL_FACTOR;
+    h *= FRAME_FILL_FACTOR;
     const left = wallBounds.minX + (boxW - w) / 2;
     const top = wallBounds.minY + (boxH - h) / 2;
     return { left: left * 100, top: top * 100, width: w * 100, height: h * 100 };
@@ -99,6 +115,14 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
             height: `${frameBox.height}%`,
           }}
         >
+          {formatSizeCaption(sizeLabel) && (
+            <div
+              className="absolute left-1/2 -translate-x-1/2 -top-5 text-[11px] sm:text-xs font-semibold text-stone-700 whitespace-nowrap"
+              style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
+            >
+              {formatSizeCaption(sizeLabel)}
+            </div>
+          )}
           <div
             className="relative w-full h-full bg-white"
             style={{
