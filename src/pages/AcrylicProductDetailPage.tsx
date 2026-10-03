@@ -486,24 +486,6 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
             {/* =================================================================== */}
             <div className="space-y-4 pt-2 border-t border-stone-200">
               
-              {/* 1. SELECT STYLE */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
-                <label className="text-xs font-bold text-stone-700 sm:col-span-1">
-                  Select Style:
-                </label>
-                <div className="sm:col-span-2">
-                  <select
-                    value={selectedStyle}
-                    onChange={(e) => setSelectedStyle(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer shadow-2xs"
-                  >
-                    {availableStyles.map((style) => (
-                      <option key={style} value={style}>{style}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
               {/* SELECT SHAPE */}
               {availableShapes.length > 0 && (
                 <div className="space-y-2">
@@ -526,24 +508,6 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                   </div>
                 </div>
               )}
-
-              {/* 2. SELECT THICKNESS */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
-                <label className="text-xs font-bold text-stone-700 sm:col-span-1">
-                  Select Thickness:
-                </label>
-                <div className="sm:col-span-2">
-                  <select
-                    value={selectedThickness}
-                    onChange={(e) => setSelectedThickness(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer shadow-2xs"
-                  >
-                    {availableThicknesses.map((th) => (
-                      <option key={th} value={th}>{th}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
 
               {/* 3. SELECT SIZE */}
               <div className="space-y-2">
@@ -588,42 +552,6 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                   >
                     {Array.from({ length: 37 }, (_, i) => i + 4).map((n) => (
                       <option key={n} value={n}>{n}"</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* 4. SELECT PAPER */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
-                <label className="text-xs font-bold text-stone-700 sm:col-span-1">
-                  Select Paper:
-                </label>
-                <div className="sm:col-span-2">
-                  <select
-                    value={selectedPaper}
-                    onChange={(e) => setSelectedPaper(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer shadow-2xs"
-                  >
-                    {availablePapers.map((paper) => (
-                      <option key={paper} value={paper}>{paper}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* 5. SELECT BASE */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
-                <label className="text-xs font-bold text-stone-700 sm:col-span-1">
-                  Select Base:
-                </label>
-                <div className="sm:col-span-2">
-                  <select
-                    value={selectedBase}
-                    onChange={(e) => setSelectedBase(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer shadow-2xs"
-                  >
-                    {availableBases.map((base) => (
-                      <option key={base} value={base}>{base}</option>
                     ))}
                   </select>
                 </div>
