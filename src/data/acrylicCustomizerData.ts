@@ -534,55 +534,7 @@ export const SIZE_OPTIONS: SizeOption[] = [
     image: '/assets/customizer/acrylic/sizes/landscape.svg'
   },
 
-  // Square
-  {
-    id: 'sq-4x4',
-    productTypeId: 'acrylic-photo-block',
-    category: 'SQUARE',
-    label: '4" × 4"',
-    dimensionsSummary: '4" × 4"',
-    widthInches: 4,
-    heightInches: 4,
-    price: 499.00,
-    aspectClass: 'aspect-square',
-    image: '/assets/customizer/acrylic/sizes/square.svg'
-  },
-  {
-    id: 'sq-5x5',
-    productTypeId: 'acrylic-photo-block',
-    category: 'SQUARE',
-    label: '5" × 5"',
-    dimensionsSummary: '5" × 5"',
-    widthInches: 5,
-    heightInches: 5,
-    price: 450.00,
-    aspectClass: 'aspect-square',
-    image: '/assets/customizer/acrylic/sizes/square.svg'
-  },
-  {
-    id: 'sq-6x6',
-    productTypeId: 'acrylic-photo-block',
-    category: 'SQUARE',
-    label: '6" × 6"',
-    dimensionsSummary: '6" × 6"',
-    widthInches: 6,
-    heightInches: 6,
-    price: 699.00,
-    aspectClass: 'aspect-square',
-    image: '/assets/customizer/acrylic/sizes/square.svg'
-  },
-  {
-    id: 'sq-8x8',
-    productTypeId: 'acrylic-photo-panel',
-    category: 'SQUARE',
-    label: '8" × 8"',
-    dimensionsSummary: '8" × 8"',
-    widthInches: 8,
-    heightInches: 8,
-    price: 355.00,
-    aspectClass: 'aspect-square',
-    image: '/assets/customizer/acrylic/sizes/square.svg'
-  },
+  // Square (EXACTLY four sizes: 10"x10", 16"x16", 18"x18", 20"x20")
   {
     id: 'sq-10x10',
     productTypeId: 'acrylic-photo-panel',
@@ -595,19 +547,6 @@ export const SIZE_OPTIONS: SizeOption[] = [
     aspectClass: 'aspect-square',
     image: '/assets/customizer/acrylic/sizes/square.svg'
   },
-  {
-    id: 'sq-12x12',
-    productTypeId: 'acrylic-photo-panel',
-    category: 'SQUARE',
-    label: '12" × 12"',
-    dimensionsSummary: '12" × 12"',
-    widthInches: 12,
-    heightInches: 12,
-    price: 999.00,
-    aspectClass: 'aspect-square',
-    image: '/assets/customizer/acrylic/sizes/square.svg'
-  },
-
   {
     id: 'sq-16x16',
     productTypeId: 'acrylic-photo-panel',
@@ -2172,6 +2111,48 @@ export const ACRYLIC_SHAPES: AcrylicShapeOption[] = [
     isSingleDimension: true,
     image: '',
     priceAddon: 150
+  },
+  {
+    id: 'shape-triangle',
+    shapeType: 'triangle' as any,
+    name: 'Triangle',
+    category: 'special',
+    description: 'Geometric 3-sided triangle acrylic for modern wall galleries.',
+    aspectClass: 'aspect-square',
+    aspectRatio: 1,
+    borderRadiusClass: 'rounded-none',
+    clipPathStyle: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+    isSingleDimension: true,
+    image: '',
+    priceAddon: 150
+  },
+  {
+    id: 'shape-panoramic',
+    shapeType: 'panoramic' as any,
+    name: 'Panoramic',
+    category: 'special',
+    description: 'Wide horizontal aspect ratio for expansive landscape scenes.',
+    aspectClass: 'aspect-[3/1]',
+    aspectRatio: 3,
+    borderRadiusClass: 'rounded-xl',
+    clipPathStyle: 'inset(0 round 14px)',
+    isSingleDimension: false,
+    image: '',
+    priceAddon: 0
+  },
+  {
+    id: 'shape-banner',
+    shapeType: 'banner' as any,
+    name: 'Banner',
+    category: 'special',
+    description: 'Elongated banner presentation for vertical displays.',
+    aspectClass: 'aspect-[1/2]',
+    aspectRatio: 0.5,
+    borderRadiusClass: 'rounded-xl',
+    clipPathStyle: 'inset(0 round 14px)',
+    isSingleDimension: false,
+    image: '',
+    priceAddon: 0
   }
 ];
 

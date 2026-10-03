@@ -45,16 +45,12 @@ export const ALL_SHAPE_DEFINITIONS: ShapeDefinition[] = [
 
 // Helper to generate standardized shape sizes
 export const STANDARD_SHAPE_SIZES: Record<string, Array<{ width: number; height: number; label: string; acrylicPrice: number; canvasPrice: number }>> = {
-  // Square: full catalog preserved (Requirement 7)
+  // Square: EXACTLY four sizes (Requirement 1: 10"x10", 16"x16", 18"x18", 20"x20")
   'shape-square': [
-    { width: 8, height: 8, label: '8" × 8"', acrylicPrice: 355.0, canvasPrice: 99.0 },
     { width: 10, height: 10, label: '10" × 10"', acrylicPrice: 799.0, canvasPrice: 199.0 },
-    { width: 12, height: 12, label: '12" × 12"', acrylicPrice: 999.0, canvasPrice: 349.0 },
-    { width: 14, height: 14, label: '14" × 14"', acrylicPrice: 1399.0, canvasPrice: 499.0 },
     { width: 16, height: 16, label: '16" × 16"', acrylicPrice: 1799.0, canvasPrice: 699.0 },
     { width: 18, height: 18, label: '18" × 18"', acrylicPrice: 2299.0, canvasPrice: 899.0 },
-    { width: 20, height: 20, label: '20" × 20"', acrylicPrice: 2799.0, canvasPrice: 1199.0 },
-    { width: 24, height: 24, label: '24" × 24"', acrylicPrice: 3499.0, canvasPrice: 1599.0 }
+    { width: 20, height: 20, label: '20" × 20"', acrylicPrice: 2799.0, canvasPrice: 1199.0 }
   ],
   // Rectangle: approx 5-6 useful options (Requirement 6)
   'shape-rectangle': [
@@ -434,13 +430,13 @@ export const COLLAGE_PRESETS: Array<Omit<SizeShapeOption, 'price'> & { acrylicPr
     ]
   },
   {
-    id: 'collage-4photo-12x12',
+    id: 'collage-4photo-10x10',
     shapeId: 'shape-square',
     shapeName: 'Photo Collage',
-    label: '4 Photos (2×2): 12" × 12"',
-    dimensionsSummary: '12" × 12" (4 Photo Grid)',
-    widthInches: 12,
-    heightInches: 12,
+    label: '4 Photos (2×2): 10" × 10"',
+    dimensionsSummary: '10" × 10" (4 Photo Grid)',
+    widthInches: 10,
+    heightInches: 10,
     acrylicPrice: 699.00,
     canvasPrice: 799.00,
     aspectRatio: 1,
@@ -450,10 +446,10 @@ export const COLLAGE_PRESETS: Array<Omit<SizeShapeOption, 'price'> & { acrylicPr
     arrangement: 'fourGrid',
     diagramType: 'collage-4',
     panels: [
-      { id: 'p0', label: 'Slot 1', dimension: '6" × 6"', widthRatio: 6, heightRatio: 6 },
-      { id: 'p1', label: 'Slot 2', dimension: '6" × 6"', widthRatio: 6, heightRatio: 6 },
-      { id: 'p2', label: 'Slot 3', dimension: '6" × 6"', widthRatio: 6, heightRatio: 6 },
-      { id: 'p3', label: 'Slot 4', dimension: '6" × 6"', widthRatio: 6, heightRatio: 6 }
+      { id: 'p0', label: 'Slot 1', dimension: '5" × 5"', widthRatio: 5, heightRatio: 5 },
+      { id: 'p1', label: 'Slot 2', dimension: '5" × 5"', widthRatio: 5, heightRatio: 5 },
+      { id: 'p2', label: 'Slot 3', dimension: '5" × 5"', widthRatio: 5, heightRatio: 5 },
+      { id: 'p3', label: 'Slot 4', dimension: '5" × 5"', widthRatio: 5, heightRatio: 5 }
     ]
   },
   {
@@ -480,6 +476,29 @@ export const COLLAGE_PRESETS: Array<Omit<SizeShapeOption, 'price'> & { acrylicPr
     ]
   },
   {
+    id: 'collage-4photo-18x18',
+    shapeId: 'shape-square',
+    shapeName: 'Photo Collage',
+    label: '4 Photos (2×2): 18" × 18"',
+    dimensionsSummary: '18" × 18" (4 Photo Grid)',
+    widthInches: 18,
+    heightInches: 18,
+    acrylicPrice: 1199.00,
+    canvasPrice: 1399.00,
+    aspectRatio: 1,
+    category: 'MULTI_PANEL',
+    panelsCount: 4,
+    pieceBreakdown: '4-Photo Square Grid',
+    arrangement: 'fourGrid',
+    diagramType: 'collage-4',
+    panels: [
+      { id: 'p0', label: 'Slot 1', dimension: '9" × 9"', widthRatio: 9, heightRatio: 9 },
+      { id: 'p1', label: 'Slot 2', dimension: '9" × 9"', widthRatio: 9, heightRatio: 9 },
+      { id: 'p2', label: 'Slot 3', dimension: '9" × 9"', widthRatio: 9, heightRatio: 9 },
+      { id: 'p3', label: 'Slot 4', dimension: '9" × 9"', widthRatio: 9, heightRatio: 9 }
+    ]
+  },
+  {
     id: 'collage-4photo-20x20',
     shapeId: 'shape-square',
     shapeName: 'Photo Collage',
@@ -501,6 +520,30 @@ export const COLLAGE_PRESETS: Array<Omit<SizeShapeOption, 'price'> & { acrylicPr
       { id: 'p2', label: 'Slot 3', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 },
       { id: 'p3', label: 'Slot 4', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }
     ]
+  },
+  {
+    id: 'collage-9photo-18x18',
+    shapeId: 'shape-square',
+    shapeName: 'Photo Collage',
+    label: '9 Photos (3×3): 18" × 18"',
+    dimensionsSummary: '18" × 18" (9 Photo Grid)',
+    widthInches: 18,
+    heightInches: 18,
+    acrylicPrice: 1599.00,
+    canvasPrice: 1799.00,
+    aspectRatio: 1,
+    category: 'MULTI_PANEL',
+    panelsCount: 9,
+    pieceBreakdown: '9-Photo Square Grid',
+    arrangement: 'nineGrid',
+    diagramType: 'collage-9',
+    panels: Array.from({ length: 9 }, (_, i) => ({
+      id: `p${i}`,
+      label: `Slot ${i + 1}`,
+      dimension: '6" × 6"',
+      widthRatio: 6,
+      heightRatio: 6
+    }))
   },
   {
     id: 'collage-9photo-20x20',
@@ -531,26 +574,26 @@ export const COLLAGE_PRESETS: Array<Omit<SizeShapeOption, 'price'> & { acrylicPr
 // MOSAIC PRESETS
 export const MOSAIC_PRESETS: Array<Omit<SizeShapeOption, 'price'> & { acrylicPrice: number; canvasPrice: number }> = [
   {
-    id: 'mosaic-4p-12x12',
+    id: 'mosaic-4p-10x10',
     shapeId: 'shape-square',
     shapeName: 'Photo Mosaic',
-    label: '4 Photos: 12" × 12"',
-    dimensionsSummary: '12" × 12" (4 Mosaic Tiles)',
-    widthInches: 12,
-    heightInches: 12,
+    label: '4 Photos: 10" × 10"',
+    dimensionsSummary: '10" × 10" (4 Mosaic Tiles)',
+    widthInches: 10,
+    heightInches: 10,
     acrylicPrice: 799.00,
     canvasPrice: 699.00,
     aspectRatio: 1,
     category: 'SQUARE',
     panelsCount: 4,
-    pieceBreakdown: '4-Tile Mosaic Grid (6"×6" ea)',
+    pieceBreakdown: '4-Tile Mosaic Grid (5"×5" ea)',
     arrangement: 'fourGrid',
     diagramType: 'mosaic-4',
     panels: [
-      { id: 'p0', label: 'Tile 1', dimension: '6" × 6"', widthRatio: 6, heightRatio: 6 },
-      { id: 'p1', label: 'Tile 2', dimension: '6" × 6"', widthRatio: 6, heightRatio: 6 },
-      { id: 'p2', label: 'Tile 3', dimension: '6" × 6"', widthRatio: 6, heightRatio: 6 },
-      { id: 'p3', label: 'Tile 4', dimension: '6" × 6"', widthRatio: 6, heightRatio: 6 }
+      { id: 'p0', label: 'Tile 1', dimension: '5" × 5"', widthRatio: 5, heightRatio: 5 },
+      { id: 'p1', label: 'Tile 2', dimension: '5" × 5"', widthRatio: 5, heightRatio: 5 },
+      { id: 'p2', label: 'Tile 3', dimension: '5" × 5"', widthRatio: 5, heightRatio: 5 },
+      { id: 'p3', label: 'Tile 4', dimension: '5" × 5"', widthRatio: 5, heightRatio: 5 }
     ]
   },
   {
@@ -602,27 +645,27 @@ export const MOSAIC_PRESETS: Array<Omit<SizeShapeOption, 'price'> & { acrylicPri
     }))
   },
   {
-    id: 'mosaic-16p-24x24',
+    id: 'mosaic-16p-20x20',
     shapeId: 'shape-square',
     shapeName: 'Photo Mosaic',
-    label: '16 Photos: 24" × 24"',
-    dimensionsSummary: '24" × 24" (16 Mosaic Tiles)',
-    widthInches: 24,
-    heightInches: 24,
-    acrylicPrice: 2499.00,
-    canvasPrice: 2199.00,
+    label: '16 Photos: 20" × 20"',
+    dimensionsSummary: '20" × 20" (16 Mosaic Tiles)',
+    widthInches: 20,
+    heightInches: 20,
+    acrylicPrice: 2299.00,
+    canvasPrice: 1999.00,
     aspectRatio: 1,
     category: 'SQUARE',
     panelsCount: 16,
-    pieceBreakdown: '16-Tile Mosaic Grid (6"×6" ea)',
+    pieceBreakdown: '16-Tile Mosaic Grid (5"×5" ea)',
     arrangement: 'sixteenGrid',
     diagramType: 'mosaic-16',
     panels: Array.from({ length: 16 }, (_, i) => ({
       id: `p${i}`,
       label: `Tile ${i + 1}`,
-      dimension: '6" × 6"',
-      widthRatio: 6,
-      heightRatio: 6
+      dimension: '5" × 5"',
+      widthRatio: 5,
+      heightRatio: 5
     }))
   }
 ];
@@ -744,9 +787,11 @@ export function getProductSizeShapeOptions(productId: string, material: 'canvas'
     }));
   }
 
-  // 3b. Mosaic
+  // 3b. Mosaic (Strictly excluding 9x9 and 16x16 per customizer requirements)
   if (normId.includes('mosaic')) {
-    return MOSAIC_PRESETS.map((p) => ({
+    return MOSAIC_PRESETS.filter(
+      (p) => !(p.widthInches === 9 && p.heightInches === 9) && !(p.widthInches === 16 && p.heightInches === 16)
+    ).map((p) => ({
       ...p,
       price: material === 'acrylic' ? p.acrylicPrice : p.canvasPrice
     }));
@@ -825,7 +870,9 @@ export function getSizesForProductAndShape(
     return matching.length > 0 ? matching : collages;
   }
   if (normId.includes('mosaic')) {
-    const mosaics = MOSAIC_PRESETS.map((p) => ({
+    const mosaics = MOSAIC_PRESETS.filter(
+      (p) => !(p.widthInches === 9 && p.heightInches === 9) && !(p.widthInches === 16 && p.heightInches === 16)
+    ).map((p) => ({
       ...p,
       price: material === 'acrylic' ? p.acrylicPrice : p.canvasPrice
     }));
