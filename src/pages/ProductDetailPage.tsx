@@ -24,9 +24,14 @@ import {
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
 import { ProductImage } from '../components/ProductImage';
+import { WallPreview } from '../components/WallPreview';
 import { CUSTOMER_REVIEWS } from '../data/storeData';
 import { Product } from '../types';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
+
+// Sentinel inserted as the first gallery slot for wall-hangable categories so
+// the "Room View" thumbnail renders a live WallPreview instead of a static image.
+const ROOM_VIEW_SENTINEL = '__ROOM_VIEW__';
 
 interface FinishStyle { wall: string; border: number; color: string; shadow: string; outline: string; overlay: string; }
 
@@ -147,14 +152,21 @@ export const ProductDetailPage: React.FC = () => {
     }
   }, [product, availableMaterials, availableShapes]);
 
-  // Gallery images (product primary + any secondary images)
+  // Gallery images (product primary + any secondary images). Wall-hangable
+  // categories get a leading "Room View" sentinel slot rendered live via
+  // WallPreview, reacting to the selected shape/size instead of a static photo.
   const galleryImages = useMemo(() => {
     if (!product) return [];
-    if (product.images && product.images.length > 0) {
-      return product.images;
-    }
-    return [product.image];
+    const base = product.images && product.images.length > 0 ? product.images : [product.image];
+    if (product.categorySlug === 'yoga-fitness') return base;
+    return [ROOM_VIEW_SENTINEL, ...base];
   }, [product]);
+
+  // The real product photo used inside the live Room View preview (first non-sentinel image)
+  const roomViewSourceImage = useMemo(() => {
+    const real = galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL);
+    return real || product?.image || '';
+  }, [galleryImages, product]);
 
   // Related products from same category or catalog
   const relatedProducts = useMemo(() => {
@@ -321,12 +333,21 @@ export const ProductDetailPage: React.FC = () => {
             
             {/* Main Primary Image */}
             <div className="relative w-full aspect-square sm:aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 shadow-xs group">
-              <ProductImage
-                src={uploadedFile || galleryImages[activeImageIndex] || product.image}
-                alt={product.name}
-                categorySlug={product.categorySlug}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
+              {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
+                <WallPreview
+                  imageSrc={uploadedFile || roomViewSourceImage}
+                  shape={selectedShape}
+                  sizeLabel={selectedSize}
+                  className="w-full h-full"
+                />
+              ) : (
+                <ProductImage
+                  src={uploadedFile || galleryImages[activeImageIndex] || product.image}
+                  alt={product.name}
+                  categorySlug={product.categorySlug}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              )}
 
               {/* Live custom text preview on the product image */}
               {customText.trim() && (
@@ -401,11 +422,15 @@ export const ProductDetailPage: React.FC = () => {
                     }}
                     className={`shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
                       activeImageIndex === idx && !uploadedFile
-                        ? 'border-[#0E4A93] shadow-md ring-2 ring-[#0E4A93]/20' 
+                        ? 'border-[#0E4A93] shadow-md ring-2 ring-[#0E4A93]/20'
                         : 'border-stone-200 hover:border-stone-400 opacity-80 hover:opacity-100'
                     }`}
                   >
-                    <ProductImage src={img} alt={`View ${idx + 1}`} categorySlug={product.categorySlug} className="w-full h-full object-cover" />
+                    {img === ROOM_VIEW_SENTINEL ? (
+                      <WallPreview imageSrc={roomViewSourceImage} shape={selectedShape} sizeLabel={selectedSize} className="w-full h-full" />
+                    ) : (
+                      <ProductImage src={img} alt={`View ${idx + 1}`} categorySlug={product.categorySlug} className="w-full h-full object-cover" />
+                    )}
                   </button>
                 ))}
               </div>
