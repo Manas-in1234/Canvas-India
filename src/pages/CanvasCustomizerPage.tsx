@@ -1283,8 +1283,6 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // WRAP & BORDER tab
   const [selectedWrapId, setSelectedWrapId] = useState<string>('full-bleed');
-  // Requirement 2 & 3: Default OFF (false) so uploaded image sits strictly inside front print area
-  const [imageOnEdges, setImageOnEdges] = useState<boolean>(false);
   const [mirrorImage, setMirrorImage] = useState<boolean>(false);
   const [selectedBorderWidthId, setSelectedBorderWidthId] = useState<string>('none');
   const [selectedBorderColor, setSelectedBorderColor] = useState<string>('#FFFFFF');
@@ -3698,57 +3696,6 @@ export const CanvasCustomizerPage: React.FC = () => {
           {/* --------------------------- WRAP & BORDER --------------------------- */}
           {activeTab === 'WRAP & BORDER' && (
             <div className="p-4 space-y-5">
-              {/* IMAGE WRAP ON EDGES USER CONTROL (Requirement 2 & 3) */}
-              <div className="space-y-2.5 pb-4 border-b border-stone-200">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">Image Wrap on Edges</label>
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      !imageOnEdges
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-blue-50 text-blue-700 border border-blue-200'
-                    }`}
-                  >
-                    {!imageOnEdges ? 'No Image on Edges (Default)' : 'Image on Edges'}
-                  </span>
-                </div>
-                <p className="text-[11px] text-stone-500">
-                  Choose whether your uploaded photo stays strictly inside the front print area, or extends continuously onto the physical canvas edges.
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setImageOnEdges(false)}
-                    className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
-                      !imageOnEdges
-                        ? 'border-[#0E4A93] bg-blue-50/30 text-[#0E4A93] shadow-xs ring-1 ring-[#0E4A93]/20'
-                        : 'border-stone-200 text-stone-700 bg-white hover:border-stone-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-black">No Image on Edges</span>
-                      {!imageOnEdges && <Check className="w-3.5 h-3.5 stroke-[3] text-[#0E4A93]" />}
-                    </div>
-                    <p className="text-[10px] text-stone-500">Front print area only. Clean border/wrap edges.</p>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setImageOnEdges(true)}
-                    className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
-                      imageOnEdges
-                        ? 'border-[#0E4A93] bg-blue-50/30 text-[#0E4A93] shadow-xs ring-1 ring-[#0E4A93]/20'
-                        : 'border-stone-200 text-stone-700 bg-white hover:border-stone-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-black">Image on Edges</span>
-                      {imageOnEdges && <Check className="w-3.5 h-3.5 stroke-[3] text-[#0E4A93]" />}
-                    </div>
-                    <p className="text-[10px] text-stone-500">Photo wraps continuously across front and edges.</p>
-                  </button>
-                </div>
-              </div>
-
               {/* 1. Edge Wrap Styles */}
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
@@ -4214,55 +4161,6 @@ export const CanvasCustomizerPage: React.FC = () => {
             onDeleteSelectedItem={removeSelectedItem}
           />
 
-          {/* ALWAYS-VISIBLE PREVIEW THUMBNAILS: Studio / Living Room / Office.
-              Clicking a room thumbnail shows the *live* customization (current
-              photo, shape, size - whatever is set right now) composited onto
-              that wall, via the same AcrylicRoomViewModal render path used
-              below - nothing here is a separate static image. */}
-          <div className="shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2 bg-white border-b border-stone-200 overflow-x-auto">
-            {[
-              { id: null as 'room' | null, label: 'Studio', thumb: null },
-              { id: 'room' as const, preset: 'living' as const, label: 'Living Room', thumb: '/assets/acrylic/acrylic-panel-living.jpg' },
-              { id: 'room' as const, preset: 'office' as const, label: 'Office', thumb: '/assets/acrylic/acrylic-corporate-office.jpg' }
-            ].map((opt) => {
-              const isActive = opt.id === null ? viewerMode !== 'room' : viewerMode === 'room' && roomViewState.roomPreset === opt.preset;
-              return (
-                <button
-                  key={opt.label}
-                  type="button"
-                  disabled={opt.id === 'room' && !hasUploadedImage}
-                  onClick={() => {
-                    if (opt.id === null) {
-                      setViewerMode(null);
-                      return;
-                    }
-                    if (!hasUploadedImage) return;
-                    setRoomViewState((prev) => ({ ...prev, roomPreset: opt.preset! }));
-                    setViewerRotation(0);
-                    setViewerTiltX(0);
-                    setViewerAutoRotate(false);
-                    setViewerMode('room');
-                  }}
-                  title={opt.id === 'room' && !hasUploadedImage ? 'Upload a photo first to preview it on a wall' : opt.label}
-                  className={`shrink-0 flex items-center gap-2 px-2 py-1.5 rounded-lg border-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-                    isActive ? 'border-[#0E4A93] bg-blue-50/60' : 'border-stone-200 hover:border-stone-300 bg-white'
-                  }`}
-                >
-                  <div className="w-9 h-9 rounded-md overflow-hidden bg-stone-100 shrink-0 border border-stone-200">
-                    {opt.thumb ? (
-                      <img src={opt.thumb} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-stone-50">
-                        <ImageIcon className="w-4 h-4 text-stone-400" />
-                      </div>
-                    )}
-                  </div>
-                  <span className={`text-[11px] font-bold whitespace-nowrap ${isActive ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{opt.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
           {/* Quick Floating Tool Popover: ADD TEXT */}
           {showTextPopover && (
             <div className="absolute top-14 right-4 w-80 max-h-[70vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-stone-200 p-4 text-xs z-30 animate-in fade-in zoom-in-95 space-y-3">
@@ -4663,7 +4561,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 boxShadow: 'inset 0 -1px 2px rgba(0,0,0,0.15), 0 -3px 8px -1px rgba(0,0,0,0.10)'
                               }}
                             >
-                              {imageOnEdges && (isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
+                              {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
                                 <img
                                   src={panelImages[0].imageUrl}
                                   alt=""
@@ -4702,7 +4600,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 boxShadow: 'inset -1px 0 2px rgba(0,0,0,0.15), -3px 0 8px -1px rgba(0,0,0,0.10)'
                               }}
                             >
-                              {imageOnEdges && (isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
+                              {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
                                 <img
                                   src={panelImages[0].imageUrl}
                                   alt=""
@@ -4741,7 +4639,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.18), 0 12px 24px -4px rgba(15, 23, 42, 0.42)'
                               }}
                             >
-                              {imageOnEdges && (isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
+                              {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
                                 <img
                                   src={panelImages[0].imageUrl}
                                   alt=""
@@ -4780,7 +4678,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 boxShadow: 'inset 1px 0 2px rgba(0,0,0,0.18), 4px 8px 16px -2px rgba(15, 23, 42, 0.35)'
                               }}
                             >
-                              {imageOnEdges && (isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
+                              {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
                                 <img
                                   src={panelImages[0].imageUrl}
                                   alt=""
@@ -4818,7 +4716,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                               zIndex: -1
                             }}
                           >
-                            {imageOnEdges && (isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
+                            {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
                               <img
                                 src={panelImages[0].imageUrl}
                                 alt=""
@@ -4872,7 +4770,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                             className="absolute inset-0 pointer-events-none z-10"
                             style={{
                               border:
-                                imageOnEdges && (isFullBleedWrap || isMirrorWrap)
+                                isFullBleedWrap || isMirrorWrap
                                   ? '12px solid rgba(0,0,0,0.06)'
                                   : `12px solid ${wrapBgColor}`,
                               borderRadius: currentShape.id === 'shape-circle' ? '9999px' : undefined
@@ -5448,16 +5346,15 @@ export const CanvasCustomizerPage: React.FC = () => {
                   const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
                   const master = panelImages[0] || createDefaultPanel();
                   const gapPx = 6;
+                  const panXPct = ((master.panX || 0) / 420) * 100;
+                  const panYPct = ((master.panY || 0) / 420) * 100;
                   return (
                     <div className="relative w-full h-full pointer-events-none select-none flex items-center justify-center" style={{ gap: `${gapPx}px` }}>
                       {splitPanels.map((_, i) => (
                         <div
                           key={i}
                           className="relative h-full rounded-xs bg-white overflow-hidden"
-                          style={{
-                            flex: 1,
-                            filter: `drop-shadow(${Math.round(wrapDepthPx * 0.35)}px ${Math.round(wrapDepthPx * 0.45)}px 0px rgba(30, 41, 59, 0.55))`
-                          }}
+                          style={{ flex: 1 }}
                         >
                           {masterImage && (
                             <div
@@ -5476,7 +5373,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   width: '100%',
                                   height: '100%',
                                   objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
-                                  transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                  transform: `translate3d(${panXPct}%, ${panYPct}%, 0) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                   filter: getFilterCss(master.filter)
                                 }}
                               />
@@ -5489,14 +5386,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                 }
 
                 return (
-                  <div
-                    className="relative w-full h-full pointer-events-none select-none flex items-center justify-center"
-                    style={{
-                      filter: `drop-shadow(${Math.round(wrapDepthPx * 0.35)}px ${Math.round(
-                        wrapDepthPx * 0.45
-                      )}px 0px rgba(30, 41, 59, 0.55))`
-                    }}
-                  >
+                  <div className="relative w-full h-full pointer-events-none select-none flex items-center justify-center">
                     <div
                       className={`relative w-full h-full overflow-hidden bg-white pointer-events-none select-none ${
                         shapeApplies ? currentShape.borderRadiusClass : 'rounded-xs'
@@ -5763,7 +5653,6 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   selectedBorderWidthId === 'none' &&
                                   !slice.isRearHalf &&
                                   primaryPhotoUrl &&
-                                  imageOnEdges &&
                                   (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
                                     <img
                                       src={primaryPhotoUrl}
@@ -5806,7 +5695,6 @@ export const CanvasCustomizerPage: React.FC = () => {
                               {!hasOuterFrame &&
                                 selectedBorderWidthId === 'none' &&
                                 primaryPhotoUrl &&
-                                imageOnEdges &&
                                 (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
                                 <img
                                   src={primaryPhotoUrl}
@@ -5843,7 +5731,6 @@ export const CanvasCustomizerPage: React.FC = () => {
                               {!hasOuterFrame &&
                                 selectedBorderWidthId === 'none' &&
                                 primaryPhotoUrl &&
-                                imageOnEdges &&
                                 (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
                                 <img
                                   src={primaryPhotoUrl}
@@ -5880,7 +5767,6 @@ export const CanvasCustomizerPage: React.FC = () => {
                               {!hasOuterFrame &&
                                 selectedBorderWidthId === 'none' &&
                                 primaryPhotoUrl &&
-                                imageOnEdges &&
                                 (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
                                 <img
                                   src={primaryPhotoUrl}
@@ -5910,7 +5796,6 @@ export const CanvasCustomizerPage: React.FC = () => {
                               {!hasOuterFrame &&
                                 selectedBorderWidthId === 'none' &&
                                 primaryPhotoUrl &&
-                                imageOnEdges &&
                                 (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
                                 <img
                                   src={primaryPhotoUrl}

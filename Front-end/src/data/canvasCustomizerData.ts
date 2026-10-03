@@ -196,7 +196,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ['shape-circle', ...ALL_CANVAS_SHAPE_IDS]
+    supportedShapeIds: ['shape-circle']
   },
   {
     id: 'canvas-triangle',
@@ -211,7 +211,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ['shape-triangle', ...ALL_CANVAS_SHAPE_IDS]
+    supportedShapeIds: ['shape-triangle']
   },
   {
     id: 'canvas-heart',
@@ -226,7 +226,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ['shape-heart', ...ALL_CANVAS_SHAPE_IDS]
+    supportedShapeIds: ['shape-heart']
   },
   {
     id: 'canvas-oval',
@@ -241,7 +241,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ['shape-oval', ...ALL_CANVAS_SHAPE_IDS]
+    supportedShapeIds: ['shape-oval']
   },
   {
     id: 'canvas-wall-art',
@@ -286,7 +286,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ['shape-hexagon', ...ALL_CANVAS_SHAPE_IDS]
+    supportedShapeIds: ['shape-hexagon']
   },
   {
     id: 'canvas-split',

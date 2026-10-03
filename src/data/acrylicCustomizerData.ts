@@ -89,11 +89,18 @@ export const ALL_CANVAS_AND_ACRYLIC_SHAPE_IDS = [
   'shape-oval',
   'shape-rounded-rect',
   'shape-heart',
-  'shape-hexagon'
+  'shape-hexagon',
+  'shape-triangle'
 ];
 
 export const AcrylicProductShapeConfig: Record<string, string[]> = {
   'acrylic-print': ALL_CANVAS_AND_ACRYLIC_SHAPE_IDS,
+  'acrylic-round': ['shape-circle'],
+  'acrylic-triangle': ['shape-triangle'],
+  'acrylic-heart': ['shape-heart'],
+  'acrylic-oval': ['shape-oval'],
+  'acrylic-hexagon': ['shape-hexagon'],
+  'acrylic-photo-block': ['shape-square', 'shape-rectangle', 'shape-rounded-rect'],
   'acrylic-wall-art': ['shape-rectangle', 'shape-square', 'shape-landscape'],
   'acrylic-collage': ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'],
   'acrylic-split': ['shape-landscape', 'shape-rectangle'],
@@ -104,7 +111,6 @@ export const AcrylicProductShapeConfig: Record<string, string[]> = {
   'acrylic-bus-roll': ['shape-portrait'],
   'acrylic-word-art': ['shape-heart', 'shape-square', 'shape-circle', 'shape-rectangle'],
   // Legacy alias fallbacks
-  'acrylic-photo-block': ['shape-square', 'shape-rectangle', 'shape-rounded-rect'],
   'acrylic-photo-panel': ALL_CANVAS_AND_ACRYLIC_SHAPE_IDS,
   'acrylic-signage': ALL_CANVAS_AND_ACRYLIC_SHAPE_IDS
 };
@@ -124,6 +130,12 @@ export const ALL_ACRYLIC_HARDWARE_IDS: string[] = [
  */
 export const AcrylicHardwareConfig: Record<string, string[]> = {
   'acrylic-print': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-round': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-triangle': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-heart': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-oval': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-hexagon': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-photo-block': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-wall-art': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-collage': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-split': ALL_ACRYLIC_HARDWARE_IDS,
@@ -134,7 +146,6 @@ export const AcrylicHardwareConfig: Record<string, string[]> = {
   'acrylic-bus-roll': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-word-art': ALL_ACRYLIC_HARDWARE_IDS,
   // Legacy aliases
-  'acrylic-photo-block': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-photo-panel': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-signage': ALL_ACRYLIC_HARDWARE_IDS
 };
@@ -172,10 +183,134 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     supportedLayoutIds: ['layout-1-single']
   },
   {
+    id: 'acrylic-round',
+    name: 'Round Acrylic',
+    price: 650.00,
+    startingPrice: 650.00,
+    image: '/images/acrylic/shapes/circle.svg',
+    iconType: 'round',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-circle',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-round'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Curved circular optical acrylic print with diamond-polished beveled edges.',
+    defaultSizeOptionId: 'shape-circle-10x10',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-round'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-round'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: true,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true
+    },
+    supportedLayoutIds: ['layout-1-single']
+  },
+  {
+    id: 'acrylic-triangle',
+    name: 'Triangle Acrylic',
+    price: 650.00,
+    startingPrice: 650.00,
+    image: '/images/acrylic/shapes/triangle.svg',
+    iconType: 'triangle',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-triangle',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-triangle'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Geometric 3-sided triangle acrylic for modern geometric wall galleries.',
+    defaultSizeOptionId: 'shape-triangle-10x10',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-triangle'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-triangle'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: true,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true
+    },
+    supportedLayoutIds: ['layout-1-single']
+  },
+  {
+    id: 'acrylic-heart',
+    name: 'Heart Acrylic',
+    price: 699.00,
+    startingPrice: 699.00,
+    image: '/images/acrylic/shapes/heart.svg',
+    iconType: 'heart',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-heart',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-heart'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Romantic heart-shaped optical acrylic print with crystal diamond polish.',
+    defaultSizeOptionId: 'shape-heart-10x10',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-heart'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-heart'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: true,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true
+    },
+    supportedLayoutIds: ['layout-1-single']
+  },
+  {
+    id: 'acrylic-oval',
+    name: 'Oval Acrylic',
+    price: 590.00,
+    startingPrice: 590.00,
+    image: '/images/acrylic/shapes/oval.svg',
+    iconType: 'oval',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-oval',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-oval'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Graceful elliptical optical acrylic print with diamond-polished perimeter.',
+    defaultSizeOptionId: 'shape-oval-10x8',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-oval'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-oval'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: true,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true
+    },
+    supportedLayoutIds: ['layout-1-single']
+  },
+  {
     id: 'acrylic-wall-art',
     name: 'Wall Display',
-    price: 2338.90,
     startingPrice: 2338.90,
+    price: 2338.90,
     image: '/images/acrylic/shapes/rectangle.svg',
     iconType: 'wall',
     defaultLayout: 'threeCollage',
@@ -232,6 +367,37 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       options: true
     },
     supportedLayoutIds: ['layout-4-grid', 'layout-3-collage', 'layout-main-2small', 'layout-top-bottom', 'layout-left-right']
+  },
+  {
+    id: 'acrylic-hexagon',
+    name: 'Hexagon Prints',
+    price: 650.00,
+    startingPrice: 650.00,
+    image: '/images/acrylic/shapes/hexagon.svg',
+    iconType: 'hexagon',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-hexagon',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-hexagon'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Modern honeycomb hexagonal acrylic print with beveled optical edges.',
+    defaultSizeOptionId: 'shape-hexagon-10x10',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-hexagon'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-hexagon'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: true,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true
+    },
+    supportedLayoutIds: ['layout-1-single']
   },
   {
     id: 'acrylic-split',
@@ -418,6 +584,37 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       options: true
     },
     supportedLayoutIds: ['layout-1-single', 'layout-top-bottom']
+  },
+  {
+    id: 'acrylic-photo-block',
+    name: 'Acrylic Photo Block',
+    price: 499.00,
+    startingPrice: 499.00,
+    image: '/images/acrylic/shapes/square.svg',
+    iconType: 'block',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-square',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-photo-block'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Ultra-thick freestanding tabletop optical acrylic block with 20mm diamond depth.',
+    defaultSizeOptionId: 'shape-square-10x10',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '18mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-photo-block'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-photo-block'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: true,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true
+    },
+    supportedLayoutIds: ['layout-1-single']
   },
   {
     id: 'acrylic-word-art',
