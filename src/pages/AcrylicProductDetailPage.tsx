@@ -310,7 +310,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
           <div className="lg:col-span-7 space-y-4">
             
             {/* Main Stage Image Container */}
-            <div className="relative aspect-[4/3] bg-stone-100 rounded-3xl overflow-hidden border border-stone-200 shadow-md group">
+            <div className="relative aspect-square bg-stone-100 rounded-3xl overflow-hidden border border-stone-200 shadow-md group">
               
               {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
                 <WallPreview
