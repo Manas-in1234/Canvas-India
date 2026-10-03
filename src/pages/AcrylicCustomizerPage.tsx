@@ -334,7 +334,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // Dynamic Shape-Specific Sizes (shape-aware pipeline from centralized productSizeShapeConfig)
   const shapeSizes = useMemo(() => {
     const configSizes = getSizesForProductAndShape(selectedProductTypeId, selectedShapeId, 'acrylic');
-    return configSizes.map((opt) => ({
+    const filtered = selectedProductTypeId === 'acrylic-mosaic'
+      ? configSizes.filter((opt) => !(opt.widthInches === 9 && opt.heightInches === 9) && !(opt.widthInches === 16 && opt.heightInches === 16))
+      : configSizes;
+    return filtered.map((opt) => ({
       id: opt.id,
       productTypeId: selectedProductTypeId,
       category: (opt.category === 'MULTI_PANEL' ? 'RECTANGLE' : opt.category) as SizeCategory,
@@ -549,7 +552,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   const [selectedDisplayOptionId, setSelectedDisplayOptionId] = useState<string>('display-standoff');
   const [selectedFinishId, setSelectedFinishId] = useState<string>('high-gloss');
-  const [selectedFrameId, setSelectedFrameId] = useState<string>('frame-none');
+  const [selectedFrameId, setSelectedFrameId] = useState<string>('no-frame');
   const [selectedEdgeWrapId, setSelectedEdgeWrapId] = useState<string>('full-bleed');
 
   // Options panel states
@@ -559,6 +562,26 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const [selectedBorderWidthId, setSelectedBorderWidthId] = useState<string>('none');
   const [selectedBorderColor, setSelectedBorderColor] = useState<string>('#FFFFFF');
   const [selectedTypographyId, setSelectedTypographyId] = useState<string>('modern-sans');
+
+  // Material Variant
+  const ACRYLIC_MATERIAL_VARIANTS = [
+    { id: 'optical-crystal', name: 'Optical Crystal Acrylic', desc: 'Ultra-clear 99.7% light transmission optical cast acrylic panel', tag: 'Standard' },
+    { id: 'frosted-satin', name: 'Frosted Satin Acrylic', desc: 'Non-glare velvet frosted rear surface for diffuse elegance', tag: '+₹99' },
+    { id: 'onyx-black', name: 'Onyx Black Backed Acrylic', desc: 'Opaque deep black backing layer for rich contrast & depth', tag: '+₹149' }
+  ];
+  const [selectedMaterialId, setSelectedMaterialId] = useState<string>('optical-crystal');
+  const [materialModalOpen, setMaterialModalOpen] = useState<boolean>(false);
+
+  // Dedicated Lyric Acrylic State (for acrylic-lyric product typography overlay)
+  const [lyricTitle, setLyricTitle] = useState<string>('PERFECT');
+  const [lyricArtist, setLyricArtist] = useState<string>('ED SHEERAN');
+  const [lyricText, setLyricText] = useState<string>(
+    "Baby, I'm dancing in the dark\nWith you between my arms\nBarefoot on the grass\nListening to our favorite song\nWhen you said you looked a mess\nI whispered underneath my breath\nYou heard it, darling\nYou look perfect tonight"
+  );
+  const [lyricFontFamily, setLyricFontFamily] = useState<'serif' | 'script' | 'sans' | 'cinzel'>('serif');
+  const [lyricTextColor, setLyricTextColor] = useState<string>('#FFFFFF');
+  const [lyricTemplate, setLyricTemplate] = useState<'center-minimal' | 'music-player' | 'elegant-script' | 'split-card'>('center-minimal');
+  const [lyricOverlayDarkness, setLyricOverlayDarkness] = useState<number>(35);
 
   // Uploaded Photos session gallery
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
@@ -2499,11 +2522,19 @@ export const AcrylicCustomizerPage: React.FC = () => {
               />
             </div>
           ) : (
-            /* CLEAN EMPTY SLOT: ONLY UPLOAD ICON [ ↑ ] */
-            <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50/80 hover:bg-stone-100/90 transition-colors cursor-pointer group p-2 text-center">
-              <div className="w-10 h-10 rounded-full bg-white shadow-xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:border-[#0E4A93]/40 group-hover:scale-110 transition-all">
-                <Upload className="w-4 h-4 stroke-[2.2]" />
+            /* CLEAN EMPTY SLOT: UploadCloud in blue-50 circle, "Upload an Image" / "Upload Slot N" */
+            <div className="w-full h-full flex flex-col items-center justify-center bg-white hover:bg-blue-50/20 transition-colors cursor-pointer group p-3 text-center">
+              <div className={`${totalSlots === 1 ? 'w-12 h-12' : 'w-8 h-8'} rounded-full bg-blue-50 text-[#0E4A93] flex items-center justify-center ${totalSlots === 1 ? 'mb-2.5' : 'mb-1'} group-hover:scale-110 transition-transform shadow-xs`}>
+                <UploadCloud className={`${totalSlots === 1 ? 'w-6 h-6' : 'w-4 h-4'} stroke-[2.2]`} />
               </div>
+              <span className={`${totalSlots === 1 ? 'text-xs' : 'text-[10px]'} font-extrabold text-[#0E4A93] group-hover:underline`}>
+                {totalSlots === 1 ? 'Upload an Image' : `Upload Slot ${panelIdx + 1}`}
+              </span>
+              {totalSlots === 1 && (
+                <span className="text-[10px] text-stone-400 mt-0.5">
+                  Maximum upload size: 25MB per file
+                </span>
+              )}
               {!isRoomView && draggingPhotoIndex !== null && !isDragOverThisSlot && (
                 <span className="text-[10px] font-bold text-[#0E4A93] animate-pulse mt-1">
                   Drop photo
@@ -2649,6 +2680,378 @@ export const AcrylicCustomizerPage: React.FC = () => {
     );
   };
 
+  // Lyric & Typography overlay for Acrylic
+  const renderLyricOverlay = () => {
+    const fontFamilies: Record<string, string> = {
+      serif: 'Georgia, Cambria, "Times New Roman", serif',
+      script: '"Brush Script MT", "Caveat", "Dancing Script", cursive',
+      sans: 'system-ui, -apple-system, Montserrat, sans-serif',
+      cinzel: 'Cinzel, Georgia, serif'
+    };
+    const resolvedFont = fontFamilies[lyricFontFamily] || fontFamilies.serif;
+
+    return (
+      <div
+        className="absolute inset-0 z-25 flex flex-col justify-end p-4 sm:p-6 pointer-events-none select-none"
+        style={{
+          background: `linear-gradient(to top, rgba(0,0,0,${lyricOverlayDarkness / 100}) 0%, rgba(0,0,0,${(lyricOverlayDarkness / 100) * 0.45}) 60%, transparent 100%)`,
+          color: lyricTextColor,
+          fontFamily: resolvedFont
+        }}
+      >
+        {lyricTemplate === 'music-player' ? (
+          <div className="space-y-2 max-w-full drop-shadow-md">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0">
+                <span className="text-xs">▶</span>
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-black tracking-wide truncate uppercase">{lyricTitle || 'Song Title'}</div>
+                <div className="text-[11px] font-semibold opacity-90 truncate">{lyricArtist || 'Artist Name'}</div>
+              </div>
+            </div>
+            <div className="w-full h-1 bg-white/30 rounded-full overflow-hidden my-1">
+              <div className="w-2/5 h-full bg-white rounded-full" />
+            </div>
+            <div className="text-[11px] leading-relaxed whitespace-pre-line opacity-95 max-h-36 overflow-hidden">
+              {lyricText}
+            </div>
+          </div>
+        ) : lyricTemplate === 'elegant-script' ? (
+          <div className="text-center space-y-1.5 drop-shadow-lg my-auto">
+            <div className="text-xl sm:text-2xl font-normal italic tracking-wide">{lyricTitle || 'Perfect'}</div>
+            <div className="w-16 h-[1px] bg-current mx-auto opacity-70 my-1" />
+            <div className="text-[10px] sm:text-xs font-light tracking-widest uppercase opacity-80">{lyricArtist || 'Ed Sheeran'}</div>
+            <div className="text-xs sm:text-sm italic leading-relaxed whitespace-pre-line opacity-95 mt-2 max-h-40 overflow-hidden">
+              {lyricText}
+            </div>
+          </div>
+        ) : lyricTemplate === 'split-card' ? (
+          <div className="bg-black/50 backdrop-blur-xs p-3.5 rounded-xl border border-white/20 space-y-1.5 drop-shadow-md">
+            <div className="flex justify-between items-baseline border-b border-white/20 pb-1">
+              <span className="text-xs font-black tracking-wider uppercase">{lyricTitle}</span>
+              <span className="text-[10px] opacity-80">{lyricArtist}</span>
+            </div>
+            <div className="text-[10px] leading-relaxed whitespace-pre-line opacity-90 max-h-32 overflow-hidden">
+              {lyricText}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center space-y-1.5 drop-shadow-md mb-2">
+            <div className="text-xs sm:text-sm font-black tracking-widest uppercase">{lyricTitle || 'Song Title'}</div>
+            <div className="text-[10px] tracking-wider uppercase opacity-80">{lyricArtist || 'Artist Name'}</div>
+            <div className="w-12 h-[1px] bg-current mx-auto opacity-60 my-1" />
+            <div className="text-[11px] sm:text-xs leading-relaxed whitespace-pre-line font-medium opacity-95 max-h-36 overflow-hidden">
+              {lyricText}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Wall Display (acrylic-wall-art): Multi-panel optical acrylic gallery wall
+  const renderWallDisplayCanvas = (isRoomView = false) => {
+    const wallPanels = (currentSizeOption as any).panels && (currentSizeOption as any).panels.length > 0
+      ? (currentSizeOption as any).panels
+      : [
+          { id: 'p0', label: 'Left Wing', dimension: '10" × 8"', widthRatio: 8, heightRatio: 10 },
+          { id: 'p1', label: 'Center Large', dimension: '16" × 20"', widthRatio: 16, heightRatio: 20 },
+          { id: 'p2', label: 'Right Wing', dimension: '10" × 8"', widthRatio: 8, heightRatio: 10 }
+        ];
+
+    const isTriptych = (currentSizeOption as any).diagramType === 'wall-display-triptych';
+    const isThreeSplit = (currentSizeOption as any).arrangement === 'threeSplit' || (currentSizeOption as any).diagramType === 'wall-display-3b';
+    const isThreeCollage = (currentSizeOption as any).arrangement === 'threeCollage' || (currentSizeOption as any).diagramType === 'wall-display-3a';
+    const isFivePiece = wallPanels.length === 5 || (currentSizeOption as any).diagramType === 'wall-display-5piece';
+    const isTiered = (currentSizeOption as any).diagramType === 'wall-display-tiered';
+
+    const renderAcrylicPanelSlot = (idx: number, customAspect?: string, extraClass: string = '') => {
+      const pSpec = wallPanels[idx] || { id: `p${idx}`, label: `Panel ${idx + 1}`, dimension: '' };
+      const panel = panelImages[idx] || createDefaultPanelState(null);
+      const isTarget = !isRoomView && activePanelIndex === idx;
+
+      return (
+        <div
+          key={pSpec.id || idx}
+          onClick={
+            isRoomView
+              ? undefined
+              : (e) => {
+                  e.stopPropagation();
+                  setActivePanelIndex(idx);
+                  setSelectedElement({ type: 'image', panelIndex: idx });
+                  if (!panel.imageUrl) {
+                    handleEmptyFrameClick(idx);
+                  }
+                }
+          }
+          style={{
+            boxShadow: isRoomView ? '0 10px 18px rgba(0,0,0,0.25)' : '0 12px 24px -4px rgba(15, 23, 42, 0.22)'
+          }}
+          className={`relative bg-white rounded-xl overflow-hidden transition-all select-none border border-slate-200/90 ${
+            customAspect ? customAspect : ''
+          } ${extraClass} ${
+            isRoomView
+              ? 'pointer-events-none'
+              : isTarget
+              ? 'ring-2 ring-[#0E4A93] z-20 cursor-pointer'
+              : 'hover:border-[#0E4A93]/60 cursor-pointer'
+          }`}
+        >
+          {panel.imageUrl ? (
+            <div
+              ref={isRoomView ? undefined : registerWheelRef(idx)}
+              onPointerDown={isRoomView ? undefined : (e) => handleImagePointerDown(e, idx)}
+              onPointerMove={isRoomView ? undefined : handleImagePointerMove}
+              onPointerUp={isRoomView ? undefined : handleImagePointerUp}
+              onPointerCancel={isRoomView ? undefined : handleImagePointerUp}
+              style={{ touchAction: 'none' }}
+              className={`w-full h-full relative overflow-hidden flex items-center justify-center bg-white ${
+                isRoomView
+                  ? 'pointer-events-none'
+                  : isDragging && activePanelIndex === idx
+                  ? 'cursor-grabbing'
+                  : 'cursor-grab'
+              }`}
+            >
+              <img
+                src={panel.imageUrl}
+                alt={pSpec.label || `Panel ${idx + 1}`}
+                draggable={false}
+                style={{
+                  transform: `translate3d(${panel.panX || 0}px, ${panel.panY || 0}px, 0) scale(${panel.scale || 1}) rotate(${panel.rotation || 0}deg)`,
+                  filter: getAcrylicFilterCss(panel.filter),
+                  objectFit: panel.fitMode === 'contain' ? 'contain' : 'cover'
+                }}
+                className="max-w-none w-full h-full pointer-events-none select-none"
+              />
+            </div>
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50/90 hover:bg-stone-100 transition-colors p-2 text-center">
+              <div className="w-8 h-8 rounded-full bg-blue-50 text-[#0E4A93] flex items-center justify-center mb-1 group-hover:scale-110 transition-transform shadow-2xs">
+                <UploadCloud className="w-4 h-4 stroke-[2.2]" />
+              </div>
+              <span className="text-[10px] font-bold text-stone-700">{pSpec.label || `Panel ${idx + 1}`}</span>
+              {pSpec.dimension && <span className="text-[9px] text-stone-400">{pSpec.dimension}</span>}
+            </div>
+          )}
+
+          {/* Optical Acrylic Gloss */}
+          {selectedFinishId === 'high-gloss' && (
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-transparent pointer-events-none z-25" />
+          )}
+
+          {/* 4 Corner Standoff Mounts */}
+          {['top-2 left-2', 'top-2 right-2', 'bottom-2 left-2', 'bottom-2 right-2'].map((posClass, sIdx) => (
+            <div
+              key={sIdx}
+              className={`absolute w-3 h-3 rounded-full bg-gradient-to-br from-stone-100 to-stone-400 border border-stone-500 shadow-xs pointer-events-none z-30 ${posClass}`}
+            >
+              <div className="w-1 h-1 rounded-full bg-stone-600 mx-auto mt-0.5" />
+            </div>
+          ))}
+
+          {/* Dimension badge */}
+          {pSpec.dimension && (
+            <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
+              {pSpec.dimension}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    if (wallPanels.length === 3 && (isThreeSplit || isTriptych)) {
+      return (
+        <div className={`flex items-center justify-center gap-3 sm:gap-4 w-full ${isRoomView ? 'h-full max-w-full' : 'max-w-2xl my-auto p-4'} select-none`}>
+          {isTriptych ? (
+            [0, 1, 2].map((idx) => (
+              <div key={idx} className="flex-1 max-w-[170px]">
+                {renderAcrylicPanelSlot(idx, 'aspect-[12/24]')}
+              </div>
+            ))
+          ) : (
+            <>
+              <div className="flex-1 max-w-[140px] self-center">
+                {renderAcrylicPanelSlot(0, 'aspect-[8/10]')}
+              </div>
+              <div className="flex-[1.4] max-w-[200px]">
+                {renderAcrylicPanelSlot(1, 'aspect-[16/20]')}
+              </div>
+              <div className="flex-1 max-w-[140px] self-center">
+                {renderAcrylicPanelSlot(2, 'aspect-[8/10]')}
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    if (wallPanels.length === 3 && isThreeCollage) {
+      return (
+        <div className={`flex flex-col items-center gap-3 w-full ${isRoomView ? 'h-full max-w-full' : 'max-w-md my-auto p-4'} select-none`}>
+          <div className="w-full">
+            {renderAcrylicPanelSlot(0, 'aspect-[18/12]')}
+          </div>
+          <div className="grid grid-cols-2 gap-3 w-full">
+            {renderAcrylicPanelSlot(1, 'aspect-[8/10]')}
+            {renderAcrylicPanelSlot(2, 'aspect-[8/10]')}
+          </div>
+        </div>
+      );
+    }
+
+    if (isFivePiece) {
+      return (
+        <div className={`flex items-center justify-center gap-2 sm:gap-2.5 w-full ${isRoomView ? 'h-full max-w-full' : 'max-w-3xl my-auto p-3'} select-none`}>
+          <div className="flex-1 max-w-[100px] self-center">{renderAcrylicPanelSlot(3, 'aspect-[8/10]')}</div>
+          <div className="flex-[1.2] max-w-[125px] self-center">{renderAcrylicPanelSlot(1, 'aspect-[12/18]')}</div>
+          <div className="flex-[1.5] max-w-[160px]">{renderAcrylicPanelSlot(0, 'aspect-[18/24]')}</div>
+          <div className="flex-[1.2] max-w-[125px] self-center">{renderAcrylicPanelSlot(2, 'aspect-[12/18]')}</div>
+          <div className="flex-1 max-w-[100px] self-center">{renderAcrylicPanelSlot(4, 'aspect-[8/10]')}</div>
+        </div>
+      );
+    }
+
+    if (isTiered) {
+      return (
+        <div className={`grid grid-cols-4 gap-2.5 items-end w-full ${isRoomView ? 'h-full max-w-full' : 'max-w-2xl my-auto p-4'} select-none`}>
+          {renderAcrylicPanelSlot(0, 'aspect-[8/10]')}
+          {renderAcrylicPanelSlot(1, 'aspect-[11/14]')}
+          {renderAcrylicPanelSlot(2, 'aspect-[16/20]')}
+          {renderAcrylicPanelSlot(3, 'aspect-[8/10]')}
+        </div>
+      );
+    }
+
+    if (wallPanels.length === 4) {
+      return (
+        <div className={`grid grid-cols-2 gap-3 w-full ${isRoomView ? 'h-full max-w-full' : 'max-w-md my-auto p-4'} select-none`}>
+          {renderAcrylicPanelSlot(0, 'aspect-square')}
+          {renderAcrylicPanelSlot(1, 'aspect-square')}
+          {renderAcrylicPanelSlot(2, 'aspect-square')}
+          {renderAcrylicPanelSlot(3, 'aspect-square')}
+        </div>
+      );
+    }
+
+    return (
+      <div className={`grid grid-cols-2 sm:grid-cols-3 gap-3 w-full ${isRoomView ? 'h-full max-w-full' : 'max-w-xl my-auto p-4'} select-none`}>
+        {wallPanels.map((_: any, idx: number) => renderAcrylicPanelSlot(idx, 'aspect-square'))}
+      </div>
+    );
+  };
+
+  // Photo Mosaic (acrylic-mosaic): Physical Multi-Tile Optical Acrylic Grid
+  const renderMosaicCanvas = (isRoomView = false) => {
+    const tilePanels = (currentSizeOption as any).panels && (currentSizeOption as any).panels.length > 0
+      ? (currentSizeOption as any).panels
+      : Array.from({ length: 4 }, (_, i) => ({ id: `p${i}`, label: `Tile ${i + 1}`, dimension: '5" × 5"', widthRatio: 5, heightRatio: 5 }));
+    const count = tilePanels.length;
+    const colsClass = count === 4 ? 'grid-cols-2' : count === 6 ? 'grid-cols-3' : count === 9 ? 'grid-cols-3' : count === 16 ? 'grid-cols-4' : 'grid-cols-2';
+    const aspectClass = count === 6 ? 'aspect-[18/12]' : 'aspect-square';
+    const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
+
+    const totalCols = count === 4 ? 2 : count === 6 ? 3 : count === 9 ? 3 : 4;
+    const totalRows = count === 4 ? 2 : count === 6 ? 2 : count === 9 ? 3 : 4;
+
+    return (
+      <div className={`w-full max-w-xl mx-auto my-auto ${isRoomView ? 'h-full p-2' : 'p-4'} flex flex-col items-center select-none`}>
+        <div
+          className={`grid ${colsClass} gap-2 w-full ${aspectClass} p-3 bg-white/70 backdrop-blur-xs rounded-2xl border border-stone-200/90 shadow-xl`}
+          style={{
+            maxWidth: count === 6 ? '32rem' : '26rem',
+            filter: 'drop-shadow(0 20px 25px rgba(0,0,0,0.15))'
+          }}
+        >
+          {tilePanels.map((pSpec: any, i: number) => {
+            const panel = panelImages[i];
+            const hasIndividualPhoto = Boolean(panel?.imageUrl);
+            const displayPhoto = hasIndividualPhoto ? panel?.imageUrl : masterImage;
+            const isTarget = !isRoomView && activePanelIndex === i;
+            const colIdx = i % totalCols;
+            const rowIdx = Math.floor(i / totalCols);
+
+            return (
+              <div
+                key={pSpec.id || i}
+                onClick={
+                  isRoomView
+                    ? undefined
+                    : (e) => {
+                        e.stopPropagation();
+                        setActivePanelIndex(i);
+                        setSelectedElement({ type: 'image', panelIndex: i });
+                        if (!panel?.imageUrl) {
+                          handleEmptyFrameClick(i);
+                        }
+                      }
+                }
+                className={`relative w-full h-full bg-white rounded-lg overflow-hidden transition-all border ${
+                  isRoomView
+                    ? 'pointer-events-none'
+                    : isTarget
+                    ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/40 z-20 cursor-pointer shadow-md'
+                    : 'border-stone-200 hover:border-stone-400 cursor-pointer shadow-xs'
+                }`}
+              >
+                {displayPhoto ? (
+                  <div className="w-full h-full overflow-hidden relative">
+                    {hasIndividualPhoto ? (
+                      <img
+                        src={panel?.imageUrl!}
+                        alt={`Tile ${i + 1}`}
+                        style={{
+                          transform: `translate(${panel?.panX || 0}px, ${panel?.panY || 0}px) scale(${panel?.scale || 1}) rotate(${panel?.rotation || 0}deg)`,
+                          filter: getAcrylicFilterCss(panel?.filter),
+                          objectFit: panel?.fitMode === 'contain' ? 'contain' : 'cover'
+                        }}
+                        className="w-full h-full pointer-events-none"
+                      />
+                    ) : (
+                      <div
+                        className="w-full h-full pointer-events-none"
+                        style={{
+                          backgroundImage: `url(${displayPhoto})`,
+                          backgroundSize: `${totalCols * 100}% ${totalRows * 100}%`,
+                          backgroundPosition: `${(colIdx / (totalCols - 1 || 1)) * 100}% ${(rowIdx / (totalRows - 1 || 1)) * 100}%`,
+                          backgroundRepeat: 'no-repeat'
+                        }}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50 hover:bg-stone-100 transition-colors p-1 text-center">
+                    <div className="w-6 h-6 rounded-full bg-blue-50 text-[#0E4A93] flex items-center justify-center mb-0.5 shadow-2xs">
+                      <UploadCloud className="w-3.5 h-3.5 stroke-[2.2]" />
+                    </div>
+                    <span className="text-[9px] font-bold text-stone-700">Tile {i + 1}</span>
+                    <span className="text-[8px] text-stone-400">{pSpec.dimension || '5"×5"'}</span>
+                  </div>
+                )}
+
+                {/* Optical gloss */}
+                {selectedFinishId === 'high-gloss' && (
+                  <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-transparent pointer-events-none z-25" />
+                )}
+
+                <div className="absolute bottom-1 left-1 bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold px-1 py-0.5 rounded z-20 pointer-events-none">
+                  {pSpec.dimension || `Tile ${i + 1}`}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {!isRoomView && (
+          <p className="text-[11px] font-semibold text-stone-500 mt-2.5 text-center">
+            Photo Mosaic • {count} Acrylic Tiles Grid • Upload 1 photo to tile across seams, or click individual tiles to customize
+          </p>
+        )}
+      </div>
+    );
+  };
+
   // ============================================================================
   // RENDER OUTER ACRYLIC PRODUCT CANVAS (Respects Shape, Aspect Ratio, Layout & Hardware)
   // ============================================================================
@@ -2670,6 +3073,16 @@ export const AcrylicCustomizerPage: React.FC = () => {
       : isFloatingMount
       ? 'drop-shadow(0 28px 34px rgba(15, 23, 42, 0.36)) drop-shadow(0 12px 16px rgba(15, 23, 42, 0.22))'
       : 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.2)) drop-shadow(0 8px 10px rgba(0, 0, 0, 0.1))';
+
+    // WALL DISPLAY (Physical Multi-Panel Gallery Wall Layout)
+    if (selectedProductTypeId === 'acrylic-wall-art') {
+      return renderWallDisplayCanvas(isRoomView);
+    }
+
+    // PHOTO MOSAIC (Multi-Tile Mosaic Acrylic Grid)
+    if (selectedProductTypeId === 'acrylic-mosaic') {
+      return renderMosaicCanvas(isRoomView);
+    }
 
     // SPLIT PRODUCT: 1 photo continuous split across physical optical acrylic panels
     if (selectedProductTypeId === 'acrylic-split') {
@@ -2777,6 +3190,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
       );
     }
 
+    const isRectangularShape = ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
+
     return (
       <div
         className={`relative w-full ${isRoomView ? 'h-full pointer-events-none select-none' : ''} flex items-center justify-center transition-all duration-300`}
@@ -2810,6 +3225,48 @@ export const AcrylicCustomizerPage: React.FC = () => {
           <div className="absolute inset-0 w-full h-full bg-stone-200/70">
             {layoutSlots.map((slot) => renderLayoutSlot(slot, layoutSlots.length, isRoomView))}
           </div>
+
+          {/* DOTTED PRINT AREA DEMARCATION (Visual boundary overlay) */}
+          {!isRoomView && (
+            isRectangularShape ? (
+              <div className="absolute inset-[14px] pointer-events-none z-24 border border-dashed border-sky-600/70 rounded-xs flex items-start justify-start p-1.5">
+                <span className="text-[8px] font-black uppercase tracking-wider text-sky-800 bg-sky-50/90 border border-sky-200/80 px-1.5 py-0.5 rounded shadow-2xs select-none">
+                  PRINT AREA
+                </span>
+              </div>
+            ) : (
+              <svg
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                className="absolute inset-0 w-full h-full pointer-events-none z-24 overflow-visible"
+              >
+                {selectedShapeId === 'shape-circle' && (
+                  <circle cx="50" cy="50" r="44" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
+                )}
+                {selectedShapeId === 'shape-oval' && (
+                  <ellipse cx="50" cy="50" rx="44" ry="44" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
+                )}
+                {selectedShapeId === 'shape-triangle' && (
+                  <polygon points="50,14 88,90 12,90" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
+                )}
+                {selectedShapeId === 'shape-heart' && (
+                  <path
+                    d="M 50,78 C 16,54 6,36 6,24 C 6,10 16,5 28,5 C 37,5 44,10 50,19 C 56,10 63,5 72,5 C 84,5 94,10 94,24 C 94,36 84,54 50,78 Z"
+                    fill="none"
+                    stroke="#0284c7"
+                    strokeWidth="1.2"
+                    strokeDasharray="3 2"
+                  />
+                )}
+                {selectedShapeId === 'shape-hexagon' && (
+                  <polygon points="27,6 73,6 94,50 73,94 27,94 6,50" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
+                )}
+              </svg>
+            )
+          )}
+
+          {/* Lyric Typography Overlay */}
+          {selectedProductTypeId === 'acrylic-lyric' && renderLyricOverlay()}
 
           {/* Design Overlay Layer */}
           {activeDesignOverlay && (
@@ -2876,6 +3333,20 @@ export const AcrylicCustomizerPage: React.FC = () => {
       setActiveTab('PRODUCTS');
     }
   }, [toolbarItems, activeTab]);
+
+  const activeTabIndex = useMemo(() => {
+    return toolbarItems.findIndex((item) => item.id === activeTab || (item.id === 'SHAPES' && activeTab === 'SHAPE'));
+  }, [toolbarItems, activeTab]);
+
+  const prevTab = useMemo(() => {
+    if (activeTabIndex <= 0) return { id: toolbarItems[0]?.id || 'PRODUCTS', label: 'Previous' };
+    return { id: toolbarItems[activeTabIndex - 1].id, label: toolbarItems[activeTabIndex - 1].label };
+  }, [toolbarItems, activeTabIndex]);
+
+  const nextTab = useMemo(() => {
+    if (activeTabIndex < 0 || activeTabIndex >= toolbarItems.length - 1) return { id: toolbarItems[toolbarItems.length - 1]?.id || 'OPTIONS', label: 'Next' };
+    return { id: toolbarItems[activeTabIndex + 1].id, label: toolbarItems[activeTabIndex + 1].label };
+  }, [toolbarItems, activeTabIndex]);
 
   return (
     <div className="w-full h-screen flex flex-col bg-[#F1F5F9] font-sans antialiased overflow-hidden select-none">
@@ -3010,7 +3481,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
               : activeTab === 'SELECT SIZE'
               ? `${shapeSizes.length + 1} Options`
               : activeTab === 'LAYOUTS & DESIGNS'
-              ? layoutSubTab === 'LAYOUTS'
+              ? selectedProductTypeId === 'acrylic-lyric'
+                ? 'Lyrics & Typography'
+                : layoutSubTab === 'LAYOUTS'
                 ? '7 Layouts'
                 : '11 Categories'
               : activeTab === 'WRAP & BORDER'
@@ -3534,30 +4007,199 @@ export const AcrylicCustomizerPage: React.FC = () => {
           {/* TAB 5: LAYOUTS & DESIGNS */}
           {activeTab === 'LAYOUTS & DESIGNS' && (
             <div className="flex-1 min-h-0 p-3.5 space-y-3 overflow-y-auto">
-              <div className="flex border border-stone-200 rounded-xl p-1 bg-stone-100">
-                <button
-                  type="button"
-                  onClick={() => setLayoutSubTab('LAYOUTS')}
-                  className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
-                    layoutSubTab === 'LAYOUTS'
-                      ? 'bg-white text-[#0E4A93] shadow-xs'
-                      : 'text-stone-600 hover:text-stone-900'
-                  }`}
-                >
-                  LAYOUTS
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLayoutSubTab('DESIGNS')}
-                  className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
-                    layoutSubTab === 'DESIGNS'
-                      ? 'bg-white text-[#0E4A93] shadow-xs'
-                      : 'text-stone-600 hover:text-stone-900'
-                  }`}
-                >
-                  DESIGNS
-                </button>
-              </div>
+              {selectedProductTypeId === 'acrylic-lyric' ? (
+                <div className="space-y-4">
+                  <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 text-xs text-[#0E4A93]">
+                    <div className="font-extrabold uppercase tracking-wide">Lyric & Typography Acrylic Panel</div>
+                    <p className="text-[11px] text-stone-600 mt-0.5">Customize your song title, artist, and lyrics below. Live preview updates on the acrylic panel.</p>
+                  </div>
+
+                  {/* Template Style */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Typography Layout</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: 'center-minimal' as const, label: 'Center Minimal', desc: 'Centered classic typography' },
+                        { id: 'music-player' as const, label: 'Spotify Style', desc: 'Player icon & progress bar' },
+                        { id: 'elegant-script' as const, label: 'Elegant Script', desc: 'Handwritten romantic vibe' },
+                        { id: 'split-card' as const, label: 'Lyric Card', desc: 'Frosted card with header' }
+                      ].map((tpl) => (
+                        <button
+                          key={tpl.id}
+                          type="button"
+                          onClick={() => setLyricTemplate(tpl.id)}
+                          className={`p-2.5 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                            lyricTemplate === tpl.id
+                              ? 'border-[#0E4A93] bg-blue-50/30 text-[#0E4A93] shadow-xs'
+                              : 'border-stone-200 text-stone-700 bg-white hover:border-stone-300'
+                          }`}
+                        >
+                          <div className="text-xs font-black">{tpl.label}</div>
+                          <div className="text-[10px] text-stone-500 mt-0.5">{tpl.desc}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Quick Preset Songs */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-stone-600 uppercase">Popular Song Presets</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        {
+                          title: 'PERFECT',
+                          artist: 'ED SHEERAN',
+                          text: "Baby, I'm dancing in the dark\nWith you between my arms\nBarefoot on the grass\nListening to our favorite song\nWhen you said you looked a mess\nI whispered underneath my breath\nYou heard it, darling\nYou look perfect tonight"
+                        },
+                        {
+                          title: 'A THOUSAND YEARS',
+                          artist: 'CHRISTINA PERRI',
+                          text: "Heart beats fast\nColors and promises\nHow to be brave?\nHow can I love when I'm afraid to fall?\nI have died every day waiting for you\nDarling, don't be afraid\nI have loved you for a thousand years\nI'll love you for a thousand more"
+                        },
+                        {
+                          title: 'ALL OF ME',
+                          artist: 'JOHN LEGEND',
+                          text: "'Cause all of me\nLoves all of you\nLove your curves and all your edges\nAll your perfect imperfections\nGive your all to me\nI'll give my all to you\nYou're my end and my beginning\nEven when I lose I'm winning"
+                        },
+                        {
+                          title: 'WEDDING VOWS',
+                          artist: 'FOREVER & ALWAYS',
+                          text: "I promise to love you unconditionally,\nTo support your dreams as my own,\nTo laugh with you in joy,\nAnd hold your hand through every storm.\nToday and for all our tomorrows,\nMy heart is yours."
+                        }
+                      ].map((song) => (
+                        <button
+                          key={song.title}
+                          type="button"
+                          onClick={() => {
+                            setLyricTitle(song.title);
+                            setLyricArtist(song.artist);
+                            setLyricText(song.text);
+                          }}
+                          className="px-2.5 py-1 bg-stone-100 hover:bg-[#0E4A93] hover:text-white rounded-lg text-[10px] font-bold text-stone-700 transition-colors cursor-pointer"
+                        >
+                          {song.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Song Title & Artist Inputs */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Song / Vow Title</label>
+                      <input
+                        type="text"
+                        value={lyricTitle}
+                        onChange={(e) => setLyricTitle(e.target.value)}
+                        placeholder="e.g. Perfect"
+                        className="w-full px-2.5 py-1.5 text-xs font-bold border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Artist / Couple Name</label>
+                      <input
+                        type="text"
+                        value={lyricArtist}
+                        onChange={(e) => setLyricArtist(e.target.value)}
+                        placeholder="e.g. Ed Sheeran"
+                        className="w-full px-2.5 py-1.5 text-xs font-bold border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Lyrics Textarea */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Lyrics / Text</label>
+                    <textarea
+                      rows={5}
+                      value={lyricText}
+                      onChange={(e) => setLyricText(e.target.value)}
+                      placeholder="Paste your favorite lyrics or personal vows here..."
+                      className="w-full px-2.5 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93] resize-y"
+                    />
+                  </div>
+
+                  {/* Font & Color */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Typography Font</label>
+                      <select
+                        value={lyricFontFamily}
+                        onChange={(e) => setLyricFontFamily(e.target.value as any)}
+                        className="w-full px-2.5 py-1.5 text-xs font-bold bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93]"
+                      >
+                        <option value="serif">Playfair Serif</option>
+                        <option value="script">Dancing Script</option>
+                        <option value="sans">Montserrat Sans</option>
+                        <option value="cinzel">Cinzel Classic</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Text Color</label>
+                      <div className="flex gap-2 pt-1">
+                        {[
+                          { hex: '#FFFFFF', name: 'White' },
+                          { hex: '#FEF08A', name: 'Soft Gold' },
+                          { hex: '#F5EBE0', name: 'Cream' },
+                          { hex: '#1E293B', name: 'Charcoal' }
+                        ].map((c) => (
+                          <button
+                            key={c.hex}
+                            type="button"
+                            onClick={() => setLyricTextColor(c.hex)}
+                            style={{ backgroundColor: c.hex }}
+                            title={c.name}
+                            className={`w-6 h-6 rounded-full border-2 transition-transform cursor-pointer ${
+                              lyricTextColor === c.hex ? 'border-[#0E4A93] scale-110 shadow-sm' : 'border-stone-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Background Scrim Darkness */}
+                  <div>
+                    <div className="flex justify-between text-[11px] font-bold text-stone-700 uppercase mb-1">
+                      <span>Overlay Contrast</span>
+                      <span>{lyricOverlayDarkness}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={10}
+                      max={80}
+                      value={lyricOverlayDarkness}
+                      onChange={(e) => setLyricOverlayDarkness(Number(e.target.value))}
+                      className="w-full h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-[#0E4A93]"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex border border-stone-200 rounded-xl p-1 bg-stone-100">
+                    <button
+                      type="button"
+                      onClick={() => setLayoutSubTab('LAYOUTS')}
+                      className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                        layoutSubTab === 'LAYOUTS'
+                          ? 'bg-white text-[#0E4A93] shadow-xs'
+                          : 'text-stone-600 hover:text-stone-900'
+                      }`}
+                    >
+                      LAYOUTS
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLayoutSubTab('DESIGNS')}
+                      className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                        layoutSubTab === 'DESIGNS'
+                          ? 'bg-white text-[#0E4A93] shadow-xs'
+                          : 'text-stone-600 hover:text-stone-900'
+                      }`}
+                    >
+                      DESIGNS
+                    </button>
+                  </div>
 
               {/* SUBTAB 1: LAYOUTS (7 Options) */}
               {layoutSubTab === 'LAYOUTS' && (
@@ -3732,6 +4374,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     })}
                   </div>
                 </div>
+              )}
+                </>
               )}
             </div>
           )}
@@ -4192,14 +4836,37 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </>
               ) : undefined
             }
+            prevStep={{
+              label: prevTab.label,
+              disabled: activeTabIndex === 0,
+              onClick: () => handleSelectTab(prevTab.id)
+            }}
+            nextStep={{
+              label: nextTab.label,
+              disabled: activeTabIndex === toolbarItems.length - 1,
+              onClick: () => handleSelectTab(nextTab.id)
+            }}
             bottomSlot={
               <div className="flex flex-wrap items-center justify-center gap-2.5 text-[11px] font-bold text-stone-600 bg-white/90 backdrop-blur-xs px-4 py-1.5 rounded-full shadow-xs border border-stone-200/80">
                 <span>
-                  Product: <strong className="text-stone-900">{selectedProductType.name}</strong>
+                  Material:{' '}
+                  <strong className="text-stone-900">
+                    {ACRYLIC_MATERIAL_VARIANTS.find((m) => m.id === selectedMaterialId)?.name || 'Optical Crystal Acrylic'}
+                  </strong>
                 </span>
                 <span>•</span>
                 <span>
-                  Shape: <strong className="text-stone-900">{currentShape.name}</strong>
+                  Thickness:{' '}
+                  <strong className="text-stone-900">
+                    {THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || '3mm Acrylic'}
+                  </strong>
+                </span>
+                <span>•</span>
+                <span>
+                  Finish:{' '}
+                  <strong className="text-stone-900">
+                    {FINISH_OPTIONS.find((f) => f.id === selectedFinishId)?.name || 'High Gloss'}
+                  </strong>
                 </span>
                 <span>•</span>
                 <span>
@@ -4208,6 +4875,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     {compatibleHardware.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware'}
                   </strong>
                 </span>
+                <button
+                  type="button"
+                  onClick={() => setMaterialModalOpen(true)}
+                  className="ml-1 px-2.5 py-0.5 bg-[#0E4A93] hover:bg-[#09356A] text-white text-[10px] font-extrabold rounded-full transition-colors cursor-pointer uppercase tracking-wider"
+                >
+                  Change Material
+                </button>
                 {layoutSlots.length > 1 && selectedProductTypeId !== 'acrylic-split' && (
                   <>
                     <span>•</span>
@@ -4231,9 +4905,36 @@ export const AcrylicCustomizerPage: React.FC = () => {
               </div>
             }
           >
-            {/* Acrylic Product Frame Wrapper */}
-            <div className="relative max-w-2xl w-full flex items-center justify-center transition-all duration-300">
-              {renderProductCanvas(false)}
+            {/* Top Adjustment Banner */}
+            <div className="w-full max-w-xl mx-auto mb-2 bg-[#FEF9C3] border border-[#FDE047] text-[#854D0E] text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs select-none">
+              <Move className="w-3.5 h-3.5 text-[#A16207]" />
+              <span>Click and drag within the print lines to Adjust your Photo.</span>
+            </div>
+
+            {/* Acrylic Product Frame Wrapper with Dimension Rulers */}
+            <div className="relative flex flex-col items-center select-none w-full max-w-2xl my-auto">
+              {/* Ruler Top */}
+              <div className="w-full flex items-center justify-center py-1 mb-1 max-w-[27rem] relative">
+                <div className="absolute inset-x-0 h-px border-b border-dashed border-stone-300" />
+                <div className="relative bg-white px-2 py-0.5 rounded-full border border-stone-200 text-[10px] font-bold text-stone-600 shadow-2xs z-10">
+                  {effectiveWidthInches} inch
+                </div>
+              </div>
+
+              <div className="relative flex items-center justify-center w-full">
+                {/* Ruler Left */}
+                <div className="absolute -left-10 inset-y-0 flex flex-col items-center justify-center">
+                  <div className="absolute inset-y-0 w-px border-r border-dashed border-stone-300" />
+                  <div className="relative bg-white px-1.5 py-0.5 rounded-full border border-stone-200 text-[9px] font-bold text-stone-600 shadow-2xs rotate-[-90deg] whitespace-nowrap z-10">
+                    {effectiveHeightInches} inch
+                  </div>
+                </div>
+
+                {/* Outer Acrylic Stage */}
+                <div className="relative w-full flex items-center justify-center transition-all duration-300">
+                  {renderProductCanvas(false)}
+                </div>
+              </div>
             </div>
           </CustomizerPreviewArea>
 
@@ -4271,6 +4972,59 @@ export const AcrylicCustomizerPage: React.FC = () => {
         customHeight={customHeight}
         onSelectSizeAndShape={handleApplySizeAndShape}
       />
+
+      {/* Change Material Modal */}
+      {materialModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+              <h3 className="font-extrabold text-sm text-stone-900 uppercase tracking-wider">Select Acrylic Material Variant</h3>
+              <button onClick={() => setMaterialModalOpen(false)} className="text-stone-400 hover:text-stone-700 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {ACRYLIC_MATERIAL_VARIANTS.map((mat) => {
+                const isSelected = selectedMaterialId === mat.id;
+                return (
+                  <div
+                    key={mat.id}
+                    onClick={() => {
+                      setSelectedMaterialId(mat.id);
+                      setMaterialModalOpen(false);
+                    }}
+                    className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                      isSelected ? 'border-[#0E4A93] bg-blue-50/30' : 'border-stone-200 hover:border-stone-300 bg-white'
+                    }`}
+                  >
+                    <div>
+                      <div className="text-xs font-bold text-stone-900">{mat.name}</div>
+                      <div className="text-[11px] text-stone-500">{mat.desc}</div>
+                    </div>
+                    <span className="text-xs font-black text-[#0E4A93]">{mat.tag}</span>
+                  </div>
+                );
+              })}
+
+              {/* Option to Switch to Canvas */}
+              <div
+                onClick={() => {
+                  setMaterialModalOpen(false);
+                  navigate('/customize/canvas/single-print');
+                }}
+                className="p-3.5 rounded-xl border-2 border-dashed border-stone-300 hover:border-[#0E4A93] hover:bg-blue-50/20 transition-all cursor-pointer flex items-center justify-between group"
+              >
+                <div>
+                  <div className="text-xs font-bold text-stone-900 group-hover:text-[#0E4A93]">Switch to Canvas Prints</div>
+                  <div className="text-[11px] text-stone-500">Artist-grade cotton canvas stretched on kiln-dried pine wood</div>
+                </div>
+                <ExternalLink className="w-4 h-4 text-stone-400 group-hover:text-[#0E4A93]" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

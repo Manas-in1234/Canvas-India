@@ -57,7 +57,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
 
   const isMultiPanelProduct = useMemo(() => {
     const norm = productId.toLowerCase();
-    return norm.includes('wall') || norm.includes('display') || norm.includes('split') || norm.includes('collage');
+    return norm.includes('wall') || norm.includes('display') || norm.includes('split') || norm.includes('collage') || norm.includes('mosaic');
   }, [productId]);
 
   // Active shape filter (defaults to 'ALL' if multiple shapes, or current shape)
@@ -82,9 +82,12 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
 
   // Filtered options based on active shape
   const visibleOptions = useMemo(() => {
-    if (activeShapeFilter === 'ALL') return allOptions;
-    return allOptions.filter((o) => o.shapeId === activeShapeFilter);
-  }, [allOptions, activeShapeFilter]);
+    let opts = activeShapeFilter === 'ALL' ? allOptions : allOptions.filter((o) => o.shapeId === activeShapeFilter);
+    if (productId.toLowerCase().includes('mosaic')) {
+      opts = opts.filter((o) => !(o.widthInches === 9 && o.heightInches === 9) && !(o.widthInches === 16 && o.heightInches === 16));
+    }
+    return opts;
+  }, [allOptions, activeShapeFilter, productId]);
 
   // Synchronize selected option when switching active shape filter
   useEffect(() => {

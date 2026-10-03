@@ -55,6 +55,11 @@ import {
   ACRYLIC_BORDER_COLORS,
   getCanvasProductCapabilities
 } from '../data/canvasCustomizerData';
+import {
+  getLayoutSlots,
+  LayoutSlotDefinition,
+  LAYOUT_PRESETS as STANDARD_LAYOUT_PRESETS
+} from '../data/acrylicCustomizerData';
 import { CustomizerProductSelector } from '../components/CustomizerProductSelector';
 import { CustomizerPreloader, PRELOADER_MIN_MS } from '../components/CustomizerPreloader';
 import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
@@ -1202,7 +1207,10 @@ export const CanvasCustomizerPage: React.FC = () => {
       diagramType: opt.diagramType,
       panels: opt.panels || [{ id: 'p0', label: 'Canvas', dimension: opt.dimensionsSummary, widthRatio: opt.widthInches, heightRatio: opt.heightInches }]
     }));
-    return configOptions.length > 0 ? configOptions : SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-classic' || s.productTypeId === 'canvas-single');
+    const filteredOptions = selectedProductTypeId === 'canvas-mosaic'
+      ? configOptions.filter((opt) => !(opt.widthInches === 9 && opt.heightInches === 9) && !(opt.widthInches === 16 && opt.heightInches === 16))
+      : configOptions;
+    return filteredOptions.length > 0 ? filteredOptions : SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-classic' || s.productTypeId === 'canvas-single');
   }, [selectedProductTypeId, selectedShapeId]);
 
   // Selected Size Option
@@ -1255,6 +1263,7 @@ export const CanvasCustomizerPage: React.FC = () => {
   const [designCategory, setDesignCategory] = useState<string>(DESIGN_TEMPLATE_CATEGORIES[0]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [expandedLayoutId, setExpandedLayoutId] = useState<string | null>('layout-1');
+  const [selectedLayoutId, setSelectedLayoutId] = useState<string>('layout-1-single');
 
   const filteredLayoutPresets = useMemo(() => {
     if (selectedProductType?.supportedLayoutIds && selectedProductType.supportedLayoutIds.length > 0) {
@@ -1274,6 +1283,8 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // WRAP & BORDER tab
   const [selectedWrapId, setSelectedWrapId] = useState<string>('full-bleed');
+  // Requirement 2 & 3: Default OFF (false) so uploaded image sits strictly inside front print area
+  const [imageOnEdges, setImageOnEdges] = useState<boolean>(false);
   const [mirrorImage, setMirrorImage] = useState<boolean>(false);
   const [selectedBorderWidthId, setSelectedBorderWidthId] = useState<string>('none');
   const [selectedBorderColor, setSelectedBorderColor] = useState<string>('#FFFFFF');
@@ -1437,6 +1448,7 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // Room / 3D / 360 viewer
   const [viewerMode, setViewerMode] = useState<'room' | '3d' | '360' | null>(null);
+  const [viewer360Axis, setViewer360Axis] = useState<'horizontal' | 'vertical'>('horizontal');
   const [roomViewState, setRoomViewState] = useState<RoomPlacementState>({
     roomPreset: 'office',
     customRoomUrl: null,
@@ -1878,8 +1890,35 @@ export const CanvasCustomizerPage: React.FC = () => {
     });
   };
 
-  // Mouse wheel zoom
+  // Wheel Zoom Listener Ref Callback (non-passive, idempotent per DOM node to completely prevent browser zoom)
+  const wheelBoundNodesRef = useRef<WeakSet<HTMLElement>>(new WeakSet());
+
+  const registerWheelRef = (panelIdx: number) => (el: HTMLElement | null) => {
+    if (!el || wheelBoundNodesRef.current.has(el)) return;
+    wheelBoundNodesRef.current.add(el);
+    const onNodeWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const delta = e.deltaY < 0 ? 0.08 : -0.08;
+      setPanelImages((prev) => {
+        const curr = prev[panelIdx] || createDefaultPanel();
+        if (!curr.imageUrl) return prev;
+        const nextScale = Math.max(0.4, Math.min(4, (curr.scale || 1) + delta));
+        return {
+          ...prev,
+          [panelIdx]: {
+            ...curr,
+            scale: nextScale
+          }
+        };
+      });
+    };
+    el.addEventListener('wheel', onNodeWheel, { passive: false });
+  };
+
+  // Mouse wheel zoom fallback
   const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
     if (!panelImages[activePanelIndex]?.imageUrl) return;
     const delta = e.deltaY < 0 ? 0.08 : -0.08;
     updateActivePanelTransform((curr) => ({
@@ -1895,12 +1934,16 @@ export const CanvasCustomizerPage: React.FC = () => {
     const animate = (now: number) => {
       const dt = Math.min(0.064, (now - lastTime) / 1000);
       lastTime = now;
-      setViewerRotation((prev) => prev + dt * 36);
+      if (viewer360Axis === 'horizontal') {
+        setViewerRotation((prev) => (prev + dt * 36) % 360);
+      } else {
+        setViewerTiltX((prev) => (prev + dt * 36) % 360);
+      }
       rafId = window.requestAnimationFrame(animate);
     };
     rafId = window.requestAnimationFrame(animate);
     return () => window.cancelAnimationFrame(rafId);
-  }, [viewerAutoRotate, viewerMode, isViewerDragging]);
+  }, [viewerAutoRotate, viewerMode, isViewerDragging, viewer360Axis]);
 
   // Drag-to-spin handlers for the 3D / 360 viewer (supports mouse & touch)
   const handleViewerPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -1923,9 +1966,16 @@ export const CanvasCustomizerPage: React.FC = () => {
     e.preventDefault();
     const deltaX = e.clientX - viewerDragRef.current.x;
     const deltaY = e.clientY - viewerDragRef.current.y;
-    setViewerRotation(viewerDragRef.current.startRotation + deltaX * 0.65);
-    if (viewerMode === '3d' || viewerMode === '360') {
-      setViewerTiltX(Math.max(-32, Math.min(32, viewerDragRef.current.startTiltX - deltaY * 0.38)));
+    if (viewerMode === '360') {
+      if (viewer360Axis === 'horizontal') {
+        setViewerRotation(viewerDragRef.current.startRotation + deltaX * 0.65);
+      } else {
+        setViewerTiltX(viewerDragRef.current.startTiltX - deltaY * 0.65);
+      }
+    } else {
+      // 3D View mode: full spherical inspection including top and bottom
+      setViewerRotation(viewerDragRef.current.startRotation + deltaX * 0.65);
+      setViewerTiltX(Math.max(-90, Math.min(90, viewerDragRef.current.startTiltX - deltaY * 0.38)));
     }
   };
   const handleViewerPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -1992,6 +2042,14 @@ export const CanvasCustomizerPage: React.FC = () => {
     const p = panels[0];
     return p ? p.widthRatio / p.heightRatio : 1;
   }, [shapeApplies, currentShape, isCustomSize, canUseCustomSize, customWidth, customHeight, panels]);
+
+  const currentLayout = useMemo(() => {
+    return STANDARD_LAYOUT_PRESETS.find((l) => l.id === selectedLayoutId) || STANDARD_LAYOUT_PRESETS[0];
+  }, [selectedLayoutId]);
+
+  const layoutSlots = useMemo(() => {
+    return getLayoutSlots(currentLayout.layoutType, printAspect);
+  }, [currentLayout.layoutType, printAspect]);
 
   // Select a layout preset: switches product type + size so panel count actually changes
   const handleSelectLayoutPreset = (preset: LayoutPreset) => {
@@ -2431,7 +2489,7 @@ export const CanvasCustomizerPage: React.FC = () => {
               <div
                 key={pSpec.id || i}
                 {...panelHandlers(i)}
-                onWheel={handleWheel}
+                ref={registerWheelRef(i)}
                 className={`relative w-full h-full bg-white rounded-lg overflow-hidden transition-all cursor-pointer group border-2 ${
                   isTarget
                     ? 'border-[#0E4A93] shadow-lg ring-2 ring-[#0E4A93]/40 z-20'
@@ -2519,7 +2577,7 @@ export const CanvasCustomizerPage: React.FC = () => {
         <div
           key={pSpec.id || idx}
           {...panelHandlers(idx)}
-          onWheel={handleWheel}
+          ref={registerWheelRef(idx)}
           style={{
             boxShadow: '4px 6px 0px #CBD5E1, 0 20px 25px -5px rgba(15, 23, 42, 0.25)'
           }}
@@ -2650,53 +2708,60 @@ export const CanvasCustomizerPage: React.FC = () => {
   };
 
   // Photo Collage (canvas-collage): Single canvas frame containing internal photo slots
-  // 3 photos renders 1 large top photo + 2 smaller bottom photos (NEVER 3 vertical columns!)
   const renderCollageCanvas = () => {
-    const renderCollageSlot = (panelIdx: number) => {
+    const renderCollageSlot = (panelIdx: number, slotDef: LayoutSlotDefinition) => {
       const panel = panelImages[panelIdx] || createDefaultPanel();
-      const panelSpec = panels[panelIdx];
       const isTarget = activePanelIndex === panelIdx;
 
       return (
         <div
-          key={panelIdx}
-          {...panelHandlers(panelIdx)}
-          className={`relative w-full h-full min-h-[110px] bg-stone-50 rounded-lg overflow-hidden transition-all cursor-pointer group ${
-            isTarget
-              ? 'ring-2 ring-inset ring-[#0E4A93] z-20 shadow-md'
-              : 'border border-stone-200/90 hover:border-stone-300'
-          }`}
+          key={slotDef.id || panelIdx}
+          style={{
+            position: 'absolute',
+            left: `${slotDef.x * 100}%`,
+            top: `${slotDef.y * 100}%`,
+            width: `${slotDef.width * 100}%`,
+            height: `${slotDef.height * 100}%`,
+            boxSizing: 'border-box',
+            padding: '2.5px'
+          }}
         >
-          {dragOverPanel === panelIdx && (
-            <div className="absolute inset-0 z-30 bg-blue-500/20 border-2 border-dashed border-[#0E4A93] pointer-events-none" />
-          )}
-          {panel.imageUrl ? (
-            <img
-              src={panel.imageUrl}
-              alt={`Slot ${panelIdx + 1}`}
-              style={{
-                transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                filter: getFilterCss(panel.filter),
-                transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-              }}
-              className="w-full h-full object-cover pointer-events-none"
-            />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50 hover:bg-stone-100 transition-colors p-2 text-center">
-              <div className="w-7 h-7 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-1">
-                <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
+          <div
+            {...panelHandlers(panelIdx)}
+            ref={registerWheelRef(panelIdx)}
+            className={`relative w-full h-full min-h-[60px] bg-stone-50 rounded-lg overflow-hidden transition-all cursor-pointer group ${
+              isTarget
+                ? 'ring-2 ring-inset ring-[#0E4A93] z-20 shadow-md'
+                : 'border border-stone-200/90 hover:border-stone-300'
+            }`}
+          >
+            {dragOverPanel === panelIdx && (
+              <div className="absolute inset-0 z-30 bg-blue-500/20 border-2 border-dashed border-[#0E4A93] pointer-events-none" />
+            )}
+            {panel.imageUrl ? (
+              <img
+                src={panel.imageUrl}
+                alt={`Slot ${panelIdx + 1}`}
+                style={{
+                  transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                  filter: getFilterCss(panel.filter),
+                  objectFit: panel.fitMode === 'contain' ? 'contain' : 'cover',
+                  transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                }}
+                className="w-full h-full pointer-events-none"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50 hover:bg-stone-100 transition-colors p-2 text-center">
+                <div className="w-7 h-7 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-1">
+                  <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
+                </div>
+                <span className="text-[10px] font-bold text-stone-600 group-hover:text-[#0E4A93]">
+                  Slot {panelIdx + 1}
+                </span>
+                <span className="text-[9px] text-stone-400">Click to upload</span>
               </div>
-              <span className="text-[10px] font-bold text-stone-600 group-hover:text-[#0E4A93]">
-                Slot {panelIdx + 1} {panelSpec?.dimension ? `(${panelSpec.dimension})` : ''}
-              </span>
-              <span className="text-[9px] text-stone-400">Click to upload</span>
-            </div>
-          )}
-          {panelSpec?.dimension && (
-            <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
-              {panelSpec.dimension}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       );
     };
@@ -2705,28 +2770,15 @@ export const CanvasCustomizerPage: React.FC = () => {
       <div
         className="relative rounded-2xl bg-white p-2.5 sm:p-3 overflow-hidden transition-all cursor-pointer shadow-2xl border-2 border-stone-300 mx-auto my-auto"
         style={{
-          aspectRatio: panels.length === 2 ? '16/10' : panels.length === 3 ? '16/12' : '1/1',
-          width: `min(27rem, calc(48vh * ${panels.length === 2 ? 1.6 : panels.length === 3 ? 1.33 : 1}))`,
+          aspectRatio: String(printAspect),
+          width: `min(27rem, calc(48vh * ${printAspect}))`,
           maxWidth: '100%',
           boxShadow: '5px 7px 0px #CBD5E1, 0 25px 50px -12px rgba(15, 23, 42, 0.38)'
         }}
       >
-        {panels.length === 3 ? (
-          // 1 large top photo + 2 smaller bottom photos (NEVER 3 vertical columns!)
-          <div className="flex flex-col gap-2 w-full h-full">
-            <div className="flex-[1.35] w-full min-h-0">
-              {renderCollageSlot(0)}
-            </div>
-            <div className="flex-1 w-full min-h-0 grid grid-cols-2 gap-2">
-              {renderCollageSlot(1)}
-              {renderCollageSlot(2)}
-            </div>
-          </div>
-        ) : (
-          <div className={`grid ${panels.length === 2 ? 'grid-cols-2' : panels.length === 9 ? 'grid-cols-3' : 'grid-cols-2'} gap-2 w-full h-full`}>
-            {panels.map((_, panelIdx) => renderCollageSlot(panelIdx))}
-          </div>
-        )}
+        <div className="relative w-full h-full bg-stone-100/60 rounded-xl overflow-hidden">
+          {layoutSlots.map((slot, idx) => renderCollageSlot(idx, slot))}
+        </div>
       </div>
     );
   };
@@ -3506,21 +3558,79 @@ export const CanvasCustomizerPage: React.FC = () => {
                       <p className="text-xs text-stone-500">
                         Choose a single-photo or multi-photo layout arrangement. Selecting a layout automatically adjusts your canvas panels.
                       </p>
-                      <div className="grid grid-cols-2 gap-3">
-                        {filteredLayoutPresets.map((preset) => {
-                          const isSelected = selectedProductTypeId === preset.productTypeId && selectedSizeId === preset.sizeId;
+                      <div className="grid grid-cols-2 gap-2">
+                        {STANDARD_LAYOUT_PRESETS.slice(0, 7).map((layout) => {
+                          const isSelected = selectedLayoutId === layout.id;
+                          const previewSlots = getLayoutSlots(layout.layoutType, printAspect);
+                          const clampedRatio = Math.max(0.78, Math.min(1.35, printAspect));
+                          const previewHeight = 46;
+                          const previewWidth = Math.round(previewHeight * clampedRatio);
+
                           return (
-                            <CustomizerOptionCard
-                              key={preset.id}
-                              selected={isSelected}
+                            <div
+                              key={layout.id}
                               onClick={() => {
-                                setExpandedLayoutId(preset.id);
-                                handleSelectLayoutPreset(preset);
+                                setSelectedLayoutId(layout.id);
+                                if (layout.id !== 'layout-1-single' && selectedProductTypeId !== 'canvas-collage') {
+                                  setSelectedProductTypeId('canvas-collage');
+                                } else if (layout.id === 'layout-1-single' && selectedProductTypeId === 'canvas-collage') {
+                                  setSelectedProductTypeId('canvas-classic');
+                                }
                               }}
-                              title={preset.label}
-                              previewHeightClass="h-28 p-2"
-                              preview={<div className="w-full">{renderLayoutThumbnail(preset.arrangement)}</div>}
-                            />
+                              className={`group relative rounded-xl border-2 transition-all overflow-hidden flex flex-col justify-between cursor-pointer ${
+                                isSelected
+                                  ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
+                                  : 'border-stone-200 hover:border-stone-400 bg-white'
+                              }`}
+                            >
+                              {isSelected && (
+                                <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                </div>
+                              )}
+
+                              <div className="w-full h-16 bg-stone-50 border-b border-stone-100 p-2 flex items-center justify-center">
+                                <div
+                                  style={{
+                                    width: `${previewWidth}px`,
+                                    height: `${previewHeight}px`
+                                  }}
+                                  className="relative group-hover:scale-105 transition-transform"
+                                >
+                                  {previewSlots.map((slot) => (
+                                    <div
+                                      key={slot.id}
+                                      style={{
+                                        position: 'absolute',
+                                        left: `${slot.x * 100}%`,
+                                        top: `${slot.y * 100}%`,
+                                        width: `${slot.width * 100}%`,
+                                        height: `${slot.height * 100}%`,
+                                        boxSizing: 'border-box',
+                                        padding: '1.5px'
+                                      }}
+                                    >
+                                      <div
+                                        className={`w-full h-full rounded-[2px] border-[1.5px] transition-colors ${
+                                          isSelected
+                                            ? 'border-[#0E4A93] bg-[#0E4A93]/20'
+                                            : 'border-[#0E4A93]/75 bg-[#0E4A93]/12 group-hover:border-[#0E4A93]'
+                                        }`}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div className="p-1.5 bg-white text-center">
+                                <div className="text-[11px] font-bold text-stone-900 leading-tight truncate">
+                                  {layout.name}
+                                </div>
+                                <div className="text-[10px] font-medium text-stone-500">
+                                  {layout.photoCount} {layout.photoCount === 1 ? 'Photo' : 'Photos'}
+                                </div>
+                              </div>
+                            </div>
                           );
                         })}
                       </div>
@@ -3588,6 +3698,57 @@ export const CanvasCustomizerPage: React.FC = () => {
           {/* --------------------------- WRAP & BORDER --------------------------- */}
           {activeTab === 'WRAP & BORDER' && (
             <div className="p-4 space-y-5">
+              {/* IMAGE WRAP ON EDGES USER CONTROL (Requirement 2 & 3) */}
+              <div className="space-y-2.5 pb-4 border-b border-stone-200">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">Image Wrap on Edges</label>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      !imageOnEdges
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-blue-50 text-blue-700 border border-blue-200'
+                    }`}
+                  >
+                    {!imageOnEdges ? 'No Image on Edges (Default)' : 'Image on Edges'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-stone-500">
+                  Choose whether your uploaded photo stays strictly inside the front print area, or extends continuously onto the physical canvas edges.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setImageOnEdges(false)}
+                    className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                      !imageOnEdges
+                        ? 'border-[#0E4A93] bg-blue-50/30 text-[#0E4A93] shadow-xs ring-1 ring-[#0E4A93]/20'
+                        : 'border-stone-200 text-stone-700 bg-white hover:border-stone-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-black">No Image on Edges</span>
+                      {!imageOnEdges && <Check className="w-3.5 h-3.5 stroke-[3] text-[#0E4A93]" />}
+                    </div>
+                    <p className="text-[10px] text-stone-500">Front print area only. Clean border/wrap edges.</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImageOnEdges(true)}
+                    className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                      imageOnEdges
+                        ? 'border-[#0E4A93] bg-blue-50/30 text-[#0E4A93] shadow-xs ring-1 ring-[#0E4A93]/20'
+                        : 'border-stone-200 text-stone-700 bg-white hover:border-stone-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-black">Image on Edges</span>
+                      {imageOnEdges && <Check className="w-3.5 h-3.5 stroke-[3] text-[#0E4A93]" />}
+                    </div>
+                    <p className="text-[10px] text-stone-500">Photo wraps continuously across front and edges.</p>
+                  </button>
+                </div>
+              </div>
+
               {/* 1. Edge Wrap Styles */}
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
@@ -4434,10 +4595,10 @@ export const CanvasCustomizerPage: React.FC = () => {
 
                 const displayWidthInches = isCustomSize && canUseCustomSize
                   ? customWidth
-                  : panels[0]?.widthRatio || 8;
+                  : currentSizeOption?.widthInches || panels[0]?.widthRatio || 8;
                 const displayHeightInches = isCustomSize && canUseCustomSize
                   ? customHeight
-                  : panels[0]?.heightRatio || 8;
+                  : currentSizeOption?.heightInches || panels[0]?.heightRatio || 8;
 
                 const isFullBleedWrap = selectedWrapId === 'full-bleed';
                 const isMirrorWrap = selectedWrapId === 'clear-edge';
@@ -4490,27 +4651,32 @@ export const CanvasCustomizerPage: React.FC = () => {
                           <>
                             {/* Top Physical Thickness Edge / Bevel */}
                             <div
-                              className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0"
+                              className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0 border-b border-black/15"
                               style={{
                                 bottom: '100%',
-                                height: `${Math.max(3, Math.round(visibleDepthPx * 0.45))}px`,
+                                height: `${Math.max(6, Math.round(visibleDepthPx * 0.55))}px`,
                                 transformOrigin: 'bottom center',
                                 transform: 'perspective(500px) rotateX(24deg)',
                                 backgroundColor: wrapBgColor,
                                 borderTopLeftRadius: '2px',
                                 borderTopRightRadius: '2px',
-                                boxShadow: 'inset 0 -1px 2px rgba(0,0,0,0.12), 0 -2px 6px -1px rgba(0,0,0,0.08)'
+                                boxShadow: 'inset 0 -1px 2px rgba(0,0,0,0.15), 0 -3px 8px -1px rgba(0,0,0,0.10)'
                               }}
                             >
-                              {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
+                              {imageOnEdges && (isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
                                 <img
                                   src={panelImages[0].imageUrl}
                                   alt=""
                                   draggable={false}
-                                  className={`w-full h-full object-cover filter brightness-95 contrast-95 ${
-                                    isMirrorWrap ? 'scale-y-[-1]' : ''
-                                  }`}
-                                  style={{ objectPosition: 'center top' }}
+                                  className="w-full h-full object-cover filter brightness-95 contrast-95"
+                                  style={{
+                                    objectPosition: 'center top',
+                                    transformOrigin: 'center bottom',
+                                    transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1}) ${
+                                      isMirrorWrap ? 'scaleY(-1)' : ''
+                                    }`,
+                                    filter: getFilterCss(panelImages[0].filter)
+                                  }}
                                 />
                               )}
                               <div
@@ -4524,27 +4690,32 @@ export const CanvasCustomizerPage: React.FC = () => {
 
                             {/* Left Physical Thickness Edge / Bevel */}
                             <div
-                              className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0"
+                              className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0 border-r border-black/15"
                               style={{
                                 right: '100%',
-                                width: `${Math.max(3, Math.round(visibleDepthPx * 0.45))}px`,
+                                width: `${Math.max(6, Math.round(visibleDepthPx * 0.55))}px`,
                                 transformOrigin: 'right center',
                                 transform: 'perspective(500px) rotateY(-24deg)',
                                 backgroundColor: wrapBgColor,
                                 borderTopLeftRadius: '2px',
                                 borderBottomLeftRadius: '2px',
-                                boxShadow: 'inset -1px 0 2px rgba(0,0,0,0.12), -2px 0 6px -1px rgba(0,0,0,0.08)'
+                                boxShadow: 'inset -1px 0 2px rgba(0,0,0,0.15), -3px 0 8px -1px rgba(0,0,0,0.10)'
                               }}
                             >
-                              {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
+                              {imageOnEdges && (isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
                                 <img
                                   src={panelImages[0].imageUrl}
                                   alt=""
                                   draggable={false}
-                                  className={`w-full h-full object-cover filter brightness-90 contrast-95 ${
-                                    isMirrorWrap ? 'scale-x-[-1]' : ''
-                                  }`}
-                                  style={{ objectPosition: 'left center' }}
+                                  className="w-full h-full object-cover filter brightness-90 contrast-95"
+                                  style={{
+                                    objectPosition: 'left center',
+                                    transformOrigin: 'right center',
+                                    transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1}) ${
+                                      isMirrorWrap ? 'scaleX(-1)' : ''
+                                    }`,
+                                    filter: getFilterCss(panelImages[0].filter)
+                                  }}
                                 />
                               )}
                               <div
@@ -4558,7 +4729,7 @@ export const CanvasCustomizerPage: React.FC = () => {
 
                             {/* Bottom Physical Thickness Edge */}
                             <div
-                              className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0"
+                              className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0 border-t border-white/25"
                               style={{
                                 top: '100%',
                                 height: `${visibleDepthPx}px`,
@@ -4570,15 +4741,20 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.18), 0 12px 24px -4px rgba(15, 23, 42, 0.42)'
                               }}
                             >
-                              {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
+                              {imageOnEdges && (isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
                                 <img
                                   src={panelImages[0].imageUrl}
                                   alt=""
                                   draggable={false}
-                                  className={`w-full h-full object-cover filter brightness-70 contrast-90 ${
-                                    isMirrorWrap ? 'scale-y-[-1]' : ''
-                                  }`}
-                                  style={{ objectPosition: 'center bottom' }}
+                                  className="w-full h-full object-cover filter brightness-70 contrast-90"
+                                  style={{
+                                    objectPosition: 'center bottom',
+                                    transformOrigin: 'center top',
+                                    transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1}) ${
+                                      isMirrorWrap ? 'scaleY(-1)' : ''
+                                    }`,
+                                    filter: getFilterCss(panelImages[0].filter)
+                                  }}
                                 />
                               )}
                               <div
@@ -4592,10 +4768,10 @@ export const CanvasCustomizerPage: React.FC = () => {
 
                             {/* Right Physical Thickness Edge */}
                             <div
-                              className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0"
+                              className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0 border-l border-white/20"
                               style={{
                                 left: '100%',
-                                width: `${Math.max(4, Math.round(visibleDepthPx * 0.65))}px`,
+                                width: `${Math.max(5, Math.round(visibleDepthPx * 0.65))}px`,
                                 transformOrigin: 'left center',
                                 transform: 'perspective(500px) rotateY(24deg)',
                                 backgroundColor: wrapBgColor,
@@ -4604,15 +4780,20 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 boxShadow: 'inset 1px 0 2px rgba(0,0,0,0.18), 4px 8px 16px -2px rgba(15, 23, 42, 0.35)'
                               }}
                             >
-                              {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
+                              {imageOnEdges && (isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
                                 <img
                                   src={panelImages[0].imageUrl}
                                   alt=""
                                   draggable={false}
-                                  className={`w-full h-full object-cover filter brightness-80 contrast-95 ${
-                                    isMirrorWrap ? 'scale-x-[-1]' : ''
-                                  }`}
-                                  style={{ objectPosition: 'right center' }}
+                                  className="w-full h-full object-cover filter brightness-80 contrast-95"
+                                  style={{
+                                    objectPosition: 'right center',
+                                    transformOrigin: 'left center',
+                                    transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1}) ${
+                                      isMirrorWrap ? 'scaleX(-1)' : ''
+                                    }`,
+                                    filter: getFilterCss(panelImages[0].filter)
+                                  }}
                                 />
                               )}
                               <div
@@ -4629,7 +4810,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                           <div
                             className="absolute inset-0 pointer-events-none overflow-hidden"
                             style={{
-                              transform: `translate(${Math.max(3, Math.round(visibleDepthPx * 0.45))}px, ${visibleDepthPx}px)`,
+                              transform: `translate(${Math.max(4, Math.round(visibleDepthPx * 0.5))}px, ${visibleDepthPx}px)`,
                               clipPath: currentShape.clipPathStyle,
                               WebkitClipPath: currentShape.clipPathStyle,
                               backgroundColor: wrapBgColor,
@@ -4637,12 +4818,16 @@ export const CanvasCustomizerPage: React.FC = () => {
                               zIndex: -1
                             }}
                           >
-                            {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
+                            {imageOnEdges && (isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
                               <img
                                 src={panelImages[0].imageUrl}
                                 alt=""
                                 draggable={false}
                                 className="w-full h-full object-cover filter brightness-70 contrast-90"
+                                style={{
+                                  transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                  filter: getFilterCss(panelImages[0].filter)
+                                }}
                               />
                             )}
                             <div
@@ -4658,7 +4843,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                         {/* 2. FRONT CANVAS SURFACE */}
                         <div
                           {...panelHandlers(0)}
-                          onWheel={handleWheel}
+                          ref={registerWheelRef(0)}
                           className={`relative w-full h-full ${currentShape.borderRadiusClass} bg-white overflow-hidden transition-all cursor-pointer group shadow-lg ${
                             activePanelIndex === 0 ? 'ring-2 ring-[#0E4A93]/50' : ''
                           }`}
@@ -4686,7 +4871,10 @@ export const CanvasCustomizerPage: React.FC = () => {
                           <div
                             className="absolute inset-0 pointer-events-none z-10"
                             style={{
-                              border: isFullBleedWrap || isMirrorWrap ? '12px solid rgba(0,0,0,0.06)' : `12px solid ${wrapBgColor}`,
+                              border:
+                                imageOnEdges && (isFullBleedWrap || isMirrorWrap)
+                                  ? '12px solid rgba(0,0,0,0.06)'
+                                  : `12px solid ${wrapBgColor}`,
                               borderRadius: currentShape.id === 'shape-circle' ? '9999px' : undefined
                             }}
                           />
@@ -4808,7 +4996,29 @@ export const CanvasCustomizerPage: React.FC = () => {
               {selectedProductTypeId === 'canvas-split' && renderContinuousSplitCanvas()}
 
               {/* PHOTO COLLAGE (Single Canvas Frame containing internal Photo Layout Grid) */}
-              {selectedProductTypeId === 'canvas-collage' && renderCollageCanvas()}
+              {selectedProductTypeId === 'canvas-collage' && (
+                <div className="relative flex flex-col items-center select-none w-full">
+                  {/* Ruler Top */}
+                  <div className="w-full flex items-center justify-center py-1 mb-1 max-w-[27rem] relative">
+                    <div className="absolute inset-x-0 h-px border-b border-dashed border-stone-300" />
+                    <div className="relative bg-white px-2 py-0.5 rounded-full border border-stone-200 text-[10px] font-bold text-stone-600 shadow-2xs z-10">
+                      {currentSizeOption?.widthInches || 12} inch
+                    </div>
+                  </div>
+
+                  <div className="relative flex items-center justify-center">
+                    {/* Ruler Left */}
+                    <div className="absolute -left-10 inset-y-0 flex flex-col items-center justify-center">
+                      <div className="absolute inset-y-0 w-px border-r border-dashed border-stone-300" />
+                      <div className="relative bg-white px-1.5 py-0.5 rounded-full border border-stone-200 text-[9px] font-bold text-stone-600 shadow-2xs rotate-[-90deg] whitespace-nowrap z-10">
+                        {currentSizeOption?.heightInches || 12} inch
+                      </div>
+                    </div>
+
+                    {renderCollageCanvas()}
+                  </div>
+                </div>
+              )}
 
               {/* Movable text + clipart: drag anywhere on the print */}
               <div className="absolute inset-0 z-30 pointer-events-none">
@@ -5450,6 +5660,10 @@ export const CanvasCustomizerPage: React.FC = () => {
                       onPointerMove={handleViewerPointerMove}
                       onPointerUp={handleViewerPointerUp}
                       onPointerCancel={handleViewerPointerUp}
+                      onWheel={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
                       style={{
                         perspective: '1250px',
                         touchAction: 'none',
@@ -5463,7 +5677,15 @@ export const CanvasCustomizerPage: React.FC = () => {
                       {/* Top-Left Mode Badge & Orientation Readout */}
                       <div className="absolute top-3 left-4 flex items-center gap-2 pointer-events-none z-20">
                         <span className="bg-white/90 backdrop-blur-xs border border-stone-200 text-stone-700 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-2xs">
-                          {normalizedAngle < 35 || normalizedAngle >= 325
+                          {viewerMode === '360' && viewer360Axis === 'vertical'
+                            ? (() => {
+                                const vertAngle = ((viewerTiltX % 360) + 360) % 360;
+                                if (vertAngle < 35 || vertAngle >= 325) return 'Front Face';
+                                if (vertAngle >= 35 && vertAngle < 145) return 'Bottom Edge';
+                                if (vertAngle >= 145 && vertAngle <= 215) return 'Canvas Back & Hardware';
+                                return 'Top Edge';
+                              })()
+                            : normalizedAngle < 35 || normalizedAngle >= 325
                             ? 'Front Face'
                             : normalizedAngle >= 35 && normalizedAngle < 75
                             ? '3/4 Front-Side Angle'
@@ -5482,7 +5704,9 @@ export const CanvasCustomizerPage: React.FC = () => {
                       </div>
 
                       <div className="absolute top-3 right-4 bg-white/90 backdrop-blur-xs border border-stone-200 text-stone-700 text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-2xs tabular-nums pointer-events-none z-20">
-                        {Math.round(normalizedAngle)}&deg;
+                        {viewerMode === '360' && viewer360Axis === 'vertical'
+                          ? `${Math.round(((viewerTiltX % 360) + 360) % 360)}°`
+                          : `${Math.round(normalizedAngle)}°`}
                       </div>
 
                       {/* Dynamic 3D Floor Shadow */}
@@ -5539,6 +5763,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   selectedBorderWidthId === 'none' &&
                                   !slice.isRearHalf &&
                                   primaryPhotoUrl &&
+                                  imageOnEdges &&
                                   (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
                                     <img
                                       src={primaryPhotoUrl}
@@ -5581,6 +5806,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                               {!hasOuterFrame &&
                                 selectedBorderWidthId === 'none' &&
                                 primaryPhotoUrl &&
+                                imageOnEdges &&
                                 (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
                                 <img
                                   src={primaryPhotoUrl}
@@ -5617,6 +5843,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                               {!hasOuterFrame &&
                                 selectedBorderWidthId === 'none' &&
                                 primaryPhotoUrl &&
+                                imageOnEdges &&
                                 (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
                                 <img
                                   src={primaryPhotoUrl}
@@ -5653,6 +5880,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                               {!hasOuterFrame &&
                                 selectedBorderWidthId === 'none' &&
                                 primaryPhotoUrl &&
+                                imageOnEdges &&
                                 (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
                                 <img
                                   src={primaryPhotoUrl}
@@ -5682,6 +5910,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                               {!hasOuterFrame &&
                                 selectedBorderWidthId === 'none' &&
                                 primaryPhotoUrl &&
+                                imageOnEdges &&
                                 (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
                                 <img
                                   src={primaryPhotoUrl}
@@ -5893,50 +6122,115 @@ export const CanvasCustomizerPage: React.FC = () => {
                     {/* 360° View Controls Footer */}
                     {is360 && (
                       <div className="px-4 py-3 border-t border-stone-200 bg-stone-50 space-y-2.5">
-                        <div className="flex items-center gap-3">
+                        {/* 360 Axis Selector: Horizontal 360 vs Vertical 360 */}
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5 p-1 bg-stone-200/70 rounded-xl">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setViewer360Axis('horizontal');
+                                setViewerTiltX(0);
+                              }}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                                viewer360Axis === 'horizontal'
+                                  ? 'bg-[#0E4A93] text-white shadow-xs'
+                                  : 'text-stone-700 hover:text-stone-900'
+                              }`}
+                            >
+                              HORIZONTAL 360
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setViewer360Axis('vertical');
+                                setViewerRotation(0);
+                              }}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                                viewer360Axis === 'vertical'
+                                  ? 'bg-[#0E4A93] text-white shadow-xs'
+                                  : 'text-stone-700 hover:text-stone-900'
+                              }`}
+                            >
+                              VERTICAL 360
+                            </button>
+                          </div>
+
                           <button
                             type="button"
                             onClick={() => setViewerAutoRotate((v) => !v)}
-                            className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 ${
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 ${
                               viewerAutoRotate
                                 ? 'bg-[#0E4A93] text-white shadow-xs'
                                 : 'bg-white text-stone-700 border border-stone-300 hover:bg-stone-100'
                             }`}
                           >
                             <RotateCw className={`w-3.5 h-3.5 ${viewerAutoRotate ? 'animate-spin' : ''}`} />
-                            <span>{viewerAutoRotate ? 'Pause 360°' : 'Auto Rotate'}</span>
+                            <span>{viewerAutoRotate ? 'Pause 360°' : 'Auto Spin'}</span>
                           </button>
+                        </div>
 
+                        <div className="flex items-center gap-3">
+                          <span className="text-[11px] font-bold text-stone-500 w-16">
+                            {viewer360Axis === 'horizontal' ? 'Y-Axis' : 'X-Axis'}
+                          </span>
                           <input
                             type="range"
                             min={0}
                             max={360}
                             step={1}
-                            value={Math.round(normalizedAngle)}
+                            value={
+                              viewer360Axis === 'horizontal'
+                                ? Math.round(normalizedAngle)
+                                : Math.round(((viewerTiltX % 360) + 360) % 360)
+                            }
                             onChange={(e) => {
                               setViewerAutoRotate(false);
-                              setViewerRotation(Number(e.target.value));
+                              const val = Number(e.target.value);
+                              if (viewer360Axis === 'horizontal') {
+                                setViewerRotation(val);
+                              } else {
+                                setViewerTiltX(val);
+                              }
                             }}
                             aria-label="360 degree rotation angle"
                             className="flex-1 accent-[#0E4A93] cursor-pointer"
                           />
+                          <span className="text-xs font-black text-stone-700 w-12 text-right tabular-nums">
+                            {viewer360Axis === 'horizontal'
+                              ? `${Math.round(normalizedAngle)}°`
+                              : `${Math.round(((viewerTiltX % 360) + 360) % 360)}°`}
+                          </span>
 
                           <div className="hidden sm:flex items-center gap-1">
-                            {[
-                              { label: 'Front', deg: 0 },
-                              { label: '3/4', deg: 35 },
-                              { label: 'Side', deg: 90 },
-                              { label: 'Back', deg: 180 }
-                            ].map((preset) => (
+                            {(viewer360Axis === 'horizontal'
+                              ? [
+                                  { label: 'Front', deg: 0 },
+                                  { label: '3/4', deg: 35 },
+                                  { label: 'Side', deg: 90 },
+                                  { label: 'Back', deg: 180 }
+                                ]
+                              : [
+                                  { label: 'Front', deg: 0 },
+                                  { label: 'Top', deg: 270 },
+                                  { label: 'Back', deg: 180 },
+                                  { label: 'Bottom', deg: 90 }
+                                ]
+                            ).map((preset) => (
                               <button
                                 key={preset.label}
                                 type="button"
                                 onClick={() => {
                                   setViewerAutoRotate(false);
-                                  setViewerRotation(preset.deg);
+                                  if (viewer360Axis === 'horizontal') {
+                                    setViewerRotation(preset.deg);
+                                  } else {
+                                    setViewerTiltX(preset.deg);
+                                  }
                                 }}
                                 className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-colors cursor-pointer ${
-                                  Math.abs(normalizedAngle - preset.deg) < 8
+                                  (viewer360Axis === 'horizontal'
+                                    ? Math.abs(normalizedAngle - preset.deg) < 8
+                                    : Math.abs((((viewerTiltX % 360) + 360) % 360) - preset.deg) < 8)
                                     ? 'bg-[#0E4A93] text-white'
                                     : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
                                 }`}
@@ -5946,25 +6240,38 @@ export const CanvasCustomizerPage: React.FC = () => {
                             ))}
                           </div>
                         </div>
+
                         <div className="text-center text-[11px] font-medium text-stone-500">
-                          Drag horizontally left or right to rotate the physical Canvas 360&deg; — inspect the front artwork, wrapped edge thickness, and rear stretcher frame.
+                          {viewer360Axis === 'horizontal'
+                            ? 'Drag horizontally left or right to rotate the physical Canvas 360° — inspect the front artwork, wrapped edge thickness, and rear stretcher frame.'
+                            : 'Drag vertically up or down to rotate the physical Canvas 360° — inspect the front face, top edge, rear stretcher frame, and bottom edge.'}
                         </div>
                       </div>
                     )}
 
-                    {/* 3D View Controls Footer */}
+                    {/* 3D View Controls Footer: Exactly 6 Selectable Views */}
                     {!is360 && (
                       <div className="px-4 py-3 border-t border-stone-200 bg-stone-50 space-y-2">
-                        <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black uppercase tracking-wider text-stone-800">Select View</span>
+                          <span className="text-[11px] font-bold text-stone-500">Click to snap camera directly to any of the 6 sides</span>
+                        </div>
+                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                           {[
-                            { label: 'Front', rotY: 0, tiltX: 0 },
-                            { label: '3/4 Left', rotY: -28, tiltX: 8 },
-                            { label: '3/4 Right', rotY: 28, tiltX: 8 },
-                            { label: 'Side Edge', rotY: -82, tiltX: 4 },
-                            { label: 'Back & Hardware', rotY: 180, tiltX: 6 }
+                            { label: 'FRONT', rotY: 0, tiltX: 0 },
+                            { label: 'BACK', rotY: 180, tiltX: 0 },
+                            { label: 'TOP', rotY: 0, tiltX: -90 },
+                            { label: 'BOTTOM', rotY: 0, tiltX: 90 },
+                            { label: 'LEFT', rotY: 90, tiltX: 0 },
+                            { label: 'RIGHT', rotY: -90, tiltX: 0 }
                           ].map((v) => {
                             const isCurrent =
-                              Math.abs(((viewerRotation - v.rotY + 540) % 360) - 180) < 8;
+                              (v.label === 'TOP' && viewerTiltX <= -45) ||
+                              (v.label === 'BOTTOM' && viewerTiltX >= 45) ||
+                              (v.label === 'FRONT' && Math.abs(viewerTiltX) < 45 && (normalizedAngle < 25 || normalizedAngle > 335)) ||
+                              (v.label === 'BACK' && Math.abs(viewerTiltX) < 45 && Math.abs(normalizedAngle - 180) < 25) ||
+                              (v.label === 'LEFT' && Math.abs(viewerTiltX) < 45 && Math.abs(normalizedAngle - 90) < 25) ||
+                              (v.label === 'RIGHT' && Math.abs(viewerTiltX) < 45 && Math.abs(normalizedAngle - 270) < 25);
                             return (
                               <button
                                 key={v.label}
@@ -5974,10 +6281,10 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   setViewerRotation(v.rotY);
                                   setViewerTiltX(v.tiltX);
                                 }}
-                                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                className={`py-2 px-3 rounded-xl text-xs font-black transition-all cursor-pointer text-center ${
                                   isCurrent
-                                    ? 'bg-[#0E4A93] text-white shadow-xs'
-                                    : 'bg-white text-stone-700 border border-stone-300 hover:bg-stone-100'
+                                    ? 'bg-[#0E4A93] text-white shadow-sm ring-2 ring-[#0E4A93]/40'
+                                    : 'bg-white text-stone-700 border border-stone-300 hover:bg-stone-100 hover:border-stone-400'
                                 }`}
                               >
                                 {v.label}
@@ -5985,9 +6292,6 @@ export const CanvasCustomizerPage: React.FC = () => {
                             );
                           })}
                         </div>
-                        <p className="text-center text-[11px] font-medium text-stone-500">
-                          Drag horizontally or vertically to inspect the physical Canvas perspective, edge depth, and rear frame.
-                        </p>
                       </div>
                     )}
                   </div>
