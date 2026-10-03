@@ -96,14 +96,20 @@ export const ProductDetailPage: React.FC = () => {
     }
   }, [product]);
 
+  // Categories that only need Size + Frame (Finish) selection — no Shape
+  // picker, no Custom dimensions.
+  const SIMPLE_VARIANT_CATEGORIES = ['cork', 'cork-art-patterns', 'yoga-fitness'];
+
   // Shape options for this product. Every wall-hangable category gets the
-  // full shape range by default (yoga mats don't have "shapes" in this sense).
+  // full shape range by default (Cork and yoga mats don't use shapes).
   const availableShapes = useMemo(() => {
     if (!product) return [];
     if (product.shapes && product.shapes.length > 0) return product.shapes;
-    if (product.categorySlug === 'yoga-fitness') return [];
+    if (SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug)) return [];
     return ['Popular', 'Square', 'Rectangle', 'Panoramic', 'Circle', 'Triangle'];
   }, [product]);
+
+  const showCustomSize = product ? !SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug) : true;
 
   // Sync variants when product changes
   useEffect(() => {
@@ -587,28 +593,30 @@ export const ProductDetailPage: React.FC = () => {
                 </div>
 
                 {/* Custom Size */}
-                <div className="flex items-center gap-2.5 pt-1">
-                  <span className={`text-xs font-semibold ${isCustomSize ? 'text-[#0E4A93]' : 'text-stone-600'}`}>Custom:</span>
-                  <select
-                    value={customWidth}
-                    onChange={(e) => handleCustomSizeChange(Number(e.target.value), customHeight)}
-                    className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border bg-white cursor-pointer focus:outline-none ${isCustomSize ? 'border-[#0E4A93] text-[#0E4A93]' : 'border-stone-300 text-stone-700'}`}
-                  >
-                    {Array.from({ length: 37 }, (_, i) => i + 4).map((n) => (
-                      <option key={n} value={n}>{n}"</option>
-                    ))}
-                  </select>
-                  <span className="text-stone-400 text-xs font-bold">X</span>
-                  <select
-                    value={customHeight}
-                    onChange={(e) => handleCustomSizeChange(customWidth, Number(e.target.value))}
-                    className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border bg-white cursor-pointer focus:outline-none ${isCustomSize ? 'border-[#0E4A93] text-[#0E4A93]' : 'border-stone-300 text-stone-700'}`}
-                  >
-                    {Array.from({ length: 37 }, (_, i) => i + 4).map((n) => (
-                      <option key={n} value={n}>{n}"</option>
-                    ))}
-                  </select>
-                </div>
+                {showCustomSize && (
+                  <div className="flex items-center gap-2.5 pt-1">
+                    <span className={`text-xs font-semibold ${isCustomSize ? 'text-[#0E4A93]' : 'text-stone-600'}`}>Custom:</span>
+                    <select
+                      value={customWidth}
+                      onChange={(e) => handleCustomSizeChange(Number(e.target.value), customHeight)}
+                      className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border bg-white cursor-pointer focus:outline-none ${isCustomSize ? 'border-[#0E4A93] text-[#0E4A93]' : 'border-stone-300 text-stone-700'}`}
+                    >
+                      {Array.from({ length: 37 }, (_, i) => i + 4).map((n) => (
+                        <option key={n} value={n}>{n}"</option>
+                      ))}
+                    </select>
+                    <span className="text-stone-400 text-xs font-bold">X</span>
+                    <select
+                      value={customHeight}
+                      onChange={(e) => handleCustomSizeChange(customWidth, Number(e.target.value))}
+                      className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border bg-white cursor-pointer focus:outline-none ${isCustomSize ? 'border-[#0E4A93] text-[#0E4A93]' : 'border-stone-300 text-stone-700'}`}
+                    >
+                      {Array.from({ length: 37 }, (_, i) => i + 4).map((n) => (
+                        <option key={n} value={n}>{n}"</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             )}
 
