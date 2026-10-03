@@ -4053,6 +4053,55 @@ export const CanvasCustomizerPage: React.FC = () => {
             onDeleteSelectedItem={removeSelectedItem}
           />
 
+          {/* ALWAYS-VISIBLE PREVIEW THUMBNAILS: Studio / Living Room / Office.
+              Clicking a room thumbnail shows the *live* customization (current
+              photo, shape, size - whatever is set right now) composited onto
+              that wall, via the same AcrylicRoomViewModal render path used
+              below - nothing here is a separate static image. */}
+          <div className="shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2 bg-white border-b border-stone-200 overflow-x-auto">
+            {[
+              { id: null as 'room' | null, label: 'Studio', thumb: null },
+              { id: 'room' as const, preset: 'living' as const, label: 'Living Room', thumb: '/assets/acrylic/acrylic-panel-living.jpg' },
+              { id: 'room' as const, preset: 'office' as const, label: 'Office', thumb: '/assets/acrylic/acrylic-corporate-office.jpg' }
+            ].map((opt) => {
+              const isActive = opt.id === null ? viewerMode !== 'room' : viewerMode === 'room' && roomViewState.roomPreset === opt.preset;
+              return (
+                <button
+                  key={opt.label}
+                  type="button"
+                  disabled={opt.id === 'room' && !hasUploadedImage}
+                  onClick={() => {
+                    if (opt.id === null) {
+                      setViewerMode(null);
+                      return;
+                    }
+                    if (!hasUploadedImage) return;
+                    setRoomViewState((prev) => ({ ...prev, roomPreset: opt.preset! }));
+                    setViewerRotation(0);
+                    setViewerTiltX(0);
+                    setViewerAutoRotate(false);
+                    setViewerMode('room');
+                  }}
+                  title={opt.id === 'room' && !hasUploadedImage ? 'Upload a photo first to preview it on a wall' : opt.label}
+                  className={`shrink-0 flex items-center gap-2 px-2 py-1.5 rounded-lg border-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                    isActive ? 'border-[#0E4A93] bg-blue-50/60' : 'border-stone-200 hover:border-stone-300 bg-white'
+                  }`}
+                >
+                  <div className="w-9 h-9 rounded-md overflow-hidden bg-stone-100 shrink-0 border border-stone-200">
+                    {opt.thumb ? (
+                      <img src={opt.thumb} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-stone-50">
+                        <ImageIcon className="w-4 h-4 text-stone-400" />
+                      </div>
+                    )}
+                  </div>
+                  <span className={`text-[11px] font-bold whitespace-nowrap ${isActive ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
           {/* Quick Floating Tool Popover: ADD TEXT */}
           {showTextPopover && (
             <div className="absolute top-14 right-4 w-80 max-h-[70vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-stone-200 p-4 text-xs z-30 animate-in fade-in zoom-in-95 space-y-3">
