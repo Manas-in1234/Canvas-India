@@ -60,13 +60,6 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
     return norm.includes('wall') || norm.includes('display') || norm.includes('split') || norm.includes('collage') || norm.includes('mosaic');
   }, [productId]);
 
-  // Active shape filter (defaults to 'ALL' if multiple shapes, or current shape)
-  const [activeShapeFilter, setActiveShapeFilter] = useState<string>(() => {
-    if (isMultiPanelProduct) return 'ALL';
-    if (supportedShapes.some((s) => s.id === currentShapeId)) return currentShapeId;
-    return 'ALL';
-  });
-
   // Locally selected option id
   const [selectedOptionId, setSelectedOptionId] = useState<string>(() => {
     const exactMatch = allOptions.find((o) => o.id === currentSizeId || o.dimensionsSummary === currentSizeId);
@@ -80,14 +73,17 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   const [localCustomW, setLocalCustomW] = useState<number>(customWidth || 12);
   const [localCustomH, setLocalCustomH] = useState<number>(customHeight || 12);
 
-  // Filtered options based on active shape
+  // Filtered options based on product and shape
   const visibleOptions = useMemo(() => {
-    let opts = activeShapeFilter === 'ALL' ? allOptions : allOptions.filter((o) => o.shapeId === activeShapeFilter);
+    let opts = allOptions;
+    if (currentShapeId && allOptions.some((o) => o.shapeId === currentShapeId)) {
+      opts = allOptions.filter((o) => o.shapeId === currentShapeId);
+    }
     if (productId.toLowerCase().includes('mosaic')) {
       opts = opts.filter((o) => !(o.widthInches === 9 && o.heightInches === 9) && !(o.widthInches === 16 && o.heightInches === 16));
     }
-    return opts;
-  }, [allOptions, activeShapeFilter, productId]);
+    return opts.length > 0 ? opts : allOptions;
+  }, [allOptions, currentShapeId, productId]);
 
   // Synchronize selected option when switching active shape filter
   useEffect(() => {
@@ -358,7 +354,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
         <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-white">
           <div className="flex items-center gap-3">
             <h2 className="text-lg sm:text-xl font-black text-stone-900 tracking-tight">
-              Select size & shape
+              Select size
             </h2>
             <span className="hidden sm:inline-block text-[11px] font-bold text-[#0E4A93] bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
               {productName}
@@ -373,40 +369,6 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
             <X className="w-4 h-4" />
           </button>
         </div>
-
-        {/* Shape Filter Pills (Only shown for products that support multiple geometric shapes) */}
-        {!isMultiPanelProduct && supportedShapes.length > 1 && (
-          <div className="px-6 pt-3 pb-2 border-b border-stone-100 bg-stone-50/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-            <span className="text-[11px] font-black uppercase text-stone-500 mr-1 shrink-0">
-              Shape:
-            </span>
-            <button
-              type="button"
-              onClick={() => setActiveShapeFilter('ALL')}
-              className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer shrink-0 ${
-                activeShapeFilter === 'ALL'
-                  ? 'bg-[#0E4A93] text-white shadow-xs'
-                  : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
-              }`}
-            >
-              All Shapes
-            </button>
-            {supportedShapes.map((shape) => (
-              <button
-                key={shape.id}
-                type="button"
-                onClick={() => setActiveShapeFilter(shape.id)}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer shrink-0 ${
-                  activeShapeFilter === shape.id
-                    ? 'bg-[#0E4A93] text-white shadow-xs'
-                    : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
-                }`}
-              >
-                {shape.label}
-              </button>
-            ))}
-          </div>
-        )}
 
         {/* Content: Cards Grid */}
         <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh] space-y-4">

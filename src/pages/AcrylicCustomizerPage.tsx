@@ -1,6 +1,7 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import QRCode from 'qrcode';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { 
   Menu,
   X, 
@@ -870,18 +871,43 @@ export const AcrylicCustomizerPage: React.FC = () => {
     img.src = imgSrc;
   };
 
+  // 0. Listen via Supabase Realtime Broadcast (cross-device over internet)
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    try {
+      const channel = supabase
+        .channel(`upload-session-${uploadSessionId}`)
+        .on('broadcast', { event: 'image-uploaded' }, (payload: any) => {
+          if (payload?.payload?.image) {
+            handleApplyIncomingPhoto(payload.payload.image);
+          }
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } catch (err) {
+      console.warn('[AcrylicCustomizer] Supabase Realtime subscription error:', err);
+    }
+  }, [uploadSessionId, activePanelIndex, frames.length, panelImages]);
+
   // 1. Listen via BroadcastChannel (same-origin / multi-tab)
   useEffect(() => {
     try {
       if (typeof BroadcastChannel !== 'undefined') {
-        const channel = new BroadcastChannel(`acrylic-upload-${uploadSessionId}`);
-        channel.onmessage = (event) => {
+        const channel1 = new BroadcastChannel(`upload-session-${uploadSessionId}`);
+        const channel2 = new BroadcastChannel(`acrylic-upload-${uploadSessionId}`);
+        const onMsg = (event: MessageEvent) => {
           if (event.data && event.data.image) {
             handleApplyIncomingPhoto(event.data.image);
           }
         };
+        channel1.onmessage = onMsg;
+        channel2.onmessage = onMsg;
         return () => {
-          channel.close();
+          channel1.close();
+          channel2.close();
         };
       }
     } catch (e) {
@@ -892,7 +918,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // 2. Listen via localStorage (storage events)
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
-      if (e.key === `acrylic_upload_${uploadSessionId}` && e.newValue) {
+      if ((e.key === `upload_session_${uploadSessionId}` || e.key === `acrylic_upload_${uploadSessionId}`) && e.newValue) {
         try {
           const data = JSON.parse(e.newValue);
           if (data && data.image) {
@@ -905,7 +931,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     return () => window.removeEventListener('storage', onStorage);
   }, [uploadSessionId, activePanelIndex, frames.length, panelImages]);
 
-  // 3. Poll Connect API endpoint every 2 seconds for cross-network phone uploads
+  // 3. Poll Connect API endpoint every 1.5 seconds for cross-network phone uploads
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
@@ -919,7 +945,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           }
         }
       } catch (err) {}
-    }, 2000);
+    }, 1500);
     return () => clearInterval(interval);
   }, [uploadSessionId, activePanelIndex, frames.length, panelImages]);
 
@@ -2537,9 +2563,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
               })()}
             </div>
           ) : (
-            /* CLEAN EMPTY SLOT: Red upload icon + red Upload an Image text */
+            /* CLEAN EMPTY SLOT: Blue upload icon + blue Upload an Image text */
             <div className="w-full h-full flex flex-col items-center justify-center bg-white hover:bg-stone-50/50 transition-colors cursor-pointer group p-3 text-center select-none">
-              <div className="flex items-center gap-2 text-[#b91c1c] group-hover:scale-105 transition-transform mb-1">
+              <div className="flex items-center gap-2 text-[#0E4A93] group-hover:scale-105 transition-transform mb-1">
                 <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
                   <path d="M11 14.5V6.85l-2.6 2.6L7 8.05 12 3.05l5 5-1.4 1.4-2.6-2.6v7.65h-2zM4 20q-.825 0-1.412-.587Q2 18.825 2 18v-2q0-.425.288-.712Q2.575 15 3 15t.713.288Q4 15.575 4 16v2h16v-2q0-.425.288-.712Q20.575 15 21 15t.713.288Q22 15.575 22 16v2q0 .825-.587 1.413Q20.825 20 20 20Z"/>
                 </svg>
@@ -2553,7 +2579,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </span>
               )}
               {!isRoomView && draggingPhotoIndex !== null && !isDragOverThisSlot && (
-                <span className="text-[10px] font-bold text-[#b91c1c] animate-pulse mt-1">
+                <span className="text-[10px] font-bold text-[#0E4A93] animate-pulse mt-1">
                   Drop photo
                 </span>
               )}
@@ -3295,7 +3321,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const items: { id: ToolbarTab; label: string; icon: React.ElementType; enabled: boolean }[] = [
       { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid, enabled: productCapabilities.products !== false },
       { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud, enabled: productCapabilities.upload !== false },
-      { id: 'SHAPES', label: 'SHAPES', icon: Shapes, enabled: productCapabilities.shapes === true },
       { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: productCapabilities.sizes !== false },
       { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: productCapabilities.layouts === true },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
@@ -3307,16 +3332,14 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // If the active tab is not supported by the currently selected product, safely revert to PRODUCTS
   useEffect(() => {
-    const isCurrentTabSupported = toolbarItems.some(
-      (item) => item.id === activeTab || (item.id === 'SHAPES' && activeTab === 'SHAPE')
-    );
+    const isCurrentTabSupported = toolbarItems.some((item) => item.id === activeTab);
     if (!isCurrentTabSupported) {
       setActiveTab('PRODUCTS');
     }
   }, [toolbarItems, activeTab]);
 
   const activeTabIndex = useMemo(() => {
-    return toolbarItems.findIndex((item) => item.id === activeTab || (item.id === 'SHAPES' && activeTab === 'SHAPE'));
+    return toolbarItems.findIndex((item) => item.id === activeTab);
   }, [toolbarItems, activeTab]);
 
   const prevTab = useMemo(() => {
@@ -3445,20 +3468,18 @@ export const AcrylicCustomizerPage: React.FC = () => {
         {/* COLUMN 1: LEFT VERTICAL SIDEBAR */}
         <CustomizerSidebar
           items={toolbarItems}
-          activeTab={activeTab === 'SHAPE' ? 'SHAPES' : activeTab}
+          activeTab={activeTab}
           onSelectTab={handleSelectTab}
         />
 
         {/* COLUMN 2: CONFIGURATION PANEL */}
         <CustomizerPanel
-          title={activeTab === 'SHAPES' || activeTab === 'SHAPE' ? 'SHAPES' : activeTab}
+          title={activeTab}
           metaText={
             activeTab === 'PRODUCTS'
               ? `${ACRYLIC_PRODUCT_TYPES.length} Styles`
               : activeTab === 'UPLOAD'
               ? `${uploadedPhotos.length} Photos`
-              : activeTab === 'SHAPES' || activeTab === 'SHAPE'
-              ? `${compatibleShapes.length} Shapes`
               : activeTab === 'SELECT SIZE'
               ? `${shapeSizes.length + 1} Options`
               : activeTab === 'LAYOUTS & DESIGNS'
@@ -3579,7 +3600,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     Click to Browse or Drag Photos
                   </div>
                   <div className="text-[11px] text-stone-500 mt-1">
-                    Supports JPG, PNG, WEBP up to 40MB
+                    Supports JPG, PNG, WEBP up to 25MB
                   </div>
                 </div>
               ) : (
@@ -3728,70 +3749,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 3: SHAPES (Product-Specific Compatible Shapes) */}
-          {(activeTab === 'SHAPES' || activeTab === 'SHAPE') && (
-            <div className="flex-1 min-h-0 p-3.5 space-y-3 overflow-y-auto">
-              <div>
-                <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-0.5">
-                  Shapes for {selectedProductType.name}
-                </h3>
-                <p className="text-[10px] text-stone-500">
-                  Showing {compatibleShapes.length} compatible laser-cut shapes for this product.
-                </p>
-              </div>
-
-              {/* Grid of Product-Compatible Shape Cards with SVG Acrylic Shape Previews */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {compatibleShapes.map((shape) => {
-                  const isSelected = selectedShapeId === shape.id;
-
-                  return (
-                    <div
-                      key={shape.id}
-                      onClick={() => handleSelectShape(shape.id)}
-                      className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
-                        isSelected
-                          ? 'border-[#0E4A93] bg-blue-50/25 shadow-sm ring-1 ring-[#0E4A93]/20'
-                          : 'border-stone-200 hover:border-stone-400 bg-white'
-                      }`}
-                    >
-                      {isSelected && (
-                        <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
-                          <Check className="w-3.5 h-3.5 stroke-[3]" />
-                        </div>
-                      )}
-
-                      <div className="w-full h-16 bg-stone-50/90 flex items-center justify-center p-1.5 overflow-hidden relative">
-                        <div className="w-full h-full flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                          <AcrylicShapePreview
-                            shape={shape.shapeType}
-                            selected={isSelected}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="p-2 bg-white border-t border-stone-100">
-                        <div className="text-xs font-bold text-stone-900 leading-tight truncate">
-                          {shape.name}
-                        </div>
-                        <div className="text-[11px] font-medium text-stone-500 mt-0.5">
-                          {shape.aspectRatio}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: SELECT SIZE */}
+          {/* SELECT SIZE */}
           {activeTab === 'SELECT SIZE' && (
             <div className="flex-1 min-h-0 p-3.5 space-y-3.5 overflow-y-auto">
-              {/* Quick Trigger for the Select Size & Shape Modal */}
+              {/* Quick Trigger for the Select Size Modal */}
               <div className="flex items-center justify-between p-3.5 bg-blue-50/80 rounded-xl border border-blue-200">
                 <div className="text-xs">
-                  <span className="font-black text-[#0E4A93] uppercase tracking-wide">Select Size & Shape</span>
+                  <span className="font-black text-[#0E4A93] uppercase tracking-wide">Select Size</span>
                   <p className="text-stone-600 text-[11px] mt-0.5">Explore recommended sizes, shapes, and multi-piece arrangements</p>
                 </div>
                 <button
