@@ -2515,21 +2515,23 @@ export const AcrylicCustomizerPage: React.FC = () => {
               />
             </div>
           ) : (
-            /* CLEAN EMPTY SLOT: UploadCloud in blue-50 circle, "Upload an Image" / "Upload Slot N" */
-            <div className="w-full h-full flex flex-col items-center justify-center bg-white hover:bg-blue-50/20 transition-colors cursor-pointer group p-3 text-center">
-              <div className={`${totalSlots === 1 ? 'w-12 h-12' : 'w-8 h-8'} rounded-full bg-blue-50 text-[#0E4A93] flex items-center justify-center ${totalSlots === 1 ? 'mb-2.5' : 'mb-1'} group-hover:scale-110 transition-transform shadow-xs`}>
-                <UploadCloud className={`${totalSlots === 1 ? 'w-6 h-6' : 'w-4 h-4'} stroke-[2.2]`} />
+            /* CLEAN EMPTY SLOT: Red upload icon + red Upload an Image text */
+            <div className="w-full h-full flex flex-col items-center justify-center bg-white hover:bg-stone-50/50 transition-colors cursor-pointer group p-3 text-center select-none">
+              <div className="flex items-center gap-2 text-[#b91c1c] group-hover:scale-105 transition-transform mb-1">
+                <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                  <path d="M11 14.5V6.85l-2.6 2.6L7 8.05 12 3.05l5 5-1.4 1.4-2.6-2.6v7.65h-2zM4 20q-.825 0-1.412-.587Q2 18.825 2 18v-2q0-.425.288-.712Q2.575 15 3 15t.713.288Q4 15.575 4 16v2h16v-2q0-.425.288-.712Q20.575 15 21 15t.713.288Q22 15.575 22 16v2q0 .825-.587 1.413Q20.825 20 20 20Z"/>
+                </svg>
+                <span className={`${totalSlots === 1 ? 'text-sm font-semibold' : 'text-xs font-semibold'} tracking-tight`}>
+                  {totalSlots === 1 ? 'Upload an Image' : `Upload Slot ${panelIdx + 1}`}
+                </span>
               </div>
-              <span className={`${totalSlots === 1 ? 'text-xs' : 'text-[10px]'} font-extrabold text-[#0E4A93] group-hover:underline`}>
-                {totalSlots === 1 ? 'Upload an Image' : `Upload Slot ${panelIdx + 1}`}
-              </span>
               {totalSlots === 1 && (
-                <span className="text-[10px] text-stone-400 mt-0.5">
+                <span className="text-xs text-stone-500">
                   Maximum upload size: 25MB per file
                 </span>
               )}
               {!isRoomView && draggingPhotoIndex !== null && !isDragOverThisSlot && (
-                <span className="text-[10px] font-bold text-[#0E4A93] animate-pulse mt-1">
+                <span className="text-[10px] font-bold text-[#b91c1c] animate-pulse mt-1">
                   Drop photo
                 </span>
               )}
@@ -3221,44 +3223,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
             {layoutSlots.map((slot) => renderLayoutSlot(slot, layoutSlots.length, isRoomView))}
           </div>
 
-          {/* DOTTED PRINT AREA DEMARCATION (Visual boundary overlay) */}
-          {!isRoomView && (
-            isRectangularShape ? (
-              <div className="absolute inset-[14px] pointer-events-none z-24 border border-dashed border-sky-600/70 rounded-xs flex items-start justify-start p-1.5">
-                <span className="text-[8px] font-black uppercase tracking-wider text-sky-800 bg-sky-50/90 border border-sky-200/80 px-1.5 py-0.5 rounded shadow-2xs select-none">
-                  PRINT AREA
-                </span>
-              </div>
-            ) : (
-              <svg
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-                className="absolute inset-0 w-full h-full pointer-events-none z-24 overflow-visible"
-              >
-                {selectedShapeId === 'shape-circle' && (
-                  <circle cx="50" cy="50" r="44" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
-                )}
-                {selectedShapeId === 'shape-oval' && (
-                  <ellipse cx="50" cy="50" rx="44" ry="44" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
-                )}
-                {selectedShapeId === 'shape-triangle' && (
-                  <polygon points="50,14 88,90 12,90" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
-                )}
-                {selectedShapeId === 'shape-heart' && (
-                  <path
-                    d="M 50,78 C 16,54 6,36 6,24 C 6,10 16,5 28,5 C 37,5 44,10 50,19 C 56,10 63,5 72,5 C 84,5 94,10 94,24 C 94,36 84,54 50,78 Z"
-                    fill="none"
-                    stroke="#0284c7"
-                    strokeWidth="1.2"
-                    strokeDasharray="3 2"
-                  />
-                )}
-                {selectedShapeId === 'shape-hexagon' && (
-                  <polygon points="27,6 73,6 94,50 73,94 27,94 6,50" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
-                )}
-              </svg>
-            )
-          )}
 
           {/* Lyric Typography Overlay */}
           {selectedProductTypeId === 'acrylic-lyric' && renderLyricOverlay()}

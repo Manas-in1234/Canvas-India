@@ -1445,7 +1445,6 @@ export const CanvasCustomizerPage: React.FC = () => {
     }
   }, [viewerMode, productCapabilities.view3D]);
 
-  const [viewer360Axis, setViewer360Axis] = useState<'horizontal' | 'vertical'>('horizontal');
   const [roomViewState, setRoomViewState] = useState<RoomPlacementState>({
     roomPreset: 'office',
     customRoomUrl: null,
@@ -1931,16 +1930,12 @@ export const CanvasCustomizerPage: React.FC = () => {
     const animate = (now: number) => {
       const dt = Math.min(0.064, (now - lastTime) / 1000);
       lastTime = now;
-      if (viewer360Axis === 'horizontal') {
-        setViewerRotation((prev) => (prev + dt * 36) % 360);
-      } else {
-        setViewerTiltX((prev) => (prev + dt * 36) % 360);
-      }
+      setViewerRotation((prev) => (prev + dt * 36) % 360);
       rafId = window.requestAnimationFrame(animate);
     };
     rafId = window.requestAnimationFrame(animate);
     return () => window.cancelAnimationFrame(rafId);
-  }, [viewerAutoRotate, viewerMode, isViewerDragging, viewer360Axis]);
+  }, [viewerAutoRotate, viewerMode, isViewerDragging]);
 
   // Drag-to-spin handlers for the 3D / 360 viewer (supports mouse & touch)
   const handleViewerPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -1964,11 +1959,11 @@ export const CanvasCustomizerPage: React.FC = () => {
     const deltaX = e.clientX - viewerDragRef.current.x;
     const deltaY = e.clientY - viewerDragRef.current.y;
     if (viewerMode === '360') {
-      if (viewer360Axis === 'horizontal') {
-        setViewerRotation(viewerDragRef.current.startRotation + deltaX * 0.65);
-      } else {
-        setViewerTiltX(viewerDragRef.current.startTiltX - deltaY * 0.65);
-      }
+      // Free 360: Horizontal drag rotates Y-axis, vertical drag tilts X-axis, diagonal rotates both freely
+      const nextRot = (viewerDragRef.current.startRotation + deltaX * 0.65) % 360;
+      const nextTilt = Math.max(-85, Math.min(85, viewerDragRef.current.startTiltX - deltaY * 0.65));
+      setViewerRotation(nextRot < 0 ? nextRot + 360 : nextRot);
+      setViewerTiltX(nextTilt);
     } else {
       // 3D View mode: full spherical inspection including top and bottom
       setViewerRotation(viewerDragRef.current.startRotation + deltaX * 0.65);
@@ -2310,7 +2305,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                 style={{
                   flex: 1,
                   aspectRatio: panelAspect,
-                  boxShadow: '4px 6px 0px rgba(203, 213, 225, 0.8), 0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                  boxShadow: '0 10px 20px -3px rgba(0, 0, 0, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
                 }}
                 className={`relative bg-stone-100 rounded-lg overflow-hidden transition-all group ${
                   masterImage ? 'cursor-grab active:cursor-grabbing ring-1 ring-black/10' : 'cursor-pointer hover:border-[#0E4A93]'
@@ -2319,13 +2314,6 @@ export const CanvasCustomizerPage: React.FC = () => {
                   if (!masterImage) fileInputRef.current?.click();
                 }}
               >
-                {/* 3D Stretcher Edge Visual on each panel */}
-                <div
-                  className="absolute inset-0 pointer-events-none z-20 rounded-lg"
-                  style={{
-                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.4), inset 2px 2px 4px rgba(0,0,0,0.15)'
-                  }}
-                />
 
                 {masterImage ? (
                   <div
@@ -2467,10 +2455,10 @@ export const CanvasCustomizerPage: React.FC = () => {
     return (
       <div className="w-full max-w-xl mx-auto my-auto p-4 flex flex-col items-center select-none">
         <div
-          className={`grid ${colsClass} gap-2 sm:gap-2.5 w-full ${aspectClass} p-3 bg-stone-100/90 rounded-2xl border-2 border-stone-300 shadow-2xl`}
+          className={`grid ${colsClass} gap-2 sm:gap-2.5 w-full ${aspectClass} p-3 bg-stone-100/90 rounded-2xl border border-stone-200 shadow-xl`}
           style={{
             maxWidth: count === 6 ? '32rem' : '26rem',
-            boxShadow: '6px 8px 0px #CBD5E1, 0 25px 50px -12px rgba(15, 23, 42, 0.35)'
+            boxShadow: '0 20px 30px -10px rgba(15, 23, 42, 0.15)'
           }}
         >
           {tilePanels.map((pSpec, i) => {
@@ -2487,13 +2475,13 @@ export const CanvasCustomizerPage: React.FC = () => {
                 key={pSpec.id || i}
                 {...panelHandlers(i)}
                 ref={registerWheelRef(i)}
-                className={`relative w-full h-full bg-white rounded-lg overflow-hidden transition-all cursor-pointer group border-2 ${
+                className={`relative w-full h-full bg-white rounded-lg overflow-hidden transition-all cursor-pointer group border ${
                   isTarget
-                    ? 'border-[#0E4A93] shadow-lg ring-2 ring-[#0E4A93]/40 z-20'
+                    ? 'border-[#0E4A93] shadow-md ring-2 ring-[#0E4A93]/40 z-20'
                     : 'border-stone-200 hover:border-stone-400 shadow-xs'
                 }`}
                 style={{
-                  boxShadow: '2px 3px 0px #CBD5E1, 0 6px 12px -2px rgba(15, 23, 42, 0.12)'
+                  boxShadow: '0 4px 10px -2px rgba(15, 23, 42, 0.08)'
                 }}
               >
                 {dragOverPanel === i && (
@@ -2576,14 +2564,14 @@ export const CanvasCustomizerPage: React.FC = () => {
           {...panelHandlers(idx)}
           ref={registerWheelRef(idx)}
           style={{
-            boxShadow: '4px 6px 0px #CBD5E1, 0 20px 25px -5px rgba(15, 23, 42, 0.25)'
+            boxShadow: '0 10px 20px -4px rgba(15, 23, 42, 0.14)'
           }}
-          className={`relative bg-white rounded-lg overflow-hidden transition-all cursor-pointer group border-2 ${
+          className={`relative bg-white rounded-lg overflow-hidden transition-all cursor-pointer group border ${
             customAspect ? customAspect : ''
           } ${extraClass} ${
             isTarget
-              ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/40 z-20'
-              : 'border-stone-300 hover:border-stone-400'
+              ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/40 z-20 shadow-md'
+              : 'border-stone-200 hover:border-stone-400 shadow-xs'
           }`}
         >
           {dragOverPanel === idx && (
@@ -2765,12 +2753,12 @@ export const CanvasCustomizerPage: React.FC = () => {
 
     return (
       <div
-        className="relative rounded-2xl bg-white p-2.5 sm:p-3 overflow-hidden transition-all cursor-pointer shadow-2xl border-2 border-stone-300 mx-auto my-auto"
+        className="relative rounded-2xl bg-white p-2.5 sm:p-3 overflow-hidden transition-all cursor-pointer shadow-lg border border-stone-200 mx-auto my-auto"
         style={{
           aspectRatio: String(printAspect),
           width: `min(27rem, calc(48vh * ${printAspect}))`,
           maxWidth: '100%',
-          boxShadow: '5px 7px 0px #CBD5E1, 0 25px 50px -12px rgba(15, 23, 42, 0.38)'
+          boxShadow: '0 15px 30px -5px rgba(15, 23, 42, 0.16)'
         }}
       >
         <div className="relative w-full h-full bg-stone-100/60 rounded-xl overflow-hidden">
@@ -4483,12 +4471,12 @@ export const CanvasCustomizerPage: React.FC = () => {
                 const wrapDepthPx = thicknessOption?.depthPx || 26;
                 const visibleDepthPx =
                   selectedThicknessId === 'canvas-lite'
-                    ? 8
+                    ? 10
                     : selectedThicknessId === 'thin-gallery'
-                    ? 16
+                    ? 18
                     : selectedThicknessId === 'thick-gallery'
                     ? 28
-                    : 5;
+                    : 14;
 
                 const displayWidthInches = isCustomSize && canUseCustomSize
                   ? customWidth
@@ -4526,6 +4514,16 @@ export const CanvasCustomizerPage: React.FC = () => {
                     </div>
 
                     <div className="relative flex items-center justify-center">
+                      {/* Top-Left Orientation / Rotate Icon to match reference image */}
+                      <button
+                        type="button"
+                        onClick={handleRotate90}
+                        className="absolute -top-6 -left-8 w-6 h-6 rounded-md bg-white border border-stone-300/80 shadow-2xs flex items-center justify-center text-stone-500 hover:text-stone-800 transition-colors z-10 cursor-pointer"
+                        title="Rotate canvas orientation"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                      </button>
+
                       {/* Ruler Left */}
                       <div className="absolute -left-10 inset-y-0 flex flex-col items-center justify-center">
                         <div className="absolute inset-y-0 w-px border-r border-dashed border-stone-300" />
@@ -4543,21 +4541,17 @@ export const CanvasCustomizerPage: React.FC = () => {
                           maxWidth: '100%'
                         }}
                       >
-                        {/* 1. PHYSICAL 4-EDGE PROJECTION (Derived from selectedThicknessId & selectedWrapId) */}
-                        {isRectangularShape ? (
+                        {/* 1. PHYSICAL 4-EDGE PROJECTION (ONLY FOR Single Print: canvas-single) */}
+                        {selectedProductTypeId === 'canvas-single' && (
                           <>
-                            {/* Top Physical Thickness Edge / Bevel */}
+                            {/* Top Physical Thickness Edge */}
                             <div
-                              className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0 border-b border-black/15"
+                              className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0 border border-stone-300"
                               style={{
                                 bottom: '100%',
-                                height: `${Math.max(6, Math.round(visibleDepthPx * 0.55))}px`,
-                                transformOrigin: 'bottom center',
-                                transform: 'perspective(500px) rotateX(24deg)',
-                                backgroundColor: wrapBgColor,
-                                borderTopLeftRadius: '2px',
-                                borderTopRightRadius: '2px',
-                                boxShadow: 'inset 0 -1px 2px rgba(0,0,0,0.15), 0 -3px 8px -1px rgba(0,0,0,0.10)'
+                                height: `${visibleDepthPx}px`,
+                                borderBottom: 'none',
+                                backgroundColor: wrapBgColor
                               }}
                             >
                               {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
@@ -4565,10 +4559,9 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   src={panelImages[0].imageUrl}
                                   alt=""
                                   draggable={false}
-                                  className="w-full h-full object-cover filter brightness-95 contrast-95"
+                                  className="w-full h-full object-cover filter brightness-95"
                                   style={{
                                     objectPosition: 'center top',
-                                    transformOrigin: 'center bottom',
                                     transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1}) ${
                                       isMirrorWrap ? 'scaleY(-1)' : ''
                                     }`,
@@ -4576,27 +4569,16 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   }}
                                 />
                               )}
-                              <div
-                                className="absolute inset-0 opacity-25"
-                                style={{
-                                  backgroundImage:
-                                    'repeating-linear-gradient(0deg, rgba(0,0,0,0.14) 0px, rgba(0,0,0,0.14) 1px, transparent 1px, transparent 3px)'
-                                }}
-                              />
                             </div>
 
-                            {/* Left Physical Thickness Edge / Bevel */}
+                            {/* Left Physical Thickness Edge */}
                             <div
-                              className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0 border-r border-black/15"
+                              className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0 border border-stone-300"
                               style={{
                                 right: '100%',
-                                width: `${Math.max(6, Math.round(visibleDepthPx * 0.55))}px`,
-                                transformOrigin: 'right center',
-                                transform: 'perspective(500px) rotateY(-24deg)',
-                                backgroundColor: wrapBgColor,
-                                borderTopLeftRadius: '2px',
-                                borderBottomLeftRadius: '2px',
-                                boxShadow: 'inset -1px 0 2px rgba(0,0,0,0.15), -3px 0 8px -1px rgba(0,0,0,0.10)'
+                                width: `${visibleDepthPx}px`,
+                                borderRight: 'none',
+                                backgroundColor: wrapBgColor
                               }}
                             >
                               {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
@@ -4604,10 +4586,9 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   src={panelImages[0].imageUrl}
                                   alt=""
                                   draggable={false}
-                                  className="w-full h-full object-cover filter brightness-90 contrast-95"
+                                  className="w-full h-full object-cover filter brightness-95"
                                   style={{
                                     objectPosition: 'left center',
-                                    transformOrigin: 'right center',
                                     transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1}) ${
                                       isMirrorWrap ? 'scaleX(-1)' : ''
                                     }`,
@@ -4615,27 +4596,17 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   }}
                                 />
                               )}
-                              <div
-                                className="absolute inset-0 opacity-25"
-                                style={{
-                                  backgroundImage:
-                                    'repeating-linear-gradient(90deg, rgba(0,0,0,0.14) 0px, rgba(0,0,0,0.14) 1px, transparent 1px, transparent 3px)'
-                                }}
-                              />
                             </div>
 
                             {/* Bottom Physical Thickness Edge */}
                             <div
-                              className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0 border-t border-white/25"
+                              className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0 border border-stone-300"
                               style={{
                                 top: '100%',
                                 height: `${visibleDepthPx}px`,
-                                transformOrigin: 'top center',
-                                transform: 'perspective(500px) rotateX(-24deg)',
+                                borderTop: 'none',
                                 backgroundColor: wrapBgColor,
-                                borderBottomLeftRadius: '2px',
-                                borderBottomRightRadius: '2px',
-                                boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.18), 0 12px 24px -4px rgba(15, 23, 42, 0.42)'
+                                boxShadow: '0 12px 20px -4px rgba(15, 23, 42, 0.12)'
                               }}
                             >
                               {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
@@ -4643,10 +4614,9 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   src={panelImages[0].imageUrl}
                                   alt=""
                                   draggable={false}
-                                  className="w-full h-full object-cover filter brightness-70 contrast-90"
+                                  className="w-full h-full object-cover filter brightness-90"
                                   style={{
                                     objectPosition: 'center bottom',
-                                    transformOrigin: 'center top',
                                     transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1}) ${
                                       isMirrorWrap ? 'scaleY(-1)' : ''
                                     }`,
@@ -4654,27 +4624,16 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   }}
                                 />
                               )}
-                              <div
-                                className="absolute inset-0 opacity-25"
-                                style={{
-                                  backgroundImage:
-                                    'repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px, transparent 1px, transparent 3px)'
-                                }}
-                              />
                             </div>
 
                             {/* Right Physical Thickness Edge */}
                             <div
-                              className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0 border-l border-white/20"
+                              className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0 border border-stone-300"
                               style={{
                                 left: '100%',
-                                width: `${Math.max(5, Math.round(visibleDepthPx * 0.65))}px`,
-                                transformOrigin: 'left center',
-                                transform: 'perspective(500px) rotateY(24deg)',
-                                backgroundColor: wrapBgColor,
-                                borderTopRightRadius: '2px',
-                                borderBottomRightRadius: '2px',
-                                boxShadow: 'inset 1px 0 2px rgba(0,0,0,0.18), 4px 8px 16px -2px rgba(15, 23, 42, 0.35)'
+                                width: `${visibleDepthPx}px`,
+                                borderLeft: 'none',
+                                backgroundColor: wrapBgColor
                               }}
                             >
                               {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
@@ -4682,10 +4641,9 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   src={panelImages[0].imageUrl}
                                   alt=""
                                   draggable={false}
-                                  className="w-full h-full object-cover filter brightness-80 contrast-95"
+                                  className="w-full h-full object-cover filter brightness-95"
                                   style={{
                                     objectPosition: 'right center',
-                                    transformOrigin: 'left center',
                                     transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1}) ${
                                       isMirrorWrap ? 'scaleX(-1)' : ''
                                     }`,
@@ -4693,55 +4651,19 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   }}
                                 />
                               )}
-                              <div
-                                className="absolute inset-0 opacity-25"
-                                style={{
-                                  backgroundImage:
-                                    'repeating-linear-gradient(90deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px, transparent 1px, transparent 3px)'
-                                }}
-                              />
                             </div>
                           </>
-                        ) : (
-                          /* Non-rectangular geometric shapes (Circle, Oval, Triangle, Heart, Hexagon) extruded under-plate */
-                          <div
-                            className="absolute inset-0 pointer-events-none overflow-hidden"
-                            style={{
-                              transform: `translate(${Math.max(4, Math.round(visibleDepthPx * 0.5))}px, ${visibleDepthPx}px)`,
-                              clipPath: currentShape.clipPathStyle,
-                              WebkitClipPath: currentShape.clipPathStyle,
-                              backgroundColor: wrapBgColor,
-                              filter: 'drop-shadow(0 14px 22px rgba(15,23,42,0.45))',
-                              zIndex: -1
-                            }}
-                          >
-                            {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
-                              <img
-                                src={panelImages[0].imageUrl}
-                                alt=""
-                                draggable={false}
-                                className="w-full h-full object-cover filter brightness-70 contrast-90"
-                                style={{
-                                  transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                                  filter: getFilterCss(panelImages[0].filter)
-                                }}
-                              />
-                            )}
-                            <div
-                              className="absolute inset-0 opacity-30"
-                              style={{
-                                backgroundImage:
-                                  'repeating-linear-gradient(0deg, rgba(0,0,0,0.2) 0px, rgba(0,0,0,0.2) 1px, transparent 1px, transparent 3px)'
-                              }}
-                            />
-                          </div>
                         )}
 
                         {/* 2. FRONT CANVAS SURFACE */}
                         <div
                           {...panelHandlers(0)}
                           ref={registerWheelRef(0)}
-                          className={`relative w-full h-full ${currentShape.borderRadiusClass} bg-white overflow-hidden transition-all cursor-pointer group shadow-lg ${
+                          className={`relative w-full h-full ${currentShape.borderRadiusClass} bg-white overflow-hidden transition-all cursor-pointer group ${
+                            selectedProductTypeId === 'canvas-single'
+                              ? 'border border-stone-300'
+                              : 'shadow-lg'
+                          } ${
                             activePanelIndex === 0 ? 'ring-2 ring-[#0E4A93]/50' : ''
                           }`}
                           style={{
@@ -4762,55 +4684,6 @@ export const CanvasCustomizerPage: React.FC = () => {
                             >
                               <RotateCw className="w-3.5 h-3.5" />
                             </button>
-                          )}
-
-                          {/* Folded edge wrap frame */}
-                          <div
-                            className="absolute inset-0 pointer-events-none z-10"
-                            style={{
-                              border:
-                                isFullBleedWrap || isMirrorWrap
-                                  ? '12px solid rgba(0,0,0,0.06)'
-                                  : `12px solid ${wrapBgColor}`,
-                              borderRadius: currentShape.id === 'shape-circle' ? '9999px' : undefined
-                            }}
-                          />
-
-                          {/* 3. DOTTED PRINT AREA DEMARCATION (Sits inside the physical Canvas) */}
-                          {isRectangularShape ? (
-                            <div className="absolute inset-[18px] pointer-events-none z-20 border border-dashed border-sky-600/70 rounded-xs flex items-start justify-start p-1.5">
-                              <span className="text-[8px] font-black uppercase tracking-wider text-sky-800 bg-sky-50/90 border border-sky-200/80 px-1.5 py-0.5 rounded shadow-2xs select-none">
-                                PRINT AREA
-                              </span>
-                            </div>
-                          ) : (
-                            <svg
-                              viewBox="0 0 100 100"
-                              preserveAspectRatio="none"
-                              className="absolute inset-0 w-full h-full pointer-events-none z-20 overflow-visible"
-                            >
-                              {currentShape.id === 'shape-circle' && (
-                                <circle cx="50" cy="50" r="44" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
-                              )}
-                              {currentShape.id === 'shape-oval' && (
-                                <ellipse cx="50" cy="50" rx="44" ry="44" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
-                              )}
-                              {currentShape.id === 'shape-triangle' && (
-                                <polygon points="50,14 88,90 12,90" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
-                              )}
-                              {currentShape.id === 'shape-heart' && (
-                                <path
-                                  d="M 50,78 C 16,54 6,36 6,24 C 6,10 16,5 28,5 C 37,5 44,10 50,19 C 56,10 63,5 72,5 C 84,5 94,10 94,24 C 94,36 84,54 50,78 Z"
-                                  fill="none"
-                                  stroke="#0284c7"
-                                  strokeWidth="1.2"
-                                  strokeDasharray="3 2"
-                                />
-                              )}
-                              {currentShape.id === 'shape-hexagon' && (
-                                <polygon points="27,6 73,6 94,50 73,94 27,94 6,50" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
-                              )}
-                            </svg>
                           )}
 
                           {dragOverPanel === 0 && (
@@ -4834,15 +4707,15 @@ export const CanvasCustomizerPage: React.FC = () => {
                           ) : (
                             <div
                               onClick={() => fileInputRef.current?.click()}
-                              className="w-full h-full flex flex-col items-center justify-center bg-white p-6 text-center cursor-pointer group"
+                              className="w-full h-full flex flex-col items-center justify-center bg-white p-6 text-center cursor-pointer group select-none"
                             >
-                              <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0E4A93] flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform shadow-xs">
-                                <UploadCloud className="w-6 h-6 stroke-[2.2]" />
+                              <div className="flex items-center gap-2 text-[#b91c1c] group-hover:scale-105 transition-transform mb-1">
+                                <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                                  <path d="M11 14.5V6.85l-2.6 2.6L7 8.05 12 3.05l5 5-1.4 1.4-2.6-2.6v7.65h-2zM4 20q-.825 0-1.412-.587Q2 18.825 2 18v-2q0-.425.288-.712Q2.575 15 3 15t.713.288Q4 15.575 4 16v2h16v-2q0-.425.288-.712Q20.575 15 21 15t.713.288Q22 15.575 22 16v2q0 .825-.587 1.413Q20.825 20 20 20Z"/>
+                                </svg>
+                                <span className="text-sm font-semibold tracking-tight">Upload an Image</span>
                               </div>
-                              <span className="text-xs font-extrabold text-[#0E4A93] group-hover:underline">
-                                Upload an Image
-                              </span>
-                              <span className="text-[10px] text-stone-400 mt-0.5">
+                              <span className="text-xs text-stone-500">
                                 Maximum upload size: 25MB per file
                               </span>
                             </div>
@@ -5566,16 +5439,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                       {/* Top-Left Mode Badge & Orientation Readout */}
                       <div className="absolute top-3 left-4 flex items-center gap-2 pointer-events-none z-20">
                         <span className="bg-white/90 backdrop-blur-xs border border-stone-200 text-stone-700 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-2xs">
-                          {viewerMode === '360' && viewer360Axis === 'vertical'
-                            ? (() => {
-                                const vertAngle = ((viewerTiltX % 360) + 360) % 360;
-                                if (vertAngle < 35 || vertAngle >= 325) return 'Front Face';
-                                if (vertAngle >= 35 && vertAngle < 145) return 'Bottom Edge';
-                                if (vertAngle >= 145 && vertAngle <= 215) return 'Canvas Back & Hardware';
-                                return 'Top Edge';
-                              })()
-                            : normalizedAngle < 35 || normalizedAngle >= 325
-                            ? 'Front Face'
+                          {normalizedAngle < 35 || normalizedAngle >= 325
+                            ? (viewerTiltX > 45 ? 'Bottom Edge' : viewerTiltX < -45 ? 'Top Edge' : 'Front Face')
                             : normalizedAngle >= 35 && normalizedAngle < 75
                             ? '3/4 Front-Side Angle'
                             : normalizedAngle >= 75 && normalizedAngle < 115
@@ -5593,9 +5458,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                       </div>
 
                       <div className="absolute top-3 right-4 bg-white/90 backdrop-blur-xs border border-stone-200 text-stone-700 text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-2xs tabular-nums pointer-events-none z-20">
-                        {viewerMode === '360' && viewer360Axis === 'vertical'
-                          ? `${Math.round(((viewerTiltX % 360) + 360) % 360)}°`
-                          : `${Math.round(normalizedAngle)}°`}
+                        {`${Math.round(normalizedAngle)}°`}
                       </div>
 
                       {/* Dynamic 3D Floor Shadow */}
@@ -6006,37 +5869,42 @@ export const CanvasCustomizerPage: React.FC = () => {
                     {/* 360° View Controls Footer */}
                     {is360 && (
                       <div className="px-4 py-3 border-t border-stone-200 bg-stone-50 space-y-2.5">
-                        {/* 360 Axis Selector: Horizontal 360 vs Vertical 360 */}
                         <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <div className="flex items-center gap-1.5 p-1 bg-stone-200/70 rounded-xl">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <button
                               type="button"
                               onClick={() => {
-                                setViewer360Axis('horizontal');
+                                setViewerAutoRotate(false);
+                                setViewerRotation(0);
                                 setViewerTiltX(0);
                               }}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                                viewer360Axis === 'horizontal'
-                                  ? 'bg-[#0E4A93] text-white shadow-xs'
-                                  : 'text-stone-700 hover:text-stone-900'
-                              }`}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-stone-700 border border-stone-300 hover:bg-stone-100 transition-all cursor-pointer shadow-2xs"
                             >
-                              HORIZONTAL 360
+                              Reset View
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setViewer360Axis('vertical');
-                                setViewerRotation(0);
-                              }}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                                viewer360Axis === 'vertical'
-                                  ? 'bg-[#0E4A93] text-white shadow-xs'
-                                  : 'text-stone-700 hover:text-stone-900'
-                              }`}
-                            >
-                              VERTICAL 360
-                            </button>
+                            {[
+                              { label: 'Front (0°)', rot: 0, tilt: 0 },
+                              { label: '3/4 View (35°)', rot: 35, tilt: -10 },
+                              { label: 'Side (90°)', rot: 90, tilt: 0 },
+                              { label: 'Back (180°)', rot: 180, tilt: 0 }
+                            ].map((preset) => (
+                              <button
+                                key={preset.label}
+                                type="button"
+                                onClick={() => {
+                                  setViewerAutoRotate(false);
+                                  setViewerRotation(preset.rot);
+                                  setViewerTiltX(preset.tilt);
+                                }}
+                                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                  Math.abs(normalizedAngle - preset.rot) < 15 && Math.abs(viewerTiltX - preset.tilt) < 15
+                                    ? 'bg-[#0E4A93] text-white shadow-xs'
+                                    : 'bg-white text-stone-700 border border-stone-300 hover:bg-stone-100'
+                                }`}
+                              >
+                                {preset.label}
+                              </button>
+                            ))}
                           </div>
 
                           <button
@@ -6055,80 +5923,28 @@ export const CanvasCustomizerPage: React.FC = () => {
 
                         <div className="flex items-center gap-3">
                           <span className="text-[11px] font-bold text-stone-500 w-16">
-                            {viewer360Axis === 'horizontal' ? 'Y-Axis' : 'X-Axis'}
+                            Rotation
                           </span>
                           <input
                             type="range"
                             min={0}
                             max={360}
                             step={1}
-                            value={
-                              viewer360Axis === 'horizontal'
-                                ? Math.round(normalizedAngle)
-                                : Math.round(((viewerTiltX % 360) + 360) % 360)
-                            }
+                            value={Math.round(normalizedAngle)}
                             onChange={(e) => {
                               setViewerAutoRotate(false);
-                              const val = Number(e.target.value);
-                              if (viewer360Axis === 'horizontal') {
-                                setViewerRotation(val);
-                              } else {
-                                setViewerTiltX(val);
-                              }
+                              setViewerRotation(Number(e.target.value));
                             }}
                             aria-label="360 degree rotation angle"
                             className="flex-1 accent-[#0E4A93] cursor-pointer"
                           />
                           <span className="text-xs font-black text-stone-700 w-12 text-right tabular-nums">
-                            {viewer360Axis === 'horizontal'
-                              ? `${Math.round(normalizedAngle)}°`
-                              : `${Math.round(((viewerTiltX % 360) + 360) % 360)}°`}
+                            {`${Math.round(normalizedAngle)}°`}
                           </span>
-
-                          <div className="hidden sm:flex items-center gap-1">
-                            {(viewer360Axis === 'horizontal'
-                              ? [
-                                  { label: 'Front', deg: 0 },
-                                  { label: '3/4', deg: 35 },
-                                  { label: 'Side', deg: 90 },
-                                  { label: 'Back', deg: 180 }
-                                ]
-                              : [
-                                  { label: 'Front', deg: 0 },
-                                  { label: 'Top', deg: 270 },
-                                  { label: 'Back', deg: 180 },
-                                  { label: 'Bottom', deg: 90 }
-                                ]
-                            ).map((preset) => (
-                              <button
-                                key={preset.label}
-                                type="button"
-                                onClick={() => {
-                                  setViewerAutoRotate(false);
-                                  if (viewer360Axis === 'horizontal') {
-                                    setViewerRotation(preset.deg);
-                                  } else {
-                                    setViewerTiltX(preset.deg);
-                                  }
-                                }}
-                                className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-colors cursor-pointer ${
-                                  (viewer360Axis === 'horizontal'
-                                    ? Math.abs(normalizedAngle - preset.deg) < 8
-                                    : Math.abs((((viewerTiltX % 360) + 360) % 360) - preset.deg) < 8)
-                                    ? 'bg-[#0E4A93] text-white'
-                                    : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
-                                }`}
-                              >
-                                {preset.label}
-                              </button>
-                            ))}
-                          </div>
                         </div>
 
                         <div className="text-center text-[11px] font-medium text-stone-500">
-                          {viewer360Axis === 'horizontal'
-                            ? 'Drag horizontally left or right to rotate the physical Canvas 360° — inspect the front artwork, wrapped edge thickness, and rear stretcher frame.'
-                            : 'Drag vertically up or down to rotate the physical Canvas 360° — inspect the front face, top edge, rear stretcher frame, and bottom edge.'}
+                          Drag horizontally left or right to spin around Y-axis, or vertically up or down to tilt around X-axis. Drag diagonally to rotate freely in full 360°.
                         </div>
                       </div>
                     )}
