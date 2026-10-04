@@ -70,6 +70,9 @@ import { CustomizerPreloader, PRELOADER_MIN_MS } from '../components/CustomizerP
 import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
 import { AcrylicRoomViewModal, RoomPlacementState } from '../components/AcrylicRoomViewModal';
 import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
+import { AcrylicLiveTextEditor, TextElement } from '../components/AcrylicLiveTextEditor';
+import { AcrylicClipartModal, ClipartElement } from '../components/AcrylicClipartModal';
+import { ClipartItem } from '../data/acrylicClipartData';
 import { getProductSizeShapeOptions, getSizesForProductAndShape } from '../data/productSizeShapeConfig';
 import {
   CustomizerHeader,
@@ -842,7 +845,7 @@ interface ClipItem {
   y: number;
 }
 
-type SelectedItem = { type: 'text' | 'clip'; id: string } | null;
+type SelectedItem = { type: 'text' | 'clipart'; id: string } | null;
 
 // Gallery: sample photographs bundled with the site
 const GALLERY_PHOTOS = [
@@ -1266,11 +1269,13 @@ export const CanvasCustomizerPage: React.FC = () => {
       .catch(() => {});
   }, []);
 
-  // Compute mobile upload URL
+  // Compute mobile upload URL: dynamically use current window.location.origin in production
   const mobileUploadUrl = useMemo(() => {
-    if (serverLanIp && window.location.hostname === 'localhost') {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocal && serverLanIp) {
       return `http://${serverLanIp}:${window.location.port || '3000'}/mobile-upload/${uploadSessionId}`;
     }
+    // Production hosted origin (e.g. https://canvassindia.com)
     return `${window.location.origin}/mobile-upload/${uploadSessionId}`;
   }, [serverLanIp, uploadSessionId]);
 
@@ -1358,6 +1363,30 @@ export const CanvasCustomizerPage: React.FC = () => {
     }
   }, [uploadSessionId, activePanelIndex, panels.length, panelImages]);
 
+  // 0b. Fail-safe Supabase Storage check (runs every 2.5s for hosted environments)
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    const interval = setInterval(async () => {
+      try {
+        for (const bucketName of ['mobile-uploads', 'uploads', 'public']) {
+          const { data: files } = await supabase.storage.from(bucketName).list(`session_${uploadSessionId}`);
+          if (files && files.length > 0) {
+            for (const file of files) {
+              if (file.name && !file.name.startsWith('.')) {
+                const filePath = `session_${uploadSessionId}/${file.name}`;
+                const { data: pubData } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+                if (pubData?.publicUrl) {
+                  handleApplyIncomingPhoto(pubData.publicUrl);
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {}
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [uploadSessionId, activePanelIndex, panels.length, panelImages]);
+
   // 1. Listen via BroadcastChannel (same-origin / multi-tab)
   useEffect(() => {
     try {
@@ -1397,8 +1426,11 @@ export const CanvasCustomizerPage: React.FC = () => {
     return () => window.removeEventListener('storage', onStorage);
   }, [uploadSessionId, activePanelIndex, panels.length, panelImages]);
 
-  // 3. Poll Connect API endpoint every 1.5 seconds for cross-network phone uploads
+  // 3. Poll Connect API endpoint in local development mode
   useEffect(() => {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocal) return;
+
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`/api/upload-session/${uploadSessionId}`);
@@ -1533,24 +1565,27 @@ export const CanvasCustomizerPage: React.FC = () => {
       }
     }
 
-    // Uploaded customer images remain attached and refitted cleanly
-    setPanelImages((prev) => {
-      const next = { ...prev };
-      Object.keys(next).forEach((k) => {
-        const idx = Number(k);
-        if (next[idx]?.imageUrl) {
-          next[idx] = {
-            ...next[idx],
-            scale: 1,
-            panX: 0,
-            panY: 0,
-            fitMode: 'contain'
-          };
-        }
+      // Uploaded customer images remain attached and refitted cleanly
+      setPanelImages((prev) => {
+        const next = { ...prev };
+        Object.keys(next).forEach((k) => {
+          const idx = Number(k);
+          if (next[idx]?.imageUrl) {
+            next[idx] = {
+              ...next[idx],
+              scale: 1,
+              panX: 0,
+              panY: 0,
+              fitMode: 'contain'
+            };
+          }
+        });
+        return next;
       });
-      return next;
-    });
-  };
+
+      // Automatically switch to UPLOAD section after size confirmation
+      setActiveTab('UPLOAD');
+    };
 
   // OPTIONS tab
   const [selectedLaminationId, setSelectedLaminationId] = useState<string>('standard');
@@ -1575,18 +1610,30 @@ export const CanvasCustomizerPage: React.FC = () => {
   const [lyricOverlayDarkness, setLyricOverlayDarkness] = useState<number>(35);
 
   // Creative Tools State
-  // Free-form text + clipart: any number of items, each draggable anywhere on the print
-  const [textItems, setTextItems] = useState<TextItem[]>([]);
-  const [clipItems, setClipItems] = useState<ClipItem[]>([]);
-  const [selectedItem, setSelectedItem] = useState<SelectedItem>(null);
-  const [showTextPopover, setShowTextPopover] = useState<boolean>(false);
-  const [showClipartPopover, setShowClipartPopover] = useState<boolean>(false);
+  // Free-form text + clipart: unified with Acrylic system
+  const [textElements, setTextElements] = useState<TextElement[]>([]);
+  const [clipartElements, setClipartElements] = useState<ClipartElement[]>([]);
+  const [selectedElement, setSelectedElement] = useState<SelectedItem>(null);
+  const [showTextModal, setShowTextModal] = useState<boolean>(false);
+  const [showClipartModal, setShowClipartModal] = useState<boolean>(false);
   const stageRef = useRef<HTMLDivElement>(null);
   const itemDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number; w: number; h: number } | null>(null);
 
-  const selectedTextItem = selectedItem?.type === 'text' ? textItems.find((t) => t.id === selectedItem.id) || null : null;
-  const selectedClipItem = selectedItem?.type === 'clip' ? clipItems.find((c) => c.id === selectedItem.id) || null : null;
-  const customText = textItems.map((t) => t.text).join(' | ');
+  const activeTextElement = useMemo(() => {
+    if (selectedElement?.type === 'text' && selectedElement.id) {
+      return textElements.find((t) => t.id === selectedElement.id) || null;
+    }
+    return null;
+  }, [selectedElement, textElements]);
+
+  const activeClipartElement = useMemo(() => {
+    if (selectedElement?.type === 'clipart' && selectedElement.id) {
+      return clipartElements.find((c) => c.id === selectedElement.id) || null;
+    }
+    return null;
+  }, [selectedElement, clipartElements]);
+
+  const customText = textElements.map((t) => t.text).join(' | ');
 
   // Upload: which frame a picked/dropped file goes to, and which frame is being dragged over
   const uploadTargetRef = useRef<number>(0);
@@ -1654,8 +1701,8 @@ export const CanvasCustomizerPage: React.FC = () => {
         selectedLaminationId,
         selectedMaterialId,
         quantity,
-        textItems,
-        clipItems,
+        textElements,
+        clipartElements,
         panelImages,
         uploadedPhotos,
         updatedAt: new Date().toISOString()
@@ -1960,47 +2007,132 @@ export const CanvasCustomizerPage: React.FC = () => {
     setAiResults(results);
   };
 
-  // --- Text & clipart items (freely movable) ---
-  const addTextItem = (text = 'Your text') => {
+  // --- Text & Clipart Items (Shared with Acrylic Customizer) ---
+  const handleAddText = (initialText = 'Your text') => {
     const id = `txt-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const item: TextItem = { id, text, fontId: 'playfair', size: 32, color: '#FFFFFF', bold: false, italic: false, x: 50, y: 50 };
-    setTextItems((prev) => [...prev, item]);
-    setSelectedItem({ type: 'text', id });
-    setShowTextPopover(true);
-    setShowClipartPopover(false);
-  };
-  const updateTextItem = (id: string, patch: Partial<TextItem>) => setTextItems((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
-  const addClipItem = (emoji: string) => {
-    const id = `clip-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    setClipItems((prev) => [...prev, { id, emoji, size: 56, x: 50, y: 50 }]);
-    setSelectedItem({ type: 'clip', id });
-  };
-  const updateClipItem = (id: string, patch: Partial<ClipItem>) => setClipItems((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
-  const removeSelectedItem = () => {
-    if (!selectedItem) return;
-    if (selectedItem.type === 'text') setTextItems((prev) => prev.filter((t) => t.id !== selectedItem.id));
-    else setClipItems((prev) => prev.filter((c) => c.id !== selectedItem.id));
-    setSelectedItem(null);
+    const newText: TextElement = {
+      id,
+      text: initialText,
+      fontFamily: 'Playfair Display',
+      fontSize: 32,
+      fontWeight: 'bold',
+      fontStyle: 'normal',
+      color: '#FFFFFF',
+      alignment: 'center',
+      lineHeight: 1.2,
+      letterSpacing: 0,
+      rotation: 0,
+      x: 50,
+      y: 50
+    };
+    setTextElements((prev) => [...prev, newText]);
+    setSelectedElement({ type: 'text', id });
+    setShowTextModal(true);
+    setShowClipartModal(false);
   };
 
-  const startItemDrag = (e: React.PointerEvent, type: 'text' | 'clip', id: string, x: number, y: number) => {
+  const handleUpdateActiveText = (updates: Partial<TextElement>) => {
+    if (selectedElement?.type !== 'text' || !selectedElement.id) return;
+    setTextElements((prev) => prev.map((t) => (t.id === selectedElement.id ? { ...t, ...updates } : t)));
+  };
+
+  const handleDuplicateActiveText = () => {
+    if (selectedElement?.type !== 'text' || !selectedElement.id) return;
+    const src = textElements.find((t) => t.id === selectedElement.id);
+    if (!src) return;
+    const newId = `txt-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const copy: TextElement = {
+      ...src,
+      id: newId,
+      x: Math.min(85, src.x + 4),
+      y: Math.min(85, src.y + 4)
+    };
+    setTextElements((prev) => [...prev, copy]);
+    setSelectedElement({ type: 'text', id: newId });
+  };
+
+  const handleDeleteActiveText = () => {
+    if (selectedElement?.type !== 'text' || !selectedElement.id) return;
+    setTextElements((prev) => prev.filter((t) => t.id !== selectedElement.id));
+    setSelectedElement(null);
+    setShowTextModal(false);
+  };
+
+  const handleSelectClipart = (clip: ClipartItem) => {
+    const newId = `clip-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const newClipObj: ClipartElement = {
+      id: newId,
+      clipartId: clip.id,
+      name: clip.name,
+      svgPath: clip.svgPath,
+      viewBox: clip.viewBox,
+      x: 50,
+      y: 50,
+      scale: 1.2,
+      rotation: 0,
+      color: '#D4AF37'
+    };
+    setClipartElements((prev) => [...prev, newClipObj]);
+    setSelectedElement({ type: 'clipart', id: newId });
+  };
+
+  const handleUpdateActiveClipart = (updates: Partial<ClipartElement>) => {
+    if (selectedElement?.type !== 'clipart' || !selectedElement.id) return;
+    setClipartElements((prev) => prev.map((c) => (c.id === selectedElement.id ? { ...c, ...updates } : c)));
+  };
+
+  const handleDuplicateActiveClipart = () => {
+    if (selectedElement?.type !== 'clipart' || !selectedElement.id) return;
+    const src = clipartElements.find((c) => c.id === selectedElement.id);
+    if (!src) return;
+    const newId = `clip-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const copy: ClipartElement = {
+      ...src,
+      id: newId,
+      x: Math.min(85, src.x + 4),
+      y: Math.min(85, src.y + 4)
+    };
+    setClipartElements((prev) => [...prev, copy]);
+    setSelectedElement({ type: 'clipart', id: newId });
+  };
+
+  const handleDeleteActiveClipart = () => {
+    if (selectedElement?.type !== 'clipart' || !selectedElement.id) return;
+    setClipartElements((prev) => prev.filter((c) => c.id !== selectedElement.id));
+    setSelectedElement(null);
+  };
+
+  const removeSelectedItem = () => {
+    if (!selectedElement) return;
+    if (selectedElement.type === 'text') handleDeleteActiveText();
+    else handleDeleteActiveClipart();
+  };
+
+  const startItemDrag = (e: React.PointerEvent, type: 'text' | 'clipart', id: string, x: number, y: number) => {
     e.stopPropagation();
-    setSelectedItem({ type, id });
-    if (type === 'text') setShowTextPopover(true);
-    else setShowClipartPopover(true);
+    setSelectedElement({ type, id });
+    if (type === 'text') {
+      setShowTextModal(true);
+      setShowClipartModal(false);
+    }
     const rect = stageRef.current?.getBoundingClientRect();
     if (!rect) return;
     itemDragRef.current = { startX: e.clientX, startY: e.clientY, origX: x, origY: y, w: rect.width, h: rect.height };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
-  const moveItemDrag = (e: React.PointerEvent, type: 'text' | 'clip', id: string) => {
+
+  const moveItemDrag = (e: React.PointerEvent, type: 'text' | 'clipart', id: string) => {
     const d = itemDragRef.current;
     if (!d) return;
-    const nx = Math.max(0, Math.min(100, d.origX + ((e.clientX - d.startX) / d.w) * 100));
-    const ny = Math.max(0, Math.min(100, d.origY + ((e.clientY - d.startY) / d.h) * 100));
-    if (type === 'text') updateTextItem(id, { x: nx, y: ny });
-    else updateClipItem(id, { x: nx, y: ny });
+    const nx = Math.max(5, Math.min(95, d.origX + ((e.clientX - d.startX) / d.w) * 100));
+    const ny = Math.max(5, Math.min(95, d.origY + ((e.clientY - d.startY) / d.h) * 100));
+    if (type === 'text') {
+      handleUpdateActiveText({ x: nx, y: ny });
+    } else {
+      handleUpdateActiveClipart({ x: nx, y: ny });
+    }
   };
+
   const endItemDrag = () => {
     itemDragRef.current = null;
   };
@@ -2187,11 +2319,28 @@ export const CanvasCustomizerPage: React.FC = () => {
   const handleApplyTemplate = (tpl: DesignTemplate) => {
     setSelectedTemplateId(tpl.id);
     // The caption is a normal text item (id "tpl-text"): one per template, movable and editable like any other
-    setTextItems((prev) => {
+    setTextElements((prev) => {
       const rest = prev.filter((t) => t.id !== 'tpl-text');
-      return [...rest, { id: 'tpl-text', text: tpl.textPreset, fontId: 'playfair', size: 34, color: '#FFFFFF', bold: true, italic: false, x: 50, y: 86 }];
+      return [
+        ...rest,
+        {
+          id: 'tpl-text',
+          text: tpl.textPreset,
+          fontFamily: 'Playfair Display',
+          fontSize: 34,
+          fontWeight: 'bold',
+          fontStyle: 'normal',
+          color: '#FFFFFF',
+          alignment: 'center',
+          lineHeight: 1.2,
+          letterSpacing: 0,
+          rotation: 0,
+          x: 50,
+          y: 86
+        }
+      ];
     });
-    setSelectedItem({ type: 'text', id: 'tpl-text' });
+    setSelectedElement({ type: 'text', id: 'tpl-text' });
   };
 
   const activeTemplate = useMemo(() => DESIGN_TEMPLATES.find((t) => t.id === selectedTemplateId) || null, [selectedTemplateId]);
@@ -2372,9 +2521,9 @@ export const CanvasCustomizerPage: React.FC = () => {
           panY: panelImages[idx]?.panY || 0,
           filter: panelImages[idx]?.filter || 'original'
         })),
-        clipart: clipItems.map((c) => c.emoji),
+        clipart: clipartElements.map((c) => c.name),
         customText,
-        textItems: textItems.map((t) => ({ text: t.text, font: FONT_OPTIONS.find((f) => f.id === t.fontId)?.label, color: t.color, size: t.size, x: t.x, y: t.y })),
+        textItems: textElements.map((t) => ({ text: t.text, font: t.fontFamily, color: t.color, size: t.fontSize, x: t.x, y: t.y })),
         unitPrice,
         totalPrice
       }
@@ -3775,7 +3924,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                           type="button"
                           onClick={() => {
                             setSelectedTemplateId(null);
-                            setTextItems((prev) => prev.filter((t) => t.id !== 'tpl-text'));
+                            setTextElements((prev) => prev.filter((t) => t.id !== 'tpl-text'));
                           }}
                           className="w-full py-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-center text-xs cursor-pointer transition-colors"
                         >
@@ -4212,21 +4361,24 @@ export const CanvasCustomizerPage: React.FC = () => {
           {/* Top Action Bar for Workspace (Shared with Acrylic Customizer) */}
           <CustomizerTopToolbar
             onSave={handleSaveDesign}
-            showTextPopover={showTextPopover}
+            showTextPopover={showTextModal}
             onToggleText={() => {
-              if (showTextPopover) {
-                setShowTextPopover(false);
-              } else if (textItems.length === 0) {
-                addTextItem();
+              if (showTextModal) {
+                setShowTextModal(false);
+              } else if (textElements.length === 0) {
+                handleAddText();
               } else {
-                setShowTextPopover(true);
-                setShowClipartPopover(false);
+                if (!selectedElement || selectedElement.type !== 'text') {
+                  setSelectedElement({ type: 'text', id: textElements[0].id });
+                }
+                setShowTextModal(true);
+                setShowClipartModal(false);
               }
             }}
-            showClipartPopover={showClipartPopover}
+            showClipartPopover={showClipartModal}
             onToggleClipart={() => {
-              setShowClipartPopover(!showClipartPopover);
-              setShowTextPopover(false);
+              setShowClipartModal(!showClipartModal);
+              setShowTextModal(false);
             }}
             isRoomViewActive={viewerMode === 'room'}
             isRoomViewDisabled={!hasUploadedImage}
@@ -4253,179 +4405,33 @@ export const CanvasCustomizerPage: React.FC = () => {
               setViewerAutoRotate(true);
               setViewerMode('360');
             }}
-            hasSelectedItem={Boolean(selectedItem)}
+            hasSelectedItem={Boolean(selectedElement)}
             onDeleteSelectedItem={removeSelectedItem}
           />
 
-          {/* Quick Floating Tool Popover: ADD TEXT */}
-          {showTextPopover && (
-            <div className="absolute top-14 right-4 w-80 max-h-[70vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-stone-200 p-4 text-xs z-30 animate-in fade-in zoom-in-95 space-y-3">
-              <div className="flex items-center justify-between font-black text-stone-900 pb-2 border-b border-stone-100">
-                <span>{selectedTextItem ? 'Edit Text' : 'Text'}</span>
-                <button onClick={() => setShowTextPopover(false)} className="text-stone-400 hover:text-stone-700 cursor-pointer">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {selectedTextItem ? (
-                <>
-                  <input
-                    type="text"
-                    value={selectedTextItem.text}
-                    onChange={(e) => updateTextItem(selectedTextItem.id, { text: e.target.value })}
-                    placeholder="Type your text"
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg text-xs font-medium focus:outline-none focus:border-[#0E4A93]"
-                  />
-
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-bold text-stone-600">Font style</span>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {FONT_OPTIONS.map((f) => (
-                        <button
-                          key={f.id}
-                          type="button"
-                          onClick={() => updateTextItem(selectedTextItem.id, { fontId: f.id })}
-                          className={`px-1.5 py-2 rounded-lg border text-center leading-tight cursor-pointer transition-colors ${
-                            selectedTextItem.fontId === f.id ? 'border-[#0E4A93] bg-blue-50 text-[#0E4A93]' : 'border-stone-200 hover:border-stone-400 text-stone-700'
-                          }`}
-                        >
-                          <div className="text-base" style={{ fontFamily: f.family }}>Aa</div>
-                          <div className="text-[9px] font-bold text-stone-500">{f.label}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => updateTextItem(selectedTextItem.id, { bold: !selectedTextItem.bold })}
-                      className={`w-9 py-1.5 rounded-lg border font-black cursor-pointer ${selectedTextItem.bold ? 'border-[#0E4A93] bg-blue-50 text-[#0E4A93]' : 'border-stone-200 text-stone-600'}`}
-                    >
-                      B
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => updateTextItem(selectedTextItem.id, { italic: !selectedTextItem.italic })}
-                      className={`w-9 py-1.5 rounded-lg border italic font-bold cursor-pointer ${selectedTextItem.italic ? 'border-[#0E4A93] bg-blue-50 text-[#0E4A93]' : 'border-stone-200 text-stone-600'}`}
-                    >
-                      I
-                    </button>
-                    <span className="text-[11px] font-bold text-stone-600 ml-2 whitespace-nowrap">Size {selectedTextItem.size}px</span>
-                    <input
-                      type="range"
-                      min={12}
-                      max={120}
-                      value={selectedTextItem.size}
-                      onChange={(e) => updateTextItem(selectedTextItem.id, { size: Number(e.target.value) })}
-                      className="flex-1 accent-[#0E4A93]"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-bold text-stone-600">Colour</span>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {TEXT_COLORS.map((col) => (
-                        <button
-                          key={col}
-                          type="button"
-                          onClick={() => updateTextItem(selectedTextItem.id, { color: col })}
-                          style={{ backgroundColor: col }}
-                          className={`w-6 h-6 rounded-full border-2 cursor-pointer ${selectedTextItem.color === col ? 'ring-2 ring-[#0E4A93] ring-offset-1' : 'border-stone-300'}`}
-                        />
-                      ))}
-                      <input
-                        type="color"
-                        value={selectedTextItem.color}
-                        onChange={(e) => updateTextItem(selectedTextItem.id, { color: e.target.value })}
-                        className="w-7 h-7 p-0 border border-stone-300 rounded cursor-pointer"
-                        title="Custom colour"
-                      />
-                    </div>
-                  </div>
-
-                  <p className="text-[11px] text-stone-400 flex items-center gap-1">
-                    <Move className="w-3 h-3" /> Drag the text on the canvas to move it anywhere.
-                  </p>
-                  <div className="flex gap-2">
-                    <button type="button" onClick={() => addTextItem()} className="flex-1 py-2 rounded-lg bg-[#0E4A93] hover:bg-[#09356A] text-white font-black cursor-pointer">
-                      + Add another
-                    </button>
-                    <button type="button" onClick={removeSelectedItem} className="px-3 py-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold cursor-pointer">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-2">
-                  {textItems.length === 0 ? (
-                    <p className="text-stone-500">No text yet.</p>
-                  ) : (
-                    <div className="space-y-1">
-                      {textItems.map((t) => (
-                        <button
-                          key={t.id}
-                          type="button"
-                          onClick={() => setSelectedItem({ type: 'text', id: t.id })}
-                          className="w-full text-left px-2.5 py-1.5 rounded-lg border border-stone-200 hover:border-[#0E4A93] truncate cursor-pointer"
-                        >
-                          {t.text || '(empty)'}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  <button type="button" onClick={() => addTextItem()} className="w-full py-2 rounded-lg bg-[#0E4A93] hover:bg-[#09356A] text-white font-black cursor-pointer">
-                    + Add text
-                  </button>
-                </div>
-              )}
-            </div>
+          {/* Live Typography Editor matching Acrylic Customizer */}
+          {showTextModal && activeTextElement && (
+            <AcrylicLiveTextEditor
+              activeText={activeTextElement}
+              onUpdateText={handleUpdateActiveText}
+              onDuplicateText={handleDuplicateActiveText}
+              onDeleteText={handleDeleteActiveText}
+              onClose={() => {
+                setShowTextModal(false);
+              }}
+            />
           )}
 
-          {/* Quick Floating Tool Popover: ADD CLIPART */}
-          {showClipartPopover && (
-            <div className="absolute top-14 right-4 w-64 bg-white rounded-2xl shadow-2xl border border-stone-200 p-4 text-xs z-30 animate-in fade-in zoom-in-95 space-y-3">
-              <div className="flex items-center justify-between font-black text-stone-900 pb-2 border-b border-stone-100">
-                <span>Select Clipart / Sticker</span>
-                <button onClick={() => setShowClipartPopover(false)} className="text-stone-400 hover:text-stone-700 cursor-pointer">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <div className="grid grid-cols-6 gap-1.5 text-xl text-center">
-                {CLIPART_ITEMS.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => addClipItem(item)}
-                    className="p-1.5 rounded-lg border border-stone-200 bg-stone-50 hover:scale-110 hover:border-[#0E4A93] transition-transform cursor-pointer"
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-              {selectedClipItem && (
-                <div className="space-y-2 pt-2 border-t border-stone-100">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold text-stone-600 whitespace-nowrap">Size {selectedClipItem.size}px</span>
-                    <input
-                      type="range"
-                      min={20}
-                      max={220}
-                      value={selectedClipItem.size}
-                      onChange={(e) => updateClipItem(selectedClipItem.id, { size: Number(e.target.value) })}
-                      className="flex-1 accent-[#0E4A93]"
-                    />
-                  </div>
-                  <button type="button" onClick={removeSelectedItem} className="w-full py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold cursor-pointer">
-                    Remove this clipart
-                  </button>
-                </div>
-              )}
-              <p className="text-[11px] text-stone-400 flex items-center gap-1">
-                <Move className="w-3 h-3" /> Tap to add, then drag it anywhere on the canvas.
-              </p>
-            </div>
-          )}
+          {/* Clipart Library Modal & Floating Active Clipart Bar matching Acrylic Customizer */}
+          <AcrylicClipartModal
+            isOpen={showClipartModal}
+            onClose={() => setShowClipartModal(false)}
+            onAddClipart={handleSelectClipart}
+            activeClipart={activeClipartElement}
+            onUpdateClipart={handleUpdateActiveClipart}
+            onDuplicateClipart={handleDuplicateActiveClipart}
+            onDeleteClipart={handleDeleteActiveClipart}
+          />
 
           {/* Validation Warning Banner (Identical to Acrylic Customizer) */}
           {validationWarning && (
@@ -4559,7 +4565,7 @@ export const CanvasCustomizerPage: React.FC = () => {
             }
           >
             {/* Stage: everything the customer designs on (frames + movable text/clipart) */}
-            <div ref={stageRef} className="relative w-full flex flex-col items-center" onPointerDown={() => setSelectedItem(null)}>
+            <div ref={stageRef} className="relative w-full flex flex-col items-center" onPointerDown={() => setSelectedElement(null)}>
               {/* Reference Screenshot Top Adjustment Banner */}
               <div className="w-full max-w-xl mx-auto mb-2 bg-[#FEF9C3] border border-[#FDE047] text-[#854D0E] text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs select-none">
                 <Move className="w-3.5 h-3.5 text-[#A16207]" />
@@ -4981,61 +4987,82 @@ export const CanvasCustomizerPage: React.FC = () => {
 
               {/* Movable text + clipart: drag anywhere on the print */}
               <div className="absolute inset-0 z-30 pointer-events-none">
-                {textItems.map((t) => {
-                  const isSel = selectedItem?.type === 'text' && selectedItem.id === t.id;
+                {textElements.map((txt) => {
+                  if (!txt.text || txt.text.trim().length === 0) return null;
+                  const isSel = selectedElement?.type === 'text' && selectedElement.id === txt.id;
                   return (
                     <div
-                      key={t.id}
-                      onPointerDown={(e) => startItemDrag(e, 'text', t.id, t.x, t.y)}
-                      onPointerMove={(e) => moveItemDrag(e, 'text', t.id)}
+                      key={txt.id}
+                      onPointerDown={(e) => startItemDrag(e, 'text', txt.id, txt.x, txt.y)}
+                      onPointerMove={(e) => moveItemDrag(e, 'text', txt.id)}
                       onPointerUp={endItemDrag}
                       onPointerCancel={endItemDrag}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedElement({ type: 'text', id: txt.id });
+                        setShowTextModal(true);
+                      }}
                       style={{
                         position: 'absolute',
-                        left: `${t.x}%`,
-                        top: `${t.y}%`,
+                        left: `${txt.x}%`,
+                        top: `${txt.y}%`,
                         transform: 'translate(-50%, -50%)',
-                        fontFamily: FONT_OPTIONS.find((f) => f.id === t.fontId)?.family,
-                        fontSize: `${t.size}px`,
-                        fontWeight: t.bold ? 800 : 500,
-                        fontStyle: t.italic ? 'italic' : 'normal',
-                        color: t.color,
+                        fontFamily: txt.fontFamily,
+                        fontSize: `${txt.fontSize}px`,
+                        fontWeight: txt.fontWeight === 'bold' ? 700 : 400,
+                        fontStyle: txt.fontStyle || 'normal',
+                        color: txt.color,
+                        textAlign: txt.alignment || 'center',
                         whiteSpace: 'pre',
-                        lineHeight: 1.15,
-                        textShadow: '0 1px 4px rgba(0,0,0,0.45)',
+                        lineHeight: 1.2,
+                        textShadow: txt.color.toUpperCase() === '#FFFFFF' ? '0 1px 4px rgba(0,0,0,0.55)' : 'none',
                         pointerEvents: 'auto',
                         touchAction: 'none'
                       }}
-                      className={`cursor-move select-none px-1.5 py-0.5 rounded ${
-                        isSel ? 'outline outline-2 outline-dashed outline-[#0E4A93] bg-black/10' : 'hover:outline hover:outline-1 hover:outline-white/70'
+                      className={`cursor-move select-none px-2 py-0.5 rounded-lg transition-all ${
+                        isSel
+                          ? 'ring-2 ring-[#0E4A93] bg-black/35 backdrop-blur-xs'
+                          : 'hover:ring-1 hover:ring-white/80'
                       }`}
                     >
-                      {t.text || ' '}
+                      {txt.text}
                     </div>
                   );
                 })}
-                {clipItems.map((c) => {
-                  const isSel = selectedItem?.type === 'clip' && selectedItem.id === c.id;
+                {clipartElements.map((clip) => {
+                  const isSel = selectedElement?.type === 'clipart' && selectedElement.id === clip.id;
                   return (
                     <div
-                      key={c.id}
-                      onPointerDown={(e) => startItemDrag(e, 'clip', c.id, c.x, c.y)}
-                      onPointerMove={(e) => moveItemDrag(e, 'clip', c.id)}
+                      key={clip.id}
+                      onPointerDown={(e) => startItemDrag(e, 'clipart', clip.id, clip.x, clip.y)}
+                      onPointerMove={(e) => moveItemDrag(e, 'clipart', clip.id)}
                       onPointerUp={endItemDrag}
                       onPointerCancel={endItemDrag}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedElement({ type: 'clipart', id: clip.id });
+                      }}
                       style={{
                         position: 'absolute',
-                        left: `${c.x}%`,
-                        top: `${c.y}%`,
-                        transform: 'translate(-50%, -50%)',
-                        fontSize: `${c.size}px`,
-                        lineHeight: 1,
+                        left: `${clip.x}%`,
+                        top: `${clip.y}%`,
+                        transform: `translate(-50%, -50%) scale(${clip.scale || 1}) rotate(${clip.rotation || 0}deg)`,
+                        color: clip.color,
                         pointerEvents: 'auto',
                         touchAction: 'none'
                       }}
-                      className={`cursor-move select-none rounded ${isSel ? 'outline outline-2 outline-dashed outline-[#0E4A93] bg-black/10' : ''}`}
+                      className={`cursor-move select-none p-1 rounded-xl transition-all ${
+                        isSel
+                          ? 'ring-2 ring-[#0E4A93] bg-black/35 backdrop-blur-xs'
+                          : 'hover:ring-1 hover:ring-white/80'
+                      }`}
                     >
-                      {c.emoji}
+                      <div
+                        className="w-10 h-10 flex items-center justify-center"
+                        dangerouslySetInnerHTML={{
+                          __html: `<svg viewBox="${clip.viewBox || '0 0 24 24'}" width="40" height="40" fill="currentColor">${clip.svgPath}</svg>`
+                        }}
+                      />
                     </div>
                   );
                 })}
@@ -5298,7 +5325,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                 )}
 
               {/* Live Text Items */}
-              {textItems.map((t) => (
+              {textElements.map((t) => (
                 <div
                   key={t.id}
                   style={{
@@ -5306,13 +5333,14 @@ export const CanvasCustomizerPage: React.FC = () => {
                     left: `${t.x}%`,
                     top: `${t.y}%`,
                     transform: 'translate(-50%, -50%)',
-                    fontFamily: FONT_OPTIONS.find((f) => f.id === t.fontId)?.family,
-                    fontSize: `${Math.max(9, t.size * scaleFactor)}px`,
-                    fontWeight: t.bold ? 800 : 500,
-                    fontStyle: t.italic ? 'italic' : 'normal',
+                    fontFamily: t.fontFamily,
+                    fontSize: `${Math.max(9, t.fontSize * scaleFactor)}px`,
+                    fontWeight: t.fontWeight === 'bold' ? 700 : 400,
+                    fontStyle: t.fontStyle || 'normal',
                     color: t.color,
+                    textAlign: t.alignment || 'center',
                     whiteSpace: 'pre',
-                    lineHeight: 1.15,
+                    lineHeight: 1.2,
                     textShadow: '0 1px 3px rgba(0,0,0,0.45)'
                   }}
                   className="pointer-events-none z-30"
@@ -5322,21 +5350,21 @@ export const CanvasCustomizerPage: React.FC = () => {
               ))}
 
               {/* Live Clipart Items */}
-              {clipItems.map((c) => (
+              {clipartElements.map((c) => (
                 <div
                   key={c.id}
                   style={{
                     position: 'absolute',
                     left: `${c.x}%`,
                     top: `${c.y}%`,
-                    transform: 'translate(-50%, -50%)',
-                    fontSize: `${Math.max(12, c.size * scaleFactor)}px`,
-                    lineHeight: 1
+                    transform: `translate(-50%, -50%) scale(${(c.scale || 1) * scaleFactor}) rotate(${c.rotation || 0}deg)`,
+                    color: c.color
                   }}
                   className="pointer-events-none z-30"
-                >
-                  {c.emoji}
-                </div>
+                  dangerouslySetInnerHTML={{
+                    __html: `<svg viewBox="${c.viewBox || '0 0 24 24'}" width="${Math.round(40 * scaleFactor)}" height="${Math.round(40 * scaleFactor)}" fill="currentColor">${c.svgPath}</svg>`
+                  }}
+                />
               ))}
             </div>
           );

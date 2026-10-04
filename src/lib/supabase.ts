@@ -1,21 +1,27 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+const supabaseAnonKey = (
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  ''
+).trim();
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl &&
   supabaseAnonKey &&
   supabaseUrl.startsWith('https://') &&
   !supabaseUrl.includes('placeholder') &&
+  !supabaseUrl.includes('your-project') &&
   !supabaseUrl.includes('your-supabase-project-url') &&
-  supabaseAnonKey !== 'your-anon-key'
+  supabaseAnonKey !== 'your-anon-key' &&
+  supabaseAnonKey !== 'placeholder-anon-key'
 );
 
 if (!isSupabaseConfigured) {
   console.warn(
-    '[Canvas India Auth] Supabase credentials are missing or unconfigured in .env.local. ' +
-    'Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable live authentication and database persistence.'
+    '[Canvas India Auth] Supabase credentials are missing or unconfigured. ' +
+    'Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (or VITE_SUPABASE_PUBLISHABLE_KEY) to enable cross-device upload and database persistence.'
   );
 }
 
@@ -31,3 +37,4 @@ export const supabase = createClient(
     },
   }
 );
+

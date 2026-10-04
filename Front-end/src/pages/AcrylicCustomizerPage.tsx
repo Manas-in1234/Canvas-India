@@ -517,24 +517,27 @@ export const AcrylicCustomizerPage: React.FC = () => {
       }
     }
 
-    // Customer photos remain attached and refitted cleanly
-    setPanelImages((prev) => {
-      const next = { ...prev };
-      Object.keys(next).forEach((k) => {
-        const idx = Number(k);
-        if (next[idx]?.imageUrl) {
-          next[idx] = {
-            ...next[idx],
-            scale: 1,
-            panX: 0,
-            panY: 0,
-            fitMode: 'contain'
-          };
-        }
+      // Uploaded customer images remain attached and refitted cleanly
+      setPanelImages((prev) => {
+        const next = { ...prev };
+        Object.keys(next).forEach((k) => {
+          const idx = Number(k);
+          if (next[idx]?.imageUrl) {
+            next[idx] = {
+              ...next[idx],
+              scale: 1,
+              panX: 0,
+              panY: 0,
+              fitMode: 'contain'
+            };
+          }
+        });
+        return next;
       });
-      return next;
-    });
-  };
+
+      // Automatically switch to UPLOAD section after size confirmation
+      setActiveTab('UPLOAD');
+    };
 
   // Normalize hardware ID if any legacy alias is encountered
   useEffect(() => {
@@ -800,11 +803,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
       .catch(() => {});
   }, []);
 
-  // Compute mobile upload URL
+  // Compute mobile upload URL: dynamically use current window.location.origin in production
   const mobileUploadUrl = useMemo(() => {
-    if (serverLanIp && window.location.hostname === 'localhost') {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocal && serverLanIp) {
       return `http://${serverLanIp}:${window.location.port || '3000'}/mobile-upload/${uploadSessionId}`;
     }
+    // Production hosted origin (e.g. https://canvassindia.com)
     return `${window.location.origin}/mobile-upload/${uploadSessionId}`;
   }, [serverLanIp, uploadSessionId]);
 
@@ -892,6 +897,30 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
   }, [uploadSessionId, activePanelIndex, frames.length, panelImages]);
 
+  // 0b. Fail-safe Supabase Storage check (runs every 2.5s for hosted environments)
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    const interval = setInterval(async () => {
+      try {
+        for (const bucketName of ['mobile-uploads', 'uploads', 'public']) {
+          const { data: files } = await supabase.storage.from(bucketName).list(`session_${uploadSessionId}`);
+          if (files && files.length > 0) {
+            for (const file of files) {
+              if (file.name && !file.name.startsWith('.')) {
+                const filePath = `session_${uploadSessionId}/${file.name}`;
+                const { data: pubData } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+                if (pubData?.publicUrl) {
+                  handleApplyIncomingPhoto(pubData.publicUrl);
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {}
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [uploadSessionId, activePanelIndex, frames.length, panelImages]);
+
   // 1. Listen via BroadcastChannel (same-origin / multi-tab)
   useEffect(() => {
     try {
@@ -931,8 +960,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
     return () => window.removeEventListener('storage', onStorage);
   }, [uploadSessionId, activePanelIndex, frames.length, panelImages]);
 
-  // 3. Poll Connect API endpoint every 1.5 seconds for cross-network phone uploads
+  // 3. Poll Connect API endpoint in local development mode
   useEffect(() => {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocal) return;
+
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`/api/upload-session/${uploadSessionId}`);

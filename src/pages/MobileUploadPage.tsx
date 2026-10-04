@@ -13,6 +13,42 @@ import {
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
+const createCompressedBase64 = (file: File, maxDim = 1280, quality = 0.8): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width;
+        let h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(e.target?.result as string);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => resolve(e.target?.result as string);
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = (err) => reject(err);
+    reader.readAsDataURL(file);
+  });
+};
+
 export const MobileUploadPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   
@@ -57,36 +93,57 @@ export const MobileUploadPage: React.FC = () => {
     setErrorMessage(null);
 
     try {
-      // 1. Read file as base64 Data URL to preserve non-destructive original quality
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (err) => reject(err);
-        reader.readAsDataURL(selectedFile);
-      });
-
       let sentSuccessfully = false;
+      let transferredUrl: string | null = null;
 
-      // 2. Broadcast via Supabase Realtime if configured
+      // 1. If Supabase is configured, attempt upload to Supabase Storage first
       if (isSupabaseConfigured) {
+        const cleanFileName = selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const filePath = `session_${sessionId}/${Date.now()}_${cleanFileName}`;
+
+        // Attempt upload to mobile-uploads bucket (or fallback to uploads/public)
+        for (const bucketName of ['mobile-uploads', 'uploads', 'public']) {
+          try {
+            const { error: storageErr } = await supabase.storage
+              .from(bucketName)
+              .upload(filePath, selectedFile, {
+                cacheControl: '3600',
+                upsert: true,
+                contentType: selectedFile.type || 'image/jpeg'
+              });
+
+            if (!storageErr) {
+              const { data: pubData } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+              if (pubData?.publicUrl) {
+                transferredUrl = pubData.publicUrl;
+                break;
+              }
+            }
+          } catch (storageException) {
+            console.warn(`[MobileUpload] Storage upload to ${bucketName} error:`, storageException);
+          }
+        }
+
+        // 2. Broadcast via Supabase Realtime channel
         try {
+          const payloadImage = transferredUrl || (await createCompressedBase64(selectedFile, 1280, 0.8));
           const channel = supabase.channel(`upload-session-${sessionId}`);
-          await new Promise<void>((resolve, reject) => {
-            const timer = setTimeout(() => reject(new Error('Realtime timeout')), 3500);
+          await new Promise<void>((resolve) => {
+            const timer = setTimeout(() => resolve(), 3500);
             channel.subscribe(async (status) => {
               if (status === 'SUBSCRIBED') {
                 try {
                   await channel.send({
                     type: 'broadcast',
                     event: 'image-uploaded',
-                    payload: { image: base64Data, timestamp: Date.now() }
+                    payload: { image: payloadImage, timestamp: Date.now() }
                   });
                   clearTimeout(timer);
                   sentSuccessfully = true;
                   resolve();
                 } catch (e) {
                   clearTimeout(timer);
-                  reject(e);
+                  resolve();
                 }
               }
             });
@@ -94,43 +151,52 @@ export const MobileUploadPage: React.FC = () => {
         } catch (sbErr) {
           console.warn('[MobileUpload] Realtime broadcast error:', sbErr);
         }
+
+        if (transferredUrl) {
+          sentSuccessfully = true;
+        }
       }
 
-      // 3. Post to backend server endpoint for cross-device mobile upload
+      // 3. Post to local server endpoint (works synchronously in dev server)
       try {
+        const base64Data = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = (err) => reject(err);
+          reader.readAsDataURL(selectedFile);
+        });
+
         const response = await fetch(`/api/upload-session/${sessionId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ image: base64Data })
+          body: JSON.stringify({ image: transferredUrl || base64Data })
         });
 
         if (response.ok) {
           sentSuccessfully = true;
-        } else {
-          console.warn('Server upload endpoint responded with status:', response.status);
         }
+
+        // 4. Same-device / tab broadcast fallback
+        try {
+          if (typeof BroadcastChannel !== 'undefined') {
+            const ch1 = new BroadcastChannel(`acrylic-upload-${sessionId}`);
+            ch1.postMessage({ image: transferredUrl || base64Data, timestamp: Date.now() });
+            setTimeout(() => ch1.close(), 1000);
+            const ch2 = new BroadcastChannel(`upload-session-${sessionId}`);
+            ch2.postMessage({ image: transferredUrl || base64Data, timestamp: Date.now() });
+            setTimeout(() => ch2.close(), 1000);
+          }
+        } catch (bcErr) {}
+
+        try {
+          localStorage.setItem(`acrylic_upload_${sessionId}`, JSON.stringify({ image: transferredUrl || base64Data, timestamp: Date.now() }));
+          localStorage.setItem(`upload_session_${sessionId}`, JSON.stringify({ image: transferredUrl || base64Data, timestamp: Date.now() }));
+        } catch (lsErr) {}
       } catch (fetchErr) {
         console.warn('[MobileUpload] Server endpoint fetch error:', fetchErr);
       }
-
-      // 4. Same-device / tab broadcast fallback
-      try {
-        if (typeof BroadcastChannel !== 'undefined') {
-          const ch1 = new BroadcastChannel(`acrylic-upload-${sessionId}`);
-          ch1.postMessage({ image: base64Data, timestamp: Date.now() });
-          setTimeout(() => ch1.close(), 1000);
-          const ch2 = new BroadcastChannel(`upload-session-${sessionId}`);
-          ch2.postMessage({ image: base64Data, timestamp: Date.now() });
-          setTimeout(() => ch2.close(), 1000);
-        }
-      } catch (bcErr) {}
-
-      try {
-        localStorage.setItem(`acrylic_upload_${sessionId}`, JSON.stringify({ image: base64Data, timestamp: Date.now() }));
-        localStorage.setItem(`upload_session_${sessionId}`, JSON.stringify({ image: base64Data, timestamp: Date.now() }));
-      } catch (lsErr) {}
 
       // 5. Strict validation: only show success if at least one transfer succeeded!
       if (sentSuccessfully) {
