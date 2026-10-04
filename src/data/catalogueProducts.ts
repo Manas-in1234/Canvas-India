@@ -676,7 +676,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -702,7 +702,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -728,7 +728,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -754,7 +754,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -780,7 +780,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -806,7 +806,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -832,7 +832,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -858,7 +858,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -884,7 +884,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -910,7 +910,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -936,7 +936,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -962,7 +962,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -988,7 +988,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -1014,7 +1014,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -1040,7 +1040,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -1066,7 +1066,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -1092,7 +1092,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -1118,7 +1118,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -1144,7 +1144,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -1170,7 +1170,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -1196,7 +1196,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -1222,7 +1222,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -1248,7 +1248,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -1274,7 +1274,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true
@@ -1300,7 +1300,7 @@ export const CATALOGUE_PRODUCTS: Product[] = [
     material: '300 GSM Heavyweight Matte Art Paper',
     sizes: ['A4 (8.3x11.7 in)', 'A3 (11.7x16.5 in)', 'A2 (16.5x23.4 in)', '18x24 inch'],
     finishes: ['Print Only (Rolled)', 'Matte Black Wood Frame', 'Teak Wood Frame'],
-    customizationAvailable: true,
+    customizationAvailable: false,
     tags: ['cork', 'pattern', 'texture', 'wall art'],
     stockStatus: 'In Stock',
     isDemoData: true

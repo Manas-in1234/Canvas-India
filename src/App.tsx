@@ -22,6 +22,7 @@ import { CancellationPolicyPage } from './pages/CancellationPolicyPage';
 import { RefundReturnPage } from './pages/RefundReturnPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { CanvasCategoryPage } from './pages/CanvasCategoryPage';
+import { CorkCategoryPage } from './pages/CorkCategoryPage';
 import { AcrylicCustomizerPage } from './pages/AcrylicCustomizerPage';
 import { AllCategoriesPage } from './pages/AllCategoriesPage';
 import { CanvasCustomizerPage } from './pages/CanvasCustomizerPage';
@@ -94,8 +95,8 @@ export function App() {
             <Route path="/acrylic-prints" element={<AcrylicCategoryPage />} />
             <Route path="/posters" element={<CategoryPage categorySlug="posters" />} />
 
-            <Route path="/cork" element={<CategoryPage categorySlug="cork" />} />
-            <Route path="/cork-prints" element={<CategoryPage categorySlug="cork" />} />
+            <Route path="/cork" element={<CorkCategoryPage />} />
+            <Route path="/cork-prints" element={<CorkCategoryPage />} />
 
             <Route path="/yoga-fitness" element={<CategoryPage categorySlug="yoga-fitness" />} />
             <Route path="/home-decor" element={<CategoryPage categorySlug="home-decor" />} />
@@ -121,7 +122,7 @@ export function App() {
             <Route path="/tribal-ethnic-art" element={<CategoryPage categorySlug="tribal-ethnic-art" />} />
             <Route path="/line-art" element={<CategoryPage categorySlug="line-art" />} />
             <Route path="/motivational-posters" element={<CategoryPage categorySlug="motivational-posters" />} />
-            <Route path="/cork-art-patterns" element={<CategoryPage categorySlug="cork-art-patterns" />} />
+            <Route path="/cork-art-patterns" element={<CorkCategoryPage />} />
 
             {/* Solutions for Designers & Architects */}
             <Route path="/designers-architects" element={<DesignersArchitectsPage />} />
