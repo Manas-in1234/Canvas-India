@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ChevronRight, ArrowRight } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { ChevronRight, ArrowRight, Sparkles } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
-import { ProductCard } from '../components/ProductCard';
 import { OCCASIONS, getOccasionBySlug } from '../data/occasionsData';
+import { SHOP_CATEGORIES } from '../data/shopCategories';
 
 export const OccasionPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { allProducts, wishlistIds, onToggleWishlist, onAddToCart, onOpenCustomize } = useShop();
+  const navigate = useNavigate();
+  const { allProducts } = useShop();
 
   const occasion = getOccasionBySlug(slug);
 
@@ -17,10 +18,23 @@ export const OccasionPage: React.FC = () => {
     }
   }, [occasion]);
 
-  const products = useMemo(() => {
+  // One tile per category relevant to this occasion — categories with a
+  // live customizer (Canvas, Acrylic) open the customizer directly;
+  // ready-made print categories open their listing page.
+  const giftTiles = useMemo(() => {
     if (!occasion) return [];
-    return allProducts.filter((p) => occasion.categorySlugs.includes(p.categorySlug));
-  }, [allProducts, occasion]);
+    return occasion.categorySlugs
+      .map((slugKey) => SHOP_CATEGORIES.find((c) => c.categorySlug === slugKey))
+      .filter((c): c is NonNullable<typeof c> => Boolean(c))
+      .map((cat) => {
+        const firstProduct = allProducts.find((p) => p.categorySlug === cat.categorySlug);
+        const destination = cat.customizerKey
+          ? `/customize/${cat.customizerKey}/${firstProduct?.slug || firstProduct?.id || cat.categorySlug}`
+          : cat.path;
+        // Prefer a real catalogue product shot over the generic category photo
+        return { ...cat, destination, image: firstProduct?.image || cat.image };
+      });
+  }, [occasion, allProducts]);
 
   if (!occasion) {
     return (
@@ -86,35 +100,65 @@ export const OccasionPage: React.FC = () => {
         ))}
       </div>
 
-      {/* PRODUCT GRID */}
+      {/* START YOUR GIFT ORDER — one tile per relevant format, straight into the customizer */}
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 pb-16 sm:pb-20">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
-            Shop {occasion.name} Picks
+        <div className="text-center mb-10">
+          <h2
+            className="text-2xl sm:text-3xl font-bold text-stone-900"
+            style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+          >
+            Start Your {occasion.name} Gift Order
           </h2>
-          <Link to="/search" className="text-xs font-bold text-[#0E4A93] hover:text-[#E8752A] flex items-center gap-1 transition-colors">
-            <span>View All Products</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+          <p className="text-xs sm:text-sm text-stone-500 mt-1.5">Pick a format to start personalizing your {occasion.name.toLowerCase()} gift</p>
         </div>
 
-        {products.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-5 gap-y-10">
-            {products.slice(0, 20).map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                isWishlisted={wishlistIds.includes(product.id)}
-                onToggleWishlist={onToggleWishlist}
-                onAddToCart={onAddToCart}
-                onCustomize={onOpenCustomize}
-                variant="listing"
-              />
+        {giftTiles.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 sm:gap-7 max-w-4xl mx-auto">
+            {giftTiles.map((tile) => (
+              <button
+                key={tile.categorySlug}
+                type="button"
+                onClick={() => navigate(tile.destination)}
+                className="group relative aspect-[4/5] rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left ring-1 ring-black/5"
+              >
+                <img
+                  src={tile.image}
+                  alt={tile.name}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{ background: `linear-gradient(to top, ${occasion.accent}E6 0%, ${occasion.accent}33 38%, rgba(0,0,0,0.05) 65%)` }}
+                />
+
+                {tile.customizerKey && (
+                  <span className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/95 flex items-center justify-center shadow-md">
+                    <Sparkles className="w-4 h-4" style={{ color: occasion.accent }} />
+                  </span>
+                )}
+
+                <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+                  <div className="font-extrabold text-white text-base sm:text-lg leading-tight drop-shadow-sm">
+                    {tile.name}
+                  </div>
+                  <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-white/95 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/30 group-hover:bg-white/25 transition-colors">
+                    <span>{tile.customizerKey ? 'Customize Now' : 'Shop Now'}</span>
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </div>
+              </button>
             ))}
           </div>
         ) : (
           <p className="text-center text-sm text-stone-500 py-12">New {occasion.name.toLowerCase()} picks are on the way — check back soon.</p>
         )}
+
+        <div className="text-center mt-10">
+          <Link to={`/search?q=${encodeURIComponent(occasion.name)}`} className="text-xs font-bold text-[#0E4A93] hover:text-[#E8752A] inline-flex items-center gap-1 transition-colors">
+            <span>Or browse all {occasion.name} products</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
     </div>
   );
