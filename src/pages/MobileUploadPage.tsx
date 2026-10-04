@@ -11,6 +11,7 @@ import {
   Smartphone,
   Check
 } from 'lucide-react';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export const MobileUploadPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -28,9 +29,9 @@ export const MobileUploadPage: React.FC = () => {
   const handleFileChange = (file: File) => {
     setErrorMessage(null);
 
-    // Validate size (40MB max)
-    if (file.size > 40 * 1024 * 1024) {
-      setErrorMessage('File size exceeds 40MB limit. Please choose a smaller photo.');
+    // Validate size (25MB max)
+    if (file.size > 25 * 1024 * 1024) {
+      setErrorMessage('File size exceeds 25MB limit. Please choose a smaller photo.');
       return;
     }
 
@@ -64,49 +65,88 @@ export const MobileUploadPage: React.FC = () => {
         reader.readAsDataURL(selectedFile);
       });
 
-      // 2. Broadcast to same-device / same-origin tabs if running in test browser
+      let sentSuccessfully = false;
+
+      // 2. Broadcast via Supabase Realtime if configured
+      if (isSupabaseConfigured) {
+        try {
+          const channel = supabase.channel(`upload-session-${sessionId}`);
+          await new Promise<void>((resolve, reject) => {
+            const timer = setTimeout(() => reject(new Error('Realtime timeout')), 3500);
+            channel.subscribe(async (status) => {
+              if (status === 'SUBSCRIBED') {
+                try {
+                  await channel.send({
+                    type: 'broadcast',
+                    event: 'image-uploaded',
+                    payload: { image: base64Data, timestamp: Date.now() }
+                  });
+                  clearTimeout(timer);
+                  sentSuccessfully = true;
+                  resolve();
+                } catch (e) {
+                  clearTimeout(timer);
+                  reject(e);
+                }
+              }
+            });
+          });
+        } catch (sbErr) {
+          console.warn('[MobileUpload] Realtime broadcast error:', sbErr);
+        }
+      }
+
+      // 3. Post to backend server endpoint for cross-device mobile upload
+      try {
+        const response = await fetch(`/api/upload-session/${sessionId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ image: base64Data })
+        });
+
+        if (response.ok) {
+          sentSuccessfully = true;
+        } else {
+          console.warn('Server upload endpoint responded with status:', response.status);
+        }
+      } catch (fetchErr) {
+        console.warn('[MobileUpload] Server endpoint fetch error:', fetchErr);
+      }
+
+      // 4. Same-device / tab broadcast fallback
       try {
         if (typeof BroadcastChannel !== 'undefined') {
-          const channel = new BroadcastChannel(`acrylic-upload-${sessionId}`);
-          channel.postMessage({ image: base64Data, timestamp: Date.now() });
-          setTimeout(() => channel.close(), 1000);
+          const ch1 = new BroadcastChannel(`acrylic-upload-${sessionId}`);
+          ch1.postMessage({ image: base64Data, timestamp: Date.now() });
+          setTimeout(() => ch1.close(), 1000);
+          const ch2 = new BroadcastChannel(`upload-session-${sessionId}`);
+          ch2.postMessage({ image: base64Data, timestamp: Date.now() });
+          setTimeout(() => ch2.close(), 1000);
         }
-      } catch (bcErr) {
-        console.warn('BroadcastChannel error:', bcErr);
-      }
+      } catch (bcErr) {}
 
       try {
-        localStorage.setItem(
-          `acrylic_upload_${sessionId}`,
-          JSON.stringify({ image: base64Data, timestamp: Date.now() })
-        );
-      } catch (lsErr) {
-        console.warn('localStorage set error:', lsErr);
+        localStorage.setItem(`acrylic_upload_${sessionId}`, JSON.stringify({ image: base64Data, timestamp: Date.now() }));
+        localStorage.setItem(`upload_session_${sessionId}`, JSON.stringify({ image: base64Data, timestamp: Date.now() }));
+      } catch (lsErr) {}
+
+      // 5. Strict validation: only show success if at least one transfer succeeded!
+      if (sentSuccessfully) {
+        setIsUploading(false);
+        setUploadSuccess(true);
+        setUploadedCount((prev) => prev + 1);
+      } else {
+        setIsUploading(false);
+        setUploadSuccess(false);
+        setErrorMessage('Unable to connect to your customizer. Please make sure the customizer is open on your computer and try again.');
       }
-
-      // 3. Post to backend Connect API endpoint for cross-network mobile devices
-      const response = await fetch(`/api/upload-session/${sessionId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ image: base64Data })
-      });
-
-      if (!response.ok) {
-        // If the API failed with non-200, check if broadcast succeeded or show info
-        console.warn('Server API returned non-OK status:', response.status);
-      }
-
-      setIsUploading(false);
-      setUploadSuccess(true);
-      setUploadedCount((prev) => prev + 1);
     } catch (err: any) {
       console.error('Upload error:', err);
-      // If network fetch failed, check if localStorage / BroadcastChannel worked
       setIsUploading(false);
-      setUploadSuccess(true);
-      setUploadedCount((prev) => prev + 1);
+      setUploadSuccess(false);
+      setErrorMessage(err?.message || 'An error occurred while uploading. Please try again.');
     }
   };
 

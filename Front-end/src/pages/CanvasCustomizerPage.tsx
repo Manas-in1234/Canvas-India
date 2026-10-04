@@ -1,5 +1,7 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
+import QRCode from 'qrcode';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import {
   Menu,
   X,
@@ -32,6 +34,9 @@ import {
   Info,
   Monitor,
   Smartphone,
+  Laptop,
+  Copy,
+  ExternalLink,
   Image as ImageIcon,
   Sparkles,
   FileText,
@@ -82,8 +87,6 @@ import {
 type ToolbarTab =
   | 'PRODUCTS'
   | 'UPLOAD'
-  | 'SHAPES'
-  | 'SHAPE'
   | 'SELECT SIZE'
   | 'LAYOUTS & DESIGNS'
   | 'WRAP & BORDER'
@@ -93,7 +96,6 @@ type ToolbarTab =
 const TOOLBAR_ITEMS: { id: ToolbarTab; label: string; icon: React.ElementType }[] = [
   { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
   { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud },
-  { id: 'SHAPES', label: 'SHAPES', icon: Shapes },
   { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
   { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers },
   { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
@@ -1145,12 +1147,11 @@ export const CanvasCustomizerPage: React.FC = () => {
   }, [selectedProductType]);
 
   // Primary Toolbar items: dynamically filtered by selected product capabilities
-  // EXACT ORDER: 1. PRODUCTS, 2. UPLOAD, 3. SHAPES, 4. SELECT SIZE, 5. LAYOUTS & DESIGNS, 6. WRAP & BORDER, 7. HARDWARE & FINISH, 8. OPTIONS
+  // EXACT ORDER: 1. PRODUCTS, 2. UPLOAD, 3. SELECT SIZE, 4. LAYOUTS & DESIGNS, 5. WRAP & BORDER, 6. HARDWARE & FINISH, 7. OPTIONS
   const toolbarItems = useMemo<{ id: ToolbarTab; label: string; icon: React.ElementType }[]>(() => {
     const items: { id: ToolbarTab; label: string; icon: React.ElementType; enabled: boolean }[] = [
       { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid, enabled: productCapabilities.products !== false },
       { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud, enabled: productCapabilities.upload !== false },
-      { id: 'SHAPES', label: 'SHAPES', icon: Shapes, enabled: productCapabilities.shapes === true },
       { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: productCapabilities.sizes !== false },
       { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: productCapabilities.layouts === true },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
@@ -1162,15 +1163,13 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // If the active tab is not supported by the currently selected product, safely revert to PRODUCTS
   useEffect(() => {
-    const isCurrentTabSupported = toolbarItems.some(
-      (item) => item.id === activeTab || (item.id === 'SHAPES' && activeTab === 'SHAPE') || (item.id === 'SHAPE' && activeTab === 'SHAPES')
-    );
+    const isCurrentTabSupported = toolbarItems.some((item) => item.id === activeTab);
     if (!isCurrentTabSupported) {
       setActiveTab('PRODUCTS');
     }
   }, [toolbarItems, activeTab]);
 
-  const activeTabIndex = Math.max(0, toolbarItems.findIndex((t) => t.id === activeTab || (t.id === 'SHAPES' && activeTab === 'SHAPE')));
+  const activeTabIndex = Math.max(0, toolbarItems.findIndex((t) => t.id === activeTab));
   const prevTab = toolbarItems[Math.max(0, activeTabIndex - 1)] || toolbarItems[0];
   const nextTab = toolbarItems[Math.min(toolbarItems.length - 1, activeTabIndex + 1)] || toolbarItems[toolbarItems.length - 1];
 
@@ -1246,8 +1245,175 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Uploaded photo collection (all photos uploaded in this session)
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
 
-  // UPLOAD tab: source sub-tab (visual, only "Computer" is wired to the file picker)
-  const [uploadSource, setUploadSource] = useState<'computer' | 'phone' | 'gallery' | 'ai'>('computer');
+  // Mobile Upload & QR Code Sync State (matches Acrylic Customizer)
+  const [uploadMode, setUploadMode] = useState<'computer' | 'mobile'>('computer');
+  const [uploadSessionId] = useState<string>(() => 'ca-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const [serverLanIp, setServerLanIp] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  const processedImagesRef = useRef<Set<string>>(new Set<string>());
+  const [draggingPhotoIndex, setDraggingPhotoIndex] = useState<number | null>(null);
+
+  // Discover server LAN IP for direct mobile connection over Wi-Fi
+  useEffect(() => {
+    fetch('/api/server-info')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.localIp) {
+          setServerLanIp(data.localIp);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Compute mobile upload URL
+  const mobileUploadUrl = useMemo(() => {
+    if (serverLanIp && window.location.hostname === 'localhost') {
+      return `http://${serverLanIp}:${window.location.port || '3000'}/mobile-upload/${uploadSessionId}`;
+    }
+    return `${window.location.origin}/mobile-upload/${uploadSessionId}`;
+  }, [serverLanIp, uploadSessionId]);
+
+  // Generate QR Code data URL dynamically
+  useEffect(() => {
+    QRCode.toDataURL(mobileUploadUrl, {
+      width: 260,
+      margin: 2,
+      color: {
+        dark: '#0E4A93',
+        light: '#ffffff'
+      }
+    })
+      .then((url) => setQrDataUrl(url))
+      .catch((err) => console.error('QR code generation error:', err));
+  }, [mobileUploadUrl]);
+
+  // Handler to assign incoming photo from mobile into active slot or next empty slot
+  const handleApplyIncomingPhoto = (imgSrc: string) => {
+    if (processedImagesRef.current.has(imgSrc)) return;
+    processedImagesRef.current.add(imgSrc);
+
+    setUploadedPhotos((prev) => (prev.includes(imgSrc) ? prev : [imgSrc, ...prev]));
+
+    const img = new Image();
+    img.onload = () => {
+      const naturalWidth = img.naturalWidth || 1200;
+      const naturalHeight = img.naturalHeight || 800;
+      const aspectRatio = naturalWidth / naturalHeight;
+
+      let targetSlot = activePanelIndex;
+      if (panels.length > 1) {
+        const emptyIdx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+          .slice(0, panels.length)
+          .find((idx) => !panelImages[idx]?.imageUrl);
+        if (emptyIdx !== undefined) {
+          targetSlot = emptyIdx;
+          setActivePanelIndex(emptyIdx);
+        }
+      }
+
+      setPanelImages((prev) => ({
+        ...prev,
+        [targetSlot]: {
+          ...createDefaultPanel(),
+          imageUrl: imgSrc,
+          uploadedImage: {
+            originalSrc: imgSrc,
+            width: naturalWidth,
+            height: naturalHeight,
+            aspectRatio
+          },
+          panX: 0,
+          panY: 0,
+          scale: 1,
+          rotation: 0,
+          fitMode: 'contain'
+        }
+      }));
+
+      setSaveToast('Photo uploaded from mobile successfully!');
+      setTimeout(() => setSaveToast(null), 4000);
+    };
+    img.src = imgSrc;
+  };
+
+  // 0. Listen via Supabase Realtime Broadcast (cross-device over internet)
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    try {
+      const channel = supabase
+        .channel(`upload-session-${uploadSessionId}`)
+        .on('broadcast', { event: 'image-uploaded' }, (payload: any) => {
+          if (payload?.payload?.image) {
+            handleApplyIncomingPhoto(payload.payload.image);
+          }
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } catch (err) {
+      console.warn('[CanvasCustomizer] Supabase Realtime subscription error:', err);
+    }
+  }, [uploadSessionId, activePanelIndex, panels.length, panelImages]);
+
+  // 1. Listen via BroadcastChannel (same-origin / multi-tab)
+  useEffect(() => {
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        const channel1 = new BroadcastChannel(`upload-session-${uploadSessionId}`);
+        const channel2 = new BroadcastChannel(`acrylic-upload-${uploadSessionId}`);
+        const onMsg = (event: MessageEvent) => {
+          if (event.data && event.data.image) {
+            handleApplyIncomingPhoto(event.data.image);
+          }
+        };
+        channel1.onmessage = onMsg;
+        channel2.onmessage = onMsg;
+        return () => {
+          channel1.close();
+          channel2.close();
+        };
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+  }, [uploadSessionId, activePanelIndex, panels.length, panelImages]);
+
+  // 2. Listen via localStorage (storage events)
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if ((e.key === `upload_session_${uploadSessionId}` || e.key === `acrylic_upload_${uploadSessionId}`) && e.newValue) {
+        try {
+          const data = JSON.parse(e.newValue);
+          if (data && data.image) {
+            handleApplyIncomingPhoto(data.image);
+          }
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [uploadSessionId, activePanelIndex, panels.length, panelImages]);
+
+  // 3. Poll Connect API endpoint every 1.5 seconds for cross-network phone uploads
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/upload-session/${uploadSessionId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.images && Array.isArray(data.images) && data.images.length > 0) {
+            for (const img of data.images) {
+              handleApplyIncomingPhoto(img);
+            }
+          }
+        }
+      } catch (err) {}
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [uploadSessionId, activePanelIndex, panels.length, panelImages]);
 
   // LAYOUTS & DESIGNS tab
   const [layoutSubTab, setLayoutSubTab] = useState<'DESIGNS' | 'LAYOUTS'>('LAYOUTS');
@@ -1863,7 +2029,10 @@ export const CanvasCustomizerPage: React.FC = () => {
         ...prev,
         [panelIdx]: {
           ...curr,
-          fitMode: 'cover'
+          fitMode: 'cover',
+          panX: 0,
+          panY: 0,
+          scale: 1
         }
       };
     });
@@ -2894,14 +3063,12 @@ export const CanvasCustomizerPage: React.FC = () => {
 
         {/* COLUMN 2: CONFIGURATION PANEL */}
         <CustomizerPanel
-          title={activeTab === 'SHAPES' || activeTab === 'SHAPE' ? 'SHAPES' : activeTab}
+          title={activeTab}
           metaText={
             activeTab === 'PRODUCTS'
               ? `${CANVAS_PRODUCT_TYPES.length} Styles`
               : activeTab === 'UPLOAD'
               ? `${uploadedPhotos.length} Photos`
-              : activeTab === 'SHAPES' || activeTab === 'SHAPE'
-              ? `${filteredShapes.length} Shapes`
               : activeTab === 'SELECT SIZE'
               ? `${availableSizeOptions.length + (canUseCustomSize ? 1 : 0)} Options`
               : activeTab === 'LAYOUTS & DESIGNS'
@@ -2930,154 +3097,43 @@ export const CanvasCustomizerPage: React.FC = () => {
 
           {/* ----------------------------- UPLOAD ------------------------------ */}
           {activeTab === 'UPLOAD' && (
-            <div className="p-4 space-y-4">
-              {/* Source Switcher (PC/Laptop, Phone, Gallery, Art Generator) */}
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { id: 'computer' as const, label: 'PC or Laptop', icon: Monitor },
-                  { id: 'phone' as const, label: 'Upload from phone', icon: Smartphone },
-                  { id: 'gallery' as const, label: 'Gallery', icon: ImageIcon },
-                  { id: 'ai' as const, label: 'Art Generator', icon: Sparkles }
-                ].map((src) => {
-                  const Icon = src.icon;
-                  const isSelected = uploadSource === src.id;
-                  return (
-                    <button
-                      key={src.id}
-                      type="button"
-                      onClick={() => setUploadSource(src.id)}
-                      className={`flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-xl border-2 text-center transition-all cursor-pointer ${
-                        isSelected
-                          ? 'border-[#0E4A93] bg-blue-50/40 text-[#0E4A93] shadow-xs'
-                          : 'border-stone-200 text-stone-500 hover:border-stone-300 bg-white'
-                      }`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      <span className="text-[10px] font-bold leading-tight">{src.label}</span>
-                    </button>
-                  );
-                })}
+            <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
+              <div>
+                <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-1">
+                  Upload Photos
+                </h3>
+                <p className="text-[11px] text-stone-500">
+                  Add high-resolution photos from your PC or laptop or scan the QR code to upload directly from your mobile phone.
+                </p>
               </div>
 
-              {uploadSource === 'computer' && (
-                <div
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    handleFilesUpload(e.dataTransfer.files, activePanelIndex);
-                  }}
-                  onClick={() => {
-                    uploadTargetRef.current = activePanelIndex;
-                    fileInputRef.current?.click();
-                  }}
-                  className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/30 hover:bg-blue-50/60 rounded-2xl p-6 text-center transition-all cursor-pointer group"
+              {/* Segmented Control: Computer vs Mobile QR */}
+              <div className="flex border border-stone-200 rounded-xl p-1 bg-stone-100">
+                <button
+                  type="button"
+                  onClick={() => setUploadMode('computer')}
+                  className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    uploadMode === 'computer'
+                      ? 'bg-white text-[#0E4A93] shadow-xs'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-[#0E4A93] text-white flex items-center justify-center mx-auto mb-3 shadow-sm group-hover:scale-105 transition-transform">
-                    <Upload className="w-6 h-6" />
-                  </div>
-                  <div className="text-sm font-black text-stone-900">Click or Drag Photos Here</div>
-                  <p className="text-xs text-stone-500 mt-1">Supports high-resolution JPG, PNG, WEBP &amp; BMP up to 40MB</p>
-                  <span className="inline-block mt-3 px-4 py-1.5 bg-[#0E4A93] text-white text-xs font-extrabold rounded-lg shadow-xs">
-                    Browse Files
-                  </span>
-                </div>
-              )}
-
-              {uploadSource === 'phone' && (
-                <div
-                  onClick={() => {
-                    uploadTargetRef.current = activePanelIndex;
-                    phoneInputRef.current?.click();
-                  }}
-                  className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/30 hover:bg-blue-50/60 rounded-2xl p-6 text-center transition-all cursor-pointer group"
+                  <Laptop className="w-3.5 h-3.5" />
+                  <span>Upload from PC or Laptop</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUploadMode('mobile')}
+                  className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    uploadMode === 'mobile'
+                      ? 'bg-white text-[#0E4A93] shadow-xs'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-[#0E4A93] text-white flex items-center justify-center mx-auto mb-3 shadow-sm group-hover:scale-105 transition-transform">
-                    <Smartphone className="w-6 h-6" />
-                  </div>
-                  <div className="text-sm font-black text-stone-900">Upload from Phone or Camera</div>
-                  <p className="text-xs text-stone-500 mt-1">
-                    On a phone or tablet this opens your camera or photo library. On a computer it opens the file picker.
-                  </p>
-                  <span className="inline-flex items-center gap-1.5 mt-3 px-4 py-1.5 bg-[#0E4A93] text-white text-xs font-extrabold rounded-lg shadow-xs">
-                    <Smartphone className="w-3.5 h-3.5" /> Take / Choose Photo
-                  </span>
-                </div>
-              )}
-
-              {uploadSource === 'gallery' && (
-                <div className="space-y-2.5">
-                  <p className="text-[11px] text-stone-500">Sample photos — click one to place it, or drag it onto a frame.</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {GALLERY_PHOTOS.map((g) => (
-                      <div
-                        key={g.url}
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('application/x-ci-url', g.url);
-                          e.dataTransfer.effectAllowed = 'copy';
-                        }}
-                        onClick={() => {
-                          handleAssignPhotoToPanel(g.url, activePanelIndex);
-                          setUploadedPhotos((prev) => (prev.includes(g.url) ? prev : [g.url, ...prev]));
-                        }}
-                        className="group relative aspect-square rounded-lg overflow-hidden border border-stone-200 bg-stone-100 cursor-grab hover:ring-2 hover:ring-[#0E4A93] transition-all"
-                        title={g.label}
-                      >
-                        <img src={g.url} alt={g.label} draggable={false} className="w-full h-full object-cover" />
-                        <span className="absolute bottom-0 inset-x-0 bg-black/55 text-white text-[9px] font-bold text-center py-0.5">{g.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {uploadSource === 'ai' && (
-                <div className="space-y-2.5 bg-stone-50 border border-stone-200 rounded-xl p-3.5">
-                  <p className="text-[11px] text-stone-500">
-                    Describe a mood or colours (e.g. &ldquo;sunset ocean&rdquo;) and get four unique abstract artworks made just for that prompt.
-                  </p>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={aiPrompt}
-                      onChange={(e) => setAiPrompt(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleGenerateArt();
-                      }}
-                      placeholder="e.g. calm blue mountains"
-                      className="flex-1 px-3 py-2 border border-stone-300 bg-white rounded-lg text-xs focus:outline-none focus:border-[#0E4A93]"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleGenerateArt}
-                      className="px-4 py-2 bg-[#E8752A] hover:bg-[#d6651d] text-white text-xs font-black rounded-lg cursor-pointer inline-flex items-center gap-1.5"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" /> Generate
-                    </button>
-                  </div>
-                  {aiResults.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      {aiResults.map((art, i) => (
-                        <div
-                          key={i}
-                          draggable
-                          onDragStart={(e) => {
-                            e.dataTransfer.setData('application/x-ci-url', art);
-                            e.dataTransfer.effectAllowed = 'copy';
-                          }}
-                          onClick={() => {
-                            handleAssignPhotoToPanel(art, activePanelIndex);
-                            setUploadedPhotos((prev) => (prev.includes(art) ? prev : [art, ...prev]));
-                          }}
-                          className="relative aspect-[4/3] rounded-lg overflow-hidden border border-stone-200 cursor-grab hover:ring-2 hover:ring-[#0E4A93] transition-all"
-                        >
-                          <img src={art} alt={`Generated art ${i + 1}`} draggable={false} className="w-full h-full object-cover" />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span>Upload from Mobile</span>
+                </button>
+              </div>
 
               {/* Split Canvas single image notification */}
               {selectedProductTypeId === 'canvas-split' && (
@@ -3086,29 +3142,27 @@ export const CanvasCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Active Panel Target Selector for Multi-Panel Layouts (Collage / Mosaic / Wall Art) */}
+              {/* Multi-slot assignment selector */}
               {panels.length > 1 && selectedProductTypeId !== 'canvas-split' && (
-                <div className="space-y-2 bg-stone-50 p-3 rounded-xl border border-stone-200">
-                  <div className="text-xs font-extrabold text-stone-700">Target Slot for Next Photo:</div>
+                <div className="p-2.5 bg-stone-100 rounded-xl space-y-1.5">
+                  <div className="text-[11px] font-bold text-stone-700">Assign to Slot:</div>
                   <div className="flex flex-wrap gap-1.5">
-                    {panels.map((p, idx) => {
-                      const isSelected = activePanelIndex === idx;
-                      const hasPhoto = Boolean(panelImages[idx]?.imageUrl);
+                    {panels.map((p, fIdx) => {
+                      const isTarget = activePanelIndex === fIdx;
+                      const hasPhoto = !!panelImages[fIdx]?.imageUrl;
                       return (
                         <button
-                          key={p.id}
+                          key={p.id || fIdx}
                           type="button"
-                          onClick={() => setActivePanelIndex(idx)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                            isSelected
-                              ? 'bg-[#0E4A93] text-white shadow-xs'
-                              : hasPhoto
-                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                              : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
+                          onClick={() => setActivePanelIndex(fIdx)}
+                          className={`flex-1 min-w-[70px] py-1.5 px-2 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                            isTarget
+                              ? 'bg-white border-[#0E4A93] text-[#0E4A93] shadow-xs'
+                              : 'bg-stone-50 border-stone-200 text-stone-600'
                           }`}
                         >
-                          <span>{p.label}</span>
-                          {hasPhoto && <Check className="w-3 h-3 text-emerald-500" />}
+                          <span>Slot {fIdx + 1}</span>
+                          {hasPhoto && <Check className="w-3 h-3 text-emerald-600" />}
                         </button>
                       );
                     })}
@@ -3116,115 +3170,170 @@ export const CanvasCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Photo Tray */}
+              {uploadMode === 'computer' ? (
+                /* COMPUTER UPLOAD ZONE */
+                <div
+                  onClick={() => {
+                    uploadTargetRef.current = activePanelIndex;
+                    fileInputRef.current?.click();
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    handleFilesUpload(e.dataTransfer.files, activePanelIndex);
+                  }}
+                  className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-6 text-center cursor-pointer transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-full bg-white text-[#0E4A93] shadow-sm flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                    <UploadCloud className="w-6 h-6 stroke-[2.5]" />
+                  </div>
+                  <div className="text-xs font-bold text-stone-900">
+                    Click to Browse or Drag Photos
+                  </div>
+                  <div className="text-[11px] text-stone-500 mt-1">
+                    Supports JPG, PNG, WEBP up to 25MB
+                  </div>
+                </div>
+              ) : (
+                /* MOBILE QR UPLOAD ZONE */
+                <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm space-y-3.5 text-center">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[11px] font-bold text-stone-700">Listening for mobile upload</span>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold bg-blue-50 text-[#0E4A93] px-2 py-0.5 rounded border border-blue-100">
+                      #{uploadSessionId}
+                    </span>
+                  </div>
+
+                  {/* QR Code Container */}
+                  <div className="relative inline-block p-3 bg-white rounded-2xl border-2 border-stone-200 shadow-sm mx-auto">
+                    {qrDataUrl ? (
+                      <img 
+                        src={qrDataUrl} 
+                        alt="Scan QR code with mobile phone" 
+                        className="w-44 h-44 sm:w-48 sm:h-48 mx-auto block object-contain"
+                      />
+                    ) : (
+                      <div className="w-44 h-44 flex items-center justify-center text-xs text-stone-400">
+                        Generating QR Code...
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="text-xs font-bold text-stone-900">
+                      Scan with your phone camera
+                    </div>
+                    <p className="text-[11px] text-stone-500 leading-relaxed max-w-xs mx-auto">
+                      Point your smartphone camera at this QR code to upload photos directly from your phone into your Canvas print.
+                    </p>
+                  </div>
+
+                  {/* Direct Link & Test Actions */}
+                  <div className="pt-2 border-t border-stone-100 flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(mobileUploadUrl);
+                        setCopiedLink(true);
+                        setTimeout(() => setCopiedLink(false), 2500);
+                      }}
+                      className="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 rounded-lg text-[11px] font-bold text-stone-700 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedLink ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3 text-stone-500" />
+                          <span>Copy Link</span>
+                        </>
+                      )}
+                    </button>
+
+                    <a
+                      href={mobileUploadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#0E4A93] rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>Open Upload Page</span>
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Uploaded Photos Gallery with Drag-and-Drop, Click-to-Apply & Remove */}
               {uploadedPhotos.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-2 pt-2 border-t border-stone-100">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-extrabold text-stone-700">Your Uploaded Photos ({uploadedPhotos.length})</span>
+                    <span className="font-bold text-stone-700">Uploaded Photos ({uploadedPhotos.length}):</span>
                     <button
                       type="button"
                       onClick={handleClearAllUploadedPhotos}
-                      className="text-rose-600 hover:text-rose-700 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                      className="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
                       title="Remove all uploaded photos"
                     >
                       <Trash2 className="w-3 h-3" />
-                      <span>Remove All</span>
+                      <span>Clear All</span>
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-2.5">
-                    {uploadedPhotos.map((photo, pIdx) => (
-                      <div
-                        key={pIdx}
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('application/x-ci-tray', String(pIdx));
-                          e.dataTransfer.effectAllowed = 'copy';
-                        }}
-                        onClick={() => handleAssignPhotoToPanel(photo, activePanelIndex)}
-                        className="group relative aspect-square rounded-xl overflow-hidden border border-stone-200 bg-stone-100 cursor-grab shadow-xs hover:ring-2 hover:ring-[#0E4A93] transition-all"
-                      >
-                        <img src={photo} alt={`Upload ${pIdx + 1}`} draggable={false} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none">
-                          <span className="text-[10px] text-white font-bold bg-[#0E4A93] px-2 py-0.5 rounded">Use Photo</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveUploadedPhoto(photo, pIdx);
-                          }}
-                          title="Remove this uploaded photo"
-                          aria-label="Remove uploaded photo"
-                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-rose-600 text-white flex items-center justify-center shadow-sm transition-colors cursor-pointer z-10"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* -------------------------------- SHAPES -------------------------------- */}
-          {(activeTab === 'SHAPES' || activeTab === 'SHAPE') && (
-            <div className="p-4 space-y-3">
-              {!shapeApplies ? (
-                <div className="p-4 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-600 space-y-2">
-                  <p>
-                    Laser-cut shapes are only available on single-panel canvases. Switch to <strong>Classic Canvas Print</strong> or{' '}
-                    <strong>Panoramic Canvas Print</strong> under Products to choose a shape.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {/* Category Filter Pills (Identical to Acrylic Customizer) */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {SHAPE_FILTER_TABS.map((tab) => (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => setShapeFilterCategory(tab.id)}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                          shapeFilterCategory === tab.id
-                            ? 'bg-[#0E4A93] text-white shadow-xs'
-                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Shape Cards Grid (Identical to Acrylic Customizer) */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                    {filteredShapes.map((shape) => {
-                      const isSelected = selectedShapeId === shape.id;
+                  <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto p-1 bg-stone-50 rounded-xl border border-stone-200">
+                    {uploadedPhotos.map((photo, pIdx) => {
+                      const isDraggingThis = draggingPhotoIndex === pIdx;
                       return (
-                        <CustomizerOptionCard
-                          key={shape.id}
-                          selected={isSelected}
-                          onClick={() => {
-                            setSelectedShapeId(shape.id);
-                            setIsSizeShapeModalOpen(true);
+                        <div
+                          key={pIdx}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('application/x-ci-tray', String(pIdx));
+                            e.dataTransfer.setData('text/plain', photo);
+                            e.dataTransfer.effectAllowed = 'copy';
+                            setDraggingPhotoIndex(pIdx);
                           }}
-                          title={shape.name}
-                          priceText={shape.priceAddon === 0 ? 'Included' : `+₹${shape.priceAddon}`}
-                          previewHeightClass="h-16 p-1.5"
-                          preview={
-                            <div className="w-full h-full flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                              <AcrylicShapePreview
-                                shape={shape.shapeType}
-                                selected={isSelected}
-                              />
-                            </div>
-                          }
-                        />
+                          onDragEnd={() => {
+                            setDraggingPhotoIndex(null);
+                          }}
+                          onClick={() => handleAssignPhotoToPanel(photo, activePanelIndex)}
+                          className={`aspect-square rounded-lg overflow-hidden border transition-all relative group bg-white shadow-2xs select-none ${
+                            isDraggingThis
+                              ? 'opacity-40 scale-95 ring-2 ring-[#0E4A93] cursor-grabbing'
+                              : 'border-stone-200 hover:border-[#0E4A93] hover:shadow-xs cursor-grab active:cursor-grabbing'
+                          }`}
+                          title="Click to apply to active slot or drag directly onto any frame"
+                        >
+                          <img 
+                            src={photo} 
+                            alt={`Upload ${pIdx}`} 
+                            className="w-full h-full object-cover pointer-events-none" 
+                          />
+                          {/* Move / Drag Indicator Icon */}
+                          <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-xs text-white p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            <Move className="w-2.5 h-2.5" />
+                          </div>
+                          {/* Remove Photo Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveUploadedPhoto(photo, pIdx);
+                            }}
+                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-rose-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10"
+                            title="Remove photo"
+                            aria-label="Remove photo"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
                       );
                     })}
                   </div>
-                </>
+                </div>
               )}
             </div>
           )}
@@ -3232,10 +3341,10 @@ export const CanvasCustomizerPage: React.FC = () => {
           {/* --------------------------- SELECT SIZE ---------------------------- */}
           {activeTab === 'SELECT SIZE' && (
             <div className="p-4 space-y-4">
-              {/* Quick Trigger for the Select Size & Shape Modal */}
+              {/* Quick Trigger for the Select Size Modal */}
               <div className="flex items-center justify-between p-3.5 bg-blue-50/80 rounded-xl border border-blue-200">
                 <div className="text-xs">
-                  <span className="font-black text-[#0E4A93] uppercase tracking-wide">Select Size & Shape</span>
+                  <span className="font-black text-[#0E4A93] uppercase tracking-wide">Select Size</span>
                   <p className="text-stone-600 text-[11px] mt-0.5">Explore recommended sizes, shapes, and multi-piece arrangements</p>
                 </div>
                 <button
@@ -4565,7 +4674,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                       bottom: '100%',
                                       height: `${visibleDepthPx}px`,
                                       borderBottom: 'none',
-                                      backgroundColor: (isWhiteBorderWrap || isBlackBorderWrap || isNoWrap) ? wrapBgColor : 'transparent'
+                                      backgroundColor: '#FFFFFF'
                                     }}
                                   />
 
@@ -4576,7 +4685,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                       right: '100%',
                                       width: `${visibleDepthPx}px`,
                                       borderRight: 'none',
-                                      backgroundColor: (isWhiteBorderWrap || isBlackBorderWrap || isNoWrap) ? wrapBgColor : 'transparent'
+                                      backgroundColor: '#FFFFFF'
                                     }}
                                   />
 
@@ -4587,7 +4696,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                       top: '100%',
                                       height: `${visibleDepthPx}px`,
                                       borderTop: 'none',
-                                      backgroundColor: (isWhiteBorderWrap || isBlackBorderWrap || isNoWrap) ? wrapBgColor : 'transparent',
+                                      backgroundColor: '#FFFFFF',
                                       boxShadow: '0 12px 20px -4px rgba(15, 23, 42, 0.12)'
                                     }}
                                   />
@@ -4599,7 +4708,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                       left: '100%',
                                       width: `${visibleDepthPx}px`,
                                       borderLeft: 'none',
-                                      backgroundColor: (isWhiteBorderWrap || isBlackBorderWrap || isNoWrap) ? wrapBgColor : 'transparent'
+                                      backgroundColor: '#FFFFFF'
                                     }}
                                   />
                                 </>
@@ -4607,7 +4716,7 @@ export const CanvasCustomizerPage: React.FC = () => {
 
                               {/* CONTINUOUS IMAGE WRAPPER FOR SINGLE PRINT:
                                   Encompasses front face + 4 flaps via inset -visibleDepthPx.
-                                  Clipped to cross shape so zoomed/panned image naturally extends into the transparent flaps!
+                                  Clipped to cross shape so zoomed/panned image naturally extends into the white flaps!
                               */}
                               {isSingleCanvasPrint && panelImages[0]?.imageUrl && (
                                 <div
@@ -4618,7 +4727,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                                     left: `-${visibleDepthPx}px`,
                                     right: `-${visibleDepthPx}px`,
                                     clipPath: crossClipPath,
-                                    WebkitClipPath: crossClipPath
+                                    WebkitClipPath: crossClipPath,
+                                    backgroundColor: '#FFFFFF'
                                   }}
                                 >
                                   {/* Front Face white backing */}
@@ -4631,14 +4741,14 @@ export const CanvasCustomizerPage: React.FC = () => {
                                       right: `${visibleDepthPx}px`
                                     }}
                                   />
-                                  {/* The ONE continuous image layer centered on the front face */}
+                                  {/* The ONE continuous image layer: when 'cover' (Fill), spans full product (front + flaps); when 'contain', spans front face */}
                                   <div
-                                    className="absolute flex items-center justify-center"
+                                    className="absolute flex items-center justify-center pointer-events-none"
                                     style={{
-                                      top: `${visibleDepthPx}px`,
-                                      bottom: `${visibleDepthPx}px`,
-                                      left: `${visibleDepthPx}px`,
-                                      right: `${visibleDepthPx}px`,
+                                      top: panelImages[0].fitMode === 'cover' ? 0 : `${visibleDepthPx}px`,
+                                      bottom: panelImages[0].fitMode === 'cover' ? 0 : `${visibleDepthPx}px`,
+                                      left: panelImages[0].fitMode === 'cover' ? 0 : `${visibleDepthPx}px`,
+                                      right: panelImages[0].fitMode === 'cover' ? 0 : `${visibleDepthPx}px`,
                                       overflow: 'visible'
                                     }}
                                   >
@@ -4669,10 +4779,10 @@ export const CanvasCustomizerPage: React.FC = () => {
                                       }}
                                       style={{
                                         width: panelImages[0].fitMode === 'cover'
-                                          ? (isWiderThanFrame ? 'auto' : '100%')
+                                          ? '100%'
                                           : (isWiderThanFrame ? '100%' : 'auto'),
                                         height: panelImages[0].fitMode === 'cover'
-                                          ? (isWiderThanFrame ? '100%' : 'auto')
+                                          ? '100%'
                                           : (isWiderThanFrame ? 'auto' : '100%'),
                                         minWidth: panelImages[0].fitMode === 'cover' ? '100%' : undefined,
                                         minHeight: panelImages[0].fitMode === 'cover' ? '100%' : undefined,
@@ -4785,7 +4895,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                     onClick={() => fileInputRef.current?.click()}
                                     className="w-full h-full flex flex-col items-center justify-center bg-white p-6 text-center cursor-pointer group select-none"
                                   >
-                                    <div className="flex items-center gap-2 text-[#b91c1c] group-hover:scale-105 transition-transform mb-1">
+                                    <div className="flex items-center gap-2 text-[#0E4A93] group-hover:scale-105 transition-transform mb-1">
                                       <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
                                         <path d="M11 14.5V6.85l-2.6 2.6L7 8.05 12 3.05l5 5-1.4 1.4-2.6-2.6v7.65h-2zM4 20q-.825 0-1.412-.587Q2 18.825 2 18v-2q0-.425.288-.712Q2.575 15 3 15t.713.288Q4 15.575 4 16v2h16v-2q0-.425.288-.712Q20.575 15 21 15t.713.288Q22 15.575 22 16v2q0 .825-.587 1.413Q20.825 20 20 20Z"/>
                                       </svg>
