@@ -119,19 +119,12 @@ export type CanvasProductIconType =
   | 'print'
   | 'collage'
   | 'split'
-  | 'signage'
   | 'round'
   | 'triangle'
   | 'heart'
   | 'oval'
   | 'hexagon'
-  | 'mosaic'
-  | 'lyric'
-  | 'painting'
-  | 'quotes'
-  | 'bus-roll'
-  | 'banner'
-  | 'pop-art';
+  | 'mosaic';
 
 export interface CanvasProductCapabilities {
   products?: boolean;
@@ -142,6 +135,9 @@ export interface CanvasProductCapabilities {
   wrap?: boolean;
   hardware?: boolean;
   options?: boolean;
+  view3D?: boolean;
+  view360?: boolean;
+  roomView?: boolean;
 }
 
 export interface CanvasProductType {
@@ -181,7 +177,20 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS,
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: true,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: true,
+      view360: true,
+      roomView: true
+    }
   },
   {
     id: 'canvas-round',
@@ -196,7 +205,20 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ['shape-circle']
+    supportedShapeIds: ['shape-circle'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
   },
   {
     id: 'canvas-triangle',
@@ -211,7 +233,20 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ['shape-triangle']
+    supportedShapeIds: ['shape-triangle'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
   },
   {
     id: 'canvas-heart',
@@ -226,7 +261,20 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ['shape-heart']
+    supportedShapeIds: ['shape-heart'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
   },
   {
     id: 'canvas-oval',
@@ -241,7 +289,20 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ['shape-oval']
+    supportedShapeIds: ['shape-oval'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
   },
   {
     id: 'canvas-wall-art',
@@ -256,7 +317,20 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultLayoutId: 'layout-3-collage',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thick-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS,
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: true,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
   },
   {
     id: 'canvas-collage',
@@ -271,7 +345,20 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultLayoutId: 'layout-4-grid',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS,
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: true,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
   },
   {
     id: 'canvas-hexagon',
@@ -286,7 +373,20 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ['shape-hexagon']
+    supportedShapeIds: ['shape-hexagon'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
   },
   {
     id: 'canvas-split',
@@ -301,7 +401,20 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultLayoutId: 'layout-3-split',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thick-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS,
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
   },
   {
     id: 'canvas-mosaic',
@@ -316,194 +429,47 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     defaultLayoutId: 'layout-4-grid',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
-  },
-  {
-    id: 'canvas-lyric',
-    name: 'Lyric on Canvas',
-    startingPrice: 148.50,
-    image: '',
-    iconType: 'lyric',
-    panelsCount: 1,
-    description: 'Your favorite song lyrics, vows, or poems printed with photo art on canvas.',
-    defaultSizeOptionId: 'shape-portrait-8x12',
-    defaultShape: 'shape-portrait',
-    defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
-  },
-  {
-    id: 'canvas-digital-painting',
-    name: 'Digital Painting',
-    startingPrice: 2598.0,
-    image: '',
-    iconType: 'painting',
-    panelsCount: 1,
-    description: 'Hand-crafted digital painting effect rendered onto authentic woven canvas.',
-    defaultSizeOptionId: 'shape-landscape-12x8',
-    defaultShape: 'shape-portrait',
-    defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: 'thick-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
-  },
-  {
-    id: 'canvas-quotes',
-    name: 'Quotes on Canvas',
-    startingPrice: 99.0,
-    image: '',
-    iconType: 'quotes',
-    panelsCount: 1,
-    description: 'Inspirational quotes and typography styled on gallery-grade canvas.',
-    defaultSizeOptionId: 'shape-square-10x10',
-    defaultShape: 'shape-square',
-    defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
-  },
-  {
-    id: 'canvas-bus-roll',
-    name: 'Bus Roll',
-    startingPrice: 705.60,
-    image: '',
-    iconType: 'bus-roll',
-    panelsCount: 1,
-    description: 'Vintage destination roll and transit-style typography art on canvas.',
-    defaultSizeOptionId: 'shape-bus-roll-8x24',
-    defaultShape: 'shape-portrait',
-    defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
-  },
-  {
-    id: 'canvas-banner',
-    name: 'Canvas Banner',
-    startingPrice: 399.0,
-    image: '',
-    iconType: 'banner',
-    panelsCount: 1,
-    description: 'Hanging fabric canvas banner with natural wood magnetic hanger bars.',
-    defaultSizeOptionId: 'shape-banner-24x8',
-    defaultShape: 'shape-portrait',
-    defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: 'hanging-canvas',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
-  },
-  {
-    id: 'canvas-pop-art',
-    name: 'Pop Art',
-    startingPrice: 598.0,
-    image: '',
-    iconType: 'pop-art',
-    panelsCount: 1,
-    description: 'Bold Andy Warhol and Lichtenstein-inspired colorful pop art portrait.',
-    defaultSizeOptionId: 'shape-square-10x10',
-    defaultShape: 'shape-square',
-    defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
-  },
-  // Backward compatibility aliases
-  {
-    id: 'canvas-classic',
-    name: 'Classic Canvas Print',
-    startingPrice: 99.0,
-    image: '',
-    iconType: 'print',
-    panelsCount: 1,
-    description: 'Stretched 380 GSM cotton canvas on a solid pine wood frame.',
-    defaultSizeOptionId: 'shape-rectangle-10x8',
-    defaultShape: 'shape-rectangle',
-    defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
-  },
-  {
-    id: 'canvas-photo-block',
-    name: 'Canvas Photo Block',
-    startingPrice: 499.0,
-    image: '',
-    iconType: 'block',
-    panelsCount: 1,
-    description: 'Freestanding tabletop canvas block on a solid wood easel base.',
-    defaultSizeOptionId: 'sq-4x4',
-    defaultShape: 'shape-square',
-    defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: 'thick-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
-  },
-  {
-    id: 'canvas-photo-panel',
-    name: 'Canvas Photo Panel',
-    startingPrice: 355.0,
-    image: '',
-    iconType: 'panel',
-    panelsCount: 1,
-    description: 'Stretched 380 GSM cotton canvas on a solid pine wood frame.',
-    defaultSizeOptionId: 'sq-8x8',
-    defaultShape: 'shape-rectangle',
-    defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
-  },
-  {
-    id: 'canvas-panoramic',
-    name: 'Panoramic Canvas Print',
-    startingPrice: 1499.0,
-    image: '',
-    iconType: 'print',
-    panelsCount: 1,
-    description: 'Wide-format panoramic canvas for landscapes and skylines.',
-    defaultSizeOptionId: 'pan-12x36',
-    defaultShape: 'shape-landscape',
-    defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
-  },
-  {
-    id: 'canvas-signage',
-    name: 'Canvas Signage',
-    startingPrice: 799.0,
-    image: '',
-    iconType: 'signage',
-    panelsCount: 1,
-    description: 'Professional logo and nameplate display on rigid mounted canvas.',
-    defaultSizeOptionId: 'rec-12x18',
-    defaultShape: 'shape-rectangle',
-    defaultLayoutId: 'layout-1-single',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: 'thick-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS,
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: true,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
   }
 ];
 
 export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProductCapabilities {
-  if (pt.capabilities) return pt.capabilities;
+  if (pt.capabilities) {
+    return {
+      view3D: pt.id === 'canvas-single',
+      view360: true,
+      roomView: true,
+      ...pt.capabilities
+    };
+  }
   const isSplit = pt.id === 'canvas-split';
-  const isCollageOrMosaic = pt.id === 'canvas-collage' || pt.id === 'canvas-mosaic' || pt.id === 'canvas-wall-art' || pt.id === 'canvas-display';
-  const isCustomGeometry = ['canvas-round', 'canvas-triangle', 'canvas-heart', 'canvas-oval', 'canvas-hexagon'].includes(pt.id);
-  const isTextArt = ['canvas-lyric', 'canvas-quotes'].includes(pt.id);
-  const isBanner = pt.id === 'canvas-banner';
-  const isPanoramic = pt.id === 'canvas-panoramic';
+  const isCollageOrMosaic = pt.id === 'canvas-collage' || pt.id === 'canvas-mosaic' || pt.id === 'canvas-wall-art';
 
   return {
     products: true,
     upload: true,
     sizes: true,
-    shapes: !isBanner && !isPanoramic && !isSplit && !isCollageOrMosaic,
-    layouts: (isCollageOrMosaic || isTextArt) && !isSplit,
-    wrap: !isBanner,
+    shapes: !isSplit && !isCollageOrMosaic,
+    layouts: isCollageOrMosaic && !isSplit,
+    wrap: true,
     hardware: true,
-    options: true
+    options: true,
+    view3D: pt.id === 'canvas-single',
+    view360: true,
+    roomView: true
   };
 }
 

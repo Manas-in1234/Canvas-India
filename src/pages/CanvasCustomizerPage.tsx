@@ -1108,7 +1108,7 @@ export const CanvasCustomizerPage: React.FC = () => {
     endPreloader(PRELOADER_MIN_MS);
   };
 
-  // Selected Canvas Product Type (supports all Canvas products via route param or sidebar switcher)
+  // Selected Canvas Product Type (supports all 10 Canvas products via route param or sidebar switcher)
   const resolveCanvasProductTypeId = (rawId?: string, catProd?: typeof catalogProduct): string => {
     const key = (rawId || catProd?.slug || catProd?.id || catProd?.name || '').toLowerCase();
     if (CANVAS_PRODUCT_TYPES.some((pt) => pt.id === key)) return key;
@@ -1117,20 +1117,11 @@ export const CanvasCustomizerPage: React.FC = () => {
     if (key.includes('triangle')) return 'canvas-triangle';
     if (key.includes('heart')) return 'canvas-heart';
     if (key.includes('oval')) return 'canvas-oval';
-    if (key.includes('hexagon')) return 'canvas-hexagon';
-    if (key.includes('mosaic')) return 'canvas-mosaic';
-    if (key.includes('lyric')) return 'canvas-lyric';
-    if (key.includes('painting')) return 'canvas-digital-painting';
-    if (key.includes('quote')) return 'canvas-quotes';
-    if (key.includes('bus') || key.includes('roll')) return 'canvas-bus-roll';
-    if (key.includes('banner')) return 'canvas-banner';
-    if (key.includes('pop')) return 'canvas-pop-art';
-    if (key.includes('block') || key.includes('desk') || key.includes('easel')) return 'canvas-photo-block';
     if (key.includes('wall') || key.includes('display')) return 'canvas-wall-art';
     if (key.includes('collage')) return 'canvas-collage';
+    if (key.includes('hexagon')) return 'canvas-hexagon';
     if (key.includes('split')) return 'canvas-split';
-    if (key.includes('panoramic') || key.includes('landscape')) return 'canvas-panoramic';
-    if (key.includes('sign')) return 'canvas-signage';
+    if (key.includes('mosaic')) return 'canvas-mosaic';
     return 'canvas-single';
   };
 
@@ -1446,6 +1437,14 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // Room / 3D / 360 viewer
   const [viewerMode, setViewerMode] = useState<'room' | '3d' | '360' | null>(null);
+
+  // Automatically close 3D view if the selected product does not support 3D (Single Print only)
+  useEffect(() => {
+    if (viewerMode === '3d' && !productCapabilities.view3D) {
+      setViewerMode(null);
+    }
+  }, [viewerMode, productCapabilities.view3D]);
+
   const [viewer360Axis, setViewer360Axis] = useState<'horizontal' | 'vertical'>('horizontal');
   const [roomViewState, setRoomViewState] = useState<RoomPlacementState>({
     roomPreset: 'office',
@@ -4142,13 +4141,13 @@ export const CanvasCustomizerPage: React.FC = () => {
               setViewerMode('room');
             }}
             is3DViewActive={viewerMode === '3d'}
-            onOpen3DView={() => {
+            onOpen3DView={productCapabilities.view3D ? () => {
               if (!hasUploadedImage) return;
               setViewerRotation(-28);
               setViewerTiltX(8);
               setViewerAutoRotate(false);
               setViewerMode('3d');
-            }}
+            } : undefined}
             is360ViewActive={viewerMode === '360'}
             onOpen360View={() => {
               if (!hasUploadedImage) return;
