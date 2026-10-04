@@ -2489,30 +2489,52 @@ export const AcrylicCustomizerPage: React.FC = () => {
                   : 'cursor-grab'
               }`}
             >
-              <img
-                src={frame.imageUrl}
-                alt={slot.label}
-                draggable={false}
-                onLoad={(ev) => {
-                  const imgEl = ev.currentTarget;
-                  if (imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0) {
-                    imageDimsRef.current[panelIdx] = {
-                      naturalWidth: imgEl.naturalWidth,
-                      naturalHeight: imgEl.naturalHeight
-                    };
-                  }
-                }}
-                style={{
-                  transform: isRoomView
-                    ? `translate3d(${lockedPanXPct}%, ${lockedPanYPct}%, 0) scale(${frame.scale || 1}) rotate(${frame.rotation || 0}deg)`
-                    : `translate3d(${frame.panX || 0}px, ${frame.panY || 0}px, 0) scale(${frame.scale || 1}) rotate(${frame.rotation || 0}deg)`,
-                  transformOrigin: 'center center',
-                  filter: filterCss,
-                  objectFit: frame.fitMode === 'contain' ? 'contain' : 'cover',
-                  transition: isRoomView || isDragging ? 'none' : 'transform 0.1s ease-out'
-                }}
-                className="max-w-none w-full h-full pointer-events-none select-none"
-              />
+              {(() => {
+                const nat = frame.uploadedImage || imageDimsRef.current[panelIdx];
+                const natW = nat?.naturalWidth || 1200;
+                const natH = nat?.naturalHeight || 800;
+                const imgRatio = Math.max(0.05, natW / Math.max(1, natH));
+                const slotRatio = Math.max(0.05, (slot.width * mainSlotW) / Math.max(1, slot.height * mainSlotH));
+                const isWiderThanSlot = imgRatio >= slotRatio;
+
+                return (
+                  <img
+                    src={frame.imageUrl}
+                    alt={slot.label}
+                    draggable={false}
+                    onLoad={(ev) => {
+                      const imgEl = ev.currentTarget;
+                      if (imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0) {
+                        imageDimsRef.current[panelIdx] = {
+                          naturalWidth: imgEl.naturalWidth,
+                          naturalHeight: imgEl.naturalHeight
+                        };
+                      }
+                    }}
+                    style={{
+                      width: frame.fitMode === 'cover'
+                        ? (isWiderThanSlot ? 'auto' : '100%')
+                        : (isWiderThanSlot ? '100%' : 'auto'),
+                      height: frame.fitMode === 'cover'
+                        ? (isWiderThanSlot ? '100%' : 'auto')
+                        : (isWiderThanSlot ? 'auto' : '100%'),
+                      minWidth: frame.fitMode === 'cover' ? '100%' : undefined,
+                      minHeight: frame.fitMode === 'cover' ? '100%' : undefined,
+                      maxWidth: frame.fitMode === 'cover' ? 'none' : '100%',
+                      maxHeight: frame.fitMode === 'cover' ? 'none' : '100%',
+                      aspectRatio: `${natW} / ${natH}`,
+                      objectFit: frame.fitMode === 'cover' ? 'cover' : 'contain',
+                      transform: isRoomView
+                        ? `translate3d(${lockedPanXPct}%, ${lockedPanYPct}%, 0) scale(${frame.scale || 1}) rotate(${frame.rotation || 0}deg)`
+                        : `translate3d(${frame.panX || 0}px, ${frame.panY || 0}px, 0) scale(${frame.scale || 1}) rotate(${frame.rotation || 0}deg)`,
+                      transformOrigin: 'center center',
+                      filter: filterCss,
+                      transition: isRoomView || isDragging ? 'none' : 'transform 0.1s ease-out'
+                    }}
+                    className="max-w-none pointer-events-none select-none"
+                  />
+                );
+              })()}
             </div>
           ) : (
             /* CLEAN EMPTY SLOT: Red upload icon + red Upload an Image text */

@@ -4541,212 +4541,291 @@ export const CanvasCustomizerPage: React.FC = () => {
                           maxWidth: '100%'
                         }}
                       >
-                        {/* 1. PHYSICAL 4-EDGE PROJECTION (ONLY FOR Single Print: canvas-single) */}
-                        {selectedProductTypeId === 'canvas-single' && (
-                          <>
-                            {/* Top Physical Thickness Edge */}
-                            <div
-                              className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0 border border-stone-300"
-                              style={{
-                                bottom: '100%',
-                                height: `${visibleDepthPx}px`,
-                                borderBottom: 'none',
-                                backgroundColor: wrapBgColor
-                              }}
-                            >
-                              {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
-                                <img
-                                  src={panelImages[0].imageUrl}
-                                  alt=""
-                                  draggable={false}
-                                  className="w-full h-full object-cover filter brightness-95"
-                                  style={{
-                                    objectPosition: 'center top',
-                                    transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1}) ${
-                                      isMirrorWrap ? 'scaleY(-1)' : ''
-                                    }`,
-                                    filter: getFilterCss(panelImages[0].filter)
-                                  }}
-                                />
-                              )}
-                            </div>
+                        {(() => {
+                          const isSingleCanvasPrint = selectedProductTypeId === 'canvas-single';
+                          const imgMeta = panelImages[0]?.uploadedImage;
+                          const natWidth = imgMeta?.width || 1200;
+                          const natHeight = imgMeta?.height || 800;
+                          const imgAspect = imgMeta?.aspectRatio || (natWidth / Math.max(1, natHeight));
+                          const isWiderThanFrame = imgAspect >= printAspect;
 
-                            {/* Left Physical Thickness Edge */}
-                            <div
-                              className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0 border border-stone-300"
-                              style={{
-                                right: '100%',
-                                width: `${visibleDepthPx}px`,
-                                borderRight: 'none',
-                                backgroundColor: wrapBgColor
-                              }}
-                            >
-                              {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
-                                <img
-                                  src={panelImages[0].imageUrl}
-                                  alt=""
-                                  draggable={false}
-                                  className="w-full h-full object-cover filter brightness-95"
-                                  style={{
-                                    objectPosition: 'left center',
-                                    transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1}) ${
-                                      isMirrorWrap ? 'scaleX(-1)' : ''
-                                    }`,
-                                    filter: getFilterCss(panelImages[0].filter)
-                                  }}
-                                />
-                              )}
-                            </div>
+                          const crossClipPath = isSingleCanvasPrint
+                            ? `polygon(${visibleDepthPx}px 0px, calc(100% - ${visibleDepthPx}px) 0px, calc(100% - ${visibleDepthPx}px) ${visibleDepthPx}px, 100% ${visibleDepthPx}px, 100% calc(100% - ${visibleDepthPx}px), calc(100% - ${visibleDepthPx}px) calc(100% - ${visibleDepthPx}px), calc(100% - ${visibleDepthPx}px) 100%, ${visibleDepthPx}px 100%, ${visibleDepthPx}px calc(100% - ${visibleDepthPx}px), 0px calc(100% - ${visibleDepthPx}px), 0px ${visibleDepthPx}px, ${visibleDepthPx}px ${visibleDepthPx}px)`
+                            : undefined;
 
-                            {/* Bottom Physical Thickness Edge */}
-                            <div
-                              className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0 border border-stone-300"
-                              style={{
-                                top: '100%',
-                                height: `${visibleDepthPx}px`,
-                                borderTop: 'none',
-                                backgroundColor: wrapBgColor,
-                                boxShadow: '0 12px 20px -4px rgba(15, 23, 42, 0.12)'
-                              }}
-                            >
-                              {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
-                                <img
-                                  src={panelImages[0].imageUrl}
-                                  alt=""
-                                  draggable={false}
-                                  className="w-full h-full object-cover filter brightness-90"
-                                  style={{
-                                    objectPosition: 'center bottom',
-                                    transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1}) ${
-                                      isMirrorWrap ? 'scaleY(-1)' : ''
-                                    }`,
-                                    filter: getFilterCss(panelImages[0].filter)
-                                  }}
-                                />
-                              )}
-                            </div>
-
-                            {/* Right Physical Thickness Edge */}
-                            <div
-                              className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0 border border-stone-300"
-                              style={{
-                                left: '100%',
-                                width: `${visibleDepthPx}px`,
-                                borderLeft: 'none',
-                                backgroundColor: wrapBgColor
-                              }}
-                            >
-                              {(isFullBleedWrap || isMirrorWrap) && panelImages[0]?.imageUrl && (
-                                <img
-                                  src={panelImages[0].imageUrl}
-                                  alt=""
-                                  draggable={false}
-                                  className="w-full h-full object-cover filter brightness-95"
-                                  style={{
-                                    objectPosition: 'right center',
-                                    transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1}) ${
-                                      isMirrorWrap ? 'scaleX(-1)' : ''
-                                    }`,
-                                    filter: getFilterCss(panelImages[0].filter)
-                                  }}
-                                />
-                              )}
-                            </div>
-                          </>
-                        )}
-
-                        {/* 2. FRONT CANVAS SURFACE */}
-                        <div
-                          {...panelHandlers(0)}
-                          ref={registerWheelRef(0)}
-                          className={`relative w-full h-full ${currentShape.borderRadiusClass} bg-white overflow-hidden transition-all cursor-pointer group ${
-                            selectedProductTypeId === 'canvas-single'
-                              ? 'border border-stone-300'
-                              : 'shadow-lg'
-                          } ${
-                            activePanelIndex === 0 ? 'ring-2 ring-[#0E4A93]/50' : ''
-                          }`}
-                          style={{
-                            clipPath: currentShape.clipPathStyle,
-                            WebkitClipPath: currentShape.clipPathStyle
-                          }}
-                        >
-                          {/* 90° Rotate Button Handle */}
-                          {panelImages[0]?.imageUrl && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRotate90();
-                              }}
-                              className="absolute top-2 left-2 z-30 w-7 h-7 rounded-full bg-white/90 backdrop-blur-xs border border-stone-300 shadow-md hover:scale-110 hover:border-stone-400 flex items-center justify-center text-stone-700 transition-transform cursor-pointer"
-                              title="Rotate photo 90°"
-                            >
-                              <RotateCw className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-
-                          {dragOverPanel === 0 && (
-                            <div className="absolute inset-0 z-30 bg-[#0E4A93]/20 border-4 border-dashed border-[#0E4A93] pointer-events-none" />
-                          )}
-
-                          {panelImages[0]?.imageUrl ? (
-                            <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
-                              <img
-                                src={panelImages[0].imageUrl}
-                                alt="Canvas Print"
-                                style={{
-                                  transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                                  filter: getFilterCss(panelImages[0].filter),
-                                  objectFit: panelImages[0].fitMode === 'contain' ? 'contain' : 'cover',
-                                  transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                                }}
-                                className="max-w-none w-full h-full pointer-events-none"
-                              />
-                            </div>
-                          ) : (
-                            <div
-                              onClick={() => fileInputRef.current?.click()}
-                              className="w-full h-full flex flex-col items-center justify-center bg-white p-6 text-center cursor-pointer group select-none"
-                            >
-                              <div className="flex items-center gap-2 text-[#b91c1c] group-hover:scale-105 transition-transform mb-1">
-                                <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
-                                  <path d="M11 14.5V6.85l-2.6 2.6L7 8.05 12 3.05l5 5-1.4 1.4-2.6-2.6v7.65h-2zM4 20q-.825 0-1.412-.587Q2 18.825 2 18v-2q0-.425.288-.712Q2.575 15 3 15t.713.288Q4 15.575 4 16v2h16v-2q0-.425.288-.712Q20.575 15 21 15t.713.288Q22 15.575 22 16v2q0 .825-.587 1.413Q20.825 20 20 20Z"/>
-                                </svg>
-                                <span className="text-sm font-semibold tracking-tight">Upload an Image</span>
-                              </div>
-                              <span className="text-xs text-stone-500">
-                                Maximum upload size: 25MB per file
-                              </span>
-                            </div>
-                          )}
-
-                          {borderWidthPx > 0 && (
-                            <div
-                              className="absolute inset-0 pointer-events-none z-25"
-                              style={{
-                                border: `${borderWidthPx}px solid ${selectedBorderColor}`,
-                                borderRadius: currentShape.id === 'shape-circle' ? '9999px' : undefined
-                              }}
-                            />
-                          )}
-
-                          {/* Applied design template: real vector decoration */}
-                          {activeTemplate && renderDecorSvg(activeTemplate.decor, activeTemplate.accent, 'absolute inset-0 w-full h-full pointer-events-none z-25')}
-
-                          {/* Canvas Banner Hanging Wooden Bars */}
-                          {selectedProductTypeId === 'canvas-banner' && (
+                          return (
                             <>
-                              <div className="absolute -top-1 left-0 right-0 h-3.5 bg-amber-800 border-b border-amber-900 shadow-md z-30 flex items-center justify-center pointer-events-none">
-                                <div className="w-2 h-2 rounded-full bg-stone-300 shadow-xs" />
-                              </div>
-                              <div className="absolute -bottom-1 left-0 right-0 h-3.5 bg-amber-800 border-t border-amber-900 shadow-md z-30 pointer-events-none" />
-                            </>
-                          )}
+                              {/* 1. PHYSICAL 4-EDGE PROJECTION GUIDES (ONLY FOR Single Print: canvas-single) */}
+                              {isSingleCanvasPrint && (
+                                <>
+                                  {/* Top Physical Thickness Edge Guide */}
+                                  <div
+                                    className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0 border border-stone-300/80 transition-colors"
+                                    style={{
+                                      bottom: '100%',
+                                      height: `${visibleDepthPx}px`,
+                                      borderBottom: 'none',
+                                      backgroundColor: (isWhiteBorderWrap || isBlackBorderWrap || isNoWrap) ? wrapBgColor : 'transparent'
+                                    }}
+                                  />
 
-                          {/* Lyric on Canvas typography overlay */}
-                          {selectedProductTypeId === 'canvas-lyric' && renderLyricOverlay()}
-                        </div>
+                                  {/* Left Physical Thickness Edge Guide */}
+                                  <div
+                                    className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0 border border-stone-300/80 transition-colors"
+                                    style={{
+                                      right: '100%',
+                                      width: `${visibleDepthPx}px`,
+                                      borderRight: 'none',
+                                      backgroundColor: (isWhiteBorderWrap || isBlackBorderWrap || isNoWrap) ? wrapBgColor : 'transparent'
+                                    }}
+                                  />
+
+                                  {/* Bottom Physical Thickness Edge Guide */}
+                                  <div
+                                    className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0 border border-stone-300/80 transition-colors"
+                                    style={{
+                                      top: '100%',
+                                      height: `${visibleDepthPx}px`,
+                                      borderTop: 'none',
+                                      backgroundColor: (isWhiteBorderWrap || isBlackBorderWrap || isNoWrap) ? wrapBgColor : 'transparent',
+                                      boxShadow: '0 12px 20px -4px rgba(15, 23, 42, 0.12)'
+                                    }}
+                                  />
+
+                                  {/* Right Physical Thickness Edge Guide */}
+                                  <div
+                                    className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0 border border-stone-300/80 transition-colors"
+                                    style={{
+                                      left: '100%',
+                                      width: `${visibleDepthPx}px`,
+                                      borderLeft: 'none',
+                                      backgroundColor: (isWhiteBorderWrap || isBlackBorderWrap || isNoWrap) ? wrapBgColor : 'transparent'
+                                    }}
+                                  />
+                                </>
+                              )}
+
+                              {/* CONTINUOUS IMAGE WRAPPER FOR SINGLE PRINT:
+                                  Encompasses front face + 4 flaps via inset -visibleDepthPx.
+                                  Clipped to cross shape so zoomed/panned image naturally extends into the transparent flaps!
+                              */}
+                              {isSingleCanvasPrint && panelImages[0]?.imageUrl && (
+                                <div
+                                  className="absolute pointer-events-none z-0"
+                                  style={{
+                                    top: `-${visibleDepthPx}px`,
+                                    bottom: `-${visibleDepthPx}px`,
+                                    left: `-${visibleDepthPx}px`,
+                                    right: `-${visibleDepthPx}px`,
+                                    clipPath: crossClipPath,
+                                    WebkitClipPath: crossClipPath
+                                  }}
+                                >
+                                  {/* Front Face white backing */}
+                                  <div
+                                    className="absolute bg-white"
+                                    style={{
+                                      top: `${visibleDepthPx}px`,
+                                      bottom: `${visibleDepthPx}px`,
+                                      left: `${visibleDepthPx}px`,
+                                      right: `${visibleDepthPx}px`
+                                    }}
+                                  />
+                                  {/* The ONE continuous image layer centered on the front face */}
+                                  <div
+                                    className="absolute flex items-center justify-center"
+                                    style={{
+                                      top: `${visibleDepthPx}px`,
+                                      bottom: `${visibleDepthPx}px`,
+                                      left: `${visibleDepthPx}px`,
+                                      right: `${visibleDepthPx}px`,
+                                      overflow: 'visible'
+                                    }}
+                                  >
+                                    <img
+                                      src={panelImages[0].imageUrl}
+                                      alt="Canvas Print"
+                                      draggable={false}
+                                      onLoad={(e) => {
+                                        const imgEl = e.currentTarget;
+                                        if (imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0 && !imgMeta?.width) {
+                                          setPanelImages((prev) => {
+                                            const cur = prev[0];
+                                            if (!cur) return prev;
+                                            return {
+                                              ...prev,
+                                              [0]: {
+                                                ...cur,
+                                                uploadedImage: {
+                                                  originalSrc: cur.imageUrl || '',
+                                                  width: imgEl.naturalWidth,
+                                                  height: imgEl.naturalHeight,
+                                                  aspectRatio: imgEl.naturalWidth / imgEl.naturalHeight
+                                                }
+                                              }
+                                            };
+                                          });
+                                        }
+                                      }}
+                                      style={{
+                                        width: panelImages[0].fitMode === 'cover'
+                                          ? (isWiderThanFrame ? 'auto' : '100%')
+                                          : (isWiderThanFrame ? '100%' : 'auto'),
+                                        height: panelImages[0].fitMode === 'cover'
+                                          ? (isWiderThanFrame ? '100%' : 'auto')
+                                          : (isWiderThanFrame ? 'auto' : '100%'),
+                                        minWidth: panelImages[0].fitMode === 'cover' ? '100%' : undefined,
+                                        minHeight: panelImages[0].fitMode === 'cover' ? '100%' : undefined,
+                                        maxWidth: panelImages[0].fitMode === 'cover' ? 'none' : '100%',
+                                        maxHeight: panelImages[0].fitMode === 'cover' ? 'none' : '100%',
+                                        aspectRatio: `${natWidth} / ${natHeight}`,
+                                        objectFit: panelImages[0].fitMode === 'cover' ? 'cover' : 'contain',
+                                        transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                        transformOrigin: 'center center',
+                                        filter: getFilterCss(panelImages[0].filter),
+                                        transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                                      }}
+                                      className="pointer-events-none select-none max-w-none"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* 2. FRONT CANVAS SURFACE */}
+                              <div
+                                {...panelHandlers(0)}
+                                ref={registerWheelRef(0)}
+                                className={`relative w-full h-full ${currentShape.borderRadiusClass} ${
+                                  isSingleCanvasPrint ? (panelImages[0]?.imageUrl ? 'bg-transparent' : 'bg-white') : 'bg-white'
+                                } transition-all cursor-pointer group ${
+                                  isSingleCanvasPrint
+                                    ? 'border border-stone-300'
+                                    : 'shadow-lg overflow-hidden'
+                                } ${
+                                  activePanelIndex === 0 ? 'ring-2 ring-[#0E4A93]/50' : ''
+                                }`}
+                                style={{
+                                  clipPath: isSingleCanvasPrint ? undefined : currentShape.clipPathStyle,
+                                  WebkitClipPath: isSingleCanvasPrint ? undefined : currentShape.clipPathStyle
+                                }}
+                              >
+                                {/* 90° Rotate Button Handle */}
+                                {panelImages[0]?.imageUrl && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRotate90();
+                                    }}
+                                    className="absolute top-2 left-2 z-30 w-7 h-7 rounded-full bg-white/90 backdrop-blur-xs border border-stone-300 shadow-md hover:scale-110 hover:border-stone-400 flex items-center justify-center text-stone-700 transition-transform cursor-pointer"
+                                    title="Rotate photo 90°"
+                                  >
+                                    <RotateCw className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+
+                                {dragOverPanel === 0 && (
+                                  <div className="absolute inset-0 z-30 bg-[#0E4A93]/20 border-4 border-dashed border-[#0E4A93] pointer-events-none" />
+                                )}
+
+                                {/* For non-single canvas products (Round, Heart, etc.), render image directly here inside the shaped container */}
+                                {!isSingleCanvasPrint && panelImages[0]?.imageUrl && (
+                                  <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
+                                    <img
+                                      src={panelImages[0].imageUrl}
+                                      alt="Canvas Print"
+                                      draggable={false}
+                                      onLoad={(e) => {
+                                        const imgEl = e.currentTarget;
+                                        if (imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0 && !imgMeta?.width) {
+                                          setPanelImages((prev) => {
+                                            const cur = prev[0];
+                                            if (!cur) return prev;
+                                            return {
+                                              ...prev,
+                                              [0]: {
+                                                ...cur,
+                                                uploadedImage: {
+                                                  originalSrc: cur.imageUrl || '',
+                                                  width: imgEl.naturalWidth,
+                                                  height: imgEl.naturalHeight,
+                                                  aspectRatio: imgEl.naturalWidth / imgEl.naturalHeight
+                                                }
+                                              }
+                                            };
+                                          });
+                                        }
+                                      }}
+                                      style={{
+                                        width: panelImages[0].fitMode === 'cover'
+                                          ? (isWiderThanFrame ? 'auto' : '100%')
+                                          : (isWiderThanFrame ? '100%' : 'auto'),
+                                        height: panelImages[0].fitMode === 'cover'
+                                          ? (isWiderThanFrame ? '100%' : 'auto')
+                                          : (isWiderThanFrame ? 'auto' : '100%'),
+                                        minWidth: panelImages[0].fitMode === 'cover' ? '100%' : undefined,
+                                        minHeight: panelImages[0].fitMode === 'cover' ? '100%' : undefined,
+                                        maxWidth: panelImages[0].fitMode === 'cover' ? 'none' : '100%',
+                                        maxHeight: panelImages[0].fitMode === 'cover' ? 'none' : '100%',
+                                        aspectRatio: `${natWidth} / ${natHeight}`,
+                                        objectFit: panelImages[0].fitMode === 'cover' ? 'cover' : 'contain',
+                                        transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                        transformOrigin: 'center center',
+                                        filter: getFilterCss(panelImages[0].filter),
+                                        transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                                      }}
+                                      className="pointer-events-none select-none max-w-none"
+                                    />
+                                  </div>
+                                )}
+
+                                {/* Empty State when no image is uploaded */}
+                                {!panelImages[0]?.imageUrl && (
+                                  <div
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="w-full h-full flex flex-col items-center justify-center bg-white p-6 text-center cursor-pointer group select-none"
+                                  >
+                                    <div className="flex items-center gap-2 text-[#b91c1c] group-hover:scale-105 transition-transform mb-1">
+                                      <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                                        <path d="M11 14.5V6.85l-2.6 2.6L7 8.05 12 3.05l5 5-1.4 1.4-2.6-2.6v7.65h-2zM4 20q-.825 0-1.412-.587Q2 18.825 2 18v-2q0-.425.288-.712Q2.575 15 3 15t.713.288Q4 15.575 4 16v2h16v-2q0-.425.288-.712Q20.575 15 21 15t.713.288Q22 15.575 22 16v2q0 .825-.587 1.413Q20.825 20 20 20Z"/>
+                                      </svg>
+                                      <span className="text-sm font-semibold tracking-tight">Upload an Image</span>
+                                    </div>
+                                    <span className="text-xs text-stone-500">
+                                      Maximum upload size: 25MB per file
+                                    </span>
+                                  </div>
+                                )}
+
+                                {borderWidthPx > 0 && (
+                                  <div
+                                    className="absolute inset-0 pointer-events-none z-25"
+                                    style={{
+                                      border: `${borderWidthPx}px solid ${selectedBorderColor}`,
+                                      borderRadius: currentShape.id === 'shape-circle' ? '9999px' : undefined
+                                    }}
+                                  />
+                                )}
+
+                                {/* Applied design template: real vector decoration */}
+                                {activeTemplate && renderDecorSvg(activeTemplate.decor, activeTemplate.accent, 'absolute inset-0 w-full h-full pointer-events-none z-25')}
+
+                                {/* Canvas Banner Hanging Wooden Bars */}
+                                {selectedProductTypeId === 'canvas-banner' && (
+                                  <>
+                                    <div className="absolute -top-1 left-0 right-0 h-3.5 bg-amber-800 border-b border-amber-900 shadow-md z-30 flex items-center justify-center pointer-events-none">
+                                      <div className="w-2 h-2 rounded-full bg-stone-300 shadow-xs" />
+                                    </div>
+                                    <div className="absolute -bottom-1 left-0 right-0 h-3.5 bg-amber-800 border-t border-amber-900 shadow-md z-30 pointer-events-none" />
+                                  </>
+                                )}
+
+                                {/* Lyric on Canvas typography overlay */}
+                                {selectedProductTypeId === 'canvas-lyric' && renderLyricOverlay()}
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
