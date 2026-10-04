@@ -36,7 +36,8 @@ export const CustomizerPreloader: React.FC<CustomizerPreloaderProps> = ({ active
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-white animate-in fade-in duration-150"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/75 animate-in fade-in duration-150"
+      style={{ backgroundColor: 'rgba(255, 255, 255, 0.75)' }}
       role="status"
       aria-live="polite"
       aria-label="Loading"

@@ -27,6 +27,9 @@ export interface ProductCapabilities {
   wrap?: boolean;
   hardware?: boolean;
   options?: boolean;
+  view3D?: boolean;
+  view360?: boolean;
+  roomView?: boolean;
 }
 
 export type AcrylicProductIconType =
@@ -89,11 +92,18 @@ export const ALL_CANVAS_AND_ACRYLIC_SHAPE_IDS = [
   'shape-oval',
   'shape-rounded-rect',
   'shape-heart',
-  'shape-hexagon'
+  'shape-hexagon',
+  'shape-triangle'
 ];
 
 export const AcrylicProductShapeConfig: Record<string, string[]> = {
   'acrylic-print': ALL_CANVAS_AND_ACRYLIC_SHAPE_IDS,
+  'acrylic-round': ['shape-circle'],
+  'acrylic-triangle': ['shape-triangle'],
+  'acrylic-heart': ['shape-heart'],
+  'acrylic-oval': ['shape-oval'],
+  'acrylic-hexagon': ['shape-hexagon'],
+  'acrylic-photo-block': ['shape-square', 'shape-rectangle', 'shape-rounded-rect'],
   'acrylic-wall-art': ['shape-rectangle', 'shape-square', 'shape-landscape'],
   'acrylic-collage': ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'],
   'acrylic-split': ['shape-landscape', 'shape-rectangle'],
@@ -104,7 +114,6 @@ export const AcrylicProductShapeConfig: Record<string, string[]> = {
   'acrylic-bus-roll': ['shape-portrait'],
   'acrylic-word-art': ['shape-heart', 'shape-square', 'shape-circle', 'shape-rectangle'],
   // Legacy alias fallbacks
-  'acrylic-photo-block': ['shape-square', 'shape-rectangle', 'shape-rounded-rect'],
   'acrylic-photo-panel': ALL_CANVAS_AND_ACRYLIC_SHAPE_IDS,
   'acrylic-signage': ALL_CANVAS_AND_ACRYLIC_SHAPE_IDS
 };
@@ -124,6 +133,12 @@ export const ALL_ACRYLIC_HARDWARE_IDS: string[] = [
  */
 export const AcrylicHardwareConfig: Record<string, string[]> = {
   'acrylic-print': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-round': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-triangle': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-heart': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-oval': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-hexagon': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-photo-block': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-wall-art': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-collage': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-split': ALL_ACRYLIC_HARDWARE_IDS,
@@ -134,7 +149,6 @@ export const AcrylicHardwareConfig: Record<string, string[]> = {
   'acrylic-bus-roll': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-word-art': ALL_ACRYLIC_HARDWARE_IDS,
   // Legacy aliases
-  'acrylic-photo-block': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-photo-panel': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-signage': ALL_ACRYLIC_HARDWARE_IDS
 };
@@ -167,15 +181,18 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       layouts: false,
       wrap: true,
       hardware: true,
-      options: true
+      options: true,
+      view3D: false,
+      view360: false,
+      roomView: true
     },
     supportedLayoutIds: ['layout-1-single']
   },
   {
     id: 'acrylic-wall-art',
     name: 'Wall Display',
-    price: 2338.90,
     startingPrice: 2338.90,
+    price: 2338.90,
     image: '/images/acrylic/shapes/rectangle.svg',
     iconType: 'wall',
     defaultLayout: 'threeCollage',
@@ -198,7 +215,10 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       layouts: true,
       wrap: true,
       hardware: true,
-      options: true
+      options: true,
+      view3D: false,
+      view360: false,
+      roomView: true
     },
     supportedLayoutIds: ['layout-wall-display-3', 'layout-4-grid', 'layout-3-collage']
   },
@@ -229,7 +249,10 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       layouts: true,
       wrap: true,
       hardware: true,
-      options: true
+      options: true,
+      view3D: false,
+      view360: false,
+      roomView: true
     },
     supportedLayoutIds: ['layout-4-grid', 'layout-3-collage', 'layout-main-2small', 'layout-top-bottom', 'layout-left-right']
   },
@@ -260,7 +283,10 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       layouts: false,
       wrap: true,
       hardware: true,
-      options: true
+      options: true,
+      view3D: false,
+      view360: false,
+      roomView: true
     },
     supportedLayoutIds: ['layout-2-split', 'layout-3-split']
   },
@@ -291,164 +317,12 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       layouts: true,
       wrap: true,
       hardware: true,
-      options: true
+      options: true,
+      view3D: false,
+      view360: false,
+      roomView: true
     },
     supportedLayoutIds: ['layout-4-grid', 'layout-mosaic-9']
-  },
-  {
-    id: 'acrylic-lyric',
-    name: 'Lyric on Acrylic',
-    price: 426.00,
-    startingPrice: 426.00,
-    image: '/assets/customizer/acrylic/templates/wedding-picture-lyrics.svg',
-    iconType: 'lyric',
-    defaultLayout: 'single',
-    defaultLayoutId: 'layout-1-single',
-    defaultShape: 'shape-portrait',
-    supportedShapes: AcrylicProductShapeConfig['acrylic-lyric'],
-    imageSlots: 1,
-    panelsCount: 1,
-    description: 'Favorite song lyrics, wedding vows, or musical staves printed alongside your photo.',
-    defaultSizeOptionId: 'shape-portrait-8x12',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: '3mm',
-    supportedShapeIds: AcrylicProductShapeConfig['acrylic-lyric'],
-    supportedHardwareIds: AcrylicHardwareConfig['acrylic-lyric'],
-    capabilities: {
-      products: true,
-      upload: true,
-      sizes: true,
-      shapes: true,
-      layouts: true,
-      wrap: true,
-      hardware: true,
-      options: true
-    },
-    supportedLayoutIds: ['layout-1-single', 'layout-top-bottom', 'layout-left-right']
-  },
-  {
-    id: 'acrylic-digital',
-    name: 'Digital Painting',
-    price: 2854.00,
-    startingPrice: 2854.00,
-    image: '/images/acrylic/shapes/landscape.svg',
-    iconType: 'painting',
-    defaultLayout: 'single',
-    defaultLayoutId: 'layout-1-single',
-    defaultShape: 'shape-landscape',
-    supportedShapes: AcrylicProductShapeConfig['acrylic-digital'],
-    imageSlots: 1,
-    panelsCount: 1,
-    description: 'Master digital painting portraiture printed in ultra-high depth on optical acrylic.',
-    defaultSizeOptionId: 'shape-landscape-12x8',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: '5mm',
-    supportedShapeIds: AcrylicProductShapeConfig['acrylic-digital'],
-    supportedHardwareIds: AcrylicHardwareConfig['acrylic-digital'],
-    capabilities: {
-      products: true,
-      upload: true,
-      sizes: true,
-      shapes: true,
-      layouts: false,
-      wrap: true,
-      hardware: true,
-      options: true
-    },
-    supportedLayoutIds: ['layout-1-single']
-  },
-  {
-    id: 'acrylic-quotes',
-    name: 'Quotes on Acrylic',
-    price: 355.00,
-    startingPrice: 355.00,
-    image: '/assets/customizer/acrylic/templates/love-quotes-acrylic.svg',
-    iconType: 'quotes',
-    defaultLayout: 'single',
-    defaultLayoutId: 'layout-1-single',
-    defaultShape: 'shape-square',
-    supportedShapes: AcrylicProductShapeConfig['acrylic-quotes'],
-    imageSlots: 1,
-    panelsCount: 1,
-    description: 'Inspirational quotes, affirmations, and custom typography on optical acrylic.',
-    defaultSizeOptionId: 'shape-square-10x10',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: '3mm',
-    supportedShapeIds: AcrylicProductShapeConfig['acrylic-quotes'],
-    supportedHardwareIds: AcrylicHardwareConfig['acrylic-quotes'],
-    capabilities: {
-      products: true,
-      upload: true,
-      sizes: true,
-      shapes: true,
-      layouts: true,
-      wrap: true,
-      hardware: true,
-      options: true
-    },
-    supportedLayoutIds: ['layout-1-single', 'layout-top-bottom', 'layout-left-right']
-  },
-  {
-    id: 'acrylic-bus-roll',
-    name: 'Bus Roll',
-    price: 1256.40,
-    startingPrice: 1256.40,
-    image: '/images/acrylic/shapes/portrait.svg',
-    iconType: 'bus-roll',
-    defaultLayout: 'single',
-    defaultLayoutId: 'layout-1-single',
-    defaultShape: 'shape-portrait',
-    supportedShapes: AcrylicProductShapeConfig['acrylic-bus-roll'],
-    imageSlots: 1,
-    panelsCount: 1,
-    description: 'Vintage transit bus-roll destination art printed on high-gloss acrylic panels.',
-    defaultSizeOptionId: 'shape-portrait-8x12',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: '5mm',
-    supportedShapeIds: AcrylicProductShapeConfig['acrylic-bus-roll'],
-    supportedHardwareIds: AcrylicHardwareConfig['acrylic-bus-roll'],
-    capabilities: {
-      products: true,
-      upload: true,
-      sizes: true,
-      shapes: false,
-      layouts: true,
-      wrap: true,
-      hardware: true,
-      options: true
-    },
-    supportedLayoutIds: ['layout-1-single', 'layout-top-bottom']
-  },
-  {
-    id: 'acrylic-word-art',
-    name: 'Word Art',
-    price: 454.00,
-    startingPrice: 454.00,
-    image: '/assets/customizer/acrylic/templates/wedding-picture-lyrics.svg',
-    iconType: 'word-art',
-    defaultLayout: 'single',
-    defaultLayoutId: 'layout-1-single',
-    defaultShape: 'shape-heart',
-    supportedShapes: AcrylicProductShapeConfig['acrylic-word-art'],
-    imageSlots: 1,
-    panelsCount: 1,
-    description: 'Word cloud artwork and custom typographic silhouette on precision acrylic.',
-    defaultSizeOptionId: 'shape-heart-12x12',
-    defaultHardwareId: 'no-hooks',
-    defaultThicknessId: '3mm',
-    supportedShapeIds: AcrylicProductShapeConfig['acrylic-word-art'],
-    supportedHardwareIds: AcrylicHardwareConfig['acrylic-word-art'],
-    capabilities: {
-      products: true,
-      upload: true,
-      sizes: true,
-      shapes: true,
-      layouts: true,
-      wrap: true,
-      hardware: true,
-      options: true
-    },
-    supportedLayoutIds: ['layout-1-single', 'layout-top-bottom']
   }
 ];
 

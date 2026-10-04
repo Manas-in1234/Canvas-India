@@ -26,7 +26,6 @@ import {
   Trash2, 
   Move,
   Eye,
-  Box,
   Crop,
   Grid,
   Search,
@@ -235,21 +234,15 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const hasUserSelectedCustomShapeRef = useRef<boolean>(false);
   const hasUserSelectedCustomLayoutRef = useRef<boolean>(false);
 
-  // Resolve initial Acrylic Product ID from URL param or catalog product (within all 10 Acrylic products)
+  // Resolve initial Acrylic Product ID from URL param or catalog product (within 5 Acrylic products)
   const resolveProductTypeId = (urlId?: string, catProd?: { id?: string; slug?: string; name?: string }): string => {
     const directMatch = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === urlId);
     if (directMatch) return directMatch.id;
     const key = (urlId || catProd?.slug || catProd?.id || catProd?.name || '').toLowerCase();
-    if (key.includes('word') || key.includes('art')) return 'acrylic-word-art';
-    if (key.includes('bus') || key.includes('roll')) return 'acrylic-bus-roll';
-    if (key.includes('quote')) return 'acrylic-quotes';
-    if (key.includes('digital') || key.includes('paint')) return 'acrylic-digital';
-    if (key.includes('lyric') || key.includes('song')) return 'acrylic-lyric';
-    if (key.includes('mosaic')) return 'acrylic-mosaic';
-    if (key.includes('split') || key.includes('triptych')) return 'acrylic-split';
-    if (key.includes('collage')) return 'acrylic-collage';
     if (key.includes('wall') || key.includes('display')) return 'acrylic-wall-art';
-    if (key.includes('print') || key.includes('block') || key.includes('panel') || key.includes('sign')) return 'acrylic-print';
+    if (key.includes('collage')) return 'acrylic-collage';
+    if (key.includes('split') || key.includes('triptych')) return 'acrylic-split';
+    if (key.includes('mosaic')) return 'acrylic-mosaic';
     return 'acrylic-print';
   };
 
@@ -2496,47 +2489,71 @@ export const AcrylicCustomizerPage: React.FC = () => {
                   : 'cursor-grab'
               }`}
             >
-              <img
-                src={frame.imageUrl}
-                alt={slot.label}
-                draggable={false}
-                onLoad={(ev) => {
-                  const imgEl = ev.currentTarget;
-                  if (imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0) {
-                    imageDimsRef.current[panelIdx] = {
-                      naturalWidth: imgEl.naturalWidth,
-                      naturalHeight: imgEl.naturalHeight
-                    };
-                  }
-                }}
-                style={{
-                  transform: isRoomView
-                    ? `translate3d(${lockedPanXPct}%, ${lockedPanYPct}%, 0) scale(${frame.scale || 1}) rotate(${frame.rotation || 0}deg)`
-                    : `translate3d(${frame.panX || 0}px, ${frame.panY || 0}px, 0) scale(${frame.scale || 1}) rotate(${frame.rotation || 0}deg)`,
-                  transformOrigin: 'center center',
-                  filter: filterCss,
-                  objectFit: frame.fitMode === 'contain' ? 'contain' : 'cover',
-                  transition: isRoomView || isDragging ? 'none' : 'transform 0.1s ease-out'
-                }}
-                className="max-w-none w-full h-full pointer-events-none select-none"
-              />
+              {(() => {
+                const nat = frame.uploadedImage || imageDimsRef.current[panelIdx];
+                const natW = nat?.naturalWidth || 1200;
+                const natH = nat?.naturalHeight || 800;
+                const imgRatio = Math.max(0.05, natW / Math.max(1, natH));
+                const slotRatio = Math.max(0.05, (slot.width * mainSlotW) / Math.max(1, slot.height * mainSlotH));
+                const isWiderThanSlot = imgRatio >= slotRatio;
+
+                return (
+                  <img
+                    src={frame.imageUrl}
+                    alt={slot.label}
+                    draggable={false}
+                    onLoad={(ev) => {
+                      const imgEl = ev.currentTarget;
+                      if (imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0) {
+                        imageDimsRef.current[panelIdx] = {
+                          naturalWidth: imgEl.naturalWidth,
+                          naturalHeight: imgEl.naturalHeight
+                        };
+                      }
+                    }}
+                    style={{
+                      width: frame.fitMode === 'cover'
+                        ? (isWiderThanSlot ? 'auto' : '100%')
+                        : (isWiderThanSlot ? '100%' : 'auto'),
+                      height: frame.fitMode === 'cover'
+                        ? (isWiderThanSlot ? '100%' : 'auto')
+                        : (isWiderThanSlot ? 'auto' : '100%'),
+                      minWidth: frame.fitMode === 'cover' ? '100%' : undefined,
+                      minHeight: frame.fitMode === 'cover' ? '100%' : undefined,
+                      maxWidth: frame.fitMode === 'cover' ? 'none' : '100%',
+                      maxHeight: frame.fitMode === 'cover' ? 'none' : '100%',
+                      aspectRatio: `${natW} / ${natH}`,
+                      objectFit: frame.fitMode === 'cover' ? 'cover' : 'contain',
+                      transform: isRoomView
+                        ? `translate3d(${lockedPanXPct}%, ${lockedPanYPct}%, 0) scale(${frame.scale || 1}) rotate(${frame.rotation || 0}deg)`
+                        : `translate3d(${frame.panX || 0}px, ${frame.panY || 0}px, 0) scale(${frame.scale || 1}) rotate(${frame.rotation || 0}deg)`,
+                      transformOrigin: 'center center',
+                      filter: filterCss,
+                      transition: isRoomView || isDragging ? 'none' : 'transform 0.1s ease-out'
+                    }}
+                    className="max-w-none pointer-events-none select-none"
+                  />
+                );
+              })()}
             </div>
           ) : (
-            /* CLEAN EMPTY SLOT: UploadCloud in blue-50 circle, "Upload an Image" / "Upload Slot N" */
-            <div className="w-full h-full flex flex-col items-center justify-center bg-white hover:bg-blue-50/20 transition-colors cursor-pointer group p-3 text-center">
-              <div className={`${totalSlots === 1 ? 'w-12 h-12' : 'w-8 h-8'} rounded-full bg-blue-50 text-[#0E4A93] flex items-center justify-center ${totalSlots === 1 ? 'mb-2.5' : 'mb-1'} group-hover:scale-110 transition-transform shadow-xs`}>
-                <UploadCloud className={`${totalSlots === 1 ? 'w-6 h-6' : 'w-4 h-4'} stroke-[2.2]`} />
+            /* CLEAN EMPTY SLOT: Red upload icon + red Upload an Image text */
+            <div className="w-full h-full flex flex-col items-center justify-center bg-white hover:bg-stone-50/50 transition-colors cursor-pointer group p-3 text-center select-none">
+              <div className="flex items-center gap-2 text-[#b91c1c] group-hover:scale-105 transition-transform mb-1">
+                <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                  <path d="M11 14.5V6.85l-2.6 2.6L7 8.05 12 3.05l5 5-1.4 1.4-2.6-2.6v7.65h-2zM4 20q-.825 0-1.412-.587Q2 18.825 2 18v-2q0-.425.288-.712Q2.575 15 3 15t.713.288Q4 15.575 4 16v2h16v-2q0-.425.288-.712Q20.575 15 21 15t.713.288Q22 15.575 22 16v2q0 .825-.587 1.413Q20.825 20 20 20Z"/>
+                </svg>
+                <span className={`${totalSlots === 1 ? 'text-sm font-semibold' : 'text-xs font-semibold'} tracking-tight`}>
+                  {totalSlots === 1 ? 'Upload an Image' : `Upload Slot ${panelIdx + 1}`}
+                </span>
               </div>
-              <span className={`${totalSlots === 1 ? 'text-xs' : 'text-[10px]'} font-extrabold text-[#0E4A93] group-hover:underline`}>
-                {totalSlots === 1 ? 'Upload an Image' : `Upload Slot ${panelIdx + 1}`}
-              </span>
               {totalSlots === 1 && (
-                <span className="text-[10px] text-stone-400 mt-0.5">
+                <span className="text-xs text-stone-500">
                   Maximum upload size: 25MB per file
                 </span>
               )}
               {!isRoomView && draggingPhotoIndex !== null && !isDragOverThisSlot && (
-                <span className="text-[10px] font-bold text-[#0E4A93] animate-pulse mt-1">
+                <span className="text-[10px] font-bold text-[#b91c1c] animate-pulse mt-1">
                   Drop photo
                 </span>
               )}
@@ -3144,7 +3161,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
                       width: '100%',
                       height: '100%',
                       objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
-                      transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg)`,
+                      transform: isRoomView
+                        ? `scale(${master.scale}) rotate(${master.rotation}deg)`
+                        : `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg)`,
                       filter: getAcrylicFilterCss(master.filter)
                     }}
                     className="pointer-events-none"
@@ -3226,44 +3245,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
             {layoutSlots.map((slot) => renderLayoutSlot(slot, layoutSlots.length, isRoomView))}
           </div>
 
-          {/* DOTTED PRINT AREA DEMARCATION (Visual boundary overlay) */}
-          {!isRoomView && (
-            isRectangularShape ? (
-              <div className="absolute inset-[14px] pointer-events-none z-24 border border-dashed border-sky-600/70 rounded-xs flex items-start justify-start p-1.5">
-                <span className="text-[8px] font-black uppercase tracking-wider text-sky-800 bg-sky-50/90 border border-sky-200/80 px-1.5 py-0.5 rounded shadow-2xs select-none">
-                  PRINT AREA
-                </span>
-              </div>
-            ) : (
-              <svg
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-                className="absolute inset-0 w-full h-full pointer-events-none z-24 overflow-visible"
-              >
-                {selectedShapeId === 'shape-circle' && (
-                  <circle cx="50" cy="50" r="44" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
-                )}
-                {selectedShapeId === 'shape-oval' && (
-                  <ellipse cx="50" cy="50" rx="44" ry="44" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
-                )}
-                {selectedShapeId === 'shape-triangle' && (
-                  <polygon points="50,14 88,90 12,90" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
-                )}
-                {selectedShapeId === 'shape-heart' && (
-                  <path
-                    d="M 50,78 C 16,54 6,36 6,24 C 6,10 16,5 28,5 C 37,5 44,10 50,19 C 56,10 63,5 72,5 C 84,5 94,10 94,24 C 94,36 84,54 50,78 Z"
-                    fill="none"
-                    stroke="#0284c7"
-                    strokeWidth="1.2"
-                    strokeDasharray="3 2"
-                  />
-                )}
-                {selectedShapeId === 'shape-hexagon' && (
-                  <polygon points="27,6 73,6 94,50 73,94 27,94 6,50" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="3 2" />
-                )}
-              </svg>
-            )
-          )}
 
           {/* Lyric Typography Overlay */}
           {selectedProductTypeId === 'acrylic-lyric' && renderLyricOverlay()}
