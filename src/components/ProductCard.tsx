@@ -4,6 +4,12 @@ import { Star, Heart, ArrowRight, Sparkles } from 'lucide-react';
 import { Product } from '../types';
 import { ProductImage } from './ProductImage';
 
+interface MaterialOption {
+  label: string;
+  active: boolean;
+  onSelect: () => void;
+}
+
 interface ProductCardProps {
   product: Product;
   isWishlisted: boolean;
@@ -11,6 +17,10 @@ interface ProductCardProps {
   onAddToCart: (product: Product) => void;
   onCustomize: (product: Product) => void;
   variant?: string;
+  // When the same design is available in more than one material (e.g. a
+  // catalogue print offered as both Canvas and Acrylic), pass the options
+  // here to show a small picker instead of two near-duplicate cards.
+  materialOptions?: MaterialOption[];
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -20,6 +30,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onAddToCart,
   onCustomize,
   variant,
+  materialOptions,
 }) => {
   return (
     <div className={`group flex flex-col justify-between text-left select-none ${variant === 'listing' ? 'p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-stone-200/70 hover:border-[#0E4A93]/40 hover:shadow-md transition-all duration-300' : ''}`}>
@@ -62,6 +73,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
           </button>
         </div>
+
+        {/* Material Picker (Canvas / Acrylic etc.) — only when this design is offered in more than one material */}
+        {materialOptions && materialOptions.length > 1 && (
+          <div className="flex items-center gap-1 mt-2">
+            {materialOptions.map((opt) => (
+              <button
+                key={opt.label}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  opt.onSelect();
+                }}
+                className={`px-2 py-0.5 rounded-full text-[9px] font-bold border transition-colors cursor-pointer ${
+                  opt.active
+                    ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
+                    : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Short category / subcategory */}
         <div className="text-[10px] text-stone-500 font-medium uppercase tracking-wider line-clamp-1 mt-2">
