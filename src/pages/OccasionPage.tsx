@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, ArrowRight } from 'lucide-react';
+import { ChevronRight, ArrowRight, Sparkles } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { OCCASIONS, getOccasionBySlug } from '../data/occasionsData';
 import { SHOP_CATEGORIES } from '../data/shopCategories';
@@ -31,7 +31,8 @@ export const OccasionPage: React.FC = () => {
         const destination = cat.customizerKey
           ? `/customize/${cat.customizerKey}/${firstProduct?.slug || firstProduct?.id || cat.categorySlug}`
           : cat.path;
-        return { ...cat, destination };
+        // Prefer a real catalogue product shot over the generic category photo
+        return { ...cat, destination, image: firstProduct?.image || cat.image };
       });
   }, [occasion, allProducts]);
 
@@ -112,24 +113,38 @@ export const OccasionPage: React.FC = () => {
         </div>
 
         {giftTiles.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 sm:gap-7 max-w-4xl mx-auto">
             {giftTiles.map((tile) => (
               <button
                 key={tile.categorySlug}
                 type="button"
                 onClick={() => navigate(tile.destination)}
-                className="group text-left cursor-pointer"
+                className="group relative aspect-[4/5] rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left ring-1 ring-black/5"
               >
-                <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 shadow-sm border border-stone-200/80 group-hover:shadow-lg transition-all">
-                  <img
-                    src={tile.image}
-                    alt={tile.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-                </div>
-                <div className="mt-3 text-center font-bold text-sm text-stone-900 group-hover:text-[#0E4A93] transition-colors">
-                  {tile.name}
+                <img
+                  src={tile.image}
+                  alt={tile.name}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{ background: `linear-gradient(to top, ${occasion.accent}E6 0%, ${occasion.accent}33 38%, rgba(0,0,0,0.05) 65%)` }}
+                />
+
+                {tile.customizerKey && (
+                  <span className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/95 flex items-center justify-center shadow-md">
+                    <Sparkles className="w-4 h-4" style={{ color: occasion.accent }} />
+                  </span>
+                )}
+
+                <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+                  <div className="font-extrabold text-white text-base sm:text-lg leading-tight drop-shadow-sm">
+                    {tile.name}
+                  </div>
+                  <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-white/95 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/30 group-hover:bg-white/25 transition-colors">
+                    <span>{tile.customizerKey ? 'Customize Now' : 'Shop Now'}</span>
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  </div>
                 </div>
               </button>
             ))}
