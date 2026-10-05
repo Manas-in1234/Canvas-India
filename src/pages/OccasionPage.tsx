@@ -113,13 +113,13 @@ export const OccasionPage: React.FC = () => {
         </div>
 
         {giftTiles.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 sm:gap-7 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
             {giftTiles.map((tile) => (
               <button
                 key={tile.categorySlug}
                 type="button"
                 onClick={() => navigate(tile.destination)}
-                className="group relative aspect-[4/5] rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left ring-1 ring-black/5"
+                className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left ring-1 ring-black/5"
               >
                 <img
                   src={tile.image}
@@ -132,18 +132,18 @@ export const OccasionPage: React.FC = () => {
                 />
 
                 {tile.customizerKey && (
-                  <span className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/95 flex items-center justify-center shadow-md">
-                    <Sparkles className="w-4 h-4" style={{ color: occasion.accent }} />
+                  <span className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 flex items-center justify-center shadow-md">
+                    <Sparkles className="w-5 h-5" style={{ color: occasion.accent }} />
                   </span>
                 )}
 
-                <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-                  <div className="font-extrabold text-white text-base sm:text-lg leading-tight drop-shadow-sm">
+                <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
+                  <div className="font-extrabold text-white text-xl sm:text-2xl leading-tight drop-shadow-sm">
                     {tile.name}
                   </div>
-                  <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-white/95 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/30 group-hover:bg-white/25 transition-colors">
+                  <div className="mt-2.5 inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-white/95 bg-white/15 backdrop-blur-sm px-3.5 py-1.5 rounded-full border border-white/30 group-hover:bg-white/25 transition-colors">
                     <span>{tile.customizerKey ? 'Customize Now' : 'Shop Now'}</span>
-                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </div>
               </button>
