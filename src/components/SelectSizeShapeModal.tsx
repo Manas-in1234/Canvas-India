@@ -291,6 +291,65 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
       );
     }
 
+    // 5b. Hexagon Bundles (1/2/3/4 hexagons) — each hexagon shows the same
+    // placeholder emoji, honeycomb-arranged to preview the real cluster.
+    if (opt.diagramType?.startsWith('hexagon')) {
+      const hexPoints = (cx: number, cy: number, w: number, h: number) =>
+        `${cx - w * 0.25},${cy - h * 0.5} ${cx + w * 0.25},${cy - h * 0.5} ${cx + w * 0.5},${cy} ${cx + w * 0.25},${cy + h * 0.5} ${cx - w * 0.25},${cy + h * 0.5} ${cx - w * 0.5},${cy}`;
+
+      const hexFace = (cx: number, cy: number, w: number, h: number, key: string) => (
+        <g key={key}>
+          <polygon
+            points={hexPoints(cx, cy, w, h)}
+            fill="#f8fafc"
+            stroke="#94a3b8"
+            strokeWidth="1.5"
+            strokeDasharray="3 2.5"
+          />
+          <text x={cx} y={cy + h * 0.14} fontSize={h * 0.4} textAnchor="middle" dominantBaseline="middle">
+            😛
+          </text>
+        </g>
+      );
+
+      let faces: React.ReactNode[] = [];
+      let widthLabelPos = { x: 100, y: 128 };
+      let heightLabelPos = { x: 10, y: 68 };
+
+      if (opt.diagramType === 'hexagon-1') {
+        faces = [hexFace(100, 67, 120, 90, 'h0')];
+      } else if (opt.diagramType === 'hexagon-2') {
+        faces = [hexFace(65, 65, 72, 88, 'h0'), hexFace(135, 65, 72, 88, 'h1')];
+      } else if (opt.diagramType === 'hexagon-3') {
+        faces = [
+          hexFace(55, 38, 66, 80, 'h0'),
+          hexFace(55, 92, 66, 80, 'h1'),
+          hexFace(128, 65, 66, 80, 'h2')
+        ];
+      } else if (opt.diagramType === 'hexagon-4') {
+        faces = [
+          hexFace(55, 38, 64, 72, 'h0'),
+          hexFace(55, 92, 64, 72, 'h1'),
+          hexFace(128, 38, 64, 72, 'h2'),
+          hexFace(128, 92, 64, 72, 'h3')
+        ];
+      }
+
+      return (
+        <svg viewBox="0 0 200 130" className="w-full h-full max-h-28">
+          <line x1="25" y1="118" x2="175" y2="118" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
+          <text x={widthLabelPos.x} y={widthLabelPos.y} fill="#64748b" fontSize="9" fontWeight="bold" textAnchor="middle">
+            {opt.widthInches}&quot;
+          </text>
+          <line x1="15" y1="12" x2="15" y2="105" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
+          <text x={heightLabelPos.x} y={heightLabelPos.y} fill="#64748b" fontSize="9" fontWeight="bold" textAnchor="middle">
+            {opt.heightInches}&quot;
+          </text>
+          {faces}
+        </svg>
+      );
+    }
+
     // 6. Single Geometric Shapes
     const isRound = opt.shapeId === 'shape-circle';
     const isHeart = opt.shapeId === 'shape-heart';
