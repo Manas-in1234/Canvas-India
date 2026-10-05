@@ -21,15 +21,28 @@ function parseDims(label: string): { w: number; h: number } {
   return { w: parseFloat(m[1]), h: parseFloat(m[2]) };
 }
 
-// Staggered gallery-wall cluster slots (fractions of the wall photo),
-// matching canvaschamp's "see it in every size" layout: one larger photo
-// up top, two smaller alongside, one more below-center.
-const SLOTS = [
-  { x: 0.05, y: 0.05 },
-  { x: 0.33, y: 0.02 },
-  { x: 0.58, y: 0.07 },
-  { x: 0.3, y: 0.36 },
-];
+// A clean, non-overlapping 2x2 grid confined to the blank-wall zone on the
+// left of the photo (clear of the window on the right), with headroom above
+// each cell reserved for the italic size caption so it never gets clipped.
+const GRID_X0 = 0.04;
+const GRID_X1 = 0.47;
+const GRID_Y0 = 0.1;
+const GRID_Y1 = 0.62;
+const GUTTER = 0.025;
+const LABEL_SPACE = 0.045;
+const CELL_W = (GRID_X1 - GRID_X0 - GUTTER) / 2;
+const CELL_H = (GRID_Y1 - GRID_Y0 - GUTTER) / 2;
+
+const CELLS = [0, 1, 2, 3].map((i) => {
+  const col = i % 2;
+  const row = Math.floor(i / 2);
+  return {
+    left: GRID_X0 + col * (CELL_W + GUTTER),
+    top: GRID_Y0 + row * (CELL_H + GUTTER) + LABEL_SPACE,
+    w: CELL_W,
+    h: CELL_H - LABEL_SPACE,
+  };
+});
 
 // Shows the SAME product photo mounted at several of its real selectable
 // sizes side by side, so the customer can compare scale on an actual wall —
@@ -58,17 +71,27 @@ export const WallMultiSizePreview: React.FC<WallMultiSizePreviewProps> = ({
         <img src={wallImageSrc} alt="" className="absolute inset-0 w-full h-full object-cover" />
 
         {picks.map((p, i) => {
-          const slot = SLOTS[i] || SLOTS[SLOTS.length - 1];
-          const relScale = 0.55 + 0.45 * Math.sqrt((p.dims.w * p.dims.h) / maxArea);
-          const w = 0.22 * relScale;
+          const cell = CELLS[i] || CELLS[CELLS.length - 1];
+          const relScale = 0.62 + 0.38 * Math.sqrt((p.dims.w * p.dims.h) / maxArea);
           const ratio = p.dims.w / p.dims.h || 1;
-          const h = w / ratio;
+          const cellRatio = cell.w / cell.h;
+          let w = cell.w;
+          let h = cell.h;
+          if (ratio >= cellRatio) {
+            h = w / ratio;
+          } else {
+            w = h * ratio;
+          }
+          w *= relScale;
+          h *= relScale;
+          const left = cell.left + (cell.w - w) / 2;
+          const top = cell.top + (cell.h - h) / 2;
 
           return (
             <div
               key={p.label}
               className="absolute"
-              style={{ left: `${slot.x * 100}%`, top: `${slot.y * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }}
+              style={{ left: `${left * 100}%`, top: `${top * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }}
             >
               <div
                 className="absolute left-1/2 -translate-x-1/2 -top-5 text-[10px] sm:text-xs font-semibold text-stone-700 whitespace-nowrap"
@@ -77,12 +100,10 @@ export const WallMultiSizePreview: React.FC<WallMultiSizePreviewProps> = ({
                 {p.dims.w}&quot; X {p.dims.h}&quot;
               </div>
               <div
-                className="relative w-full h-full bg-white"
-                style={{ padding: '4%', boxShadow: '0 14px 22px -8px rgba(0,0,0,0.5), 0 3px 8px -3px rgba(0,0,0,0.3)' }}
+                className="relative w-full h-full overflow-hidden"
+                style={{ boxShadow: '0 14px 22px -8px rgba(0,0,0,0.5), 0 3px 8px -3px rgba(0,0,0,0.3)' }}
               >
-                <div className="w-full h-full overflow-hidden">
-                  <img src={imageSrc} alt={`${p.dims.w}x${p.dims.h} preview`} className="w-full h-full object-cover" />
-                </div>
+                <img src={imageSrc} alt={`${p.dims.w}x${p.dims.h} preview`} className="w-full h-full object-cover" />
               </div>
             </div>
           );

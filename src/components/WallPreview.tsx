@@ -114,8 +114,8 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
   const clipPath = isTriangle ? 'polygon(50% 0%, 0% 100%, 100% 100%)' : undefined;
 
   const hasFrameBorder = finishStyle.border > 0;
-  const framePadding = isTriangle ? 0 : hasFrameBorder ? `${finishStyle.border}%` : '3%';
-  const frameBg = hasFrameBorder ? finishStyle.color : '#ffffff';
+  const framePadding = isTriangle || !hasFrameBorder ? 0 : `${finishStyle.border}%`;
+  const frameBg = hasFrameBorder ? finishStyle.color : 'transparent';
 
   return (
     <div className={`relative w-full h-full flex items-center justify-center bg-stone-50 ${className}`}>
@@ -164,7 +164,7 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
               <img
                 src={imageSrc}
                 alt="Product on wall preview"
-                className={`w-full h-full ${isCircle || isTriangle ? 'object-cover' : 'object-contain'}`}
+                className="w-full h-full object-cover"
               />
               {finishStyle.overlay && (
                 <div className="absolute inset-0 pointer-events-none" style={{ background: finishStyle.overlay }} />
