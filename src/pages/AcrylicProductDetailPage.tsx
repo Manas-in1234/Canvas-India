@@ -22,6 +22,7 @@ import { Product } from '../types';
 import { useShop } from '../context/ShopContext';
 import { ProductImage } from '../components/ProductImage';
 import { WallPreview } from '../components/WallPreview';
+import { WallMultiSizePreview } from '../components/WallMultiSizePreview';
 import {
   AcrylicProductReview,
   getProductReviews,
@@ -36,6 +37,7 @@ export interface AcrylicProductDetailPageProps {
 // Sentinel inserted as the second gallery slot so that thumbnail renders a
 // live WallPreview (reacting to the selected shape/size) instead of a static image.
 const ROOM_VIEW_SENTINEL = '__ROOM_VIEW__';
+const MULTI_SIZE_SENTINEL = '__MULTI_SIZE__';
 
 export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> = ({ product }) => {
   const navigate = useNavigate();
@@ -55,11 +57,15 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
       });
     }
     if (list.length === 0) return list;
-    return [ROOM_VIEW_SENTINEL, ...list];
+    const sizesForProduct = product.availableSizes || product.sizes || [];
+    const sentinels = sizesForProduct.length > 1
+      ? [ROOM_VIEW_SENTINEL, MULTI_SIZE_SENTINEL]
+      : [ROOM_VIEW_SENTINEL];
+    return [...sentinels, ...list];
   }, [product]);
 
   const roomViewSourceImage = useMemo(() => {
-    return galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL) || product.image;
+    return galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL && img !== MULTI_SIZE_SENTINEL) || product.image;
   }, [galleryImages, product]);
 
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
@@ -309,13 +315,25 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
           <div className="lg:col-span-7 space-y-4">
             
             {/* Main Stage Image Container */}
-            <div className="relative aspect-[3/4] h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] max-w-full mx-auto bg-stone-100 rounded-3xl overflow-hidden border border-stone-200 shadow-md group">
+            <div
+              className={`relative bg-stone-100 rounded-3xl overflow-hidden border border-stone-200 shadow-md group ${
+                galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL || galleryImages[activeImageIndex] === MULTI_SIZE_SENTINEL
+                  ? 'w-full aspect-[4/3]'
+                  : 'aspect-[3/4] h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] max-w-full mx-auto'
+              }`}
+            >
 
               {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
                 <WallPreview
                   imageSrc={roomViewSourceImage}
                   shape={selectedShape}
                   sizeLabel={selectedSize}
+                  className="w-full h-full"
+                />
+              ) : galleryImages[activeImageIndex] === MULTI_SIZE_SENTINEL ? (
+                <WallMultiSizePreview
+                  imageSrc={roomViewSourceImage}
+                  sizes={product.availableSizes || product.sizes || []}
                   className="w-full h-full"
                 />
               ) : (
@@ -404,6 +422,8 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                     >
                       {imgUrl === ROOM_VIEW_SENTINEL ? (
                         <WallPreview imageSrc={roomViewSourceImage} shape={selectedShape} sizeLabel={selectedSize} className="w-full h-full" />
+                      ) : imgUrl === MULTI_SIZE_SENTINEL ? (
+                        <WallMultiSizePreview imageSrc={roomViewSourceImage} sizes={product.availableSizes || product.sizes || []} className="w-full h-full" />
                       ) : (
                         <ProductImage
                           src={imgUrl}

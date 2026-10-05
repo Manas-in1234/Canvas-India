@@ -25,6 +25,7 @@ import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
 import { ProductImage } from '../components/ProductImage';
 import { WallPreview } from '../components/WallPreview';
+import { WallMultiSizePreview } from '../components/WallMultiSizePreview';
 import { CUSTOMER_REVIEWS } from '../data/storeData';
 import { Product } from '../types';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
@@ -33,6 +34,7 @@ import { getFinishStyle } from '../utils/finishStyle';
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
 // the "Room View" thumbnail renders a live WallPreview instead of a static image.
 const ROOM_VIEW_SENTINEL = '__ROOM_VIEW__';
+const MULTI_SIZE_SENTINEL = '__MULTI_SIZE__';
 
 export const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -148,12 +150,15 @@ export const ProductDetailPage: React.FC = () => {
     if (!product) return [];
     const base = product.images && product.images.length > 0 ? product.images : [product.image];
     if (product.categorySlug === 'yoga-fitness') return base;
-    return [ROOM_VIEW_SENTINEL, ...base];
+    const hasMultipleSizes = product.sizes && product.sizes.length > 1;
+    return hasMultipleSizes
+      ? [ROOM_VIEW_SENTINEL, MULTI_SIZE_SENTINEL, ...base]
+      : [ROOM_VIEW_SENTINEL, ...base];
   }, [product]);
 
   // The real product photo used inside the live Room View preview (first non-sentinel image)
   const roomViewSourceImage = useMemo(() => {
-    const real = galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL);
+    const real = galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL && img !== MULTI_SIZE_SENTINEL);
     return real || product?.image || '';
   }, [galleryImages, product]);
 
@@ -321,13 +326,25 @@ export const ProductDetailPage: React.FC = () => {
           <div className="lg:col-span-6 xl:col-span-7 flex flex-col gap-4 sticky top-24">
             
             {/* Main Primary Image */}
-            <div className="relative aspect-[3/4] h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] max-w-full mx-auto rounded-2xl overflow-hidden bg-stone-100 shadow-xs group">
+            <div
+              className={`relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group ${
+                galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL || galleryImages[activeImageIndex] === MULTI_SIZE_SENTINEL
+                  ? 'w-full aspect-[4/3]'
+                  : 'aspect-[3/4] h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] max-w-full mx-auto'
+              }`}
+            >
               {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
                 <WallPreview
                   imageSrc={uploadedFile || roomViewSourceImage}
                   shape={selectedShape}
                   sizeLabel={selectedSize}
                   finish={selectedFinish}
+                  className="w-full h-full"
+                />
+              ) : galleryImages[activeImageIndex] === MULTI_SIZE_SENTINEL ? (
+                <WallMultiSizePreview
+                  imageSrc={uploadedFile || roomViewSourceImage}
+                  sizes={product.sizes || []}
                   className="w-full h-full"
                 />
               ) : (
@@ -418,6 +435,8 @@ export const ProductDetailPage: React.FC = () => {
                   >
                     {img === ROOM_VIEW_SENTINEL ? (
                       <WallPreview imageSrc={roomViewSourceImage} shape={selectedShape} sizeLabel={selectedSize} finish={selectedFinish} className="w-full h-full" />
+                    ) : img === MULTI_SIZE_SENTINEL ? (
+                      <WallMultiSizePreview imageSrc={roomViewSourceImage} sizes={product.sizes || []} className="w-full h-full" />
                     ) : (
                       <ProductImage src={img} alt={`View ${idx + 1}`} categorySlug={product.categorySlug} className="w-full h-full object-cover" />
                     )}

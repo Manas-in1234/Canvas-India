@@ -23,10 +23,11 @@ interface WallPreviewProps {
 const DEFAULT_WALL_IMAGE = 'https://images.unsplash.com/photo-1687075197041-91fba1013e1d?w=1600&q=80';
 const DEFAULT_WALL_ASPECT = 1600 / 900;
 // The blank stretch of wall on the left side of this photo.
-const DEFAULT_WALL_BOUNDS: WallBounds = { minX: 0.05, maxX: 0.4, minY: 0.05, maxY: 0.52 };
-// After fitting the frame to its zone, shrink it further so it reads like a
-// real small/medium print on a wall rather than a poster filling the space.
-const FRAME_FILL_FACTOR = 0.62;
+const DEFAULT_WALL_BOUNDS: WallBounds = { minX: 0.04, maxX: 0.46, minY: 0.03, maxY: 0.58 };
+// After fitting the frame to its zone, scale it so the artwork itself is
+// actually recognizable (not a postage-stamp), while still reading as a
+// print on a wall rather than filling the whole photo.
+const FRAME_FILL_FACTOR = 0.92;
 
 const SIZE_PATTERN = /(\d+(?:\.\d+)?)\s*["”]?\s*x\s*(\d+(?:\.\d+)?)/i;
 
@@ -81,7 +82,7 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
   const sizeScale = useMemo(() => {
     if (!dims) return 1;
     const maxDim = Math.min(Math.max(Math.max(dims.w, dims.h), 8), 40);
-    return 0.55 + ((maxDim - 8) / (40 - 8)) * 0.45;
+    return 0.75 + ((maxDim - 8) / (40 - 8)) * 0.25;
   }, [dims]);
 
   const finishStyle = useMemo(() => getFinishStyle(finish || ''), [finish]);
