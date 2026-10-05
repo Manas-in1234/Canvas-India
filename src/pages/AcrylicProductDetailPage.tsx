@@ -310,7 +310,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
           <div className="lg:col-span-7 space-y-4">
             
             {/* Main Stage Image Container */}
-            <div className="relative h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] bg-stone-100 rounded-3xl overflow-hidden border border-stone-200 shadow-md group flex items-center justify-center">
+            <div className="relative aspect-[3/4] h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] max-w-full mx-auto bg-stone-100 rounded-3xl overflow-hidden border border-stone-200 shadow-md group">
 
               {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
                 <WallPreview
@@ -324,7 +324,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                   src={galleryImages[activeImageIndex] || product.image}
                   alt={product.name}
                   category="acrylic"
-                  className="max-w-full max-h-full w-auto h-auto object-contain transition-all duration-300"
+                  className="w-full h-full object-cover transition-all duration-300"
                 />
               )}
 
