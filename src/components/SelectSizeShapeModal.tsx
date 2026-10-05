@@ -292,10 +292,33 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
     }
 
     // 5b. Hexagon Bundles (1/2/3/4 hexagons) — each hexagon shows the same
-    // placeholder emoji, honeycomb-arranged to preview the real cluster.
+    // black-and-white pencil-sketch face placeholder, properly honeycomb-
+    // tessellated (adjacent hexagons share edges, no gaps/overlap) to
+    // preview the real cluster.
     if (opt.diagramType?.startsWith('hexagon')) {
       const hexPoints = (cx: number, cy: number, w: number, h: number) =>
         `${cx - w * 0.25},${cy - h * 0.5} ${cx + w * 0.25},${cy - h * 0.5} ${cx + w * 0.5},${cy} ${cx + w * 0.25},${cy + h * 0.5} ${cx - w * 0.25},${cy + h * 0.5} ${cx - w * 0.5},${cy}`;
+
+      // Minimalist black-and-white pencil-sketch "tongue out" face —
+      // hand-drawn-looking strokes, no color fill.
+      const pencilFace = (cx: number, cy: number, h: number) => {
+        const r = h * 0.26;
+        return (
+          <g stroke="#334155" strokeWidth={Math.max(1, h * 0.022)} fill="none" strokeLinecap="round">
+            <circle cx={cx} cy={cy} r={r} />
+            <path d={`M ${cx - r * 0.55} ${cy - r * 0.15} q ${r * 0.15} ${-r * 0.35} ${r * 0.3} 0`} />
+            <path d={`M ${cx + r * 0.25} ${cy - r * 0.15} q ${r * 0.15} ${-r * 0.35} ${r * 0.3} 0`} />
+            <path d={`M ${cx - r * 0.6} ${cy - r * 0.42} q ${r * 0.3} ${-r * 0.2} ${r * 0.5} 0`} />
+            <path d={`M ${cx + r * 0.1} ${cy - r * 0.42} q ${r * 0.3} ${-r * 0.2} ${r * 0.5} 0`} />
+            <path d={`M ${cx - r * 0.45} ${cy + r * 0.3} q ${r * 0.45} ${r * 0.32} ${r * 0.9} 0`} />
+            <path
+              d={`M ${cx - r * 0.12} ${cy + r * 0.42} q ${r * 0.12} ${r * 0.55} ${r * 0.3} ${r * 0.1}`}
+              fill="#64748b"
+              fillOpacity="0.15"
+            />
+          </g>
+        );
+      };
 
       const hexFace = (cx: number, cy: number, w: number, h: number, key: string) => (
         <g key={key}>
@@ -306,43 +329,57 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
             strokeWidth="1.5"
             strokeDasharray="3 2.5"
           />
-          <text x={cx} y={cy + h * 0.14} fontSize={h * 0.4} textAnchor="middle" dominantBaseline="middle">
-            😛
-          </text>
+          {pencilFace(cx, cy, h)}
         </g>
       );
 
+      // Proper honeycomb spacing: hexagons in the same column are stacked
+      // with vertical center-distance = h (they share the top/bottom edge);
+      // neighboring columns are offset horizontally by w*0.75 (shared slanted
+      // edge) and vertically by h/2.
       let faces: React.ReactNode[] = [];
-      let widthLabelPos = { x: 100, y: 128 };
-      let heightLabelPos = { x: 10, y: 68 };
 
       if (opt.diagramType === 'hexagon-1') {
-        faces = [hexFace(100, 67, 120, 90, 'h0')];
+        faces = [hexFace(100, 62, 110, 86, 'h0')];
       } else if (opt.diagramType === 'hexagon-2') {
-        faces = [hexFace(65, 65, 72, 88, 'h0'), hexFace(135, 65, 72, 88, 'h1')];
+        // Two hexagons in the same row, sharing a vertical edge.
+        const w = 70, h = 80, cy = 60;
+        const dx = w * 0.75;
+        faces = [hexFace(100 - dx / 2, cy, w, h, 'h0'), hexFace(100 + dx / 2, cy, w, h, 'h1')];
       } else if (opt.diagramType === 'hexagon-3') {
+        // Left column of 2 (stacked, sharing a horizontal edge) + 1 on the
+        // right offset by h/2, sharing a slanted edge with both.
+        const w = 52, h = 50, cy = 62;
+        const dx = w * 0.75;
+        const colX1 = 100 - dx / 2;
+        const colX2 = 100 + dx / 2;
         faces = [
-          hexFace(55, 38, 66, 80, 'h0'),
-          hexFace(55, 92, 66, 80, 'h1'),
-          hexFace(128, 65, 66, 80, 'h2')
+          hexFace(colX1, cy - h / 2, w, h, 'h0'),
+          hexFace(colX1, cy + h / 2, w, h, 'h1'),
+          hexFace(colX2, cy, w, h, 'h2')
         ];
       } else if (opt.diagramType === 'hexagon-4') {
+        // Diamond cluster: top, bottom, left and right hexagons each share
+        // a slanted edge with both of their neighbors — true honeycomb
+        // tessellation for a 4-piece bundle.
+        const w = 46, h = 40, cy = 62;
+        const dx = w * 0.75;
         faces = [
-          hexFace(55, 38, 64, 72, 'h0'),
-          hexFace(55, 92, 64, 72, 'h1'),
-          hexFace(128, 38, 64, 72, 'h2'),
-          hexFace(128, 92, 64, 72, 'h3')
+          hexFace(100, cy - h / 2, w, h, 'h0'),
+          hexFace(100, cy + h / 2, w, h, 'h1'),
+          hexFace(100 - dx, cy, w, h, 'h2'),
+          hexFace(100 + dx, cy, w, h, 'h3')
         ];
       }
 
       return (
         <svg viewBox="0 0 200 130" className="w-full h-full max-h-28">
-          <line x1="25" y1="118" x2="175" y2="118" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
-          <text x={widthLabelPos.x} y={widthLabelPos.y} fill="#64748b" fontSize="9" fontWeight="bold" textAnchor="middle">
+          <line x1="25" y1="120" x2="175" y2="120" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
+          <text x="100" y="129" fill="#64748b" fontSize="9" fontWeight="bold" textAnchor="middle">
             {opt.widthInches}&quot;
           </text>
-          <line x1="15" y1="12" x2="15" y2="105" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
-          <text x={heightLabelPos.x} y={heightLabelPos.y} fill="#64748b" fontSize="9" fontWeight="bold" textAnchor="middle">
+          <line x1="15" y1="10" x2="15" y2="108" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
+          <text x="10" y="64" fill="#64748b" fontSize="9" fontWeight="bold" textAnchor="middle">
             {opt.heightInches}&quot;
           </text>
           {faces}
