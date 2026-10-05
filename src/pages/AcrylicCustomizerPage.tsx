@@ -103,6 +103,7 @@ import {
 } from '../components/CustomizerUiShell';
 import { ClipartItem } from '../data/acrylicClipartData';
 import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
+import { SelectLayoutModal, LayoutModalOption } from '../components/SelectLayoutModal';
 import { getProductSizeShapeOptions, getSizesForProductAndShape } from '../data/productSizeShapeConfig';
 
 // ============================================================================
@@ -226,6 +227,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
     setActiveTab(tabId);
     if (tabId === 'SELECT SIZE') {
       setIsSizeShapeModalOpen(true);
+    } else if (tabId === 'LAYOUTS & DESIGNS') {
+      setIsLayoutModalOpen(true);
     }
     beginPreloader();
     endPreloader(PRELOADER_MIN_MS);
@@ -480,6 +483,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Select Size & Shape Modal State
   const [isSizeShapeModalOpen, setIsSizeShapeModalOpen] = useState<boolean>(false);
+  const [isLayoutModalOpen, setIsLayoutModalOpen] = useState<boolean>(false);
 
   // Apply handler for SelectSizeShapeModal in Acrylic Customizer
   const handleApplySizeAndShape = (config: {
@@ -517,27 +521,40 @@ export const AcrylicCustomizerPage: React.FC = () => {
       }
     }
 
-      // Uploaded customer images remain attached and refitted cleanly
-      setPanelImages((prev) => {
-        const next = { ...prev };
-        Object.keys(next).forEach((k) => {
-          const idx = Number(k);
-          if (next[idx]?.imageUrl) {
-            next[idx] = {
-              ...next[idx],
-              scale: 1,
-              panX: 0,
-              panY: 0,
-              fitMode: 'contain'
-            };
-          }
-        });
-        return next;
+    // Uploaded customer images remain attached and refitted cleanly
+    setPanelImages((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((k) => {
+        const idx = Number(k);
+        if (next[idx]?.imageUrl) {
+          next[idx] = {
+            ...next[idx],
+            scale: 1,
+            panX: 0,
+            panY: 0,
+            fitMode: 'contain'
+          };
+        }
       });
+      return next;
+    });
 
-      // Automatically switch to UPLOAD section after size confirmation
-      setActiveTab('UPLOAD');
-    };
+    // Automatically switch to UPLOAD section after size confirmation
+    setActiveTab('UPLOAD');
+  };
+
+  // Apply handler for SelectLayoutModal in Acrylic Customizer
+  const handleApplyLayoutFromModal = (layout: LayoutModalOption) => {
+    setSelectedLayoutId(layout.id);
+    if (layout.id.startsWith('wall-display')) {
+      setSelectedSizeId(layout.id);
+    } else if (layout.id.startsWith('split')) {
+      setSelectedSizeId(layout.id === 'split-3p-36x24' ? 'split-3p-36x24' : 'split-2p');
+    } else if (layout.id.startsWith('mosaic')) {
+      setSelectedSizeId(layout.id);
+    }
+    setIsLayoutModalOpen(false);
+  };
 
   // Normalize hardware ID if any legacy alias is encountered
   useEffect(() => {
@@ -1900,8 +1917,18 @@ export const AcrylicCustomizerPage: React.FC = () => {
       }
     }
 
-    // 8. Open the "Select size & shape" popup modal immediately
-    setIsSizeShapeModalOpen(true);
+    // 8. Open the "Select size & shape" popup modal only if single print
+    const isSingle = [
+      'acrylic-print',
+      'acrylic-photo-panel',
+      'acrylic-single'
+    ].includes(pt.id);
+    if (isSingle) {
+      setIsSizeShapeModalOpen(true);
+    } else {
+      setIsSizeShapeModalOpen(false);
+      setActiveTab('UPLOAD');
+    }
   };
 
   // Switch acrylic shape (updates workspace geometry, aspect ratio, clipping mask, and size orientation)
@@ -3348,19 +3375,25 @@ export const AcrylicCustomizerPage: React.FC = () => {
     options: true
   };
 
+  const isSinglePrintAcrylic = [
+    'acrylic-print',
+    'acrylic-photo-panel',
+    'acrylic-single'
+  ].includes(selectedProductTypeId);
+
   // Primary Toolbar items: dynamically filtered by selected product capabilities
   const toolbarItems = useMemo<{ id: ToolbarTab; label: string; icon: React.ElementType }[]>(() => {
     const items: { id: ToolbarTab; label: string; icon: React.ElementType; enabled: boolean }[] = [
       { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid, enabled: productCapabilities.products !== false },
       { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud, enabled: productCapabilities.upload !== false },
-      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: productCapabilities.sizes !== false },
+      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSinglePrintAcrylic && productCapabilities.sizes !== false },
       { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: productCapabilities.layouts === true },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
       { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal, enabled: productCapabilities.hardware !== false },
       { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false }
     ];
     return items.filter((item) => item.enabled);
-  }, [productCapabilities]);
+  }, [productCapabilities, isSinglePrintAcrylic]);
 
   // If the active tab is not supported by the currently selected product, safely revert to PRODUCTS
   useEffect(() => {
@@ -4178,8 +4211,26 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     </button>
                   </div>
 
-              {/* SUBTAB 1: LAYOUTS (7 Options) */}
-              {layoutSubTab === 'LAYOUTS' && (
+                  {/* Selected Layout Summary Banner */}
+                  <div className="flex items-center justify-between p-3 bg-blue-50/70 rounded-xl border border-blue-100 my-2">
+                    <div>
+                      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Active Layout</span>
+                      <div className="text-xs font-black text-stone-900 mt-0.5">
+                        {LAYOUT_PRESETS.find((l) => l.id === selectedLayoutId)?.name || selectedLayoutId}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsLayoutModalOpen(true)}
+                      className="px-3 py-1 bg-[#0E4A93] hover:bg-[#0A366C] text-white text-xs font-bold rounded-lg shadow-xs transition-transform hover:scale-102 cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Layers className="w-3 h-3" />
+                      <span>Change Layout</span>
+                    </button>
+                  </div>
+
+                  {/* SUBTAB 1: LAYOUTS (7 Options) */}
+                  {layoutSubTab === 'LAYOUTS' && (
                 <div className="space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     {(selectedProductType?.supportedLayoutIds && selectedProductType.supportedLayoutIds.length > 0
@@ -4948,6 +4999,17 @@ export const AcrylicCustomizerPage: React.FC = () => {
         customWidth={customWidth}
         customHeight={customHeight}
         onSelectSizeAndShape={handleApplySizeAndShape}
+      />
+
+      {/* Select Layout Modal */}
+      <SelectLayoutModal
+        isOpen={isLayoutModalOpen}
+        onClose={() => setIsLayoutModalOpen(false)}
+        material="acrylic"
+        productId={selectedProductTypeId}
+        productName={selectedProductType.name}
+        currentLayoutId={selectedLayoutId}
+        onSelectLayout={handleApplyLayoutFromModal}
       />
 
       {/* Change Material Modal */}
