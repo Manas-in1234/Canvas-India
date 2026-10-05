@@ -2886,6 +2886,115 @@ export const CanvasCustomizerPage: React.FC = () => {
     );
   };
 
+  // Hexagon Cluster (canvas-hexagon multi-piece bundles): N individually
+  // uploadable hexagon panels, honeycomb-arranged the same way as the
+  // Select Size diagram preview (adjacent hexagons share edges, no gaps).
+  const renderHexagonCluster = () => {
+    const hexPanels = currentSizeOption.panels && currentSizeOption.panels.length > 0
+      ? currentSizeOption.panels
+      : [{ id: 'p0', label: 'Hexagon', dimension: '10" × 11.5"', widthRatio: 10, heightRatio: 11.5 }];
+    const count = hexPanels.length;
+
+    type HexLayout = { x: number; y: number; w: number; h: number };
+    let layout: HexLayout[];
+    if (count === 2) {
+      const w = 0.42, h = 0.78, dx = w * 0.75;
+      layout = [
+        { x: 0.5 - dx / 2 - w / 2, y: 0.5 - h / 2, w, h },
+        { x: 0.5 + dx / 2 - w / 2, y: 0.5 - h / 2, w, h }
+      ];
+    } else if (count === 3) {
+      const w = 0.34, h = 0.62, dx = w * 0.75;
+      const colX1 = 0.5 - dx / 2;
+      const colX2 = 0.5 + dx / 2;
+      layout = [
+        { x: colX1 - w / 2, y: 0.5 - h, w, h },
+        { x: colX1 - w / 2, y: 0.5, w, h },
+        { x: colX2 - w / 2, y: 0.5 - h / 2, w, h }
+      ];
+    } else if (count === 4) {
+      const w = 0.3, h = 0.4, dx = w * 0.75;
+      layout = [
+        { x: 0.5 - w / 2, y: 0.5 - h, w, h },
+        { x: 0.5 - w / 2, y: 0.5, w, h },
+        { x: 0.5 - dx - w / 2, y: 0.5 - h / 2, w, h },
+        { x: 0.5 + dx - w / 2, y: 0.5 - h / 2, w, h }
+      ];
+    } else {
+      layout = [{ x: 0.5 - 0.35, y: 0.5 - 0.4, w: 0.7, h: 0.8 }];
+    }
+
+    const hexClip = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';
+
+    return (
+      <div className="w-full max-w-xl mx-auto my-auto p-4 flex flex-col items-center select-none">
+        <div
+          className="relative w-full bg-stone-100/60 rounded-2xl border border-stone-200 shadow-xl"
+          style={{
+            aspectRatio: String((currentSizeOption.widthInches || 20) / (currentSizeOption.heightInches || 20)),
+            maxWidth: '26rem',
+            boxShadow: '0 20px 30px -10px rgba(15, 23, 42, 0.15)'
+          }}
+        >
+          {hexPanels.map((pSpec, i) => {
+            const pos = layout[i] || layout[0];
+            const panel = panelImages[i] || createDefaultPanel();
+            const isTarget = activePanelIndex === i;
+
+            return (
+              <div
+                key={pSpec.id || i}
+                style={{
+                  position: 'absolute',
+                  left: `${pos.x * 100}%`,
+                  top: `${pos.y * 100}%`,
+                  width: `${pos.w * 100}%`,
+                  height: `${pos.h * 100}%`
+                }}
+              >
+                <div
+                  {...panelHandlers(i)}
+                  ref={registerWheelRef(i)}
+                  className={`relative w-full h-full bg-white overflow-hidden transition-all cursor-pointer group ${
+                    isTarget ? 'ring-2 ring-[#0E4A93] z-20 shadow-md' : 'shadow-xs'
+                  }`}
+                  style={{ clipPath: hexClip, WebkitClipPath: hexClip }}
+                >
+                  {dragOverPanel === i && (
+                    <div className="absolute inset-0 z-30 bg-blue-500/20 border-2 border-dashed border-[#0E4A93] pointer-events-none" />
+                  )}
+                  {panel.imageUrl ? (
+                    <img
+                      src={panel.imageUrl}
+                      alt={`Hexagon ${i + 1}`}
+                      style={{
+                        transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                        filter: getFilterCss(panel.filter),
+                        objectFit: 'cover'
+                      }}
+                      className="w-full h-full pointer-events-none"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50 hover:bg-stone-100 transition-colors p-1 text-center">
+                      <div className="w-6 h-6 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-0.5">
+                        <Upload className="w-3 h-3 stroke-[2.2]" />
+                      </div>
+                      <span className="text-[9px] font-bold text-stone-600">Hexagon {i + 1}</span>
+                      <span className="text-[8px] text-stone-400">Click to upload</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-[11px] font-semibold text-stone-500 mt-2.5 text-center">
+          Hexagon Cluster • {count} {count === 1 ? 'Hexagon' : 'Hexagons'} • Click each hexagon to upload its own photo
+        </p>
+      </div>
+    );
+  };
+
   // Wall Display (canvas-wall-art): Multi-panel gallery collection with physical 3D canvas bevels
   const renderWallDisplayCanvas = () => {
     const wallPanels = currentSizeOption.panels && currentSizeOption.panels.length > 0
@@ -4609,6 +4718,9 @@ export const CanvasCustomizerPage: React.FC = () => {
               {/* PHOTO MOSAIC (Multi-Tile Mosaic Canvas Grid) */}
               {selectedProductTypeId === 'canvas-mosaic' && renderMosaicCanvas()}
 
+              {/* HEXAGON CLUSTER (Multi-piece Hexagon Bundles) */}
+              {selectedProductTypeId === 'canvas-hexagon' && panels.length > 1 && renderHexagonCluster()}
+
               {/* SINGLE PANEL LAYOUTS (Single Print, Round, Triangle, Heart, Oval, Hexagon, etc.) */}
               {selectedProductTypeId !== 'canvas-wall-art' && selectedProductTypeId !== 'canvas-collage' && selectedProductTypeId !== 'canvas-mosaic' && selectedProductTypeId !== 'canvas-split' && panels.length === 1 && (() => {
                 const frameOption = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
@@ -4990,6 +5102,9 @@ export const CanvasCustomizerPage: React.FC = () => {
 
               {/* SPLIT CANVAS (Physical Multi-Panel Sliced Layout) */}
               {selectedProductTypeId === 'canvas-split' && renderContinuousSplitCanvas()}
+
+              {/* HEXAGON CLUSTER (Multi-piece Hexagon Bundles) */}
+              {selectedProductTypeId === 'canvas-hexagon' && panels.length > 1 && renderHexagonCluster()}
 
               {/* PHOTO COLLAGE (Single Canvas Frame containing internal Photo Layout Grid) */}
               {selectedProductTypeId === 'canvas-collage' && (
