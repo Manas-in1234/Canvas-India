@@ -212,13 +212,6 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
             </div>
             <p className="text-sm mt-2 text-[#567477]">Explore our wide range of creative handmade products</p>
-            <button
-              type="button"
-              onClick={() => navigate('/categories')}
-              className="hidden sm:inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
-            >
-              View All <ArrowRight className="w-3.5 h-3.5" />
-            </button>
           </div>
 
           <div className="flex items-center gap-3">
@@ -259,6 +252,16 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
+          </div>
+
+          <div className="hidden sm:flex justify-end mt-6">
+            <button
+              type="button"
+              onClick={() => navigate('/categories')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
+            >
+              View All <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
 
           <button
