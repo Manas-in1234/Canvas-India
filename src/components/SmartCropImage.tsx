@@ -95,26 +95,36 @@ function detectCrop(img: HTMLImageElement, containerAspect: number): CropResult 
   // Border is negligible — nothing meaningful to crop.
   if (boxFracW > 0.97 && boxFracH > 0.97) return { scale: 1, posX: 50, posY: 50 };
 
+  // With object-fit: contain as the base fit, the image is scaled down
+  // until it fully fits the box — its rendered size (normalized to a box
+  // height of 1) is:
   const imgAspect = iw / ih;
-  const zoomNeededX = imgAspect >= containerAspect
-    ? 1 / boxFracW
-    : (containerAspect / imgAspect) / boxFracW;
-  const zoomNeededY = imgAspect >= containerAspect
-    ? (imgAspect / containerAspect) / boxFracH
-    : 1 / boxFracH;
+  const renderedW = Math.min(imgAspect, containerAspect);
+  const renderedH = Math.min(1, containerAspect / imgAspect);
 
-  const scale = Math.min(3, Math.max(1, Math.max(zoomNeededX, zoomNeededY)));
+  // Zoom needed so the bbox alone (not the whole image) would, under the
+  // same contain logic, exactly fill the box in each axis.
+  const zoomNeededX = containerAspect / (boxFracW * renderedW);
+  const zoomNeededY = 1 / (boxFracH * renderedH);
+
+  // Use the SMALLER of the two (contain-style): this guarantees the entire
+  // artwork stays visible — never cropped — even if that means a sliver of
+  // the box's own background shows on one axis when the artwork's aspect
+  // ratio doesn't exactly match the frame's.
+  const scale = Math.min(3, Math.max(1, Math.min(zoomNeededX, zoomNeededY)));
   const posX = ((bx0 + bx1) / 2) * 100;
   const posY = ((by0 + by1) / 2) * 100;
 
   return { scale, posX, posY };
 }
 
-// Drop-in replacement for a plain object-fit:cover product image that
-// automatically crops out a uniform white/flat mat around the artwork
-// (common in stock mockup photography) without ever cropping the artwork
-// itself — the crop box is derived from the image's own content, not a
-// fixed percentage.
+// Drop-in replacement for a plain product image that automatically trims a
+// uniform white/flat mat around the artwork (common in stock mockup
+// photography or batch-extracted catalogue scans) WITHOUT ever cropping the
+// artwork itself. Uses object-fit: contain + a precise zoom to the content's
+// own bounding box, so the whole artwork always stays fully visible — on an
+// aspect-ratio mismatch it leaves a sliver of box background on one axis
+// rather than cutting into the image.
 export const SmartCropImage: React.FC<SmartCropImageProps> = ({
   src,
   alt = '',
@@ -153,7 +163,7 @@ export const SmartCropImage: React.FC<SmartCropImageProps> = ({
       onLoad={onLoad}
       className={className}
       style={{
-        objectFit: 'cover',
+        objectFit: 'contain',
         objectPosition: `${crop.posX}% ${crop.posY}%`,
         transform: `scale(${crop.scale})`,
         transformOrigin: '50% 50%',
