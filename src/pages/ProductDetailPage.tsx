@@ -670,10 +670,10 @@ export const ProductDetailPage: React.FC = () => {
                       >
                         <div className="relative aspect-[4/3] bg-stone-200 rounded-md overflow-hidden flex items-center justify-center" style={{ background: fs.wall }}>
                           <div
-                            className="relative w-[62%] aspect-[4/3] overflow-hidden"
+                            className="relative w-[62%] aspect-[4/3] overflow-hidden bg-white"
                             style={{ border: `${fs.border}px solid ${fs.color}`, boxShadow: fs.shadow, outline: fs.outline }}
                           >
-                            <img src={galleryImages[0] || product.image} alt="" className="w-full h-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }} />
+                            <img src={galleryImages[0] || product.image} alt="" className="w-full h-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }} />
                             {fs.overlay && <div className="absolute inset-0 pointer-events-none" style={{ background: fs.overlay }} />}
                           </div>
                         </div>
