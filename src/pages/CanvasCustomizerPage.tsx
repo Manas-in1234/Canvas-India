@@ -2763,7 +2763,6 @@ export const CanvasCustomizerPage: React.FC = () => {
       ? currentSizeOption.panels
       : Array.from({ length: 4 }, (_, i) => ({ id: `p${i}`, label: `Tile ${i + 1}`, dimension: '6" × 6"', widthRatio: 6, heightRatio: 6 }));
     const count = tilePanels.length;
-    const colsClass = count === 4 ? 'grid-cols-2' : count === 6 ? 'grid-cols-3' : count === 9 ? 'grid-cols-3' : count === 16 ? 'grid-cols-4' : 'grid-cols-2';
     const aspectClass = count === 6 ? 'aspect-[18/12]' : 'aspect-square';
     const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
 
@@ -2773,8 +2772,10 @@ export const CanvasCustomizerPage: React.FC = () => {
     return (
       <div className="w-full max-w-xl mx-auto my-auto p-4 flex flex-col items-center select-none">
         <div
-          className={`grid ${colsClass} gap-2 sm:gap-2.5 w-full ${aspectClass} p-3 bg-stone-100/90 rounded-2xl border border-stone-200 shadow-xl`}
+          className={`grid gap-2 sm:gap-2.5 w-full ${aspectClass} p-3 bg-stone-100/90 rounded-2xl border border-stone-200 shadow-xl`}
           style={{
+            gridTemplateColumns: `repeat(${totalCols}, 1fr)`,
+            gridTemplateRows: `repeat(${totalRows}, 1fr)`,
             maxWidth: count === 6 ? '32rem' : '26rem',
             boxShadow: '0 20px 30px -10px rgba(15, 23, 42, 0.15)'
           }}
@@ -2815,7 +2816,10 @@ export const CanvasCustomizerPage: React.FC = () => {
                         style={{
                           transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
                           filter: getFilterCss(panel.filter),
-                          objectFit: panel.fitMode === 'contain' ? 'contain' : 'cover'
+                          // Mosaic tiles are small — always fill edge-to-edge
+                          // rather than respecting a "contain" fit, which
+                          // would shrink the photo and leave visible gaps.
+                          objectFit: 'cover'
                         }}
                         className="w-full h-full pointer-events-none"
                       />
