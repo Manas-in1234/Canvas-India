@@ -191,28 +191,142 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         </Container>
       </section>
 
-      {/* OFFER BANNER */}
-      <section className="relative overflow-hidden bg-gradient-to-r from-[#7C3AED] via-[#DB2777] to-[#F97316] text-white">
-        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 20% 30%, #fff 2px, transparent 3px), radial-gradient(circle at 70% 60%, #fff 2px, transparent 3px), radial-gradient(circle at 90% 20%, #fff 3px, transparent 4px)', backgroundSize: '90px 90px, 120px 120px, 160px 160px' }} />
-        <img
-          src={u('photo-1518199266791-5375a83190b7', 1600)}
-          alt="Happy couple with handcrafted love gift"
-          className="absolute right-0 top-0 h-full w-1/2 object-cover object-center"
-          style={{ maskImage: 'linear-gradient(to right, transparent, black 40%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 40%)', opacity: 0.85 }}
-        />
-        <Container className="relative py-12 sm:py-16">
-          <div className="max-w-lg">
-            <span className="inline-block px-3 py-1 rounded-full bg-white/20 border border-white/40 text-[11px] tracking-[0.25em] font-bold uppercase">Limited Time Offer</span>
-            <h3 className="text-4xl sm:text-5xl font-bold italic mt-3 leading-tight" style={{ fontFamily: SERIF }}>Handcrafted with Love ♡</h3>
-            <p className="text-xl mt-2" style={{ fontFamily: SERIF }}>Special Offers Just for You!</p>
-            <p className="mt-2 text-base text-white/90">Get up to <span className="text-3xl font-black text-amber-300 align-middle">50% OFF</span> on selected products.</p>
-            <button
-              type="button"
-              onClick={() => navigate('/search')}
-              className="mt-5 px-7 py-3 rounded-full bg-white text-[#DB2777] hover:bg-amber-300 hover:text-[#7C3AED] text-sm font-extrabold inline-flex items-center gap-2 shadow-xl cursor-pointer transition-colors"
-            >
-              Shop Deals <ArrowRight className="w-4 h-4" />
-            </button>
+      {/* SPECIAL OFFER LIFESTYLE BANNER WITH HANGING LEATHER TAG */}
+      <section id="deals-section" className="relative overflow-hidden bg-[#F6F0E5] text-stone-900 border-y border-stone-300/70 py-12 lg:py-16">
+        {/* Background Soft Sunlit Wall Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FDFBF7] via-[#F4EDE2] to-[#E9DEC9] pointer-events-none" />
+        <div className="absolute -left-20 -top-20 w-96 h-96 rounded-full bg-amber-400/10 blur-3xl pointer-events-none" />
+
+        <Container className="relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+
+            {/* Left Column: Realistic Interior Mockup with Canvas Art, Plant & Hanging Stitched Leather Tag */}
+            <div className="lg:col-span-7 relative">
+              
+              {/* Wall & Wooden Shelf Container */}
+              <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] rounded-2xl overflow-hidden shadow-2xl border border-stone-300/80 bg-[#F2EADB] flex flex-col justify-end group">
+                
+                {/* Wall Backdrop with Warm Soft Sun Lighting */}
+                <div className="absolute inset-0 bg-gradient-to-b from-[#FAF6F0] via-[#F3EBDD] to-[#E5D7C2]" />
+
+                {/* Leaf Shadow Overlay */}
+                <div className="absolute inset-0 opacity-15 bg-[radial-gradient(ellipse_at_top_right,#000_0%,transparent_70%)] pointer-events-none" />
+                
+                {/* Potted Green Plant on Wooden Tabletop (Left Side) */}
+                <div className="absolute bottom-6 left-3 sm:left-7 z-10 w-24 sm:w-36 aspect-[3/4] flex items-end pointer-events-none">
+                  <img
+                    src="https://images.unsplash.com/photo-1545241047-6083a3684587?w=500&auto=format&fit=crop&q=80"
+                    alt="Potted Green Plant"
+                    className="w-full h-full object-contain drop-shadow-xl"
+                  />
+                </div>
+
+                {/* Main Coastal Sunset Canvas Painting Resting on Wooden Shelf */}
+                <div className="absolute bottom-6 right-3 sm:right-8 z-10 w-[64%] sm:w-[60%] aspect-[4/3] rounded-sm overflow-hidden shadow-2xl border-4 border-white bg-stone-900 transform -rotate-1 group-hover:rotate-0 transition-transform duration-500">
+                  <img
+                    src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=900&auto=format&fit=crop&q=90"
+                    alt="Vibrant Coastal Sunset Canvas Painting"
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Canvas Subtle Gloss Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/20 pointer-events-none" />
+                </div>
+
+                {/* Acrylic / Paint Jars on Right Edge of Table */}
+                <div className="absolute bottom-6 right-1 sm:right-2 z-20 flex gap-1 items-end pointer-events-none">
+                  <div className="w-3.5 h-6 sm:w-4 sm:h-7 rounded-xs bg-emerald-600 shadow-md border border-emerald-800" />
+                  <div className="w-3.5 h-7 sm:w-4 sm:h-8 rounded-xs bg-blue-600 shadow-md border border-blue-800" />
+                </div>
+
+                {/* Wooden Tabletop Surface at Bottom */}
+                <div className="relative z-20 w-full h-6 sm:h-8 bg-gradient-to-r from-[#8B5A2B] via-[#A0522D] to-[#7A451F] border-t-2 border-[#5C3214] shadow-inner flex items-center px-4">
+                  <div className="w-full h-px bg-amber-200/20" />
+                </div>
+
+                {/* ========================================================================= */}
+                {/* HANGING STITCHED LEATHER SPECIAL PRICE TAG / BADGE */}
+                {/* ========================================================================= */}
+                <div className="absolute top-4 left-16 sm:top-6 sm:left-24 z-30 flex flex-col items-center select-none group/tag cursor-pointer">
+                  {/* Wall Pin / Nail */}
+                  <div className="w-3.5 h-3.5 rounded-full bg-stone-800 shadow-md border-2 border-stone-400 z-20 flex items-center justify-center">
+                    <div className="w-1 h-1 rounded-full bg-stone-300" />
+                  </div>
+                  
+                  {/* Hanging String Lines */}
+                  <div className="relative w-10 h-9 -mt-1 pointer-events-none z-10">
+                    <svg className="w-full h-full" viewBox="0 0 40 36" fill="none">
+                      <path d="M20 0 L5 36" stroke="#5C3214" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M20 0 L35 36" stroke="#5C3214" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </div>
+
+                  {/* Stitched Circular Orange Leather Badge */}
+                  <div className="-mt-1.5 w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#EA580C] via-[#DC2626] to-[#9A3412] text-white flex flex-col items-center justify-center p-2 shadow-2xl shadow-orange-950/50 border-4 border-[#78350F] relative overflow-hidden group-hover/tag:rotate-6 group-hover/tag:scale-105 transition-all duration-300">
+                    {/* Metal Grommet Hole */}
+                    <div className="absolute top-1.5 w-3 h-3 rounded-full bg-stone-300 border-2 border-stone-600 shadow-inner z-10" />
+                    
+                    {/* Dashed Stitched Inner Ring */}
+                    <div className="absolute inset-1.5 rounded-full border-2 border-dashed border-amber-200/60 pointer-events-none" />
+                    
+                    {/* Badge Text Content */}
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-amber-200 mt-2.5 leading-none drop-shadow-xs">
+                      SPECIAL PRICE
+                    </span>
+                    <span className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-md mt-0.5 leading-none">
+                      20% OFF
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* Right Column: Copy & Interactive CTAs */}
+            <div className="lg:col-span-5 space-y-5">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EA580C]/10 border border-[#EA580C]/30 text-[#EA580C] text-xs font-black uppercase tracking-widest">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Festive Season Offer • Limited Time</span>
+              </div>
+
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight text-[#0E4A93]" style={{ fontFamily: SERIF }}>
+                Handcrafted Canvas for Your Walls
+              </h2>
+
+              <p className="text-sm sm:text-base text-stone-700 leading-relaxed">
+                Transform your favorite memories into museum-grade canvas prints &amp; glossy acrylic float frames. Printed with 12-color archival pigment inks on kiln-dried pine wood.
+              </p>
+
+              <div className="p-4 rounded-2xl bg-white/90 border border-stone-200 shadow-sm flex items-center justify-between gap-4">
+                <div>
+                  <div className="text-[11px] text-stone-500 font-bold uppercase tracking-wider">Use Coupon Code</div>
+                  <div className="text-lg font-black text-[#EA580C] tracking-widest font-mono">CANVAS20</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[11px] text-stone-500 font-bold uppercase tracking-wider">Discount</div>
+                  <div className="text-base font-extrabold text-[#0E4A93]">Flat 20% OFF</div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={handleStartCreatingCanvas}
+                  className="px-7 py-3.5 rounded-full bg-[#0E4A93] hover:bg-[#0B3B77] text-white text-sm font-extrabold shadow-lg shadow-blue-900/20 flex items-center gap-2 transition cursor-pointer"
+                >
+                  <span>Claim 20% OFF &amp; Customize</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/search')}
+                  className="px-6 py-3.5 rounded-full bg-white hover:bg-stone-100 text-stone-800 border border-stone-300 text-sm font-bold shadow-xs transition cursor-pointer"
+                >
+                  Shop All Deals
+                </button>
+              </div>
+            </div>
+
           </div>
         </Container>
       </section>

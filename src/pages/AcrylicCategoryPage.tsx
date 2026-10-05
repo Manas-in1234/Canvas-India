@@ -1,27 +1,20 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { 
-  ChevronRight, 
-  Search, 
-  Sparkles, 
-  CheckCircle2, 
-  X,
-  Heart,
+import React, { useState, useMemo, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
   SlidersHorizontal,
-  ArrowUpDown,
-  Check,
+  X,
   RotateCcw,
-  ShoppingCart,
-  Star,
-  Award,
-  Palette,
-  Gift,
-  Shapes
+  ChevronRight,
+  FilterX,
+  ArrowUpDown,
+  Sparkles,
+  CheckCircle2,
+  ShoppingCart
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
-import { ProductImage } from '../components/ProductImage';
+import { ProductCard } from '../components/ProductCard';
+import { CANVAS_FILTER_OCCASIONS } from '../data/storeData';
 import { Product } from '../types';
-import { loadAllStoredReviews, AcrylicProductReview } from '../data/acrylicReviews';
 
 export interface AcrylicCategoryTab {
   slug: string;
@@ -48,7 +41,7 @@ export const isProductInAcrylicCategory = (product: Product, slug: string): bool
   const name = (product.name || '').toLowerCase();
   const prodSlug = (product.slug || '').toLowerCase();
   const subcat = (product.subcategory || '').toLowerCase();
-  const tags = (product.tags || []).map(t => t.toLowerCase());
+  const tags = (product.tags || []).map((t) => t.toLowerCase());
 
   switch (slug) {
     case 'photo-blocks':
@@ -72,310 +65,125 @@ export const isProductInAcrylicCategory = (product: Product, slug: string): bool
   }
 };
 
-const OCCASIONS_LIST = [
-  'Birthday',
-  'Anniversary',
-  'Wedding',
-  'Housewarming',
-  'Diwali',
-  'Corporate Gifts'
-];
+type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'discount';
 
-const FEATURES_LIST = [
-  'Premium Acrylic',
-  'Vibrant & Long Lasting',
-  'Ready to Hang',
-  'Personalized',
-  'Suitable for Gifting',
-  'Corporate Use'
-];
-
-type SortOption = 
-  | 'Price: Low to High'
-  | 'Price: High to Low'
-  | 'Newest First'
-  | 'Best Selling'
-  | 'Discount: High to Low'
-  | 'Customer Rating'
-  | 'Name: A–Z';
-
-const SORT_OPTIONS: SortOption[] = [
-  'Price: Low to High',
-  'Price: High to Low',
-  'Newest First',
-  'Best Selling',
-  'Discount: High to Low',
-  'Customer Rating',
-  'Name: A–Z'
-];
+const PRICE_MIN_DEFAULT = 400;
+const PRICE_MAX_DEFAULT = 4000;
 
 export const AcrylicCategoryPage: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { 
-    allProducts, 
-    wishlistIds, 
-    onToggleWishlist, 
-    onAddToCart 
+  const {
+    allProducts,
+    wishlistIds,
+    onAddToCart,
+    onOpenCustomize,
+    onToggleWishlist
   } = useShop();
-
-  // Product category filter state (Default: 'all')
-  const initialCategory = searchParams.get('category') || searchParams.get('shape') || 'all';
-  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-
-  // Panels Open/Close State (BOTH CLOSED BY DEFAULT)
-  const [filterPanelOpen, setFilterPanelOpen] = useState<boolean>(false);
-  const [sortPanelOpen, setSortPanelOpen] = useState<boolean>(false);
-
-  // Applied Filter State
-  const [appliedMinPrice, setAppliedMinPrice] = useState<number>(400);
-  const [appliedMaxPrice, setAppliedMaxPrice] = useState<number>(4000);
-  const [appliedOccasions, setAppliedOccasions] = useState<string[]>([]);
-  const [appliedFeatures, setAppliedFeatures] = useState<string[]>([]);
-
-  // Draft Filter State (inside filter panel)
-  const [draftMinPrice, setDraftMinPrice] = useState<number>(400);
-  const [draftMaxPrice, setDraftMaxPrice] = useState<number>(4000);
-  const [draftOccasions, setDraftOccasions] = useState<string[]>([]);
-  const [draftFeatures, setDraftFeatures] = useState<string[]>([]);
-
-  // Sorting state (Default: 'Price: Low to High')
-  const [sortBy, setSortBy] = useState<SortOption>('Price: Low to High');
-
-  // Product reviews state persisted in localStorage
-  const [productReviewsMap] = useState<Record<string, AcrylicProductReview[]>>(() => {
-    return loadAllStoredReviews();
-  });
-
-  // Ref for panels outside click detection
-  const sortRef = useRef<HTMLDivElement>(null);
-  const filterRef = useRef<HTMLDivElement>(null);
-
-  // Sync category with URL
-  useEffect(() => {
-    const cat = searchParams.get('category') || searchParams.get('shape');
-    if (cat && ACRYLIC_CATEGORY_TABS.some(t => t.slug.toLowerCase() === cat.toLowerCase())) {
-      setSelectedCategory(cat.toLowerCase());
-    } else if (!cat) {
-      setSelectedCategory('all');
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     document.title = 'Acrylic Prints & Wall Art | Canvas India';
   }, []);
 
-  // Close sort dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
-        setSortPanelOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  // Filter States
+  const [minPrice, setMinPrice] = useState<number>(PRICE_MIN_DEFAULT);
+  const [maxPrice, setMaxPrice] = useState<number>(PRICE_MAX_DEFAULT);
+  const [selectedOccasions, setSelectedOccasions] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<SortOption>('featured');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
 
-  // When opening filter panel, initialize draft state from applied state
-  const handleToggleFilterPanel = () => {
-    if (!filterPanelOpen) {
-      setDraftMinPrice(appliedMinPrice);
-      setDraftMaxPrice(appliedMaxPrice);
-      setDraftOccasions([...appliedOccasions]);
-      setDraftFeatures([...appliedFeatures]);
-      setSortPanelOpen(false);
-      setFilterPanelOpen(true);
-    } else {
-      setFilterPanelOpen(false);
-    }
-  };
+  // Source of truth for Acrylic category products — pulled from the shared catalog
+  const products: Product[] = useMemo(
+    () => allProducts.filter((p) => p.categorySlug === 'acrylic'),
+    [allProducts]
+  );
 
-  const handleToggleSortPanel = () => {
-    if (!sortPanelOpen) {
-      setFilterPanelOpen(false);
-      setSortPanelOpen(true);
-    } else {
-      setSortPanelOpen(false);
-    }
-  };
+  // Matches an occasion against a product's occasions list, falling back to tags
+  const productMatchesOccasion = (product: Product, occ: string) =>
+    !!product.occasions?.includes(occ) ||
+    !!product.tags?.some((t) => t.toLowerCase() === occ.toLowerCase());
 
-  const handleSelectCategory = (slug: string) => {
-    setSelectedCategory(slug);
-    const newParams = new URLSearchParams(searchParams);
-    if (slug === 'all') {
-      newParams.delete('category');
-      newParams.delete('shape');
-    } else {
-      newParams.set('category', slug);
-      newParams.delete('shape');
-    }
-    setSearchParams(newParams, { replace: true });
-  };
-
-  // Base Acrylic products from catalog
-  const acrylicProducts = useMemo(() => {
-    return allProducts.filter((p) => p.categorySlug === 'acrylic');
-  }, [allProducts]);
-
-  // Occasion checkbox toggle in draft
-  const handleToggleDraftOccasion = (occasion: string) => {
-    setDraftOccasions((prev) => 
-      prev.includes(occasion) ? prev.filter((o) => o !== occasion) : [...prev, occasion]
-    );
-  };
-
-  // Feature checkbox toggle in draft
-  const handleToggleDraftFeature = (feature: string) => {
-    setDraftFeatures((prev) => 
-      prev.includes(feature) ? prev.filter((f) => f !== feature) : [...prev, feature]
-    );
-  };
-
-  // Clear all filters action
-  const handleClearAllFilters = () => {
-    setDraftMinPrice(400);
-    setDraftMaxPrice(4000);
-    setDraftOccasions([]);
-    setDraftFeatures([]);
-    setAppliedMinPrice(400);
-    setAppliedMaxPrice(4000);
-    setAppliedOccasions([]);
-    setAppliedFeatures([]);
-    setFilterPanelOpen(false);
-  };
-
-  // Apply filters action
-  const handleApplyFilters = () => {
-    let min = Math.max(400, Math.min(draftMinPrice, draftMaxPrice));
-    let max = Math.min(4000, Math.max(draftMinPrice, draftMaxPrice));
-    if (min === max) {
-      if (max < 4000) max += 100;
-      else min -= 100;
-    }
-    setAppliedMinPrice(min);
-    setAppliedMaxPrice(max);
-    setDraftMinPrice(min);
-    setDraftMaxPrice(max);
-    setAppliedOccasions([...draftOccasions]);
-    setAppliedFeatures([...draftFeatures]);
-    setFilterPanelOpen(false);
-  };
-
-  // Active filter count calculation
-  const activeFiltersCount = useMemo(() => {
-    let count = 0;
-    if (appliedMinPrice > 400 || appliedMaxPrice < 4000) count += 1;
-    count += appliedOccasions.length;
-    count += appliedFeatures.length;
-    return count;
-  }, [appliedMinPrice, appliedMaxPrice, appliedOccasions, appliedFeatures]);
-
-  // Handle Sort Option selection
-  const handleSelectSort = (option: SortOption) => {
-    setSortBy(option);
-    setSortPanelOpen(false);
-  };
-
-  // Filtered Acrylic Products
-  const filteredProducts = useMemo(() => {
-    return acrylicProducts.filter((product) => {
-      // 1. Category filter
-      if (selectedCategory !== 'all') {
-        if (!isProductInAcrylicCategory(product, selectedCategory)) {
-          return false;
-        }
-      }
-
-      // 2. Price range filter
-      if (product.price < appliedMinPrice || product.price > appliedMaxPrice) {
-        return false;
-      }
-
-      // 3. Occasions filter (OR logic within occasions)
-      if (appliedOccasions.length > 0) {
-        const matchesOccasion = appliedOccasions.some(occ => 
-          product.occasions?.includes(occ) ||
-          product.tags?.some(t => t.toLowerCase() === occ.toLowerCase())
-        );
-        if (!matchesOccasion) {
-          return false;
-        }
-      }
-
-      // 4. Features filter (OR logic within features)
-      if (appliedFeatures.length > 0) {
-        const matchesFeature = appliedFeatures.some(feat => {
-          if (feat === 'Personalized' && (product.customizable || product.uploadRequired)) return true;
-          if (feat === 'Corporate Use' && (product.subcategory === 'Corporate' || product.subcategory === 'Signage' || product.tags?.includes('corporate'))) return true;
-          return product.features?.some(pf => pf.toLowerCase().includes(feat.toLowerCase()));
-        });
-        if (!matchesFeature) {
-          return false;
-        }
-      }
-
-      // 5. Search query filter
-      if (searchQuery.trim() !== '') {
-        const q = searchQuery.toLowerCase().trim();
-        const matchesName = product.name.toLowerCase().includes(q);
-        const matchesDesc = product.description.toLowerCase().includes(q);
-        const matchesTags = product.tags?.some(t => t.toLowerCase().includes(q));
-        const matchesMaterial = product.material?.toLowerCase().includes(q);
-        if (!matchesName && !matchesDesc && !matchesTags && !matchesMaterial) {
-          return false;
-        }
-      }
-
-      return true;
+  // Occasion count helper
+  const occasionCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    CANVAS_FILTER_OCCASIONS.forEach((occ) => {
+      counts[occ] = products.filter((p) => productMatchesOccasion(p, occ)).length;
     });
-  }, [acrylicProducts, selectedCategory, appliedMinPrice, appliedMaxPrice, appliedOccasions, appliedFeatures, searchQuery]);
+    return counts;
+  }, [products]);
 
-  // Sorted Products
-  const sortedProducts = useMemo(() => {
-    const list = [...filteredProducts];
+  // Toggle occasion filter
+  const handleToggleOccasion = (occ: string) => {
+    setSelectedOccasions((prev) =>
+      prev.includes(occ) ? prev.filter((o) => o !== occ) : [...prev, occ]
+    );
+  };
+
+  // Reset all filters
+  const handleResetFilters = () => {
+    setMinPrice(PRICE_MIN_DEFAULT);
+    setMaxPrice(PRICE_MAX_DEFAULT);
+    setSelectedOccasions([]);
+    setSortBy('featured');
+  };
+
+  // Check if any filter is active
+  const isFiltered =
+    minPrice > PRICE_MIN_DEFAULT ||
+    maxPrice < PRICE_MAX_DEFAULT ||
+    selectedOccasions.length > 0;
+
+  // Filtered and sorted products
+  const filteredProducts = useMemo(() => {
+    let result = products.filter((product) => {
+      // Price range check
+      const matchesPrice = product.price >= minPrice && product.price <= maxPrice;
+
+      // Occasion check
+      const matchesOccasion =
+        selectedOccasions.length === 0 ||
+        selectedOccasions.some((occ) => productMatchesOccasion(product, occ));
+
+      return matchesPrice && matchesOccasion;
+    });
+
+    // Sorting
     switch (sortBy) {
-      case 'Price: Low to High':
-        list.sort((a, b) => a.price - b.price);
+      case 'price-low':
+        result = [...result].sort((a, b) => a.price - b.price);
         break;
-      case 'Price: High to Low':
-        list.sort((a, b) => b.price - a.price);
+      case 'price-high':
+        result = [...result].sort((a, b) => b.price - a.price);
         break;
-      case 'Newest First':
-        list.sort((a, b) => new Date(b.createdAt || '2026-01-01').getTime() - new Date(a.createdAt || '2026-01-01').getTime());
+      case 'rating':
+        result = [...result].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
         break;
-      case 'Best Selling':
-        list.sort((a, b) => ((b.bestseller || b.badge === 'Best Seller') ? 1 : 0) - ((a.bestseller || a.badge === 'Best Seller') ? 1 : 0));
+      case 'discount':
+        result = [...result].sort((a, b) => b.discountPercent - a.discountPercent);
         break;
-      case 'Discount: High to Low':
-        list.sort((a, b) => (b.discountPercent || b.discount || 0) - (a.discountPercent || a.discount || 0));
-        break;
-      case 'Customer Rating':
-        list.sort((a, b) => (b.rating || 4.5) - (a.rating || 4.5));
-        break;
-      case 'Name: A–Z':
-        list.sort((a, b) => a.name.localeCompare(b.name));
-        break;
+      case 'featured':
       default:
+        // Default ordering
         break;
     }
-    return list;
-  }, [filteredProducts, sortBy]);
 
-  // Current active category tab object
-  const currentCategoryTab = useMemo(() => {
-    return ACRYLIC_CATEGORY_TABS.find(t => t.slug === selectedCategory) || ACRYLIC_CATEGORY_TABS[0];
-  }, [selectedCategory]);
+    return result;
+  }, [products, minPrice, maxPrice, selectedOccasions, sortBy]);
+
+  // Price presets
+  const applyPricePreset = (min: number, max: number) => {
+    setMinPrice(min);
+    setMaxPrice(max);
+  };
 
   return (
-    <div className="w-full bg-[#FFFDF9] text-stone-900 font-manrope min-h-screen">
-      
+    <div className="w-full bg-[#FFFDF9] text-stone-900 font-manrope">
+
       {/* ========================================================================= */}
-      {/* 1. PROFESSIONAL ACRYLIC HERO SECTION                                      */}
+      {/* HERO SECTION                                                              */}
       {/* ========================================================================= */}
       <section className="w-full bg-gradient-to-b from-[#FFFDF9] via-[#F8F9FA] to-white border-b border-stone-200/80 overflow-hidden">
         <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-8 sm:py-12 lg:py-14">
-          
+
           {/* Breadcrumb: Home > Acrylic */}
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-stone-500 mb-6">
             <Link to="/" className="hover:text-[#0E4A93] transition-colors">Home</Link>
@@ -384,19 +192,19 @@ export const AcrylicCategoryPage: React.FC = () => {
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-            
+
             {/* LEFT COLUMN: Heading, Description, and CTAs */}
             <div className="lg:col-span-7 space-y-6">
-              
+
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-[#0E4A93] text-xs font-black tracking-wide uppercase">
                 <Sparkles className="w-3.5 h-3.5 text-[#0E4A93]" />
                 <span>Premium Optical Acrylic Glass</span>
               </div>
 
-              {/* Exact Heading & Subtitle */}
+              {/* Heading & Subtitle */}
               <div className="space-y-3">
-                <h1 
+                <h1
                   className="text-3xl sm:text-4xl lg:text-5xl font-black text-stone-950 tracking-tight leading-tight"
                   style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
                 >
@@ -412,7 +220,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    const catalogEl = document.getElementById('acrylic-catalog');
+                    const catalogEl = document.getElementById('acrylic-catalog-section');
                     if (catalogEl) {
                       catalogEl.scrollIntoView({ behavior: 'smooth' });
                     }
@@ -425,7 +233,7 @@ export const AcrylicCategoryPage: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => navigate('/customize/acrylic/acrylic-rectangle-print')}
+                  onClick={() => navigate(`/customize/acrylic/${products[0]?.slug || products[0]?.id || 'acrylic-rectangle-print'}`)}
                   className="px-6 py-3.5 bg-[#E8752A] hover:bg-[#d6651d] active:scale-[0.99] text-white text-xs sm:text-sm font-black rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4 text-amber-200" />
@@ -469,9 +277,8 @@ export const AcrylicCategoryPage: React.FC = () => {
                   }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
-                
-                {/* Acrylic Gloss Glass Sheen Layer */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/20 pointer-events-none" />
+
+                <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/10 pointer-events-none" />
 
                 {/* Floating Highlight Badge */}
                 <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-md border border-stone-200/80 flex items-center gap-2.5">
@@ -491,279 +298,289 @@ export const AcrylicCategoryPage: React.FC = () => {
       </section>
 
       {/* ========================================================================= */}
-      {/* 2. ACRYLIC PRODUCT CATEGORIES HORIZONTAL NAVIGATION                       */}
+      {/* ACRYLIC PRODUCT LISTING (Matches Canvas Category Page Layout 1:1)        */}
       {/* ========================================================================= */}
-      <div id="acrylic-catalog" className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-2xs">
-        <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-3">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5">
-            {ACRYLIC_CATEGORY_TABS.map((tab) => {
-              const isActive = selectedCategory === tab.slug;
-              // Compute dynamic product count for this acrylic category
-              const count = tab.slug === 'all'
-                ? acrylicProducts.length
-                : acrylicProducts.filter(p => isProductInAcrylicCategory(p, tab.slug)).length;
+      <section id="acrylic-catalog-section" className="w-full py-8 sm:py-12 border-b border-stone-200/80">
+        <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
 
-              return (
-                <button
-                  key={tab.slug}
-                  type="button"
-                  onClick={() => handleSelectCategory(tab.slug)}
-                  className={`px-4 py-2 rounded-full text-xs whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
-                    isActive
-                      ? 'bg-[#0E4A93] text-white shadow-xs ring-2 ring-[#0E4A93]/20 font-bold'
-                      : 'bg-stone-50 hover:bg-stone-100 text-stone-700 border border-stone-300 font-medium'
-                  }`}
-                >
-                  <span>{tab.name}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                    isActive ? 'bg-white/25 text-white' : 'bg-stone-200/80 text-stone-600'
-                  }`}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 3. TOP CONTROLS: HORIZONTAL FILTERS, SORT BUTTONS, & SEARCH               */}
-      {/* ========================================================================= */}
-      <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 pt-5 pb-2">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          
-          {/* Action Buttons: FILTERS (Left) & SORT (Right) */}
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            
-            {/* [ FILTERS ] Button */}
-            <div className="relative">
+          {/* Section Header */}
+          <div className="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-6 mb-6 border-b border-stone-200">
+            {/* Results Count & Controls */}
+            <div className="flex items-center gap-3 shrink-0 self-start md:self-end">
+              {/* Mobile Filter Trigger */}
               <button
                 type="button"
-                onClick={handleToggleFilterPanel}
-                className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer border ${
-                  filterPanelOpen || activeFiltersCount > 0
-                    ? 'bg-[#0E4A93] text-white border-[#0E4A93] shadow-sm'
-                    : 'bg-white text-stone-800 border-stone-300 hover:border-stone-400 hover:bg-stone-50'
-                }`}
-                aria-expanded={filterPanelOpen}
-                aria-label="Toggle Filters"
+                onClick={() => setMobileFiltersOpen(true)}
+                className="lg:hidden flex items-center gap-2 px-3.5 py-2 rounded-lg border border-stone-300 bg-white text-xs font-bold text-stone-800 hover:border-[#0E4A93] shadow-2xs cursor-pointer"
+                aria-label="Open filter sidebar"
               >
-                <SlidersHorizontal className="w-4 h-4 shrink-0" />
-                <span>FILTERS</span>
-                {activeFiltersCount > 0 && (
-                  <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black ${
-                    filterPanelOpen ? 'bg-amber-400 text-stone-900' : 'bg-[#0E4A93] text-white border border-white/40'
-                  }`}>
-                    {activeFiltersCount}
-                  </span>
+                <SlidersHorizontal className="w-3.5 h-3.5 text-[#0E4A93]" />
+                <span>Filters</span>
+                {isFiltered && (
+                  <span className="w-2 h-2 rounded-full bg-[#E8752A]"></span>
                 )}
               </button>
-            </div>
 
-            {/* [ SORT ] Button */}
-            <div className="relative" ref={sortRef}>
+              {/* Sort By Dropdown */}
+              <div className="flex items-center gap-2 text-xs">
+                <label htmlFor="sort-dropdown" className="font-semibold text-stone-500 hidden sm:inline">
+                  Sort:
+                </label>
+                <div className="relative">
+                  <select
+                    id="sort-dropdown"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                    className="appearance-none bg-white border border-stone-300 hover:border-[#0E4A93] text-stone-800 font-semibold text-xs rounded-lg px-3 py-2 pr-7 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0E4A93]/20 shadow-2xs"
+                  >
+                    <option value="featured">Featured</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="rating">Customer Rating</option>
+                    <option value="discount">Biggest Discount</option>
+                  </select>
+                  <ArrowUpDown className="w-3 h-3 text-stone-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Active Filter Badges Bar */}
+          {isFiltered && (
+            <div className="flex flex-wrap items-center gap-2 mb-6 p-3 rounded-xl bg-orange-50/60 border border-orange-200/60 text-xs">
+              <span className="font-bold text-stone-700">Active Filters:</span>
+
+              {(minPrice > PRICE_MIN_DEFAULT || maxPrice < PRICE_MAX_DEFAULT) && (
+                <span className="inline-flex items-center gap-1.5 bg-white border border-orange-200 text-stone-800 px-2.5 py-1 rounded-md font-semibold text-[11px] shadow-2xs">
+                  <span>Price: ₹{minPrice.toLocaleString('en-IN')} - ₹{maxPrice.toLocaleString('en-IN')}</span>
+                  <button
+                    type="button"
+                    onClick={() => { setMinPrice(PRICE_MIN_DEFAULT); setMaxPrice(PRICE_MAX_DEFAULT); }}
+                    className="text-stone-400 hover:text-stone-700 cursor-pointer"
+                    aria-label="Remove price filter"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+
+              {selectedOccasions.map((occ) => (
+                <span
+                  key={occ}
+                  className="inline-flex items-center gap-1.5 bg-white border border-orange-200 text-stone-800 px-2.5 py-1 rounded-md font-semibold text-[11px] shadow-2xs"
+                >
+                  <span>{occ}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleOccasion(occ)}
+                    className="text-stone-400 hover:text-stone-700 cursor-pointer"
+                    aria-label={`Remove ${occ} filter`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+
               <button
                 type="button"
-                onClick={handleToggleSortPanel}
-                className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer border ${
-                  sortPanelOpen
-                    ? 'bg-stone-900 text-white border-stone-900 shadow-sm'
-                    : 'bg-white text-stone-800 border-stone-300 hover:border-stone-400 hover:bg-stone-50'
-                }`}
-                aria-expanded={sortPanelOpen}
-                aria-label="Toggle Sort"
+                onClick={handleResetFilters}
+                className="text-[11px] font-bold text-[#E8752A] hover:underline ml-auto flex items-center gap-1 cursor-pointer"
               >
-                <ArrowUpDown className="w-4 h-4 shrink-0 text-stone-500" />
-                <span>SORT: <span className="font-semibold text-stone-600">{sortBy}</span></span>
+                <RotateCcw className="w-3 h-3" />
+                <span>Clear All</span>
               </button>
+            </div>
+          )}
 
-              {/* SORT DROPDOWN PANEL (Closed by default, opens on click) */}
-              {sortPanelOpen && (
-                <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-stone-200 py-2 z-30 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="px-3 py-2 border-b border-stone-100 text-[11px] font-extrabold uppercase tracking-wider text-stone-400">
-                    Sort Acrylic Products
-                  </div>
-                  <div className="p-1 space-y-0.5">
-                    {SORT_OPTIONS.map((option) => {
-                      const isSelected = sortBy === option;
-                      return (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => handleSelectSort(option)}
-                          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
-                            isSelected
-                              ? 'bg-blue-50 text-[#0E4A93]'
-                              : 'text-stone-700 hover:bg-stone-50 hover:text-stone-900'
-                          }`}
-                        >
-                          <span>{option}</span>
-                          {isSelected && <Check className="w-4 h-4 text-[#0E4A93] shrink-0" />}
-                        </button>
-                      );
-                    })}
+          {/* Main Two-Column E-Commerce Browsing Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+            {/* =================================================================== */}
+            {/* LEFT COLUMN: DESKTOP FILTER SIDEBAR (lg:col-span-3)                 */}
+            {/* =================================================================== */}
+            <aside className="hidden lg:block lg:col-span-3 space-y-6 text-left sticky top-24 bg-white p-5 rounded-2xl border border-stone-200/90 shadow-xs">
+
+              {/* Sidebar Title & Reset */}
+              <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-[#0E4A93]" />
+                  <h3 className="font-bold text-sm text-stone-900 uppercase tracking-wider">Filters</h3>
+                </div>
+                {isFiltered && (
+                  <button
+                    type="button"
+                    onClick={handleResetFilters}
+                    className="text-xs font-bold text-[#E8752A] hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Reset</span>
+                  </button>
+                )}
+              </div>
+
+              {/* ------------------------------------------------------------- */}
+              {/* FILTER A: PRICE RANGE                                          */}
+              {/* ------------------------------------------------------------- */}
+              <div className="space-y-3.5 pb-5 border-b border-stone-100">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs uppercase tracking-wide text-stone-900">
+                    Price Range
+                  </span>
+                  <span className="text-[11px] font-semibold text-[#0E4A93]">
+                    ₹{minPrice.toLocaleString('en-IN')} – ₹{maxPrice.toLocaleString('en-IN')}
+                  </span>
+                </div>
+
+                {/* Range Slider Control */}
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={PRICE_MIN_DEFAULT}
+                      max={PRICE_MAX_DEFAULT}
+                      step={100}
+                      value={maxPrice}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        if (val >= minPrice) {
+                          setMaxPrice(val);
+                        }
+                      }}
+                      className="w-full accent-[#0E4A93] cursor-pointer"
+                      aria-label="Price range slider"
+                    />
                   </div>
                 </div>
-              )}
-            </div>
 
-          </div>
-
-          {/* Search Box within Acrylic Prints */}
-          <div className="relative w-full sm:w-72">
-            <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by shape, name, or style..."
-              className="w-full pl-8 pr-7 py-2 bg-white text-stone-900 placeholder-stone-400 rounded-xl border border-stone-300 focus:outline-none focus:border-[#0E4A93] text-xs transition-colors shadow-2xs"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
-        </div>
-
-        {/* ========================================================================= */}
-        {/* 4. EXPANDABLE FILTER PANEL (Closed by default)                            */}
-        {/* ========================================================================= */}
-        {filterPanelOpen && (
-          <div 
-            ref={filterRef}
-            className="mt-4 bg-white border border-stone-200/90 rounded-2xl p-5 sm:p-7 shadow-lg animate-in fade-in slide-in-from-top-2 duration-200"
-          >
-            <div className="flex items-center justify-between pb-4 mb-5 border-b border-stone-100">
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-[#0E4A93]" />
-                <h3 className="text-sm font-extrabold text-stone-900 uppercase tracking-wider">
-                  Filter Acrylic Products
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setFilterPanelOpen(false)}
-                className="p-1 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 cursor-pointer transition-colors"
-                aria-label="Close Filter Panel"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              
-              {/* SECTION A: PRICE RANGE */}
-              <div className="space-y-3">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">
-                  Price Range
-                </span>
-                
-                <div className="grid grid-cols-2 gap-3 pt-1">
+                {/* Min / Max Inputs */}
+                <div className="grid grid-cols-2 gap-2 pt-1">
                   <div>
-                    <label className="block text-[11px] font-semibold text-stone-500 mb-1">
+                    <label htmlFor="desktop-min-price" className="text-[10px] uppercase font-bold text-stone-500 block mb-1">
                       Min Price
                     </label>
-                    <div className="flex items-center px-3 py-1.5 bg-stone-50 border border-stone-300 rounded-xl focus-within:border-[#0E4A93] focus-within:bg-white transition-colors">
-                      <span className="text-stone-400 font-bold text-xs mr-1">₹</span>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400 text-xs font-semibold">₹</span>
                       <input
+                        id="desktop-min-price"
                         type="number"
-                        min={400}
-                        max={draftMaxPrice - 50}
+                        min={PRICE_MIN_DEFAULT}
+                        max={maxPrice}
                         step={50}
-                        value={draftMinPrice}
+                        value={minPrice}
                         onChange={(e) => {
                           const val = Number(e.target.value);
-                          setDraftMinPrice(val);
+                          if (val <= maxPrice) setMinPrice(val);
                         }}
-                        onBlur={() => {
-                          let val = Math.max(400, Math.min(draftMinPrice, draftMaxPrice - 100));
-                          setDraftMinPrice(val);
-                        }}
-                        className="w-full bg-transparent text-xs font-bold text-stone-900 focus:outline-none"
+                        className="w-full pl-6 pr-2 py-1.5 text-xs font-bold text-stone-800 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:border-[#0E4A93]"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-stone-500 mb-1">
+                    <label htmlFor="desktop-max-price" className="text-[10px] uppercase font-bold text-stone-500 block mb-1">
                       Max Price
                     </label>
-                    <div className="flex items-center px-3 py-1.5 bg-stone-50 border border-stone-300 rounded-xl focus-within:border-[#0E4A93] focus-within:bg-white transition-colors">
-                      <span className="text-stone-400 font-bold text-xs mr-1">₹</span>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400 text-xs font-semibold">₹</span>
                       <input
+                        id="desktop-max-price"
                         type="number"
-                        min={draftMinPrice + 50}
-                        max={4000}
+                        min={minPrice}
+                        max={PRICE_MAX_DEFAULT}
                         step={50}
-                        value={draftMaxPrice}
+                        value={maxPrice}
                         onChange={(e) => {
                           const val = Number(e.target.value);
-                          setDraftMaxPrice(val);
+                          if (val >= minPrice) setMaxPrice(val);
                         }}
-                        onBlur={() => {
-                          let val = Math.min(4000, Math.max(draftMaxPrice, draftMinPrice + 100));
-                          setDraftMaxPrice(val);
-                        }}
-                        className="w-full bg-transparent text-xs font-bold text-stone-900 focus:outline-none"
+                        className="w-full pl-6 pr-2 py-1.5 text-xs font-bold text-stone-800 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:border-[#0E4A93]"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-[10px] text-stone-400">
-                  <span>₹400</span>
-                  <span>₹4,000</span>
+                {/* Quick Price Bracket Chips */}
+                <div className="pt-1 flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => applyPricePreset(PRICE_MIN_DEFAULT, 999)}
+                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-md border transition-colors cursor-pointer ${
+                      minPrice === PRICE_MIN_DEFAULT && maxPrice === 999
+                        ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
+                        : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100'
+                    }`}
+                  >
+                    Under ₹1,000
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPricePreset(1000, 1999)}
+                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-md border transition-colors cursor-pointer ${
+                      minPrice === 1000 && maxPrice === 1999
+                        ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
+                        : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100'
+                    }`}
+                  >
+                    ₹1,000 – ₹1,999
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPricePreset(2000, PRICE_MAX_DEFAULT)}
+                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-md border transition-colors cursor-pointer ${
+                      minPrice === 2000 && maxPrice === PRICE_MAX_DEFAULT
+                        ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
+                        : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100'
+                    }`}
+                  >
+                    ₹2,000+
+                  </button>
                 </div>
               </div>
 
-              {/* SECTION B: SHOP BY OCCASION */}
+              {/* ------------------------------------------------------------- */}
+              {/* FILTER B: SHOP BY OCCASION                                     */}
+              {/* ------------------------------------------------------------- */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
+                  <span className="font-bold text-xs uppercase tracking-wide text-stone-900">
                     Shop by Occasion
                   </span>
-                  {draftOccasions.length > 0 && (
-                    <span className="text-[11px] font-bold text-[#0E4A93]">
-                      {draftOccasions.length} selected
-                    </span>
+                  {selectedOccasions.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedOccasions([])}
+                      className="text-[10px] font-bold text-stone-500 hover:text-stone-800"
+                    >
+                      Clear
+                    </button>
                   )}
                 </div>
 
-                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                  {OCCASIONS_LIST.map((occasion) => {
-                    const isChecked = draftOccasions.includes(occasion);
-                    const matchCount = acrylicProducts.filter(p => 
-                      p.occasions?.includes(occasion) || p.tags?.some(t => t.toLowerCase() === occasion.toLowerCase())
-                    ).length;
+                <div className="space-y-1.5">
+                  {CANVAS_FILTER_OCCASIONS.map((occasion) => {
+                    const isChecked = selectedOccasions.includes(occasion);
+                    const count = occasionCounts[occasion] || 0;
 
                     return (
                       <label
                         key={occasion}
-                        className={`flex items-center justify-between p-2 rounded-xl text-xs cursor-pointer transition-colors ${
-                          isChecked 
-                            ? 'bg-blue-50/70 border border-blue-200 text-stone-900 font-bold' 
-                            : 'hover:bg-stone-50 text-stone-700 border border-transparent'
+                        className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+                          isChecked
+                            ? 'bg-blue-50/70 text-[#0E4A93]'
+                            : 'hover:bg-stone-50 text-stone-700'
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
                           <input
                             type="checkbox"
                             checked={isChecked}
-                            onChange={() => handleToggleDraftOccasion(occasion)}
-                            className="w-4 h-4 rounded border-stone-300 text-[#0E4A93] focus:ring-[#0E4A93] accent-[#0E4A93] cursor-pointer"
+                            onChange={() => handleToggleOccasion(occasion)}
+                            className="w-4 h-4 rounded text-[#0E4A93] focus:ring-[#0E4A93] cursor-pointer"
                           />
                           <span>{occasion}</span>
                         </div>
-                        <span className="text-[10px] font-semibold text-stone-400 px-1.5 py-0.5 rounded-full bg-stone-100">
-                          {matchCount}
+                        <span className={`text-[11px] font-medium ${isChecked ? 'text-[#0E4A93]' : 'text-stone-400'}`}>
+                          ({count})
                         </span>
                       </label>
                     );
@@ -771,428 +588,270 @@ export const AcrylicCategoryPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* SECTION C: ACRYLIC FEATURES */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
-                    Acrylic Features
-                  </span>
-                  {draftFeatures.length > 0 && (
-                    <span className="text-[11px] font-bold text-[#0E4A93]">
-                      {draftFeatures.length} selected
-                    </span>
-                  )}
+              {/* Quality & Delivery Assurance Strip in Sidebar */}
+              <div className="pt-2 border-t border-stone-100 space-y-2 text-[11px] text-stone-500">
+                <div className="flex items-center gap-2 text-stone-700 font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span>Crystal-Clear Optical Acrylic</span>
                 </div>
-
-                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                  {FEATURES_LIST.map((feature) => {
-                    const isChecked = draftFeatures.includes(feature);
-                    const matchCount = acrylicProducts.filter(p => {
-                      if (feature === 'Personalized' && (p.customizable || p.uploadRequired)) return true;
-                      if (feature === 'Corporate Use' && (p.subcategory === 'Corporate' || p.subcategory === 'Signage' || p.tags?.includes('corporate'))) return true;
-                      return p.features?.some(pf => pf.toLowerCase().includes(feature.toLowerCase()));
-                    }).length;
-
-                    return (
-                      <label
-                        key={feature}
-                        className={`flex items-center justify-between p-2 rounded-xl text-xs cursor-pointer transition-colors ${
-                          isChecked 
-                            ? 'bg-blue-50/70 border border-blue-200 text-stone-900 font-bold' 
-                            : 'hover:bg-stone-50 text-stone-700 border border-transparent'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => handleToggleDraftFeature(feature)}
-                            className="w-4 h-4 rounded border-stone-300 text-[#0E4A93] focus:ring-[#0E4A93] accent-[#0E4A93] cursor-pointer"
-                          />
-                          <span>{feature}</span>
-                        </div>
-                        <span className="text-[10px] font-semibold text-stone-400 px-1.5 py-0.5 rounded-full bg-stone-100">
-                          {matchCount}
-                        </span>
-                      </label>
-                    );
-                  })}
+                <div className="flex items-center gap-2 text-stone-700 font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span>Ready to Hang with Hardware</span>
+                </div>
+                <div className="flex items-center gap-2 text-stone-700 font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span>Free Insured Delivery on ₹999+</span>
                 </div>
               </div>
 
-            </div>
+            </aside>
 
-            {/* SECTION D: BOTTOM ACTION BUTTONS */}
-            <div className="flex items-center justify-between pt-5 mt-6 border-t border-stone-100">
-              <button
-                type="button"
-                onClick={handleClearAllFilters}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-xl transition-colors cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>CLEAR ALL</span>
-              </button>
+            {/* =================================================================== */}
+            {/* RIGHT COLUMN: PRODUCT GRID (lg:col-span-9)                          */}
+            {/* =================================================================== */}
+            <main className="lg:col-span-9">
 
-              <div className="flex items-center gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setFilterPanelOpen(false)}
-                  className="px-4 py-2.5 text-xs font-semibold text-stone-600 hover:text-stone-900 rounded-xl hover:bg-stone-100 transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleApplyFilters}
-                  className="px-6 py-2.5 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-extrabold rounded-xl shadow-xs hover:shadow-md transition-all cursor-pointer"
-                >
-                  APPLY FILTERS
-                </button>
-              </div>
-            </div>
-
-          </div>
-        )}
-
-        {/* Active Filters Pill Bar */}
-        {activeFiltersCount > 0 && (
-          <div className="flex flex-wrap items-center gap-2 pt-3 pb-1">
-            <span className="text-xs font-semibold text-stone-500">Active Filters:</span>
-            
-            {(appliedMinPrice > 400 || appliedMaxPrice < 4000) && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-stone-100 text-stone-800 rounded-full text-xs font-medium">
-                <span>₹{appliedMinPrice} – ₹{appliedMaxPrice}</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAppliedMinPrice(400);
-                    setAppliedMaxPrice(4000);
-                  }}
-                  className="hover:text-rose-600 cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </span>
-            )}
-
-            {appliedOccasions.map((occ) => (
-              <span key={occ} className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-[#0E4A93] rounded-full text-xs font-medium border border-blue-200/60">
-                <span>{occ}</span>
-                <button
-                  type="button"
-                  onClick={() => setAppliedOccasions(prev => prev.filter(o => o !== occ))}
-                  className="hover:text-rose-600 cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </span>
-            ))}
-
-            {appliedFeatures.map((feat) => (
-              <span key={feat} className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-800 rounded-full text-xs font-medium border border-amber-200/60">
-                <span>{feat}</span>
-                <button
-                  type="button"
-                  onClick={() => setAppliedFeatures(prev => prev.filter(f => f !== feat))}
-                  className="hover:text-rose-600 cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </span>
-            ))}
-
-            <button
-              type="button"
-              onClick={handleClearAllFilters}
-              className="text-xs font-bold text-[#0E4A93] hover:underline cursor-pointer ml-1"
-            >
-              Clear All
-            </button>
-          </div>
-        )}
-
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 5. DYNAMIC PRODUCT COUNT & GRID                                           */}
-      {/* ========================================================================= */}
-      <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-4">
-        
-        {/* Dynamic Product Count Display */}
-        <div className="flex items-center justify-between pb-4">
-          <div className="text-sm text-stone-600 font-medium">
-            {selectedCategory === 'all' ? (
-              <>
-                Showing <span className="font-extrabold text-stone-900">{sortedProducts.length}</span> of{' '}
-                <span className="font-extrabold text-stone-900">{acrylicProducts.length}</span> Acrylic Products
-              </>
-            ) : (
-              <>
-                Showing <span className="font-extrabold text-stone-900">{sortedProducts.length}</span>{' '}
-                <span className="font-extrabold text-[#0E4A93]">{currentCategoryTab.name}</span>
-              </>
-            )}
-          </div>
-
-          {selectedCategory !== 'all' && (
-            <div className="text-xs text-stone-500 hidden sm:flex items-center gap-1.5">
-              <span>Category:</span>
-              <span className="font-bold text-[#0E4A93] bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">
-                {currentCategoryTab.name}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* ACRYLIC PRODUCT CARDS GRID */}
-        {sortedProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-7">
-            {sortedProducts.map((product) => {
-              const isWishlisted = wishlistIds.includes(product.id);
-              const discount = product.discount || product.discountPercent || 25;
-              const originalPrice = product.originalPrice || product.compareAtPrice || Math.round(product.price * 1.3);
-
-              // Reviews calculations for this specific product
-              const reviewsForProduct = productReviewsMap[product.id] || [];
-              const totalReviewsCount = (product.reviewsCount || 24) + reviewsForProduct.filter(r => r.id.startsWith('rev-')).length;
-              const averageRating = reviewsForProduct.length > 0
-                ? Number((reviewsForProduct.reduce((acc, r) => acc + r.rating, 0) / reviewsForProduct.length).toFixed(1))
-                : (product.rating || 4.8);
-
-              return (
-                <div
-                  key={product.id}
-                  className="group bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
-                >
-                  {/* Top Image Container with Overlays */}
-                  <div className="relative aspect-[4/3] bg-stone-100 overflow-hidden flex items-center justify-center p-3">
-                    <Link to={`/products/${product.slug || product.id}`} className="block w-full h-full">
-                      <ProductImage
-                        src={product.image}
-                        alt={product.name}
-                        category="acrylic"
-                        categorySlug="acrylic"
-                        shape={product.shape}
-                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                      />
-                    </Link>
-
-                    {/* Acrylic Gloss Glass Sheen Effect Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-transparent pointer-events-none" />
-
-                    {/* Top Left: Discount Badge Overlay */}
-                    <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">
-                      <span className="bg-[#E8752A] text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs tracking-wide">
-                        {discount}% OFF
-                      </span>
-
-                      {product.badge && product.badge !== 'Custom' && (
-                        <span className="bg-[#0E4A93] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                          {product.badge}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Top Right: Wishlist Heart Button Overlay */}
-                    <button
-                      type="button"
-                      onClick={() => onToggleWishlist(product.id)}
-                      className={`absolute top-2.5 right-2.5 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-all shadow-xs cursor-pointer ${
-                        isWishlisted
-                          ? 'bg-rose-50 text-rose-600'
-                          : 'bg-white/90 text-stone-600 hover:text-rose-600 hover:bg-white'
-                      }`}
-                      aria-label="Toggle Wishlist"
-                    >
-                      <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
-                    </button>
-
-                    {/* Bottom Left: Thickness / Style Tag */}
-                    <div className="absolute bottom-2.5 left-2.5 bg-black/60 backdrop-blur-xs text-white text-[10px] font-medium px-2 py-0.5 rounded">
-                      {product.availableThicknesses?.[0] || '5mm'} Optical Acrylic
-                    </div>
+              {/* Results status indicator */}
+              <div className="flex items-center justify-between pb-4 mb-4 text-xs font-semibold text-stone-600 border-b border-stone-100">
+                <div>
+                  Showing <span className="text-stone-900 font-bold">{filteredProducts.length}</span> of {products.length} Acrylic Prints
+                </div>
+                {isFiltered && (
+                  <div className="text-[11px] text-[#0E4A93] font-bold">
+                    Filtered view active
                   </div>
+                )}
+              </div>
 
-                  {/* Card Content */}
-                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
-                    <div className="space-y-1.5">
-                      {/* Product Category Tag */}
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-[#0E4A93] flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" />
-                        <span>{product.subcategory || 'ACRYLIC PRINT'}</span>
-                      </div>
-
-                      {/* Product Title (clickable) */}
-                      <Link to={`/products/${product.slug || product.id}`} className="block">
-                        <h3 className="font-bold text-stone-900 text-sm sm:text-base leading-snug group-hover:text-[#0E4A93] transition-colors line-clamp-2">
-                          {product.name}
-                        </h3>
-                      </Link>
-
-                      {/* Description */}
-                      <p className="text-xs text-stone-500 line-clamp-2 leading-relaxed">
-                        {product.shortDescription || product.description}
-                      </p>
-                    </div>
-
-                    {/* Rating Summary Row (Clean display of rating and reviews count) */}
-                    <div className="pt-2 border-t border-stone-100 flex items-center gap-1.5 text-xs text-amber-500 font-bold">
-                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      <span>{averageRating}</span>
-                      <span className="text-stone-400 font-normal">
-                        ({totalReviewsCount} reviews)
-                      </span>
-                    </div>
-
-                    {/* Price & Primary Purchase CTA Row */}
-                    <div className="pt-2 border-t border-stone-100 space-y-2.5">
-                      <div className="flex items-baseline justify-between">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-lg sm:text-xl font-extrabold text-stone-950">
-                            ₹{product.price.toLocaleString('en-IN')}
-                          </span>
-                          <span className="text-xs text-stone-400 line-through">
-                            ₹{originalPrice.toLocaleString('en-IN')}
-                          </span>
-                        </div>
-                        <span className="text-[11px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded">
-                          Save ₹{(originalPrice - product.price).toLocaleString('en-IN')}
-                        </span>
-                      </div>
-
-                      {/* Two Action Buttons: [ CUSTOMIZE ] & [ ADD TO CART ] */}
-                      <div className="grid grid-cols-2 gap-2 pt-1">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            navigate(`/customize/acrylic/${product.slug || product.id}`);
-                          }}
-                          className="py-2 px-2 bg-stone-100 hover:bg-[#0E4A93] hover:text-white text-[#0E4A93] border border-[#0E4A93]/30 active:scale-[0.99] text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
-                        >
-                          <Sparkles className="w-3.5 h-3.5" />
-                          <span>CUSTOMIZE</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            onAddToCart(product);
-                          }}
-                          className="py-2 px-2 bg-[#0E4A93] hover:bg-[#09356A] active:scale-[0.99] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-xs hover:shadow-md transition-all cursor-pointer"
-                        >
-                          <ShoppingCart className="w-3.5 h-3.5 text-white" />
-                          <span>ADD TO CART</span>
-                        </button>
-                      </div>
-                    </div>
-
-                  </div>
+              {/* Grid or Polished Empty State */}
+              {filteredProducts.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-5">
+                  {filteredProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      isWishlisted={wishlistIds.includes(product.id)}
+                      onToggleWishlist={onToggleWishlist}
+                      onAddToCart={onAddToCart}
+                      onCustomize={onOpenCustomize}
+                      variant="listing"
+                    />
+                  ))}
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          /* Empty State */
-          <div className="py-20 text-center space-y-4 max-w-md mx-auto">
-            <div className="w-16 h-16 rounded-full bg-blue-50 text-[#0E4A93] flex items-center justify-center mx-auto">
-              <Search className="w-8 h-8" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="font-bold text-stone-900 text-lg">No Acrylic Products Found</h3>
-              <p className="text-xs text-stone-500 leading-relaxed">
-                We couldn&apos;t find any acrylic products matching the selected category or filters.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                handleSelectCategory('all');
-                handleClearAllFilters();
-                setSearchQuery('');
-              }}
-              className="px-5 py-2.5 bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold rounded-xl text-xs transition-colors cursor-pointer inline-flex items-center gap-1.5"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Category &amp; Filters</span>
-            </button>
-          </div>
-        )}
+              ) : (
+                /* Polished Empty State */
+                <div className="py-16 sm:py-20 px-6 rounded-2xl bg-white border border-stone-200/80 text-center space-y-4 max-w-md mx-auto my-6 shadow-xs">
+                  <div className="w-14 h-14 rounded-full bg-orange-50 text-[#E8752A] flex items-center justify-center mx-auto border border-orange-200">
+                    <FilterX className="w-7 h-7" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-bold text-stone-900">
+                      No Acrylic Prints Match Filters
+                    </h3>
+                    <p className="text-xs text-stone-500 leading-relaxed">
+                      We couldn&apos;t find any products in your selected price range or occasion criteria.
+                      Try widening your price range or clearing occasion selections.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleResetFilters}
+                    className="px-6 py-2.5 bg-[#0E4A93] hover:bg-[#0A3770] text-white text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer inline-flex items-center gap-2"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Reset All Filters</span>
+                  </button>
+                </div>
+              )}
 
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 6. WHY CHOOSE ACRYLIC PRINTS? (4 CLEAN BENEFITS SECTION)                  */}
-      {/* ========================================================================= */}
-      <section className="w-full bg-stone-50 border-t border-stone-200/80 py-12 sm:py-16 mt-8">
-        <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <span className="text-xs font-bold text-[#0E4A93] uppercase tracking-wider">The Canvas India Difference</span>
-            <h2 
-              className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight mt-1"
-              style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
-            >
-              Why Choose Acrylic Prints?
-            </h2>
-            <p className="text-xs sm:text-sm text-stone-600 mt-1.5">
-              Engineered with cast monomer optical acrylic for gallery-grade depth, luminance, and longevity.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            
-            {/* Benefit 1 */}
-            <div className="bg-white p-6 rounded-2xl border border-stone-200/80 shadow-2xs space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#0E4A93] flex items-center justify-center font-bold">
-                <Award className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-stone-900 text-sm sm:text-base">1. Premium Quality</h3>
-              <p className="text-xs text-stone-600 leading-relaxed">
-                Crystal clear and vibrant prints with direct 12-color sub-surface UV curing that captures high dynamic range and subtle gradients without banding.
-              </p>
-            </div>
-
-            {/* Benefit 2 */}
-            <div className="bg-white p-6 rounded-2xl border border-stone-200/80 shadow-2xs space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-[#E8752A] flex items-center justify-center font-bold">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-stone-900 text-sm sm:text-base">2. Modern &amp; Elegant</h3>
-              <p className="text-xs text-stone-600 leading-relaxed">
-                Enhances any space with frameless floating elegance. Polished diamond-beveled edges refract room lighting to create an immersive 3D depth effect.
-              </p>
-            </div>
-
-            {/* Benefit 3 */}
-            <div className="bg-white p-6 rounded-2xl border border-stone-200/80 shadow-2xs space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
-                <Palette className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-stone-900 text-sm sm:text-base">3. Fully Customizable</h3>
-              <p className="text-xs text-stone-600 leading-relaxed">
-                Your design, your way. Choose custom shapes, 18+ cut geometries, 5mm to 8mm thicknesses, desktop freestanding blocks, metallic paper, or floating wall studs.
-              </p>
-            </div>
-
-            {/* Benefit 4 */}
-            <div className="bg-white p-6 rounded-2xl border border-stone-200/80 shadow-2xs space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
-                <Gift className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-stone-900 text-sm sm:text-base">4. Perfect for Gifting</h3>
-              <p className="text-xs text-stone-600 leading-relaxed">
-                Cherish weddings, anniversaries, and milestones forever. Acrylic glass will never discolor, oxidize, or warp under ambient humidity.
-              </p>
-            </div>
+            </main>
 
           </div>
 
         </div>
       </section>
 
+      {/* ========================================================================= */}
+      {/* 3. MOBILE FILTER SLIDE-OVER DRAWER                                        */}
+      {/* ========================================================================= */}
+      {mobileFiltersOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex justify-end">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+            onClick={() => setMobileFiltersOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Drawer Content */}
+          <div className="relative w-full max-w-xs sm:max-w-sm bg-white h-full shadow-2xl flex flex-col z-10 text-left">
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-[#0E4A93]" />
+                <h3 className="font-bold text-sm text-stone-900 uppercase tracking-wider">
+                  Filter Products
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileFiltersOpen(false)}
+                className="p-1 rounded-md text-stone-400 hover:text-stone-700 cursor-pointer"
+                aria-label="Close filters"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Drawer Body */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-6">
+
+              {/* Price Range */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs uppercase tracking-wide text-stone-900">
+                    Price Range
+                  </span>
+                  <span className="text-[11px] font-semibold text-[#0E4A93]">
+                    ₹{minPrice} – ₹{maxPrice}
+                  </span>
+                </div>
+
+                <input
+                  type="range"
+                  min={PRICE_MIN_DEFAULT}
+                  max={PRICE_MAX_DEFAULT}
+                  step={100}
+                  value={maxPrice}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    if (val >= minPrice) setMaxPrice(val);
+                  }}
+                  className="w-full accent-[#0E4A93] cursor-pointer"
+                  aria-label="Price range slider mobile"
+                />
+
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div>
+                    <label htmlFor="mobile-min-price" className="text-[10px] uppercase font-bold text-stone-500 block mb-1">
+                      Min (₹)
+                    </label>
+                    <input
+                      id="mobile-min-price"
+                      type="number"
+                      min={PRICE_MIN_DEFAULT}
+                      max={maxPrice}
+                      value={minPrice}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        if (val <= maxPrice) setMinPrice(val);
+                      }}
+                      className="w-full px-2.5 py-1.5 text-xs font-bold text-stone-800 bg-stone-50 border border-stone-200 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="mobile-max-price" className="text-[10px] uppercase font-bold text-stone-500 block mb-1">
+                      Max (₹)
+                    </label>
+                    <input
+                      id="mobile-max-price"
+                      type="number"
+                      min={minPrice}
+                      max={PRICE_MAX_DEFAULT}
+                      value={maxPrice}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        if (val >= minPrice) setMaxPrice(val);
+                      }}
+                      className="w-full px-2.5 py-1.5 text-xs font-bold text-stone-800 bg-stone-50 border border-stone-200 rounded-lg"
+                    />
+                  </div>
+                </div>
+
+                {/* Quick Presets */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => applyPricePreset(PRICE_MIN_DEFAULT, 999)}
+                    className="px-2 py-1 text-[10px] font-semibold rounded bg-stone-100 text-stone-700"
+                  >
+                    Under ₹1,000
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPricePreset(1000, 1999)}
+                    className="px-2 py-1 text-[10px] font-semibold rounded bg-stone-100 text-stone-700"
+                  >
+                    ₹1,000 – ₹1,999
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPricePreset(2000, PRICE_MAX_DEFAULT)}
+                    className="px-2 py-1 text-[10px] font-semibold rounded bg-stone-100 text-stone-700"
+                  >
+                    ₹2,000+
+                  </button>
+                </div>
+              </div>
+
+              {/* Shop by Occasion */}
+              <div className="space-y-3 pt-4 border-t border-stone-100">
+                <span className="font-bold text-xs uppercase tracking-wide text-stone-900 block">
+                  Shop by Occasion
+                </span>
+                <div className="space-y-2">
+                  {CANVAS_FILTER_OCCASIONS.map((occasion) => {
+                    const isChecked = selectedOccasions.includes(occasion);
+                    const count = occasionCounts[occasion] || 0;
+
+                    return (
+                      <label
+                        key={occasion}
+                        className={`flex items-center justify-between p-2 rounded-lg text-xs font-semibold cursor-pointer ${
+                          isChecked ? 'bg-blue-50 text-[#0E4A93]' : 'bg-stone-50 text-stone-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => handleToggleOccasion(occasion)}
+                            className="w-4 h-4 rounded text-[#0E4A93] cursor-pointer"
+                          />
+                          <span>{occasion}</span>
+                        </div>
+                        <span className="text-[11px] text-stone-400">({count})</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Drawer Footer Actions */}
+            <div className="p-4 border-t border-stone-200 flex items-center gap-3 bg-stone-50">
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="w-1/2 py-2.5 border border-stone-300 rounded-lg text-xs font-bold text-stone-700 hover:bg-stone-100 cursor-pointer"
+              >
+                Reset All
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileFiltersOpen(false)}
+                className="w-1/2 py-2.5 bg-[#0E4A93] rounded-lg text-xs font-bold text-white shadow-sm hover:bg-[#0A3770] cursor-pointer"
+              >
+                View ({filteredProducts.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
+
 export default AcrylicCategoryPage;

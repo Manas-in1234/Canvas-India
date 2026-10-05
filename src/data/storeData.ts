@@ -513,7 +513,7 @@ export interface MegaMenuItem {
 
 export interface MegaMenuGroup {
   title: string;
-  iconType: 'heart' | 'sparkles' | 'palette' | 'layers' | 'circleDot' | 'printer' | 'package' | 'building' | 'sliders' | 'gift';
+  iconType: 'heart' | 'sparkles' | 'palette' | 'layers' | 'circleDot' | 'printer' | 'package' | 'building' | 'sliders' | 'gift' | 'activity';
   items: MegaMenuItem[];
 }
 
@@ -540,28 +540,28 @@ export const MEGA_MENUS_DATA: Record<string, MegaMenuConfig> = {
     name: 'Canvas Frames',
     groups: [
       {
-        title: 'Shop Canvas',
+        title: 'Canvas Print Styles',
         iconType: 'palette',
         items: [
-          { name: 'Photo Canvas', slug: 'canvas', description: 'Stretched 380 GSM cotton on solid pine frame' },
-          { name: 'Family Photos', slug: 'canvas', description: 'Skin-tone color balancing with mirrored edge' },
-          { name: 'Wedding Memories', slug: 'canvas', description: 'Grand panoramic portraits with floater frame' },
-          { name: 'Artistic Reproductions', slug: 'canvas', description: 'Museum-grade pigment color reproduction' },
-          { name: 'Nature & Landscape', slug: 'canvas', description: 'Vivid scenic wilderness & mountain views' },
-          { name: 'Motivational', slug: 'canvas', description: 'Inspirational quotes on fine textured canvas' },
-          { name: 'Religious & Spiritual', slug: 'canvas', description: 'Devotional sacred motifs & pooja art' },
-          { name: 'Corporate Canvas', slug: 'canvas', description: 'Large architectural prints for office walls' },
+          { name: 'Canvas Prints', slug: 'canvas', description: 'Museum-grade 380 GSM cotton canvas prints' },
+          { name: 'Shaped Canvas Prints', slug: 'canvas', description: 'Custom cut round, oval, arch & geometric shapes' },
+          { name: 'Wall Display', slug: 'canvas', description: 'Multi-frame canvas clusters & gallery wall arrangements' },
+          { name: 'Photo Collage', slug: 'canvas', description: 'Multi-photo grid layout canvas displays' },
+          { name: 'Photo Mosaic', slug: 'canvas', description: 'Mosaic grid created from hundreds of micro photos' },
+          { name: 'Pop Art', slug: 'canvas', description: 'Vibrant comic & Andy Warhol style portrait art' },
+          { name: 'Lyrics on Canvas', slug: 'canvas', description: 'Song lyrics, wedding vows & custom typography art' },
         ],
       },
       {
-        title: 'Spaces & Décor',
+        title: 'Formats & Specialty Canvas',
         iconType: 'sliders',
         items: [
-          { name: 'Living Room Décor', slug: 'canvas', description: 'Statement sofa centerpieces & gallery walls' },
-          { name: 'Bedroom Décor', slug: 'canvas', description: 'Calming headboard panoramas & couple art' },
-          { name: 'Hotel & Hospitality Décor', slug: 'canvas', description: 'Coordinated suite art & guest lobby sets' },
-          { name: 'Restaurant & Café Décor', slug: 'canvas', description: 'Atmospheric food & beverage wall prints' },
-          { name: 'Customized Canvas Gifts', slug: 'canvas', description: 'Personalized gift wrapping & custom sizes' },
+          { name: 'Panoramic Canvas Prints', slug: 'canvas', description: 'Wide aspect landscape & horizon photo prints' },
+          { name: 'Split Canvas Prints', slug: 'canvas', description: 'Multi-panel triptych & 3-to-5 piece canvas sets' },
+          { name: 'Hexagon Canvas', slug: 'canvas', description: 'Honeycomb geometric multi-canvas clusters' },
+          { name: 'Wholesale Canvas Prints', slug: 'canvas', description: 'Bulk printing for artists, studios & interior designers' },
+          { name: 'Custom Caricature', slug: 'canvas', description: 'Digital caricature portraits printed on canvas' },
+          { name: 'Canvas Banner', slug: 'canvas', description: 'Heavyweight cotton canvas hanging scroll banners' },
         ],
       },
     ],
@@ -658,35 +658,37 @@ export const MEGA_MENUS_DATA: Record<string, MegaMenuConfig> = {
   },
   cork: {
     id: 'cork',
-    name: 'Cork Yoga & Wellness Products',
+    name: 'Cork & Yoga Fitness',
     groups: [
       {
-        title: 'Cork Yoga Products',
-        iconType: 'circleDot',
+        title: 'Yoga & Fitness Gear',
+        iconType: 'activity',
         items: [
-          { name: 'Yoga Mats', slug: 'cork', description: 'Cork fabric, latex, and rubberized yoga mats' },
-          { name: 'Yoga Bricks', slug: 'cork', description: 'Cork yoga bricks for balance and restorative practice' },
-          { name: 'Yoga Rollers', slug: 'cork', description: 'Cork yoga rollers and peanut rollers' },
-          { name: 'Yoga Balls', slug: 'cork', description: 'Cork yoga balls with natural texture and grip' },
-          { name: 'Yoga Wedges', slug: 'cork', description: 'Cork wedges for wrist and ankle support' },
+          { name: 'Yoga Mats', slug: 'yoga-fitness', description: 'Eco-friendly cork fabric, TPE & natural tree rubber mats' },
+          { name: 'Customized Yoga Mats', slug: 'yoga-fitness', description: 'Monogrammed names, mantras & laser alignment lines' },
+          { name: 'Yoga Bricks & Wedges', slug: 'yoga-fitness', description: 'Cork yoga bricks & wrist/ankle wedges for balance' },
+          { name: 'Yoga Rollers & Massage Sets', slug: 'yoga-fitness', description: 'Cork yoga rollers, peanut rollers & massage balls' },
+          { name: 'Gym & Fitness Products', slug: 'yoga-fitness', description: 'Workout mats, sweat towels & fitness banners' },
         ],
       },
       {
-        title: 'Wellness Accessories',
-        iconType: 'sliders',
+        title: 'Cork Boards & Accessories',
+        iconType: 'circleDot',
         items: [
-          { name: 'Massage Sets', slug: 'cork', description: 'Cork massage roller and foot massage ball sets' },
-          { name: 'Knee Pads', slug: 'cork', description: 'Cork yoga knee pads rubberized with latex' },
-          { name: 'Yoga Bags', slug: 'cork', description: 'Cork yoga bags and yoga kit bags' },
+          { name: 'Archon Cork Board', slug: 'cork', description: 'High-density self-healing natural cork bulletin board' },
+          { name: 'Custom Cork Display', slug: 'cork', description: 'Geometric 3D acoustic cork wall cladding tiles' },
+          { name: 'Framed Cork Pinboards', slug: 'cork', description: 'Anodized aluminum & hardwood framed pinboards' },
+          { name: 'Printed Cork Art Panels', slug: 'cork', description: 'Organic textures with fine pigment graphics' },
+          { name: 'Yoga Bags & Knee Pads', slug: 'cork', description: 'Cork yoga bags and rubberized knee cushion pads' },
         ],
       },
     ],
     promo: {
-      title: 'Cork Yoga & Wellness',
-      tagline: 'Eco-friendly cork yoga products. Lightweight, durable, naturally antimicrobial and biodegradable.',
-      badge: 'Cork Yoga Catalogue 2026',
+      title: 'Cork Yoga & Fitness Collection',
+      tagline: 'Eco-friendly cork yoga products & fitness gear. Lightweight, durable, naturally antimicrobial.',
+      badge: 'Cork Fitness Catalogue 2026',
       image: '/assets/products/cork/9C-YA1/9c-ya1(1).png',
-      buttonText: 'Explore Cork Products',
+      buttonText: 'Explore Cork & Yoga',
       slug: 'cork',
       actionType: 'category',
     },

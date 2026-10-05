@@ -68,11 +68,7 @@ export const CustomizerProductCard: React.FC<CustomizerProductCardProps> = ({
           )
         )}
         {pt.iconType === 'panel' && (
-          pt.defaultShape === 'shape-rectangle' || pt.defaultShape === 'shape-landscape' ? (
-            <div className="w-7 h-5 border-2 border-stone-400 rounded-xs" />
-          ) : (
-            <div className="w-6 h-6 border-2 border-stone-400 rounded-xs" />
-          )
+          <div className="w-6 h-6 border-2 border-stone-400 rounded-xs" />
         )}
         {pt.iconType === 'print' && <div className="w-7 h-5 border-2 border-stone-400 rounded-xs" />}
         {pt.iconType === 'collage' && (
@@ -99,8 +95,12 @@ export const CustomizerProductCard: React.FC<CustomizerProductCardProps> = ({
           </div>
         )}
         {pt.iconType === 'signage' && (
-          <div className="w-7 h-5 border-2 border-stone-400 rounded-xs flex items-center justify-center">
-            <div className="w-4 h-1.5 bg-[#0E4A93]/40 rounded-xs" />
+          <div className="w-7 h-5 border-2 border-stone-400 rounded-xs bg-white relative flex items-center justify-center">
+            <span className="absolute top-0.5 left-0.5 w-1 h-1 rounded-full bg-[#0E4A93]/50" />
+            <span className="absolute top-0.5 right-0.5 w-1 h-1 rounded-full bg-[#0E4A93]/50" />
+            <span className="absolute bottom-0.5 left-0.5 w-1 h-1 rounded-full bg-[#0E4A93]/50" />
+            <span className="absolute bottom-0.5 right-0.5 w-1 h-1 rounded-full bg-[#0E4A93]/50" />
+            <div className="w-3.5 h-1 bg-[#0E4A93]/35 rounded-full" />
           </div>
         )}
       </div>
