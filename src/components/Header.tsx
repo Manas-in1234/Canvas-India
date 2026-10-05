@@ -27,6 +27,11 @@ import {
   Activity,
   LogOut,
   MapPin,
+  Mountain,
+  Globe,
+  PenTool,
+  Quote,
+  Shapes,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Product } from '../types';
@@ -75,39 +80,11 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     description: 'High-gloss 5mm crystal clear acrylic glass prints',
   },
   {
-    name: 'Posters & Custom Wall Graphics',
-    slug: 'posters',
-    route: '/posters',
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
-    description: 'Custom posters and commercial wall graphics',
-  },
-  {
     name: 'Cork',
     slug: 'cork',
     route: '/cork',
     image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=400&auto=format&fit=crop&q=80',
     description: 'Natural 8mm eco-friendly cork pinboards',
-  },
-  {
-    name: 'Yoga & Fitness',
-    slug: 'yoga-fitness',
-    route: '/yoga-fitness',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&auto=format&fit=crop&q=80',
-    description: 'Customized yoga mats and wellness gear',
-  },
-  {
-    name: 'Home Décor',
-    slug: 'home-decor',
-    route: '/home-decor',
-    image: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=400&auto=format&fit=crop&q=80',
-    description: 'Curated decorative and interior wall collections',
-  },
-  {
-    name: 'Custom Prints',
-    slug: 'custom-prints',
-    route: '/custom-prints',
-    image: 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=400&auto=format&fit=crop&q=80',
-    description: 'Personalized prints with custom sizes & photos',
   },
   {
     name: 'Gifts & Occasions',
@@ -129,13 +106,6 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     route: '/corporate-orders',
     image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80',
     description: 'Office branding, corporate kits & GST billing',
-  },
-  {
-    name: 'Designers & Architects',
-    slug: 'designers-architects',
-    route: '/designers-architects',
-    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&auto=format&fit=crop&q=80',
-    description: 'Turnkey interior wall solutions for trade professionals',
   },
 ];
 
@@ -172,6 +142,12 @@ export const Header: React.FC<HeaderProps> = ({
     if (path === '/corporate-orders' || path === '/corporate') return 'corporate-orders';
     if (path === '/bulk-order' || path === '/bulk-orders') return 'bulk-order';
     if (path === '/designers-architects') return 'designers-architects';
+    if (path === '/devotional-art') return 'devotional-art';
+    if (path === '/scenery-landscape-art') return 'scenery-landscape-art';
+    if (path === '/tribal-ethnic-art') return 'tribal-ethnic-art';
+    if (path === '/line-art') return 'line-art';
+    if (path === '/motivational-posters') return 'motivational-posters';
+    if (path === '/cork-art-patterns') return 'cork-art-patterns';
     return '';
   }, [location.pathname]);
   const [activeMegaMenu, setActiveMegaMenu] = useState<string | null>(null);
@@ -194,14 +170,17 @@ export const Header: React.FC<HeaderProps> = ({
 
   // Category bar shopping categories (Excludes Bulk Order, Posters, Custom Prints, Home Decor, and Yoga & Fitness which sits inside Cork)
   const CATEGORY_BAR_ITEMS = useMemo(() => {
-    return PRIMARY_CATEGORIES.filter(
-      (cat) =>
-        cat.slug !== 'bulk-order' &&
-        cat.slug !== 'posters' &&
-        cat.slug !== 'custom-prints' &&
-        cat.slug !== 'home-decor' &&
-        cat.slug !== 'yoga-fitness'
-    );
+    const excluded = new Set([
+      // Print World catalogue categories live in the "Shop by Category"
+      // homepage section, not the navbar
+      'devotional-art',
+      'scenery-landscape-art',
+      'tribal-ethnic-art',
+      'line-art',
+      'motivational-posters',
+      'cork-art-patterns',
+    ]);
+    return PRIMARY_CATEGORIES.filter((cat) => !excluded.has(cat.slug));
   }, []);
 
   // Close open dropdown menus on scroll or resize to prevent detached floating elements
@@ -232,6 +211,12 @@ export const Header: React.FC<HeaderProps> = ({
       case 'Image': return ImageIcon;
       case 'Activity': return Activity;
       case 'Home': return HomeIcon;
+      case 'Sparkles': return Sparkles;
+      case 'Mountain': return Mountain;
+      case 'Globe': return Globe;
+      case 'PenTool': return PenTool;
+      case 'Quote': return Quote;
+      case 'Shapes': return Shapes;
       default: return Sliders;
     }
   };
@@ -771,7 +756,7 @@ export const Header: React.FC<HeaderProps> = ({
                         <Grid className="w-3.5 h-3.5 text-[#0E4A93]" />
                         <span>Print Categories</span>
                       </span>
-                      <span className="text-[10px] font-semibold text-stone-400">11 Categories</span>
+                      <span className="text-[10px] font-semibold text-stone-400">{ALL_CATEGORIES_MENU_ITEMS.length} Categories</span>
                     </div>
                     
                     <div className="py-1 space-y-0.5 max-h-[420px] overflow-y-auto scrollbar-none">

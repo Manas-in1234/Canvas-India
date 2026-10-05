@@ -8,7 +8,7 @@ import {
   AlignCenter,
   AlignRight,
   Bold,
-  RotateCw,
+  Italic,
   ChevronDown
 } from 'lucide-react';
 import { FONT_OPTIONS, TEXT_COLOR_PRESETS } from '../data/acrylicCustomizerData';
@@ -19,11 +19,12 @@ export interface TextElement {
   fontFamily: string;
   fontSize: number;
   fontWeight: 'normal' | 'bold' | '600' | '700';
+  fontStyle?: 'normal' | 'italic';
   color: string;
   alignment: 'left' | 'center' | 'right';
-  lineHeight: number;
-  letterSpacing: number;
-  rotation: number;
+  lineHeight?: number;
+  letterSpacing?: number;
+  rotation?: number;
   x: number;
   y: number;
 }
@@ -138,31 +139,57 @@ export const AcrylicLiveTextEditor: React.FC<AcrylicLiveTextEditorProps> = ({
           </div>
         </div>
 
-        {/* Font Size & Weight */}
+        {/* Font Size */}
+        <div>
+          <div className="flex justify-between items-center mb-1">
+            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+              Font Size ({activeText.fontSize}px)
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min={12}
+              max={96}
+              value={activeText.fontSize}
+              onChange={(e) => onUpdateText({ fontSize: Number(e.target.value) })}
+              className="w-full accent-[#0E4A93] h-1.5 bg-stone-200 rounded-lg cursor-pointer"
+            />
+            <input
+              type="number"
+              min={10}
+              max={120}
+              value={activeText.fontSize}
+              onChange={(e) => onUpdateText({ fontSize: Math.max(10, Math.min(120, Number(e.target.value))) })}
+              className="w-14 px-1.5 py-1 text-center text-xs font-bold border border-stone-300 rounded-lg text-stone-800 focus:outline-none focus:border-[#0E4A93]"
+            />
+          </div>
+        </div>
+
+        {/* Alignment & Style */}
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
-                Size ({activeText.fontSize}px)
-              </label>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <input
-                type="range"
-                min={12}
-                max={96}
-                value={activeText.fontSize}
-                onChange={(e) => onUpdateText({ fontSize: Number(e.target.value) })}
-                className="w-full accent-[#0E4A93] h-1.5 bg-stone-200 rounded-lg cursor-pointer"
-              />
-              <input
-                type="number"
-                min={10}
-                max={120}
-                value={activeText.fontSize}
-                onChange={(e) => onUpdateText({ fontSize: Math.max(10, Math.min(120, Number(e.target.value))) })}
-                className="w-12 px-1.5 py-1 text-center text-xs font-bold border border-stone-300 rounded-lg text-stone-800 focus:outline-none focus:border-[#0E4A93]"
-              />
+            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block mb-1">
+              Alignment
+            </label>
+            <div className="flex bg-stone-100 p-0.5 rounded-lg border border-stone-200">
+              {(['left', 'center', 'right'] as const).map((align) => (
+                <button
+                  key={align}
+                  type="button"
+                  onClick={() => onUpdateText({ alignment: align })}
+                  className={`flex-1 py-1.5 rounded-md flex items-center justify-center transition-all cursor-pointer ${
+                    activeText.alignment === align
+                      ? 'bg-white text-[#0E4A93] shadow-xs font-bold'
+                      : 'text-stone-500 hover:text-stone-800'
+                  }`}
+                  title={`Align ${align}`}
+                >
+                  {align === 'left' && <AlignLeft className="w-3.5 h-3.5" />}
+                  {align === 'center' && <AlignCenter className="w-3.5 h-3.5" />}
+                  {align === 'right' && <AlignRight className="w-3.5 h-3.5" />}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -179,95 +206,25 @@ export const AcrylicLiveTextEditor: React.FC<AcrylicLiveTextEditorProps> = ({
                     ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
                     : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
                 }`}
+                title="Bold"
               >
                 <Bold className="w-3.5 h-3.5" />
                 <span>Bold</span>
               </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Alignment & Rotation */}
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block mb-1">
-              Alignment
-            </label>
-            <div className="flex bg-stone-100 p-0.5 rounded-lg border border-stone-200">
-              {(['left', 'center', 'right'] as const).map((align) => (
-                <button
-                  key={align}
-                  type="button"
-                  onClick={() => onUpdateText({ alignment: align })}
-                  className={`flex-1 py-1 rounded-md flex items-center justify-center transition-all cursor-pointer ${
-                    activeText.alignment === align
-                      ? 'bg-white text-[#0E4A93] shadow-xs font-bold'
-                      : 'text-stone-500 hover:text-stone-800'
-                  }`}
-                  title={`Align ${align}`}
-                >
-                  {align === 'left' && <AlignLeft className="w-3.5 h-3.5" />}
-                  {align === 'center' && <AlignCenter className="w-3.5 h-3.5" />}
-                  {align === 'right' && <AlignRight className="w-3.5 h-3.5" />}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
-                Rotation ({activeText.rotation || 0}°)
-              </label>
               <button
                 type="button"
-                onClick={() => onUpdateText({ rotation: ((activeText.rotation || 0) + 90) % 360 })}
-                className="text-[10px] font-bold text-[#0E4A93] hover:underline cursor-pointer flex items-center gap-0.5"
+                onClick={() => onUpdateText({ fontStyle: activeText.fontStyle === 'italic' ? 'normal' : 'italic' })}
+                className={`flex-1 py-1.5 flex items-center justify-center gap-1 text-xs font-bold italic rounded-lg border transition-all cursor-pointer ${
+                  activeText.fontStyle === 'italic'
+                    ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
+                    : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
+                }`}
+                title="Italic"
               >
-                <RotateCw className="w-2.5 h-2.5" /> +90°
+                <Italic className="w-3.5 h-3.5" />
+                <span>Italic</span>
               </button>
             </div>
-            <input
-              type="range"
-              min={-180}
-              max={180}
-              value={activeText.rotation || 0}
-              onChange={(e) => onUpdateText({ rotation: Number(e.target.value) })}
-              className="w-full accent-[#0E4A93] h-1.5 bg-stone-200 rounded-lg cursor-pointer"
-            />
-          </div>
-        </div>
-
-        {/* Line Height & Letter Spacing */}
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block mb-1">
-              Line Height ({(activeText.lineHeight || 1.2).toFixed(1)})
-            </label>
-            <input
-              type="range"
-              min={0.9}
-              max={2.4}
-              step={0.1}
-              value={activeText.lineHeight || 1.2}
-              onChange={(e) => onUpdateText({ lineHeight: Number(e.target.value) })}
-              className="w-full accent-[#0E4A93] h-1.5 bg-stone-200 rounded-lg cursor-pointer"
-            />
-          </div>
-
-          <div>
-            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block mb-1">
-              Letter Spacing ({activeText.letterSpacing || 0}px)
-            </label>
-            <input
-              type="range"
-              min={-2}
-              max={12}
-              step={0.5}
-              value={activeText.letterSpacing || 0}
-              onChange={(e) => onUpdateText({ letterSpacing: Number(e.target.value) })}
-              className="w-full accent-[#0E4A93] h-1.5 bg-stone-200 rounded-lg cursor-pointer"
-            />
           </div>
         </div>
 

@@ -21,16 +21,21 @@ import {
 import { Product } from '../types';
 import { useShop } from '../context/ShopContext';
 import { ProductImage } from '../components/ProductImage';
-import { 
-  AcrylicProductReview, 
-  getProductReviews, 
-  saveProductReview, 
-  getRelatedAcrylicProducts 
+import { WallPreview } from '../components/WallPreview';
+import {
+  AcrylicProductReview,
+  getProductReviews,
+  saveProductReview,
+  getRelatedAcrylicProducts
 } from '../data/acrylicReviews';
 
 export interface AcrylicProductDetailPageProps {
   product: Product;
 }
+
+// Sentinel inserted as the second gallery slot so that thumbnail renders a
+// live WallPreview (reacting to the selected shape/size) instead of a static image.
+const ROOM_VIEW_SENTINEL = '__ROOM_VIEW__';
 
 export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> = ({ product }) => {
   const navigate = useNavigate();
@@ -38,7 +43,9 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
 
   const isWishlisted = wishlistIds.includes(product.id);
 
-  // Gallery State
+  // Gallery State — a live "Room View" slot is inserted as the second image
+  // (after the real primary photo) so the frame hanging on a wall reacts to
+  // the selected shape/size instead of a static pre-baked photo.
   const galleryImages = useMemo(() => {
     const list: string[] = [];
     if (product.image) list.push(product.image);
@@ -47,13 +54,14 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
         if (!list.includes(img)) list.push(img);
       });
     }
-    // Add additional angles if available
-    if (list.length < 3) {
-      list.push('/assets/acrylic/acrylic-panel-living.jpg');
-      list.push('/assets/acrylic/acrylic-panel-standoff.jpg');
-    }
-    return list;
+    if (list.length === 0) return list;
+    const [first, ...rest] = list;
+    return [first, ROOM_VIEW_SENTINEL, ...rest];
   }, [product]);
+
+  const roomViewSourceImage = useMemo(() => {
+    return galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL) || product.image;
+  }, [galleryImages, product]);
 
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
 
@@ -66,12 +74,19 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   ];
   const availablePapers = product.availablePapers || ['White Luster Photo Paper', 'Metallic Pearl Paper'];
   const availableBases = product.availableBases || ['Without Base', 'Acrylic Base', 'Solid Wood Base'];
+  const availableShapes = product.shapes && product.shapes.length > 0
+    ? product.shapes
+    : ['Popular', 'Square', 'Rectangle', 'Panoramic', 'Circle', 'Triangle'];
 
   const [selectedStyle, setSelectedStyle] = useState<string>(availableStyles[0]);
   const [selectedThickness, setSelectedThickness] = useState<string>(availableThicknesses[0]);
   const [selectedSize, setSelectedSize] = useState<string>(availableSizes[0]);
   const [selectedPaper, setSelectedPaper] = useState<string>(availablePapers[0]);
   const [selectedBase, setSelectedBase] = useState<string>(availableBases[0]);
+  const [selectedShape, setSelectedShape] = useState<string>(product.shape || availableShapes[0]);
+  const [customWidth, setCustomWidth] = useState<number>(8);
+  const [customHeight, setCustomHeight] = useState<number>(8);
+  const [isCustomSize, setIsCustomSize] = useState<boolean>(false);
   const [quantity, setQuantity] = useState<number>(1);
 
   // Bottom Tabs State ('description' | 'specifications' | 'shipping' | 'reviews')
@@ -84,10 +99,21 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
     setSelectedSize(availableSizes[0] || '4" x 4"');
     setSelectedPaper(availablePapers[0] || 'White Luster Photo Paper');
     setSelectedBase(availableBases[0] || 'Without Base');
+    setSelectedShape(product.shape || availableShapes[0] || '');
+    setIsCustomSize(false);
+    setCustomWidth(8);
+    setCustomHeight(8);
     setQuantity(1);
     setActiveImageIndex(0);
     document.title = `${product.name} | Canvas India`;
   }, [product]);
+
+  const handleCustomSizeChange = (width: number, height: number) => {
+    setCustomWidth(width);
+    setCustomHeight(height);
+    setIsCustomSize(true);
+    setSelectedSize(`${width}" x ${height}" (Custom)`);
+  };
 
   // Gallery Navigation Controls
   const handlePrevImage = () => {
@@ -229,6 +255,11 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
     );
   };
 
+  const handleBuyNow = () => {
+    handleAddToCart();
+    navigate('/cart');
+  };
+
   // Dedicated Customizer Page Navigation
   const handleOpenCustomizer = () => {
     const params = new URLSearchParams({
@@ -279,14 +310,23 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
           <div className="lg:col-span-7 space-y-4">
             
             {/* Main Stage Image Container */}
-            <div className="relative aspect-[4/3] bg-stone-100 rounded-3xl overflow-hidden border border-stone-200 shadow-md group">
-              
-              <ProductImage
-                src={galleryImages[activeImageIndex] || product.image}
-                alt={product.name}
-                category="acrylic"
-                className="w-full h-full object-cover transition-all duration-300"
-              />
+            <div className="relative h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] bg-stone-100 rounded-3xl overflow-hidden border border-stone-200 shadow-md group flex items-center justify-center">
+
+              {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
+                <WallPreview
+                  imageSrc={roomViewSourceImage}
+                  shape={selectedShape}
+                  sizeLabel={selectedSize}
+                  className="w-full h-full"
+                />
+              ) : (
+                <ProductImage
+                  src={galleryImages[activeImageIndex] || product.image}
+                  alt={product.name}
+                  category="acrylic"
+                  className="max-w-full max-h-full w-auto h-auto object-contain transition-all duration-300"
+                />
+              )}
 
               {/* Acrylic Gloss Glass Sheen Effect Overlay */}
               <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-transparent pointer-events-none" />
@@ -363,12 +403,16 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                           : 'border-stone-200 hover:border-stone-400 opacity-80 hover:opacity-100'
                       }`}
                     >
-                      <ProductImage
-                        src={imgUrl}
-                        alt={`${product.name} preview ${idx + 1}`}
-                        category="acrylic"
-                        className="w-full h-full object-cover"
-                      />
+                      {imgUrl === ROOM_VIEW_SENTINEL ? (
+                        <WallPreview imageSrc={roomViewSourceImage} shape={selectedShape} sizeLabel={selectedSize} className="w-full h-full" />
+                      ) : (
+                        <ProductImage
+                          src={imgUrl}
+                          alt={`${product.name} preview ${idx + 1}`}
+                          category="acrylic"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                     </button>
                   );
                 })}
@@ -447,91 +491,72 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
             {/* =================================================================== */}
             <div className="space-y-4 pt-2 border-t border-stone-200">
               
-              {/* 1. SELECT STYLE */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
-                <label className="text-xs font-bold text-stone-700 sm:col-span-1">
-                  Select Style:
-                </label>
-                <div className="sm:col-span-2">
-                  <select
-                    value={selectedStyle}
-                    onChange={(e) => setSelectedStyle(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer shadow-2xs"
-                  >
-                    {availableStyles.map((style) => (
-                      <option key={style} value={style}>{style}</option>
+              {/* SELECT SHAPE */}
+              {availableShapes.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-stone-700">Select Shape:</span>
+                  <div className="grid grid-cols-4 gap-2">
+                    {availableShapes.map((shapeOpt) => (
+                      <button
+                        key={shapeOpt}
+                        type="button"
+                        onClick={() => setSelectedShape(shapeOpt)}
+                        className={`px-2 py-2 text-xs font-semibold rounded-full border-2 text-center capitalize transition-all cursor-pointer ${
+                          selectedShape === shapeOpt
+                            ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
+                            : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
+                        }`}
+                      >
+                        {shapeOpt}
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
-              </div>
-
-              {/* 2. SELECT THICKNESS */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
-                <label className="text-xs font-bold text-stone-700 sm:col-span-1">
-                  Select Thickness:
-                </label>
-                <div className="sm:col-span-2">
-                  <select
-                    value={selectedThickness}
-                    onChange={(e) => setSelectedThickness(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer shadow-2xs"
-                  >
-                    {availableThicknesses.map((th) => (
-                      <option key={th} value={th}>{th}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              )}
 
               {/* 3. SELECT SIZE */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
-                <label className="text-xs font-bold text-stone-700 sm:col-span-1">
-                  Select Size:
-                </label>
-                <div className="sm:col-span-2">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-stone-700">Select Size:</span>
+                  <span className="text-stone-500 font-medium">{selectedSize}</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {availableSizes.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => { setIsCustomSize(false); setSelectedSize(size); }}
+                      className={`px-2 py-2 text-[11px] font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
+                        selectedSize === size && !isCustomSize
+                          ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
+                          : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom Size */}
+                <div className="flex items-center gap-2.5 pt-1">
+                  <span className={`text-xs font-semibold ${isCustomSize ? 'text-[#0E4A93]' : 'text-stone-600'}`}>Custom:</span>
                   <select
-                    value={selectedSize}
-                    onChange={(e) => setSelectedSize(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer shadow-2xs"
+                    value={customWidth}
+                    onChange={(e) => handleCustomSizeChange(Number(e.target.value), customHeight)}
+                    className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border bg-white cursor-pointer focus:outline-none ${isCustomSize ? 'border-[#0E4A93] text-[#0E4A93]' : 'border-stone-300 text-stone-700'}`}
                   >
-                    {availableSizes.map((size) => (
-                      <option key={size} value={size}>{size}</option>
+                    {Array.from({ length: 37 }, (_, i) => i + 4).map((n) => (
+                      <option key={n} value={n}>{n}"</option>
                     ))}
                   </select>
-                </div>
-              </div>
-
-              {/* 4. SELECT PAPER */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
-                <label className="text-xs font-bold text-stone-700 sm:col-span-1">
-                  Select Paper:
-                </label>
-                <div className="sm:col-span-2">
+                  <span className="text-stone-400 text-xs font-bold">X</span>
                   <select
-                    value={selectedPaper}
-                    onChange={(e) => setSelectedPaper(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer shadow-2xs"
+                    value={customHeight}
+                    onChange={(e) => handleCustomSizeChange(customWidth, Number(e.target.value))}
+                    className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border bg-white cursor-pointer focus:outline-none ${isCustomSize ? 'border-[#0E4A93] text-[#0E4A93]' : 'border-stone-300 text-stone-700'}`}
                   >
-                    {availablePapers.map((paper) => (
-                      <option key={paper} value={paper}>{paper}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* 5. SELECT BASE */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
-                <label className="text-xs font-bold text-stone-700 sm:col-span-1">
-                  Select Base:
-                </label>
-                <div className="sm:col-span-2">
-                  <select
-                    value={selectedBase}
-                    onChange={(e) => setSelectedBase(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer shadow-2xs"
-                  >
-                    {availableBases.map((base) => (
-                      <option key={base} value={base}>{base}</option>
+                    {Array.from({ length: 37 }, (_, i) => i + 4).map((n) => (
+                      <option key={n} value={n}>{n}"</option>
                     ))}
                   </select>
                 </div>
@@ -573,21 +598,11 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
             </div>
 
             {/* =================================================================== */}
-            {/* TWO PRIMARY ACTIONS: [ CUSTOMIZE ] & [ ADD TO CART ]                */}
+            {/* TWO PRIMARY ACTIONS: [ ADD TO CART ] & [ BUY NOW ]                  */}
             {/* =================================================================== */}
             <div className="pt-4 space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* 1. CUSTOMIZE BUTTON */}
-                <button
-                  type="button"
-                  onClick={handleOpenCustomizer}
-                  className="w-full py-3.5 px-4 bg-[#0E4A93] hover:bg-[#09356A] active:scale-[0.99] text-white text-xs font-black rounded-xl shadow-md hover:shadow-lg flex items-center justify-center gap-2 tracking-wide transition-all cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-300" />
-                  <span>CUSTOMIZE</span>
-                </button>
-
-                {/* 2. ADD TO CART BUTTON */}
+                {/* 1. ADD TO CART BUTTON */}
                 <button
                   type="button"
                   onClick={handleAddToCart}
@@ -595,6 +610,16 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                 >
                   <ShoppingCart className="w-4 h-4 text-white" />
                   <span>ADD TO CART</span>
+                </button>
+
+                {/* 2. BUY NOW BUTTON */}
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  className="w-full py-3.5 px-4 bg-[#0E4A93] hover:bg-[#09356A] active:scale-[0.99] text-white text-xs font-black rounded-xl shadow-md hover:shadow-lg flex items-center justify-center gap-2 tracking-wide transition-all cursor-pointer"
+                >
+                  <span>BUY NOW</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
 

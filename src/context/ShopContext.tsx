@@ -120,7 +120,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       // fallback
     }
-    return ['cnv-1', 'acr-1'];
+    return [];
   });
 
   // Cart persisted in localStorage

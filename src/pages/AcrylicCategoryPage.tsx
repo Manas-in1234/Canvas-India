@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
-import { CANVAS_FILTER_OCCASIONS } from '../data/storeData';
+import { SHOP_CATEGORIES } from '../data/shopCategories';
 import { Product } from '../types';
 
 export interface AcrylicCategoryTab {
@@ -87,7 +87,6 @@ export const AcrylicCategoryPage: React.FC = () => {
   // Filter States
   const [minPrice, setMinPrice] = useState<number>(PRICE_MIN_DEFAULT);
   const [maxPrice, setMaxPrice] = useState<number>(PRICE_MAX_DEFAULT);
-  const [selectedOccasions, setSelectedOccasions] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
 
@@ -97,53 +96,22 @@ export const AcrylicCategoryPage: React.FC = () => {
     [allProducts]
   );
 
-  // Matches an occasion against a product's occasions list, falling back to tags
-  const productMatchesOccasion = (product: Product, occ: string) =>
-    !!product.occasions?.includes(occ) ||
-    !!product.tags?.some((t) => t.toLowerCase() === occ.toLowerCase());
-
-  // Occasion count helper
-  const occasionCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    CANVAS_FILTER_OCCASIONS.forEach((occ) => {
-      counts[occ] = products.filter((p) => productMatchesOccasion(p, occ)).length;
-    });
-    return counts;
-  }, [products]);
-
-  // Toggle occasion filter
-  const handleToggleOccasion = (occ: string) => {
-    setSelectedOccasions((prev) =>
-      prev.includes(occ) ? prev.filter((o) => o !== occ) : [...prev, occ]
-    );
-  };
-
   // Reset all filters
   const handleResetFilters = () => {
     setMinPrice(PRICE_MIN_DEFAULT);
     setMaxPrice(PRICE_MAX_DEFAULT);
-    setSelectedOccasions([]);
     setSortBy('featured');
   };
 
   // Check if any filter is active
   const isFiltered =
     minPrice > PRICE_MIN_DEFAULT ||
-    maxPrice < PRICE_MAX_DEFAULT ||
-    selectedOccasions.length > 0;
+    maxPrice < PRICE_MAX_DEFAULT;
 
   // Filtered and sorted products
   const filteredProducts = useMemo(() => {
     let result = products.filter((product) => {
-      // Price range check
-      const matchesPrice = product.price >= minPrice && product.price <= maxPrice;
-
-      // Occasion check
-      const matchesOccasion =
-        selectedOccasions.length === 0 ||
-        selectedOccasions.some((occ) => productMatchesOccasion(product, occ));
-
-      return matchesPrice && matchesOccasion;
+      return product.price >= minPrice && product.price <= maxPrice;
     });
 
     // Sorting
@@ -167,7 +135,7 @@ export const AcrylicCategoryPage: React.FC = () => {
     }
 
     return result;
-  }, [products, minPrice, maxPrice, selectedOccasions, sortBy]);
+  }, [products, minPrice, maxPrice, sortBy]);
 
   // Price presets
   const applyPricePreset = (min: number, max: number) => {
@@ -364,23 +332,6 @@ export const AcrylicCategoryPage: React.FC = () => {
                 </span>
               )}
 
-              {selectedOccasions.map((occ) => (
-                <span
-                  key={occ}
-                  className="inline-flex items-center gap-1.5 bg-white border border-orange-200 text-stone-800 px-2.5 py-1 rounded-md font-semibold text-[11px] shadow-2xs"
-                >
-                  <span>{occ}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleOccasion(occ)}
-                    className="text-stone-400 hover:text-stone-700 cursor-pointer"
-                    aria-label={`Remove ${occ} filter`}
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-
               <button
                 type="button"
                 onClick={handleResetFilters}
@@ -538,53 +489,24 @@ export const AcrylicCategoryPage: React.FC = () => {
               </div>
 
               {/* ------------------------------------------------------------- */}
-              {/* FILTER B: SHOP BY OCCASION                                     */}
+              {/* FILTER B: SHOP BY CATEGORY                                     */}
               {/* ------------------------------------------------------------- */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs uppercase tracking-wide text-stone-900">
-                    Shop by Occasion
-                  </span>
-                  {selectedOccasions.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedOccasions([])}
-                      className="text-[10px] font-bold text-stone-500 hover:text-stone-800"
+                <span className="font-bold text-xs uppercase tracking-wide text-stone-900 block">
+                  Shop by Category
+                </span>
+
+                <div className="space-y-1">
+                  {SHOP_CATEGORIES.map((cat) => (
+                    <Link
+                      key={cat.path}
+                      to={cat.path}
+                      className="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all hover:bg-stone-50 text-stone-700"
                     >
-                      Clear
-                    </button>
-                  )}
-                </div>
-
-                <div className="space-y-1.5">
-                  {CANVAS_FILTER_OCCASIONS.map((occasion) => {
-                    const isChecked = selectedOccasions.includes(occasion);
-                    const count = occasionCounts[occasion] || 0;
-
-                    return (
-                      <label
-                        key={occasion}
-                        className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
-                          isChecked
-                            ? 'bg-blue-50/70 text-[#0E4A93]'
-                            : 'hover:bg-stone-50 text-stone-700'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => handleToggleOccasion(occasion)}
-                            className="w-4 h-4 rounded text-[#0E4A93] focus:ring-[#0E4A93] cursor-pointer"
-                          />
-                          <span>{occasion}</span>
-                        </div>
-                        <span className={`text-[11px] font-medium ${isChecked ? 'text-[#0E4A93]' : 'text-stone-400'}`}>
-                          ({count})
-                        </span>
-                      </label>
-                    );
-                  })}
+                      <span>{cat.name}</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
+                    </Link>
+                  ))}
                 </div>
               </div>
 
@@ -794,36 +716,23 @@ export const AcrylicCategoryPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Shop by Occasion */}
+              {/* Shop by Category */}
               <div className="space-y-3 pt-4 border-t border-stone-100">
                 <span className="font-bold text-xs uppercase tracking-wide text-stone-900 block">
-                  Shop by Occasion
+                  Shop by Category
                 </span>
-                <div className="space-y-2">
-                  {CANVAS_FILTER_OCCASIONS.map((occasion) => {
-                    const isChecked = selectedOccasions.includes(occasion);
-                    const count = occasionCounts[occasion] || 0;
-
-                    return (
-                      <label
-                        key={occasion}
-                        className={`flex items-center justify-between p-2 rounded-lg text-xs font-semibold cursor-pointer ${
-                          isChecked ? 'bg-blue-50 text-[#0E4A93]' : 'bg-stone-50 text-stone-700'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => handleToggleOccasion(occasion)}
-                            className="w-4 h-4 rounded text-[#0E4A93] cursor-pointer"
-                          />
-                          <span>{occasion}</span>
-                        </div>
-                        <span className="text-[11px] text-stone-400">({count})</span>
-                      </label>
-                    );
-                  })}
+                <div className="space-y-1">
+                  {SHOP_CATEGORIES.map((cat) => (
+                    <Link
+                      key={cat.path}
+                      to={cat.path}
+                      onClick={() => setMobileFiltersOpen(false)}
+                      className="flex items-center justify-between p-2 rounded-lg text-xs font-semibold cursor-pointer bg-stone-50 text-stone-700"
+                    >
+                      <span>{cat.name}</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
+                    </Link>
+                  ))}
                 </div>
               </div>
 

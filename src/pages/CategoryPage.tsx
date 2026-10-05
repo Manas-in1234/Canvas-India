@@ -87,7 +87,9 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
       if (activeSlug === 'canvas' && p.categorySlug !== 'canvas') return false;
       if (activeSlug === 'acrylic' && p.categorySlug !== 'acrylic') return false;
       if (activeSlug === 'posters' && p.categorySlug !== 'posters') return false;
-      if (activeSlug === 'cork' && p.categorySlug !== 'cork') return false;
+      if (activeSlug === 'cork') {
+        return p.categorySlug === 'cork' || p.categorySlug === 'cork-art-patterns';
+      }
       if (activeSlug === 'yoga-fitness' && p.categorySlug !== 'yoga-fitness') return false;
       if (activeSlug === 'home-decor' && p.categorySlug !== 'home-decor') return false;
       if (activeSlug === 'custom-prints' && p.categorySlug !== 'custom-prints') return false;
@@ -104,7 +106,9 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
       if (activeSlug === 'photo-frames') {
         return p.finishes?.some((f) => f.toLowerCase().includes('frame')) ?? false;
       }
-      return true;
+      // Default: exact categorySlug match (covers every category not special-cased above,
+      // e.g. the catalogue print categories) instead of showing every product.
+      return p.categorySlug === activeSlug;
     });
   }, [allProducts, activeSlug]);
 
@@ -389,6 +393,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
                 onToggleWishlist={onToggleWishlist}
                 onAddToCart={onAddToCart}
                 onCustomize={onOpenCustomize}
+                variant="listing"
               />
             ))}
           </div>
