@@ -19,7 +19,7 @@ export interface SizeShapeOption {
   panelsCount?: number;
   pieceBreakdown?: string;
   arrangement?: string;
-  diagramType?: 'single-shape' | 'wall-display-3a' | 'wall-display-3b' | 'wall-display-4a' | 'wall-display-tiered' | 'wall-display-triptych' | 'wall-display-5piece' | 'split-2' | 'split-3' | 'split-4' | 'collage-2' | 'collage-3' | 'collage-4' | 'collage-9' | 'mosaic-4' | 'mosaic-6' | 'mosaic-9' | 'mosaic-16';
+  diagramType?: 'single-shape' | 'wall-display-3a' | 'wall-display-3b' | 'wall-display-4a' | 'wall-display-tiered' | 'wall-display-triptych' | 'wall-display-5piece' | 'split-2' | 'split-3' | 'split-4' | 'collage-2' | 'collage-3' | 'collage-4' | 'collage-9' | 'mosaic-4' | 'mosaic-6' | 'mosaic-9' | 'mosaic-16' | 'hexagon-1' | 'hexagon-2' | 'hexagon-3' | 'hexagon-4';
   panels?: Array<{ id: string; label: string; dimension: string; widthRatio: number; heightRatio: number }>;
 }
 
@@ -129,13 +129,14 @@ export const STANDARD_SHAPE_SIZES: Record<string, Array<{ width: number; height:
     { width: 20, height: 16, label: '16" × 20"', acrylicPrice: 1590.0, canvasPrice: 699.0 },
     { width: 24, height: 18, label: '18" × 24"', acrylicPrice: 2190.0, canvasPrice: 999.0 }
   ],
-  // Panoramic: width >> height (Requirement 9)
+  // Panoramic: 6 sizes (12"x18", 12"x24", 16"x24", 16"x32", 20"x30", 24"x36")
   'shape-panoramic': [
-    { width: 24, height: 10, label: '24" × 10"', acrylicPrice: 1190.0, canvasPrice: 499.0 },
-    { width: 30, height: 10, label: '30" × 10"', acrylicPrice: 1450.0, canvasPrice: 599.0 },
-    { width: 36, height: 12, label: '36" × 12"', acrylicPrice: 1850.0, canvasPrice: 799.0 },
-    { width: 40, height: 16, label: '40" × 16"', acrylicPrice: 2490.0, canvasPrice: 999.0 },
-    { width: 48, height: 16, label: '48" × 16"', acrylicPrice: 2890.0, canvasPrice: 1299.0 }
+    { width: 18, height: 12, label: '12" × 18"', acrylicPrice: 1250.0, canvasPrice: 449.0 },
+    { width: 24, height: 12, label: '12" × 24"', acrylicPrice: 1699.0, canvasPrice: 599.0 },
+    { width: 24, height: 16, label: '16" × 24"', acrylicPrice: 2190.0, canvasPrice: 799.0 },
+    { width: 32, height: 16, label: '16" × 32"', acrylicPrice: 2890.0, canvasPrice: 999.0 },
+    { width: 30, height: 20, label: '20" × 30"', acrylicPrice: 3490.0, canvasPrice: 1199.0 },
+    { width: 36, height: 24, label: '24" × 36"', acrylicPrice: 4990.0, canvasPrice: 1599.0 }
   ],
   // Bus Roll: portrait transit format
   'shape-bus-roll': [
@@ -670,6 +671,103 @@ export const MOSAIC_PRESETS: Array<Omit<SizeShapeOption, 'price'> & { acrylicPri
   }
 ];
 
+// HEXAGON BUNDLE PRESETS — multi-piece hexagon clusters (1/2/3/4 hexagons
+// hung together), matching the canvaschamp.in "Hexagonal Prints" size
+// picker: each card shows a live diagram of the hexagon(s) with dimension
+// lines, so picking a count visually previews the real arrangement.
+export const HEXAGON_PRESETS: Array<Omit<SizeShapeOption, 'price'> & { acrylicPrice: number; canvasPrice: number }> = [
+  {
+    id: 'hexagon-1p-10x11',
+    shapeId: 'shape-hexagon',
+    shapeName: 'Hexagon',
+    label: 'Single Hexagonal Print',
+    dimensionsSummary: '10" × 11.5"',
+    widthInches: 10,
+    heightInches: 11.5,
+    acrylicPrice: 650.0,
+    canvasPrice: 799.0,
+    aspectRatio: 10 / 11.5,
+    category: 'SPECIAL',
+    panelsCount: 1,
+    pieceBreakdown: '1 Hexagon Panel',
+    arrangement: 'single',
+    diagramType: 'hexagon-1',
+    panels: [{ id: 'p0', label: 'Hexagon', dimension: '10" × 11.5"', widthRatio: 10, heightRatio: 11.5 }]
+  },
+  {
+    id: 'hexagon-2p-19x10',
+    shapeId: 'shape-hexagon',
+    shapeName: 'Hexagon',
+    label: 'Hexagonal Prints Bundle of 2',
+    dimensionsSummary: '19" × 10" (2 Hexagons)',
+    widthInches: 19,
+    heightInches: 10,
+    acrylicPrice: 1150.0,
+    canvasPrice: 1399.0,
+    aspectRatio: 19 / 10,
+    category: 'SPECIAL',
+    panelsCount: 2,
+    pieceBreakdown: '2-Hexagon Cluster (10"×11.5" ea)',
+    arrangement: 'twoHex',
+    diagramType: 'hexagon-2',
+    panels: Array.from({ length: 2 }, (_, i) => ({
+      id: `p${i}`,
+      label: `Hexagon ${i + 1}`,
+      dimension: '10" × 11.5"',
+      widthRatio: 10,
+      heightRatio: 11.5
+    }))
+  },
+  {
+    id: 'hexagon-3p-27x13.75',
+    shapeId: 'shape-hexagon',
+    shapeName: 'Hexagon',
+    label: 'Hexagonal Prints Bundle of 3',
+    dimensionsSummary: '27" × 13.75" (3 Hexagons)',
+    widthInches: 27,
+    heightInches: 13.75,
+    acrylicPrice: 1650.0,
+    canvasPrice: 1999.0,
+    aspectRatio: 27 / 13.75,
+    category: 'SPECIAL',
+    panelsCount: 3,
+    pieceBreakdown: '3-Hexagon Cluster (10"×11.5" ea)',
+    arrangement: 'threeHex',
+    diagramType: 'hexagon-3',
+    panels: Array.from({ length: 3 }, (_, i) => ({
+      id: `p${i}`,
+      label: `Hexagon ${i + 1}`,
+      dimension: '10" × 11.5"',
+      widthRatio: 10,
+      heightRatio: 11.5
+    }))
+  },
+  {
+    id: 'hexagon-4p-27x19',
+    shapeId: 'shape-hexagon',
+    shapeName: 'Hexagon',
+    label: 'Hexagonal Prints Bundle of 4',
+    dimensionsSummary: '27" × 19" (4 Hexagons)',
+    widthInches: 27,
+    heightInches: 19,
+    acrylicPrice: 2150.0,
+    canvasPrice: 2599.0,
+    aspectRatio: 27 / 19,
+    category: 'SPECIAL',
+    panelsCount: 4,
+    pieceBreakdown: '4-Hexagon Cluster (10"×11.5" ea)',
+    arrangement: 'fourHex',
+    diagramType: 'hexagon-4',
+    panels: Array.from({ length: 4 }, (_, i) => ({
+      id: `p${i}`,
+      label: `Hexagon ${i + 1}`,
+      dimension: '10" × 11.5"',
+      widthRatio: 10,
+      heightRatio: 11.5
+    }))
+  }
+];
+
 /**
  * Returns the compatible shapes list for a given product
  */
@@ -802,6 +900,14 @@ export function getProductSizeShapeOptions(productId: string, material: 'canvas'
   const options: SizeShapeOption[] = [];
 
   supportedShapes.forEach((shape) => {
+    // Hexagon gets its own preset cluster (1/2/3/4-hexagon bundles with a
+    // live diagram) instead of the generic flat single-size list.
+    if (shape.id === 'shape-hexagon') {
+      HEXAGON_PRESETS.forEach((p) => {
+        options.push({ ...p, price: material === 'acrylic' ? p.acrylicPrice : p.canvasPrice });
+      });
+      return;
+    }
     const rawSizes = STANDARD_SHAPE_SIZES[shape.id] || STANDARD_SHAPE_SIZES['shape-rectangle'];
     rawSizes.forEach((sz) => {
       const optionId = `${shape.id}-${sz.width}x${sz.height}`;
@@ -878,6 +984,12 @@ export function getSizesForProductAndShape(
     }));
     const matching = mosaics.filter((c) => c.shapeId === shapeId);
     return matching.length > 0 ? matching : mosaics;
+  }
+  if (shapeId === 'shape-hexagon') {
+    return HEXAGON_PRESETS.map((p) => ({
+      ...p,
+      price: material === 'acrylic' ? p.acrylicPrice : p.canvasPrice
+    }));
   }
 
   // Single panel products: return sizes for the active shape
