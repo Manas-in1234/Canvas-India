@@ -141,14 +141,14 @@ export const ProductDetailPage: React.FC = () => {
   }, [product, availableMaterials, availableShapes]);
 
   // Gallery images (product primary + any secondary images). Wall-hangable
-  // categories get a leading "Room View" sentinel slot rendered live via
-  // WallPreview, reacting to the selected shape/size instead of a static photo.
+  // categories get a leading "Room View" sentinel slot — shown first, like
+  // canvaschamp — rendered live via WallPreview, reacting to the selected
+  // shape/size instead of a static photo.
   const galleryImages = useMemo(() => {
     if (!product) return [];
     const base = product.images && product.images.length > 0 ? product.images : [product.image];
     if (product.categorySlug === 'yoga-fitness') return base;
-    const [first, ...rest] = base;
-    return [first, ROOM_VIEW_SENTINEL, ...rest];
+    return [ROOM_VIEW_SENTINEL, ...base];
   }, [product]);
 
   // The real product photo used inside the live Room View preview (first non-sentinel image)

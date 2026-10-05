@@ -55,8 +55,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
       });
     }
     if (list.length === 0) return list;
-    const [first, ...rest] = list;
-    return [first, ROOM_VIEW_SENTINEL, ...rest];
+    return [ROOM_VIEW_SENTINEL, ...list];
   }, [product]);
 
   const roomViewSourceImage = useMemo(() => {
