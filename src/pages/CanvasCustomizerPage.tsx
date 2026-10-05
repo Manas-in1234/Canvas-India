@@ -1242,6 +1242,27 @@ export const CanvasCustomizerPage: React.FC = () => {
     3: createDefaultPanel()
   });
 
+  // Changing the selected size changes the frame's aspect ratio. If a panel
+  // was left in 'cover' (Fill) mode from a previous size, re-displaying it in
+  // a differently-shaped frame crops a different region of the photo — which
+  // reads as "the image got cropped just from picking a size". Resetting to
+  // 'contain' (no crop, auto letterboxed) whenever size changes guarantees
+  // the full uploaded photo is always visible right after a size change; the
+  // user can still choose Fill afterward if they want edge-to-edge cropping.
+  const prevSelectedSizeIdRef = useRef(selectedSizeId);
+  useEffect(() => {
+    if (prevSelectedSizeIdRef.current === selectedSizeId) return;
+    prevSelectedSizeIdRef.current = selectedSizeId;
+    setPanelImages((prev) => {
+      const next: Record<number, PanelImageState> = {};
+      Object.keys(prev).forEach((key) => {
+        const idx = Number(key);
+        next[idx] = { ...prev[idx], fitMode: 'contain', scale: 1, panX: 0, panY: 0 };
+      });
+      return next;
+    });
+  }, [selectedSizeId]);
+
   // Currently Active Panel Slot for drag/transform/upload targeting
   const [activePanelIndex, setActivePanelIndex] = useState<number>(0);
 
