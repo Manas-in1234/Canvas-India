@@ -99,203 +99,7 @@ export const HEART_CLIP_PATH = 'url(#acrylic-clip-shape-heart)';
 // ============================================================================
 
 export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[]> = {
-  // 1. Hexagon Prints (canvas-hexagon)
-  'canvas-hexagon': [
-    {
-      id: 'hexagon-1',
-      productTypeId: 'canvas-hexagon',
-      name: 'Single Hexagon Print',
-      description: '1 Individual Honeycomb Canvas Panel',
-      geometryType: 'hexagon',
-      panelsCount: 1,
-      photoCount: 1,
-      arrangement: 'single',
-      dimensionsSummary: '10" × 11.5"',
-      aspectRatio: 10 / 11.5,
-      overallWidthInches: 10,
-      overallHeightInches: 11.5,
-      price: 799.0,
-      acrylicPrice: 650.0,
-      panels: [
-        {
-          id: 'p0',
-          label: 'Hexagon',
-          dimension: '10" × 11.5"',
-          x: 0.08,
-          y: 0.05,
-          w: 0.84,
-          h: 0.90,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
-        }
-      ]
-    },
-    {
-      id: 'hexagon-2',
-      productTypeId: 'canvas-hexagon',
-      name: 'Hexagon Bundle of 2',
-      description: '2 Interlocking Honeycomb Canvas Panels',
-      geometryType: 'hexagon-cluster',
-      panelsCount: 2,
-      photoCount: 2,
-      arrangement: 'twoHex',
-      dimensionsSummary: '19" × 10" (2 Hexagons)',
-      aspectRatio: 1.9,
-      overallWidthInches: 19,
-      overallHeightInches: 10,
-      price: 1399.0,
-      acrylicPrice: 1150.0,
-      panels: [
-        {
-          id: 'p0',
-          label: 'Hexagon 1',
-          dimension: '10" × 11.5"',
-          x: 0.04,
-          y: 0.08,
-          w: 0.44,
-          h: 0.84,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
-        },
-        {
-          id: 'p1',
-          label: 'Hexagon 2',
-          dimension: '10" × 11.5"',
-          x: 0.52,
-          y: 0.08,
-          w: 0.44,
-          h: 0.84,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
-        }
-      ]
-    },
-    {
-      id: 'hexagon-3',
-      productTypeId: 'canvas-hexagon',
-      name: 'Hexagon Bundle of 3',
-      description: '3 Honeycomb Cluster Panels (1 Top + 2 Bottom)',
-      geometryType: 'hexagon-cluster',
-      panelsCount: 3,
-      photoCount: 3,
-      arrangement: 'threeHex',
-      dimensionsSummary: '27" × 13.75" (3 Hexagons)',
-      aspectRatio: 1.45,
-      overallWidthInches: 27,
-      overallHeightInches: 13.75,
-      price: 1899.0,
-      acrylicPrice: 1650.0,
-      panels: [
-        {
-          id: 'p0',
-          label: 'Hexagon 1 (Top)',
-          dimension: '10" × 11.5"',
-          x: 0.27,
-          y: 0.04,
-          w: 0.46,
-          h: 0.46,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
-        },
-        {
-          id: 'p1',
-          label: 'Hexagon 2 (Left)',
-          dimension: '10" × 11.5"',
-          x: 0.04,
-          y: 0.50,
-          w: 0.46,
-          h: 0.46,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
-        },
-        {
-          id: 'p2',
-          label: 'Hexagon 3 (Right)',
-          dimension: '10" × 11.5"',
-          x: 0.50,
-          y: 0.50,
-          w: 0.46,
-          h: 0.46,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
-        }
-      ]
-    },
-    {
-      id: 'hexagon-4',
-      productTypeId: 'canvas-hexagon',
-      name: 'Hexagon Bundle of 4',
-      description: '4-Piece Diamond Honeycomb Cluster',
-      geometryType: 'hexagon-cluster',
-      panelsCount: 4,
-      photoCount: 4,
-      arrangement: 'fourHex',
-      dimensionsSummary: '27" × 19" (4 Hexagons)',
-      aspectRatio: 1.42,
-      overallWidthInches: 27,
-      overallHeightInches: 19,
-      price: 2399.0,
-      acrylicPrice: 2150.0,
-      panels: [
-        {
-          id: 'p0',
-          label: 'Hexagon 1 (Top)',
-          dimension: '10" × 11.5"',
-          x: 0.27,
-          y: 0.03,
-          w: 0.46,
-          h: 0.45,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
-        },
-        {
-          id: 'p1',
-          label: 'Hexagon 2 (Left)',
-          dimension: '10" × 11.5"',
-          x: 0.04,
-          y: 0.275,
-          w: 0.46,
-          h: 0.45,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
-        },
-        {
-          id: 'p2',
-          label: 'Hexagon 3 (Right)',
-          dimension: '10" × 11.5"',
-          x: 0.50,
-          y: 0.275,
-          w: 0.46,
-          h: 0.45,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
-        },
-        {
-          id: 'p3',
-          label: 'Hexagon 4 (Bottom)',
-          dimension: '10" × 11.5"',
-          x: 0.27,
-          y: 0.52,
-          w: 0.46,
-          h: 0.45,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
-        }
-      ]
-    }
-  ],
-
-  // 2. Wall Display (canvas-wall-art)
+// 2. Wall Display (canvas-wall-art)
   'canvas-wall-art': [
     {
       id: 'wall-display-3a',
@@ -685,9 +489,38 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
   // 4. Photo Collage (canvas-collage)
   'canvas-collage': [
     {
+      id: 'layout-1-single',
+      productTypeId: 'canvas-collage',
+      name: 'Single Image',
+      description: '1 Large Full Canvas Image Slot',
+      geometryType: 'collage',
+      panelsCount: 1,
+      photoCount: 1,
+      arrangement: 'single',
+      dimensionsSummary: '16" × 16"',
+      aspectRatio: 1,
+      overallWidthInches: 16,
+      overallHeightInches: 16,
+      price: 499.0,
+      acrylicPrice: 449.0,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Photo 1',
+          dimension: '16" × 16"',
+          x: 0.03,
+          y: 0.03,
+          w: 0.94,
+          h: 0.94,
+          widthRatio: 16,
+          heightRatio: 16
+        }
+      ]
+    },
+    {
       id: 'layout-2-split',
       productTypeId: 'canvas-collage',
-      name: '2 Photos Dual Split',
+      name: '2 Image Split',
       description: '2 Photos side by side with clean dividing line',
       geometryType: 'collage',
       panelsCount: 2,
@@ -698,27 +531,27 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
       overallWidthInches: 18,
       overallHeightInches: 12,
       price: 599.0,
-      acrylicPrice: 426.00,
+      acrylicPrice: 549.0,
       panels: [
         {
           id: 'p0',
-          label: 'Photo 1',
+          label: 'Left Photo',
           dimension: '9" × 12"',
-          x: 0.02,
-          y: 0.04,
-          w: 0.47,
-          h: 0.92,
+          x: 0.03,
+          y: 0.03,
+          w: 0.455,
+          h: 0.94,
           widthRatio: 9,
           heightRatio: 12
         },
         {
           id: 'p1',
-          label: 'Photo 2',
+          label: 'Right Photo',
           dimension: '9" × 12"',
-          x: 0.51,
-          y: 0.04,
-          w: 0.47,
-          h: 0.92,
+          x: 0.515,
+          y: 0.03,
+          w: 0.455,
+          h: 0.94,
           widthRatio: 9,
           heightRatio: 12
         }
@@ -727,8 +560,8 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
     {
       id: 'layout-3-collage',
       productTypeId: 'canvas-collage',
-      name: '3 Photos Feature Collage',
-      description: '1 Main top photograph with 2 supporting bottom photos',
+      name: '3 Image Collage',
+      description: '1 Main top photograph + 2 supporting bottom photos',
       geometryType: 'collage',
       panelsCount: 3,
       photoCount: 3,
@@ -738,16 +571,16 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
       overallWidthInches: 16,
       overallHeightInches: 20,
       price: 899.0,
-      acrylicPrice: 799.00,
+      acrylicPrice: 799.0,
       panels: [
         {
           id: 'p0',
           label: 'Top Main',
           dimension: '16" × 12"',
-          x: 0.04,
-          y: 0.04,
-          w: 0.92,
-          h: 0.52,
+          x: 0.03,
+          y: 0.03,
+          w: 0.94,
+          h: 0.55,
           widthRatio: 16,
           heightRatio: 12
         },
@@ -755,10 +588,10 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
           id: 'p1',
           label: 'Bottom Left',
           dimension: '8" × 8"',
-          x: 0.04,
-          y: 0.58,
-          w: 0.44,
-          h: 0.38,
+          x: 0.03,
+          y: 0.61,
+          w: 0.455,
+          h: 0.36,
           widthRatio: 8,
           heightRatio: 8
         },
@@ -766,10 +599,10 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
           id: 'p2',
           label: 'Bottom Right',
           dimension: '8" × 8"',
-          x: 0.52,
-          y: 0.58,
-          w: 0.44,
-          h: 0.38,
+          x: 0.515,
+          y: 0.61,
+          w: 0.455,
+          h: 0.36,
           widthRatio: 8,
           heightRatio: 8
         }
@@ -778,8 +611,8 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
     {
       id: 'layout-4-grid',
       productTypeId: 'canvas-collage',
-      name: '4 Photos Grid (2×2)',
-      description: 'Classic symmetrical 2×2 square quad grid',
+      name: '4 Image Grid',
+      description: '2 × 2 Symmetrical square quad grid',
       geometryType: 'collage',
       panelsCount: 4,
       photoCount: 4,
@@ -789,12 +622,73 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
       overallWidthInches: 16,
       overallHeightInches: 16,
       price: 1199.0,
-      acrylicPrice: 999.00,
+      acrylicPrice: 999.0,
       panels: [
-        { id: 'p0', label: 'Photo 1', dimension: '8" × 8"', x: 0.04, y: 0.04, w: 0.44, h: 0.44, widthRatio: 8, heightRatio: 8 },
-        { id: 'p1', label: 'Photo 2', dimension: '8" × 8"', x: 0.52, y: 0.04, w: 0.44, h: 0.44, widthRatio: 8, heightRatio: 8 },
-        { id: 'p2', label: 'Photo 3', dimension: '8" × 8"', x: 0.04, y: 0.52, w: 0.44, h: 0.44, widthRatio: 8, heightRatio: 8 },
-        { id: 'p3', label: 'Photo 4', dimension: '8" × 8"', x: 0.52, y: 0.52, w: 0.44, h: 0.44, widthRatio: 8, heightRatio: 8 }
+        { id: 'p0', label: 'Top Left', dimension: '8" × 8"', x: 0.03, y: 0.03, w: 0.455, h: 0.455, widthRatio: 8, heightRatio: 8 },
+        { id: 'p1', label: 'Top Right', dimension: '8" × 8"', x: 0.515, y: 0.03, w: 0.455, h: 0.455, widthRatio: 8, heightRatio: 8 },
+        { id: 'p2', label: 'Bottom Left', dimension: '8" × 8"', x: 0.03, y: 0.515, w: 0.455, h: 0.455, widthRatio: 8, heightRatio: 8 },
+        { id: 'p3', label: 'Bottom Right', dimension: '8" × 8"', x: 0.515, y: 0.515, w: 0.455, h: 0.455, widthRatio: 8, heightRatio: 8 }
+      ]
+    },
+    {
+      id: 'layout-top-bottom',
+      productTypeId: 'canvas-collage',
+      name: 'Top + Bottom',
+      description: '2 Horizontal stacked split photo slots',
+      geometryType: 'collage',
+      panelsCount: 2,
+      photoCount: 2,
+      arrangement: 'twoSplit',
+      dimensionsSummary: '16" × 16"',
+      aspectRatio: 1,
+      overallWidthInches: 16,
+      overallHeightInches: 16,
+      price: 699.0,
+      acrylicPrice: 599.0,
+      panels: [
+        { id: 'p0', label: 'Top Photo', dimension: '16" × 8"', x: 0.03, y: 0.03, w: 0.94, h: 0.455, widthRatio: 16, heightRatio: 8 },
+        { id: 'p1', label: 'Bottom Photo', dimension: '16" × 8"', x: 0.03, y: 0.515, w: 0.94, h: 0.455, widthRatio: 16, heightRatio: 8 }
+      ]
+    },
+    {
+      id: 'layout-left-right',
+      productTypeId: 'canvas-collage',
+      name: 'Left + Right',
+      description: '2 Equal vertical photo slots',
+      geometryType: 'collage',
+      panelsCount: 2,
+      photoCount: 2,
+      arrangement: 'twoSplit',
+      dimensionsSummary: '20" × 16"',
+      aspectRatio: 20 / 16,
+      overallWidthInches: 20,
+      overallHeightInches: 16,
+      price: 799.0,
+      acrylicPrice: 699.0,
+      panels: [
+        { id: 'p0', label: 'Left Photo', dimension: '10" × 16"', x: 0.03, y: 0.03, w: 0.455, h: 0.94, widthRatio: 10, heightRatio: 16 },
+        { id: 'p1', label: 'Right Photo', dimension: '10" × 16"', x: 0.515, y: 0.03, w: 0.455, h: 0.94, widthRatio: 10, heightRatio: 16 }
+      ]
+    },
+    {
+      id: 'layout-main-2small',
+      productTypeId: 'canvas-collage',
+      name: 'Main + 2 Small',
+      description: '1 Large left photo slot + 2 stacked right photo slots',
+      geometryType: 'collage',
+      panelsCount: 3,
+      photoCount: 3,
+      arrangement: 'threeCollage',
+      dimensionsSummary: '20" × 15"',
+      aspectRatio: 20 / 15,
+      overallWidthInches: 20,
+      overallHeightInches: 15,
+      price: 999.0,
+      acrylicPrice: 899.0,
+      panels: [
+        { id: 'p0', label: 'Left Main', dimension: '12" × 15"', x: 0.03, y: 0.03, w: 0.56, h: 0.94, widthRatio: 12, heightRatio: 15 },
+        { id: 'p1', label: 'Top Right', dimension: '8" × 7.5"', x: 0.62, y: 0.03, w: 0.35, h: 0.455, widthRatio: 8, heightRatio: 7.5 },
+        { id: 'p2', label: 'Bottom Right', dimension: '8" × 7.5"', x: 0.62, y: 0.515, w: 0.35, h: 0.455, widthRatio: 8, heightRatio: 7.5 }
       ]
     },
     {
@@ -811,7 +705,7 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
       overallWidthInches: 18,
       overallHeightInches: 18,
       price: 1799.0,
-      acrylicPrice: 1599.00,
+      acrylicPrice: 1599.0,
       panels: Array.from({ length: 9 }, (_, i) => {
         const col = i % 3;
         const row = Math.floor(i / 3);
@@ -1094,9 +988,6 @@ PRODUCT_LAYOUT_DEFINITIONS['canvas-classic'] = PRODUCT_LAYOUT_DEFINITIONS['canva
  */
 export function getProductLayouts(productTypeId: string): ProductLayoutDefinition[] {
   const normId = (productTypeId || '').toLowerCase();
-  if (normId.includes('hexagon')) {
-    return PRODUCT_LAYOUT_DEFINITIONS['canvas-hexagon'];
-  }
   if (normId.includes('wall') || normId.includes('display')) {
     return PRODUCT_LAYOUT_DEFINITIONS['canvas-wall-art'];
   }
@@ -1124,15 +1015,122 @@ export function getProductLayout(productTypeId: string, layoutId?: string): Prod
 
 /**
  * Honeycomb cluster positioning for 1, 2, 3, or 4 hexagon panels.
- * Directly sourced from the centralized PRODUCT_LAYOUT_DEFINITIONS['canvas-hexagon'].
+ * Adjacent hexagons lock together along shared edges.
  */
 export function getHexagonClusterLayout(count: number): HexPanelLayout[] {
-  const key = count === 2 ? 'hexagon-2' : count === 3 ? 'hexagon-3' : count === 4 ? 'hexagon-4' : 'hexagon-1';
-  const layoutDef = PRODUCT_LAYOUT_DEFINITIONS['canvas-hexagon'].find((l) => l.id === key);
-  if (layoutDef) {
-    return layoutDef.panels.map((p) => ({ x: p.x, y: p.y, w: p.w, h: p.h }));
+  if (count === 2) {
+    const w = 0.44;
+    const h = 0.76;
+    const dx = w * 0.75;
+    return [
+      { x: 0.5 - dx / 2 - w / 2, y: 0.5 - h / 2, w, h },
+      { x: 0.5 + dx / 2 - w / 2, y: 0.5 - h / 2, w, h }
+    ];
   }
-  return [{ x: 0.08, y: 0.05, w: 0.84, h: 0.90 }];
+  if (count === 3) {
+    const w = 0.36;
+    const h = 0.56;
+    const dx = w * 0.75;
+    const colX1 = 0.5 - dx / 2;
+    const colX2 = 0.5 + dx / 2;
+    return [
+      { x: colX1 - w / 2, y: 0.5 - h, w, h },
+      { x: colX1 - w / 2, y: 0.5, w, h },
+      { x: colX2 - w / 2, y: 0.5 - h / 2, w, h }
+    ];
+  }
+  if (count === 4) {
+    const w = 0.32;
+    const h = 0.44;
+    const dx = w * 0.75;
+    return [
+      { x: 0.5 - w / 2, y: 0.5 - h, w, h },
+      { x: 0.5 - w / 2, y: 0.5, w, h },
+      { x: 0.5 - dx - w / 2, y: 0.5 - h / 2, w, h },
+      { x: 0.5 + dx - w / 2, y: 0.5 - h / 2, w, h }
+    ];
+  }
+  // Single hexagon: centered
+  const w = 0.74;
+  const h = 0.88;
+  return [{ x: 0.5 - w / 2, y: 0.5 - h / 2, w, h }];
+}
+
+/**
+ * Renders an exact SVG hexagon cluster diagram for size cards & modals.
+ */
+function renderHexagonSvgDiagram({
+  count,
+  isSelected,
+  widthInches,
+  heightInches,
+  diagramType
+}: {
+  count: number;
+  isSelected?: boolean;
+  widthInches?: number;
+  heightInches?: number;
+  diagramType?: string;
+}): React.ReactNode {
+  const strokeColor = isSelected ? '#0E4A93' : '#64748b';
+  const fillColor = isSelected ? '#0E4A9322' : '#f8fafc';
+
+  const hexPoints = (cx: number, cy: number, w: number, h: number) =>
+    `${cx - w * 0.25},${cy - h * 0.5} ${cx + w * 0.25},${cy - h * 0.5} ${cx + w * 0.5},${cy} ${cx + w * 0.25},${cy + h * 0.5} ${cx - w * 0.25},${cy + h * 0.5} ${cx - w * 0.5},${cy}`;
+
+  let faces: React.ReactNode[] = [];
+
+  if (count === 2 || diagramType === 'hexagon-2') {
+    const w = 24;
+    const h = 28;
+    const cy = 24;
+    const dx = w * 0.75;
+    faces = [
+      <polygon key="h0" points={hexPoints(30 - dx / 2, cy, w, h)} fill={fillColor} stroke={strokeColor} strokeWidth="1.4" />,
+      <polygon key="h1" points={hexPoints(30 + dx / 2, cy, w, h)} fill={fillColor} stroke={strokeColor} strokeWidth="1.4" />
+    ];
+  } else if (count === 3 || diagramType === 'hexagon-3') {
+    const w = 18;
+    const h = 20;
+    const cy = 24;
+    const dx = w * 0.75;
+    const colX1 = 30 - dx / 2;
+    const colX2 = 30 + dx / 2;
+    faces = [
+      <polygon key="h0" points={hexPoints(colX1, cy - h / 2, w, h)} fill={fillColor} stroke={strokeColor} strokeWidth="1.3" />,
+      <polygon key="h1" points={hexPoints(colX1, cy + h / 2, w, h)} fill={fillColor} stroke={strokeColor} strokeWidth="1.3" />,
+      <polygon key="h2" points={hexPoints(colX2, cy, w, h)} fill={fillColor} stroke={strokeColor} strokeWidth="1.3" />
+    ];
+  } else if (count === 4 || diagramType === 'hexagon-4') {
+    const w = 16;
+    const h = 18;
+    const cy = 24;
+    const dx = w * 0.75;
+    faces = [
+      <polygon key="h0" points={hexPoints(30, cy - h / 2, w, h)} fill={fillColor} stroke={strokeColor} strokeWidth="1.2" />,
+      <polygon key="h1" points={hexPoints(30, cy + h / 2, w, h)} fill={fillColor} stroke={strokeColor} strokeWidth="1.2" />,
+      <polygon key="h2" points={hexPoints(30 - dx, cy, w, h)} fill={fillColor} stroke={strokeColor} strokeWidth="1.2" />,
+      <polygon key="h3" points={hexPoints(30 + dx, cy, w, h)} fill={fillColor} stroke={strokeColor} strokeWidth="1.2" />
+    ];
+  } else {
+    // 1 Hexagon
+    const w = 32;
+    const h = 36;
+    faces = [
+      <polygon key="h0" points={hexPoints(30, 24, w, h)} fill={fillColor} stroke={strokeColor} strokeWidth="1.6" />
+    ];
+  }
+
+  return (
+    <svg viewBox="0 0 60 48" className="w-full h-full max-h-12">
+      {faces}
+      {widthInches && (
+        <text x="30" y="47" fill={strokeColor} fontSize="6" fontWeight="bold" textAnchor="middle">
+          {widthInches}&quot;{heightInches ? ` × ${heightInches}"` : ''}
+        </text>
+      )}
+    </svg>
+  );
 }
 
 /**
@@ -1297,22 +1295,24 @@ export function getCanvasProductGeometry(
 
   // 1. Hexagon Prints
   if (normType.includes('hexagon')) {
-    const layoutDef = getProductLayout('canvas-hexagon', sizeOption?.diagramType || sizeOption?.id);
-    const hexLayout = layoutDef.panels.map((p) => ({ x: p.x, y: p.y, w: p.w, h: p.h }));
+    const hexLayout = getHexagonClusterLayout(panelsCount);
+    const aspect = panelsCount === 2 ? 19 / 10 : panelsCount === 3 ? 27 / 13.75 : panelsCount === 4 ? 27 / 19 : 10 / 11.5;
+    const hexW = panelsCount === 2 ? 19 : panelsCount === 3 ? 27 : panelsCount === 4 ? 27 : (width || 10);
+    const hexH = panelsCount === 2 ? 10 : panelsCount === 3 ? 13.75 : panelsCount === 4 ? 19 : (height || 11);
     return {
       productTypeId,
-      geometryType: layoutDef.geometryType,
+      geometryType: panelsCount > 1 ? 'hexagon-cluster' : 'hexagon',
       shapeId: 'shape-hexagon',
-      aspectRatio: layoutDef.aspectRatio,
-      widthInches: layoutDef.overallWidthInches,
-      heightInches: layoutDef.overallHeightInches,
+      aspectRatio: aspect,
+      widthInches: hexW,
+      heightInches: hexH,
       clipPath: HEXAGON_CLIP_PATH,
       borderRadius: '0px',
-      isMultiPanel: layoutDef.panelsCount > 1,
-      panelsCount: layoutDef.panelsCount,
+      isMultiPanel: panelsCount > 1,
+      panelsCount,
       hexPanelsLayout: hexLayout,
-      layoutDef,
-      renderSvgPreview: ({ isSelected }) => renderProductLayoutDiagram(layoutDef, Boolean(isSelected))
+      renderSvgPreview: ({ isSelected, widthInches, heightInches, diagramType }) =>
+        renderHexagonSvgDiagram({ count: panelsCount, isSelected, widthInches, heightInches, diagramType })
     };
   }
 
