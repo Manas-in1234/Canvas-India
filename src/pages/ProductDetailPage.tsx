@@ -141,14 +141,14 @@ export const ProductDetailPage: React.FC = () => {
   }, [product, availableMaterials, availableShapes]);
 
   // Gallery images (product primary + any secondary images). Wall-hangable
-  // categories get a leading "Room View" sentinel slot rendered live via
-  // WallPreview, reacting to the selected shape/size instead of a static photo.
+  // categories get a leading "Room View" sentinel slot — shown first, like
+  // canvaschamp — rendered live via WallPreview, reacting to the selected
+  // shape/size instead of a static photo.
   const galleryImages = useMemo(() => {
     if (!product) return [];
     const base = product.images && product.images.length > 0 ? product.images : [product.image];
     if (product.categorySlug === 'yoga-fitness') return base;
-    const [first, ...rest] = base;
-    return [first, ROOM_VIEW_SENTINEL, ...rest];
+    return [ROOM_VIEW_SENTINEL, ...base];
   }, [product]);
 
   // The real product photo used inside the live Room View preview (first non-sentinel image)
@@ -321,7 +321,7 @@ export const ProductDetailPage: React.FC = () => {
           <div className="lg:col-span-6 xl:col-span-7 flex flex-col gap-4 sticky top-24">
             
             {/* Main Primary Image */}
-            <div className="relative w-full h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] rounded-2xl overflow-hidden bg-stone-100 shadow-xs group flex items-center justify-center">
+            <div className="relative aspect-[3/4] h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] max-w-full mx-auto rounded-2xl overflow-hidden bg-stone-100 shadow-xs group">
               {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
                 <WallPreview
                   imageSrc={uploadedFile || roomViewSourceImage}
@@ -335,7 +335,7 @@ export const ProductDetailPage: React.FC = () => {
                   src={uploadedFile || galleryImages[activeImageIndex] || product.image}
                   alt={product.name}
                   categorySlug={product.categorySlug}
-                  className="max-w-full max-h-full w-auto h-auto object-contain transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               )}
 
