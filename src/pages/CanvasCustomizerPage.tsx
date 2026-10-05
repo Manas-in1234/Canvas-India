@@ -2803,7 +2803,13 @@ export const CanvasCustomizerPage: React.FC = () => {
         >
           {tilePanels.map((pSpec, i) => {
             const panel = panelImages[i];
-            const hasIndividualPhoto = Boolean(panel?.imageUrl);
+            // A tile only gets its own full (non-sliced) photo when the user
+            // explicitly uploaded a *different* image onto that specific
+            // tile. The single "upload 1 photo to tile across seams" photo
+            // always lands in panel 0 first, which otherwise made Tile 1
+            // wrongly show the whole image while every other tile correctly
+            // sliced a quadrant of it.
+            const hasIndividualPhoto = Boolean(panel?.imageUrl) && panel.imageUrl !== masterImage;
             const displayPhoto = hasIndividualPhoto ? panel.imageUrl : masterImage;
             const isTarget = activePanelIndex === i;
 
