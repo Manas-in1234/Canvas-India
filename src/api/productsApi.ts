@@ -24,13 +24,14 @@ const DEFAULT_CATEGORY_IMAGES: Record<string, string> = {
 
 const DEFAULT_IMAGE = '/products/placeholders/default-placeholder.svg';
 
+const DEFAULT_API_BASE_URL = 'https://canvas-india-backend.kasettynani.workers.dev/api/v1';
+
 /**
- * Returns the sanitized base URL from environment variables.
+ * Returns the sanitized base URL from environment variables, falling back to live production worker.
  */
 export function getApiBaseUrl(): string {
-  const envUrl = import.meta.env.VITE_API_BASE_URL;
-  if (!envUrl) return '';
-  return String(envUrl).trim().replace(/\/+$/, '');
+  const envUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
+  return (envUrl || DEFAULT_API_BASE_URL).replace(/\/+$/, '');
 }
 
 /**
