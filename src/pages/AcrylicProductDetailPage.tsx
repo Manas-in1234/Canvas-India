@@ -21,6 +21,7 @@ import {
 import { Product } from '../types';
 import { useShop } from '../context/ShopContext';
 import { ProductImage } from '../components/ProductImage';
+import { SmartCropImage } from '../components/SmartCropImage';
 import { WallPreview } from '../components/WallPreview';
 import { WallMultiSizePreview } from '../components/WallMultiSizePreview';
 import {
@@ -337,11 +338,11 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                   className="w-full h-full"
                 />
               ) : (
-                <ProductImage
+                <SmartCropImage
                   src={galleryImages[activeImageIndex] || product.image}
                   alt={product.name}
-                  category="acrylic"
-                  className="w-full h-full object-cover transition-all duration-300"
+                  containerAspect={3 / 4}
+                  className="w-full h-full transition-all duration-300"
                 />
               )}
 

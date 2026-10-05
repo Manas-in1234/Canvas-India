@@ -26,6 +26,7 @@ import { ProductCard } from '../components/ProductCard';
 import { ProductImage } from '../components/ProductImage';
 import { WallPreview } from '../components/WallPreview';
 import { WallMultiSizePreview } from '../components/WallMultiSizePreview';
+import { SmartCropImage } from '../components/SmartCropImage';
 import { CUSTOMER_REVIEWS } from '../data/storeData';
 import { Product } from '../types';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
@@ -348,11 +349,11 @@ export const ProductDetailPage: React.FC = () => {
                   className="w-full h-full"
                 />
               ) : (
-                <ProductImage
+                <SmartCropImage
                   src={uploadedFile || galleryImages[activeImageIndex] || product.image}
                   alt={product.name}
-                  categorySlug={product.categorySlug}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  containerAspect={3 / 4}
+                  className="w-full h-full"
                 />
               )}
 
