@@ -527,24 +527,6 @@ export const ProductDetailPage: React.FC = () => {
               {product.shortDescription || product.description}
             </p>
 
-            {/* Pricing */}
-            <div className="pb-4 border-b border-stone-200">
-              <div className="flex items-baseline gap-3">
-                <span className="text-3xl sm:text-4xl font-extrabold text-stone-950">
-                  ₹{product.price.toLocaleString('en-IN')}
-                </span>
-                <span className="text-base sm:text-lg text-stone-400 line-through">
-                  ₹{(product.compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)).toLocaleString('en-IN')}
-                </span>
-                {product.discountPercent > 0 && (
-                  <span className="text-sm font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                    Save ₹{((product.compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)) - product.price).toLocaleString('en-IN')} ({product.discountPercent}%)
-                  </span>
-                )}
-              </div>
-              <p className="text-[11px] text-stone-500 mt-1">Inclusive of GST taxes. Free shipping on orders above ₹999 across India.</p>
-            </div>
-
             {/* Shape Selector (Canvas products: Popular/Square/Rectangle/Panoramic/Circle/Triangle) */}
             {availableShapes.length > 0 && (
               <div className="space-y-2">
@@ -707,6 +689,24 @@ export const ProductDetailPage: React.FC = () => {
                   +
                 </button>
               </div>
+            </div>
+
+            {/* Pricing */}
+            <div className="pt-2 pb-4 border-t border-stone-200">
+              <div className="flex items-baseline gap-3">
+                <span className="text-3xl sm:text-4xl font-extrabold text-stone-950">
+                  ₹{product.price.toLocaleString('en-IN')}
+                </span>
+                <span className="text-base sm:text-lg text-stone-400 line-through">
+                  ₹{(product.compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)).toLocaleString('en-IN')}
+                </span>
+                {product.discountPercent > 0 && (
+                  <span className="text-sm font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                    Save ₹{((product.compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)) - product.price).toLocaleString('en-IN')} ({product.discountPercent}%)
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-stone-500 mt-1">Inclusive of GST taxes. Free shipping on orders above ₹999 across India.</p>
             </div>
 
             {/* Action CTAs: Add to Cart & Buy Now */}
