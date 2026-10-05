@@ -985,7 +985,7 @@ export function getSizesForProductAndShape(
     const matching = mosaics.filter((c) => c.shapeId === shapeId);
     return matching.length > 0 ? matching : mosaics;
   }
-  if (shapeId === 'shape-hexagon') {
+  if (normId.includes('hexagon') || shapeId === 'shape-hexagon') {
     return HEXAGON_PRESETS.map((p) => ({
       ...p,
       price: material === 'acrylic' ? p.acrylicPrice : p.canvasPrice
