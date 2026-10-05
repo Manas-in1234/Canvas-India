@@ -131,20 +131,7 @@ export const SignUpPage: React.FC = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-6 shadow-xl rounded-2xl sm:px-10 border border-gray-100">
-          {!isConfigured && (
-            <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-sm">
-              <div className="flex items-start gap-2 font-medium">
-                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-amber-800">Supabase Credentials Notice</p>
-                  <p className="mt-1 text-xs text-amber-700">
-                    Live Supabase credentials are not yet configured in <code className="bg-amber-100 px-1 py-0.5 rounded">.env.local</code>.
-                    Please add <code className="bg-amber-100 px-1 py-0.5 rounded">VITE_SUPABASE_URL</code> and <code className="bg-amber-100 px-1 py-0.5 rounded">VITE_SUPABASE_ANON_KEY</code>.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+
 
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm flex items-start gap-2">
