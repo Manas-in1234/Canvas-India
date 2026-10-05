@@ -72,7 +72,11 @@ export const WallMultiSizePreview: React.FC<WallMultiSizePreviewProps> = ({
 
         {picks.map((p, i) => {
           const cell = CELLS[i] || CELLS[CELLS.length - 1];
-          const relScale = 0.62 + 0.38 * Math.sqrt((p.dims.w * p.dims.h) / maxArea);
+          // Scale linear size by sqrt(area ratio) so the rendered box AREA is
+          // actually proportional to the real print area, not just a mild
+          // visual nudge — a 18x24 should look meaningfully bigger than an
+          // 8x12, not nearly the same size.
+          const relScale = Math.max(0.4, Math.sqrt((p.dims.w * p.dims.h) / maxArea));
           const ratio = p.dims.w / p.dims.h || 1;
           const cellRatio = cell.w / cell.h;
           let w = cell.w;

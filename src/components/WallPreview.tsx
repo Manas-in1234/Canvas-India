@@ -164,7 +164,7 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
               <img
                 src={imageSrc}
                 alt="Product on wall preview"
-                className="w-full h-full object-cover"
+                className={`w-full h-full ${isCircle || isTriangle ? 'object-cover' : 'object-contain'}`}
               />
               {finishStyle.overlay && (
                 <div className="absolute inset-0 pointer-events-none" style={{ background: finishStyle.overlay }} />
