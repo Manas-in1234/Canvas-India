@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Heart, ArrowRight, Sparkles } from 'lucide-react';
 import { Product } from '../types';
-import { ProductImage } from './ProductImage';
+import { SmartCropImage } from './SmartCropImage';
 
 interface MaterialOption {
   label: string;
@@ -42,12 +42,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             className="block w-full h-full cursor-pointer"
             title={`View ${product.name}`}
           >
-            <ProductImage
+            <SmartCropImage
               src={product.image}
               alt={product.name}
-              categorySlug={product.categorySlug}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
+              containerAspect={3 / 4}
+              className="w-full h-full"
             />
           </Link>
 
