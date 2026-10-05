@@ -5,6 +5,7 @@ import { useShop } from '../context/ShopContext';
 import { addressService } from '../services/addressService';
 import { orderService } from '../services/orderService';
 import { paymentService } from '../services/paymentService';
+import { delhiveryService, PincodeServiceabilityResult } from '../services/delhiveryService';
 import { Address } from '../types/auth';
 import {
   ShieldCheck,
@@ -66,6 +67,27 @@ export const CheckoutPage: React.FC = () => {
   // Payment & Processing state
   const [processing, setProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  // Delhivery live pincode validation
+  const [delhiveryStatus, setDelhiveryStatus] = useState<PincodeServiceabilityResult | null>(null);
+  const [checkingPincode, setCheckingPincode] = useState(false);
+
+  useEffect(() => {
+    const cleanPin = postalCode.trim().replace(/\D/g, '');
+    if (cleanPin.length === 6) {
+      setCheckingPincode(true);
+      delhiveryService.checkPincode(cleanPin).then((res) => {
+        setDelhiveryStatus(res);
+        setCheckingPincode(false);
+        if (res.serviceable) {
+          if (!city && res.city) setCity(res.city);
+          if (!state && res.state) setState(res.state);
+        }
+      });
+    } else {
+      setDelhiveryStatus(null);
+    }
+  }, [postalCode]);
 
   // Load addresses when user signs in
   useEffect(() => {
@@ -652,6 +674,31 @@ export const CheckoutPage: React.FC = () => {
                             placeholder="400001"
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#002B49] outline-none"
                           />
+                          {checkingPincode && (
+                            <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1.5">
+                              <span className="inline-block w-2.5 h-2.5 border-2 border-[#002B49] border-t-transparent rounded-full animate-spin"></span>
+                              <span>Checking Delhivery Express serviceability...</span>
+                            </p>
+                          )}
+                          {!checkingPincode && delhiveryStatus && (
+                            <div className={`text-[11px] font-medium mt-1.5 flex items-start gap-1.5 p-1.5 rounded-md ${
+                              delhiveryStatus.serviceable ? 'text-emerald-800 bg-emerald-50 border border-emerald-200' : 'text-amber-800 bg-amber-50 border border-amber-200'
+                            }`}>
+                              {delhiveryStatus.serviceable ? (
+                                <>
+                                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                                  <span>
+                                    ✓ Serviceable by Delhivery Express {delhiveryStatus.city ? `(${delhiveryStatus.city})` : ''} · Est. {delhiveryStatus.estimatedDays || 3} days
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <AlertCircle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+                                  <span>{delhiveryStatus.message || 'Pincode not serviceable for standard express delivery'}</span>
+                                </>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -734,8 +781,13 @@ export const CheckoutPage: React.FC = () => {
                           className="text-[#002B49] focus:ring-[#002B49]"
                         />
                         <div>
-                          <p className="text-xs font-bold text-gray-900">Standard Delivery (4 - 7 Business Days)</p>
-                          <p className="text-[11px] text-gray-500">Secure surface transport with bubble & foam corner packaging</p>
+                          <p className="text-xs font-bold text-gray-900 flex items-center gap-2">
+                            <span>Standard Delivery (3 - 5 Business Days)</span>
+                            <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded">
+                              Delhivery Express
+                            </span>
+                          </p>
+                          <p className="text-[11px] text-gray-500">Fast surface transport directly from our Hyderabad fulfillment center</p>
                         </div>
                       </div>
                       <span className="text-xs font-bold text-[#002B49]">

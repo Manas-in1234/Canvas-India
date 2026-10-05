@@ -11,6 +11,11 @@ interface AuthContextType {
   isConfigured: boolean;
   signUp: (params: { email: string; password: string; fullName: string; phone: string }) => Promise<{ error: AuthError | Error | null }>;
   signIn: (params: { email: string; password: string }) => Promise<{ error: AuthError | Error | null }>;
+  signInWithGoogle: (redirectTo?: string) => Promise<{ error: AuthError | Error | null }>;
+  signInWithPhone: (phone: string) => Promise<{ error: AuthError | Error | null }>;
+  verifyPhoneOtp: (phone: string, token: string) => Promise<{ error: AuthError | Error | null }>;
+  signInWithEmailOtp: (email: string, redirectTo?: string) => Promise<{ error: AuthError | Error | null }>;
+  verifyEmailOtp: (email: string, token: string) => Promise<{ error: AuthError | Error | null }>;
   signOut: () => Promise<{ error: AuthError | Error | null }>;
   resetPassword: (email: string) => Promise<{ error: AuthError | Error | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: AuthError | Error | null }>;
@@ -101,6 +106,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  const getUnconfiguredError = () =>
+    new Error(
+      import.meta.env.DEV
+        ? 'Supabase credentials are not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env.local file.'
+        : 'Authentication service is temporarily unavailable. Please try again shortly.'
+    );
+
   const signUp = async ({
     email,
     password,
@@ -113,11 +125,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     phone: string;
   }) => {
     if (!isSupabaseConfigured) {
-      return {
-        error: new Error(
-          'Supabase credentials are not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env.local file.'
-        ),
-      };
+      return { error: getUnconfiguredError() };
     }
 
     try {
@@ -156,11 +164,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async ({ email, password }: { email: string; password: string }) => {
     if (!isSupabaseConfigured) {
-      return {
-        error: new Error(
-          'Supabase credentials are not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env.local file.'
-        ),
-      };
+      return { error: getUnconfiguredError() };
     }
 
     try {
@@ -168,6 +172,117 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password,
       });
+      return { error };
+    } catch (err: any) {
+      return { error: err };
+    }
+  };
+
+  const signInWithGoogle = async (redirectPath: string = '/account') => {
+    if (!isSupabaseConfigured) {
+      return { error: getUnconfiguredError() };
+    }
+    try {
+      const target = redirectPath.startsWith('/') ? redirectPath : `/${redirectPath}`;
+      const redirectTo = `${window.location.origin}${target}`;
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo,
+        },
+      });
+      return { error };
+    } catch (err: any) {
+      return { error: err };
+    }
+  };
+
+  const formatPhoneE164 = (phone: string): string => {
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.startsWith('91') && cleaned.length === 12) {
+      return `+${cleaned}`;
+    }
+    if (cleaned.length === 10) {
+      return `+91${cleaned}`;
+    }
+    return cleaned.startsWith('+') ? cleaned : `+${cleaned}`;
+  };
+
+  const signInWithPhone = async (phone: string) => {
+    if (!isSupabaseConfigured) {
+      return { error: getUnconfiguredError() };
+    }
+    try {
+      const formatted = formatPhoneE164(phone);
+      const { data, error } = await supabase.auth.signInWithOtp({
+        phone: formatted,
+      });
+      return { error };
+    } catch (err: any) {
+      return { error: err };
+    }
+  };
+
+  const verifyPhoneOtp = async (phone: string, token: string) => {
+    if (!isSupabaseConfigured) {
+      return { error: getUnconfiguredError() };
+    }
+    try {
+      const formatted = formatPhoneE164(phone);
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: formatted,
+        token: token.trim(),
+        type: 'sms',
+      });
+      if (data?.session) {
+        setSession(data.session);
+        setUser(data.session.user);
+        if (data.session.user) {
+          await fetchProfile(data.session.user.id, data.session.user.email);
+        }
+      }
+      return { error };
+    } catch (err: any) {
+      return { error: err };
+    }
+  };
+
+  const signInWithEmailOtp = async (email: string, redirectPath: string = '/account') => {
+    if (!isSupabaseConfigured) {
+      return { error: getUnconfiguredError() };
+    }
+    try {
+      const target = redirectPath.startsWith('/') ? redirectPath : `/${redirectPath}`;
+      const redirectTo = `${window.location.origin}${target}`;
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          emailRedirectTo: redirectTo,
+        },
+      });
+      return { error };
+    } catch (err: any) {
+      return { error: err };
+    }
+  };
+
+  const verifyEmailOtp = async (email: string, token: string) => {
+    if (!isSupabaseConfigured) {
+      return { error: getUnconfiguredError() };
+    }
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: token.trim(),
+        type: 'email',
+      });
+      if (data?.session) {
+        setSession(data.session);
+        setUser(data.session.user);
+        if (data.session.user) {
+          await fetchProfile(data.session.user.id, data.session.user.email);
+        }
+      }
       return { error };
     } catch (err: any) {
       return { error: err };
@@ -195,9 +310,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     if (!isSupabaseConfigured) {
-      return {
-        error: new Error('Supabase credentials are not configured in .env.local.'),
-      };
+      return { error: getUnconfiguredError() };
     }
 
     try {
@@ -213,9 +326,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updatePassword = async (newPassword: string) => {
     if (!isSupabaseConfigured) {
-      return {
-        error: new Error('Supabase credentials are not configured in .env.local.'),
-      };
+      return { error: getUnconfiguredError() };
     }
 
     try {
@@ -230,9 +341,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateProfile = async (params: Partial<UserProfile>) => {
     if (!isSupabaseConfigured) {
-      return {
-        error: new Error('Supabase credentials are not configured in .env.local.'),
-      };
+      return { error: getUnconfiguredError() };
     }
     if (!user) {
       return { error: new Error('No user is currently signed in.') };
@@ -271,6 +380,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isConfigured: isSupabaseConfigured,
         signUp,
         signIn,
+        signInWithGoogle,
+        signInWithPhone,
+        verifyPhoneOtp,
+        signInWithEmailOtp,
+        verifyEmailOtp,
         signOut,
         resetPassword,
         updatePassword,

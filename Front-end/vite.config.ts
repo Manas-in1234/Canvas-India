@@ -130,9 +130,54 @@ function uploadSessionPlugin(): Plugin {
   };
 }
 
+function validateEnvironmentPlugin(mode: string, command: string): Plugin {
+  return {
+    name: 'validate-environment-plugin',
+    configResolved(config) {
+      if (mode === 'production' || command === 'build') {
+        // General required variables — must be non-empty, non-placeholder
+        const requiredVars = [
+          'VITE_SUPABASE_URL',
+          'VITE_SUPABASE_ANON_KEY',
+          'VITE_API_BASE_URL',
+        ];
+
+        const missingVars = requiredVars.filter(key => {
+          const val = config.env[key] || process.env[key];
+          return !val || typeof val !== 'string' || val.trim() === '' || val.includes('placeholder') || val.includes('your-');
+        });
+
+        // Razorpay Key ID — must be present and start with rzp_live_ or rzp_test_
+        const razorpayKey = (config.env['VITE_RAZORPAY_KEY_ID'] || process.env['VITE_RAZORPAY_KEY_ID'] || '').trim();
+        const razorpayValid =
+          razorpayKey.length > 0 &&
+          (razorpayKey.startsWith('rzp_live_') || razorpayKey.startsWith('rzp_test_')) &&
+          !razorpayKey.includes('placeholder');
+        if (!razorpayValid) {
+          missingVars.push(
+            'VITE_RAZORPAY_KEY_ID (must be present and start with rzp_live_ or rzp_test_)'
+          );
+        }
+
+        if (missingVars.length > 0) {
+          throw new Error(
+            `\n==============================================================\n` +
+            `[FATAL BUILD ERROR] Missing Required Production Environment Variable(s):\n` +
+            missingVars.map(v => `  - ${v}`).join('\n') +
+            `\n\nVite production builds REQUIRE these variables to be configured.` +
+            `\nEnsure they are present in .env.local, .env.production, or build environment variables.` +
+            `\nDeployment aborted to prevent generating a non-functional storefront bundle.` +
+            `\n==============================================================\n`
+          );
+        }
+      }
+    },
+  };
+}
+
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss(), uploadSessionPlugin()],
+export default defineConfig(({ mode, command }) => ({
+  plugins: [react(), tailwindcss(), uploadSessionPlugin(), validateEnvironmentPlugin(mode, command)],
   server: {
     host: '0.0.0.0',
     port: 3000,
@@ -142,5 +187,5 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 3000,
     strictPort: true,
-  }
-});
+  },
+}));

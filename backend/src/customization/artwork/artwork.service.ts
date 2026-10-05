@@ -1,18 +1,21 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import type { Queue } from 'bullmq';
+import { BadRequestException, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { AuditService } from '../../audit/audit.service.js';
 import { JobsService } from '../../production/jobs/jobs.service.js';
-import { ARTWORK_GENERATION_QUEUE, type ArtworkGenerationJobData } from '../queue/queue-names.js';
+import { StorageService } from '../assets/storage.service.js';
+import { PreflightService } from './preflight.service.js';
+import sharp from 'sharp';
 
 @Injectable()
 export class ArtworkService {
+  private readonly logger = new Logger(ArtworkService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
     private readonly jobsService: JobsService,
-    @InjectQueue(ARTWORK_GENERATION_QUEUE) private readonly artworkQueue: Queue<ArtworkGenerationJobData>,
+    private readonly storageService: StorageService,
+    private readonly preflightService: PreflightService,
   ) {}
 
   async findOne(id: string) {
@@ -26,15 +29,88 @@ export class ArtworkService {
     return artwork;
   }
 
-  /** Kicks off pre-flight (scope §27-29); processing runs off the request path. */
+  /**
+   * Lists artwork for the admin review queue. No listing endpoint existed
+   * before this — a reviewer had no way to see what was awaiting review
+   * without already knowing an artwork's id.
+   */
+  findAll(status?: string) {
+    return this.prisma.artwork.findMany({
+      where: status ? { status: status as never } : undefined,
+      include: { designVersion: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /** Kicks off pre-flight (scope §27-29); processing runs synchronously. */
   async create(designVersionId: string) {
     const artwork = await this.prisma.artwork.create({
       data: { designVersionId, status: 'PENDING' },
     });
 
-    await this.artworkQueue.add('generate', { artworkId: artwork.id });
+    // Run pre-flight checks synchronously
+    const artworkWithDetails = await this.prisma.artwork.findUnique({
+      where: { id: artwork.id },
+      include: { designVersion: { include: { elements: { include: { asset: true } } } } },
+    });
 
-    return artwork;
+    if (!artworkWithDetails) {
+      this.logger.warn(`Artwork ${artwork.id} not found; skipping pre-flight`);
+      return artwork;
+    }
+
+    const primaryImageElement = artworkWithDetails.designVersion.elements.find((el) => el.type === 'image' && el.asset);
+
+    if (!primaryImageElement?.asset) {
+      await this.prisma.artwork.update({
+        where: { id: artwork.id },
+        data: {
+          status: 'PREFLIGHT_FAILED',
+          preflightResult: { overall: 'FAIL', message: 'No image asset found in design' },
+        },
+      });
+      return this.prisma.artwork.findUnique({
+        where: { id: artwork.id },
+        include: { designVersion: true },
+      });
+    }
+
+    try {
+      const original = await this.storageService.getObjectBuffer(primaryImageElement.asset.storageKey);
+      const metadata = await sharp(original).metadata();
+
+      const report = this.preflightService.evaluate({
+        imageWidthPx: metadata.width ?? 0,
+        imageHeightPx: metadata.height ?? 0,
+        targetWidthInches: Number(artworkWithDetails.designVersion.targetWidthInches),
+        targetHeightInches: Number(artworkWithDetails.designVersion.targetHeightInches),
+      });
+
+      const statusByResult = {
+        PASS: 'PREFLIGHT_PASSED',
+        WARNING: 'PREFLIGHT_WARNING',
+        FAIL: 'PREFLIGHT_FAILED',
+      } as const;
+
+      await this.prisma.artwork.update({
+        where: { id: artwork.id },
+        data: {
+          status: statusByResult[report.overall],
+          preflightResult: report as never,
+        },
+      });
+    } catch (error) {
+      this.logger.error(`Artwork generation failed for ${artwork.id}`, error as Error);
+      await this.prisma.artwork.update({
+        where: { id: artwork.id },
+        data: { status: 'PREFLIGHT_FAILED', preflightResult: { overall: 'FAIL', message: 'Processing error' } },
+      });
+    }
+
+    return this.prisma.artwork.findUnique({
+      where: { id: artwork.id },
+      include: { designVersion: true },
+    });
   }
 
   /**
@@ -47,6 +123,7 @@ export class ArtworkService {
    */
   async approve(id: string, adminUserId: string, reason?: string) {
     const artwork = await this.getReviewable(id);
+    const orderItemId = artwork.orderItemId;
 
     const updated = await this.prisma.artwork.update({
       where: { id },
@@ -61,15 +138,15 @@ export class ArtworkService {
       reason,
     });
 
-    if (artwork.orderItemId) {
-      await this.jobsService.createForOrderItem(artwork.orderItemId);
+    if (orderItemId) {
+      await this.jobsService.createForOrderItem(orderItemId);
     }
 
     return updated;
   }
 
   async reject(id: string, adminUserId: string, reason?: string) {
-    const artwork = await this.getReviewable(id);
+    await this.getReviewable(id);
 
     const updated = await this.prisma.artwork.update({
       where: { id },

@@ -4,7 +4,7 @@ import {
   COURIER_PROVIDER,
   ShippingService,
 } from './shipping.service.js';
-import { StubCourierAdapter } from './adapters/stub-courier.adapter.js';
+import { DelhiveryAdapter } from './adapters/delhivery.adapter.js';
 import { NdrRtoModule } from './ndr-rto/ndr-rto.module.js';
 
 @Module({
@@ -14,7 +14,7 @@ import { NdrRtoModule } from './ndr-rto/ndr-rto.module.js';
     ShippingService,
     {
       provide: COURIER_PROVIDER,
-      useClass: StubCourierAdapter,
+      useClass: DelhiveryAdapter,
     },
   ],
   exports: [ShippingService],
