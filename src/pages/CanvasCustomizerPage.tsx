@@ -1382,6 +1382,7 @@ export const CanvasCustomizerPage: React.FC = () => {
     const isLayoutProduct = [
       'canvas-wall-art',
       'canvas-collage',
+      'canvas-hexagon',
       'canvas-split',
       'canvas-mosaic'
     ].includes(selectedProductTypeId);
@@ -1791,6 +1792,7 @@ export const CanvasCustomizerPage: React.FC = () => {
     const isLayoutProduct = [
       'canvas-wall-art',
       'canvas-collage',
+      'canvas-hexagon',
       'canvas-split',
       'canvas-mosaic'
     ].includes(productId);
@@ -3143,15 +3145,11 @@ export const CanvasCustomizerPage: React.FC = () => {
   };
 
   // Hexagon Cluster (canvas-hexagon 1 or multi-piece bundles): N individually
-  // uploadable hexagon panels, honeycomb-arranged the same way as the
-  // Select Size diagram preview (adjacent hexagons share edges, no gaps).
+  // uploadable hexagon panels, arranged according to the selected Hexagon layout definition
   const renderHexagonCluster = () => {
-    const hexPanels = currentSizeOption.panels && currentSizeOption.panels.length > 0
-      ? currentSizeOption.panels
-      : [{ id: 'p0', label: 'Hexagon', dimension: '10" × 11.5"', widthRatio: 10, heightRatio: 11.5 }];
+    const layout = getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+    const hexPanels = layout.panels;
     const count = hexPanels.length;
-    const geom = getCanvasProductGeometry('canvas-hexagon', currentSizeOption, 'shape-hexagon');
-    const hexLayout = geom.hexPanelsLayout || getHexagonClusterLayout(count);
     const hexClip = HEXAGON_CLIP_PATH;
 
     return (
@@ -3159,12 +3157,11 @@ export const CanvasCustomizerPage: React.FC = () => {
         <div
           className="relative w-full flex items-center justify-center"
           style={{
-            aspectRatio: String(geom.aspectRatio),
+            aspectRatio: String(layout.aspectRatio),
             maxHeight: '56vh'
           }}
         >
           {hexPanels.map((pSpec, idx) => {
-            const pos = hexLayout[idx] || { x: 0, y: 0, w: 1, h: 1 };
             const panel = panelImages[idx] || createDefaultPanel();
             const isTarget = activePanelIndex === idx;
 
@@ -3173,10 +3170,10 @@ export const CanvasCustomizerPage: React.FC = () => {
                 key={pSpec.id || idx}
                 style={{
                   position: 'absolute',
-                  left: `${pos.x * 100}%`,
-                  top: `${pos.y * 100}%`,
-                  width: `${pos.w * 100}%`,
-                  height: `${pos.h * 100}%`,
+                  left: `${pSpec.x * 100}%`,
+                  top: `${pSpec.y * 100}%`,
+                  width: `${pSpec.w * 100}%`,
+                  height: `${pSpec.h * 100}%`,
                   clipPath: hexClip,
                   WebkitClipPath: hexClip,
                   filter: 'drop-shadow(0 12px 20px rgba(0,0,0,0.3)) drop-shadow(0 2px 4px rgba(0,0,0,0.2))'

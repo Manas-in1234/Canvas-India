@@ -99,7 +99,203 @@ export const HEART_CLIP_PATH = 'url(#acrylic-clip-shape-heart)';
 // ============================================================================
 
 export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[]> = {
-// 2. Wall Display (canvas-wall-art)
+  // 1. Hexagon Prints (canvas-hexagon)
+  'canvas-hexagon': [
+    {
+      id: 'hexagon-1',
+      productTypeId: 'canvas-hexagon',
+      name: 'Single Hexagon Print',
+      description: '1 Individual Honeycomb Canvas Panel',
+      geometryType: 'hexagon',
+      panelsCount: 1,
+      photoCount: 1,
+      arrangement: 'single',
+      dimensionsSummary: '10" × 11.5"',
+      aspectRatio: 10 / 11.5,
+      overallWidthInches: 10,
+      overallHeightInches: 11.5,
+      price: 799.0,
+      acrylicPrice: 650.0,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon',
+          dimension: '10" × 11.5"',
+          x: 0.08,
+          y: 0.05,
+          w: 0.84,
+          h: 0.90,
+          clipPath: HEXAGON_CLIP_PATH,
+          widthRatio: 10,
+          heightRatio: 11.5
+        }
+      ]
+    },
+    {
+      id: 'hexagon-2',
+      productTypeId: 'canvas-hexagon',
+      name: 'Hexagon Bundle of 2',
+      description: '2 Interlocking Honeycomb Canvas Panels',
+      geometryType: 'hexagon-cluster',
+      panelsCount: 2,
+      photoCount: 2,
+      arrangement: 'twoHex',
+      dimensionsSummary: '19" × 10" (2 Hexagons)',
+      aspectRatio: 1.9,
+      overallWidthInches: 19,
+      overallHeightInches: 10,
+      price: 1399.0,
+      acrylicPrice: 1150.0,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon 1',
+          dimension: '10" × 11.5"',
+          x: 0.04,
+          y: 0.08,
+          w: 0.44,
+          h: 0.84,
+          clipPath: HEXAGON_CLIP_PATH,
+          widthRatio: 10,
+          heightRatio: 11.5
+        },
+        {
+          id: 'p1',
+          label: 'Hexagon 2',
+          dimension: '10" × 11.5"',
+          x: 0.52,
+          y: 0.08,
+          w: 0.44,
+          h: 0.84,
+          clipPath: HEXAGON_CLIP_PATH,
+          widthRatio: 10,
+          heightRatio: 11.5
+        }
+      ]
+    },
+    {
+      id: 'hexagon-3',
+      productTypeId: 'canvas-hexagon',
+      name: 'Hexagon Bundle of 3',
+      description: '3 Honeycomb Cluster Panels (1 Top + 2 Bottom)',
+      geometryType: 'hexagon-cluster',
+      panelsCount: 3,
+      photoCount: 3,
+      arrangement: 'threeHex',
+      dimensionsSummary: '27" × 13.75" (3 Hexagons)',
+      aspectRatio: 1.45,
+      overallWidthInches: 27,
+      overallHeightInches: 13.75,
+      price: 1899.0,
+      acrylicPrice: 1650.0,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon 1 (Top)',
+          dimension: '10" × 11.5"',
+          x: 0.27,
+          y: 0.04,
+          w: 0.46,
+          h: 0.46,
+          clipPath: HEXAGON_CLIP_PATH,
+          widthRatio: 10,
+          heightRatio: 11.5
+        },
+        {
+          id: 'p1',
+          label: 'Hexagon 2 (Left)',
+          dimension: '10" × 11.5"',
+          x: 0.04,
+          y: 0.50,
+          w: 0.46,
+          h: 0.46,
+          clipPath: HEXAGON_CLIP_PATH,
+          widthRatio: 10,
+          heightRatio: 11.5
+        },
+        {
+          id: 'p2',
+          label: 'Hexagon 3 (Right)',
+          dimension: '10" × 11.5"',
+          x: 0.50,
+          y: 0.50,
+          w: 0.46,
+          h: 0.46,
+          clipPath: HEXAGON_CLIP_PATH,
+          widthRatio: 10,
+          heightRatio: 11.5
+        }
+      ]
+    },
+    {
+      id: 'hexagon-4',
+      productTypeId: 'canvas-hexagon',
+      name: 'Hexagon Bundle of 4',
+      description: '4-Piece Diamond Honeycomb Cluster',
+      geometryType: 'hexagon-cluster',
+      panelsCount: 4,
+      photoCount: 4,
+      arrangement: 'fourHex',
+      dimensionsSummary: '27" × 19" (4 Hexagons)',
+      aspectRatio: 1.42,
+      overallWidthInches: 27,
+      overallHeightInches: 19,
+      price: 2399.0,
+      acrylicPrice: 2150.0,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon 1 (Top)',
+          dimension: '10" × 11.5"',
+          x: 0.27,
+          y: 0.03,
+          w: 0.46,
+          h: 0.45,
+          clipPath: HEXAGON_CLIP_PATH,
+          widthRatio: 10,
+          heightRatio: 11.5
+        },
+        {
+          id: 'p1',
+          label: 'Hexagon 2 (Left)',
+          dimension: '10" × 11.5"',
+          x: 0.04,
+          y: 0.275,
+          w: 0.46,
+          h: 0.45,
+          clipPath: HEXAGON_CLIP_PATH,
+          widthRatio: 10,
+          heightRatio: 11.5
+        },
+        {
+          id: 'p2',
+          label: 'Hexagon 3 (Right)',
+          dimension: '10" × 11.5"',
+          x: 0.50,
+          y: 0.275,
+          w: 0.46,
+          h: 0.45,
+          clipPath: HEXAGON_CLIP_PATH,
+          widthRatio: 10,
+          heightRatio: 11.5
+        },
+        {
+          id: 'p3',
+          label: 'Hexagon 4 (Bottom)',
+          dimension: '10" × 11.5"',
+          x: 0.27,
+          y: 0.52,
+          w: 0.46,
+          h: 0.45,
+          clipPath: HEXAGON_CLIP_PATH,
+          widthRatio: 10,
+          heightRatio: 11.5
+        }
+      ]
+    }
+  ],
+
+  // 2. Wall Display (canvas-wall-art)
   'canvas-wall-art': [
     {
       id: 'wall-display-3a',
@@ -988,6 +1184,9 @@ PRODUCT_LAYOUT_DEFINITIONS['canvas-classic'] = PRODUCT_LAYOUT_DEFINITIONS['canva
  */
 export function getProductLayouts(productTypeId: string): ProductLayoutDefinition[] {
   const normId = (productTypeId || '').toLowerCase();
+  if (normId.includes('hexagon')) {
+    return PRODUCT_LAYOUT_DEFINITIONS['canvas-hexagon'];
+  }
   if (normId.includes('wall') || normId.includes('display')) {
     return PRODUCT_LAYOUT_DEFINITIONS['canvas-wall-art'];
   }
@@ -1009,7 +1208,9 @@ export function getProductLayouts(productTypeId: string): ProductLayoutDefinitio
 export function getProductLayout(productTypeId: string, layoutId?: string): ProductLayoutDefinition {
   const layouts = getProductLayouts(productTypeId);
   if (!layoutId) return layouts[0];
-  const found = layouts.find((l) => l.id === layoutId);
+  const found = layouts.find(
+    (l) => l.id === layoutId || (l as any).diagramType === layoutId || layoutId.startsWith(l.id) || l.id.startsWith(layoutId)
+  );
   return found || layouts[0];
 }
 
@@ -1018,6 +1219,11 @@ export function getProductLayout(productTypeId: string, layoutId?: string): Prod
  * Adjacent hexagons lock together along shared edges.
  */
 export function getHexagonClusterLayout(count: number): HexPanelLayout[] {
+  const key = count === 2 ? 'hexagon-2' : count === 3 ? 'hexagon-3' : count === 4 ? 'hexagon-4' : 'hexagon-1';
+  const layoutDef = PRODUCT_LAYOUT_DEFINITIONS['canvas-hexagon']?.find((l) => l.id === key);
+  if (layoutDef) {
+    return layoutDef.panels.map((p) => ({ x: p.x, y: p.y, w: p.w, h: p.h }));
+  }
   if (count === 2) {
     const w = 0.44;
     const h = 0.76;
@@ -1295,24 +1501,22 @@ export function getCanvasProductGeometry(
 
   // 1. Hexagon Prints
   if (normType.includes('hexagon')) {
-    const hexLayout = getHexagonClusterLayout(panelsCount);
-    const aspect = panelsCount === 2 ? 19 / 10 : panelsCount === 3 ? 27 / 13.75 : panelsCount === 4 ? 27 / 19 : 10 / 11.5;
-    const hexW = panelsCount === 2 ? 19 : panelsCount === 3 ? 27 : panelsCount === 4 ? 27 : (width || 10);
-    const hexH = panelsCount === 2 ? 10 : panelsCount === 3 ? 13.75 : panelsCount === 4 ? 19 : (height || 11);
+    const layoutDef = getProductLayout('canvas-hexagon', sizeOption?.diagramType || sizeOption?.id);
+    const hexLayout = layoutDef.panels.map((p) => ({ x: p.x, y: p.y, w: p.w, h: p.h }));
     return {
       productTypeId,
-      geometryType: panelsCount > 1 ? 'hexagon-cluster' : 'hexagon',
+      geometryType: layoutDef.geometryType,
       shapeId: 'shape-hexagon',
-      aspectRatio: aspect,
-      widthInches: hexW,
-      heightInches: hexH,
+      aspectRatio: layoutDef.aspectRatio,
+      widthInches: layoutDef.overallWidthInches,
+      heightInches: layoutDef.overallHeightInches,
       clipPath: HEXAGON_CLIP_PATH,
       borderRadius: '0px',
-      isMultiPanel: panelsCount > 1,
-      panelsCount,
+      isMultiPanel: layoutDef.panelsCount > 1,
+      panelsCount: layoutDef.panelsCount,
       hexPanelsLayout: hexLayout,
-      renderSvgPreview: ({ isSelected, widthInches, heightInches, diagramType }) =>
-        renderHexagonSvgDiagram({ count: panelsCount, isSelected, widthInches, heightInches, diagramType })
+      layoutDef,
+      renderSvgPreview: ({ isSelected }) => renderProductLayoutDiagram(layoutDef, Boolean(isSelected))
     };
   }
 

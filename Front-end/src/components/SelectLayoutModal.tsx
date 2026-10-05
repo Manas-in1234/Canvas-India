@@ -105,11 +105,13 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
               return (
                 <div
                   key={layout.id}
-                  onClick={() => setSelectedId(layout.id)}
+                  onClick={() => {
+                    setSelectedId(layout.id);
+                    onSelectLayout(layout);
+                  }}
                   onDoubleClick={() => {
                     setSelectedId(layout.id);
                     onSelectLayout(layout);
-                    onClose();
                   }}
                   className={`group relative rounded-2xl border transition-all cursor-pointer flex flex-col justify-between overflow-hidden bg-white hover:border-[#0E4A93]/60 ${
                     isSelected
