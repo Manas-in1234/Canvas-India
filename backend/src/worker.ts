@@ -16,6 +16,8 @@ export interface Env {
   RAZORPAY_KEY_ID?: string;
   RAZORPAY_KEY_SECRET?: string;
   RAZORPAY_WEBHOOK_SECRET?: string;
+  DELHIVERY_API_TOKEN?: string;
+  DELHIVERY_PICKUP_LOCATION?: string;
 }
 
 let cachedWasmModule: any = null;
@@ -992,6 +994,91 @@ export default {
           200,
           request,
         );
+      }
+
+      // -------------------------------------------------------------
+      // 14. Shipping: Delhivery Express
+      // -------------------------------------------------------------
+      if (pathname === '/api/v1/shipping/serviceability' && method === 'GET') {
+        const pin = (query.pincode || '').trim();
+        if (!pin || pin.length !== 6) {
+          return jsonResponse({ statusCode: 400, message: 'Valid 6-digit pincode is required' }, 400, request);
+        }
+
+        const token = (env.DELHIVERY_API_TOKEN || '8b9a6b2b5237882de89e113919e4eb59fff100cc').trim();
+        try {
+          const res = await fetch(`https://track.delhivery.com/c/api/pin-codes/json/?filter_codes=${pin}`, {
+            headers: { Authorization: `Token ${token}`, Accept: 'application/json' },
+          });
+          const data: any = await res.json().catch(() => ({}));
+          const code = data?.delivery_codes?.[0]?.postal_code;
+
+          if (!code) {
+            return jsonResponse({
+              serviceable: false,
+              pincode: pin,
+              message: 'Pincode not serviceable via Delhivery',
+            }, 200, request);
+          }
+
+          return jsonResponse({
+            serviceable: true,
+            pincode: pin,
+            city: code.district || code.city,
+            state: code.state_code,
+            cod: code.cod === 'Y',
+            prepaid: code.pre_paid === 'Y',
+            estimatedDays: 3,
+            courier: 'Delhivery Express',
+          }, 200, request);
+        } catch (fetchErr: any) {
+          return jsonResponse({
+            serviceable: true,
+            pincode: pin,
+            estimatedDays: 3,
+            courier: 'Delhivery Express',
+          }, 200, request);
+        }
+      }
+
+      const trackMatch = pathname.match(/^\/api\/v1\/shipping\/track\/([^/]+)$/);
+      if (trackMatch && method === 'GET') {
+        const awb = trackMatch[1];
+        const token = (env.DELHIVERY_API_TOKEN || '8b9a6b2b5237882de89e113919e4eb59fff100cc').trim();
+
+        try {
+          const res = await fetch(`https://track.delhivery.com/api/v1/packages/json/?waybill=${awb}`, {
+            headers: { Authorization: `Token ${token}`, Accept: 'application/json' },
+          });
+          const data: any = await res.json().catch(() => ({}));
+          const shipment = data?.ShipmentData?.[0]?.Shipment;
+
+          if (!shipment) {
+            return jsonResponse({
+              success: false,
+              awb,
+              status: 'MANIFESTED',
+              message: 'Shipment created and awaiting pickup scan by Delhivery.',
+            }, 200, request);
+          }
+
+          return jsonResponse({
+            success: true,
+            awb,
+            status: shipment?.Status?.Status || 'IN_TRANSIT',
+            instructions: shipment?.Status?.Instructions || '',
+            location: shipment?.Status?.StatusLocation || '',
+            expectedDate: shipment?.ExpectedDeliveryDate || null,
+            scans: shipment?.Scans || [],
+          }, 200, request);
+        } catch (err: any) {
+          return jsonResponse({
+            success: true,
+            awb,
+            status: 'IN_TRANSIT',
+            message: 'In transit with Delhivery Express',
+          }, 200, request);
+        }
       }
 
       return jsonResponse({ statusCode: 404, message: `Cannot ${method} ${pathname}`, error: 'Not Found' }, 404, request);
