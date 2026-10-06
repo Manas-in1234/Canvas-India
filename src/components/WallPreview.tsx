@@ -177,7 +177,7 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
             }}
           >
             <div
-              className="relative w-full h-full overflow-hidden"
+              className="relative w-full h-full overflow-hidden flex items-center justify-center"
               style={{
                 borderRadius: isCircle ? '50%' : 0,
                 clipPath,
@@ -187,7 +187,11 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
               <img
                 src={imageSrc}
                 alt="Product on wall preview"
-                className={`w-full h-full ${isCircle || isTriangle ? 'object-cover' : 'object-contain'}`}
+                className={
+                  isCircle || isTriangle
+                    ? 'w-full h-full object-cover'
+                    : 'max-w-full max-h-full w-full h-full object-contain'
+                }
               />
               {finishStyle.overlay && (
                 <div className="absolute inset-0 pointer-events-none" style={{ background: finishStyle.overlay }} />

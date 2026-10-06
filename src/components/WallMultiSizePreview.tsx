@@ -104,7 +104,7 @@ export const WallMultiSizePreview: React.FC<WallMultiSizePreviewProps> = ({
                 {p.dims.w}&quot; X {p.dims.h}&quot;
               </div>
               <div
-                className="relative w-full h-full overflow-hidden"
+                className="relative w-full h-full overflow-hidden flex items-center justify-center"
                 style={{ boxShadow: '0 14px 22px -8px rgba(0,0,0,0.5), 0 3px 8px -3px rgba(0,0,0,0.3)' }}
               >
                 <img src={imageSrc} alt={`${p.dims.w}x${p.dims.h} preview`} className="w-full h-full object-cover" />
