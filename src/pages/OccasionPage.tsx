@@ -99,9 +99,21 @@ export const OccasionPage: React.FC = () => {
           of the occasion photo that spills over the banner's edge */}
       <div className="relative mt-4 mx-auto max-w-[1680px]">
         <section
-          className="relative w-full overflow-hidden rounded-3xl"
+          className="relative w-full overflow-hidden rounded-3xl h-[280px] sm:h-[320px] lg:h-[360px]"
           style={{ background: `linear-gradient(120deg, ${occasion.accent}, ${occasion.accent}CC)` }}
         >
+          {/* The occasion photo, full-bleed on the right, fading into the
+              solid color on the left so the headline stays readable */}
+          <img
+            src={occasion.bannerImage}
+            alt={occasion.name}
+            className="hidden sm:block absolute right-0 top-0 h-full w-[55%] object-cover"
+            style={{
+              maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, #000 45%, #000 100%)',
+              WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, #000 45%, #000 100%)',
+            }}
+          />
+
           {/* Repeating heart texture */}
           <svg className="absolute inset-0 w-full h-full opacity-[0.07]" aria-hidden="true">
             <defs>
@@ -113,25 +125,20 @@ export const OccasionPage: React.FC = () => {
           </svg>
 
           {/* Decorative heart-swirl doodle, top-right */}
-          <svg className="hidden sm:block absolute -top-2 right-10 w-24 h-24 text-white/25" viewBox="0 0 100 100" fill="none">
+          <svg className="hidden sm:block absolute -top-2 right-10 w-24 h-24 text-white/40 z-10" viewBox="0 0 100 100" fill="none">
             <path d="M50 85 C20 65, 15 40, 30 28 C40 20, 50 28, 50 38 C50 28, 60 20, 70 28 C85 40, 80 65, 50 85 Z" stroke="currentColor" strokeWidth="2" />
             <path d="M70 15 Q85 20 80 35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
 
-          <div className="relative z-10 px-6 sm:px-10 lg:px-14 py-10 sm:py-14 lg:py-16 max-w-xl">
+          <div className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-10 lg:px-14 max-w-xl">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight drop-shadow-sm" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
               {occasion.name} Gifts &amp; Prints
             </h1>
-            <p className="text-sm sm:text-base text-white/90 max-w-xl mt-3 leading-relaxed">
+            <p className="text-sm sm:text-base text-white/90 max-w-xl mt-3 leading-relaxed drop-shadow-sm">
               {occasion.tagline}
             </p>
           </div>
         </section>
-
-        {/* Tilted polaroid, spilling past the banner's bottom-right edge */}
-        <div className="hidden lg:block absolute -bottom-10 right-10 rotate-3 bg-white p-2.5 pb-6 rounded-sm shadow-xl z-20">
-          <img src={occasion.bannerImage} alt="" className="w-40 h-40 object-cover" />
-        </div>
       </div>
 
       {/* OTHER OCCASIONS QUICK SWITCH */}
