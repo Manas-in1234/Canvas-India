@@ -204,7 +204,12 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
 
   return (
     <div className={`relative w-full h-full flex items-center justify-center bg-stone-50 ${className}`}>
-      <div className="relative h-full max-w-full" style={{ aspectRatio: wallNaturalAspect }}>
+      {/* Width-driven aspect box: this photo (1.78:1) is always wider than
+          its container in this app's actual layouts, so constraining by
+          width and letting height derive from aspect-ratio is the correct,
+          unambiguous branch — avoids the h-full+aspect-ratio conflict that
+          silently squished this box toward the outer container's own shape. */}
+      <div className="relative w-full max-h-full" style={{ aspectRatio: wallNaturalAspect }}>
         <img
           src={wallImageSrc}
           alt=""

@@ -67,7 +67,7 @@ export const WallMultiSizePreview: React.FC<WallMultiSizePreviewProps> = ({
 
   return (
     <div className={`relative w-full h-full bg-stone-50 ${className}`}>
-      <div className="relative h-full max-w-full" style={{ aspectRatio: wallNaturalAspect }}>
+      <div className="relative w-full max-h-full" style={{ aspectRatio: wallNaturalAspect }}>
         <img src={wallImageSrc} alt="" className="absolute inset-0 w-full h-full object-cover" />
 
         {picks.map((p, i) => {
