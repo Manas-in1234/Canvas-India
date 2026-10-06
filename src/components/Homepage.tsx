@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight, Truck, BadgeCheck, Headphones, ShieldCheck, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Truck, BadgeCheck, Headphones, ShieldCheck, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote, Gift, Percent } from 'lucide-react';
 import { Product } from '../types';
 import { OCCASIONS } from '../data/occasionsData';
 
@@ -28,6 +28,13 @@ const BLUE = '#0E4A93';
 const ORANGE = '#E8752A';
 
 const u = (id: string, w = 1200) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=90`;
+
+const FESTIVE_OFFERS = [
+  { icon: Gift, title: 'Buy 1 Get 1', sub: 'Free on all prints', bg: 'from-[#DC2626] to-[#9A3412]', rotate: '-rotate-1' },
+  { icon: Percent, title: 'Flat 20% Off', sub: 'Canvas prints', bg: 'from-[#EA580C] to-[#C2410C]', rotate: 'rotate-1' },
+  { icon: Truck, title: 'Free Shipping', sub: 'On orders ₹999+', bg: 'from-[#B45309] to-[#78350F]', rotate: 'rotate-1' },
+  { icon: Sparkles, title: 'Festive Bundles', sub: 'Save even more', bg: 'from-[#9A3412] to-[#7C2D12]', rotate: '-rotate-1' },
+];
 
 const CATEGORY_CARDS = [
   { name: 'Acrylic Prints', sub: 'Vibrant Colors | Endless Possibilities', price: 499, slug: 'acrylic', image: u('photo-1513364776144-60967b0f800f'), grad: 'from-[#0E4A93]/90', chip: 'bg-[#E8752A]' },
@@ -101,17 +108,25 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#F7F1E5] border-b border-stone-200/60">
-        {/* Desktop/tablet: full-bleed masked image behind the text (unchanged) */}
-        <img
-          src="/hero-scene.jpg"
-          alt="Canvas painting, frame, cork coaster and paints on a sunlit table"
-          className="hidden lg:block absolute right-0 top-0 h-full w-[60%] object-cover object-center"
-          style={{
-            maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
-            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
-          }}
-        />
-        <div className="hidden lg:block absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent" />
+        {/* Desktop/tablet: festive offers grid, in place of the lifestyle photo */}
+        <div className="hidden lg:grid absolute right-10 top-1/2 -translate-y-1/2 w-[38%] grid-cols-2 gap-4">
+          {FESTIVE_OFFERS.map(({ icon: Icon, title, sub, bg, rotate }) => (
+            <button
+              key={title}
+              type="button"
+              onClick={() => navigate('/festive-offers')}
+              className={`group relative ${rotate} hover:rotate-0 bg-gradient-to-br ${bg} rounded-2xl p-5 text-left shadow-xl shadow-orange-950/15 transition-transform duration-300 cursor-pointer overflow-hidden`}
+            >
+              <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-white/10" />
+              <div className="absolute -right-1 -bottom-8 w-16 h-16 rounded-full bg-white/10" />
+              <Icon className="w-6 h-6 text-amber-100 mb-3" strokeWidth={2} />
+              <div className="font-bold text-white text-base sm:text-lg leading-tight" style={{ fontFamily: SERIF }}>
+                {title}
+              </div>
+              <div className="text-[11px] sm:text-xs text-amber-100/90 font-medium mt-1">{sub}</div>
+            </button>
+          ))}
+        </div>
 
         {/* Hanging Stitched Leather Special Price Tag (Top Center) */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center select-none">
@@ -174,14 +189,23 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               </button>
             </div>
 
-            {/* Mobile/tablet only: contained image below the text, in normal
-                flow (no overlay/mask) so nothing ever sits on top of it */}
-            <div className="lg:hidden mt-8 rounded-2xl overflow-hidden shadow-md aspect-[16/10]">
-              <img
-                src="/hero-scene.jpg"
-                alt="Canvas painting, frame, cork coaster and paints on a sunlit table"
-                className="w-full h-full object-cover"
-              />
+            {/* Mobile/tablet only: festive offers grid below the text */}
+            <div className="lg:hidden mt-8 grid grid-cols-2 gap-3">
+              {FESTIVE_OFFERS.map(({ icon: Icon, title, sub, bg }) => (
+                <button
+                  key={title}
+                  type="button"
+                  onClick={() => navigate('/festive-offers')}
+                  className={`relative bg-gradient-to-br ${bg} rounded-2xl p-4 text-left shadow-md overflow-hidden cursor-pointer`}
+                >
+                  <div className="absolute -right-3 -bottom-3 w-14 h-14 rounded-full bg-white/10" />
+                  <Icon className="w-5 h-5 text-amber-100 mb-2" strokeWidth={2} />
+                  <div className="font-bold text-white text-sm leading-tight" style={{ fontFamily: SERIF }}>
+                    {title}
+                  </div>
+                  <div className="text-[10px] text-amber-100/90 font-medium mt-0.5">{sub}</div>
+                </button>
+              ))}
             </div>
 
             {/* In-hero feature highlights */}
