@@ -39,12 +39,11 @@ export interface AcrylicProductDetailPageProps {
 // live WallPreview (reacting to the selected shape/size) instead of a static image.
 const ROOM_VIEW_SENTINEL = '__ROOM_VIEW__';
 
-// Default to a mediumly-big size (not the smallest) so the product — and its
-// Room View — looks substantial right away. Size lists are ordered
-// smallest-to-largest, so this is the second-largest when there's a choice.
+// Default to the largest available size so the product — and its Room View
+// — looks substantial right away. Size lists are ordered smallest-to-largest.
 function pickDefaultSize(sizes?: string[]): string | undefined {
   if (!sizes || sizes.length === 0) return undefined;
-  return sizes[Math.max(0, sizes.length - 2)];
+  return sizes[sizes.length - 1];
 }
 const MULTI_SIZE_SENTINEL = '__MULTI_SIZE__';
 
