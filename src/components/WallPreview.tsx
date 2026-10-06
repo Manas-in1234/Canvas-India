@@ -84,14 +84,33 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
   // edges. Measuring the actual file's own aspect ratio and shaping the
   // frame to match it guarantees a perfect, gap-free, never-cropped fit.
   const [naturalAspect, setNaturalAspect] = useState<number | null>(null);
+  // When the frame's shape doesn't exactly match the photo's own aspect
+  // ratio, object-contain leaves a sliver of the frame's own background
+  // showing on one axis — sampling the artwork's own corner color and using
+  // that (instead of plain white/transparent) makes that sliver read as an
+  // intentional mat in the artwork's own tone, not a stray white border.
+  const [sampledBg, setSampledBg] = useState<string | null>(null);
   useEffect(() => {
     setNaturalAspect(null);
+    setSampledBg(null);
     if (!imageSrc) return;
     let cancelled = false;
     const img = new Image();
+    img.crossOrigin = 'anonymous';
     img.onload = () => {
-      if (!cancelled && img.naturalWidth && img.naturalHeight) {
-        setNaturalAspect(img.naturalWidth / img.naturalHeight);
+      if (cancelled || !img.naturalWidth || !img.naturalHeight) return;
+      setNaturalAspect(img.naturalWidth / img.naturalHeight);
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 4;
+        canvas.height = 4;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, 4, 4);
+        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+        if (!cancelled) setSampledBg(`rgb(${r}, ${g}, ${b})`);
+      } catch {
+        // Cross-origin image without CORS headers — fall back silently.
       }
     };
     img.src = imageSrc;
@@ -147,7 +166,7 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
 
   const hasFrameBorder = finishStyle.border > 0;
   const framePadding = isTriangle || !hasFrameBorder ? 0 : `${finishStyle.border}%`;
-  const frameBg = hasFrameBorder ? finishStyle.color : 'transparent';
+  const frameBg = hasFrameBorder ? finishStyle.color : (sampledBg || 'transparent');
 
   return (
     <div className={`relative w-full h-full flex items-center justify-center bg-stone-50 ${className}`}>
