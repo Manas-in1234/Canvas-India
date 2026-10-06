@@ -113,20 +113,24 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
           }}
         />
-        <div className="hidden lg:block absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent" />
-        <div className="hidden lg:block absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+        <div className="hidden lg:block absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent pointer-events-none" />
+        {/* Darken only behind the text, bottom-right — not the whole photo, so the image stays bright and clear */}
+        <div
+          className="hidden lg:block absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse 480px 320px at 88% 85%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 45%, transparent 75%)' }}
+        />
 
         <button
           type="button"
           onClick={() => navigate('/festive-offers')}
-          className="hidden lg:flex absolute right-14 bottom-12 flex-col items-start text-left cursor-pointer group"
+          className="hidden lg:flex absolute right-14 bottom-12 z-20 flex-col items-start text-left cursor-pointer group"
         >
-          <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-200 drop-shadow">Festive Sale</span>
+          <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-300 drop-shadow">Festive Sale</span>
           <div className="font-bold text-white text-4xl leading-tight mt-1 drop-shadow-lg" style={{ fontFamily: SERIF }}>
             Up to 20% Off
           </div>
-          <p className="text-sm text-amber-100/90 font-medium mt-2 drop-shadow">+ Free shipping on orders ₹999 and above</p>
-          <span className="inline-flex items-center gap-2 mt-5 text-sm font-bold text-white bg-white/15 group-hover:bg-white/25 backdrop-blur-xs border border-white/30 rounded-full px-5 py-2.5 transition-colors">
+          <p className="text-sm text-white/90 font-medium mt-2 drop-shadow">+ Free shipping on orders ₹999 and above</p>
+          <span className="inline-flex items-center gap-2 mt-5 text-sm font-bold text-white bg-[#E8752A] group-hover:bg-[#D3631A] rounded-full px-5 py-2.5 shadow-lg shadow-orange-950/40 transition-colors">
             Shop Festive Offers <ArrowRight className="w-4 h-4" />
           </span>
         </button>
