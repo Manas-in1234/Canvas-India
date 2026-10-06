@@ -13,6 +13,21 @@ interface WallMultiSizePreviewProps {
 const DEFAULT_WALL_IMAGE = 'https://images.unsplash.com/photo-1687075197041-91fba1013e1d?w=1600&q=80';
 const DEFAULT_WALL_ASPECT = 1600 / 900;
 
+// Same real-world calibration as WallPreview (same source photo): pixels per
+// inch at the photo's native 1600x900, measured against the accent chair's
+// real ~31" height. Sizes here must be true-to-scale against the console —
+// a 16x16 should look like it genuinely sits around console height, not
+// bigger than the sofa and not a postage stamp.
+const WALL_PHOTO_NATIVE_WIDTH = 1600;
+const WALL_PHOTO_NATIVE_HEIGHT = 900;
+const REAL_PPI = 8.6;
+
+// Safe wall zone: left portion of the photo, clear of the window on the right.
+const ZONE_LEFT = 0.05;
+const ZONE_RIGHT = 0.47;
+const ZONE_TOP = 0.09;
+const GAP = 0.016;
+
 const SIZE_PATTERN = /(\d+(?:\.\d+)?)\s*["”]?\s*x\s*(\d+(?:\.\d+)?)/i;
 
 function parseDims(label: string): { w: number; h: number } {
@@ -21,32 +36,11 @@ function parseDims(label: string): { w: number; h: number } {
   return { w: parseFloat(m[1]), h: parseFloat(m[2]) };
 }
 
-// A clean, non-overlapping 2x2 grid confined to the blank-wall zone on the
-// left of the photo (clear of the window on the right), with headroom above
-// each cell reserved for the italic size caption so it never gets clipped.
-const GRID_X0 = 0.04;
-const GRID_X1 = 0.47;
-const GRID_Y0 = 0.1;
-const GRID_Y1 = 0.62;
-const GUTTER = 0.025;
-const LABEL_SPACE = 0.045;
-const CELL_W = (GRID_X1 - GRID_X0 - GUTTER) / 2;
-const CELL_H = (GRID_Y1 - GRID_Y0 - GUTTER) / 2;
-
-const CELLS = [0, 1, 2, 3].map((i) => {
-  const col = i % 2;
-  const row = Math.floor(i / 2);
-  return {
-    left: GRID_X0 + col * (CELL_W + GUTTER),
-    top: GRID_Y0 + row * (CELL_H + GUTTER) + LABEL_SPACE,
-    w: CELL_W,
-    h: CELL_H - LABEL_SPACE,
-  };
-});
-
 // Shows the SAME product photo mounted at several of its real selectable
-// sizes side by side, so the customer can compare scale on an actual wall —
-// the "multi-size" gallery image canvaschamp.in always includes.
+// sizes side by side, true to each other's actual physical scale against
+// the room's furniture — the "multi-size" gallery image canvaschamp.in
+// always includes, and why that one looks right: a 16x16 reads as roughly
+// console-height, not sofa-sized.
 export const WallMultiSizePreview: React.FC<WallMultiSizePreviewProps> = ({
   imageSrc,
   sizes,
@@ -63,55 +57,55 @@ export const WallMultiSizePreview: React.FC<WallMultiSizePreviewProps> = ({
       .slice(0, 4);
   }, [sizes]);
 
-  const maxArea = Math.max(...picks.map((p) => p.dims.w * p.dims.h), 1);
+  const frames = useMemo(() => {
+    const zoneWidth = ZONE_RIGHT - ZONE_LEFT;
+    const raw = picks.map((p) => ({
+      label: p.label,
+      dims: p.dims,
+      w: (p.dims.w * REAL_PPI) / WALL_PHOTO_NATIVE_WIDTH,
+      h: (p.dims.h * REAL_PPI) / WALL_PHOTO_NATIVE_HEIGHT,
+    }));
+
+    const totalWidth = raw.reduce((sum, f) => sum + f.w, 0) + GAP * Math.max(0, raw.length - 1);
+    // Uniform safety scale-down if the row would overflow the safe zone —
+    // preserves true RELATIVE proportions, just fits the display.
+    const fit = totalWidth > zoneWidth ? zoneWidth / totalWidth : 1;
+
+    let left = ZONE_LEFT + (zoneWidth - totalWidth * fit) / 2;
+    return raw.map((f) => {
+      const w = f.w * fit;
+      const h = f.h * fit;
+      const frame = { label: f.label, dims: f.dims, left, top: ZONE_TOP, w, h };
+      left += w + GAP * fit;
+      return frame;
+    });
+  }, [picks]);
 
   return (
     <div className={`relative w-full h-full bg-stone-50 ${className}`}>
       <div className="relative h-full max-w-full" style={{ aspectRatio: wallNaturalAspect }}>
         <img src={wallImageSrc} alt="" className="absolute inset-0 w-full h-full object-cover" />
 
-        {picks.map((p, i) => {
-          const cell = CELLS[i] || CELLS[CELLS.length - 1];
-          // Scale linear size by sqrt(area ratio) so the rendered box AREA is
-          // actually proportional to the real print area, not just a mild
-          // visual nudge — a 18x24 should look meaningfully bigger than an
-          // 8x12, not nearly the same size.
-          const relScale = Math.max(0.4, Math.sqrt((p.dims.w * p.dims.h) / maxArea));
-          const ratio = p.dims.w / p.dims.h || 1;
-          const cellRatio = cell.w / cell.h;
-          let w = cell.w;
-          let h = cell.h;
-          if (ratio >= cellRatio) {
-            h = w / ratio;
-          } else {
-            w = h * ratio;
-          }
-          w *= relScale;
-          h *= relScale;
-          const left = cell.left + (cell.w - w) / 2;
-          const top = cell.top + (cell.h - h) / 2;
-
-          return (
+        {frames.map((f) => (
+          <div
+            key={f.label}
+            className="absolute"
+            style={{ left: `${f.left * 100}%`, top: `${f.top * 100}%`, width: `${f.w * 100}%`, height: `${f.h * 100}%` }}
+          >
             <div
-              key={p.label}
-              className="absolute"
-              style={{ left: `${left * 100}%`, top: `${top * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }}
+              className="absolute left-1/2 -translate-x-1/2 -top-5 text-[10px] sm:text-xs font-semibold text-stone-700 whitespace-nowrap"
+              style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
             >
-              <div
-                className="absolute left-1/2 -translate-x-1/2 -top-5 text-[10px] sm:text-xs font-semibold text-stone-700 whitespace-nowrap"
-                style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
-              >
-                {p.dims.w}&quot; X {p.dims.h}&quot;
-              </div>
-              <div
-                className="relative w-full h-full overflow-hidden flex items-center justify-center"
-                style={{ boxShadow: '0 14px 22px -8px rgba(0,0,0,0.5), 0 3px 8px -3px rgba(0,0,0,0.3)' }}
-              >
-                <img src={imageSrc} alt={`${p.dims.w}x${p.dims.h} preview`} className="w-full h-full object-cover" />
-              </div>
+              {f.dims.w}&quot; X {f.dims.h}&quot;
             </div>
-          );
-        })}
+            <div
+              className="relative w-full h-full overflow-hidden flex items-center justify-center"
+              style={{ boxShadow: '0 14px 22px -8px rgba(0,0,0,0.5), 0 3px 8px -3px rgba(0,0,0,0.3)' }}
+            >
+              <img src={imageSrc} alt={`${f.dims.w}x${f.dims.h} preview`} className="w-full h-full object-cover" />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
