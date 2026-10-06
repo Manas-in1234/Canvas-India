@@ -374,7 +374,7 @@ export const ProductDetailPage: React.FC = () => {
                 galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL || galleryImages[activeImageIndex] === MULTI_SIZE_SENTINEL
                   ? (isPilotProduct ? 'w-full aspect-[4/3] max-h-[440px]' : 'w-full aspect-[4/3]')
                   : isPilotProduct
-                  ? 'w-full aspect-[3/4] max-h-[520px] mx-auto'
+                  ? 'aspect-[3/4] h-[34vh] max-h-[400px] w-auto max-w-full mx-auto'
                   : 'aspect-[3/4] h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] max-w-full mx-auto'
               }`}
             >
