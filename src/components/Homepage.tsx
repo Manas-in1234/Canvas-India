@@ -85,6 +85,11 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
     navigate(`/customize/canvas/${first?.slug || first?.id || 'canvas-photo-panel'}`);
   };
 
+  const handleCustomizeFestiveGift = () => {
+    const first = allProducts.find((p) => p.categorySlug === 'devotional-art') || allProducts.find((p) => p.categorySlug === 'canvas');
+    navigate(`/customize/${first?.categorySlug || 'canvas'}/${first?.slug || first?.id || 'canvas-photo-panel'}`);
+  };
+
   const scrollRow = (ref: React.RefObject<HTMLDivElement>, dir: 1 | -1) => {
     const el = ref.current;
     if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: 'smooth' });
@@ -122,7 +127,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
         <button
           type="button"
-          onClick={() => navigate('/festive-offers')}
+          onClick={handleCustomizeFestiveGift}
           className="hidden lg:flex absolute right-14 bottom-12 z-20 flex-col items-start text-left cursor-pointer group"
         >
           <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-300 drop-shadow">Festive Sale</span>
@@ -131,7 +136,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           </div>
           <p className="text-sm text-white/90 font-medium mt-2 drop-shadow">+ Free shipping on orders ₹999 and above</p>
           <span className="inline-flex items-center gap-2 mt-5 text-sm font-bold text-white bg-[#E8752A] group-hover:bg-[#D3631A] rounded-full px-5 py-2.5 shadow-lg shadow-orange-950/40 transition-colors">
-            Shop Festive Offers <ArrowRight className="w-4 h-4" />
+            Customize Festive Gift <ArrowRight className="w-4 h-4" />
           </span>
         </button>
 
@@ -199,7 +204,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             {/* Mobile/tablet only: single festive offers banner below the text */}
             <button
               type="button"
-              onClick={() => navigate('/festive-offers')}
+              onClick={handleCustomizeFestiveGift}
               className="lg:hidden mt-8 relative w-full aspect-[16/9] rounded-2xl text-left shadow-md overflow-hidden cursor-pointer"
             >
               <img src={u('photo-1577083753695-e010191bacb5', 1200)} alt="Festive diya oil lamps with flower petals" className="absolute inset-0 w-full h-full object-cover" />
