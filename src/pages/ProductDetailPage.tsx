@@ -189,7 +189,10 @@ export const ProductDetailPage: React.FC = () => {
     if (!product) return [];
     const base = product.images && product.images.length > 0 ? product.images : [product.image];
     if (product.categorySlug === 'yoga-fitness') return base;
-    const hasMultipleSizes = product.sizes && product.sizes.length > 1;
+    // Multi-size comparison gallery image removed on the pilot product per
+    // direct request — its sizes don't line up with how this product's
+    // shapes/sizes actually work now.
+    const hasMultipleSizes = product.sizes && product.sizes.length > 1 && product.id !== PILOT_PRODUCT_ID;
     return hasMultipleSizes
       ? [ROOM_VIEW_SENTINEL, MULTI_SIZE_SENTINEL, ...base]
       : [ROOM_VIEW_SENTINEL, ...base];
