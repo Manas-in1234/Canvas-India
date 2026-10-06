@@ -100,14 +100,20 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
     };
   }, [imageSrc]);
 
+  // The frame's SHAPE should be true to what you're actually ordering — a
+  // selected 27x27 size should visibly render as a square, a Rectangle shape
+  // should be horizontal — not whatever aspect ratio the source photo
+  // happens to be. The image itself never crops to match (see object-contain
+  // below), so there's no downside to prioritizing the real shape/size here.
   const ratio = useMemo(() => {
     if (isCircle || shapeKey === 'square') return 1;
     if (isTriangle) return 1;
-    if (naturalAspect) return naturalAspect;
+    if (shapeKey === 'rectangle') return 1.5; // horizontal/landscape
     if (shapeKey === 'panoramic') return 2.2;
     if (dims) return dims.w / dims.h;
+    if (naturalAspect) return naturalAspect;
     return 2 / 3;
-  }, [shapeKey, isCircle, isTriangle, naturalAspect, dims]);
+  }, [shapeKey, isCircle, isTriangle, dims, naturalAspect]);
 
   const finishStyle = useMemo(() => getFinishStyle(finish || ''), [finish]);
 
@@ -197,11 +203,7 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
                     setNaturalAspect((prev) => (prev === a ? prev : a));
                   }
                 }}
-                className={
-                  isCircle || isTriangle
-                    ? 'w-full h-full object-cover'
-                    : 'max-w-full max-h-full w-full h-full object-contain'
-                }
+                className="max-w-full max-h-full w-full h-full object-contain"
               />
               {finishStyle.overlay && (
                 <div className="absolute inset-0 pointer-events-none" style={{ background: finishStyle.overlay }} />
