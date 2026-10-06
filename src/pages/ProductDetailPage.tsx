@@ -30,7 +30,6 @@ import { SmartCropImage } from '../components/SmartCropImage';
 import { CUSTOMER_REVIEWS } from '../data/storeData';
 import { Product } from '../types';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
-import { getFinishStyle } from '../utils/finishStyle';
 
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
 // the "Room View" thumbnail renders a live WallPreview instead of a static image.
@@ -663,45 +662,6 @@ export const ProductDetailPage: React.FC = () => {
                       {mat}
                     </button>
                   ))}
-                </div>
-              </div>
-            )}
-
-            {/* 3. Finish Selector */}
-            {product.finishes && product.finishes.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-stone-800">3. Finish &amp; Style:</span>
-                  <span className="text-stone-500 font-medium">{selectedFinish}</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {product.finishes.map((finish) => {
-                    const fs = getFinishStyle(finish);
-                    const active = selectedFinish === finish;
-                    return (
-                      <button
-                        key={finish}
-                        type="button"
-                        onClick={() => setSelectedFinish(finish)}
-                        className={`p-1.5 text-left rounded-xl border-2 transition-all cursor-pointer ${
-                          active
-                            ? 'border-[#0E4A93] bg-blue-50/60 shadow-2xs'
-                            : 'border-stone-200 bg-white hover:border-stone-400'
-                        }`}
-                      >
-                        <div className="relative aspect-[4/3] bg-stone-200 rounded-md overflow-hidden flex items-center justify-center" style={{ background: fs.wall }}>
-                          <div
-                            className="relative w-[62%] aspect-[4/3] overflow-hidden bg-white"
-                            style={{ border: `${fs.border}px solid ${fs.color}`, boxShadow: fs.shadow, outline: fs.outline }}
-                          >
-                            <img src={galleryImages[0] || product.image} alt="" className="w-full h-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }} />
-                            {fs.overlay && <div className="absolute inset-0 pointer-events-none" style={{ background: fs.overlay }} />}
-                          </div>
-                        </div>
-                        <div className={`mt-1.5 px-0.5 text-[11px] font-semibold leading-tight ${active ? 'text-[#0E4A93]' : 'text-stone-700'}`}>{finish}</div>
-                      </button>
-                    );
-                  })}
                 </div>
               </div>
             )}
