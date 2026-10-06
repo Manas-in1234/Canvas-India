@@ -175,6 +175,10 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
 
   const clipPath = isTriangle ? 'polygon(50% 0%, 0% 100%, 100% 100%)' : undefined;
 
+  // Standard/Popular always shows the full picture — never crops, even when
+  // the selected size's ratio doesn't exactly match the image.
+  const neverCrop = shapeKey === 'standard' || shapeKey === 'popular';
+
   // Circle/Triangle clip a square bounding box to that outline — an image
   // sized to fill the square has its corners fall outside the circle/
   // triangle and get masked away, which reads as cropping even though
@@ -263,14 +267,17 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
                     setNaturalAspect((prev) => (prev === a ? prev : a));
                   }
                 }}
-                className={inscribedFit ? 'object-contain' : 'object-cover'}
+                className={inscribedFit || neverCrop ? 'object-contain' : 'object-cover'}
                 style={
                   inscribedFit
                     ? { width: `${inscribedFit.widthPct}%`, height: `${inscribedFit.heightPct}%` }
-                    : // Changing size (not shape) crops to fill rather than
-                      // growing the background sliver — biased toward the
-                      // top of the image so a vertical crop trims from the
-                      // bottom/sides first, not off the subject's face.
+                    : neverCrop
+                    ? // Standard/Popular: always show the full picture, never crop.
+                      { maxWidth: '100%', maxHeight: '100%', width: '100%', height: '100%' }
+                    : // Square/Rectangle/Panoramic: changing size crops to fill
+                      // rather than growing the background sliver — biased
+                      // toward the top so a vertical crop trims the bottom/
+                      // sides first, not the subject's face.
                       { width: '100%', height: '100%', objectPosition: '50% 20%' }
                 }
               />
