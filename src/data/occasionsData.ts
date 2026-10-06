@@ -36,6 +36,10 @@ export const OCCASIONS: OccasionDef[] = [
     tint: 'from-[#E11D48]/90',
     accent: '#E11D48',
     categorySlugs: ['canvas', 'acrylic'],
+    tileImages: {
+      canvas: '/assets/occasions/anniversary-beach.png',
+      acrylic: '/assets/occasions/anniversary-dinner.png',
+    },
   },
   {
     slug: 'wedding',
