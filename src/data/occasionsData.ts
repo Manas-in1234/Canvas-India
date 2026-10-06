@@ -63,6 +63,16 @@ export const OCCASIONS: OccasionDef[] = [
     categorySlugs: ['devotional-art', 'motivational-posters'],
   },
   {
+    slug: 'festive-offers',
+    name: 'Festive Offers',
+    emoji: '✨',
+    tagline: 'Up to 20% off + free shipping on ₹999+ — festive devotional art, posters and more',
+    bannerImage: u('photo-1577083753695-e010191bacb5', 1600),
+    tint: 'from-[#9A3412]/90',
+    accent: '#E8752A',
+    categorySlugs: ['devotional-art', 'motivational-posters', 'tribal-ethnic-art', 'scenery-landscape-art'],
+  },
+  {
     slug: 'corporate-gifts',
     name: 'Corporate Gifts',
     emoji: '🎁',

@@ -86,10 +86,10 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   };
 
   const handleCustomizeFestiveGift = () => {
-    // Land on the Diwali occasion page (format tiles — Devotional Art,
-    // Motivational Posters, etc.), not straight into a customizer. Each
-    // tile's own "Shop Now" is what opens the customizer.
-    navigate('/occasions/diwali');
+    // Dedicated "Festive Offers" landing page (its own occasion entry,
+    // separate from Diwali) with format tiles — each tile's own "Shop Now"
+    // is what opens the customizer.
+    navigate('/occasions/festive-offers');
   };
 
   const scrollRow = (ref: React.RefObject<HTMLDivElement>, dir: 1 | -1) => {
