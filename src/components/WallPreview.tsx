@@ -149,6 +149,17 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
     let w = (widthIn * REAL_PPI) / WALL_PHOTO_NATIVE_WIDTH;
     let h = (heightIn * REAL_PPI) / WALL_PHOTO_NATIVE_HEIGHT;
 
+    // Circle/Triangle only ever show the rectangle inscribed in their
+    // outline (never-crop fit), which uses a fraction of the bounding
+    // square's area — without this, the visible artwork reads as much
+    // smaller than the same true size in a Square/Rectangle frame. Boost
+    // the frame itself so the inscribed image ends up comparably sized.
+    if (isCircle || isTriangle) {
+      const boost = 1.6;
+      w *= boost;
+      h *= boost;
+    }
+
     // Safety cap: don't let an oversized custom print overflow the safe
     // hanging zone or collide with the window to its right.
     const boxW = wallBounds.maxX - wallBounds.minX;
@@ -160,7 +171,7 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
     const left = wallBounds.minX + (boxW - w) / 2;
     const top = wallBounds.minY + (boxH - h) / 2;
     return { left: left * 100, top: top * 100, width: w * 100, height: h * 100 };
-  }, [ratio, wallBounds, dims]);
+  }, [ratio, wallBounds, dims, isCircle, isTriangle]);
 
   const clipPath = isTriangle ? 'polygon(50% 0%, 0% 100%, 100% 100%)' : undefined;
 
