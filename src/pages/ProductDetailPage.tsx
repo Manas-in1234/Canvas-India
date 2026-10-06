@@ -372,9 +372,9 @@ export const ProductDetailPage: React.FC = () => {
             <div
               className={`relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group ${
                 galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL || galleryImages[activeImageIndex] === MULTI_SIZE_SENTINEL
-                  ? (isPilotProduct ? 'w-full aspect-[16/10] max-h-[340px]' : 'w-full aspect-[4/3]')
+                  ? (isPilotProduct ? 'w-full aspect-[4/3] max-h-[440px]' : 'w-full aspect-[4/3]')
                   : isPilotProduct
-                  ? 'aspect-[3/4] h-[30vh] min-h-[220px] max-h-[340px] max-w-full mx-auto'
+                  ? 'aspect-[3/4] h-[38vh] min-h-[280px] max-h-[440px] max-w-full mx-auto'
                   : 'aspect-[3/4] h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] max-w-full mx-auto'
               }`}
             >
@@ -461,8 +461,8 @@ export const ProductDetailPage: React.FC = () => {
               )}
             </div>
 
-            {/* Gallery Thumbnails */}
-            {galleryImages.length > 1 && (
+            {/* Gallery Thumbnails — hidden above the fold on the pilot product, like canvaschamp */}
+            {!isPilotProduct && galleryImages.length > 1 && (
               <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
                 {galleryImages.map((img, idx) => (
                   <button
@@ -500,13 +500,23 @@ export const ProductDetailPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-start gap-2.5">
-                <Truck className="w-5 h-5 text-[#0E4A93] shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-bold text-xs text-stone-900">Free Delivery</div>
-                  <div className="text-[11px] text-stone-500">On orders ₹999+</div>
+              {isPilotProduct ? (
+                <div className="flex items-start gap-2.5">
+                  <Heart className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-bold text-xs text-stone-900">Made with Love</div>
+                    <div className="text-[11px] text-stone-500">Handcrafted, every piece</div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex items-start gap-2.5">
+                  <Truck className="w-5 h-5 text-[#0E4A93] shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-bold text-xs text-stone-900">Free Delivery</div>
+                    <div className="text-[11px] text-stone-500">On orders ₹999+</div>
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-start gap-2.5">
                 <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
@@ -528,7 +538,7 @@ export const ProductDetailPage: React.FC = () => {
           </div>
 
           {/* RIGHT: PRODUCT INFO & PURCHASE CONTROLS (5-6 columns) */}
-          <div className={`lg:col-span-6 xl:col-span-5 flex flex-col text-left ${isPilotProduct ? 'gap-2.5' : 'gap-5'}`}>
+          <div className={`lg:col-span-6 xl:col-span-5 flex flex-col text-left ${isPilotProduct ? 'gap-3.5' : 'gap-5'}`}>
             
             {/* Header: Category & Share */}
             <div>
@@ -571,12 +581,14 @@ export const ProductDetailPage: React.FC = () => {
                     <span>•</span>
                   </>
                 ) : (
-                  <>
-                    <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-bold text-[11px] px-2 py-0.5 rounded">
-                      New Arrival
-                    </span>
-                    <span>•</span>
-                  </>
+                  !isPilotProduct && (
+                    <>
+                      <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-bold text-[11px] px-2 py-0.5 rounded">
+                        New Arrival
+                      </span>
+                      <span>•</span>
+                    </>
+                  )
                 )}
                 
                 <span className="text-emerald-700 font-semibold flex items-center gap-1">
@@ -595,7 +607,7 @@ export const ProductDetailPage: React.FC = () => {
 
             {/* Shape Selector (Canvas products: Popular/Square/Rectangle/Panoramic/Circle/Triangle) */}
             {availableShapes.length > 0 && (
-              <div className={isPilotProduct ? 'space-y-1' : 'space-y-2'}>
+              <div className={isPilotProduct ? 'space-y-1.5' : 'space-y-2'}>
                 <span className="font-bold text-xs text-stone-800">{categoryName} Shapes:</span>
                 <div className={`grid grid-cols-4 ${isPilotProduct ? 'gap-1.5' : 'gap-2'}`}>
                   {availableShapes.map((shapeOpt) => (
@@ -624,7 +636,7 @@ export const ProductDetailPage: React.FC = () => {
 
             {/* 1. Size Selector */}
             {product.sizes && product.sizes.length > 0 && (
-              <div className={isPilotProduct ? 'space-y-1' : 'space-y-2'}>
+              <div className={isPilotProduct ? 'space-y-1.5' : 'space-y-2'}>
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-stone-800">{availableShapes.length > 0 ? `${categoryName} Sizes:` : '1. Available Sizes:'}</span>
                   <span className="text-stone-500 font-medium">{selectedSize}</span>
@@ -674,9 +686,9 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* 2. Material Selector */}
-            {availableMaterials.length > 0 && (
-              <div className={isPilotProduct ? 'space-y-1' : 'space-y-2'}>
+            {/* 2. Material Selector — hidden on the pilot product */}
+            {!isPilotProduct && availableMaterials.length > 0 && (
+              <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-stone-800">2. Material:</span>
                   <span className="text-stone-500 font-medium">{selectedMaterial}</span>
