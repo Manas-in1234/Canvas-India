@@ -1,9 +1,19 @@
 import React, { useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, ArrowRight, Sparkles } from 'lucide-react';
+import { ChevronRight, ArrowRight, Sparkles, Cake, Heart, Gem, Home, Flame, Gift } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { OCCASIONS, getOccasionBySlug } from '../data/occasionsData';
 import { SHOP_CATEGORIES } from '../data/shopCategories';
+
+const OCCASION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  birthday: Cake,
+  anniversary: Heart,
+  wedding: Gem,
+  housewarming: Home,
+  diwali: Flame,
+  'festive-offers': Sparkles,
+  'corporate-gifts': Gift,
+};
 
 export const OccasionPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -61,43 +71,56 @@ export const OccasionPage: React.FC = () => {
         </nav>
       </div>
 
-      {/* HERO BANNER — each occasion gets its own full-width photo banner */}
-      <section className="relative w-full h-[280px] sm:h-[360px] lg:h-[420px] overflow-hidden mt-4">
-        <img
-          src={occasion.bannerImage}
-          alt={occasion.name}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className={`absolute inset-0 bg-gradient-to-t ${occasion.tint} via-black/10 to-black/40`} />
-        <div className="relative z-10 h-full w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 flex flex-col items-start justify-end pb-8 sm:pb-12">
-          <span className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/90 flex items-center justify-center text-2xl shadow-md mb-3">
-            {occasion.emoji}
-          </span>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight drop-shadow-sm">
-            {occasion.name} Gifts &amp; Prints
-          </h1>
-          <p className="text-sm sm:text-base text-white/90 max-w-xl mt-2 leading-relaxed drop-shadow-sm">
-            {occasion.tagline}
-          </p>
+      {/* HERO BANNER — soft gradient in the occasion's own color, a corner
+          heart-doodle flourish, and a tilted polaroid of the occasion photo */}
+      <section
+        className="relative w-full overflow-hidden mt-4 rounded-3xl mx-auto max-w-[1680px]"
+        style={{ background: `linear-gradient(120deg, ${occasion.accent}, ${occasion.accent}CC)` }}
+      >
+        {/* Decorative heart-swirl doodle, top-right */}
+        <svg className="hidden sm:block absolute -top-2 right-10 w-24 h-24 text-white/25" viewBox="0 0 100 100" fill="none">
+          <path d="M50 85 C20 65, 15 40, 30 28 C40 20, 50 28, 50 38 C50 28, 60 20, 70 28 C85 40, 80 65, 50 85 Z" stroke="currentColor" strokeWidth="2" />
+          <path d="M70 15 Q85 20 80 35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+
+        <div className="relative z-10 px-6 sm:px-10 lg:px-14 py-10 sm:py-14 lg:py-16 flex items-center gap-8">
+          <div className="max-w-xl">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight drop-shadow-sm" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+              {occasion.name} Gifts &amp; Prints
+            </h1>
+            <p className="text-sm sm:text-base text-white/90 max-w-xl mt-3 leading-relaxed">
+              {occasion.tagline}
+            </p>
+          </div>
+
+          {/* Tilted polaroid photo prop */}
+          <div className="hidden lg:block shrink-0 ml-auto -mr-2 rotate-3 bg-white p-2.5 pb-6 rounded-sm shadow-xl">
+            <img src={occasion.bannerImage} alt="" className="w-44 h-44 object-cover rounded-2xs" />
+          </div>
         </div>
       </section>
 
       {/* OTHER OCCASIONS QUICK SWITCH */}
-      <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-6 flex items-center gap-2.5 overflow-x-auto scrollbar-none">
-        {OCCASIONS.map((o) => (
-          <Link
-            key={o.slug}
-            to={`/occasions/${o.slug}`}
-            className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all ${
-              o.slug === occasion.slug
-                ? 'text-white border-transparent'
-                : 'bg-white text-stone-700 border-stone-200 hover:border-stone-400'
-            }`}
-            style={o.slug === occasion.slug ? { backgroundColor: occasion.accent } : undefined}
-          >
-            {o.emoji} {o.name}
-          </Link>
-        ))}
+      <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-6 flex flex-wrap items-center justify-center gap-2.5">
+        {OCCASIONS.map((o) => {
+          const OIcon = OCCASION_ICONS[o.slug] || Sparkles;
+          const active = o.slug === occasion.slug;
+          return (
+            <Link
+              key={o.slug}
+              to={`/occasions/${o.slug}`}
+              className={`shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold border transition-all ${
+                active
+                  ? 'text-white border-transparent shadow-md'
+                  : 'bg-white text-stone-700 border-stone-200 hover:border-stone-400'
+              }`}
+              style={active ? { backgroundColor: occasion.accent } : undefined}
+            >
+              <OIcon className="w-3.5 h-3.5" />
+              {o.name}
+            </Link>
+          );
+        })}
       </div>
 
       {/* START YOUR GIFT ORDER — one tile per relevant format, straight into the customizer */}
@@ -110,6 +133,11 @@ export const OccasionPage: React.FC = () => {
             Start Your {occasion.name} Gift Order
           </h2>
           <p className="text-xs sm:text-sm text-stone-500 mt-1.5">Pick a format to start personalizing your {occasion.name.toLowerCase()} gift</p>
+          <div className="flex items-center justify-center gap-3 mt-4">
+            <span className="h-px w-16 bg-stone-300" />
+            <Heart className="w-3.5 h-3.5" style={{ color: occasion.accent }} fill={occasion.accent} />
+            <span className="h-px w-16 bg-stone-300" />
+          </div>
         </div>
 
         {giftTiles.length > 0 ? (
@@ -126,10 +154,7 @@ export const OccasionPage: React.FC = () => {
                   alt={tile.name}
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
-                <div
-                  className="absolute inset-0"
-                  style={{ background: `linear-gradient(to top, ${occasion.accent}E6 0%, ${occasion.accent}33 38%, rgba(0,0,0,0.05) 65%)` }}
-                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
 
                 {tile.customizerKey && (
                   <span className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 flex items-center justify-center shadow-md">
