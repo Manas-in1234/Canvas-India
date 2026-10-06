@@ -41,8 +41,11 @@ export const OccasionPage: React.FC = () => {
         const destination = cat.customizerKey
           ? `/customize/${cat.customizerKey}/${firstProduct?.slug || firstProduct?.id || cat.categorySlug}`
           : cat.path;
-        // Prefer a real catalogue product shot over the generic category photo
-        return { ...cat, destination, image: firstProduct?.image || cat.image };
+        // The first catalogue product in a category is often unrelated to
+        // the occasion (e.g. a tribal print showing up on the Anniversary
+        // page) — use the occasion's own curated photo instead, which is
+        // actually relevant and already verified to load (it's the banner).
+        return { ...cat, destination, image: occasion.bannerImage };
       });
   }, [occasion, allProducts]);
 
@@ -142,37 +145,52 @@ export const OccasionPage: React.FC = () => {
 
         {giftTiles.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
-            {giftTiles.map((tile) => (
-              <button
-                key={tile.categorySlug}
-                type="button"
-                onClick={() => navigate(tile.destination)}
-                className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left ring-1 ring-black/5"
-              >
-                <img
-                  src={tile.image}
-                  alt={tile.name}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
-
-                {tile.customizerKey && (
-                  <span className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 flex items-center justify-center shadow-md">
-                    <Sparkles className="w-5 h-5" style={{ color: occasion.accent }} />
-                  </span>
-                )}
-
-                <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
-                  <div className="font-extrabold text-white text-xl sm:text-2xl leading-tight drop-shadow-sm">
-                    {tile.name}
+            {giftTiles.map((tile) => {
+              const isCanvas = tile.categorySlug === 'canvas';
+              const isAcrylic = tile.categorySlug === 'acrylic';
+              return (
+                <button
+                  key={tile.categorySlug}
+                  type="button"
+                  onClick={() => navigate(tile.destination)}
+                  className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left ring-1 ring-black/5"
+                  style={{ backgroundColor: `${occasion.accent}14` }}
+                >
+                  {/* Canvas: inset like a framed/stretched canvas on a wall.
+                      Acrylic: full-bleed with a glossy diagonal sheen. */}
+                  <div className={isCanvas ? 'absolute inset-5 sm:inset-7 rounded-md overflow-hidden shadow-lg' : 'absolute inset-0'}>
+                    <img
+                      src={tile.image}
+                      alt={tile.name}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    {isAcrylic && (
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{ background: 'linear-gradient(115deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 30%, rgba(255,255,255,0) 70%, rgba(255,255,255,0.2) 100%)' }}
+                      />
+                    )}
                   </div>
-                  <div className="mt-2.5 inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-white/95 bg-white/15 backdrop-blur-sm px-3.5 py-1.5 rounded-full border border-white/30 group-hover:bg-white/25 transition-colors">
-                    <span>{tile.customizerKey ? 'Customize Now' : 'Shop Now'}</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+                  {tile.customizerKey && (
+                    <span className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 flex items-center justify-center shadow-md">
+                      <Sparkles className="w-5 h-5" style={{ color: occasion.accent }} />
+                    </span>
+                  )}
+
+                  <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
+                    <div className="font-extrabold text-white text-xl sm:text-2xl leading-tight drop-shadow-sm">
+                      {tile.name}
+                    </div>
+                    <div className="mt-2.5 inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-white/95 bg-white/15 backdrop-blur-sm px-3.5 py-1.5 rounded-full border border-white/30 group-hover:bg-white/25 transition-colors">
+                      <span>{tile.customizerKey ? 'Customize Now' : 'Shop Now'}</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         ) : (
           <p className="text-center text-sm text-stone-500 py-12">New {occasion.name.toLowerCase()} picks are on the way — check back soon.</p>
