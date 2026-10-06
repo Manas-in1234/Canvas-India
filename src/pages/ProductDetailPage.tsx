@@ -49,10 +49,11 @@ function pickDefaultSize(sizes?: string[]): string | undefined {
 // confirmed — then rolled out to the rest of the catalogue.
 const PILOT_PRODUCT_ID = 'tribal-ethnic-art-a-a-001';
 
-// The Popular shape always shows 25x30 as its size, regardless of the
-// product's own catalogue sizes. Pilot product only — see PILOT_PRODUCT_ID.
+// The Standard (formerly Popular) shape always shows 25x30 as its size,
+// regardless of the product's own catalogue sizes. Pilot product only —
+// see PILOT_PRODUCT_ID.
 function sizeForShape(shape: string, sizes?: string[], isPilot?: boolean): string | undefined {
-  if (isPilot && shape.toLowerCase() === 'popular') return '25x30 inch';
+  if (isPilot && (shape.toLowerCase() === 'popular' || shape.toLowerCase() === 'standard')) return '25x30 inch';
   return pickDefaultSize(sizes);
 }
 
@@ -128,6 +129,8 @@ export const ProductDetailPage: React.FC = () => {
     if (!product) return [];
     if (product.shapes && product.shapes.length > 0) return product.shapes;
     if (SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug)) return [];
+    // Pilot product: Circle/Triangle removed, Popular renamed to Standard.
+    if (product.id === PILOT_PRODUCT_ID) return ['Standard', 'Square', 'Rectangle', 'Panoramic'];
     return ['Popular', 'Square', 'Rectangle', 'Panoramic', 'Circle', 'Triangle'];
   }, [product]);
 
@@ -579,7 +582,7 @@ export const ProductDetailPage: React.FC = () => {
                       type="button"
                       onClick={() => {
                         setSelectedShape(shapeOpt);
-                        if (product.id === PILOT_PRODUCT_ID && shapeOpt.toLowerCase() === 'popular') setSelectedSize('25x30 inch');
+                        if (product.id === PILOT_PRODUCT_ID && shapeOpt.toLowerCase() === 'standard') setSelectedSize('25x30 inch');
                       }}
                       className={`px-2 py-2 text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
                         selectedShape === shapeOpt
