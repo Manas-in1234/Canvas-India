@@ -33,6 +33,14 @@ const DEFAULT_WALL_BOUNDS: WallBounds = { minX: 0.04, maxX: 0.46, minY: 0.03, ma
 const WALL_PHOTO_NATIVE_WIDTH = 1600;
 const WALL_PHOTO_NATIVE_HEIGHT = 900;
 const REAL_PPI = 8.6;
+// A fixed "camera zoom" applied to the whole composition (wall photo +
+// frame) recentered on the frame — stands the camera closer so the frame
+// reads as bigger with less empty wall around it, WITHOUT touching true
+// relative scale between different selected sizes (every size gets this
+// same fixed zoom, so an 18x24 is still honestly ~3x an 8x12 area-wise).
+// This only moves the "camera" — the artwork image itself inside the frame
+// is never cropped or zoomed, still a full object-contain fit.
+const CAMERA_ZOOM = 1.8;
 
 const SIZE_PATTERN = /(\d+(?:\.\d+)?)\s*["”]?\s*x\s*(\d+(?:\.\d+)?)/i;
 
@@ -139,9 +147,18 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
   const framePadding = isTriangle || !hasFrameBorder ? 0 : `${finishStyle.border}%`;
   const frameBg = hasFrameBorder ? finishStyle.color : 'transparent';
 
+  // Recenter the camera on the frame, then zoom in — translate happens
+  // before scale (rightmost CSS transform function applies first), so the
+  // frame's center is moved to the box's own center, then that fixed point
+  // stays put while the whole composition scales up around it.
+  const frameCenterX = frameBox.left + frameBox.width / 2;
+  const frameCenterY = frameBox.top + frameBox.height / 2;
+  const cameraTransform = `scale(${CAMERA_ZOOM}) translate(${50 - frameCenterX}%, ${50 - frameCenterY}%)`;
+
   return (
     <div className={`relative w-full h-full flex items-center justify-center bg-stone-50 ${className}`}>
-      <div className="relative h-full max-w-full" style={{ aspectRatio: wallNaturalAspect }}>
+      <div className="relative h-full max-w-full overflow-hidden" style={{ aspectRatio: wallNaturalAspect }}>
+        <div className="absolute inset-0" style={{ transform: cameraTransform, transformOrigin: '50% 50%' }}>
         <img
           src={wallImageSrc}
           alt=""
@@ -159,8 +176,13 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
         >
           {formatSizeCaption(sizeLabel) && (
             <div
-              className="absolute left-1/2 -translate-x-1/2 -top-5 text-[11px] sm:text-xs font-semibold text-stone-700 whitespace-nowrap"
-              style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
+              className="absolute left-1/2 -top-5 text-[11px] sm:text-xs font-semibold text-stone-700 whitespace-nowrap"
+              style={{
+                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontStyle: 'italic',
+                transform: `translateX(-50%) scale(${1 / CAMERA_ZOOM})`,
+                transformOrigin: 'center bottom',
+              }}
             >
               {formatSizeCaption(sizeLabel)}
             </div>
@@ -197,6 +219,7 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
               )}
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
