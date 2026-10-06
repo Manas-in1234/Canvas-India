@@ -149,6 +149,7 @@ export const ProductDetailPage: React.FC = () => {
   }, [product]);
 
   const showCustomSize = product ? !SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug) : true;
+  const isPilotProduct = product?.id === PILOT_PRODUCT_ID;
 
   // Sync variants when product changes
   useEffect(() => {
@@ -362,16 +363,18 @@ export const ProductDetailPage: React.FC = () => {
         {/* ========================================================================= */}
         {/* 2. MAIN 2-COLUMN PRODUCT DISPLAY                                          */}
         {/* ========================================================================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-14 items-start">
-          
+        <div className={`grid grid-cols-1 lg:grid-cols-12 items-start ${isPilotProduct ? 'gap-5 xl:gap-8' : 'gap-8 xl:gap-14'}`}>
+
           {/* LEFT: GALLERY (Sticky on desktop, 6-7 columns) */}
-          <div className="lg:col-span-6 xl:col-span-7 flex flex-col gap-4 sticky top-24">
-            
+          <div className={`lg:col-span-6 xl:col-span-7 flex flex-col gap-4 sticky ${isPilotProduct ? 'top-4' : 'top-24'}`}>
+
             {/* Main Primary Image */}
             <div
               className={`relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group ${
                 galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL || galleryImages[activeImageIndex] === MULTI_SIZE_SENTINEL
-                  ? 'w-full aspect-[4/3]'
+                  ? (isPilotProduct ? 'w-full aspect-[16/10] max-h-[340px]' : 'w-full aspect-[4/3]')
+                  : isPilotProduct
+                  ? 'aspect-[3/4] h-[30vh] min-h-[220px] max-h-[340px] max-w-full mx-auto'
                   : 'aspect-[3/4] h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] max-w-full mx-auto'
               }`}
             >
@@ -525,7 +528,7 @@ export const ProductDetailPage: React.FC = () => {
           </div>
 
           {/* RIGHT: PRODUCT INFO & PURCHASE CONTROLS (5-6 columns) */}
-          <div className="lg:col-span-6 xl:col-span-5 flex flex-col gap-5 text-left">
+          <div className={`lg:col-span-6 xl:col-span-5 flex flex-col text-left ${isPilotProduct ? 'gap-2.5' : 'gap-5'}`}>
             
             {/* Header: Category & Share */}
             <div>
@@ -551,12 +554,12 @@ export const ProductDetailPage: React.FC = () => {
                 </button>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight mt-1">
+              <h1 className={`font-extrabold text-stone-900 tracking-tight mt-1 ${isPilotProduct ? 'text-lg sm:text-xl' : 'text-2xl sm:text-3xl'}`}>
                 {product.name}
               </h1>
 
               {/* Status & Ratings */}
-              <div className="flex items-center gap-2.5 mt-2.5 text-xs text-stone-600">
+              <div className={`flex items-center gap-2.5 text-xs text-stone-600 ${isPilotProduct ? 'mt-1' : 'mt-2.5'}`}>
                 {product.rating !== null && product.rating > 0 ? (
                   <>
                     <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded text-amber-800 font-bold">
@@ -583,16 +586,18 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Short Description */}
-            <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
-              {product.shortDescription || product.description}
-            </p>
+            {/* Short Description — hidden on the pilot product to keep everything above the fold */}
+            {!isPilotProduct && (
+              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
+                {product.shortDescription || product.description}
+              </p>
+            )}
 
             {/* Shape Selector (Canvas products: Popular/Square/Rectangle/Panoramic/Circle/Triangle) */}
             {availableShapes.length > 0 && (
-              <div className="space-y-2">
+              <div className={isPilotProduct ? 'space-y-1' : 'space-y-2'}>
                 <span className="font-bold text-xs text-stone-800">{categoryName} Shapes:</span>
-                <div className="grid grid-cols-4 gap-2">
+                <div className={`grid grid-cols-4 ${isPilotProduct ? 'gap-1.5' : 'gap-2'}`}>
                   {availableShapes.map((shapeOpt) => (
                     <button
                       key={shapeOpt}
@@ -604,7 +609,7 @@ export const ProductDetailPage: React.FC = () => {
                           setSelectedSize(sizeForShape(shapeOpt, product.sizes, true) || selectedSize);
                         }
                       }}
-                      className={`px-2 py-2 text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
+                      className={`${isPilotProduct ? 'px-2 py-1.5' : 'px-2 py-2'} text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
                         selectedShape === shapeOpt
                           ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
                           : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
@@ -619,18 +624,18 @@ export const ProductDetailPage: React.FC = () => {
 
             {/* 1. Size Selector */}
             {product.sizes && product.sizes.length > 0 && (
-              <div className="space-y-2">
+              <div className={isPilotProduct ? 'space-y-1' : 'space-y-2'}>
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-stone-800">{availableShapes.length > 0 ? `${categoryName} Sizes:` : '1. Available Sizes:'}</span>
                   <span className="text-stone-500 font-medium">{selectedSize}</span>
                 </div>
-                <div className="grid grid-cols-4 gap-2">
+                <div className={`grid grid-cols-4 ${isPilotProduct ? 'gap-1.5' : 'gap-2'}`}>
                   {(product.id === PILOT_PRODUCT_ID ? pilotSizesForShape(selectedShape) || product.sizes : product.sizes).map((size) => (
                     <button
                       key={size}
                       type="button"
                       onClick={() => { setIsCustomSize(false); setSelectedSize(size); }}
-                      className={`px-2 py-2 text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
+                      className={`${isPilotProduct ? 'px-2 py-1.5' : 'px-2 py-2'} text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
                         selectedSize === size && !isCustomSize
                           ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
                           : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
@@ -671,7 +676,7 @@ export const ProductDetailPage: React.FC = () => {
 
             {/* 2. Material Selector */}
             {availableMaterials.length > 0 && (
-              <div className="space-y-2">
+              <div className={isPilotProduct ? 'space-y-1' : 'space-y-2'}>
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-stone-800">2. Material:</span>
                   <span className="text-stone-500 font-medium">{selectedMaterial}</span>
@@ -759,9 +764,9 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Pricing */}
-            <div className="pt-2 pb-4 border-t border-stone-200">
+            <div className={`border-t border-stone-200 ${isPilotProduct ? 'pt-2 pb-1' : 'pt-2 pb-4'}`}>
               <div className="flex items-baseline gap-3">
-                <span className="text-3xl sm:text-4xl font-extrabold text-stone-950">
+                <span className={`font-extrabold text-stone-950 ${isPilotProduct ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl'}`}>
                   ₹{product.price.toLocaleString('en-IN')}
                 </span>
                 <span className="text-base sm:text-lg text-stone-400 line-through">
@@ -773,11 +778,13 @@ export const ProductDetailPage: React.FC = () => {
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-stone-500 mt-1">Inclusive of GST taxes. Free shipping on orders above ₹999 across India.</p>
+              {!isPilotProduct && (
+                <p className="text-[11px] text-stone-500 mt-1">Inclusive of GST taxes. Free shipping on orders above ₹999 across India.</p>
+              )}
             </div>
 
             {/* Action CTAs: Add to Cart & Buy Now */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <div className={`flex flex-col sm:flex-row gap-3 ${isPilotProduct ? '' : 'pt-2'}`}>
               <button
                 type="button"
                 onClick={handleAddToCartWithVariants}
@@ -797,7 +804,8 @@ export const ProductDetailPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Indian Delivery Check Section */}
+            {/* Indian Delivery Check Section — hidden on the pilot product to keep everything above the fold */}
+            {!isPilotProduct && (
             <div className="p-4 rounded-xl bg-stone-50 border border-stone-200/80 space-y-2.5">
               <div className="flex items-center gap-2 text-xs font-bold text-stone-800">
                 <Truck className="w-4 h-4 text-[#0E4A93]" />
@@ -839,6 +847,7 @@ export const ProductDetailPage: React.FC = () => {
                 </div>
               )}
             </div>
+            )}
 
           </div>
 
