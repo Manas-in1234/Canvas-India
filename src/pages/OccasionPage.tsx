@@ -45,7 +45,7 @@ export const OccasionPage: React.FC = () => {
         // the occasion (e.g. a tribal print showing up on the Anniversary
         // page) — use the occasion's own curated photo instead, which is
         // actually relevant and already verified to load (it's the banner).
-        return { ...cat, destination, image: occasion.bannerImage };
+        return { ...cat, destination, image: occasion.tileImages?.[cat.categorySlug] || occasion.bannerImage };
       });
   }, [occasion, allProducts]);
 

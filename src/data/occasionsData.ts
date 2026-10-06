@@ -7,6 +7,7 @@ export interface OccasionDef {
   tint: string; // tailwind gradient "from-[#hex]/85" class used over the banner
   accent: string; // hex color for badges/CTAs on the banner
   categorySlugs: string[]; // which product categories are relevant to this occasion
+  tileImages?: Record<string, string>; // optional per-category photo override for the format tiles
 }
 
 const u = (id: string, w: number) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=80`;
@@ -17,10 +18,14 @@ export const OCCASIONS: OccasionDef[] = [
     name: 'Birthday',
     emoji: '🎂',
     tagline: 'Custom photo canvases and acrylic prints to celebrate another trip around the sun',
-    bannerImage: u('photo-1513151233558-d860c5398176', 1600),
+    bannerImage: '/assets/occasions/birthday-banner.png',
     tint: 'from-[#EC4899]/90',
     accent: '#EC4899',
     categorySlugs: ['canvas', 'acrylic'],
+    tileImages: {
+      canvas: '/assets/occasions/birthday-cakesmash.png',
+      acrylic: '/assets/occasions/birthday-dino.png',
+    },
   },
   {
     slug: 'anniversary',
