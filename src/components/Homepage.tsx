@@ -101,27 +101,35 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#F7F1E5] border-b border-stone-200/60">
-        {/* Desktop/tablet: single festive offers banner, in place of the lifestyle photo */}
-        <div className="hidden lg:flex absolute right-10 top-1/2 -translate-y-1/2 w-[40%] aspect-[4/3] max-h-[380px]">
-          <button
-            type="button"
-            onClick={() => navigate('/festive-offers')}
-            className="group relative w-full h-full rounded-[2rem] text-left shadow-2xl shadow-orange-950/25 cursor-pointer overflow-hidden"
-          >
-            <img src="/assets/catalogue/devotional-art/G-A_001.jpg" alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#7C2D12]/95 via-[#9A3412]/60 to-[#9A3412]/10" />
-            <div className="relative h-full flex flex-col justify-end p-8">
-              <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-200">Festive Sale</span>
-              <div className="font-bold text-white text-4xl leading-tight mt-1 drop-shadow-md" style={{ fontFamily: SERIF }}>
-                Up to 20% Off
-              </div>
-              <p className="text-sm text-amber-100/90 font-medium mt-2">+ Free shipping on orders ₹999 and above</p>
-              <span className="inline-flex items-center gap-2 mt-5 text-sm font-bold text-white bg-white/15 hover:bg-white/25 backdrop-blur-xs border border-white/30 rounded-full px-5 py-2.5 w-fit transition-colors">
-                Shop Festive Offers <ArrowRight className="w-4 h-4" />
-              </span>
-            </div>
-          </button>
-        </div>
+        {/* Desktop/tablet: full-bleed festive image, fading into the cream
+            background on the left — same treatment the original lifestyle
+            photo used, no card/box, just one continuous scene. */}
+        <img
+          src="/assets/catalogue/devotional-art/G-A_001.jpg"
+          alt="Festive diya and temple decor"
+          className="hidden lg:block absolute right-0 top-0 h-full w-[60%] object-cover object-center"
+          style={{
+            maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
+          }}
+        />
+        <div className="hidden lg:block absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent" />
+        <div className="hidden lg:block absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+
+        <button
+          type="button"
+          onClick={() => navigate('/festive-offers')}
+          className="hidden lg:flex absolute right-14 bottom-12 flex-col items-start text-left cursor-pointer group"
+        >
+          <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-200 drop-shadow">Festive Sale</span>
+          <div className="font-bold text-white text-4xl leading-tight mt-1 drop-shadow-lg" style={{ fontFamily: SERIF }}>
+            Up to 20% Off
+          </div>
+          <p className="text-sm text-amber-100/90 font-medium mt-2 drop-shadow">+ Free shipping on orders ₹999 and above</p>
+          <span className="inline-flex items-center gap-2 mt-5 text-sm font-bold text-white bg-white/15 group-hover:bg-white/25 backdrop-blur-xs border border-white/30 rounded-full px-5 py-2.5 transition-colors">
+            Shop Festive Offers <ArrowRight className="w-4 h-4" />
+          </span>
+        </button>
 
         {/* Hanging Stitched Leather Special Price Tag (Top Center) */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center select-none">
