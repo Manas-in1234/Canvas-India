@@ -112,7 +112,7 @@ export const AcrylicProductShapeConfig: Record<string, string[]> = {
   'acrylic-digital': ['shape-landscape', 'shape-rectangle', 'shape-portrait', 'shape-square'],
   'acrylic-quotes': ['shape-square', 'shape-portrait', 'shape-rectangle', 'shape-heart'],
   'acrylic-bus-roll': ['shape-portrait'],
-  'acrylic-word-art': ['shape-heart', 'shape-square', 'shape-circle', 'shape-rectangle'],
+  'acrylic-word-art': ['shape-square', 'shape-rectangle', 'shape-circle', 'shape-heart'],
   // Legacy alias fallbacks
   'acrylic-photo-panel': ALL_CANVAS_AND_ACRYLIC_SHAPE_IDS,
   'acrylic-signage': ALL_CANVAS_AND_ACRYLIC_SHAPE_IDS

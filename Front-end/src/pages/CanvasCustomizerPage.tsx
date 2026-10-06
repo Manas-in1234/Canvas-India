@@ -42,9 +42,18 @@ import {
   FileText,
   Shapes,
   FlipHorizontal2,
-  AlertCircle
+  AlertCircle,
+  Edit3
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
+import { WordArtSizeRatioModal } from '../components/WordArtSizeRatioModal';
+import { WordArtPersonalizeModal } from '../components/WordArtPersonalizeModal';
+import {
+  WORD_ART_SIZE_CATALOG,
+  DEFAULT_WORD_ART_CONFIG,
+  type WordArtSizeOption,
+  type WordArtConfig
+} from '../data/wordArtData';
 import {
   CANVAS_SHAPES,
   CanvasShapeOption,
@@ -566,13 +575,13 @@ const SIZE_OPTIONS: SizeOption[] = [
     ]
   },
 
-  // 11. Lyric on Canvas (canvas-lyric) - Starts at ₹148.50
+  // 11. Lyric on Canvas (canvas-lyric) - Starts at ₹1,498.50
   {
     id: 'lyric-8x8',
     productTypeId: 'canvas-lyric',
     label: 'Lyric Canvas: 8" × 8"',
     dimensionsSummary: '8" × 8"',
-    price: 148.50,
+    price: 1498.50,
     categories: ['RECOMMENDED', 'SQUARE'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '8" × 8"', widthRatio: 8, heightRatio: 8 }]
   },
@@ -581,7 +590,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     productTypeId: 'canvas-lyric',
     label: 'Lyric Canvas: 12" × 18"',
     dimensionsSummary: '12" × 18"',
-    price: 499.0,
+    price: 1999.0,
     categories: ['RECOMMENDED'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '12" × 18"', widthRatio: 12, heightRatio: 18 }]
   },
@@ -606,13 +615,13 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '16" × 24"', widthRatio: 16, heightRatio: 24 }]
   },
 
-  // 13. Quotes on Canvas (canvas-quotes) - Starts at ₹99.00
+  // 13. Quotes on Canvas (canvas-quotes) - Starts at ₹999.00
   {
     id: 'quotes-8x8',
     productTypeId: 'canvas-quotes',
     label: 'Quotes Canvas: 8" × 8"',
     dimensionsSummary: '8" × 8"',
-    price: 99.0,
+    price: 999.0,
     categories: ['RECOMMENDED', 'SQUARE'],
     panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '8" × 8"', widthRatio: 8, heightRatio: 8 }]
   },
@@ -686,7 +695,27 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
   },
 
-  // 17. Classic Canvas Print (canvas-classic) - Starts at ₹99.00
+  // 17. Word Art (canvas-word-art) - Starts at ₹198.00
+  {
+    id: 'word-12x12',
+    productTypeId: 'canvas-word-art',
+    label: 'Word Art: 12" × 12"',
+    dimensionsSummary: '12" × 12"',
+    price: 198.0,
+    categories: ['RECOMMENDED', 'SQUARE'],
+    panels: [{ id: 'p0', label: 'Word Art Canvas', dimension: '12" × 12"', widthRatio: 12, heightRatio: 12 }]
+  },
+  {
+    id: 'word-16x16',
+    productTypeId: 'canvas-word-art',
+    label: 'Word Art: 16" × 16"',
+    dimensionsSummary: '16" × 16"',
+    price: 399.0,
+    categories: ['RECOMMENDED', 'SQUARE'],
+    panels: [{ id: 'p0', label: 'Word Art Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
+  },
+
+  // 18. Classic Canvas Print (canvas-classic) - Starts at ₹99.00
   {
     id: 'classic-8x8',
     productTypeId: 'canvas-classic',
@@ -1269,7 +1298,11 @@ export const CanvasCustomizerPage: React.FC = () => {
   const handleSelectTab = (tabId: ToolbarTab) => {
     setActiveTab(tabId);
     if (tabId === 'SELECT SIZE') {
-      setIsSizeShapeModalOpen(true);
+      if (selectedProductTypeId === 'canvas-word-art') {
+        setIsWordArtSizeModalOpen(true);
+      } else {
+        setIsSizeShapeModalOpen(true);
+      }
     } else if (tabId === 'LAYOUTS & DESIGNS') {
       setIsLayoutModalOpen(true);
     }
@@ -1277,7 +1310,7 @@ export const CanvasCustomizerPage: React.FC = () => {
     endPreloader(PRELOADER_MIN_MS);
   };
 
-  // Selected Canvas Product Type (supports all 10 Canvas products via route param or sidebar switcher)
+  // Selected Canvas Product Type (supports all 17 Canvas products via route param or sidebar switcher)
   const resolveCanvasProductTypeId = (rawId?: string, catProd?: typeof catalogProduct): string => {
     const key = (rawId || catProd?.slug || catProd?.id || catProd?.name || '').toLowerCase();
     if (CANVAS_PRODUCT_TYPES.some((pt) => pt.id === key)) return key;
@@ -1291,6 +1324,13 @@ export const CanvasCustomizerPage: React.FC = () => {
     if (key.includes('hexagon')) return 'canvas-hexagon';
     if (key.includes('split')) return 'canvas-split';
     if (key.includes('mosaic')) return 'canvas-mosaic';
+    if (key.includes('lyric')) return 'canvas-lyric';
+    if (key.includes('painting')) return 'canvas-digital-painting';
+    if (key.includes('quote')) return 'canvas-quotes';
+    if (key.includes('bus')) return 'canvas-bus-roll';
+    if (key.includes('banner')) return 'canvas-banner';
+    if (key.includes('pop')) return 'canvas-pop-art';
+    if (key.includes('word')) return 'canvas-word-art';
     return 'canvas-single';
   };
 
@@ -1316,14 +1356,21 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Check if current product is single print
   const isSinglePrintCanvas = selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-classic';
 
-  // Check if current product is single print or shaped canvas (only these 5 shapes/types allow size selection)
+  // Check if current product is single print, shaped canvas, or standard format canvas
   const isSingleOrShapedCanvas = [
     'canvas-single',
     'canvas-classic',
     'canvas-round',
     'canvas-triangle',
     'canvas-heart',
-    'canvas-oval'
+    'canvas-oval',
+    'canvas-lyric',
+    'canvas-digital-painting',
+    'canvas-quotes',
+    'canvas-bus-roll',
+    'canvas-banner',
+    'canvas-pop-art',
+    'canvas-word-art'
   ].includes(selectedProductTypeId);
 
   // Primary Toolbar items: dynamically filtered by selected product capabilities
@@ -1331,7 +1378,12 @@ export const CanvasCustomizerPage: React.FC = () => {
   const toolbarItems = useMemo<{ id: ToolbarTab; label: string; icon: React.ElementType }[]>(() => {
     const items: { id: ToolbarTab; label: string; icon: React.ElementType; enabled: boolean }[] = [
       { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid, enabled: productCapabilities.products !== false },
-      { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud, enabled: productCapabilities.upload !== false },
+      {
+        id: 'UPLOAD',
+        label: selectedProductTypeId === 'canvas-word-art' ? 'WORD ART' : 'UPLOAD',
+        icon: selectedProductTypeId === 'canvas-word-art' ? Type : UploadCloud,
+        enabled: productCapabilities.upload !== false
+      },
       { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSingleOrShapedCanvas && productCapabilities.sizes !== false },
       { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: productCapabilities.layouts === true },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
@@ -1750,6 +1802,66 @@ export const CanvasCustomizerPage: React.FC = () => {
   const [isSizeShapeModalOpen, setIsSizeShapeModalOpen] = useState<boolean>(false);
   const [isLayoutModalOpen, setIsLayoutModalOpen] = useState<boolean>(false);
 
+  // Word Art Flow State (Size + Ratio -> Details / Personalization -> Product Workspace)
+  const [isWordArtSizeModalOpen, setIsWordArtSizeModalOpen] = useState<boolean>(false);
+  const [isWordArtPersonalizeModalOpen, setIsWordArtPersonalizeModalOpen] = useState<boolean>(false);
+  const [wordArtSizeOption, setWordArtSizeOption] = useState<WordArtSizeOption>(
+    WORD_ART_SIZE_CATALOG.Square[0]
+  );
+  const [wordArtConfig, setWordArtConfig] = useState<WordArtConfig>(DEFAULT_WORD_ART_CONFIG);
+  const [activeWordArtDataUrl, setActiveWordArtDataUrl] = useState<string | null>(null);
+
+  const handleSelectWordArtSize = (size: WordArtSizeOption) => {
+    setWordArtSizeOption(size);
+    setSelectedSizeId(size.id);
+    setCustomWidth(size.widthInches);
+    setCustomHeight(size.heightInches);
+  };
+
+  const handleCreateWordArtFromSize = (size: WordArtSizeOption) => {
+    setWordArtSizeOption(size);
+    setSelectedSizeId(size.id);
+    setCustomWidth(size.widthInches);
+    setCustomHeight(size.heightInches);
+    setIsWordArtSizeModalOpen(false);
+    setIsWordArtPersonalizeModalOpen(true);
+  };
+
+  const handleWordArtChangeSize = () => {
+    setIsWordArtPersonalizeModalOpen(false);
+    setIsWordArtSizeModalOpen(true);
+  };
+
+  const handleAddWordArtToProduct = (dataUrl: string, config: WordArtConfig) => {
+    setActiveWordArtDataUrl(dataUrl);
+    setWordArtConfig(config);
+
+    // Apply high-res Word Art artwork directly into slot 0
+    setPanelImages((prev) => ({
+      ...prev,
+      0: {
+        ...createDefaultPanel(),
+        imageUrl: dataUrl,
+        fitMode: 'contain',
+        scale: 1,
+        rotation: 0,
+        panX: 0,
+        panY: 0
+      }
+    }));
+
+    setUploadedPhotos((prev) => [dataUrl, ...prev.filter((p) => p !== dataUrl)]);
+
+    if (selectedProductTypeId === 'canvas-word-art') {
+      setIsCustomSize(true);
+      setCustomWidth(wordArtSizeOption.widthInches);
+      setCustomHeight(wordArtSizeOption.heightInches);
+    }
+
+    setIsWordArtPersonalizeModalOpen(false);
+    setActiveTab('UPLOAD');
+  };
+
   // Automatically sync default shape, hardware, thickness, and layout when product selection changes
   useEffect(() => {
     const pt = CANVAS_PRODUCT_TYPES.find((p) => p.id === selectedProductTypeId);
@@ -1774,6 +1886,21 @@ export const CanvasCustomizerPage: React.FC = () => {
   const selectCanvasProduct = (productId: string) => {
     const pt = CANVAS_PRODUCT_TYPES.find((p) => p.id === productId);
     if (!pt) return;
+
+    if (productId === 'canvas-word-art') {
+      setSelectedProductTypeId('canvas-word-art');
+      setIsCustomSize(true);
+      setCustomWidth(wordArtSizeOption.widthInches);
+      setCustomHeight(wordArtSizeOption.heightInches);
+      setActivePanelIndex(0);
+      setSelectedShapeId('shape-square');
+      setSelectedHardwareId('no-hooks');
+      setSelectedThicknessId('thin-gallery');
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setIsWordArtSizeModalOpen(true);
+      return;
+    }
 
     setSelectedProductTypeId(productId);
     setIsCustomSize(false);
@@ -1816,9 +1943,13 @@ export const CanvasCustomizerPage: React.FC = () => {
       if (pt.defaultShape) {
         setSelectedShapeId(pt.defaultShape);
       }
-      const matchingSizes = SIZE_OPTIONS.filter((s) => s.productTypeId === productId);
-      if (matchingSizes.length > 0) {
-        setSelectedSizeId(matchingSizes[0].id);
+      if (pt.defaultSizeOptionId) {
+        setSelectedSizeId(pt.defaultSizeOptionId);
+      } else {
+        const matchingSizes = SIZE_OPTIONS.filter((s) => s.productTypeId === productId);
+        if (matchingSizes.length > 0) {
+          setSelectedSizeId(matchingSizes[0].id);
+        }
       }
     }
 
@@ -2040,7 +2171,9 @@ export const CanvasCustomizerPage: React.FC = () => {
   };
 
   // Dynamic Price Calculation
-  const sizePrice = isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price;
+  const sizePrice = selectedProductTypeId === 'canvas-word-art'
+    ? wordArtSizeOption.price
+    : (isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price);
 
   const unitPrice = useMemo(() => {
     let price = sizePrice;
@@ -2670,11 +2803,14 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // Width / height ratio of the print: fixed for symmetric shapes (circle, heart...), otherwise follows the chosen size.
   const printAspect = useMemo(() => {
+    if (selectedProductTypeId === 'canvas-word-art') {
+      return wordArtSizeOption.aspectRatio || (wordArtSizeOption.widthInches / Math.max(1, wordArtSizeOption.heightInches));
+    }
     if (shapeApplies && currentShape.isSingleDimension) return 1;
     if (isCustomSize && canUseCustomSize) return customWidth / customHeight;
     const p = panels[0];
     return p ? p.widthRatio / p.heightRatio : 1;
-  }, [shapeApplies, currentShape, isCustomSize, canUseCustomSize, customWidth, customHeight, panels]);
+  }, [selectedProductTypeId, wordArtSizeOption, shapeApplies, currentShape, isCustomSize, canUseCustomSize, customWidth, customHeight, panels]);
 
   const currentLayout = useMemo(() => {
     return STANDARD_LAYOUT_PRESETS.find((l) => l.id === selectedLayoutId) || STANDARD_LAYOUT_PRESETS[0];
@@ -2765,9 +2901,13 @@ export const CanvasCustomizerPage: React.FC = () => {
       product: {
         ...catalogProduct,
         price: unitPrice,
-        name: `${selectedProductType.name} - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
+        name: selectedProductTypeId === 'canvas-word-art'
+          ? `${selectedProductType.name} - ${wordArtSizeOption.label}`
+          : `${selectedProductType.name} - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
       },
-      size: isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary,
+      size: selectedProductTypeId === 'canvas-word-art'
+        ? `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`
+        : isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary,
       finish: WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label || 'Canvas Lite',
       quantity,
       customText: customText || undefined,
@@ -3567,9 +3707,11 @@ export const CanvasCustomizerPage: React.FC = () => {
 
         {/* COLUMN 2: CONFIGURATION PANEL */}
         <CustomizerPanel
-          title={activeTab}
+          title={activeTab === 'UPLOAD' && selectedProductTypeId === 'canvas-word-art' ? 'WORD ART' : activeTab}
           metaText={
-            activeTab === 'PRODUCTS'
+            selectedProductTypeId === 'canvas-word-art' && activeTab === 'UPLOAD'
+              ? `${wordArtSizeOption.label} (${wordArtSizeOption.ratioTab})`
+              : activeTab === 'PRODUCTS'
               ? `${CANVAS_PRODUCT_TYPES.length} Styles`
               : activeTab === 'UPLOAD'
               ? `${uploadedPhotos.length} Photos`
@@ -3599,8 +3741,68 @@ export const CanvasCustomizerPage: React.FC = () => {
             />
           )}
 
-          {/* ----------------------------- UPLOAD ------------------------------ */}
+          {/* ----------------------------- UPLOAD / WORD ART ------------------------------ */}
           {activeTab === 'UPLOAD' && (
+            selectedProductTypeId === 'canvas-word-art' ? (
+              <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
+                <div>
+                  <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-1">
+                    Word Art Personalization
+                  </h3>
+                  <p className="text-[11px] text-stone-500">
+                    Personalize your canvas with custom names, words, shapes, and color palettes.
+                  </p>
+                </div>
+
+                {/* Primary CTA button matching reference screenshot */}
+                <button
+                  type="button"
+                  onClick={() => setIsWordArtPersonalizeModalOpen(true)}
+                  className="w-full py-3.5 px-4 bg-[#0E4A93] hover:bg-[#0b3c77] active:scale-[0.99] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Type className="w-4 h-4" />
+                  <span>{activeWordArtDataUrl ? 'EDIT PERSONALIZED WORD ART' : 'CLICK HERE TO CREATE PERSONALIZED WORDART'}</span>
+                </button>
+
+                {/* Size & Ratio Summary Box */}
+                <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200/80 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-stone-200">
+                    <span className="text-[11px] font-black uppercase text-stone-500 tracking-wider">Canvas Size</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsWordArtSizeModalOpen(true)}
+                      className="text-xs font-black text-[#0E4A93] hover:underline cursor-pointer"
+                    >
+                      Change Size
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between text-xs font-bold text-stone-800">
+                    <span>{wordArtSizeOption.label}</span>
+                    <span className="text-[#0E4A93] font-black">₹{wordArtSizeOption.price.toFixed(2)}</span>
+                  </div>
+                  <div className="text-[11px] text-stone-500 font-medium">
+                    Ratio: <span className="font-bold text-stone-700">{wordArtSizeOption.ratioTab}</span> ({wordArtSizeOption.widthInches}" × {wordArtSizeOption.heightInches}")
+                  </div>
+
+                  {activeWordArtDataUrl && (
+                    <div className="pt-2 border-t border-stone-200 space-y-1.5 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-stone-500 font-medium">Primary Name:</span>
+                        <span className="font-bold text-stone-900">{wordArtConfig.primaryName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-stone-500 font-medium">Font:</span>
+                        <span className="font-bold text-stone-900">{wordArtConfig.fontFamily}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-stone-500 font-medium">Shape:</span>
+                        <span className="font-bold capitalize text-stone-900">{wordArtConfig.shape}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
             <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
               <div>
                 <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-1">
@@ -3610,6 +3812,64 @@ export const CanvasCustomizerPage: React.FC = () => {
                   Add high-resolution photos from your PC or laptop or scan the QR code to upload directly from your mobile phone.
                 </p>
               </div>
+
+              {/* Active Word Art Card for Shape-based Products */}
+              {activeWordArtDataUrl && (
+                <div className="p-3.5 bg-blue-50/80 rounded-2xl border border-blue-200/80 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-black text-[#0E4A93]">
+                      <Type className="w-4 h-4" />
+                      <span>ACTIVE WORD ART</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wide">
+                      {selectedProductType.name}
+                    </span>
+                  </div>
+                  <div className="text-xs text-stone-700 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">Primary Name:</span>
+                      <span className="font-bold text-stone-900">{wordArtConfig.primaryName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">Design Silhouette:</span>
+                      <span className="font-bold capitalize text-stone-900">{wordArtConfig.shape}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsWordArtPersonalizeModalOpen(true)}
+                      className="flex-1 py-2 px-3 bg-[#0E4A93] hover:bg-[#0b3c77] text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Edit Word Art</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleRemoveSlotPhoto(0);
+                        setActiveWordArtDataUrl(null);
+                      }}
+                      className="py-2 px-3 bg-white hover:bg-rose-50 text-rose-600 border border-stone-200 hover:border-rose-300 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                      title="Remove Word Art"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Create Word Art Option for Shape Canvas Products */}
+              {!activeWordArtDataUrl && isSingleOrShapedCanvas && (
+                <button
+                  type="button"
+                  onClick={() => setIsWordArtPersonalizeModalOpen(true)}
+                  className="w-full py-2.5 px-3.5 bg-blue-50 hover:bg-blue-100/80 active:scale-[0.99] text-[#0E4A93] border border-blue-200/80 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+                >
+                  <Type className="w-4 h-4 text-[#0E4A93]" />
+                  <span>Personalize With Word Art</span>
+                </button>
+              )}
 
               {/* Segmented Control: Computer vs Mobile QR */}
               <div className="flex border border-stone-200 rounded-xl p-1 bg-stone-100">
@@ -3840,7 +4100,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                 </div>
               )}
             </div>
-          )}
+          )
+        )}
 
           {/* --------------------------- SELECT SIZE ---------------------------- */}
           {activeTab === 'SELECT SIZE' && (
@@ -5053,10 +5314,14 @@ export const CanvasCustomizerPage: React.FC = () => {
                     ? 28
                     : 14;
 
-                const displayWidthInches = isCustomSize && canUseCustomSize
+                const displayWidthInches = selectedProductTypeId === 'canvas-word-art'
+                  ? wordArtSizeOption.widthInches
+                  : isCustomSize && canUseCustomSize
                   ? customWidth
                   : currentSizeOption?.widthInches || panels[0]?.widthRatio || 8;
-                const displayHeightInches = isCustomSize && canUseCustomSize
+                const displayHeightInches = selectedProductTypeId === 'canvas-word-art'
+                  ? wordArtSizeOption.heightInches
+                  : isCustomSize && canUseCustomSize
                   ? customHeight
                   : currentSizeOption?.heightInches || panels[0]?.heightRatio || 8;
 
@@ -5271,7 +5536,11 @@ export const CanvasCustomizerPage: React.FC = () => {
                               <div
                                 {...panelHandlers(0)}
                                 ref={registerWheelRef(0)}
-                                className={`relative w-full h-full ${currentShape.borderRadiusClass} ${
+                                className={`relative w-full h-full ${
+                                  (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
+                                    ? 'rounded-xs'
+                                    : currentShape.borderRadiusClass
+                                } ${
                                   isSingleCanvasPrint ? (panelImages[0]?.imageUrl ? 'bg-transparent' : 'bg-white') : 'bg-white'
                                 } transition-all cursor-pointer group ${
                                   isSingleCanvasPrint
@@ -5281,8 +5550,12 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   activePanelIndex === 0 ? 'ring-2 ring-[#0E4A93]/50' : ''
                                 }`}
                                 style={{
-                                  clipPath: isSingleCanvasPrint ? undefined : currentShape.clipPathStyle,
-                                  WebkitClipPath: isSingleCanvasPrint ? undefined : currentShape.clipPathStyle
+                                  clipPath: (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
+                                    ? undefined
+                                    : currentShape.clipPathStyle,
+                                  WebkitClipPath: (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
+                                    ? undefined
+                                    : currentShape.clipPathStyle
                                 }}
                               >
                                 {/* 90° Rotate Button Handle */}
@@ -5298,6 +5571,37 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   >
                                     <RotateCw className="w-3.5 h-3.5" />
                                   </button>
+                                )}
+
+                                {/* Word Art Floating Controls (EDIT / DELETE) as shown in reference */}
+                                {(selectedProductTypeId === 'canvas-word-art' || Boolean(activeWordArtDataUrl)) && panelImages[0]?.imageUrl && (
+                                  <div className="absolute top-2 right-2 z-35 flex items-center bg-white/95 backdrop-blur-xs rounded-lg shadow-md border border-stone-200 divide-x divide-stone-200 overflow-hidden">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsWordArtPersonalizeModalOpen(true);
+                                      }}
+                                      className="px-3 py-1.5 flex items-center gap-1.5 text-xs font-black text-stone-700 hover:text-[#0E4A93] hover:bg-stone-50 cursor-pointer transition-colors"
+                                      title="Edit Word Art details"
+                                    >
+                                      <Edit3 className="w-3.5 h-3.5" />
+                                      <span>EDIT</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRemoveSlotPhoto(0);
+                                        setActiveWordArtDataUrl(null);
+                                      }}
+                                      className="px-3 py-1.5 flex items-center gap-1.5 text-xs font-black text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors"
+                                      title="Delete Word Art"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                      <span>DELETE</span>
+                                    </button>
+                                  </div>
                                 )}
 
                                 {dragOverPanel === 0 && (
@@ -5357,20 +5661,53 @@ export const CanvasCustomizerPage: React.FC = () => {
 
                                 {/* Empty State when no image is uploaded */}
                                 {!panelImages[0]?.imageUrl && (
-                                  <div
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="w-full h-full flex flex-col items-center justify-center bg-white p-6 text-center cursor-pointer group select-none"
-                                  >
-                                    <div className="flex items-center gap-2 text-[#0E4A93] group-hover:scale-105 transition-transform mb-1">
-                                      <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
-                                        <path d="M11 14.5V6.85l-2.6 2.6L7 8.05 12 3.05l5 5-1.4 1.4-2.6-2.6v7.65h-2zM4 20q-.825 0-1.412-.587Q2 18.825 2 18v-2q0-.425.288-.712Q2.575 15 3 15t.713.288Q4 15.575 4 16v2h16v-2q0-.425.288-.712Q20.575 15 21 15t.713.288Q22 15.575 22 16v2q0 .825-.587 1.413Q20.825 20 20 20Z"/>
-                                      </svg>
-                                      <span className="text-sm font-semibold tracking-tight">Upload an Image</span>
+                                  selectedProductTypeId === 'canvas-word-art' ? (
+                                    <div
+                                      onClick={() => setIsWordArtPersonalizeModalOpen(true)}
+                                      className="w-full h-full flex flex-col items-center justify-center bg-white p-6 text-center cursor-pointer group select-none"
+                                    >
+                                      <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#0E4A93] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-xs">
+                                        <Type className="w-7 h-7" />
+                                      </div>
+                                      <span className="text-sm font-black text-[#0E4A93] mb-1">
+                                        Create Personalized Word Art
+                                      </span>
+                                      <span className="text-xs text-stone-500 max-w-xs">
+                                        Click here to customize names, words, shapes, and color palettes
+                                      </span>
+                                      <span className="mt-3 px-4 py-1.5 bg-[#0E4A93] text-white text-xs font-bold rounded-lg shadow-xs group-hover:bg-[#0b3c77] transition-colors">
+                                        Start Customizing
+                                      </span>
                                     </div>
-                                    <span className="text-xs text-stone-500">
-                                      Maximum upload size: 25MB per file
-                                    </span>
-                                  </div>
+                                  ) : (
+                                    <div
+                                      onClick={() => fileInputRef.current?.click()}
+                                      className="w-full h-full flex flex-col items-center justify-center bg-white p-6 text-center cursor-pointer group select-none"
+                                    >
+                                      <div className="flex items-center gap-2 text-[#0E4A93] group-hover:scale-105 transition-transform mb-1">
+                                        <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                                          <path d="M11 14.5V6.85l-2.6 2.6L7 8.05 12 3.05l5 5-1.4 1.4-2.6-2.6v7.65h-2zM4 20q-.825 0-1.412-.587Q2 18.825 2 18v-2q0-.425.288-.712Q2.575 15 3 15t.713.288Q4 15.575 4 16v2h16v-2q0-.425.288-.712Q20.575 15 21 15t.713.288Q22 15.575 22 16v2q0 .825-.587 1.413Q20.825 20 20 20Z"/>
+                                        </svg>
+                                        <span className="text-sm font-semibold tracking-tight">Upload an Image</span>
+                                      </div>
+                                      <span className="text-xs text-stone-500 mb-2">
+                                        Maximum upload size: 25MB per file
+                                      </span>
+                                      {isSingleOrShapedCanvas && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsWordArtPersonalizeModalOpen(true);
+                                          }}
+                                          className="mt-1 px-3 py-1 bg-blue-50 hover:bg-blue-100 text-[#0E4A93] border border-blue-200 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                                        >
+                                          <Type className="w-3.5 h-3.5" />
+                                          <span>Or Create Word Art</span>
+                                        </button>
+                                      )}
+                                    </div>
+                                  )
                                 )}
 
                                 {borderWidthPx > 0 && (
@@ -5556,8 +5893,11 @@ export const CanvasCustomizerPage: React.FC = () => {
 
         const isHexagonProduct = selectedProductTypeId === 'canvas-hexagon';
         const isHexagonCluster = isHexagonProduct && panels.length > 1;
+        const isRectShape = !geom.clipPath && ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
         const activeClipPath = isHexagonProduct
           ? HEXAGON_CLIP_PATH
+          : isRectShape
+          ? undefined
           : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined));
 
         const frameOption = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
@@ -5646,6 +5986,7 @@ export const CanvasCustomizerPage: React.FC = () => {
           const sc = p?.scale || 1;
           const rot = p?.rotation || 0;
           const flt = p?.filter || 'original';
+          const isContain = p?.fitMode === 'contain';
 
           return url ? (
             <div className="w-full h-full overflow-hidden relative flex items-center justify-center bg-stone-100 pointer-events-none select-none">
@@ -5655,9 +5996,10 @@ export const CanvasCustomizerPage: React.FC = () => {
                 draggable={false}
                 style={{
                   filter: getFilterCss(flt),
+                  objectFit: isContain ? 'contain' : 'cover',
                   transform: `translate3d(${panXPct}%, ${panYPct}%, 0) scale(${sc}) rotate(${rot}deg) scaleX(${mirrorImage ? -1 : 1})`
                 }}
-                className="max-w-none w-full h-full object-cover pointer-events-none select-none"
+                className={`max-w-none w-full h-full ${isContain ? 'object-contain' : 'object-cover'} pointer-events-none select-none`}
               />
               {/* Subtle physical cotton canvas weave micro-texture */}
               <div
@@ -6174,7 +6516,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                 }
 
                 // 4. Single Non-Rectangular or Rectangular Canvas on Room Wall
-                const clipStyle = isHexagonProduct ? HEXAGON_CLIP_PATH : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined));
+                const clipStyle = isHexagonProduct ? HEXAGON_CLIP_PATH : (isRectangularShape ? undefined : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined)));
                 const hasClip = Boolean(clipStyle);
 
                 return (
@@ -7205,6 +7547,25 @@ export const CanvasCustomizerPage: React.FC = () => {
         productName={selectedProductType.name}
         currentLayoutId={selectedLayoutId}
         onSelectLayout={handleApplyLayoutFromModal}
+      />
+
+      {/* Word Art Size + Ratio Modal */}
+      <WordArtSizeRatioModal
+        isOpen={isWordArtSizeModalOpen}
+        onClose={() => setIsWordArtSizeModalOpen(false)}
+        selectedSizeId={wordArtSizeOption.id}
+        onSelectSize={handleSelectWordArtSize}
+        onCreateWordArt={handleCreateWordArtFromSize}
+      />
+
+      {/* Word Art Personalization Modal */}
+      <WordArtPersonalizeModal
+        isOpen={isWordArtPersonalizeModalOpen}
+        onClose={() => setIsWordArtPersonalizeModalOpen(false)}
+        selectedSize={wordArtSizeOption}
+        initialConfig={wordArtConfig}
+        onChangeSize={handleWordArtChangeSize}
+        onAddToProduct={handleAddWordArtToProduct}
       />
     </div>
   );

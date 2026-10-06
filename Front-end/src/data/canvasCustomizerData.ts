@@ -131,7 +131,14 @@ export type CanvasProductIconType =
   | 'heart'
   | 'oval'
   | 'hexagon'
-  | 'mosaic';
+  | 'mosaic'
+  | 'lyric'
+  | 'painting'
+  | 'quotes'
+  | 'bus-roll'
+  | 'banner'
+  | 'pop-art'
+  | 'word-art';
 
 export interface CanvasProductCapabilities {
   products?: boolean;
@@ -443,6 +450,202 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       sizes: false,
       shapes: false,
       layouts: true,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
+  },
+  {
+    id: 'canvas-lyric',
+    name: 'Lyric on Canvas',
+    startingPrice: 1498.50,
+    image: '',
+    iconType: 'lyric',
+    panelsCount: 1,
+    description: 'Personalized song lyrics and cherished music quotes beautifully printed on gallery-wrapped canvas.',
+    defaultSizeOptionId: 'lyric-8x8',
+    defaultShape: 'shape-portrait',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS,
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: true,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
+  },
+  {
+    id: 'canvas-digital-painting',
+    name: 'Digital Painting',
+    startingPrice: 2598.00,
+    image: '',
+    iconType: 'painting',
+    panelsCount: 1,
+    description: 'Turn your favorite memories and portraits into artistic digital oil and watercolor paintings on canvas.',
+    defaultSizeOptionId: 'painting-12x18',
+    defaultShape: 'shape-portrait',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS,
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
+  },
+  {
+    id: 'canvas-quotes',
+    name: 'Quotes on Canvas',
+    startingPrice: 999.00,
+    image: '',
+    iconType: 'quotes',
+    panelsCount: 1,
+    description: 'Inspirational quotes, typography, and life mantras rendered on premium archival canvas.',
+    defaultSizeOptionId: 'quotes-8x8',
+    defaultShape: 'shape-square',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS,
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
+  },
+  {
+    id: 'canvas-bus-roll',
+    name: 'Bus Roll',
+    startingPrice: 705.60,
+    image: '',
+    iconType: 'bus-roll',
+    panelsCount: 1,
+    description: 'Vintage vintage-transit and destination subway scroll canvas prints with custom places and memories.',
+    defaultSizeOptionId: 'bus-12x36',
+    defaultShape: 'shape-portrait',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS,
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
+  },
+  {
+    id: 'canvas-banner',
+    name: 'Canvas Banner',
+    startingPrice: 399.00,
+    image: '',
+    iconType: 'banner',
+    panelsCount: 1,
+    description: 'Hanging fabric canvas banner with solid wood rails and rustic twine cord for wall hanging.',
+    defaultSizeOptionId: 'banner-12x18',
+    defaultShape: 'shape-portrait',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS,
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
+      wrap: false,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
+  },
+  {
+    id: 'canvas-pop-art',
+    name: 'Pop Art',
+    startingPrice: 598.00,
+    image: '',
+    iconType: 'pop-art',
+    panelsCount: 1,
+    description: 'Vibrant Andy Warhol-inspired pop art portrait canvas featuring vivid colors and bold outlines.',
+    defaultSizeOptionId: 'pop-12x12',
+    defaultShape: 'shape-square',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS,
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: true,
+      roomView: true
+    }
+  },
+  {
+    id: 'canvas-word-art',
+    name: 'Word Art',
+    startingPrice: 198.00,
+    image: '',
+    iconType: 'word-art',
+    panelsCount: 1,
+    description: 'Expressive word cloud silhouette art created from your custom names, dates, and meaningful phrases.',
+    defaultSizeOptionId: 'word-12x12',
+    defaultShape: 'shape-square',
+    defaultLayoutId: 'layout-1-single',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: 'thin-gallery',
+    supportedShapeIds: ALL_CANVAS_SHAPE_IDS,
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
       wrap: true,
       hardware: true,
       options: true,

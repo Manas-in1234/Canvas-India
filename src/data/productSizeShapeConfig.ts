@@ -808,11 +808,18 @@ export function getProductSupportedShapes(productId: string, material: 'canvas' 
   if (normId.includes('bus') || normId.includes('roll')) {
     return [{ id: 'shape-portrait', label: 'Portrait', category: 'basic' }];
   }
-  if (normId.includes('word') || normId.includes('art')) {
+  if (normId.includes('word')) {
     return [
-      { id: 'shape-heart', label: 'Heart', category: 'decorative' },
       { id: 'shape-square', label: 'Square', category: 'basic' },
+      { id: 'shape-rectangle', label: 'Rectangle', category: 'basic' },
       { id: 'shape-circle', label: 'Round', category: 'special' },
+      { id: 'shape-heart', label: 'Heart', category: 'decorative' }
+    ];
+  }
+  if (normId.includes('pop')) {
+    return [
+      { id: 'shape-square', label: 'Square', category: 'basic' },
+      { id: 'shape-portrait', label: 'Portrait', category: 'basic' },
       { id: 'shape-rectangle', label: 'Rectangle', category: 'basic' }
     ];
   }
