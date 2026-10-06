@@ -164,6 +164,27 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
 
   const clipPath = isTriangle ? 'polygon(50% 0%, 0% 100%, 100% 100%)' : undefined;
 
+  // Circle/Triangle clip a square bounding box to that outline — an image
+  // sized to fill the square has its corners fall outside the circle/
+  // triangle and get masked away, which reads as cropping even though
+  // object-contain never zoomed it. Fix: size the image to the exact
+  // rectangle inscribed in that shape (preserving the image's own aspect),
+  // so every pixel of it stays inside the visible outline.
+  const inscribedFit = useMemo(() => {
+    if (!isCircle && !isTriangle) return null;
+    const r = naturalAspect || (dims ? dims.w / dims.h : 0.75);
+    if (isCircle) {
+      // Largest w x h (w/h = r) with w^2 + h^2 = diameter^2 (unit square box).
+      const hFrac = 1 / Math.sqrt(r * r + 1);
+      return { widthPct: r * hFrac * 100, heightPct: hFrac * 100, align: 'center' as const };
+    }
+    // Triangle (apex top-center, base full-width at bottom, unit box): the
+    // widest rectangle of aspect r sitting on the base is width = r*h,
+    // height = h, where r*h + h = 1 (triangle narrows linearly to the apex).
+    const hFrac = 1 / (r + 1);
+    return { widthPct: r * hFrac * 100, heightPct: hFrac * 100, align: 'end' as const };
+  }, [isCircle, isTriangle, naturalAspect, dims]);
+
   const hasFrameBorder = finishStyle.border > 0;
   const framePadding = isTriangle || !hasFrameBorder ? 0 : `${finishStyle.border}%`;
   const frameBg = hasFrameBorder ? finishStyle.color : (sampledBg || 'transparent');
@@ -205,7 +226,9 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
             }}
           >
             <div
-              className="relative w-full h-full overflow-hidden flex items-center justify-center"
+              className={`relative w-full h-full overflow-hidden flex justify-center ${
+                inscribedFit?.align === 'end' ? 'items-end' : 'items-center'
+              }`}
               style={{
                 borderRadius: isCircle ? '50%' : 0,
                 clipPath,
@@ -222,7 +245,12 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
                     setNaturalAspect((prev) => (prev === a ? prev : a));
                   }
                 }}
-                className="max-w-full max-h-full w-full h-full object-contain"
+                className="object-contain"
+                style={
+                  inscribedFit
+                    ? { width: `${inscribedFit.widthPct}%`, height: `${inscribedFit.heightPct}%` }
+                    : { maxWidth: '100%', maxHeight: '100%', width: '100%', height: '100%' }
+                }
               />
               {finishStyle.overlay && (
                 <div className="absolute inset-0 pointer-events-none" style={{ background: finishStyle.overlay }} />
