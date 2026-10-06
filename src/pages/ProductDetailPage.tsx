@@ -37,6 +37,15 @@ import { getFinishStyle } from '../utils/finishStyle';
 const ROOM_VIEW_SENTINEL = '__ROOM_VIEW__';
 const MULTI_SIZE_SENTINEL = '__MULTI_SIZE__';
 
+// Default to a mediumly-big size (not the smallest) so the product — and its
+// Room View — looks substantial right away, instead of starting on the
+// tiniest option. Size lists are ordered smallest-to-largest, so this is the
+// second-largest when there's a choice.
+function pickDefaultSize(sizes?: string[]): string | undefined {
+  if (!sizes || sizes.length === 0) return undefined;
+  return sizes[Math.max(0, sizes.length - 2)];
+}
+
 export const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
@@ -117,7 +126,7 @@ export const ProductDetailPage: React.FC = () => {
   // Sync variants when product changes
   useEffect(() => {
     if (product) {
-      setSelectedSize(product.availableSizes?.[0] || product.sizes?.[0] || '12x18 inch');
+      setSelectedSize(pickDefaultSize(product.availableSizes) || pickDefaultSize(product.sizes) || '12x18 inch');
       setSelectedFinish(product.finishes?.[0] || 'Standard Finish');
       setSelectedMaterial(availableMaterials[0] || 'Standard');
       setSelectedShape(product.shape || availableShapes[0] || '');

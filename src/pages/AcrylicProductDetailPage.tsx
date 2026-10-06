@@ -38,6 +38,14 @@ export interface AcrylicProductDetailPageProps {
 // Sentinel inserted as the second gallery slot so that thumbnail renders a
 // live WallPreview (reacting to the selected shape/size) instead of a static image.
 const ROOM_VIEW_SENTINEL = '__ROOM_VIEW__';
+
+// Default to a mediumly-big size (not the smallest) so the product — and its
+// Room View — looks substantial right away. Size lists are ordered
+// smallest-to-largest, so this is the second-largest when there's a choice.
+function pickDefaultSize(sizes?: string[]): string | undefined {
+  if (!sizes || sizes.length === 0) return undefined;
+  return sizes[Math.max(0, sizes.length - 2)];
+}
 const MULTI_SIZE_SENTINEL = '__MULTI_SIZE__';
 
 export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> = ({ product }) => {
@@ -102,7 +110,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   useEffect(() => {
     setSelectedStyle(availableStyles[0] || 'Block');
     setSelectedThickness(availableThicknesses[0] || '7mm');
-    setSelectedSize(availableSizes[0] || '4" x 4"');
+    setSelectedSize(pickDefaultSize(availableSizes) || '4" x 4"');
     setSelectedPaper(availablePapers[0] || 'White Luster Photo Paper');
     setSelectedBase(availableBases[0] || 'Without Base');
     setSelectedShape(product.shape || availableShapes[0] || '');
