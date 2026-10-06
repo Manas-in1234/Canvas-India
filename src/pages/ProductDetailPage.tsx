@@ -30,6 +30,7 @@ import { SmartCropImage } from '../components/SmartCropImage';
 import { CUSTOMER_REVIEWS } from '../data/storeData';
 import { Product } from '../types';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
+import { getFinishStyle } from '../utils/finishStyle';
 
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
 // the "Room View" thumbnail renders a live WallPreview instead of a static image.
@@ -44,10 +45,14 @@ function pickDefaultSize(sizes?: string[]): string | undefined {
   return sizes[sizes.length - 1];
 }
 
+// Experimental changes are being piloted on this one product only, until
+// confirmed — then rolled out to the rest of the catalogue.
+const PILOT_PRODUCT_ID = 'tribal-ethnic-art-a-a-001';
+
 // The Popular shape always shows 25x30 as its size, regardless of the
-// product's own catalogue sizes.
-function sizeForShape(shape: string, sizes?: string[]): string | undefined {
-  if (shape.toLowerCase() === 'popular') return '25x30 inch';
+// product's own catalogue sizes. Pilot product only — see PILOT_PRODUCT_ID.
+function sizeForShape(shape: string, sizes?: string[], isPilot?: boolean): string | undefined {
+  if (isPilot && shape.toLowerCase() === 'popular') return '25x30 inch';
   return pickDefaultSize(sizes);
 }
 
@@ -132,7 +137,8 @@ export const ProductDetailPage: React.FC = () => {
   useEffect(() => {
     if (product) {
       const defaultShape = product.shape || availableShapes[0] || '';
-      setSelectedSize(sizeForShape(defaultShape, product.availableSizes) || sizeForShape(defaultShape, product.sizes) || '12x18 inch');
+      const isPilot = product.id === PILOT_PRODUCT_ID;
+      setSelectedSize(sizeForShape(defaultShape, product.availableSizes, isPilot) || sizeForShape(defaultShape, product.sizes, isPilot) || '12x18 inch');
       setSelectedFinish(product.finishes?.[0] || 'Standard Finish');
       setSelectedMaterial(availableMaterials[0] || 'Standard');
       setSelectedShape(defaultShape);
@@ -573,7 +579,7 @@ export const ProductDetailPage: React.FC = () => {
                       type="button"
                       onClick={() => {
                         setSelectedShape(shapeOpt);
-                        if (shapeOpt.toLowerCase() === 'popular') setSelectedSize('25x30 inch');
+                        if (product.id === PILOT_PRODUCT_ID && shapeOpt.toLowerCase() === 'popular') setSelectedSize('25x30 inch');
                       }}
                       className={`px-2 py-2 text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
                         selectedShape === shapeOpt
@@ -662,6 +668,45 @@ export const ProductDetailPage: React.FC = () => {
                       {mat}
                     </button>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* 3. Finish Selector — hidden on the pilot product per direct request */}
+            {product.id !== PILOT_PRODUCT_ID && product.finishes && product.finishes.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-stone-800">3. Finish &amp; Style:</span>
+                  <span className="text-stone-500 font-medium">{selectedFinish}</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {product.finishes.map((finish) => {
+                    const fs = getFinishStyle(finish);
+                    const active = selectedFinish === finish;
+                    return (
+                      <button
+                        key={finish}
+                        type="button"
+                        onClick={() => setSelectedFinish(finish)}
+                        className={`p-1.5 text-left rounded-xl border-2 transition-all cursor-pointer ${
+                          active
+                            ? 'border-[#0E4A93] bg-blue-50/60 shadow-2xs'
+                            : 'border-stone-200 bg-white hover:border-stone-400'
+                        }`}
+                      >
+                        <div className="relative aspect-[4/3] bg-stone-200 rounded-md overflow-hidden flex items-center justify-center" style={{ background: fs.wall }}>
+                          <div
+                            className="relative w-[62%] aspect-[4/3] overflow-hidden bg-white"
+                            style={{ border: `${fs.border}px solid ${fs.color}`, boxShadow: fs.shadow, outline: fs.outline }}
+                          >
+                            <img src={galleryImages[0] || product.image} alt="" className="w-full h-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }} />
+                            {fs.overlay && <div className="absolute inset-0 pointer-events-none" style={{ background: fs.overlay }} />}
+                          </div>
+                        </div>
+                        <div className={`mt-1.5 px-0.5 text-[11px] font-semibold leading-tight ${active ? 'text-[#0E4A93]' : 'text-stone-700'}`}>{finish}</div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
