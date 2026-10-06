@@ -860,7 +860,8 @@ export const ProductDetailPage: React.FC = () => {
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             
-            {/* Left: Product Description & Craftsmanship */}
+            {/* Left: Product Description & Craftsmanship — removed on the pilot product */}
+            {!isPilotProduct && (
             <div className="lg:col-span-7 space-y-6">
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
                 Product Description &amp; Craftsmanship
@@ -892,9 +893,10 @@ export const ProductDetailPage: React.FC = () => {
                 </ul>
               </div>
             </div>
+            )}
 
-            {/* Right: Specifications Table */}
-            <div className="lg:col-span-5 space-y-4">
+            {/* Right: Specifications Table — takes the Description's place on the pilot product */}
+            <div className={isPilotProduct ? 'lg:col-span-12 space-y-4' : 'lg:col-span-5 space-y-4'}>
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
                 Product Specifications
               </h2>
