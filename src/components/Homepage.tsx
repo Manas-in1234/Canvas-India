@@ -105,8 +105,8 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             background on the left — same treatment the original lifestyle
             photo used, no card/box, just one continuous scene. */}
         <img
-          src="/assets/catalogue/devotional-art/G-A_001.jpg"
-          alt="Festive diya and temple decor"
+          src={u('photo-1577083753695-e010191bacb5', 2200)}
+          alt="Festive diya oil lamps with flower petals"
           className="hidden lg:block absolute right-0 top-0 h-full w-[60%] object-cover object-center"
           style={{
             maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
@@ -202,7 +202,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               onClick={() => navigate('/festive-offers')}
               className="lg:hidden mt-8 relative w-full aspect-[16/9] rounded-2xl text-left shadow-md overflow-hidden cursor-pointer"
             >
-              <img src="/assets/catalogue/devotional-art/G-A_001.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <img src={u('photo-1577083753695-e010191bacb5', 1200)} alt="Festive diya oil lamps with flower petals" className="absolute inset-0 w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#7C2D12]/95 via-[#9A3412]/60 to-[#9A3412]/10" />
               <div className="relative h-full flex flex-col justify-end p-5">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">Festive Sale</span>
