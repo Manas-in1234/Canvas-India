@@ -49,11 +49,25 @@ function pickDefaultSize(sizes?: string[]): string | undefined {
 // confirmed — then rolled out to the rest of the catalogue.
 const PILOT_PRODUCT_ID = 'tribal-ethnic-art-a-a-001';
 
-// The Standard (formerly Popular) shape always shows 25x30 as its size,
-// regardless of the product's own catalogue sizes. Pilot product only —
-// see PILOT_PRODUCT_ID.
+// Pilot product: each shape has its own size list, matching that shape's
+// own proportions (square sizes for Square, landscape for Rectangle, etc.)
+// instead of every shape reusing the same flat catalogue sizes.
+const PILOT_SHAPE_SIZES: Record<string, string[]> = {
+  standard: ['16x20 inch', '20x24 inch', '22x28 inch', '25x30 inch'],
+  square: ['16x16 inch', '20x20 inch', '24x24 inch', '28x28 inch'],
+  rectangle: ['24x16 inch', '30x20 inch', '36x24 inch'],
+  panoramic: ['36x16 inch', '44x20 inch', '55x25 inch'],
+};
+
+function pilotSizesForShape(shape: string): string[] | undefined {
+  return PILOT_SHAPE_SIZES[shape.toLowerCase()];
+}
+
 function sizeForShape(shape: string, sizes?: string[], isPilot?: boolean): string | undefined {
-  if (isPilot && (shape.toLowerCase() === 'popular' || shape.toLowerCase() === 'standard')) return '25x30 inch';
+  if (isPilot) {
+    const pilotSizes = pilotSizesForShape(shape);
+    if (pilotSizes) return pilotSizes[pilotSizes.length - 1];
+  }
   return pickDefaultSize(sizes);
 }
 
@@ -582,7 +596,10 @@ export const ProductDetailPage: React.FC = () => {
                       type="button"
                       onClick={() => {
                         setSelectedShape(shapeOpt);
-                        if (product.id === PILOT_PRODUCT_ID && shapeOpt.toLowerCase() === 'standard') setSelectedSize('25x30 inch');
+                        if (product.id === PILOT_PRODUCT_ID) {
+                          setIsCustomSize(false);
+                          setSelectedSize(sizeForShape(shapeOpt, product.sizes, true) || selectedSize);
+                        }
                       }}
                       className={`px-2 py-2 text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
                         selectedShape === shapeOpt
@@ -605,7 +622,7 @@ export const ProductDetailPage: React.FC = () => {
                   <span className="text-stone-500 font-medium">{selectedSize}</span>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                  {product.sizes.map((size) => (
+                  {(product.id === PILOT_PRODUCT_ID ? pilotSizesForShape(selectedShape) || product.sizes : product.sizes).map((size) => (
                     <button
                       key={size}
                       type="button"
