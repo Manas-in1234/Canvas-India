@@ -366,7 +366,7 @@ export const ProductDetailPage: React.FC = () => {
         <div className={`grid grid-cols-1 lg:grid-cols-12 items-start ${isPilotProduct ? 'gap-5 xl:gap-8' : 'gap-8 xl:gap-14'}`}>
 
           {/* LEFT: GALLERY (Sticky on desktop, 6-7 columns) */}
-          <div className={`lg:col-span-6 xl:col-span-7 flex flex-col gap-4 sticky ${isPilotProduct ? 'top-4' : 'top-24'}`}>
+          <div className={`${isPilotProduct ? 'lg:col-span-5 xl:col-span-6' : 'lg:col-span-6 xl:col-span-7'} flex flex-col gap-4 sticky ${isPilotProduct ? 'top-4' : 'top-24'}`}>
 
             {/* Main Primary Image */}
             <div
@@ -461,8 +461,8 @@ export const ProductDetailPage: React.FC = () => {
               )}
             </div>
 
-            {/* Gallery Thumbnails — hidden above the fold on the pilot product, like canvaschamp */}
-            {!isPilotProduct && galleryImages.length > 1 && (
+            {/* Gallery Thumbnails */}
+            {galleryImages.length > 1 && (
               <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
                 {galleryImages.map((img, idx) => (
                   <button
@@ -538,7 +538,7 @@ export const ProductDetailPage: React.FC = () => {
           </div>
 
           {/* RIGHT: PRODUCT INFO & PURCHASE CONTROLS (5-6 columns) */}
-          <div className={`lg:col-span-6 xl:col-span-5 flex flex-col text-left ${isPilotProduct ? 'gap-3.5' : 'gap-5'}`}>
+          <div className={`${isPilotProduct ? 'lg:col-span-7 xl:col-span-6' : 'lg:col-span-6 xl:col-span-5'} flex flex-col text-left ${isPilotProduct ? 'gap-3.5' : 'gap-5'}`}>
             
             {/* Header: Category & Share */}
             <div>
