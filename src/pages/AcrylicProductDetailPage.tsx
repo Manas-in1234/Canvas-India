@@ -45,6 +45,13 @@ function pickDefaultSize(sizes?: string[]): string | undefined {
   if (!sizes || sizes.length === 0) return undefined;
   return sizes[sizes.length - 1];
 }
+
+// The Popular shape always shows 25x30 as its size, regardless of the
+// product's own catalogue sizes.
+function sizeForShape(shape: string, sizes?: string[]): string | undefined {
+  if (shape.toLowerCase() === 'popular') return '25x30 inch';
+  return pickDefaultSize(sizes);
+}
 const MULTI_SIZE_SENTINEL = '__MULTI_SIZE__';
 
 export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> = ({ product }) => {
@@ -109,10 +116,11 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   useEffect(() => {
     setSelectedStyle(availableStyles[0] || 'Block');
     setSelectedThickness(availableThicknesses[0] || '7mm');
-    setSelectedSize(pickDefaultSize(availableSizes) || '4" x 4"');
+    const defaultShape = product.shape || availableShapes[0] || '';
+    setSelectedSize(sizeForShape(defaultShape, availableSizes) || '4" x 4"');
     setSelectedPaper(availablePapers[0] || 'White Luster Photo Paper');
     setSelectedBase(availableBases[0] || 'Without Base');
-    setSelectedShape(product.shape || availableShapes[0] || '');
+    setSelectedShape(defaultShape);
     setIsCustomSize(false);
     setCustomWidth(8);
     setCustomHeight(8);
@@ -527,7 +535,10 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                       <button
                         key={shapeOpt}
                         type="button"
-                        onClick={() => setSelectedShape(shapeOpt)}
+                        onClick={() => {
+                          setSelectedShape(shapeOpt);
+                          if (shapeOpt.toLowerCase() === 'popular') setSelectedSize('25x30 inch');
+                        }}
                         className={`px-2 py-2 text-xs font-semibold rounded-full border-2 text-center capitalize transition-all cursor-pointer ${
                           selectedShape === shapeOpt
                             ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'

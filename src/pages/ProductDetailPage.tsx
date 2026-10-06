@@ -45,6 +45,13 @@ function pickDefaultSize(sizes?: string[]): string | undefined {
   return sizes[sizes.length - 1];
 }
 
+// The Popular shape always shows 25x30 as its size, regardless of the
+// product's own catalogue sizes.
+function sizeForShape(shape: string, sizes?: string[]): string | undefined {
+  if (shape.toLowerCase() === 'popular') return '25x30 inch';
+  return pickDefaultSize(sizes);
+}
+
 export const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
@@ -125,10 +132,11 @@ export const ProductDetailPage: React.FC = () => {
   // Sync variants when product changes
   useEffect(() => {
     if (product) {
-      setSelectedSize(pickDefaultSize(product.availableSizes) || pickDefaultSize(product.sizes) || '12x18 inch');
+      const defaultShape = product.shape || availableShapes[0] || '';
+      setSelectedSize(sizeForShape(defaultShape, product.availableSizes) || sizeForShape(defaultShape, product.sizes) || '12x18 inch');
       setSelectedFinish(product.finishes?.[0] || 'Standard Finish');
       setSelectedMaterial(availableMaterials[0] || 'Standard');
-      setSelectedShape(product.shape || availableShapes[0] || '');
+      setSelectedShape(defaultShape);
       setIsCustomSize(false);
       setCustomWidth(8);
       setCustomHeight(8);
@@ -564,7 +572,10 @@ export const ProductDetailPage: React.FC = () => {
                     <button
                       key={shapeOpt}
                       type="button"
-                      onClick={() => setSelectedShape(shapeOpt)}
+                      onClick={() => {
+                        setSelectedShape(shapeOpt);
+                        if (shapeOpt.toLowerCase() === 'popular') setSelectedSize('25x30 inch');
+                      }}
                       className={`px-2 py-2 text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
                         selectedShape === shapeOpt
                           ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
