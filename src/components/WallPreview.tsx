@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { getFinishStyle } from '../utils/finishStyle';
 
 interface WallBounds {
@@ -69,13 +69,36 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
 
   const dims = useMemo(() => parseDimensions(sizeLabel), [sizeLabel]);
 
+  // The selected print size's aspect ratio is what the frame SHOULD be, but
+  // catalogue photos aren't always cropped to exactly that ratio — a forced
+  // box shape then either crops the art or leaves a visible gap at the
+  // edges. Measuring the actual file's own aspect ratio and shaping the
+  // frame to match it guarantees a perfect, gap-free, never-cropped fit.
+  const [naturalAspect, setNaturalAspect] = useState<number | null>(null);
+  useEffect(() => {
+    setNaturalAspect(null);
+    if (!imageSrc) return;
+    let cancelled = false;
+    const img = new Image();
+    img.onload = () => {
+      if (!cancelled && img.naturalWidth && img.naturalHeight) {
+        setNaturalAspect(img.naturalWidth / img.naturalHeight);
+      }
+    };
+    img.src = imageSrc;
+    return () => {
+      cancelled = true;
+    };
+  }, [imageSrc]);
+
   const ratio = useMemo(() => {
     if (isCircle || shapeKey === 'square') return 1;
     if (isTriangle) return 1;
+    if (naturalAspect) return naturalAspect;
     if (shapeKey === 'panoramic') return 2.2;
     if (dims) return dims.w / dims.h;
     return 2 / 3;
-  }, [shapeKey, isCircle, isTriangle, dims]);
+  }, [shapeKey, isCircle, isTriangle, naturalAspect, dims]);
 
   // Larger selected sizes should visibly occupy more of the wall, even when
   // two sizes share the same aspect ratio (e.g. 12x18 vs 24x36).
