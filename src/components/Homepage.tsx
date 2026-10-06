@@ -30,10 +30,10 @@ const ORANGE = '#E8752A';
 const u = (id: string, w = 1200) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=90`;
 
 const FESTIVE_OFFERS = [
-  { icon: Gift, title: 'Buy 1 Get 1', sub: 'Free on all prints', bg: 'from-[#DC2626] to-[#9A3412]', rotate: '-rotate-1' },
-  { icon: Percent, title: 'Flat 20% Off', sub: 'Canvas prints', bg: 'from-[#EA580C] to-[#C2410C]', rotate: 'rotate-1' },
-  { icon: Truck, title: 'Free Shipping', sub: 'On orders ₹999+', bg: 'from-[#B45309] to-[#78350F]', rotate: 'rotate-1' },
-  { icon: Sparkles, title: 'Festive Bundles', sub: 'Save even more', bg: 'from-[#9A3412] to-[#7C2D12]', rotate: '-rotate-1' },
+  { icon: Gift, title: 'Buy 1 Get 1', sub: 'Free on all prints', image: u('photo-1513364776144-60967b0f800f', 700), grad: 'from-[#DC2626]/90 via-[#DC2626]/40', rotate: '-rotate-1' },
+  { icon: Percent, title: 'Flat 20% Off', sub: 'Canvas prints', image: u('photo-1536924940846-227afb31e2a5', 700), grad: 'from-[#EA580C]/90 via-[#EA580C]/40', rotate: 'rotate-1' },
+  { icon: Truck, title: 'Free Shipping', sub: 'On orders ₹999+', image: u('photo-1586075010923-2dd4570fb338', 700), grad: 'from-[#B45309]/90 via-[#B45309]/40', rotate: 'rotate-1' },
+  { icon: Sparkles, title: 'Festive Bundles', sub: 'Save even more', image: '/assets/catalogue/devotional-art/G-A_001.jpg', grad: 'from-[#9A3412]/90 via-[#9A3412]/40', rotate: '-rotate-1' },
 ];
 
 const CATEGORY_CARDS = [
@@ -108,24 +108,36 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#F7F1E5] border-b border-stone-200/60">
-        {/* Desktop/tablet: festive offers grid, in place of the lifestyle photo */}
-        <div className="hidden lg:grid absolute right-10 top-1/2 -translate-y-1/2 w-[38%] grid-cols-2 gap-4">
-          {FESTIVE_OFFERS.map(({ icon: Icon, title, sub, bg, rotate }) => (
-            <button
-              key={title}
-              type="button"
-              onClick={() => navigate('/festive-offers')}
-              className={`group relative ${rotate} hover:rotate-0 bg-gradient-to-br ${bg} rounded-2xl p-5 text-left shadow-xl shadow-orange-950/15 transition-transform duration-300 cursor-pointer overflow-hidden`}
-            >
-              <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-white/10" />
-              <div className="absolute -right-1 -bottom-8 w-16 h-16 rounded-full bg-white/10" />
-              <Icon className="w-6 h-6 text-amber-100 mb-3" strokeWidth={2} />
-              <div className="font-bold text-white text-base sm:text-lg leading-tight" style={{ fontFamily: SERIF }}>
-                {title}
-              </div>
-              <div className="text-[11px] sm:text-xs text-amber-100/90 font-medium mt-1">{sub}</div>
-            </button>
-          ))}
+        {/* Desktop/tablet: festive offers grid, in place of the lifestyle photo.
+            Wrapped in a soft cream fade that bleeds left into the text column
+            so the grid reads as part of the same scene, not a separate block. */}
+        <div className="hidden lg:block absolute right-0 top-0 h-full w-[48%]">
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'radial-gradient(60% 80% at 30% 50%, rgba(247,241,229,0.9) 0%, rgba(247,241,229,0.5) 35%, rgba(247,241,229,0) 65%)',
+            }}
+          />
+          <div className="relative h-full grid grid-cols-2 gap-4 items-center px-10">
+            {FESTIVE_OFFERS.map(({ icon: Icon, title, sub, image, grad, rotate }) => (
+              <button
+                key={title}
+                type="button"
+                onClick={() => navigate('/festive-offers')}
+                className={`group relative ${rotate} hover:rotate-0 rounded-2xl text-left shadow-xl shadow-orange-950/20 transition-transform duration-300 cursor-pointer overflow-hidden aspect-[4/3]`}
+              >
+                <img src={image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className={`absolute inset-0 bg-gradient-to-t ${grad} to-transparent`} />
+                <div className="relative h-full flex flex-col justify-end p-4">
+                  <Icon className="w-5 h-5 text-amber-100 mb-1.5 drop-shadow" strokeWidth={2} />
+                  <div className="font-bold text-white text-sm sm:text-base leading-tight drop-shadow-md" style={{ fontFamily: SERIF }}>
+                    {title}
+                  </div>
+                  <div className="text-[11px] text-amber-100/90 font-medium mt-0.5 drop-shadow">{sub}</div>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Hanging Stitched Leather Special Price Tag (Top Center) */}
@@ -191,19 +203,22 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
             {/* Mobile/tablet only: festive offers grid below the text */}
             <div className="lg:hidden mt-8 grid grid-cols-2 gap-3">
-              {FESTIVE_OFFERS.map(({ icon: Icon, title, sub, bg }) => (
+              {FESTIVE_OFFERS.map(({ icon: Icon, title, sub, image, grad }) => (
                 <button
                   key={title}
                   type="button"
                   onClick={() => navigate('/festive-offers')}
-                  className={`relative bg-gradient-to-br ${bg} rounded-2xl p-4 text-left shadow-md overflow-hidden cursor-pointer`}
+                  className="relative rounded-2xl text-left shadow-md overflow-hidden cursor-pointer aspect-[4/3]"
                 >
-                  <div className="absolute -right-3 -bottom-3 w-14 h-14 rounded-full bg-white/10" />
-                  <Icon className="w-5 h-5 text-amber-100 mb-2" strokeWidth={2} />
-                  <div className="font-bold text-white text-sm leading-tight" style={{ fontFamily: SERIF }}>
-                    {title}
+                  <img src={image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className={`absolute inset-0 bg-gradient-to-t ${grad} to-transparent`} />
+                  <div className="relative h-full flex flex-col justify-end p-3.5">
+                    <Icon className="w-5 h-5 text-amber-100 mb-1.5 drop-shadow" strokeWidth={2} />
+                    <div className="font-bold text-white text-sm leading-tight drop-shadow-md" style={{ fontFamily: SERIF }}>
+                      {title}
+                    </div>
+                    <div className="text-[10px] text-amber-100/90 font-medium mt-0.5 drop-shadow">{sub}</div>
                   </div>
-                  <div className="text-[10px] text-amber-100/90 font-medium mt-0.5">{sub}</div>
                 </button>
               ))}
             </div>
