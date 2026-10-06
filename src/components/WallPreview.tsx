@@ -263,11 +263,15 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
                     setNaturalAspect((prev) => (prev === a ? prev : a));
                   }
                 }}
-                className="object-contain"
+                className={inscribedFit ? 'object-contain' : 'object-cover'}
                 style={
                   inscribedFit
                     ? { width: `${inscribedFit.widthPct}%`, height: `${inscribedFit.heightPct}%` }
-                    : { maxWidth: '100%', maxHeight: '100%', width: '100%', height: '100%' }
+                    : // Changing size (not shape) crops to fill rather than
+                      // growing the background sliver — biased toward the
+                      // top of the image so a vertical crop trims from the
+                      // bottom/sides first, not off the subject's face.
+                      { width: '100%', height: '100%', objectPosition: '50% 20%' }
                 }
               />
               {finishStyle.overlay && (
