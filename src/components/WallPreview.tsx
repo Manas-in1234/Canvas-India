@@ -32,7 +32,11 @@ const DEFAULT_WALL_BOUNDS: WallBounds = { minX: 0.04, maxX: 0.46, minY: 0.03, ma
 // fraction of a box.
 const WALL_PHOTO_NATIVE_WIDTH = 1600;
 const WALL_PHOTO_NATIVE_HEIGHT = 900;
-const REAL_PPI = 8.6;
+// Slightly more generous than the literal chair measurement (8.6) so prints
+// read as more prominent, without cropping the room out of frame the way a
+// camera zoom does. Relative scale between different sizes is unaffected —
+// every size still scales through this exact same number.
+const REAL_PPI = 11;
 
 const SIZE_PATTERN = /(\d+(?:\.\d+)?)\s*["”]?\s*x\s*(\d+(?:\.\d+)?)/i;
 
@@ -186,6 +190,13 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
               <img
                 src={imageSrc}
                 alt="Product on wall preview"
+                onLoad={(e) => {
+                  const img = e.currentTarget;
+                  if (img.naturalWidth && img.naturalHeight) {
+                    const a = img.naturalWidth / img.naturalHeight;
+                    setNaturalAspect((prev) => (prev === a ? prev : a));
+                  }
+                }}
                 className={
                   isCircle || isTriangle
                     ? 'w-full h-full object-cover'
