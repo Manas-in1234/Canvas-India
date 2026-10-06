@@ -86,12 +86,10 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   };
 
   const handleCustomizeFestiveGift = () => {
-    // Only /customize/canvas and /customize/acrylic actually exist as routes
-    // — a product's own categorySlug (e.g. "devotional-art") isn't a valid
-    // customizer route, so always go through canvas regardless of theme.
-    const festive = allProducts.find((p) => p.categorySlug === 'canvas' && p.id.includes('devotional-art'));
-    const first = festive || allProducts.find((p) => p.categorySlug === 'canvas');
-    navigate(`/customize/canvas/${first?.slug || first?.id || 'canvas-devotional-art-g-a-001'}`);
+    // Land on the Diwali occasion page (format tiles — Devotional Art,
+    // Motivational Posters, etc.), not straight into a customizer. Each
+    // tile's own "Shop Now" is what opens the customizer.
+    navigate('/occasions/diwali');
   };
 
   const scrollRow = (ref: React.RefObject<HTMLDivElement>, dir: 1 | -1) => {
