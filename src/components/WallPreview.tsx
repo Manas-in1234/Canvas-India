@@ -196,9 +196,11 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
     return { widthPct: r * hFrac * 100, heightPct: hFrac * 100, align: 'end' as const };
   }, [isCircle, isTriangle, naturalAspect, dims]);
 
-  const hasFrameBorder = finishStyle.border > 0;
-  const framePadding = isTriangle || !hasFrameBorder ? 0 : `${finishStyle.border}%`;
-  const frameBg = hasFrameBorder ? finishStyle.color : (sampledBg || 'transparent');
+  // No colored frame border in this preview regardless of the selected
+  // finish — it read as an ugly, unwanted box around the artwork. Finish
+  // still affects the overlay sheen (gloss/matte/etc.), just not a border.
+  const framePadding = 0;
+  const frameBg = sampledBg || 'transparent';
 
   return (
     <div className={`relative w-full h-full flex items-center justify-center bg-stone-50 ${className}`}>
