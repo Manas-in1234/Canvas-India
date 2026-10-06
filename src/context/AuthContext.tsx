@@ -178,17 +178,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const getCanonicalRedirectUrl = (redirectPath: string = '/account'): string => {
+    const target = redirectPath.startsWith('/') ? redirectPath : `/${redirectPath}`;
+    if (typeof window === 'undefined') return target;
+    return `${window.location.origin}${target}`;
+  };
+
   const signInWithGoogle = async (redirectPath: string = '/account') => {
     if (!isSupabaseConfigured) {
       return { error: getUnconfiguredError() };
     }
     try {
-      const target = redirectPath.startsWith('/') ? redirectPath : `/${redirectPath}`;
-      const redirectTo = `${window.location.origin}${target}`;
+      const redirectTo = getCanonicalRedirectUrl(redirectPath);
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
       return { error };
@@ -252,12 +261,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: getUnconfiguredError() };
     }
     try {
-      const target = redirectPath.startsWith('/') ? redirectPath : `/${redirectPath}`;
-      const redirectTo = `${window.location.origin}${target}`;
+      const redirectTo = getCanonicalRedirectUrl(redirectPath);
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
           emailRedirectTo: redirectTo,
+          shouldCreateUser: true,
         },
       });
       return { error };

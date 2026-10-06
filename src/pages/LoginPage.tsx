@@ -3,10 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Mail,
-  Lock,
   Phone,
-  Eye,
-  EyeOff,
   AlertCircle,
   ArrowRight,
   ShieldCheck,
@@ -17,11 +14,11 @@ import {
 
 export const LoginPage: React.FC = () => {
   const {
-    signIn,
     signInWithGoogle,
     signInWithPhone,
     verifyPhoneOtp,
     signInWithEmailOtp,
+    verifyEmailOtp,
   } = useAuth();
 
   const navigate = useNavigate();
@@ -31,17 +28,17 @@ export const LoginPage: React.FC = () => {
   // Active Login Method: 'phone' | 'email'
   const [activeTab, setActiveTab] = useState<'phone' | 'email'>('phone');
 
-  // Email form state
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [useEmailOtp, setUseEmailOtp] = useState(false);
-
   // Phone form state
   const [phone, setPhone] = useState('');
   const [phoneOtp, setPhoneOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [timer, setTimer] = useState(0);
+  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+  const [phoneTimer, setPhoneTimer] = useState(0);
+
+  // Email form state (Pure OTP flow, no passwords)
+  const [email, setEmail] = useState('');
+  const [emailOtp, setEmailOtp] = useState('');
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const [emailTimer, setEmailTimer] = useState(0);
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -49,18 +46,27 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Countdown timer for OTP resend
+  // Countdown timer for Phone OTP resend
   useEffect(() => {
     let interval: any = null;
-    if (timer > 0) {
+    if (phoneTimer > 0) {
       interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
+        setPhoneTimer((prev) => prev - 1);
       }, 1000);
-    } else {
-      clearInterval(interval);
     }
     return () => clearInterval(interval);
-  }, [timer]);
+  }, [phoneTimer]);
+
+  // Countdown timer for Email OTP resend
+  useEffect(() => {
+    let interval: any = null;
+    if (emailTimer > 0) {
+      interval = setInterval(() => {
+        setEmailTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [emailTimer]);
 
   // Google OAuth Login
   const handleGoogleSignIn = async () => {
@@ -74,52 +80,9 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  // Email & Password / OTP Submit
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-
-    if (!email) {
-      setError('Please enter your email address.');
-      return;
-    }
-
-    setLoading(true);
-
-    if (useEmailOtp) {
-      // Magic Link / Email OTP flow
-      const { error: otpError } = await signInWithEmailOtp(email, redirectUrl);
-      setLoading(false);
-      if (otpError) {
-        setError(otpError.message || 'Failed to send login link. Please try password login.');
-      } else {
-        setSuccess('We have sent a login link/OTP to your email address.');
-      }
-      return;
-    }
-
-    // Standard Password Login
-    if (!password) {
-      setLoading(false);
-      setError('Please enter your password.');
-      return;
-    }
-
-    const { error: signInError } = await signIn({ email, password });
-    setLoading(false);
-
-    if (signInError) {
-      setError(signInError.message || 'Invalid email or password.');
-    } else {
-      setSuccess('Login successful! Redirecting to your account...');
-      setTimeout(() => {
-        navigate(redirectUrl);
-      }, 600);
-    }
-  };
-
-  // Send Phone OTP
+  // -------------------------------------------------------------
+  // PHONE OTP FLOW
+  // -------------------------------------------------------------
   const handleSendPhoneOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setError(null);
@@ -138,13 +101,12 @@ export const LoginPage: React.FC = () => {
     if (phoneError) {
       setError(phoneError.message || 'Unable to send OTP to this mobile number. Please check the number or use Email/Google.');
     } else {
-      setOtpSent(true);
-      setTimer(30);
+      setPhoneOtpSent(true);
+      setPhoneTimer(30);
       setSuccess(`OTP sent successfully to +91 ${cleanPhone}`);
     }
   };
 
-  // Verify Phone OTP
   const handleVerifyPhoneOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -169,6 +131,57 @@ export const LoginPage: React.FC = () => {
     }
   };
 
+  // -------------------------------------------------------------
+  // EMAIL OTP FLOW (PASSWORDLESS)
+  // -------------------------------------------------------------
+  const handleSendEmailOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email.trim())) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    setLoading(true);
+    const { error: sendError } = await signInWithEmailOtp(email.trim(), redirectUrl);
+    setLoading(false);
+
+    if (sendError) {
+      setError(sendError.message || 'Unable to send OTP code to this email. Please try again.');
+    } else {
+      setEmailOtpSent(true);
+      setEmailTimer(30);
+      setSuccess(`Verification code sent to ${email.trim()}`);
+    }
+  };
+
+  const handleVerifyEmailOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    if (!emailOtp || emailOtp.trim().length < 4) {
+      setError('Please enter the verification code sent to your email.');
+      return;
+    }
+
+    setLoading(true);
+    const { error: verifyError } = await verifyEmailOtp(email.trim(), emailOtp.trim());
+    setLoading(false);
+
+    if (verifyError) {
+      setError(verifyError.message || 'Invalid or expired verification code. Please check your email or resend.');
+    } else {
+      setSuccess('Email verified successfully! Logging you in...');
+      setTimeout(() => {
+        navigate(redirectUrl);
+      }, 600);
+    }
+  };
+
   return (
     <div className="min-h-[80vh] bg-gradient-to-b from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -180,13 +193,7 @@ export const LoginPage: React.FC = () => {
             Sign in to your account
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link
-              to={`/signup?redirect=${encodeURIComponent(redirectUrl)}`}
-              className="font-semibold text-[#002B49] hover:underline"
-            >
-              Sign up here
-            </Link>
+            Fast, secure passwordless login with OTP
           </p>
         </div>
       </div>
@@ -235,12 +242,12 @@ export const LoginPage: React.FC = () => {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-white px-3 text-gray-500 font-semibold tracking-wider">
-                Or continue with
+                Or continue with OTP
               </span>
             </div>
           </div>
 
-          {/* 2 TABS: PHONE NUMBER (STANDARD E-COMMERCE) OR EMAIL */}
+          {/* 2 TABS: MOBILE OTP OR EMAIL OTP */}
           <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-xl mb-6">
             <button
               type="button"
@@ -272,7 +279,7 @@ export const LoginPage: React.FC = () => {
               }`}
             >
               <Mail className="w-3.5 h-3.5" />
-              <span>Email &amp; Password</span>
+              <span>Email OTP</span>
             </button>
           </div>
 
@@ -291,10 +298,10 @@ export const LoginPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 1: PHONE NUMBER LOGIN */}
+          {/* TAB 1: MOBILE OTP LOGIN */}
           {activeTab === 'phone' && (
             <div>
-              {!otpSent ? (
+              {!phoneOtpSent ? (
                 <form className="space-y-4" onSubmit={handleSendPhoneOtp}>
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1.5">
@@ -350,7 +357,7 @@ export const LoginPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => {
-                          setOtpSent(false);
+                          setPhoneOtpSent(false);
                           setPhoneOtp('');
                           setError(null);
                         }}
@@ -378,8 +385,8 @@ export const LoginPage: React.FC = () => {
 
                     <div className="mt-2 flex items-center justify-between text-xs">
                       <span className="text-gray-500">Sent to +91 {phone}</span>
-                      {timer > 0 ? (
-                        <span className="text-gray-500">Resend in {timer}s</span>
+                      {phoneTimer > 0 ? (
+                        <span className="text-gray-500">Resend in {phoneTimer}s</span>
                       ) : (
                         <button
                           type="button"
@@ -415,95 +422,124 @@ export const LoginPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 2: EMAIL LOGIN */}
+          {/* TAB 2: EMAIL OTP LOGIN (NO PASSWORD) */}
           {activeTab === 'email' && (
-            <form className="space-y-4" onSubmit={handleEmailSubmit}>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <div className="relative rounded-lg shadow-xs">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                    <Mail className="h-5 w-5" />
-                  </div>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#002B49] focus:border-transparent outline-none transition"
-                  />
-                </div>
-              </div>
-
-              {!useEmailOtp ? (
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700">
-                      Password
+            <div>
+              {!emailOtpSent ? (
+                <form className="space-y-4" onSubmit={handleSendEmailOtp}>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1.5">
+                      Email Address
                     </label>
-                    <Link
-                      to="/forgot-password"
-                      className="text-xs font-semibold text-[#002B49] hover:underline"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
-                  <div className="relative rounded-lg shadow-xs">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                      <Lock className="h-5 w-5" />
+                    <div className="relative rounded-lg shadow-xs">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                        <Mail className="h-5 w-5" />
+                      </div>
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#002B49] focus:border-transparent outline-none transition"
+                      />
                     </div>
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter your password"
-                      className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#002B49] focus:border-transparent outline-none transition"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                    <p className="mt-1.5 text-[11px] text-gray-500">
+                      We will send a 6-digit verification code to your email. No password needed.
+                    </p>
                   </div>
-                </div>
-              ) : null}
 
-              <div className="flex items-center justify-between text-xs pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseEmailOtp(!useEmailOtp);
-                    setError(null);
-                  }}
-                  className="text-[#002B49] font-medium hover:underline cursor-pointer"
-                >
-                  {useEmailOtp ? 'Use password instead' : 'Log in with Email Link / OTP'}
-                </button>
-              </div>
+                  <button
+                    type="submit"
+                    disabled={loading || !email.includes('@')}
+                    className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#002B49] hover:bg-[#001f35] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#002B49] disabled:opacity-50 transition cursor-pointer"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Sending OTP...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Send Email OTP</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              ) : (
+                <form className="space-y-4" onSubmit={handleVerifyEmailOtp}>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700">
+                        Enter Email OTP Code
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEmailOtpSent(false);
+                          setEmailOtp('');
+                          setError(null);
+                        }}
+                        className="text-xs text-[#002B49] font-medium hover:underline cursor-pointer"
+                      >
+                        Change email
+                      </button>
+                    </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#002B49] hover:bg-[#001f35] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#002B49] disabled:opacity-50 transition cursor-pointer"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Signing In...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>{useEmailOtp ? 'Send Login Link' : 'Sign In'}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </form>
+                    <div className="relative rounded-lg shadow-xs">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                        <KeyRound className="h-5 w-5" />
+                      </div>
+                      <input
+                        type="text"
+                        maxLength={8}
+                        autoFocus
+                        required
+                        value={emailOtp}
+                        onChange={(e) => setEmailOtp(e.target.value)}
+                        placeholder="Enter 6-digit OTP"
+                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm tracking-widest font-mono focus:ring-2 focus:ring-[#002B49] focus:border-transparent outline-none transition"
+                      />
+                    </div>
+
+                    <div className="mt-2 flex items-center justify-between text-xs">
+                      <span className="text-gray-500 truncate max-w-[200px]">Sent to {email}</span>
+                      {emailTimer > 0 ? (
+                        <span className="text-gray-500">Resend in {emailTimer}s</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleSendEmailOtp()}
+                          className="text-[#002B49] font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <RotateCw className="w-3 h-3" />
+                          <span>Resend Code</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading || emailOtp.trim().length === 0}
+                    className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#002B49] hover:bg-[#001f35] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#002B49] disabled:opacity-50 transition cursor-pointer"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Verifying...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Verify &amp; Sign In</span>
+                        <CheckCircle className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+            </div>
           )}
 
           {/* QUICK GUEST CHECKOUT LINK IF ARRIVING FROM CART */}
