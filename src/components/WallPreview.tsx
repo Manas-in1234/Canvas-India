@@ -24,10 +24,15 @@ const DEFAULT_WALL_IMAGE = 'https://images.unsplash.com/photo-1687075197041-91fb
 const DEFAULT_WALL_ASPECT = 1600 / 900;
 // The blank stretch of wall on the left side of this photo.
 const DEFAULT_WALL_BOUNDS: WallBounds = { minX: 0.04, maxX: 0.46, minY: 0.03, maxY: 0.58 };
-// After fitting the frame to its zone, scale it so the artwork itself is
-// actually recognizable (not a postage-stamp), while still reading as a
-// print on a wall rather than filling the whole photo.
-const FRAME_FILL_FACTOR = 0.98;
+// Real-world scale calibration for DEFAULT_WALL_IMAGE at its native 1600x900:
+// pixels-per-inch, measured against the accent chair in that photo (its
+// floor-to-backrest height spans ~267px there, and that style of chair is
+// consistently sold at ~31" tall) — so a selected print size renders at its
+// TRUE physical size relative to the room's furniture, not an arbitrary
+// fraction of a box.
+const WALL_PHOTO_NATIVE_WIDTH = 1600;
+const WALL_PHOTO_NATIVE_HEIGHT = 900;
+const REAL_PPI = 8.6;
 
 const SIZE_PATTERN = /(\d+(?:\.\d+)?)\s*["”]?\s*x\s*(\d+(?:\.\d+)?)/i;
 
@@ -100,39 +105,33 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
     return 2 / 3;
   }, [shapeKey, isCircle, isTriangle, naturalAspect, dims]);
 
-  // Larger selected sizes should visibly occupy more of the wall, even when
-  // two sizes share the same aspect ratio (e.g. 12x18 vs 24x36).
-  const sizeScale = useMemo(() => {
-    if (!dims) return 1;
-    const maxDim = Math.min(Math.max(Math.max(dims.w, dims.h), 8), 40);
-    return 0.94 + ((maxDim - 8) / (40 - 8)) * 0.06;
-  }, [dims]);
-
   const finishStyle = useMemo(() => getFinishStyle(finish || ''), [finish]);
 
-  // Fit the frame (at its target aspect ratio) inside the wall's safe hanging
-  // zone, centered — like object-fit: contain, but for a positioned overlay —
-  // then scale by both the fill factor and the selected size's magnitude.
+  // Size the frame to the selected print's TRUE physical area (in square
+  // inches, converted via REAL_PPI), then shape it to the image's actual
+  // aspect ratio (not the size label's) so it stays gap-free. This is what
+  // makes an 18x24 genuinely read as ~3x the area of an 8x12 next to the
+  // room's furniture, instead of both just filling the same box.
   const frameBox = useMemo(() => {
+    const areaIn2 = dims ? dims.w * dims.h : 144; // ~12x12 default when no size is selected yet
+    const widthIn = Math.sqrt(areaIn2 * ratio);
+    const heightIn = Math.sqrt(areaIn2 / ratio);
+
+    let w = (widthIn * REAL_PPI) / WALL_PHOTO_NATIVE_WIDTH;
+    let h = (heightIn * REAL_PPI) / WALL_PHOTO_NATIVE_HEIGHT;
+
+    // Safety cap: don't let an oversized custom print overflow the safe
+    // hanging zone or collide with the window to its right.
     const boxW = wallBounds.maxX - wallBounds.minX;
     const boxH = wallBounds.maxY - wallBounds.minY;
-    const boxRatio = boxW / boxH;
-    let w = boxW;
-    let h = boxH;
-    if (ratio >= boxRatio) {
-      w = boxW;
-      h = w / ratio;
-    } else {
-      h = boxH;
-      w = h * ratio;
-    }
-    const scale = FRAME_FILL_FACTOR * sizeScale;
-    w *= scale;
-    h *= scale;
+    const overflow = Math.max(w / boxW, h / boxH, 1);
+    w /= overflow;
+    h /= overflow;
+
     const left = wallBounds.minX + (boxW - w) / 2;
     const top = wallBounds.minY + (boxH - h) / 2;
     return { left: left * 100, top: top * 100, width: w * 100, height: h * 100 };
-  }, [ratio, wallBounds, sizeScale]);
+  }, [ratio, wallBounds, dims]);
 
   const clipPath = isTriangle ? 'polygon(50% 0%, 0% 100%, 100% 100%)' : undefined;
 
