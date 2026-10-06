@@ -64,7 +64,27 @@ export const OccasionPage: React.FC = () => {
   }
 
   return (
-    <div className="w-full bg-[#FFFDF9] text-stone-900 font-manrope">
+    <div className="w-full bg-[#FFFDF9] text-stone-900 font-manrope relative overflow-hidden">
+      {/* Scattered page decorations — florals, a second polaroid, ribbon,
+          loose heart doodles — so the page reads as a designed scene, not
+          a bare template. Faded on small screens to avoid clutter. */}
+      <div className="hidden md:block absolute top-16 left-0 w-40 opacity-70 pointer-events-none -translate-x-6">
+        <svg viewBox="0 0 160 140" fill="none">
+          {[...Array(6)].map((_, i) => (
+            <circle key={i} cx={20 + (i % 3) * 30 + (i > 2 ? 15 : 0)} cy={20 + Math.floor(i / 3) * 40} r={7 + (i % 2) * 2} fill="white" stroke="#E5CFC0" strokeWidth="1" />
+          ))}
+        </svg>
+      </div>
+      <div className="hidden lg:block absolute top-[520px] left-0 -translate-x-10 -rotate-6 bg-white p-2 pb-5 rounded-sm shadow-lg z-20 pointer-events-none">
+        <img src={occasion.bannerImage} alt="" className="w-28 h-28 object-cover" />
+      </div>
+      <Heart className="hidden lg:block absolute top-[470px] left-24 w-6 h-6 opacity-40 pointer-events-none" style={{ color: occasion.accent }} />
+      <svg className="hidden lg:block absolute bottom-10 right-8 w-28 h-28 opacity-50 pointer-events-none" viewBox="0 0 100 100" fill="none">
+        <path d="M10 10 Q50 10 50 50 Q50 90 90 90" stroke="#C9A0A0" strokeWidth="2.5" strokeLinecap="round" />
+        <circle cx="12" cy="10" r="4" fill="#E8B4B4" />
+        <circle cx="88" cy="90" r="4" fill="#E8B4B4" />
+      </svg>
+
       {/* BREADCRUMB */}
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 pt-6">
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-stone-500">
@@ -74,20 +94,31 @@ export const OccasionPage: React.FC = () => {
         </nav>
       </div>
 
-      {/* HERO BANNER — soft gradient in the occasion's own color, a corner
-          heart-doodle flourish, and a tilted polaroid of the occasion photo */}
-      <section
-        className="relative w-full overflow-hidden mt-4 rounded-3xl mx-auto max-w-[1680px]"
-        style={{ background: `linear-gradient(120deg, ${occasion.accent}, ${occasion.accent}CC)` }}
-      >
-        {/* Decorative heart-swirl doodle, top-right */}
-        <svg className="hidden sm:block absolute -top-2 right-10 w-24 h-24 text-white/25" viewBox="0 0 100 100" fill="none">
-          <path d="M50 85 C20 65, 15 40, 30 28 C40 20, 50 28, 50 38 C50 28, 60 20, 70 28 C85 40, 80 65, 50 85 Z" stroke="currentColor" strokeWidth="2" />
-          <path d="M70 15 Q85 20 80 35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        </svg>
+      {/* HERO BANNER — soft gradient in the occasion's own color, a subtle
+          repeating heart texture, a corner doodle, and a tilted polaroid
+          of the occasion photo that spills over the banner's edge */}
+      <div className="relative mt-4 mx-auto max-w-[1680px]">
+        <section
+          className="relative w-full overflow-hidden rounded-3xl"
+          style={{ background: `linear-gradient(120deg, ${occasion.accent}, ${occasion.accent}CC)` }}
+        >
+          {/* Repeating heart texture */}
+          <svg className="absolute inset-0 w-full h-full opacity-[0.07]" aria-hidden="true">
+            <defs>
+              <pattern id={`hearts-${occasion.slug}`} width="70" height="60" patternUnits="userSpaceOnUse">
+                <path d="M20 35 C8 26, 5 14, 13 9 C17 6, 20 10, 20 15 C20 10, 23 6, 27 9 C35 14, 32 26, 20 35 Z" fill="white" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill={`url(#hearts-${occasion.slug})`} />
+          </svg>
 
-        <div className="relative z-10 px-6 sm:px-10 lg:px-14 py-10 sm:py-14 lg:py-16 flex items-center gap-8">
-          <div className="max-w-xl">
+          {/* Decorative heart-swirl doodle, top-right */}
+          <svg className="hidden sm:block absolute -top-2 right-10 w-24 h-24 text-white/25" viewBox="0 0 100 100" fill="none">
+            <path d="M50 85 C20 65, 15 40, 30 28 C40 20, 50 28, 50 38 C50 28, 60 20, 70 28 C85 40, 80 65, 50 85 Z" stroke="currentColor" strokeWidth="2" />
+            <path d="M70 15 Q85 20 80 35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+
+          <div className="relative z-10 px-6 sm:px-10 lg:px-14 py-10 sm:py-14 lg:py-16 max-w-xl">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight drop-shadow-sm" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
               {occasion.name} Gifts &amp; Prints
             </h1>
@@ -95,13 +126,13 @@ export const OccasionPage: React.FC = () => {
               {occasion.tagline}
             </p>
           </div>
+        </section>
 
-          {/* Tilted polaroid photo prop */}
-          <div className="hidden lg:block shrink-0 ml-auto -mr-2 rotate-3 bg-white p-2.5 pb-6 rounded-sm shadow-xl">
-            <img src={occasion.bannerImage} alt="" className="w-44 h-44 object-cover rounded-2xs" />
-          </div>
+        {/* Tilted polaroid, spilling past the banner's bottom-right edge */}
+        <div className="hidden lg:block absolute -bottom-10 right-10 rotate-3 bg-white p-2.5 pb-6 rounded-sm shadow-xl z-20">
+          <img src={occasion.bannerImage} alt="" className="w-40 h-40 object-cover" />
         </div>
-      </section>
+      </div>
 
       {/* OTHER OCCASIONS QUICK SWITCH */}
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-6 flex flex-wrap items-center justify-center gap-2.5">
