@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight, Truck, BadgeCheck, Headphones, ShieldCheck, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote, Gift, Percent } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Truck, BadgeCheck, Headphones, ShieldCheck, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote } from 'lucide-react';
 import { Product } from '../types';
 import { OCCASIONS } from '../data/occasionsData';
 
@@ -28,13 +28,6 @@ const BLUE = '#0E4A93';
 const ORANGE = '#E8752A';
 
 const u = (id: string, w = 1200) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=90`;
-
-const FESTIVE_OFFERS = [
-  { icon: Gift, title: 'Buy 1 Get 1', sub: 'Free on all prints', image: u('photo-1513364776144-60967b0f800f', 700), grad: 'from-[#DC2626]/90 via-[#DC2626]/40', rotate: '-rotate-1' },
-  { icon: Percent, title: 'Flat 20% Off', sub: 'Canvas prints', image: u('photo-1536924940846-227afb31e2a5', 700), grad: 'from-[#EA580C]/90 via-[#EA580C]/40', rotate: 'rotate-1' },
-  { icon: Truck, title: 'Free Shipping', sub: 'On orders ₹999+', image: u('photo-1586075010923-2dd4570fb338', 700), grad: 'from-[#B45309]/90 via-[#B45309]/40', rotate: 'rotate-1' },
-  { icon: Sparkles, title: 'Festive Bundles', sub: 'Save even more', image: '/assets/catalogue/devotional-art/G-A_001.jpg', grad: 'from-[#9A3412]/90 via-[#9A3412]/40', rotate: '-rotate-1' },
-];
 
 const CATEGORY_CARDS = [
   { name: 'Acrylic Prints', sub: 'Vibrant Colors | Endless Possibilities', price: 499, slug: 'acrylic', image: u('photo-1513364776144-60967b0f800f'), grad: 'from-[#0E4A93]/90', chip: 'bg-[#E8752A]' },
@@ -108,36 +101,26 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#F7F1E5] border-b border-stone-200/60">
-        {/* Desktop/tablet: festive offers grid, in place of the lifestyle photo.
-            Wrapped in a soft cream fade that bleeds left into the text column
-            so the grid reads as part of the same scene, not a separate block. */}
-        <div className="hidden lg:block absolute right-0 top-0 h-full w-[48%]">
-          <div
-            className="absolute inset-0"
-            style={{
-              background: 'radial-gradient(60% 80% at 30% 50%, rgba(247,241,229,0.9) 0%, rgba(247,241,229,0.5) 35%, rgba(247,241,229,0) 65%)',
-            }}
-          />
-          <div className="relative h-full grid grid-cols-2 gap-4 items-center px-10">
-            {FESTIVE_OFFERS.map(({ icon: Icon, title, sub, image, grad, rotate }) => (
-              <button
-                key={title}
-                type="button"
-                onClick={() => navigate('/festive-offers')}
-                className={`group relative ${rotate} hover:rotate-0 rounded-2xl text-left shadow-xl shadow-orange-950/20 transition-transform duration-300 cursor-pointer overflow-hidden aspect-[4/3]`}
-              >
-                <img src={image} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                <div className={`absolute inset-0 bg-gradient-to-t ${grad} to-transparent`} />
-                <div className="relative h-full flex flex-col justify-end p-4">
-                  <Icon className="w-5 h-5 text-amber-100 mb-1.5 drop-shadow" strokeWidth={2} />
-                  <div className="font-bold text-white text-sm sm:text-base leading-tight drop-shadow-md" style={{ fontFamily: SERIF }}>
-                    {title}
-                  </div>
-                  <div className="text-[11px] text-amber-100/90 font-medium mt-0.5 drop-shadow">{sub}</div>
-                </div>
-              </button>
-            ))}
-          </div>
+        {/* Desktop/tablet: single festive offers banner, in place of the lifestyle photo */}
+        <div className="hidden lg:flex absolute right-10 top-1/2 -translate-y-1/2 w-[40%] aspect-[4/3] max-h-[380px]">
+          <button
+            type="button"
+            onClick={() => navigate('/festive-offers')}
+            className="group relative w-full h-full rounded-[2rem] text-left shadow-2xl shadow-orange-950/25 cursor-pointer overflow-hidden"
+          >
+            <img src="/assets/catalogue/devotional-art/G-A_001.jpg" alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#7C2D12]/95 via-[#9A3412]/60 to-[#9A3412]/10" />
+            <div className="relative h-full flex flex-col justify-end p-8">
+              <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-200">Festive Sale</span>
+              <div className="font-bold text-white text-4xl leading-tight mt-1 drop-shadow-md" style={{ fontFamily: SERIF }}>
+                Up to 20% Off
+              </div>
+              <p className="text-sm text-amber-100/90 font-medium mt-2">+ Free shipping on orders ₹999 and above</p>
+              <span className="inline-flex items-center gap-2 mt-5 text-sm font-bold text-white bg-white/15 hover:bg-white/25 backdrop-blur-xs border border-white/30 rounded-full px-5 py-2.5 w-fit transition-colors">
+                Shop Festive Offers <ArrowRight className="w-4 h-4" />
+              </span>
+            </div>
+          </button>
         </div>
 
         {/* Hanging Stitched Leather Special Price Tag (Top Center) */}
@@ -201,27 +184,22 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               </button>
             </div>
 
-            {/* Mobile/tablet only: festive offers grid below the text */}
-            <div className="lg:hidden mt-8 grid grid-cols-2 gap-3">
-              {FESTIVE_OFFERS.map(({ icon: Icon, title, sub, image, grad }) => (
-                <button
-                  key={title}
-                  type="button"
-                  onClick={() => navigate('/festive-offers')}
-                  className="relative rounded-2xl text-left shadow-md overflow-hidden cursor-pointer aspect-[4/3]"
-                >
-                  <img src={image} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${grad} to-transparent`} />
-                  <div className="relative h-full flex flex-col justify-end p-3.5">
-                    <Icon className="w-5 h-5 text-amber-100 mb-1.5 drop-shadow" strokeWidth={2} />
-                    <div className="font-bold text-white text-sm leading-tight drop-shadow-md" style={{ fontFamily: SERIF }}>
-                      {title}
-                    </div>
-                    <div className="text-[10px] text-amber-100/90 font-medium mt-0.5 drop-shadow">{sub}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
+            {/* Mobile/tablet only: single festive offers banner below the text */}
+            <button
+              type="button"
+              onClick={() => navigate('/festive-offers')}
+              className="lg:hidden mt-8 relative w-full aspect-[16/9] rounded-2xl text-left shadow-md overflow-hidden cursor-pointer"
+            >
+              <img src="/assets/catalogue/devotional-art/G-A_001.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#7C2D12]/95 via-[#9A3412]/60 to-[#9A3412]/10" />
+              <div className="relative h-full flex flex-col justify-end p-5">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">Festive Sale</span>
+                <div className="font-bold text-white text-2xl leading-tight mt-0.5 drop-shadow-md" style={{ fontFamily: SERIF }}>
+                  Up to 20% Off
+                </div>
+                <p className="text-xs text-amber-100/90 font-medium mt-1">+ Free shipping on orders ₹999+</p>
+              </div>
+            </button>
 
             {/* In-hero feature highlights */}
             <div className="mt-8 lg:mt-10 pt-6 border-t border-stone-300/60 grid grid-cols-2 sm:grid-cols-4 gap-3 text-[#0E4A93]">
