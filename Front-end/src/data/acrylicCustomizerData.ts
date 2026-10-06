@@ -168,7 +168,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     imageSlots: 1,
     panelsCount: 1,
     description: 'Vibrant direct UV sub-surface print on optical crystal acrylic.',
-    defaultSizeOptionId: 'shape-rectangle-12x8',
+    defaultSizeOptionId: 'shape-square-10x10',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-print'],
@@ -178,7 +178,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       upload: true,
       sizes: true,
       shapes: true,
-      layouts: false,
+      layouts: true,
       wrap: true,
       hardware: true,
       options: true,
@@ -210,7 +210,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     capabilities: {
       products: true,
       upload: true,
-      sizes: true,
+      sizes: false,
       shapes: false,
       layouts: true,
       wrap: true,
@@ -244,8 +244,8 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     capabilities: {
       products: true,
       upload: true,
-      sizes: true,
-      shapes: true,
+      sizes: false,
+      shapes: false,
       layouts: true,
       wrap: true,
       hardware: true,
@@ -278,9 +278,9 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     capabilities: {
       products: true,
       upload: true,
-      sizes: true,
+      sizes: false,
       shapes: false,
-      layouts: false,
+      layouts: true,
       wrap: true,
       hardware: true,
       options: true,
@@ -312,8 +312,8 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     capabilities: {
       products: true,
       upload: true,
-      sizes: true,
-      shapes: true,
+      sizes: false,
+      shapes: false,
       layouts: true,
       wrap: true,
       hardware: true,
@@ -346,58 +346,46 @@ export interface SizeOption {
 }
 
 export const SIZE_OPTIONS: SizeOption[] = [
-  // Recommended
+  // Recommended (6 mixed sizes: 10x10, 16x16, 18x18, 12x18, 16x24, 20x30)
   {
-    id: 'rec-11x17',
-    productTypeId: 'acrylic-photo-panel',
+    id: 'rec-10x10',
+    productTypeId: 'acrylic-print',
     category: 'RECOMMENDED',
-    label: '11" × 17"',
-    dimensionsSummary: '11" × 17"',
-    widthInches: 17,
-    heightInches: 11,
-    price: 447.00,
-    aspectClass: 'aspect-[17/11]',
-    image: '/assets/customizer/acrylic/sizes/landscape.svg'
-  },
-  {
-    id: 'rec-22x34',
-    productTypeId: 'acrylic-photo-panel',
-    category: 'RECOMMENDED',
-    label: '22" × 34"',
-    dimensionsSummary: '22" × 34"',
-    widthInches: 34,
-    heightInches: 22,
-    price: 1624.00,
-    aspectClass: 'aspect-[34/22]',
-    image: '/assets/customizer/acrylic/sizes/landscape.svg'
-  },
-  {
-    id: 'rec-33x51',
-    productTypeId: 'acrylic-photo-panel',
-    category: 'RECOMMENDED',
-    label: '33" × 51"',
-    dimensionsSummary: '33" × 51"',
-    widthInches: 51,
-    heightInches: 33,
-    price: 3584.00,
-    aspectClass: 'aspect-[51/33]',
-    image: '/assets/customizer/acrylic/sizes/large.svg'
-  },
-  {
-    id: 'rec-8x10',
-    productTypeId: 'acrylic-photo-panel',
-    category: 'RECOMMENDED',
-    label: '8" × 10"',
-    dimensionsSummary: '8" × 10"',
+    label: '10" × 10"',
+    dimensionsSummary: '10" × 10"',
     widthInches: 10,
-    heightInches: 8,
-    price: 590.00,
-    aspectClass: 'aspect-[10/8]',
-    image: '/assets/customizer/acrylic/sizes/landscape.svg'
+    heightInches: 10,
+    price: 799.00,
+    aspectClass: 'aspect-square',
+    image: '/assets/customizer/acrylic/sizes/square.svg'
+  },
+  {
+    id: 'rec-16x16',
+    productTypeId: 'acrylic-print',
+    category: 'RECOMMENDED',
+    label: '16" × 16"',
+    dimensionsSummary: '16" × 16"',
+    widthInches: 16,
+    heightInches: 16,
+    price: 1799.00,
+    aspectClass: 'aspect-square',
+    image: '/assets/customizer/acrylic/sizes/square.svg'
+  },
+  {
+    id: 'rec-18x18',
+    productTypeId: 'acrylic-print',
+    category: 'RECOMMENDED',
+    label: '18" × 18"',
+    dimensionsSummary: '18" × 18"',
+    widthInches: 18,
+    heightInches: 18,
+    price: 2299.00,
+    aspectClass: 'aspect-square',
+    image: '/assets/customizer/acrylic/sizes/square.svg'
   },
   {
     id: 'rec-12x18',
-    productTypeId: 'acrylic-photo-panel',
+    productTypeId: 'acrylic-print',
     category: 'RECOMMENDED',
     label: '12" × 18"',
     dimensionsSummary: '12" × 18"',
@@ -407,11 +395,35 @@ export const SIZE_OPTIONS: SizeOption[] = [
     aspectClass: 'aspect-[18/12]',
     image: '/assets/customizer/acrylic/sizes/landscape.svg'
   },
+  {
+    id: 'rec-16x24',
+    productTypeId: 'acrylic-print',
+    category: 'RECOMMENDED',
+    label: '16" × 24"',
+    dimensionsSummary: '16" × 24"',
+    widthInches: 24,
+    heightInches: 16,
+    price: 2190.00,
+    aspectClass: 'aspect-[24/16]',
+    image: '/assets/customizer/acrylic/sizes/landscape.svg'
+  },
+  {
+    id: 'rec-20x30',
+    productTypeId: 'acrylic-print',
+    category: 'RECOMMENDED',
+    label: '20" × 30"',
+    dimensionsSummary: '20" × 30"',
+    widthInches: 30,
+    heightInches: 20,
+    price: 3490.00,
+    aspectClass: 'aspect-[30/20]',
+    image: '/assets/customizer/acrylic/sizes/landscape.svg'
+  },
 
   // Square (EXACTLY four sizes: 10"x10", 16"x16", 18"x18", 20"x20")
   {
     id: 'sq-10x10',
-    productTypeId: 'acrylic-photo-panel',
+    productTypeId: 'acrylic-print',
     category: 'SQUARE',
     label: '10" × 10"',
     dimensionsSummary: '10" × 10"',
@@ -423,7 +435,7 @@ export const SIZE_OPTIONS: SizeOption[] = [
   },
   {
     id: 'sq-16x16',
-    productTypeId: 'acrylic-photo-panel',
+    productTypeId: 'acrylic-print',
     category: 'SQUARE',
     label: '16" × 16"',
     dimensionsSummary: '16" × 16"',
@@ -435,7 +447,7 @@ export const SIZE_OPTIONS: SizeOption[] = [
   },
   {
     id: 'sq-18x18',
-    productTypeId: 'acrylic-photo-panel',
+    productTypeId: 'acrylic-print',
     category: 'SQUARE',
     label: '18" × 18"',
     dimensionsSummary: '18" × 18"',
@@ -447,7 +459,7 @@ export const SIZE_OPTIONS: SizeOption[] = [
   },
   {
     id: 'sq-20x20',
-    productTypeId: 'acrylic-photo-panel',
+    productTypeId: 'acrylic-print',
     category: 'SQUARE',
     label: '20" × 20"',
     dimensionsSummary: '20" × 20"',
@@ -458,41 +470,77 @@ export const SIZE_OPTIONS: SizeOption[] = [
     image: '/assets/customizer/acrylic/sizes/square.svg'
   },
 
-  // Panoramic
+  // Panoramic (6 sizes: 12x18, 12x24, 16x24, 16x32, 20x30, 24x36)
   {
-    id: 'pan-10x30',
-    productTypeId: 'acrylic-photo-panel',
+    id: 'pan-12x18',
+    productTypeId: 'acrylic-print',
     category: 'PANORAMIC',
-    label: '10" × 30"',
-    dimensionsSummary: '10" × 30"',
-    widthInches: 30,
-    heightInches: 10,
-    price: 1450.00,
-    aspectClass: 'aspect-[30/10]',
-    image: '/assets/customizer/acrylic/sizes/panoramic.svg'
-  },
-  {
-    id: 'pan-12x36',
-    productTypeId: 'acrylic-photo-panel',
-    category: 'PANORAMIC',
-    label: '12" × 36"',
-    dimensionsSummary: '12" × 36"',
-    widthInches: 36,
+    label: '12" × 18"',
+    dimensionsSummary: '12" × 18"',
+    widthInches: 18,
     heightInches: 12,
-    price: 1850.00,
-    aspectClass: 'aspect-[36/12]',
+    price: 1250.00,
+    aspectClass: 'aspect-[18/12]',
     image: '/assets/customizer/acrylic/sizes/panoramic.svg'
   },
   {
-    id: 'pan-16x48',
-    productTypeId: 'acrylic-photo-panel',
+    id: 'pan-12x24',
+    productTypeId: 'acrylic-print',
     category: 'PANORAMIC',
-    label: '16" × 48"',
-    dimensionsSummary: '16" × 48"',
-    widthInches: 48,
+    label: '12" × 24"',
+    dimensionsSummary: '12" × 24"',
+    widthInches: 24,
+    heightInches: 12,
+    price: 1699.00,
+    aspectClass: 'aspect-[24/12]',
+    image: '/assets/customizer/acrylic/sizes/panoramic.svg'
+  },
+  {
+    id: 'pan-16x24',
+    productTypeId: 'acrylic-print',
+    category: 'PANORAMIC',
+    label: '16" × 24"',
+    dimensionsSummary: '16" × 24"',
+    widthInches: 24,
+    heightInches: 16,
+    price: 2190.00,
+    aspectClass: 'aspect-[24/16]',
+    image: '/assets/customizer/acrylic/sizes/panoramic.svg'
+  },
+  {
+    id: 'pan-16x32',
+    productTypeId: 'acrylic-print',
+    category: 'PANORAMIC',
+    label: '16" × 32"',
+    dimensionsSummary: '16" × 32"',
+    widthInches: 32,
     heightInches: 16,
     price: 2890.00,
-    aspectClass: 'aspect-[48/16]',
+    aspectClass: 'aspect-[32/16]',
+    image: '/assets/customizer/acrylic/sizes/panoramic.svg'
+  },
+  {
+    id: 'pan-20x30',
+    productTypeId: 'acrylic-print',
+    category: 'PANORAMIC',
+    label: '20" × 30"',
+    dimensionsSummary: '20" × 30"',
+    widthInches: 30,
+    heightInches: 20,
+    price: 3490.00,
+    aspectClass: 'aspect-[30/20]',
+    image: '/assets/customizer/acrylic/sizes/panoramic.svg'
+  },
+  {
+    id: 'pan-24x36',
+    productTypeId: 'acrylic-print',
+    category: 'PANORAMIC',
+    label: '24" × 36"',
+    dimensionsSummary: '24" × 36"',
+    widthInches: 36,
+    heightInches: 24,
+    price: 4990.00,
+    aspectClass: 'aspect-[36/24]',
     image: '/assets/customizer/acrylic/sizes/panoramic.svg'
   },
 

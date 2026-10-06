@@ -103,7 +103,14 @@ import {
 } from '../components/CustomizerUiShell';
 import { ClipartItem } from '../data/acrylicClipartData';
 import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
+import { SelectLayoutModal, LayoutModalOption } from '../components/SelectLayoutModal';
 import { getProductSizeShapeOptions, getSizesForProductAndShape } from '../data/productSizeShapeConfig';
+import {
+  getProductLayouts,
+  getProductLayout,
+  ProductLayoutDefinition,
+  ProductPanelGeometry
+} from '../data/productGeometry';
 
 // ============================================================================
 // COMPONENT TYPES
@@ -226,6 +233,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
     setActiveTab(tabId);
     if (tabId === 'SELECT SIZE') {
       setIsSizeShapeModalOpen(true);
+    } else if (tabId === 'LAYOUTS & DESIGNS') {
+      setIsLayoutModalOpen(true);
     }
     beginPreloader();
     endPreloader(PRELOADER_MIN_MS);
@@ -327,6 +336,29 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Dynamic Shape-Specific Sizes (shape-aware pipeline from centralized productSizeShapeConfig)
   const shapeSizes = useMemo(() => {
+    const isLayoutProduct = [
+      'acrylic-wall-art',
+      'acrylic-collage',
+      'acrylic-split',
+      'acrylic-mosaic'
+    ].includes(selectedProductTypeId);
+
+    if (isLayoutProduct) {
+      const layouts = getProductLayouts(selectedProductTypeId);
+      return layouts.map((layout) => ({
+        id: layout.id,
+        productTypeId: selectedProductTypeId,
+        category: 'RECTANGLE' as SizeCategory,
+        label: layout.name,
+        dimensionsSummary: layout.dimensionsSummary,
+        widthInches: layout.overallWidthInches,
+        heightInches: layout.overallHeightInches,
+        price: layout.acrylicPrice || layout.price,
+        aspectClass: layout.aspectRatio >= 1.2 ? 'aspect-[16/10]' : layout.aspectRatio <= 0.8 ? 'aspect-[10/16]' : 'aspect-square',
+        image: '/assets/customizer/acrylic/sizes/panoramic.svg'
+      }));
+    }
+
     const configSizes = getSizesForProductAndShape(selectedProductTypeId, selectedShapeId, 'acrylic');
     const filtered = selectedProductTypeId === 'acrylic-mosaic'
       ? configSizes.filter((opt) => !(opt.widthInches === 9 && opt.heightInches === 9) && !(opt.widthInches === 16 && opt.heightInches === 16))
@@ -480,6 +512,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Select Size & Shape Modal State
   const [isSizeShapeModalOpen, setIsSizeShapeModalOpen] = useState<boolean>(false);
+  const [isLayoutModalOpen, setIsLayoutModalOpen] = useState<boolean>(false);
 
   // Apply handler for SelectSizeShapeModal in Acrylic Customizer
   const handleApplySizeAndShape = (config: {
@@ -517,27 +550,35 @@ export const AcrylicCustomizerPage: React.FC = () => {
       }
     }
 
-      // Uploaded customer images remain attached and refitted cleanly
-      setPanelImages((prev) => {
-        const next = { ...prev };
-        Object.keys(next).forEach((k) => {
-          const idx = Number(k);
-          if (next[idx]?.imageUrl) {
-            next[idx] = {
-              ...next[idx],
-              scale: 1,
-              panX: 0,
-              panY: 0,
-              fitMode: 'contain'
-            };
-          }
-        });
-        return next;
+    // Uploaded customer images remain attached and refitted cleanly
+    setPanelImages((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((k) => {
+        const idx = Number(k);
+        if (next[idx]?.imageUrl) {
+          next[idx] = {
+            ...next[idx],
+            scale: 1,
+            panX: 0,
+            panY: 0,
+            fitMode: 'contain'
+          };
+        }
       });
+      return next;
+    });
 
-      // Automatically switch to UPLOAD section after size confirmation
-      setActiveTab('UPLOAD');
-    };
+    // Automatically switch to UPLOAD section after size confirmation
+    setActiveTab('UPLOAD');
+  };
+
+  // Apply handler for SelectLayoutModal in Acrylic Customizer
+  const handleApplyLayoutFromModal = (layout: LayoutModalOption) => {
+    setSelectedLayoutId(layout.id);
+    setSelectedSizeId(layout.id);
+    setIsLayoutModalOpen(false);
+    setActiveTab('UPLOAD');
+  };
 
   // Normalize hardware ID if any legacy alias is encountered
   useEffect(() => {
@@ -1187,8 +1228,21 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Centralized normalized layout slots (0..1) for the active layout and product aspect ratio
   const layoutSlots = useMemo(() => {
+    if (selectedProductTypeId === 'acrylic-collage') {
+      const layoutDef = getProductLayout('acrylic-collage', selectedLayoutId);
+      return layoutDef.panels.map((p, idx) => ({
+        id: p.id || `slot-${idx}`,
+        panelIndex: idx,
+        slotIndex: idx,
+        label: p.label || `Slot ${idx + 1}`,
+        x: p.x,
+        y: p.y,
+        width: p.w,
+        height: p.h
+      }));
+    }
     return getLayoutSlots(currentLayout.layoutType, productAspectRatio);
-  }, [currentLayout.layoutType, productAspectRatio]);
+  }, [currentLayout.layoutType, productAspectRatio, selectedProductTypeId, selectedLayoutId]);
 
   useEffect(() => {
     if (activePanelIndex >= layoutSlots.length) {
@@ -1900,8 +1954,36 @@ export const AcrylicCustomizerPage: React.FC = () => {
       }
     }
 
-    // 8. Open the "Select size & shape" popup modal immediately
-    setIsSizeShapeModalOpen(true);
+    // 8. Open the popup modal immediately based on product category
+    const isSingle = [
+      'acrylic-print',
+      'acrylic-photo-panel',
+      'acrylic-single'
+    ].includes(pt.id);
+
+    const isLayoutProduct = [
+      'acrylic-wall-art',
+      'acrylic-collage',
+      'acrylic-split',
+      'acrylic-mosaic'
+    ].includes(pt.id);
+
+    if (isSingle) {
+      setIsSizeShapeModalOpen(true);
+      setIsLayoutModalOpen(false);
+    } else if (isLayoutProduct) {
+      const layouts = getProductLayouts(pt.id);
+      if (layouts[0]) {
+        setSelectedLayoutId(layouts[0].id);
+        setSelectedSizeId(layouts[0].id);
+      }
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(true);
+    } else {
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setActiveTab('UPLOAD');
+    }
   };
 
   // Switch acrylic shape (updates workspace geometry, aspect ratio, clipping mask, and size orientation)
@@ -3020,13 +3102,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Photo Mosaic (acrylic-mosaic): Physical Multi-Tile Optical Acrylic Grid
   const renderMosaicCanvas = (isRoomView = false) => {
-    const tilePanels = (currentSizeOption as any).panels && (currentSizeOption as any).panels.length > 0
-      ? (currentSizeOption as any).panels
-      : Array.from({ length: 4 }, (_, i) => ({ id: `p${i}`, label: `Tile ${i + 1}`, dimension: '5" × 5"', widthRatio: 5, heightRatio: 5 }));
+    const layout = getProductLayout('acrylic-mosaic', selectedLayoutId || (currentSizeOption as any).diagramType || currentSizeOption?.id);
+    const tilePanels = layout.panels;
     const count = tilePanels.length;
-    const colsClass = count === 4 ? 'grid-cols-2' : count === 6 ? 'grid-cols-3' : count === 9 ? 'grid-cols-3' : count === 16 ? 'grid-cols-4' : 'grid-cols-2';
-    const aspectClass = count === 6 ? 'aspect-[18/12]' : 'aspect-square';
     const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
+    const master = panelImages[0] || createDefaultPanelState(null);
 
     const totalCols = count === 4 ? 2 : count === 6 ? 3 : count === 9 ? 3 : 4;
     const totalRows = count === 4 ? 2 : count === 6 ? 2 : count === 9 ? 3 : 4;
@@ -3034,15 +3114,18 @@ export const AcrylicCustomizerPage: React.FC = () => {
     return (
       <div className={`w-full max-w-xl mx-auto my-auto ${isRoomView ? 'h-full p-2' : 'p-4'} flex flex-col items-center select-none`}>
         <div
-          className={`grid ${colsClass} gap-2 w-full ${aspectClass} p-3 bg-white/70 backdrop-blur-xs rounded-2xl border border-stone-200/90 shadow-xl`}
+          className="grid gap-2 w-full p-3 bg-white/70 backdrop-blur-xs rounded-2xl border border-stone-200/90 shadow-xl"
           style={{
+            aspectRatio: String(layout.aspectRatio),
+            gridTemplateColumns: `repeat(${totalCols}, 1fr)`,
+            gridTemplateRows: `repeat(${totalRows}, 1fr)`,
             maxWidth: count === 6 ? '32rem' : '26rem',
             filter: 'drop-shadow(0 20px 25px rgba(0,0,0,0.15))'
           }}
         >
           {tilePanels.map((pSpec: any, i: number) => {
             const panel = panelImages[i];
-            const hasIndividualPhoto = Boolean(panel?.imageUrl);
+            const hasIndividualPhoto = Boolean(panel?.imageUrl) && panel.imageUrl !== masterImage;
             const displayPhoto = hasIndividualPhoto ? panel?.imageUrl : masterImage;
             const isTarget = !isRoomView && activePanelIndex === i;
             const colIdx = i % totalCols;
@@ -3086,14 +3169,28 @@ export const AcrylicCustomizerPage: React.FC = () => {
                       />
                     ) : (
                       <div
-                        className="w-full h-full pointer-events-none"
                         style={{
-                          backgroundImage: `url(${displayPhoto})`,
-                          backgroundSize: `${totalCols * 100}% ${totalRows * 100}%`,
-                          backgroundPosition: `${(colIdx / (totalCols - 1 || 1)) * 100}% ${(rowIdx / (totalRows - 1 || 1)) * 100}%`,
-                          backgroundRepeat: 'no-repeat'
+                          position: 'absolute',
+                          top: `${-rowIdx * 100}%`,
+                          left: `${-colIdx * 100}%`,
+                          width: `${totalCols * 100}%`,
+                          height: `${totalRows * 100}%`,
+                          pointerEvents: 'none'
                         }}
-                      />
+                      >
+                        <img
+                          src={masterImage || undefined}
+                          alt={`Tile ${i + 1}`}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
+                            transform: `translate(${master.panX || 0}px, ${master.panY || 0}px) scale(${master.scale || 1}) rotate(${master.rotation || 0}deg)`,
+                            filter: getAcrylicFilterCss(master.filter)
+                          }}
+                          className="pointer-events-none"
+                        />
+                      </div>
                     )}
                   </div>
                 ) : (
@@ -3102,7 +3199,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                       <UploadCloud className="w-3.5 h-3.5 stroke-[2.2]" />
                     </div>
                     <span className="text-[9px] font-bold text-stone-700">Tile {i + 1}</span>
-                    <span className="text-[8px] text-stone-400">{pSpec.dimension || '5"×5"'}</span>
+                    <span className="text-[8px] text-stone-400">{pSpec.dimension || '6"×6"'}</span>
                   </div>
                 )}
 
@@ -3161,108 +3258,103 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
     // SPLIT PRODUCT: 1 photo continuous split across physical optical acrylic panels
     if (selectedProductTypeId === 'acrylic-split') {
-      const panelCount = (currentSizeOption as any).panelsCount || ((currentSizeOption as any).arrangement === 'twoSplit' ? 2 : (currentSizeOption as any).arrangement === 'fourGrid' ? 4 : 3);
-      const N = panelCount;
+      const layout = getProductLayout('acrylic-split', selectedLayoutId || (currentSizeOption as any).diagramType || currentSizeOption?.id);
+      const splitPanels = layout.panels;
+      const N = splitPanels.length;
       const masterImage = panelImages[0]?.imageUrl || Object.values(panelImages).find((p) => Boolean(p?.imageUrl))?.imageUrl || null;
       const master = panelImages[0] || createDefaultPanelState(null);
-      const gapPx = isRoomView ? 8 : 14;
 
       return (
-        <div
-          className={`relative w-full ${isRoomView ? 'h-full pointer-events-none select-none' : ''} flex items-center justify-center transition-all duration-300`}
-          style={
-            isRoomView
-              ? {
-                  width: '100%',
-                  height: '100%',
-                  gap: `${gapPx}px`
-                }
-              : {
-                  maxWidth: `${boxWidthPx}px`,
-                  aspectRatio: `${effectiveWidthInches} / ${effectiveHeightInches}`,
-                  gap: `${gapPx}px`,
-                  filter: outerFilter
-                }
-          }
-        >
-          {Array.from({ length: N }).map((_, i) => (
-            <div
-              key={i}
-              className={`relative h-full rounded-xl bg-white overflow-hidden select-none transition-all ${
-                !isRoomView && !masterImage ? 'cursor-pointer hover:border-[#0E4A93]' : ''
-              }`}
-              style={{
-                flex: 1,
-                border: '1.5px solid rgba(226, 232, 240, 0.9)',
-                boxShadow: isRoomView ? '0 12px 18px rgba(0,0,0,0.22)' : '0 8px 16px rgba(15, 23, 42, 0.15)'
-              }}
-              onClick={() => {
-                if (!isRoomView && !masterImage) singleFileInputRef.current?.click();
-              }}
-            >
-              {/* Continuous Sliced Photo */}
-              {masterImage ? (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: `calc(-${i * 100}% - ${i * gapPx}px)`,
-                    width: `calc(${N * 100}% + ${(N - 1) * gapPx}px)`,
-                    height: '100%',
-                    pointerEvents: 'none'
-                  }}
-                >
-                  <img
-                    src={masterImage}
-                    alt={`Split Acrylic Panel ${i + 1}`}
+        <div className={`w-full max-w-2xl mx-auto my-auto ${isRoomView ? 'h-full p-2' : 'p-4'} flex flex-col items-center select-none`}>
+          <div
+            className="relative w-full"
+            style={{
+              aspectRatio: String(layout.aspectRatio),
+              maxHeight: isRoomView ? '100%' : '56vh',
+              filter: outerFilter
+            }}
+          >
+            {splitPanels.map((pSpec, i) => (
+              <div
+                key={pSpec.id || i}
+                className={`relative h-full rounded-xl bg-white overflow-hidden select-none transition-all ${
+                  !isRoomView && !masterImage ? 'cursor-pointer hover:border-[#0E4A93]' : ''
+                }`}
+                style={{
+                  position: 'absolute',
+                  left: `${pSpec.x * 100}%`,
+                  top: `${pSpec.y * 100}%`,
+                  width: `${pSpec.w * 100}%`,
+                  height: `${pSpec.h * 100}%`,
+                  border: '1.5px solid rgba(226, 232, 240, 0.9)',
+                  boxShadow: isRoomView ? '0 12px 18px rgba(0,0,0,0.22)' : '0 8px 16px rgba(15, 23, 42, 0.15)'
+                }}
+                onClick={() => {
+                  if (!isRoomView && !masterImage) singleFileInputRef.current?.click();
+                }}
+              >
+                {/* Continuous Sliced Photo */}
+                {masterImage ? (
+                  <div
                     style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
-                      transform: isRoomView
-                        ? `scale(${master.scale}) rotate(${master.rotation}deg)`
-                        : `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg)`,
-                      filter: getAcrylicFilterCss(master.filter)
+                      position: 'absolute',
+                      top: `${(-pSpec.y / pSpec.h) * 100}%`,
+                      left: `${(-pSpec.x / pSpec.w) * 100}%`,
+                      width: `${(1 / pSpec.w) * 100}%`,
+                      height: `${(1 / pSpec.h) * 100}%`,
+                      pointerEvents: 'none'
                     }}
-                    className="pointer-events-none"
-                  />
-                </div>
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-stone-50 group-hover:bg-blue-50/40">
-                  <UploadCloud className="w-5 h-5 text-stone-400 mb-1" />
-                  <span className="text-[10px] font-bold text-stone-600">Panel {i + 1}</span>
-                </div>
-              )}
+                  >
+                    <img
+                      src={masterImage}
+                      alt={`Split Acrylic Panel ${i + 1}`}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
+                        transform: `translate(${master.panX || 0}px, ${master.panY || 0}px) scale(${master.scale || 1}) rotate(${master.rotation || 0}deg)`,
+                        filter: getAcrylicFilterCss(master.filter)
+                      }}
+                      className="pointer-events-none"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-stone-50 group-hover:bg-blue-50/40">
+                    <UploadCloud className="w-5 h-5 text-stone-400 mb-1" />
+                    <span className="text-[10px] font-bold text-stone-600">{pSpec.label || `Panel ${i + 1}`}</span>
+                  </div>
+                )}
 
-              {/* Optical Acrylic Gloss Overlay */}
-              {selectedFinishId === 'high-gloss' && (
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-transparent pointer-events-none z-25" />
-              )}
+                {/* Optical Acrylic Gloss Overlay */}
+                {selectedFinishId === 'high-gloss' && (
+                  <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-transparent pointer-events-none z-25" />
+                )}
 
-              {/* 4 Corner Standoff Mounts on Each Panel */}
-              {['top-left', 'top-right', 'bottom-left', 'bottom-right'].map((pos) => (
-                <div
-                  key={pos}
-                  className={`absolute w-3.5 h-3.5 rounded-full bg-gradient-to-br from-stone-200 to-stone-400 border border-stone-500 shadow-sm pointer-events-none z-30 ${
-                    pos === 'top-left'
-                      ? 'top-2 left-2'
-                      : pos === 'top-right'
-                      ? 'top-2 right-2'
-                      : pos === 'bottom-left'
-                      ? 'bottom-2 left-2'
-                      : 'bottom-2 right-2'
-                  }`}
-                >
-                  <div className="w-1.5 h-1.5 rounded-full bg-stone-600 mx-auto mt-0.5" />
+                {/* 4 Corner Standoff Mounts on Each Panel */}
+                {['top-left', 'top-right', 'bottom-left', 'bottom-right'].map((pos) => (
+                  <div
+                    key={pos}
+                    className={`absolute w-3.5 h-3.5 rounded-full bg-gradient-to-br from-stone-200 to-stone-400 border border-stone-500 shadow-sm pointer-events-none z-30 ${
+                      pos === 'top-left'
+                        ? 'top-2 left-2'
+                        : pos === 'top-right'
+                        ? 'top-2 right-2'
+                        : pos === 'bottom-left'
+                        ? 'bottom-2 left-2'
+                        : 'bottom-2 right-2'
+                    }`}
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full bg-stone-600 mx-auto mt-0.5" />
+                  </div>
+                ))}
+
+                {/* Panel label tag */}
+                <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
+                  {pSpec.dimension || `Panel ${i + 1} of ${N}`}
                 </div>
-              ))}
-
-              {/* Panel label tag */}
-              <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
-                Panel {i + 1} of {N}
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       );
     }
@@ -3348,19 +3440,25 @@ export const AcrylicCustomizerPage: React.FC = () => {
     options: true
   };
 
+  const isSinglePrintAcrylic = [
+    'acrylic-print',
+    'acrylic-photo-panel',
+    'acrylic-single'
+  ].includes(selectedProductTypeId);
+
   // Primary Toolbar items: dynamically filtered by selected product capabilities
   const toolbarItems = useMemo<{ id: ToolbarTab; label: string; icon: React.ElementType }[]>(() => {
     const items: { id: ToolbarTab; label: string; icon: React.ElementType; enabled: boolean }[] = [
       { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid, enabled: productCapabilities.products !== false },
       { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud, enabled: productCapabilities.upload !== false },
-      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: productCapabilities.sizes !== false },
+      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSinglePrintAcrylic && productCapabilities.sizes !== false },
       { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: productCapabilities.layouts === true },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
       { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal, enabled: productCapabilities.hardware !== false },
       { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false }
     ];
     return items.filter((item) => item.enabled);
-  }, [productCapabilities]);
+  }, [productCapabilities, isSinglePrintAcrylic]);
 
   // If the active tab is not supported by the currently selected product, safely revert to PRODUCTS
   useEffect(() => {
@@ -4178,8 +4276,26 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     </button>
                   </div>
 
-              {/* SUBTAB 1: LAYOUTS (7 Options) */}
-              {layoutSubTab === 'LAYOUTS' && (
+                  {/* Selected Layout Summary Banner */}
+                  <div className="flex items-center justify-between p-3 bg-blue-50/70 rounded-xl border border-blue-100 my-2">
+                    <div>
+                      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Active Layout</span>
+                      <div className="text-xs font-black text-stone-900 mt-0.5">
+                        {LAYOUT_PRESETS.find((l) => l.id === selectedLayoutId)?.name || selectedLayoutId}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsLayoutModalOpen(true)}
+                      className="px-3 py-1 bg-[#0E4A93] hover:bg-[#0A366C] text-white text-xs font-bold rounded-lg shadow-xs transition-transform hover:scale-102 cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Layers className="w-3 h-3" />
+                      <span>Change Layout</span>
+                    </button>
+                  </div>
+
+                  {/* SUBTAB 1: LAYOUTS (7 Options) */}
+                  {layoutSubTab === 'LAYOUTS' && (
                 <div className="space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     {(selectedProductType?.supportedLayoutIds && selectedProductType.supportedLayoutIds.length > 0
@@ -4948,6 +5064,17 @@ export const AcrylicCustomizerPage: React.FC = () => {
         customWidth={customWidth}
         customHeight={customHeight}
         onSelectSizeAndShape={handleApplySizeAndShape}
+      />
+
+      {/* Select Layout Modal */}
+      <SelectLayoutModal
+        isOpen={isLayoutModalOpen}
+        onClose={() => setIsLayoutModalOpen(false)}
+        material="acrylic"
+        productId={selectedProductTypeId}
+        productName={selectedProductType.name}
+        currentLayoutId={selectedLayoutId}
+        onSelectLayout={handleApplyLayoutFromModal}
       />
 
       {/* Change Material Modal */}

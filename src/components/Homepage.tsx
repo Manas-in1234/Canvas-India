@@ -85,6 +85,15 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
     navigate(`/customize/canvas/${first?.slug || first?.id || 'canvas-photo-panel'}`);
   };
 
+  const handleCustomizeFestiveGift = () => {
+    // Only /customize/canvas and /customize/acrylic actually exist as routes
+    // — a product's own categorySlug (e.g. "devotional-art") isn't a valid
+    // customizer route, so always go through canvas regardless of theme.
+    const festive = allProducts.find((p) => p.categorySlug === 'canvas' && p.id.includes('devotional-art'));
+    const first = festive || allProducts.find((p) => p.categorySlug === 'canvas');
+    navigate(`/customize/canvas/${first?.slug || first?.id || 'canvas-devotional-art-g-a-001'}`);
+  };
+
   const scrollRow = (ref: React.RefObject<HTMLDivElement>, dir: 1 | -1) => {
     const el = ref.current;
     if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: 'smooth' });
@@ -101,17 +110,39 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#F7F1E5] border-b border-stone-200/60">
-        {/* Desktop/tablet: full-bleed masked image behind the text (unchanged) */}
+        {/* Desktop/tablet: full-bleed festive image, fading into the cream
+            background on the left — same treatment the original lifestyle
+            photo used, no card/box, just one continuous scene. */}
         <img
-          src="/hero-scene.jpg"
-          alt="Canvas painting, frame, cork coaster and paints on a sunlit table"
+          src={u('photo-1577083753695-e010191bacb5', 2200)}
+          alt="Festive diya oil lamps with flower petals"
           className="hidden lg:block absolute right-0 top-0 h-full w-[60%] object-cover object-center"
           style={{
             maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
             WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
           }}
         />
-        <div className="hidden lg:block absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent" />
+        <div className="hidden lg:block absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent pointer-events-none" />
+        {/* Darken only behind the text, bottom-right — not the whole photo, so the image stays bright and clear */}
+        <div
+          className="hidden lg:block absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse 480px 320px at 88% 85%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 45%, transparent 75%)' }}
+        />
+
+        <button
+          type="button"
+          onClick={handleCustomizeFestiveGift}
+          className="hidden lg:flex absolute right-14 bottom-12 z-20 flex-col items-start text-left cursor-pointer group"
+        >
+          <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-300 drop-shadow">Festive Sale</span>
+          <div className="font-bold text-white text-4xl leading-tight mt-1 drop-shadow-lg" style={{ fontFamily: SERIF }}>
+            Up to 20% Off
+          </div>
+          <p className="text-sm text-white/90 font-medium mt-2 drop-shadow">+ Free shipping on orders ₹999 and above</p>
+          <span className="inline-flex items-center gap-2 mt-5 text-sm font-bold text-white bg-[#E8752A] group-hover:bg-[#D3631A] rounded-full px-5 py-2.5 shadow-lg shadow-orange-950/40 transition-colors">
+            Customize Festive Gift <ArrowRight className="w-4 h-4" />
+          </span>
+        </button>
 
         {/* Hanging Stitched Leather Special Price Tag (Top Center) */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center select-none">
@@ -174,15 +205,22 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               </button>
             </div>
 
-            {/* Mobile/tablet only: contained image below the text, in normal
-                flow (no overlay/mask) so nothing ever sits on top of it */}
-            <div className="lg:hidden mt-8 rounded-2xl overflow-hidden shadow-md aspect-[16/10]">
-              <img
-                src="/hero-scene.jpg"
-                alt="Canvas painting, frame, cork coaster and paints on a sunlit table"
-                className="w-full h-full object-cover"
-              />
-            </div>
+            {/* Mobile/tablet only: single festive offers banner below the text */}
+            <button
+              type="button"
+              onClick={handleCustomizeFestiveGift}
+              className="lg:hidden mt-8 relative w-full aspect-[16/9] rounded-2xl text-left shadow-md overflow-hidden cursor-pointer"
+            >
+              <img src={u('photo-1577083753695-e010191bacb5', 1200)} alt="Festive diya oil lamps with flower petals" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#7C2D12]/95 via-[#9A3412]/60 to-[#9A3412]/10" />
+              <div className="relative h-full flex flex-col justify-end p-5">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">Festive Sale</span>
+                <div className="font-bold text-white text-2xl leading-tight mt-0.5 drop-shadow-md" style={{ fontFamily: SERIF }}>
+                  Up to 20% Off
+                </div>
+                <p className="text-xs text-amber-100/90 font-medium mt-1">+ Free shipping on orders ₹999+</p>
+              </div>
+            </button>
 
             {/* In-hero feature highlights */}
             <div className="mt-8 lg:mt-10 pt-6 border-t border-stone-300/60 grid grid-cols-2 sm:grid-cols-4 gap-3 text-[#0E4A93]">

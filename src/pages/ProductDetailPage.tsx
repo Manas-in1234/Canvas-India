@@ -25,6 +25,8 @@ import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
 import { ProductImage } from '../components/ProductImage';
 import { WallPreview } from '../components/WallPreview';
+import { WallMultiSizePreview } from '../components/WallMultiSizePreview';
+import { SmartCropImage } from '../components/SmartCropImage';
 import { CUSTOMER_REVIEWS } from '../data/storeData';
 import { Product } from '../types';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
@@ -33,6 +35,41 @@ import { getFinishStyle } from '../utils/finishStyle';
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
 // the "Room View" thumbnail renders a live WallPreview instead of a static image.
 const ROOM_VIEW_SENTINEL = '__ROOM_VIEW__';
+const MULTI_SIZE_SENTINEL = '__MULTI_SIZE__';
+
+// Default to the largest available size so the product — and its Room View
+// — looks substantial right away, instead of starting on the tiniest
+// option. Size lists are ordered smallest-to-largest.
+function pickDefaultSize(sizes?: string[]): string | undefined {
+  if (!sizes || sizes.length === 0) return undefined;
+  return sizes[sizes.length - 1];
+}
+
+// Experimental changes are being piloted on this one product only, until
+// confirmed — then rolled out to the rest of the catalogue.
+const PILOT_PRODUCT_ID = 'tribal-ethnic-art-a-a-001';
+
+// Pilot product: each shape has its own size list, matching that shape's
+// own proportions (square sizes for Square, landscape for Rectangle, etc.)
+// instead of every shape reusing the same flat catalogue sizes.
+const PILOT_SHAPE_SIZES: Record<string, string[]> = {
+  standard: ['16x20 inch', '20x24 inch', '22x28 inch', '25x30 inch'],
+  square: ['16x16 inch', '20x20 inch', '24x24 inch', '28x28 inch'],
+  rectangle: ['24x16 inch', '30x20 inch', '36x24 inch'],
+  panoramic: ['36x16 inch', '44x20 inch', '55x25 inch'],
+};
+
+function pilotSizesForShape(shape: string): string[] | undefined {
+  return PILOT_SHAPE_SIZES[shape.toLowerCase()];
+}
+
+function sizeForShape(shape: string, sizes?: string[], isPilot?: boolean): string | undefined {
+  if (isPilot) {
+    const pilotSizes = pilotSizesForShape(shape);
+    if (pilotSizes) return pilotSizes[pilotSizes.length - 1];
+  }
+  return pickDefaultSize(sizes);
+}
 
 export const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -106,18 +143,23 @@ export const ProductDetailPage: React.FC = () => {
     if (!product) return [];
     if (product.shapes && product.shapes.length > 0) return product.shapes;
     if (SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug)) return [];
+    // Pilot product: Circle/Triangle removed, Popular renamed to Standard.
+    if (product.id === PILOT_PRODUCT_ID) return ['Standard', 'Square', 'Rectangle', 'Panoramic'];
     return ['Popular', 'Square', 'Rectangle', 'Panoramic', 'Circle', 'Triangle'];
   }, [product]);
 
   const showCustomSize = product ? !SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug) : true;
+  const isPilotProduct = product?.id === PILOT_PRODUCT_ID;
 
   // Sync variants when product changes
   useEffect(() => {
     if (product) {
-      setSelectedSize(product.availableSizes?.[0] || product.sizes?.[0] || '12x18 inch');
+      const defaultShape = product.shape || availableShapes[0] || '';
+      const isPilot = product.id === PILOT_PRODUCT_ID;
+      setSelectedSize(sizeForShape(defaultShape, product.availableSizes, isPilot) || sizeForShape(defaultShape, product.sizes, isPilot) || '12x18 inch');
       setSelectedFinish(product.finishes?.[0] || 'Standard Finish');
       setSelectedMaterial(availableMaterials[0] || 'Standard');
-      setSelectedShape(product.shape || availableShapes[0] || '');
+      setSelectedShape(defaultShape);
       setIsCustomSize(false);
       setCustomWidth(8);
       setCustomHeight(8);
@@ -141,19 +183,25 @@ export const ProductDetailPage: React.FC = () => {
   }, [product, availableMaterials, availableShapes]);
 
   // Gallery images (product primary + any secondary images). Wall-hangable
-  // categories get a leading "Room View" sentinel slot rendered live via
-  // WallPreview, reacting to the selected shape/size instead of a static photo.
+  // categories get a leading "Room View" sentinel slot — shown first, like
+  // canvaschamp — rendered live via WallPreview, reacting to the selected
+  // shape/size instead of a static photo.
   const galleryImages = useMemo(() => {
     if (!product) return [];
     const base = product.images && product.images.length > 0 ? product.images : [product.image];
     if (product.categorySlug === 'yoga-fitness') return base;
-    const [first, ...rest] = base;
-    return [first, ROOM_VIEW_SENTINEL, ...rest];
+    // Multi-size comparison gallery image removed on the pilot product per
+    // direct request — its sizes don't line up with how this product's
+    // shapes/sizes actually work now.
+    const hasMultipleSizes = product.sizes && product.sizes.length > 1 && product.id !== PILOT_PRODUCT_ID;
+    return hasMultipleSizes
+      ? [ROOM_VIEW_SENTINEL, MULTI_SIZE_SENTINEL, ...base]
+      : [ROOM_VIEW_SENTINEL, ...base];
   }, [product]);
 
   // The real product photo used inside the live Room View preview (first non-sentinel image)
   const roomViewSourceImage = useMemo(() => {
-    const real = galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL);
+    const real = galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL && img !== MULTI_SIZE_SENTINEL);
     return real || product?.image || '';
   }, [galleryImages, product]);
 
@@ -315,13 +363,21 @@ export const ProductDetailPage: React.FC = () => {
         {/* ========================================================================= */}
         {/* 2. MAIN 2-COLUMN PRODUCT DISPLAY                                          */}
         {/* ========================================================================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-14 items-start">
-          
+        <div className={`grid grid-cols-1 lg:grid-cols-12 items-start ${isPilotProduct ? 'gap-5 xl:gap-8' : 'gap-8 xl:gap-14'}`}>
+
           {/* LEFT: GALLERY (Sticky on desktop, 6-7 columns) */}
-          <div className="lg:col-span-6 xl:col-span-7 flex flex-col gap-4 sticky top-24">
-            
+          <div className={`${isPilotProduct ? 'lg:col-span-5 xl:col-span-6' : 'lg:col-span-6 xl:col-span-7'} flex flex-col gap-4 sticky ${isPilotProduct ? 'top-4' : 'top-24'}`}>
+
             {/* Main Primary Image */}
-            <div className="relative w-full h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] rounded-2xl overflow-hidden bg-stone-100 shadow-xs group flex items-center justify-center">
+            <div
+              className={`relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group ${
+                galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL || galleryImages[activeImageIndex] === MULTI_SIZE_SENTINEL
+                  ? (isPilotProduct ? 'w-full aspect-[4/3] max-h-[440px]' : 'w-full aspect-[4/3]')
+                  : isPilotProduct
+                  ? 'aspect-[3/4] h-[34vh] max-h-[400px] w-auto max-w-full mx-auto'
+                  : 'aspect-[3/4] h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] max-w-full mx-auto'
+              }`}
+            >
               {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
                 <WallPreview
                   imageSrc={uploadedFile || roomViewSourceImage}
@@ -330,12 +386,18 @@ export const ProductDetailPage: React.FC = () => {
                   finish={selectedFinish}
                   className="w-full h-full"
                 />
+              ) : galleryImages[activeImageIndex] === MULTI_SIZE_SENTINEL ? (
+                <WallMultiSizePreview
+                  imageSrc={uploadedFile || roomViewSourceImage}
+                  sizes={product.sizes || []}
+                  className="w-full h-full"
+                />
               ) : (
-                <ProductImage
+                <SmartCropImage
                   src={uploadedFile || galleryImages[activeImageIndex] || product.image}
                   alt={product.name}
-                  categorySlug={product.categorySlug}
-                  className="max-w-full max-h-full w-auto h-auto object-contain transition-transform duration-500 group-hover:scale-105"
+                  containerAspect={3 / 4}
+                  className="w-full h-full"
                 />
               )}
 
@@ -418,6 +480,8 @@ export const ProductDetailPage: React.FC = () => {
                   >
                     {img === ROOM_VIEW_SENTINEL ? (
                       <WallPreview imageSrc={roomViewSourceImage} shape={selectedShape} sizeLabel={selectedSize} finish={selectedFinish} className="w-full h-full" />
+                    ) : img === MULTI_SIZE_SENTINEL ? (
+                      <WallMultiSizePreview imageSrc={roomViewSourceImage} sizes={product.sizes || []} className="w-full h-full" />
                     ) : (
                       <ProductImage src={img} alt={`View ${idx + 1}`} categorySlug={product.categorySlug} className="w-full h-full object-cover" />
                     )}
@@ -436,13 +500,23 @@ export const ProductDetailPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-start gap-2.5">
-                <Truck className="w-5 h-5 text-[#0E4A93] shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-bold text-xs text-stone-900">Free Delivery</div>
-                  <div className="text-[11px] text-stone-500">On orders ₹999+</div>
+              {isPilotProduct ? (
+                <div className="flex items-start gap-2.5">
+                  <Heart className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-bold text-xs text-stone-900">Made with Love</div>
+                    <div className="text-[11px] text-stone-500">Handcrafted, every piece</div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex items-start gap-2.5">
+                  <Truck className="w-5 h-5 text-[#0E4A93] shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-bold text-xs text-stone-900">Free Delivery</div>
+                    <div className="text-[11px] text-stone-500">On orders ₹999+</div>
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-start gap-2.5">
                 <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
@@ -464,7 +538,7 @@ export const ProductDetailPage: React.FC = () => {
           </div>
 
           {/* RIGHT: PRODUCT INFO & PURCHASE CONTROLS (5-6 columns) */}
-          <div className="lg:col-span-6 xl:col-span-5 flex flex-col gap-5 text-left">
+          <div className={`${isPilotProduct ? 'lg:col-span-7 xl:col-span-6' : 'lg:col-span-6 xl:col-span-5'} flex flex-col text-left ${isPilotProduct ? 'gap-3.5' : 'gap-5'}`}>
             
             {/* Header: Category & Share */}
             <div>
@@ -490,12 +564,12 @@ export const ProductDetailPage: React.FC = () => {
                 </button>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight mt-1">
+              <h1 className={`font-extrabold text-stone-900 tracking-tight mt-1 ${isPilotProduct ? 'text-lg sm:text-xl' : 'text-2xl sm:text-3xl'}`}>
                 {product.name}
               </h1>
 
               {/* Status & Ratings */}
-              <div className="flex items-center gap-2.5 mt-2.5 text-xs text-stone-600">
+              <div className={`flex items-center gap-2.5 text-xs text-stone-600 ${isPilotProduct ? 'mt-1' : 'mt-2.5'}`}>
                 {product.rating !== null && product.rating > 0 ? (
                   <>
                     <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded text-amber-800 font-bold">
@@ -507,12 +581,14 @@ export const ProductDetailPage: React.FC = () => {
                     <span>•</span>
                   </>
                 ) : (
-                  <>
-                    <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-bold text-[11px] px-2 py-0.5 rounded">
-                      New Arrival
-                    </span>
-                    <span>•</span>
-                  </>
+                  !isPilotProduct && (
+                    <>
+                      <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-bold text-[11px] px-2 py-0.5 rounded">
+                        New Arrival
+                      </span>
+                      <span>•</span>
+                    </>
+                  )
                 )}
                 
                 <span className="text-emerald-700 font-semibold flex items-center gap-1">
@@ -522,22 +598,30 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Short Description */}
-            <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
-              {product.shortDescription || product.description}
-            </p>
+            {/* Short Description — hidden on the pilot product to keep everything above the fold */}
+            {!isPilotProduct && (
+              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
+                {product.shortDescription || product.description}
+              </p>
+            )}
 
             {/* Shape Selector (Canvas products: Popular/Square/Rectangle/Panoramic/Circle/Triangle) */}
             {availableShapes.length > 0 && (
-              <div className="space-y-2">
+              <div className={isPilotProduct ? 'space-y-1.5' : 'space-y-2'}>
                 <span className="font-bold text-xs text-stone-800">{categoryName} Shapes:</span>
-                <div className="grid grid-cols-4 gap-2">
+                <div className={`grid grid-cols-4 ${isPilotProduct ? 'gap-1.5' : 'gap-2'}`}>
                   {availableShapes.map((shapeOpt) => (
                     <button
                       key={shapeOpt}
                       type="button"
-                      onClick={() => setSelectedShape(shapeOpt)}
-                      className={`px-2 py-2 text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
+                      onClick={() => {
+                        setSelectedShape(shapeOpt);
+                        if (product.id === PILOT_PRODUCT_ID) {
+                          setIsCustomSize(false);
+                          setSelectedSize(sizeForShape(shapeOpt, product.sizes, true) || selectedSize);
+                        }
+                      }}
+                      className={`${isPilotProduct ? 'px-2 py-1.5' : 'px-2 py-2'} text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
                         selectedShape === shapeOpt
                           ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
                           : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
@@ -552,18 +636,18 @@ export const ProductDetailPage: React.FC = () => {
 
             {/* 1. Size Selector */}
             {product.sizes && product.sizes.length > 0 && (
-              <div className="space-y-2">
+              <div className={isPilotProduct ? 'space-y-1.5' : 'space-y-2'}>
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-stone-800">{availableShapes.length > 0 ? `${categoryName} Sizes:` : '1. Available Sizes:'}</span>
                   <span className="text-stone-500 font-medium">{selectedSize}</span>
                 </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {product.sizes.map((size) => (
+                <div className={`grid grid-cols-4 ${isPilotProduct ? 'gap-1.5' : 'gap-2'}`}>
+                  {(product.id === PILOT_PRODUCT_ID ? pilotSizesForShape(selectedShape) || product.sizes : product.sizes).map((size) => (
                     <button
                       key={size}
                       type="button"
                       onClick={() => { setIsCustomSize(false); setSelectedSize(size); }}
-                      className={`px-2 py-2 text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
+                      className={`${isPilotProduct ? 'px-2 py-1.5' : 'px-2 py-2'} text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
                         selectedSize === size && !isCustomSize
                           ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
                           : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
@@ -602,8 +686,8 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* 2. Material Selector */}
-            {availableMaterials.length > 0 && (
+            {/* 2. Material Selector — hidden on the pilot product */}
+            {!isPilotProduct && availableMaterials.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-stone-800">2. Material:</span>
@@ -628,8 +712,8 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* 3. Finish Selector */}
-            {product.finishes && product.finishes.length > 0 && (
+            {/* 3. Finish Selector — hidden on the pilot product per direct request */}
+            {product.id !== PILOT_PRODUCT_ID && product.finishes && product.finishes.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-stone-800">3. Finish &amp; Style:</span>
@@ -692,9 +776,9 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Pricing */}
-            <div className="pt-2 pb-4 border-t border-stone-200">
+            <div className={`border-t border-stone-200 ${isPilotProduct ? 'pt-2 pb-1' : 'pt-2 pb-4'}`}>
               <div className="flex items-baseline gap-3">
-                <span className="text-3xl sm:text-4xl font-extrabold text-stone-950">
+                <span className={`font-extrabold text-stone-950 ${isPilotProduct ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl'}`}>
                   ₹{product.price.toLocaleString('en-IN')}
                 </span>
                 <span className="text-base sm:text-lg text-stone-400 line-through">
@@ -706,11 +790,13 @@ export const ProductDetailPage: React.FC = () => {
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-stone-500 mt-1">Inclusive of GST taxes. Free shipping on orders above ₹999 across India.</p>
+              {!isPilotProduct && (
+                <p className="text-[11px] text-stone-500 mt-1">Inclusive of GST taxes. Free shipping on orders above ₹999 across India.</p>
+              )}
             </div>
 
             {/* Action CTAs: Add to Cart & Buy Now */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <div className={`flex flex-col sm:flex-row gap-3 ${isPilotProduct ? '' : 'pt-2'}`}>
               <button
                 type="button"
                 onClick={handleAddToCartWithVariants}
@@ -730,7 +816,8 @@ export const ProductDetailPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Indian Delivery Check Section */}
+            {/* Indian Delivery Check Section — hidden on the pilot product to keep everything above the fold */}
+            {!isPilotProduct && (
             <div className="p-4 rounded-xl bg-stone-50 border border-stone-200/80 space-y-2.5">
               <div className="flex items-center gap-2 text-xs font-bold text-stone-800">
                 <Truck className="w-4 h-4 text-[#0E4A93]" />
@@ -772,6 +859,7 @@ export const ProductDetailPage: React.FC = () => {
                 </div>
               )}
             </div>
+            )}
 
           </div>
 
@@ -784,7 +872,8 @@ export const ProductDetailPage: React.FC = () => {
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             
-            {/* Left: Product Description & Craftsmanship */}
+            {/* Left: Product Description & Craftsmanship — removed on the pilot product */}
+            {!isPilotProduct && (
             <div className="lg:col-span-7 space-y-6">
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
                 Product Description &amp; Craftsmanship
@@ -816,9 +905,10 @@ export const ProductDetailPage: React.FC = () => {
                 </ul>
               </div>
             </div>
+            )}
 
-            {/* Right: Specifications Table */}
-            <div className="lg:col-span-5 space-y-4">
+            {/* Right: Specifications Table — takes the Description's place on the pilot product */}
+            <div className={isPilotProduct ? 'lg:col-span-12 space-y-4' : 'lg:col-span-5 space-y-4'}>
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
                 Product Specifications
               </h2>
