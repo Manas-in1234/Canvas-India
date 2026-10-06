@@ -21,7 +21,9 @@ import {
 import { Product } from '../types';
 import { useShop } from '../context/ShopContext';
 import { ProductImage } from '../components/ProductImage';
+import { SmartCropImage } from '../components/SmartCropImage';
 import { WallPreview } from '../components/WallPreview';
+import { WallMultiSizePreview } from '../components/WallMultiSizePreview';
 import {
   AcrylicProductReview,
   getProductReviews,
@@ -36,6 +38,21 @@ export interface AcrylicProductDetailPageProps {
 // Sentinel inserted as the second gallery slot so that thumbnail renders a
 // live WallPreview (reacting to the selected shape/size) instead of a static image.
 const ROOM_VIEW_SENTINEL = '__ROOM_VIEW__';
+
+// Default to the largest available size so the product — and its Room View
+// — looks substantial right away. Size lists are ordered smallest-to-largest.
+function pickDefaultSize(sizes?: string[]): string | undefined {
+  if (!sizes || sizes.length === 0) return undefined;
+  return sizes[sizes.length - 1];
+}
+
+// The Popular shape always shows 25x30 as its size, regardless of the
+// product's own catalogue sizes.
+function sizeForShape(shape: string, sizes?: string[]): string | undefined {
+  if (shape.toLowerCase() === 'popular') return '25x30 inch';
+  return pickDefaultSize(sizes);
+}
+const MULTI_SIZE_SENTINEL = '__MULTI_SIZE__';
 
 export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> = ({ product }) => {
   const navigate = useNavigate();
@@ -55,12 +72,15 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
       });
     }
     if (list.length === 0) return list;
-    const [first, ...rest] = list;
-    return [first, ROOM_VIEW_SENTINEL, ...rest];
+    const sizesForProduct = product.availableSizes || product.sizes || [];
+    const sentinels = sizesForProduct.length > 1
+      ? [ROOM_VIEW_SENTINEL, MULTI_SIZE_SENTINEL]
+      : [ROOM_VIEW_SENTINEL];
+    return [...sentinels, ...list];
   }, [product]);
 
   const roomViewSourceImage = useMemo(() => {
-    return galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL) || product.image;
+    return galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL && img !== MULTI_SIZE_SENTINEL) || product.image;
   }, [galleryImages, product]);
 
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
@@ -96,10 +116,11 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   useEffect(() => {
     setSelectedStyle(availableStyles[0] || 'Block');
     setSelectedThickness(availableThicknesses[0] || '7mm');
-    setSelectedSize(availableSizes[0] || '4" x 4"');
+    const defaultShape = product.shape || availableShapes[0] || '';
+    setSelectedSize(sizeForShape(defaultShape, availableSizes) || '4" x 4"');
     setSelectedPaper(availablePapers[0] || 'White Luster Photo Paper');
     setSelectedBase(availableBases[0] || 'Without Base');
-    setSelectedShape(product.shape || availableShapes[0] || '');
+    setSelectedShape(defaultShape);
     setIsCustomSize(false);
     setCustomWidth(8);
     setCustomHeight(8);
@@ -310,7 +331,13 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
           <div className="lg:col-span-7 space-y-4">
             
             {/* Main Stage Image Container */}
-            <div className="relative h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] bg-stone-100 rounded-3xl overflow-hidden border border-stone-200 shadow-md group flex items-center justify-center">
+            <div
+              className={`relative bg-stone-100 rounded-3xl overflow-hidden border border-stone-200 shadow-md group ${
+                galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL || galleryImages[activeImageIndex] === MULTI_SIZE_SENTINEL
+                  ? 'w-full aspect-[4/3]'
+                  : 'aspect-[3/4] h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] max-w-full mx-auto'
+              }`}
+            >
 
               {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
                 <WallPreview
@@ -319,12 +346,18 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                   sizeLabel={selectedSize}
                   className="w-full h-full"
                 />
+              ) : galleryImages[activeImageIndex] === MULTI_SIZE_SENTINEL ? (
+                <WallMultiSizePreview
+                  imageSrc={roomViewSourceImage}
+                  sizes={product.availableSizes || product.sizes || []}
+                  className="w-full h-full"
+                />
               ) : (
-                <ProductImage
+                <SmartCropImage
                   src={galleryImages[activeImageIndex] || product.image}
                   alt={product.name}
-                  category="acrylic"
-                  className="max-w-full max-h-full w-auto h-auto object-contain transition-all duration-300"
+                  containerAspect={3 / 4}
+                  className="w-full h-full transition-all duration-300"
                 />
               )}
 
@@ -405,6 +438,8 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                     >
                       {imgUrl === ROOM_VIEW_SENTINEL ? (
                         <WallPreview imageSrc={roomViewSourceImage} shape={selectedShape} sizeLabel={selectedSize} className="w-full h-full" />
+                      ) : imgUrl === MULTI_SIZE_SENTINEL ? (
+                        <WallMultiSizePreview imageSrc={roomViewSourceImage} sizes={product.availableSizes || product.sizes || []} className="w-full h-full" />
                       ) : (
                         <ProductImage
                           src={imgUrl}
@@ -500,7 +535,10 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                       <button
                         key={shapeOpt}
                         type="button"
-                        onClick={() => setSelectedShape(shapeOpt)}
+                        onClick={() => {
+                          setSelectedShape(shapeOpt);
+                          if (shapeOpt.toLowerCase() === 'popular') setSelectedSize('25x30 inch');
+                        }}
                         className={`px-2 py-2 text-xs font-semibold rounded-full border-2 text-center capitalize transition-all cursor-pointer ${
                           selectedShape === shapeOpt
                             ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
