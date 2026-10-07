@@ -59,7 +59,7 @@ export const OCCASIONS: OccasionDef[] = [
     bannerImage: u('photo-1560448204-e02f11c3d0e2', 1600),
     tint: 'from-[#0E4A93]/90',
     accent: '#0E4A93',
-    categorySlugs: ['scenery-landscape-art', 'tribal-ethnic-art', 'line-art', 'devotional-art'],
+    categorySlugs: ['canvas', 'acrylic'],
   },
   {
     slug: 'diwali',
@@ -69,7 +69,7 @@ export const OCCASIONS: OccasionDef[] = [
     bannerImage: u('photo-1605721911519-3dfeb3be25e7', 1600),
     tint: 'from-[#EA580C]/90',
     accent: '#EA580C',
-    categorySlugs: ['devotional-art', 'motivational-posters'],
+    categorySlugs: ['canvas', 'acrylic'],
   },
   {
     slug: 'festive-offers',
@@ -79,7 +79,7 @@ export const OCCASIONS: OccasionDef[] = [
     bannerImage: u('photo-1577083753695-e010191bacb5', 1600),
     tint: 'from-[#9A3412]/90',
     accent: '#E8752A',
-    categorySlugs: ['devotional-art', 'motivational-posters', 'tribal-ethnic-art', 'scenery-landscape-art'],
+    categorySlugs: ['canvas', 'acrylic'],
   },
   {
     slug: 'corporate-gifts',
