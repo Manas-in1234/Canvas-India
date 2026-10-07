@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, ArrowRight, Sparkles, Cake, Heart, Gem, Home, Flame, Gift } from 'lucide-react';
+import { ChevronRight, ArrowRight, Sparkles, Cake, Heart, Gem, Home, Flame, Gift, PartyPopper } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { OCCASIONS, getOccasionBySlug } from '../data/occasionsData';
 import { SHOP_CATEGORIES } from '../data/shopCategories';
@@ -15,6 +15,35 @@ const OCCASION_ICONS: Record<string, React.ComponentType<{ className?: string }>
   'corporate-gifts': Gift,
 };
 
+// Full festival/special-day list shown on the Festive Offers page, so every
+// occasion from the reference grid is browsable in one place, not just the
+// handful that get their own dedicated occasion page.
+const ALL_FESTIVALS: { name: string; date: string }[] = [
+  { name: "Mother's Day", date: '10th May' },
+  { name: "Brother's Day", date: '24th May' },
+  { name: "Father's Day", date: '21st June' },
+  { name: 'Friendship Day', date: '2nd August' },
+  { name: "Teacher's Day", date: '5th September' },
+  { name: "Children's Day", date: '14th November' },
+  { name: "Men's Day", date: '19th November' },
+  { name: 'New Year', date: '1st January' },
+  { name: 'Republic Day', date: '26th January' },
+  { name: "Valentine's Day", date: '14th February' },
+  { name: "Women's Day", date: '8th March' },
+  { name: 'Rakshabandhan', date: '28th August' },
+  { name: 'Janmashtami', date: '4th September' },
+  { name: 'Ganesh Chaturthi', date: '14th September' },
+  { name: 'Karwa Chauth', date: '29th October' },
+  { name: 'Halloween', date: '31st October' },
+  { name: 'Diwali', date: '5th November' },
+  { name: 'Bhai Dooj', date: '11th November' },
+  { name: 'Christmas', date: '25th December' },
+  { name: 'Lohri', date: '13th January' },
+  { name: 'Makar Sankranti', date: '14th January' },
+  { name: 'Pongal', date: '14th January' },
+  { name: 'Holi', date: '6th March' },
+];
+
 export const OccasionPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -27,6 +56,14 @@ export const OccasionPage: React.FC = () => {
       document.title = `${occasion.name} Gifts & Prints | Canvas India`;
     }
   }, [occasion]);
+
+  // Every festival tile leads to the same live customizer — there's no
+  // per-festival product catalogue yet, so this is a functional "start a
+  // personalized gift" entry point rather than a filtered listing.
+  const handleCustomizeFestival = () => {
+    const first = allProducts.find((p) => p.categorySlug === 'canvas');
+    navigate(`/customize/canvas/${first?.slug || first?.id || 'canvas-photo-panel'}`);
+  };
 
   // One tile per category relevant to this occasion — categories with a
   // live customizer (Canvas, Acrylic) open the customizer directly;
@@ -216,6 +253,41 @@ export const OccasionPage: React.FC = () => {
           </div>
         ) : (
           <p className="text-center text-sm text-stone-500 py-12">New {occasion.name.toLowerCase()} picks are on the way — check back soon.</p>
+        )}
+
+        {/* Shop by Festival — every special day from the reference grid,
+            not just the occasions with their own dedicated page. Festive
+            Offers only. */}
+        {occasion.slug === 'festive-offers' && (
+          <div className="mt-16 sm:mt-20">
+            <div className="text-center mb-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-stone-900" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+                Shop by Festival
+              </h2>
+              <p className="text-xs sm:text-sm text-stone-500 mt-1.5">Pick any special day to start a personalized gift for it</p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+              {ALL_FESTIVALS.map((f) => (
+                <button
+                  key={f.name}
+                  type="button"
+                  onClick={handleCustomizeFestival}
+                  className="group flex flex-col items-center text-center p-4 rounded-xl border border-stone-200 bg-white hover:border-transparent hover:shadow-lg transition-all cursor-pointer"
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = occasion.accent)}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = '')}
+                >
+                  <span
+                    className="w-11 h-11 rounded-full flex items-center justify-center mb-2.5 transition-colors"
+                    style={{ backgroundColor: `${occasion.accent}14` }}
+                  >
+                    <PartyPopper className="w-5 h-5" style={{ color: occasion.accent }} />
+                  </span>
+                  <span className="text-xs font-bold text-stone-800 leading-tight">{f.name}</span>
+                  <span className="text-[10px] text-stone-400 mt-0.5">{f.date}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
         <div className="text-center mt-10">
