@@ -94,13 +94,13 @@ export const OccasionPage: React.FC = () => {
         </nav>
       </div>
 
-      {/* HERO BANNER — soft gradient in the occasion's own color, a subtle
-          repeating heart texture, a corner doodle, and a tilted polaroid
-          of the occasion photo that spills over the banner's edge */}
+      {/* HERO BANNER — flat solid color in the occasion's own accent, the
+          occasion photo on the right, text vertically centered. No pattern
+          texture or doodles — kept clean. */}
       <div className="relative mt-4 mx-auto max-w-[1680px]">
         <section
           className="relative w-full overflow-hidden rounded-3xl h-[280px] sm:h-[320px] lg:h-[360px]"
-          style={{ background: `linear-gradient(120deg, ${occasion.accent}, ${occasion.accent}CC)` }}
+          style={{ backgroundColor: occasion.accent }}
         >
           {/* The occasion photo, full-bleed on the right, fading into the
               solid color on the left so the headline stays readable */}
@@ -113,22 +113,6 @@ export const OccasionPage: React.FC = () => {
               WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, #000 45%, #000 100%)',
             }}
           />
-
-          {/* Repeating heart texture */}
-          <svg className="absolute inset-0 w-full h-full opacity-[0.07]" aria-hidden="true">
-            <defs>
-              <pattern id={`hearts-${occasion.slug}`} width="70" height="60" patternUnits="userSpaceOnUse">
-                <path d="M20 35 C8 26, 5 14, 13 9 C17 6, 20 10, 20 15 C20 10, 23 6, 27 9 C35 14, 32 26, 20 35 Z" fill="white" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill={`url(#hearts-${occasion.slug})`} />
-          </svg>
-
-          {/* Decorative heart-swirl doodle, top-right */}
-          <svg className="hidden sm:block absolute -top-2 right-10 w-24 h-24 text-white/40 z-10" viewBox="0 0 100 100" fill="none">
-            <path d="M50 85 C20 65, 15 40, 30 28 C40 20, 50 28, 50 38 C50 28, 60 20, 70 28 C85 40, 80 65, 50 85 Z" stroke="currentColor" strokeWidth="2" />
-            <path d="M70 15 Q85 20 80 35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
 
           <div className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-10 lg:px-14 max-w-xl">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight drop-shadow-sm" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
