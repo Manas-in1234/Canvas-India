@@ -81,16 +81,6 @@ export const OCCASIONS: OccasionDef[] = [
     accent: '#E8752A',
     categorySlugs: ['canvas', 'acrylic'],
   },
-  {
-    slug: 'corporate-gifts',
-    name: 'Corporate Gifts',
-    emoji: '🎁',
-    tagline: 'Premium acrylic plaques and motivational prints for offices and teams',
-    bannerImage: u('photo-1497215728101-856f4ea42174', 1600),
-    tint: 'from-[#0F766E]/90',
-    accent: '#0F766E',
-    categorySlugs: ['acrylic', 'motivational-posters'],
-  },
 ];
 
 export const getOccasionBySlug = (slug: string | undefined): OccasionDef | undefined =>

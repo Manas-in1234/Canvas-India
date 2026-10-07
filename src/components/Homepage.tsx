@@ -315,7 +315,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         <Container>
           <SectionTitle title="Shop by Occasion" sub="Thoughtful personalized gifts for life's most precious celebrations" />
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {OCCASIONS.filter((o) => o.slug !== 'corporate-gifts').map((o) => (
+            {OCCASIONS.map((o) => (
               <button
                 key={o.slug}
                 type="button"
