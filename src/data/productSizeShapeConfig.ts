@@ -19,7 +19,7 @@ export interface SizeShapeOption {
   panelsCount?: number;
   pieceBreakdown?: string;
   arrangement?: string;
-  diagramType?: 'single-shape' | 'wall-display-3a' | 'wall-display-3b' | 'wall-display-4a' | 'wall-display-tiered' | 'wall-display-triptych' | 'wall-display-5piece' | 'split-2' | 'split-3' | 'split-4' | 'collage-2' | 'collage-3' | 'collage-4' | 'collage-9' | 'mosaic-4' | 'mosaic-6' | 'mosaic-9' | 'mosaic-16' | 'hexagon-1' | 'hexagon-2' | 'hexagon-3' | 'hexagon-4';
+  diagramType?: 'single-shape' | 'wall-display-3a' | 'wall-display-3b' | 'wall-display-4a' | 'wall-display-tiered' | 'wall-display-triptych' | 'wall-display-5piece' | 'split-2' | 'split-3' | 'split-4' | 'collage-2' | 'collage-3' | 'collage-4' | 'collage-9' | 'mosaic-4' | 'mosaic-6' | 'mosaic-9' | 'mosaic-16' | 'hexagon-1' | 'hexagon-2' | 'hexagon-3' | 'hexagon-4' | string;
   panels?: Array<{ id: string; label: string; dimension: string; widthRatio: number; heightRatio: number }>;
 }
 
@@ -573,100 +573,194 @@ export const COLLAGE_PRESETS: Array<Omit<SizeShapeOption, 'price'> & { acrylicPr
 ];
 
 // MOSAIC PRESETS
-export const MOSAIC_PRESETS: Array<Omit<SizeShapeOption, 'price'> & { acrylicPrice: number; canvasPrice: number }> = [
+export const MOSAIC_PRESETS: Array<Omit<SizeShapeOption, 'price'> & { acrylicPrice: number; canvasPrice: number; cols?: number; rows?: number; priceRange?: string }> = [
   {
-    id: 'mosaic-4p-10x10',
+    id: 'mosaic2-4x4',
     shapeId: 'shape-square',
     shapeName: 'Photo Mosaic',
-    label: '4 Photos: 10" × 10"',
-    dimensionsSummary: '10" × 10" (4 Mosaic Tiles)',
-    widthInches: 10,
-    heightInches: 10,
-    acrylicPrice: 799.00,
-    canvasPrice: 699.00,
-    aspectRatio: 1,
-    category: 'SQUARE',
-    panelsCount: 4,
-    pieceBreakdown: '4-Tile Mosaic Grid (5"×5" ea)',
-    arrangement: 'fourGrid',
-    diagramType: 'mosaic-4',
-    panels: [
-      { id: 'p0', label: 'Tile 1', dimension: '5" × 5"', widthRatio: 5, heightRatio: 5 },
-      { id: 'p1', label: 'Tile 2', dimension: '5" × 5"', widthRatio: 5, heightRatio: 5 },
-      { id: 'p2', label: 'Tile 3', dimension: '5" × 5"', widthRatio: 5, heightRatio: 5 },
-      { id: 'p3', label: 'Tile 4', dimension: '5" × 5"', widthRatio: 5, heightRatio: 5 }
-    ]
-  },
-  {
-    id: 'mosaic-6p-18x12',
-    shapeId: 'shape-rectangle',
-    shapeName: 'Photo Mosaic',
-    label: '6 Photos: 18" × 12"',
-    dimensionsSummary: '18" × 12" (6 Mosaic Tiles)',
-    widthInches: 18,
-    heightInches: 12,
-    acrylicPrice: 1199.00,
-    canvasPrice: 999.00,
-    aspectRatio: 18 / 12,
-    category: 'RECTANGLE',
-    panelsCount: 6,
-    pieceBreakdown: '6-Tile Mosaic Grid (6"×6" ea)',
-    arrangement: 'sixGrid',
-    diagramType: 'mosaic-6',
-    panels: Array.from({ length: 6 }, (_, i) => ({
-      id: `p${i}`,
-      label: `Tile ${i + 1}`,
-      dimension: '6" × 6"',
-      widthRatio: 6,
-      heightRatio: 6
-    }))
-  },
-  {
-    id: 'mosaic-9p-18x18',
-    shapeId: 'shape-square',
-    shapeName: 'Photo Mosaic',
-    label: '9 Photos: 18" × 18"',
-    dimensionsSummary: '18" × 18" (9 Mosaic Tiles)',
-    widthInches: 18,
-    heightInches: 18,
-    acrylicPrice: 1499.00,
-    canvasPrice: 1299.00,
-    aspectRatio: 1,
-    category: 'SQUARE',
-    panelsCount: 9,
-    pieceBreakdown: '9-Tile Mosaic Grid (6"×6" ea)',
-    arrangement: 'nineGrid',
-    diagramType: 'mosaic-9',
-    panels: Array.from({ length: 9 }, (_, i) => ({
-      id: `p${i}`,
-      label: `Tile ${i + 1}`,
-      dimension: '6" × 6"',
-      widthRatio: 6,
-      heightRatio: 6
-    }))
-  },
-  {
-    id: 'mosaic-16p-20x20',
-    shapeId: 'shape-square',
-    shapeName: 'Photo Mosaic',
-    label: '16 Photos: 20" × 20"',
-    dimensionsSummary: '20" × 20" (16 Mosaic Tiles)',
-    widthInches: 20,
-    heightInches: 20,
-    acrylicPrice: 2299.00,
-    canvasPrice: 1999.00,
+    label: 'Mosaic2-4x4 (16 Tiles)',
+    dimensionsSummary: '16" × 16"',
+    widthInches: 16,
+    heightInches: 16,
+    acrylicPrice: 198.50,
+    canvasPrice: 148.50,
+    priceRange: '₹148.50 - ₹9,225.00',
     aspectRatio: 1,
     category: 'SQUARE',
     panelsCount: 16,
-    pieceBreakdown: '16-Tile Mosaic Grid (5"×5" ea)',
-    arrangement: 'sixteenGrid',
-    diagramType: 'mosaic-16',
+    pieceBreakdown: '16-Tile Mosaic Grid (4×4)',
+    arrangement: 'mosaic2-4x4',
+    diagramType: 'mosaic-4x4',
+    cols: 4,
+    rows: 4,
     panels: Array.from({ length: 16 }, (_, i) => ({
       id: `p${i}`,
       label: `Tile ${i + 1}`,
-      dimension: '5" × 5"',
-      widthRatio: 5,
-      heightRatio: 5
+      dimension: '4" × 4"',
+      widthRatio: 4,
+      heightRatio: 4
+    }))
+  },
+  {
+    id: 'mosaic4-5x5',
+    shapeId: 'shape-square',
+    shapeName: 'Photo Mosaic',
+    label: 'Mosaic4-5x5 (25 Tiles)',
+    dimensionsSummary: '20" × 20"',
+    widthInches: 20,
+    heightInches: 20,
+    acrylicPrice: 198.50,
+    canvasPrice: 148.50,
+    priceRange: '₹148.50 - ₹9,225.00',
+    aspectRatio: 1,
+    category: 'SQUARE',
+    panelsCount: 25,
+    pieceBreakdown: '25-Tile Mosaic Grid (5×5)',
+    arrangement: 'mosaic4-5x5',
+    diagramType: 'mosaic-5x5',
+    cols: 5,
+    rows: 5,
+    panels: Array.from({ length: 25 }, (_, i) => ({
+      id: `p${i}`,
+      label: `Tile ${i + 1}`,
+      dimension: '4" × 4"',
+      widthRatio: 4,
+      heightRatio: 4
+    }))
+  },
+  {
+    id: 'mosaic6-6x6',
+    shapeId: 'shape-square',
+    shapeName: 'Photo Mosaic',
+    label: 'Mosaic6-6x6 (36 Tiles)',
+    dimensionsSummary: '24" × 24"',
+    widthInches: 24,
+    heightInches: 24,
+    acrylicPrice: 198.50,
+    canvasPrice: 148.50,
+    priceRange: '₹148.50 - ₹9,225.00',
+    aspectRatio: 1,
+    category: 'SQUARE',
+    panelsCount: 36,
+    pieceBreakdown: '36-Tile Mosaic Grid (6×6)',
+    arrangement: 'mosaic6-6x6',
+    diagramType: 'mosaic-6x6',
+    cols: 6,
+    rows: 6,
+    panels: Array.from({ length: 36 }, (_, i) => ({
+      id: `p${i}`,
+      label: `Tile ${i + 1}`,
+      dimension: '4" × 4"',
+      widthRatio: 4,
+      heightRatio: 4
+    }))
+  },
+  {
+    id: 'mosaic3-3x4',
+    shapeId: 'shape-rectangle',
+    shapeName: 'Photo Mosaic',
+    label: 'Mosaic3-3x4 (12 Tiles)',
+    dimensionsSummary: '16" × 12"',
+    widthInches: 16,
+    heightInches: 12,
+    acrylicPrice: 505.00,
+    canvasPrice: 405.00,
+    priceRange: '₹405.00 - ₹5,517.00',
+    aspectRatio: 16 / 12,
+    category: 'RECTANGLE',
+    panelsCount: 12,
+    pieceBreakdown: '12-Tile Mosaic Grid (4 cols × 3 rows)',
+    arrangement: 'mosaic3-3x4',
+    diagramType: 'mosaic-3x4',
+    cols: 4,
+    rows: 3,
+    panels: Array.from({ length: 12 }, (_, i) => ({
+      id: `p${i}`,
+      label: `Tile ${i + 1}`,
+      dimension: '4" × 4"',
+      widthRatio: 4,
+      heightRatio: 4
+    }))
+  },
+  {
+    id: 'mosaic5-4x5',
+    shapeId: 'shape-rectangle',
+    shapeName: 'Photo Mosaic',
+    label: 'Mosaic5-4x5 (20 Tiles)',
+    dimensionsSummary: '16" × 20"',
+    widthInches: 16,
+    heightInches: 20,
+    acrylicPrice: 795.00,
+    canvasPrice: 645.00,
+    priceRange: '₹645.00 - ₹5,176.50',
+    aspectRatio: 16 / 20,
+    category: 'RECTANGLE',
+    panelsCount: 20,
+    pieceBreakdown: '20-Tile Mosaic Grid (4 cols × 5 rows)',
+    arrangement: 'mosaic5-4x5',
+    diagramType: 'mosaic-4x5',
+    cols: 4,
+    rows: 5,
+    panels: Array.from({ length: 20 }, (_, i) => ({
+      id: `p${i}`,
+      label: `Tile ${i + 1}`,
+      dimension: '4" × 4"',
+      widthRatio: 4,
+      heightRatio: 4
+    }))
+  },
+  {
+    id: 'mosaic1-3x4',
+    shapeId: 'shape-rectangle',
+    shapeName: 'Photo Mosaic',
+    label: 'Mosaic1-3x4 (12 Tiles)',
+    dimensionsSummary: '12" × 16"',
+    widthInches: 12,
+    heightInches: 16,
+    acrylicPrice: 845.00,
+    canvasPrice: 685.50,
+    priceRange: '₹685.50 - ₹5,517.00',
+    aspectRatio: 12 / 16,
+    category: 'RECTANGLE',
+    panelsCount: 12,
+    pieceBreakdown: '12-Tile Mosaic Grid (3 cols × 4 rows)',
+    arrangement: 'mosaic1-3x4',
+    diagramType: 'mosaic-1-3x4',
+    cols: 3,
+    rows: 4,
+    panels: Array.from({ length: 12 }, (_, i) => ({
+      id: `p${i}`,
+      label: `Tile ${i + 1}`,
+      dimension: '4" × 4"',
+      widthRatio: 4,
+      heightRatio: 4
+    }))
+  },
+  {
+    id: 'mosaic7-5x3',
+    shapeId: 'shape-rectangle',
+    shapeName: 'Photo Mosaic',
+    label: 'Mosaic7-5x3 (15 Tiles)',
+    dimensionsSummary: '12" × 20"',
+    widthInches: 12,
+    heightInches: 20,
+    acrylicPrice: 999.00,
+    canvasPrice: 813.00,
+    priceRange: '₹813.00 - ₹3,105.00',
+    aspectRatio: 12 / 20,
+    category: 'RECTANGLE',
+    panelsCount: 15,
+    pieceBreakdown: '15-Tile Mosaic Grid (3 cols × 5 rows)',
+    arrangement: 'mosaic7-5x3',
+    diagramType: 'mosaic-5x3',
+    cols: 3,
+    rows: 5,
+    panels: Array.from({ length: 15 }, (_, i) => ({
+      id: `p${i}`,
+      label: `Tile ${i + 1}`,
+      dimension: '4" × 4"',
+      widthRatio: 4,
+      heightRatio: 4
     }))
   }
 ];
@@ -892,11 +986,9 @@ export function getProductSizeShapeOptions(productId: string, material: 'canvas'
     }));
   }
 
-  // 3b. Mosaic (Strictly excluding 9x9 and 16x16 per customizer requirements)
+  // 3b. Mosaic (7 exact configurations)
   if (normId.includes('mosaic')) {
-    return MOSAIC_PRESETS.filter(
-      (p) => !(p.widthInches === 9 && p.heightInches === 9) && !(p.widthInches === 16 && p.heightInches === 16)
-    ).map((p) => ({
+    return MOSAIC_PRESETS.map((p) => ({
       ...p,
       price: material === 'acrylic' ? p.acrylicPrice : p.canvasPrice
     }));
@@ -983,9 +1075,7 @@ export function getSizesForProductAndShape(
     return matching.length > 0 ? matching : collages;
   }
   if (normId.includes('mosaic')) {
-    const mosaics = MOSAIC_PRESETS.filter(
-      (p) => !(p.widthInches === 9 && p.heightInches === 9) && !(p.widthInches === 16 && p.heightInches === 16)
-    ).map((p) => ({
+    const mosaics = MOSAIC_PRESETS.map((p) => ({
       ...p,
       price: material === 'acrylic' ? p.acrylicPrice : p.canvasPrice
     }));

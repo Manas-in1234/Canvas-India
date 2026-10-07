@@ -75,22 +75,30 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-white">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0E4A93]">
-              <Layers className="w-4 h-4" />
-            </div>
+            {productId !== 'canvas-mosaic' && (
+              <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0E4A93]">
+                <Layers className="w-4 h-4" />
+              </div>
+            )}
             <div>
               <h2 className="text-lg sm:text-xl font-black text-stone-900 tracking-tight">
-                Select Layout
+                {productId === 'canvas-mosaic' ? 'Select shape' : 'Select Layout'}
               </h2>
-              <p className="text-xs text-stone-500">
-                Choose an arrangement for {productName}
-              </p>
+              {productId !== 'canvas-mosaic' && (
+                <p className="text-xs text-stone-500">
+                  Choose an arrangement for {productName}
+                </p>
+              )}
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center cursor-pointer transition-colors"
+            className={`w-7 h-7 rounded-full flex items-center justify-center cursor-pointer transition-colors ${
+              productId === 'canvas-mosaic'
+                ? 'bg-black hover:bg-stone-800 text-white shadow-xs'
+                : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+            }`}
             title="Close"
           >
             <X className="w-4 h-4" />
@@ -99,9 +107,64 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
 
         {/* Content: Layout Cards */}
         <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh]">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div
+            className={
+              productId === 'canvas-mosaic'
+                ? 'grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4'
+                : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'
+            }
+          >
             {productLayouts.map((layout) => {
               const isSelected = selectedId === layout.id;
+              const isMosaic = productId === 'canvas-mosaic';
+
+              if (isMosaic) {
+                return (
+                  <div
+                    key={layout.id}
+                    onClick={() => {
+                      setSelectedId(layout.id);
+                      onSelectLayout(layout);
+                    }}
+                    onDoubleClick={() => {
+                      setSelectedId(layout.id);
+                      onSelectLayout(layout);
+                    }}
+                    className={`group relative rounded-none border transition-all cursor-pointer flex flex-col justify-between overflow-hidden bg-white ${
+                      isSelected
+                        ? 'border-2 border-stone-800 shadow-sm'
+                        : 'border-stone-200 hover:border-stone-400 shadow-2xs'
+                    }`}
+                  >
+                    {/* Selected Checkmark Badge matching Reference 1 */}
+                    {isSelected && (
+                      <div className="absolute top-1.5 right-1.5 z-10 w-5 h-5 rounded-[2px] bg-[#374151] text-white flex items-center justify-center shadow-xs">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                    )}
+
+                    {/* Diagram / Preview Box */}
+                    <div className="h-28 sm:h-32 p-3 bg-white flex items-center justify-center relative select-none">
+                      {renderProductLayoutDiagram(layout, isSelected)}
+                    </div>
+
+                    {/* Details Bottom Box */}
+                    <div className="p-2.5 bg-white flex flex-col items-center justify-center text-center">
+                      <span
+                        className={`text-xs sm:text-[13px] font-bold truncate transition-colors ${
+                          isSelected ? 'text-[#dc2626]' : 'text-stone-900'
+                        }`}
+                      >
+                        {layout.name}
+                      </span>
+                      <span className="text-[11px] sm:text-xs font-semibold text-stone-800 mt-0.5">
+                        {layout.priceRange || `₹${layout.price.toFixed(2)}`}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div
                   key={layout.id}

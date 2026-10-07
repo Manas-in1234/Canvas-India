@@ -3178,8 +3178,8 @@ export const CanvasCustomizerPage: React.FC = () => {
     const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
     const master = panelImages[0] || createDefaultPanel();
 
-    const totalCols = count === 4 ? 2 : count === 6 ? 3 : count === 9 ? 3 : 4;
-    const totalRows = count === 4 ? 2 : count === 6 ? 2 : count === 9 ? 3 : 4;
+    const totalCols = layout.cols || (count === 16 ? 4 : count === 25 ? 5 : count === 36 ? 6 : count === 20 ? 4 : count === 15 ? 3 : count === 12 && layout.aspectRatio > 1 ? 4 : 3);
+    const totalRows = layout.rows || Math.ceil(count / totalCols);
 
     return (
       <div className="w-full max-w-xl mx-auto my-auto p-4 flex flex-col items-center select-none">
@@ -3189,7 +3189,7 @@ export const CanvasCustomizerPage: React.FC = () => {
             aspectRatio: String(layout.aspectRatio),
             gridTemplateColumns: `repeat(${totalCols}, 1fr)`,
             gridTemplateRows: `repeat(${totalRows}, 1fr)`,
-            maxWidth: count === 6 ? '32rem' : '26rem',
+            maxWidth: layout.aspectRatio > 1.2 ? '34rem' : layout.aspectRatio < 0.8 ? '22rem' : '28rem',
             boxShadow: '0 20px 30px -10px rgba(15, 23, 42, 0.15)'
           }}
         >
@@ -4580,7 +4580,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                         {layout.name}
                                       </div>
                                       <div className="text-[10px] font-medium text-stone-500 truncate">
-                                        {layout.panelsCount} {layout.panelsCount === 1 ? 'Panel' : 'Panels'} • {layout.dimensionsSummary}
+                                        {layout.priceRange || `${layout.panelsCount} ${layout.panelsCount === 1 ? 'Panel' : 'Panels'} • ${layout.dimensionsSummary}`}
                                       </div>
                                     </div>
                                   </div>
@@ -5883,13 +5883,26 @@ export const CanvasCustomizerPage: React.FC = () => {
           uploadedPhotos[0] ||
           '';
 
+        const effectiveSizeForViewer = selectedProductTypeId === 'canvas-word-art'
+          ? {
+              id: wordArtSizeOption.id,
+              widthInches: wordArtSizeOption.widthInches,
+              heightInches: wordArtSizeOption.heightInches,
+              dimensionsSummary: `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`,
+              aspectRatio: wordArtSizeOption.aspectRatio || (wordArtSizeOption.widthInches / Math.max(1, wordArtSizeOption.heightInches)),
+              panelsCount: 1
+            }
+          : currentSizeOption;
+
         const geom = getCanvasProductGeometry(
           selectedProductTypeId,
-          currentSizeOption,
+          effectiveSizeForViewer,
           currentShape.id
         );
 
-        const previewAspect = geom.aspectRatio || (panels.length === 1 ? printAspect : 1);
+        const previewAspect = selectedProductTypeId === 'canvas-word-art'
+          ? (wordArtSizeOption.aspectRatio || (wordArtSizeOption.widthInches / Math.max(1, wordArtSizeOption.heightInches)))
+          : (geom.aspectRatio || (panels.length === 1 ? printAspect : 1));
 
         const isHexagonProduct = selectedProductTypeId === 'canvas-hexagon';
         const isHexagonCluster = isHexagonProduct && panels.length > 1;
@@ -6277,16 +6290,22 @@ export const CanvasCustomizerPage: React.FC = () => {
               isOpen={true}
               onClose={() => setViewerMode(null)}
               productDimensionLabel={
-                isCustomSize && canUseCustomSize
+                selectedProductTypeId === 'canvas-word-art'
+                  ? `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`
+                  : isCustomSize && canUseCustomSize
                   ? `${customWidth}" × ${customHeight}"`
                   : currentSizeOption.dimensionsSummary
               }
               productId={selectedProductTypeId}
               productName={selectedProductType.name}
               shapeId={isHexagonProduct ? (isHexagonCluster ? 'shape-rectangle' : 'shape-hexagon') : (shapeApplies ? selectedShapeId : 'shape-rectangle')}
-              shapeName={isHexagonProduct ? (isHexagonCluster ? `${panels.length} Hexagons` : 'Hexagon') : (shapeApplies ? currentShape.name : `${panels.length} Panels`)}
-              widthInches={canvasRoomWidthInches}
-              heightInches={canvasRoomHeightInches}
+              shapeName={
+                selectedProductTypeId === 'canvas-word-art'
+                  ? (wordArtSizeOption.ratioTab || (wordArtSizeOption.widthInches === wordArtSizeOption.heightInches ? 'Square' : 'Rectangle'))
+                  : isHexagonProduct ? (isHexagonCluster ? `${panels.length} Hexagons` : 'Hexagon') : (shapeApplies ? currentShape.name : `${panels.length} Panels`)
+              }
+              widthInches={selectedProductTypeId === 'canvas-word-art' ? wordArtSizeOption.widthInches : canvasRoomWidthInches}
+              heightInches={selectedProductTypeId === 'canvas-word-art' ? wordArtSizeOption.heightInches : canvasRoomHeightInches}
               initialRoomState={roomViewState}
               onRoomStateChange={setRoomViewState}
               renderProduct={() => {
@@ -6398,8 +6417,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                   const layoutDef = getProductLayout('canvas-mosaic', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   const tilePanels = layoutDef.panels;
                   const count = tilePanels.length;
-                  const totalCols = count === 4 ? 2 : count === 6 ? 3 : count === 9 ? 3 : 4;
-                  const totalRows = count === 4 ? 2 : count === 6 ? 2 : count === 9 ? 3 : 4;
+                  const totalCols = layoutDef.cols || (count === 16 ? 4 : count === 25 ? 5 : count === 36 ? 6 : count === 20 ? 4 : count === 15 ? 3 : count === 12 && layoutDef.aspectRatio > 1 ? 4 : 3);
+                  const totalRows = layoutDef.rows || Math.ceil(count / totalCols);
                   const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
                   const master = panelImages[0] || createDefaultPanel();
                   const panXPct = ((master.panX || 0) / 420) * 100;
@@ -6580,10 +6599,16 @@ export const CanvasCustomizerPage: React.FC = () => {
                   <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-stone-500 bg-stone-100 px-2.5 py-0.5 rounded-full">
                     <span>{selectedProductType.name}</span>
                     <span>•</span>
-                    <span>{shapeApplies ? currentShape.name : `${panels.length} Panels`}</span>
+                    <span>
+                      {selectedProductTypeId === 'canvas-word-art'
+                        ? (wordArtSizeOption.ratioTab || (wordArtSizeOption.widthInches === wordArtSizeOption.heightInches ? 'Square' : 'Rectangle'))
+                        : shapeApplies ? currentShape.name : `${panels.length} Panels`}
+                    </span>
                     <span>•</span>
                     <span>
-                      {isCustomSize && canUseCustomSize
+                      {selectedProductTypeId === 'canvas-word-art'
+                        ? `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`
+                        : isCustomSize && canUseCustomSize
                         ? `${customWidth}" × ${customHeight}"`
                         : currentSizeOption.dimensionsSummary}
                     </span>

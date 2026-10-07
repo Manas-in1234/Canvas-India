@@ -63,6 +63,9 @@ export interface ProductLayoutDefinition {
   price: number;
   acrylicPrice?: number;
   panels: ProductPanelGeometry[];
+  cols?: number;
+  rows?: number;
+  priceRange?: string;
 }
 
 export interface CanvasGeometryConfig {
@@ -920,120 +923,268 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
     }
   ],
 
-  // 5. Photo Mosaic (canvas-mosaic)
+  // 5. Photo Mosaic (canvas-mosaic) - 7 exact configurations from reference
   'canvas-mosaic': [
     {
-      id: 'mosaic-4p-10x10',
+      id: 'mosaic2-4x4',
       productTypeId: 'canvas-mosaic',
-      name: '4 Mosaic Tiles (2×2)',
-      description: '4 artistic mosaic photo blocks',
-      geometryType: 'mosaic',
-      panelsCount: 4,
-      photoCount: 4,
-      arrangement: 'fourGrid',
-      dimensionsSummary: '10" × 10"',
-      aspectRatio: 1,
-      overallWidthInches: 10,
-      overallHeightInches: 10,
-      price: 699.0,
-      acrylicPrice: 799.00,
-      panels: [
-        { id: 'p0', label: 'Tile 1', dimension: '5" × 5"', x: 0.04, y: 0.04, w: 0.44, h: 0.44, widthRatio: 5, heightRatio: 5 },
-        { id: 'p1', label: 'Tile 2', dimension: '5" × 5"', x: 0.52, y: 0.04, w: 0.44, h: 0.44, widthRatio: 5, heightRatio: 5 },
-        { id: 'p2', label: 'Tile 3', dimension: '5" × 5"', x: 0.04, y: 0.52, w: 0.44, h: 0.44, widthRatio: 5, heightRatio: 5 },
-        { id: 'p3', label: 'Tile 4', dimension: '5" × 5"', x: 0.52, y: 0.52, w: 0.44, h: 0.44, widthRatio: 5, heightRatio: 5 }
-      ]
-    },
-    {
-      id: 'mosaic-6p-18x12',
-      productTypeId: 'canvas-mosaic',
-      name: '6 Mosaic Tiles (3×2)',
-      description: '6 artistic mosaic photo blocks in landscape layout',
-      geometryType: 'mosaic',
-      panelsCount: 6,
-      photoCount: 6,
-      arrangement: 'sixGrid',
-      dimensionsSummary: '18" × 12"',
-      aspectRatio: 18 / 12,
-      overallWidthInches: 18,
-      overallHeightInches: 12,
-      price: 999.0,
-      acrylicPrice: 1199.00,
-      panels: Array.from({ length: 6 }, (_, i) => {
-        const col = i % 3;
-        const row = Math.floor(i / 3);
-        return {
-          id: `p${i}`,
-          label: `Tile ${i + 1}`,
-          dimension: '6" × 6"',
-          x: 0.03 + col * 0.32,
-          y: 0.04 + row * 0.46,
-          w: 0.29,
-          h: 0.42,
-          widthRatio: 6,
-          heightRatio: 6
-        };
-      })
-    },
-    {
-      id: 'mosaic-9p-18x18',
-      productTypeId: 'canvas-mosaic',
-      name: '9 Mosaic Tiles (3×3)',
-      description: '9 artistic mosaic photo blocks in square grid',
-      geometryType: 'mosaic',
-      panelsCount: 9,
-      photoCount: 9,
-      arrangement: 'nineGrid',
-      dimensionsSummary: '18" × 18"',
-      aspectRatio: 1,
-      overallWidthInches: 18,
-      overallHeightInches: 18,
-      price: 1299.0,
-      acrylicPrice: 1499.00,
-      panels: Array.from({ length: 9 }, (_, i) => {
-        const col = i % 3;
-        const row = Math.floor(i / 3);
-        return {
-          id: `p${i}`,
-          label: `Tile ${i + 1}`,
-          dimension: '6" × 6"',
-          x: 0.03 + col * 0.32,
-          y: 0.03 + row * 0.32,
-          w: 0.29,
-          h: 0.29,
-          widthRatio: 6,
-          heightRatio: 6
-        };
-      })
-    },
-    {
-      id: 'mosaic-16p-20x20',
-      productTypeId: 'canvas-mosaic',
-      name: '16 Mosaic Tiles (4×4)',
-      description: '16 detailed micro-photo mosaic blocks',
+      name: 'Mosaic2-4x4',
+      description: '16 mosaic tiles in a 4×4 grid',
       geometryType: 'mosaic',
       panelsCount: 16,
       photoCount: 16,
-      arrangement: 'sixteenGrid',
+      arrangement: 'mosaic2-4x4',
+      dimensionsSummary: '16" × 16"',
+      aspectRatio: 1,
+      overallWidthInches: 16,
+      overallHeightInches: 16,
+      price: 148.5,
+      acrylicPrice: 198.5,
+      priceRange: '₹148.50 - ₹9,225.00',
+      cols: 4,
+      rows: 4,
+      panels: Array.from({ length: 16 }, (_, i) => {
+        const col = i % 4;
+        const row = Math.floor(i / 4);
+        const gap = 0.02;
+        const tileW = (1 - 3 * gap) / 4;
+        const tileH = (1 - 3 * gap) / 4;
+        return {
+          id: `p${i}`,
+          label: `Tile ${i + 1}`,
+          dimension: '4" × 4"',
+          x: col * (tileW + gap),
+          y: row * (tileH + gap),
+          w: tileW,
+          h: tileH,
+          widthRatio: 4,
+          heightRatio: 4
+        };
+      })
+    },
+    {
+      id: 'mosaic4-5x5',
+      productTypeId: 'canvas-mosaic',
+      name: 'Mosaic4-5x5',
+      description: '25 mosaic tiles in a 5×5 grid',
+      geometryType: 'mosaic',
+      panelsCount: 25,
+      photoCount: 25,
+      arrangement: 'mosaic4-5x5',
       dimensionsSummary: '20" × 20"',
       aspectRatio: 1,
       overallWidthInches: 20,
       overallHeightInches: 20,
-      price: 1999.0,
-      acrylicPrice: 2299.00,
-      panels: Array.from({ length: 16 }, (_, i) => {
-        const col = i % 4;
-        const row = Math.floor(i / 4);
+      price: 148.5,
+      acrylicPrice: 198.5,
+      priceRange: '₹148.50 - ₹9,225.00',
+      cols: 5,
+      rows: 5,
+      panels: Array.from({ length: 25 }, (_, i) => {
+        const col = i % 5;
+        const row = Math.floor(i / 5);
+        const gap = 0.018;
+        const tileW = (1 - 4 * gap) / 5;
+        const tileH = (1 - 4 * gap) / 5;
         return {
           id: `p${i}`,
           label: `Tile ${i + 1}`,
-          dimension: '5" × 5"',
-          x: 0.02 + col * 0.245,
-          y: 0.02 + row * 0.245,
-          w: 0.22,
-          h: 0.22,
-          widthRatio: 5,
-          heightRatio: 5
+          dimension: '4" × 4"',
+          x: col * (tileW + gap),
+          y: row * (tileH + gap),
+          w: tileW,
+          h: tileH,
+          widthRatio: 4,
+          heightRatio: 4
+        };
+      })
+    },
+    {
+      id: 'mosaic6-6x6',
+      productTypeId: 'canvas-mosaic',
+      name: 'Mosaic6-6x6',
+      description: '36 mosaic tiles in a 6×6 grid',
+      geometryType: 'mosaic',
+      panelsCount: 36,
+      photoCount: 36,
+      arrangement: 'mosaic6-6x6',
+      dimensionsSummary: '24" × 24"',
+      aspectRatio: 1,
+      overallWidthInches: 24,
+      overallHeightInches: 24,
+      price: 148.5,
+      acrylicPrice: 198.5,
+      priceRange: '₹148.50 - ₹9,225.00',
+      cols: 6,
+      rows: 6,
+      panels: Array.from({ length: 36 }, (_, i) => {
+        const col = i % 6;
+        const row = Math.floor(i / 6);
+        const gap = 0.015;
+        const tileW = (1 - 5 * gap) / 6;
+        const tileH = (1 - 5 * gap) / 6;
+        return {
+          id: `p${i}`,
+          label: `Tile ${i + 1}`,
+          dimension: '4" × 4"',
+          x: col * (tileW + gap),
+          y: row * (tileH + gap),
+          w: tileW,
+          h: tileH,
+          widthRatio: 4,
+          heightRatio: 4
+        };
+      })
+    },
+    {
+      id: 'mosaic3-3x4',
+      productTypeId: 'canvas-mosaic',
+      name: 'Mosaic3-3x4',
+      description: '12 mosaic tiles in a 4×3 landscape grid',
+      geometryType: 'mosaic',
+      panelsCount: 12,
+      photoCount: 12,
+      arrangement: 'mosaic3-3x4',
+      dimensionsSummary: '16" × 12"',
+      aspectRatio: 16 / 12,
+      overallWidthInches: 16,
+      overallHeightInches: 12,
+      price: 405.0,
+      acrylicPrice: 505.0,
+      priceRange: '₹405.00 - ₹5,517.00',
+      cols: 4,
+      rows: 3,
+      panels: Array.from({ length: 12 }, (_, i) => {
+        const col = i % 4;
+        const row = Math.floor(i / 4);
+        const gapX = 0.02;
+        const gapY = 0.025;
+        const tileW = (1 - 3 * gapX) / 4;
+        const tileH = (1 - 2 * gapY) / 3;
+        return {
+          id: `p${i}`,
+          label: `Tile ${i + 1}`,
+          dimension: '4" × 4"',
+          x: col * (tileW + gapX),
+          y: row * (tileH + gapY),
+          w: tileW,
+          h: tileH,
+          widthRatio: 4,
+          heightRatio: 4
+        };
+      })
+    },
+    {
+      id: 'mosaic5-4x5',
+      productTypeId: 'canvas-mosaic',
+      name: 'Mosaic5-4x5',
+      description: '20 mosaic tiles in a 4×5 portrait grid',
+      geometryType: 'mosaic',
+      panelsCount: 20,
+      photoCount: 20,
+      arrangement: 'mosaic5-4x5',
+      dimensionsSummary: '16" × 20"',
+      aspectRatio: 16 / 20,
+      overallWidthInches: 16,
+      overallHeightInches: 20,
+      price: 645.0,
+      acrylicPrice: 795.0,
+      priceRange: '₹645.00 - ₹5,176.50',
+      cols: 4,
+      rows: 5,
+      panels: Array.from({ length: 20 }, (_, i) => {
+        const col = i % 4;
+        const row = Math.floor(i / 4);
+        const gapX = 0.02;
+        const gapY = 0.018;
+        const tileW = (1 - 3 * gapX) / 4;
+        const tileH = (1 - 4 * gapY) / 5;
+        return {
+          id: `p${i}`,
+          label: `Tile ${i + 1}`,
+          dimension: '4" × 4"',
+          x: col * (tileW + gapX),
+          y: row * (tileH + gapY),
+          w: tileW,
+          h: tileH,
+          widthRatio: 4,
+          heightRatio: 4
+        };
+      })
+    },
+    {
+      id: 'mosaic1-3x4',
+      productTypeId: 'canvas-mosaic',
+      name: 'Mosaic1-3x4',
+      description: '12 mosaic tiles in a 3×4 portrait grid',
+      geometryType: 'mosaic',
+      panelsCount: 12,
+      photoCount: 12,
+      arrangement: 'mosaic1-3x4',
+      dimensionsSummary: '12" × 16"',
+      aspectRatio: 12 / 16,
+      overallWidthInches: 12,
+      overallHeightInches: 16,
+      price: 685.5,
+      acrylicPrice: 845.0,
+      priceRange: '₹685.50 - ₹5,517.00',
+      cols: 3,
+      rows: 4,
+      panels: Array.from({ length: 12 }, (_, i) => {
+        const col = i % 3;
+        const row = Math.floor(i / 3);
+        const gapX = 0.025;
+        const gapY = 0.02;
+        const tileW = (1 - 2 * gapX) / 3;
+        const tileH = (1 - 3 * gapY) / 4;
+        return {
+          id: `p${i}`,
+          label: `Tile ${i + 1}`,
+          dimension: '4" × 4"',
+          x: col * (tileW + gapX),
+          y: row * (tileH + gapY),
+          w: tileW,
+          h: tileH,
+          widthRatio: 4,
+          heightRatio: 4
+        };
+      })
+    },
+    {
+      id: 'mosaic7-5x3',
+      productTypeId: 'canvas-mosaic',
+      name: 'Mosaic7-5x3',
+      description: '15 mosaic tiles in a 3×5 portrait grid',
+      geometryType: 'mosaic',
+      panelsCount: 15,
+      photoCount: 15,
+      arrangement: 'mosaic7-5x3',
+      dimensionsSummary: '12" × 20"',
+      aspectRatio: 12 / 20,
+      overallWidthInches: 12,
+      overallHeightInches: 20,
+      price: 813.0,
+      acrylicPrice: 999.0,
+      priceRange: '₹813.00 - ₹3,105.00',
+      cols: 3,
+      rows: 5,
+      panels: Array.from({ length: 15 }, (_, i) => {
+        const col = i % 3;
+        const row = Math.floor(i / 3);
+        const gapX = 0.025;
+        const gapY = 0.018;
+        const tileW = (1 - 2 * gapX) / 3;
+        const tileH = (1 - 4 * gapY) / 5;
+        return {
+          id: `p${i}`,
+          label: `Tile ${i + 1}`,
+          dimension: '4" × 4"',
+          x: col * (tileW + gapX),
+          y: row * (tileH + gapY),
+          w: tileW,
+          h: tileH,
+          widthRatio: 4,
+          heightRatio: 4
         };
       })
     }
@@ -1208,9 +1359,24 @@ export function getProductLayouts(productTypeId: string): ProductLayoutDefinitio
 export function getProductLayout(productTypeId: string, layoutId?: string): ProductLayoutDefinition {
   const layouts = getProductLayouts(productTypeId);
   if (!layoutId) return layouts[0];
-  const found = layouts.find(
-    (l) => l.id === layoutId || (l as any).diagramType === layoutId || layoutId.startsWith(l.id) || l.id.startsWith(layoutId)
-  );
+  const normKey = layoutId.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const found = layouts.find((l) => {
+    if (l.id === layoutId) return true;
+    if (l.name.toLowerCase() === layoutId.toLowerCase()) return true;
+    const lNorm = l.id.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (lNorm === normKey) return true;
+    if ((l as any).diagramType === layoutId) return true;
+    if (layoutId.startsWith(l.id) || l.id.startsWith(layoutId)) return true;
+    // Map legacy / alternative IDs for Mosaic
+    if (normKey.includes('4x4') && lNorm.includes('4x4')) return true;
+    if (normKey.includes('5x5') && lNorm.includes('5x5')) return true;
+    if ((normKey.includes('6x6') || normKey.includes('86x6')) && lNorm.includes('6x6')) return true;
+    if (normKey.includes('3x4') && !normKey.includes('13x4') && lNorm.includes('3x4') && l.aspectRatio > 1) return true;
+    if (normKey.includes('4x5') && lNorm.includes('4x5')) return true;
+    if ((normKey.includes('13x4') || (normKey.includes('3x4') && l.aspectRatio < 1)) && (lNorm.includes('13x4') || lNorm.includes('1-3x4'))) return true;
+    if (normKey.includes('5x3') && lNorm.includes('5x3')) return true;
+    return false;
+  });
   return found || layouts[0];
 }
 
@@ -1417,8 +1583,54 @@ export function renderProductLayoutDiagram(
     );
   }
 
-  // 2. Wall Display, Split Canvas, Collage, Mosaic, Single Print
-  const isOuterBorder = layout.geometryType === 'collage' || layout.geometryType === 'mosaic';
+  // 1b. Photo Mosaic (clean neutral solid grey tiles matching Reference 1)
+  if (layout.geometryType === 'mosaic') {
+    const cols = layout.cols || (layout.panelsCount === 16 ? 4 : layout.panelsCount === 25 ? 5 : layout.panelsCount === 36 ? 6 : layout.panelsCount === 20 ? 4 : layout.panelsCount === 15 ? 3 : layout.panelsCount === 12 && layout.aspectRatio > 1 ? 4 : 3);
+    const rows = layout.rows || Math.ceil(layout.panelsCount / cols);
+    const tileColor = '#9ca3af'; // Neutral solid grey matching Reference 1
+    const padding = 12;
+    const availW = viewBoxW - padding * 2;
+    const availH = viewBoxH - padding * 2;
+    const gridAspect = cols / rows;
+    let drawW = availW;
+    let drawH = drawW / gridAspect;
+    if (drawH > availH) {
+      drawH = availH;
+      drawW = drawH * gridAspect;
+    }
+    const startX = (viewBoxW - drawW) / 2;
+    const startY = (viewBoxH - drawH) / 2;
+    const gap = Math.max(1.8, Math.min(3.2, drawW * 0.028));
+    const cellW = (drawW - (cols - 1) * gap) / cols;
+    const cellH = (drawH - (rows - 1) * gap) / rows;
+
+    return (
+      <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} className="w-full h-full max-h-24">
+        {Array.from({ length: rows }).map((_, r) =>
+          Array.from({ length: cols }).map((_, c) => {
+            const idx = r * cols + c;
+            if (idx >= layout.panelsCount) return null;
+            const x = startX + c * (cellW + gap);
+            const y = startY + r * (cellH + gap);
+            return (
+              <rect
+                key={idx}
+                x={x}
+                y={y}
+                width={cellW}
+                height={cellH}
+                fill={tileColor}
+                rx={1}
+              />
+            );
+          })
+        )}
+      </svg>
+    );
+  }
+
+  // 2. Wall Display, Split Canvas, Collage, Single Print
+  const isOuterBorder = layout.geometryType === 'collage';
 
   return (
     <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} className="w-full h-full max-h-24">
@@ -1705,7 +1917,38 @@ export function getCanvasProductGeometry(
     };
   }
 
-  // 10. Default / Single Print (Rectangle/Square)
+  // 10. Word Art
+  if (normType.includes('word')) {
+    const rawRatio = width / Math.max(1, height);
+    return {
+      productTypeId,
+      geometryType: 'rectangle',
+      shapeId: width === height ? 'shape-square' : 'shape-rectangle',
+      aspectRatio: rawRatio || 1,
+      widthInches: width,
+      heightInches: height,
+      borderRadius: '2px',
+      isMultiPanel: false,
+      panelsCount: 1,
+      renderSvgPreview: ({ isSelected, widthInches, heightInches }) => {
+        const clampedRatio = Math.max(0.65, Math.min(2.1, rawRatio));
+        const hBox = clampedRatio > 1.4 ? 26 : 34;
+        const wBox = Math.round(hBox * clampedRatio);
+        const boxClass = `rounded-[3px] border-2 transition-colors ${
+          isSelected ? 'border-[#0E4A93] bg-[#0E4A93]/20' : 'border-stone-400 bg-[#0E4A93]/12'
+        }`;
+        return (
+          <div style={{ width: `${wBox}px`, height: `${hBox}px` }} className={`${boxClass} flex items-center justify-center`}>
+            <span className="text-[7.5px] font-bold text-stone-600">
+              {widthInches && heightInches ? `${widthInches}×${heightInches}` : ''}
+            </span>
+          </div>
+        );
+      }
+    };
+  }
+
+  // 11. Default / Single Print (Rectangle/Square)
   const clampedRatio = Math.max(0.65, Math.min(2.1, rawAspect));
   const h = clampedRatio > 1.4 ? 26 : 34;
   const w = Math.round(h * clampedRatio);
