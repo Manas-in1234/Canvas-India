@@ -79,7 +79,7 @@ export const OCCASIONS: OccasionDef[] = [
     bannerImage: u('photo-1577083753695-e010191bacb5', 1600),
     tint: 'from-[#9A3412]/90',
     accent: '#E8752A',
-    categorySlugs: ['canvas', 'acrylic'],
+    categorySlugs: [], // Festive Offers uses the "Shop by Festival" grid instead of format tiles
   },
 ];
 

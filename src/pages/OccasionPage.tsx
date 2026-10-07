@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, ArrowRight, Sparkles, Cake, Heart, Gem, Home, Flame, Gift, PartyPopper } from 'lucide-react';
+import {
+  ChevronRight, ArrowRight, Sparkles, Cake, Heart, Gem, Home, Flame, Gift, PartyPopper,
+  Users, GraduationCap, Baby, UserRound, Flag, CalendarHeart, HandHeart, Music2, Moon, Ghost, TreePine, Sun, Wheat,
+} from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { OCCASIONS, getOccasionBySlug } from '../data/occasionsData';
 import { SHOP_CATEGORIES } from '../data/shopCategories';
@@ -18,30 +21,30 @@ const OCCASION_ICONS: Record<string, React.ComponentType<{ className?: string }>
 // Full festival/special-day list shown on the Festive Offers page, so every
 // occasion from the reference grid is browsable in one place, not just the
 // handful that get their own dedicated occasion page.
-const ALL_FESTIVALS: { name: string; date: string }[] = [
-  { name: "Mother's Day", date: '10th May' },
-  { name: "Brother's Day", date: '24th May' },
-  { name: "Father's Day", date: '21st June' },
-  { name: 'Friendship Day', date: '2nd August' },
-  { name: "Teacher's Day", date: '5th September' },
-  { name: "Children's Day", date: '14th November' },
-  { name: "Men's Day", date: '19th November' },
-  { name: 'New Year', date: '1st January' },
-  { name: 'Republic Day', date: '26th January' },
-  { name: "Valentine's Day", date: '14th February' },
-  { name: "Women's Day", date: '8th March' },
-  { name: 'Rakshabandhan', date: '28th August' },
-  { name: 'Janmashtami', date: '4th September' },
-  { name: 'Ganesh Chaturthi', date: '14th September' },
-  { name: 'Karwa Chauth', date: '29th October' },
-  { name: 'Halloween', date: '31st October' },
-  { name: 'Diwali', date: '5th November' },
-  { name: 'Bhai Dooj', date: '11th November' },
-  { name: 'Christmas', date: '25th December' },
-  { name: 'Lohri', date: '13th January' },
-  { name: 'Makar Sankranti', date: '14th January' },
-  { name: 'Pongal', date: '14th January' },
-  { name: 'Holi', date: '6th March' },
+const ALL_FESTIVALS: { name: string; date: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }[] = [
+  { name: "Mother's Day", date: '10th May', icon: Heart },
+  { name: "Brother's Day", date: '24th May', icon: Users },
+  { name: "Father's Day", date: '21st June', icon: UserRound },
+  { name: 'Friendship Day', date: '2nd August', icon: HandHeart },
+  { name: "Teacher's Day", date: '5th September', icon: GraduationCap },
+  { name: "Children's Day", date: '14th November', icon: Baby },
+  { name: "Men's Day", date: '19th November', icon: UserRound },
+  { name: 'New Year', date: '1st January', icon: PartyPopper },
+  { name: 'Republic Day', date: '26th January', icon: Flag },
+  { name: "Valentine's Day", date: '14th February', icon: Heart },
+  { name: "Women's Day", date: '8th March', icon: UserRound },
+  { name: 'Rakshabandhan', date: '28th August', icon: HandHeart },
+  { name: 'Janmashtami', date: '4th September', icon: Music2 },
+  { name: 'Ganesh Chaturthi', date: '14th September', icon: Sparkles },
+  { name: 'Karwa Chauth', date: '29th October', icon: Moon },
+  { name: 'Halloween', date: '31st October', icon: Ghost },
+  { name: 'Diwali', date: '5th November', icon: Flame },
+  { name: 'Bhai Dooj', date: '11th November', icon: CalendarHeart },
+  { name: 'Christmas', date: '25th December', icon: TreePine },
+  { name: 'Lohri', date: '13th January', icon: Flame },
+  { name: 'Makar Sankranti', date: '14th January', icon: Sun },
+  { name: 'Pongal', date: '14th January', icon: Wheat },
+  { name: 'Holi', date: '6th March', icon: Sparkles },
 ];
 
 export const OccasionPage: React.FC = () => {
@@ -187,6 +190,8 @@ export const OccasionPage: React.FC = () => {
 
       {/* START YOUR GIFT ORDER — one tile per relevant format, straight into the customizer */}
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 pb-16 sm:pb-20">
+        {occasion.categorySlugs.length > 0 && (
+        <>
         <div className="text-center mb-10">
           <h2
             className="text-2xl sm:text-3xl font-bold text-stone-900"
@@ -254,6 +259,8 @@ export const OccasionPage: React.FC = () => {
         ) : (
           <p className="text-center text-sm text-stone-500 py-12">New {occasion.name.toLowerCase()} picks are on the way — check back soon.</p>
         )}
+        </>
+        )}
 
         {/* Shop by Festival — every special day from the reference grid,
             not just the occasions with their own dedicated page. Festive
@@ -267,7 +274,9 @@ export const OccasionPage: React.FC = () => {
               <p className="text-xs sm:text-sm text-stone-500 mt-1.5">Pick any special day to start a personalized gift for it</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-              {ALL_FESTIVALS.map((f) => (
+              {ALL_FESTIVALS.map((f) => {
+                const FIcon = f.icon;
+                return (
                 <button
                   key={f.name}
                   type="button"
@@ -280,22 +289,25 @@ export const OccasionPage: React.FC = () => {
                     className="w-11 h-11 rounded-full flex items-center justify-center mb-2.5 transition-colors"
                     style={{ backgroundColor: `${occasion.accent}14` }}
                   >
-                    <PartyPopper className="w-5 h-5" style={{ color: occasion.accent }} />
+                    <FIcon className="w-5 h-5" style={{ color: occasion.accent }} />
                   </span>
                   <span className="text-xs font-bold text-stone-800 leading-tight">{f.name}</span>
                   <span className="text-[10px] text-stone-400 mt-0.5">{f.date}</span>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
 
+        {occasion.categorySlugs.length > 0 && (
         <div className="text-center mt-10">
           <Link to={`/search?q=${encodeURIComponent(occasion.name)}`} className="text-xs font-bold text-[#0E4A93] hover:text-[#E8752A] inline-flex items-center gap-1 transition-colors">
             <span>Or browse all {occasion.name} products</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
+        )}
       </div>
     </div>
   );
