@@ -550,10 +550,10 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
           id: 'p0',
           label: 'Left Panel',
           dimension: '12" × 16"',
-          x: 0.02,
-          y: 0.04,
-          w: 0.47,
-          h: 0.92,
+          x: 0,
+          y: 0,
+          w: 0.5,
+          h: 1,
           widthRatio: 12,
           heightRatio: 16
         },
@@ -561,10 +561,10 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
           id: 'p1',
           label: 'Right Panel',
           dimension: '12" × 16"',
-          x: 0.51,
-          y: 0.04,
-          w: 0.47,
-          h: 0.92,
+          x: 0.5,
+          y: 0,
+          w: 0.5,
+          h: 1,
           widthRatio: 12,
           heightRatio: 16
         }
@@ -590,10 +590,10 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
           id: 'p0',
           label: 'Left Panel',
           dimension: '12" × 24"',
-          x: 0.02,
-          y: 0.04,
-          w: 0.31,
-          h: 0.92,
+          x: 0,
+          y: 0,
+          w: 1 / 3,
+          h: 1,
           widthRatio: 12,
           heightRatio: 24
         },
@@ -601,10 +601,10 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
           id: 'p1',
           label: 'Center Panel',
           dimension: '12" × 24"',
-          x: 0.345,
-          y: 0.04,
-          w: 0.31,
-          h: 0.92,
+          x: 1 / 3,
+          y: 0,
+          w: 1 / 3,
+          h: 1,
           widthRatio: 12,
           heightRatio: 24
         },
@@ -612,10 +612,10 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
           id: 'p2',
           label: 'Right Panel',
           dimension: '12" × 24"',
-          x: 0.67,
-          y: 0.04,
-          w: 0.31,
-          h: 0.92,
+          x: 2 / 3,
+          y: 0,
+          w: 1 / 3,
+          h: 1,
           widthRatio: 12,
           heightRatio: 24
         }
@@ -641,10 +641,10 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
           id: 'p0',
           label: 'Panel 1',
           dimension: '10" × 20"',
-          x: 0.02,
-          y: 0.04,
-          w: 0.23,
-          h: 0.92,
+          x: 0,
+          y: 0,
+          w: 0.25,
+          h: 1,
           widthRatio: 10,
           heightRatio: 20
         },
@@ -652,10 +652,10 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
           id: 'p1',
           label: 'Panel 2',
           dimension: '10" × 20"',
-          x: 0.265,
-          y: 0.04,
-          w: 0.23,
-          h: 0.92,
+          x: 0.25,
+          y: 0,
+          w: 0.25,
+          h: 1,
           widthRatio: 10,
           heightRatio: 20
         },
@@ -663,10 +663,10 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
           id: 'p2',
           label: 'Panel 3',
           dimension: '10" × 20"',
-          x: 0.51,
-          y: 0.04,
-          w: 0.23,
-          h: 0.92,
+          x: 0.5,
+          y: 0,
+          w: 0.25,
+          h: 1,
           widthRatio: 10,
           heightRatio: 20
         },
@@ -674,10 +674,10 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
           id: 'p3',
           label: 'Panel 4',
           dimension: '10" × 20"',
-          x: 0.755,
-          y: 0.04,
-          w: 0.23,
-          h: 0.92,
+          x: 0.75,
+          y: 0,
+          w: 0.25,
+          h: 1,
           widthRatio: 10,
           heightRatio: 20
         }
@@ -946,15 +946,14 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
       panels: Array.from({ length: 16 }, (_, i) => {
         const col = i % 4;
         const row = Math.floor(i / 4);
-        const gap = 0.02;
-        const tileW = (1 - 3 * gap) / 4;
-        const tileH = (1 - 3 * gap) / 4;
+        const tileW = 1 / 4;
+        const tileH = 1 / 4;
         return {
           id: `p${i}`,
           label: `Tile ${i + 1}`,
           dimension: '4" × 4"',
-          x: col * (tileW + gap),
-          y: row * (tileH + gap),
+          x: col * tileW,
+          y: row * tileH,
           w: tileW,
           h: tileH,
           widthRatio: 4,
@@ -983,15 +982,14 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
       panels: Array.from({ length: 25 }, (_, i) => {
         const col = i % 5;
         const row = Math.floor(i / 5);
-        const gap = 0.018;
-        const tileW = (1 - 4 * gap) / 5;
-        const tileH = (1 - 4 * gap) / 5;
+        const tileW = 1 / 5;
+        const tileH = 1 / 5;
         return {
           id: `p${i}`,
           label: `Tile ${i + 1}`,
           dimension: '4" × 4"',
-          x: col * (tileW + gap),
-          y: row * (tileH + gap),
+          x: col * tileW,
+          y: row * tileH,
           w: tileW,
           h: tileH,
           widthRatio: 4,
@@ -1020,15 +1018,14 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
       panels: Array.from({ length: 36 }, (_, i) => {
         const col = i % 6;
         const row = Math.floor(i / 6);
-        const gap = 0.015;
-        const tileW = (1 - 5 * gap) / 6;
-        const tileH = (1 - 5 * gap) / 6;
+        const tileW = 1 / 6;
+        const tileH = 1 / 6;
         return {
           id: `p${i}`,
           label: `Tile ${i + 1}`,
           dimension: '4" × 4"',
-          x: col * (tileW + gap),
-          y: row * (tileH + gap),
+          x: col * tileW,
+          y: row * tileH,
           w: tileW,
           h: tileH,
           widthRatio: 4,
@@ -1057,16 +1054,14 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
       panels: Array.from({ length: 12 }, (_, i) => {
         const col = i % 4;
         const row = Math.floor(i / 4);
-        const gapX = 0.02;
-        const gapY = 0.025;
-        const tileW = (1 - 3 * gapX) / 4;
-        const tileH = (1 - 2 * gapY) / 3;
+        const tileW = 1 / 4;
+        const tileH = 1 / 3;
         return {
           id: `p${i}`,
           label: `Tile ${i + 1}`,
           dimension: '4" × 4"',
-          x: col * (tileW + gapX),
-          y: row * (tileH + gapY),
+          x: col * tileW,
+          y: row * tileH,
           w: tileW,
           h: tileH,
           widthRatio: 4,
@@ -1095,16 +1090,14 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
       panels: Array.from({ length: 20 }, (_, i) => {
         const col = i % 4;
         const row = Math.floor(i / 4);
-        const gapX = 0.02;
-        const gapY = 0.018;
-        const tileW = (1 - 3 * gapX) / 4;
-        const tileH = (1 - 4 * gapY) / 5;
+        const tileW = 1 / 4;
+        const tileH = 1 / 5;
         return {
           id: `p${i}`,
           label: `Tile ${i + 1}`,
           dimension: '4" × 4"',
-          x: col * (tileW + gapX),
-          y: row * (tileH + gapY),
+          x: col * tileW,
+          y: row * tileH,
           w: tileW,
           h: tileH,
           widthRatio: 4,
@@ -1133,16 +1126,14 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
       panels: Array.from({ length: 12 }, (_, i) => {
         const col = i % 3;
         const row = Math.floor(i / 3);
-        const gapX = 0.025;
-        const gapY = 0.02;
-        const tileW = (1 - 2 * gapX) / 3;
-        const tileH = (1 - 3 * gapY) / 4;
+        const tileW = 1 / 3;
+        const tileH = 1 / 4;
         return {
           id: `p${i}`,
           label: `Tile ${i + 1}`,
           dimension: '4" × 4"',
-          x: col * (tileW + gapX),
-          y: row * (tileH + gapY),
+          x: col * tileW,
+          y: row * tileH,
           w: tileW,
           h: tileH,
           widthRatio: 4,
@@ -1171,16 +1162,14 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
       panels: Array.from({ length: 15 }, (_, i) => {
         const col = i % 3;
         const row = Math.floor(i / 3);
-        const gapX = 0.025;
-        const gapY = 0.018;
-        const tileW = (1 - 2 * gapX) / 3;
-        const tileH = (1 - 4 * gapY) / 5;
+        const tileW = 1 / 3;
+        const tileH = 1 / 5;
         return {
           id: `p${i}`,
           label: `Tile ${i + 1}`,
           dimension: '4" × 4"',
-          x: col * (tileW + gapX),
-          y: row * (tileH + gapY),
+          x: col * tileW,
+          y: row * tileH,
           w: tileW,
           h: tileH,
           widthRatio: 4,
@@ -1583,15 +1572,14 @@ export function renderProductLayoutDiagram(
     );
   }
 
-  // 1b. Photo Mosaic (clean neutral solid grey tiles matching Reference 1)
+  // 1b. Photo Mosaic (continuous rectangular product surface with hairline grid divisions, 0 gaps)
   if (layout.geometryType === 'mosaic') {
     const cols = layout.cols || (layout.panelsCount === 16 ? 4 : layout.panelsCount === 25 ? 5 : layout.panelsCount === 36 ? 6 : layout.panelsCount === 20 ? 4 : layout.panelsCount === 15 ? 3 : layout.panelsCount === 12 && layout.aspectRatio > 1 ? 4 : 3);
     const rows = layout.rows || Math.ceil(layout.panelsCount / cols);
-    const tileColor = '#9ca3af'; // Neutral solid grey matching Reference 1
     const padding = 12;
     const availW = viewBoxW - padding * 2;
     const availH = viewBoxH - padding * 2;
-    const gridAspect = cols / rows;
+    const gridAspect = layout.aspectRatio || (cols / rows);
     let drawW = availW;
     let drawH = drawW / gridAspect;
     if (drawH > availH) {
@@ -1600,41 +1588,109 @@ export function renderProductLayoutDiagram(
     }
     const startX = (viewBoxW - drawW) / 2;
     const startY = (viewBoxH - drawH) / 2;
-    const gap = Math.max(1.8, Math.min(3.2, drawW * 0.028));
-    const cellW = (drawW - (cols - 1) * gap) / cols;
-    const cellH = (drawH - (rows - 1) * gap) / rows;
 
     return (
       <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} className="w-full h-full max-h-24">
-        {Array.from({ length: rows }).map((_, r) =>
-          Array.from({ length: cols }).map((_, c) => {
-            const idx = r * cols + c;
-            if (idx >= layout.panelsCount) return null;
-            const x = startX + c * (cellW + gap);
-            const y = startY + r * (cellH + gap);
-            return (
-              <rect
-                key={idx}
-                x={x}
-                y={y}
-                width={cellW}
-                height={cellH}
-                fill={tileColor}
-                rx={1}
-              />
-            );
-          })
-        )}
+        {/* Continuous single surface (0 gap) */}
+        <rect
+          x={startX}
+          y={startY}
+          width={drawW}
+          height={drawH}
+          rx={2}
+          fill={fillColor}
+          stroke={strokeColor}
+          strokeWidth="1.6"
+        />
+        {/* Internal division grid lines (0 gap) */}
+        {Array.from({ length: cols - 1 }).map((_, c) => {
+          const x = startX + ((c + 1) / cols) * drawW;
+          return (
+            <line
+              key={`mv-${c}`}
+              x1={x}
+              y1={startY}
+              x2={x}
+              y2={startY + drawH}
+              stroke={strokeColor}
+              strokeWidth="0.9"
+              opacity="0.75"
+            />
+          );
+        })}
+        {Array.from({ length: rows - 1 }).map((_, r) => {
+          const y = startY + ((r + 1) / rows) * drawH;
+          return (
+            <line
+              key={`mh-${r}`}
+              x1={startX}
+              y1={y}
+              x2={startX + drawW}
+              y2={y}
+              stroke={strokeColor}
+              strokeWidth="0.9"
+              opacity="0.75"
+            />
+          );
+        })}
       </svg>
     );
   }
 
-  // 2. Wall Display, Split Canvas, Collage, Single Print
+  // 1c. Split Canvas (continuous rectangular product surface with hairline split divisions, 0 gaps)
+  if (layout.geometryType === 'split-canvas') {
+    const padding = 12;
+    const availW = viewBoxW - padding * 2;
+    const availH = viewBoxH - padding * 2;
+    const gridAspect = layout.aspectRatio || 1.5;
+    let drawW = availW;
+    let drawH = drawW / gridAspect;
+    if (drawH > availH) {
+      drawH = availH;
+      drawW = drawH * gridAspect;
+    }
+    const startX = (viewBoxW - drawW) / 2;
+    const startY = (viewBoxH - drawH) / 2;
+
+    return (
+      <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} className="w-full h-full max-h-24">
+        {/* Continuous single surface (0 gap) */}
+        <rect
+          x={startX}
+          y={startY}
+          width={drawW}
+          height={drawH}
+          rx={2}
+          fill={fillColor}
+          stroke={strokeColor}
+          strokeWidth="1.6"
+        />
+        {/* Internal split boundary lines (0 gap) */}
+        {layout.panels.slice(0, -1).map((p, idx) => {
+          const splitX = startX + (p.x + p.w) * drawW;
+          return (
+            <line
+              key={`sv-${idx}`}
+              x1={splitX}
+              y1={startY}
+              x2={splitX}
+              y2={startY + drawH}
+              stroke={strokeColor}
+              strokeWidth="1.1"
+              opacity="0.8"
+            />
+          );
+        })}
+      </svg>
+    );
+  }
+
+  // 2. Wall Display, Collage, Single Print
   const isOuterBorder = layout.geometryType === 'collage';
 
   return (
     <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} className="w-full h-full max-h-24">
-      {/* Background card frame for collage / mosaic */}
+      {/* Background card frame for collage */}
       {isOuterBorder && (
         <rect
           x="12"

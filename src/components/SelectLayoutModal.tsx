@@ -75,30 +75,22 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-white">
           <div className="flex items-center gap-3">
-            {productId !== 'canvas-mosaic' && (
-              <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0E4A93]">
-                <Layers className="w-4 h-4" />
-              </div>
-            )}
+            <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0E4A93]">
+              <Layers className="w-4 h-4" />
+            </div>
             <div>
               <h2 className="text-lg sm:text-xl font-black text-stone-900 tracking-tight">
-                {productId === 'canvas-mosaic' ? 'Select shape' : 'Select Layout'}
+                Select Layout
               </h2>
-              {productId !== 'canvas-mosaic' && (
-                <p className="text-xs text-stone-500">
-                  Choose an arrangement for {productName}
-                </p>
-              )}
+              <p className="text-xs text-stone-500">
+                Choose an arrangement for {productName}
+              </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className={`w-7 h-7 rounded-full flex items-center justify-center cursor-pointer transition-colors ${
-              productId === 'canvas-mosaic'
-                ? 'bg-black hover:bg-stone-800 text-white shadow-xs'
-                : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
-            }`}
+            className="w-7 h-7 rounded-full flex items-center justify-center cursor-pointer transition-colors bg-stone-100 hover:bg-stone-200 text-stone-700"
             title="Close"
           >
             <X className="w-4 h-4" />
@@ -107,63 +99,9 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
 
         {/* Content: Layout Cards */}
         <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh]">
-          <div
-            className={
-              productId === 'canvas-mosaic'
-                ? 'grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4'
-                : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'
-            }
-          >
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {productLayouts.map((layout) => {
               const isSelected = selectedId === layout.id;
-              const isMosaic = productId === 'canvas-mosaic';
-
-              if (isMosaic) {
-                return (
-                  <div
-                    key={layout.id}
-                    onClick={() => {
-                      setSelectedId(layout.id);
-                      onSelectLayout(layout);
-                    }}
-                    onDoubleClick={() => {
-                      setSelectedId(layout.id);
-                      onSelectLayout(layout);
-                    }}
-                    className={`group relative rounded-none border transition-all cursor-pointer flex flex-col justify-between overflow-hidden bg-white ${
-                      isSelected
-                        ? 'border-2 border-stone-800 shadow-sm'
-                        : 'border-stone-200 hover:border-stone-400 shadow-2xs'
-                    }`}
-                  >
-                    {/* Selected Checkmark Badge matching Reference 1 */}
-                    {isSelected && (
-                      <div className="absolute top-1.5 right-1.5 z-10 w-5 h-5 rounded-[2px] bg-[#374151] text-white flex items-center justify-center shadow-xs">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                    )}
-
-                    {/* Diagram / Preview Box */}
-                    <div className="h-28 sm:h-32 p-3 bg-white flex items-center justify-center relative select-none">
-                      {renderProductLayoutDiagram(layout, isSelected)}
-                    </div>
-
-                    {/* Details Bottom Box */}
-                    <div className="p-2.5 bg-white flex flex-col items-center justify-center text-center">
-                      <span
-                        className={`text-xs sm:text-[13px] font-bold truncate transition-colors ${
-                          isSelected ? 'text-[#dc2626]' : 'text-stone-900'
-                        }`}
-                      >
-                        {layout.name}
-                      </span>
-                      <span className="text-[11px] sm:text-xs font-semibold text-stone-800 mt-0.5">
-                        {layout.priceRange || `₹${layout.price.toFixed(2)}`}
-                      </span>
-                    </div>
-                  </div>
-                );
-              }
 
               return (
                 <div
@@ -190,28 +128,39 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
                   )}
 
                   {/* Diagram / Preview Box */}
-                  <div className="h-32 p-3 bg-stone-50/50 border-b border-stone-100 flex items-center justify-center relative select-none group-hover:scale-102 transition-transform">
+                  <div className="h-28 sm:h-32 p-3 bg-stone-50/50 border-b border-stone-100 flex items-center justify-center relative select-none group-hover:scale-102 transition-transform">
                     {renderProductLayoutDiagram(layout, isSelected)}
                   </div>
 
                   {/* Details Bottom Box */}
                   <div className="p-3 bg-white flex flex-col space-y-1">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-1">
                       <span className="text-xs sm:text-[13px] font-black text-stone-900 truncate">
                         {layout.name}
                       </span>
-                      <span className="text-[11px] font-bold text-[#0E4A93] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
-                        {layout.panelsCount} {layout.panelsCount === 1 ? 'Panel' : 'Panels'}
+                      <span className="text-[10px] font-bold text-[#0E4A93] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 shrink-0">
+                        {layout.geometryType === 'mosaic'
+                          ? (layout.cols && layout.rows ? `${layout.cols}×${layout.rows}` : `${layout.panelsCount} Tiles`)
+                          : `${layout.panelsCount} ${layout.panelsCount === 1 ? 'Panel' : 'Panels'}`}
                       </span>
                     </div>
-                    <p className="text-[11px] text-stone-500 line-clamp-1">
-                      {layout.description}
-                    </p>
-                    {layout.dimensionsSummary && (
-                      <span className="text-[10px] font-semibold text-stone-400">
-                        {layout.dimensionsSummary}
-                      </span>
+                    {layout.description && (
+                      <p className="text-[11px] text-stone-500 line-clamp-1">
+                        {layout.description}
+                      </p>
                     )}
+                    <div className="flex items-center justify-between text-[10px] text-stone-400 pt-0.5">
+                      {layout.dimensionsSummary && (
+                        <span className="font-semibold text-stone-500">
+                          {layout.dimensionsSummary}
+                        </span>
+                      )}
+                      {(layout.priceRange || layout.price) && (
+                        <span className="font-extrabold text-[#0E4A93] ml-auto">
+                          {layout.priceRange || `₹${layout.price.toFixed(2)}`}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -227,7 +176,9 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
               {currentSelected?.name}
             </strong>
             <span className="ml-2 text-stone-400">
-              ({currentSelected?.panelsCount} {currentSelected?.panelsCount === 1 ? 'Panel' : 'Panels'})
+              ({currentSelected?.geometryType === 'mosaic'
+                ? `${currentSelected?.panelsCount} Tiles`
+                : `${currentSelected?.panelsCount} ${currentSelected?.panelsCount === 1 ? 'Panel' : 'Panels'}`})
             </span>
           </div>
           <div className="flex items-center gap-2.5">
