@@ -97,7 +97,7 @@ export const OccasionPage: React.FC = () => {
       {/* HERO BANNER — flat solid color in the occasion's own accent, the
           occasion photo on the right, text vertically centered. No pattern
           texture or doodles — kept clean. */}
-      <div className="relative mt-4 mx-auto max-w-[1680px]">
+      <div className="relative mt-4 mx-auto max-w-[1680px] px-4 sm:px-8 lg:px-12 xl:px-14">
         <section
           className="relative w-full overflow-hidden rounded-3xl h-[280px] sm:h-[320px] lg:h-[360px]"
           style={{ backgroundColor: occasion.accent }}
