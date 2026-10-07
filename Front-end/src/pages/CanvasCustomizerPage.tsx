@@ -1619,7 +1619,10 @@ export const CanvasCustomizerPage: React.FC = () => {
       const aspectRatio = naturalWidth / naturalHeight;
 
       let targetSlot = activePanelIndex;
-      if (panels.length > 1) {
+      if (selectedProductTypeId === 'canvas-split' || selectedProductTypeId === 'canvas-mosaic') {
+        targetSlot = 0;
+        setActivePanelIndex(0);
+      } else if (panels.length > 1) {
         const emptyIdx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
           .slice(0, panels.length)
           .find((idx) => !panelImages[idx]?.imageUrl);
@@ -3082,21 +3085,19 @@ export const CanvasCustomizerPage: React.FC = () => {
                 />
                 {/* Internal split division lines (Zero physical gaps) */}
                 <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
-                  {splitPanels.slice(0, -1).map((p, idx) => {
-                    const splitX = (p.x + p.w) * 100;
-                    return (
-                      <line
-                        key={`sv-${idx}`}
-                        x1={`${splitX}%`}
-                        y1="0"
-                        x2={`${splitX}%`}
-                        y2="100%"
-                        stroke="rgba(255, 255, 255, 0.45)"
-                        strokeWidth="1.5"
-                        style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
-                      />
-                    );
-                  })}
+                  {splitPanels.map((p, idx) => (
+                    <rect
+                      key={`sv-${idx}`}
+                      x={`${p.x * 100}%`}
+                      y={`${p.y * 100}%`}
+                      width={`${p.w * 100}%`}
+                      height={`${p.h * 100}%`}
+                      fill="none"
+                      stroke="rgba(255, 255, 255, 0.45)"
+                      strokeWidth="1.5"
+                      style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
+                    />
+                  ))}
                 </svg>
               </div>
             ) : (
@@ -3104,20 +3105,18 @@ export const CanvasCustomizerPage: React.FC = () => {
               <div className="w-full h-full relative flex items-center justify-center bg-[#dcdfe4]">
                 {/* Internal split lines drawn on empty surface (Zero physical gaps) */}
                 <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
-                  {splitPanels.slice(0, -1).map((p, idx) => {
-                    const splitX = (p.x + p.w) * 100;
-                    return (
-                      <line
-                        key={`esv-${idx}`}
-                        x1={`${splitX}%`}
-                        y1="0"
-                        x2={`${splitX}%`}
-                        y2="100%"
-                        stroke="rgba(0, 0, 0, 0.16)"
-                        strokeWidth="1.5"
-                      />
-                    );
-                  })}
+                  {splitPanels.map((p, idx) => (
+                    <rect
+                      key={`esv-${idx}`}
+                      x={`${p.x * 100}%`}
+                      y={`${p.y * 100}%`}
+                      width={`${p.w * 100}%`}
+                      height={`${p.h * 100}%`}
+                      fill="none"
+                      stroke="rgba(0, 0, 0, 0.16)"
+                      strokeWidth="1.5"
+                    />
+                  ))}
                 </svg>
 
                 {/* Centered Single Upload Action (Canvas India Branding) */}
@@ -3994,15 +3993,17 @@ export const CanvasCustomizerPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Split Canvas single image notification */}
-              {selectedProductTypeId === 'canvas-split' && (
+              {/* Split Canvas & Photo Mosaic single image notification */}
+              {(selectedProductTypeId === 'canvas-split' || selectedProductTypeId === 'canvas-mosaic') && (
                 <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 text-xs font-semibold text-[#0E4A93]">
-                  Upload 1 photo — it is divided seamlessly across the {panels.length || 3} physical canvas panels.
+                  {selectedProductTypeId === 'canvas-mosaic'
+                    ? 'Upload 1 photo — it spans seamlessly across the entire mosaic product.'
+                    : `Upload 1 photo — it is divided seamlessly across the ${panels.length || 3} physical canvas panels.`}
                 </div>
               )}
 
               {/* Multi-slot assignment selector */}
-              {panels.length > 1 && selectedProductTypeId !== 'canvas-split' && (
+              {panels.length > 1 && selectedProductTypeId !== 'canvas-split' && selectedProductTypeId !== 'canvas-mosaic' && (
                 <div className="p-2.5 bg-stone-100 rounded-xl space-y-1.5">
                   <div className="text-[11px] font-bold text-stone-700">Assign to Slot:</div>
                   <div className="flex flex-wrap gap-1.5">
@@ -4033,13 +4034,13 @@ export const CanvasCustomizerPage: React.FC = () => {
                 /* COMPUTER UPLOAD ZONE */
                 <div
                   onClick={() => {
-                    uploadTargetRef.current = activePanelIndex;
+                    uploadTargetRef.current = (selectedProductTypeId === 'canvas-split' || selectedProductTypeId === 'canvas-mosaic') ? 0 : activePanelIndex;
                     fileInputRef.current?.click();
                   }}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => {
                     e.preventDefault();
-                    handleFilesUpload(e.dataTransfer.files, activePanelIndex);
+                    handleFilesUpload(e.dataTransfer.files, (selectedProductTypeId === 'canvas-split' || selectedProductTypeId === 'canvas-mosaic') ? 0 : activePanelIndex);
                   }}
                   className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-6 text-center cursor-pointer transition-all group"
                 >
@@ -4158,7 +4159,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                           onDragEnd={() => {
                             setDraggingPhotoIndex(null);
                           }}
-                          onClick={() => handleAssignPhotoToPanel(photo, activePanelIndex)}
+                          onClick={() => handleAssignPhotoToPanel(photo, (selectedProductTypeId === 'canvas-split' || selectedProductTypeId === 'canvas-mosaic') ? 0 : activePanelIndex)}
                           className={`aspect-square rounded-lg overflow-hidden border transition-all relative group bg-white shadow-2xs select-none ${
                             isDraggingThis
                               ? 'opacity-40 scale-95 ring-2 ring-[#0E4A93] cursor-grabbing'
@@ -6216,21 +6217,19 @@ export const CanvasCustomizerPage: React.FC = () => {
                           />
                           {/* Internal split division lines (0 gap) */}
                           <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
-                            {splitPanels.slice(0, -1).map((p, idx) => {
-                              const splitX = (p.x + p.w) * 100;
-                              return (
-                                <line
-                                  key={`front-split-${idx}`}
-                                  x1={`${splitX}%`}
-                                  y1="0"
-                                  x2={`${splitX}%`}
-                                  y2="100%"
-                                  stroke="rgba(255, 255, 255, 0.45)"
-                                  strokeWidth="1.5"
-                                  style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
-                                />
-                              );
-                            })}
+                            {splitPanels.map((p, idx) => (
+                              <rect
+                                key={`front-split-${idx}`}
+                                x={`${p.x * 100}%`}
+                                y={`${p.y * 100}%`}
+                                width={`${p.w * 100}%`}
+                                height={`${p.h * 100}%`}
+                                fill="none"
+                                stroke="rgba(255, 255, 255, 0.45)"
+                                strokeWidth="1.5"
+                                style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
+                              />
+                            ))}
                           </svg>
                         </div>
                       ) : (
@@ -6677,21 +6676,19 @@ export const CanvasCustomizerPage: React.FC = () => {
                             />
                             {/* Internal split division lines (0 gap) */}
                             <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
-                              {splitPanels.slice(0, -1).map((p, idx) => {
-                                const splitX = (p.x + p.w) * 100;
-                                return (
-                                  <line
-                                    key={`room-sv-${idx}`}
-                                    x1={`${splitX}%`}
-                                    y1="0"
-                                    x2={`${splitX}%`}
-                                    y2="100%"
-                                    stroke="rgba(255, 255, 255, 0.45)"
-                                    strokeWidth="1.5"
-                                    style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
-                                  />
-                                );
-                              })}
+                              {splitPanels.map((p, idx) => (
+                                <rect
+                                  key={`room-sv-${idx}`}
+                                  x={`${p.x * 100}%`}
+                                  y={`${p.y * 100}%`}
+                                  width={`${p.w * 100}%`}
+                                  height={`${p.h * 100}%`}
+                                  fill="none"
+                                  stroke="rgba(255, 255, 255, 0.45)"
+                                  strokeWidth="1.5"
+                                  style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
+                                />
+                              ))}
                             </svg>
                           </div>
                         ) : (

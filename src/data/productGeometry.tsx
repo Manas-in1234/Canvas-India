@@ -66,6 +66,7 @@ export interface ProductLayoutDefinition {
   cols?: number;
   rows?: number;
   priceRange?: string;
+  diagramType?: string;
 }
 
 export interface CanvasGeometryConfig {
@@ -531,155 +532,2698 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
   // 3. Split Canvas (canvas-split)
   'canvas-split': [
     {
-      id: 'split-2p',
+      id: 'split-2p-20x20',
       productTypeId: 'canvas-split',
-      name: '2-Piece Diptych Split',
-      description: '1 panoramic photo split across 2 vertical panels',
+      name: '2-piece (2) 20x20 CM (8"x8")',
+      description: '1 photo split across 2 square panels side by side',
       geometryType: 'split-canvas',
       panelsCount: 2,
       photoCount: 1,
       arrangement: 'twoSplit',
-      dimensionsSummary: '24" × 16" total',
-      aspectRatio: 24 / 16,
-      overallWidthInches: 24,
-      overallHeightInches: 16,
-      price: 1199.0,
-      acrylicPrice: 674.50,
+      dimensionsSummary: '2-piece (2) 20x20 CM (8"x8")',
+      aspectRatio: 2.0000,
+      overallWidthInches: 16,
+      overallHeightInches: 8,
+      price: 188.10,
+      acrylicPrice: 169.00,
+      diagramType: 'split-2p-20x20' as any,
       panels: [
         {
           id: 'p0',
           label: 'Left Panel',
-          dimension: '12" × 16"',
-          x: 0,
-          y: 0,
-          w: 0.5,
-          h: 1,
-          widthRatio: 12,
-          heightRatio: 16
+          dimension: '20x20 CM (8"x8")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.5000,
+          h: 1.0000,
+          widthRatio: 8,
+          heightRatio: 8
         },
         {
           id: 'p1',
           label: 'Right Panel',
-          dimension: '12" × 16"',
-          x: 0.5,
-          y: 0,
-          w: 0.5,
-          h: 1,
-          widthRatio: 12,
-          heightRatio: 16
+          dimension: '20x20 CM (8"x8")',
+          x: 0.5000,
+          y: 0.0000,
+          w: 0.5000,
+          h: 1.0000,
+          widthRatio: 8,
+          heightRatio: 8
         }
       ]
     },
     {
-      id: 'split-3p-36x24',
+      id: 'split-2p-45x25',
       productTypeId: 'canvas-split',
-      name: '3-Piece Triptych Split',
-      description: '1 continuous panoramic photo split across 3 panels',
+      name: '2-piece (2) 45x25 CM (18"x10")',
+      description: '1 photo split across 2 vertical panels side by side',
       geometryType: 'split-canvas',
-      panelsCount: 3,
+      panelsCount: 2,
       photoCount: 1,
-      arrangement: 'threeSplit',
-      dimensionsSummary: '36" × 24" total',
-      aspectRatio: 36 / 24,
-      overallWidthInches: 36,
-      overallHeightInches: 24,
-      price: 2199.0,
-      acrylicPrice: 1890.00,
+      arrangement: 'twoSplit',
+      dimensionsSummary: '2-piece (2) 45x25 CM (18"x10")',
+      aspectRatio: 1.1111,
+      overallWidthInches: 20,
+      overallHeightInches: 18,
+      price: 824.60,
+      acrylicPrice: 740.00,
+      diagramType: 'split-2p-45x25' as any,
       panels: [
         {
           id: 'p0',
           label: 'Left Panel',
-          dimension: '12" × 24"',
-          x: 0,
-          y: 0,
-          w: 1 / 3,
-          h: 1,
-          widthRatio: 12,
-          heightRatio: 24
+          dimension: '25x45 CM (10"x18")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.5000,
+          h: 1.0000,
+          widthRatio: 10,
+          heightRatio: 18
         },
         {
           id: 'p1',
-          label: 'Center Panel',
-          dimension: '12" × 24"',
-          x: 1 / 3,
-          y: 0,
-          w: 1 / 3,
-          h: 1,
-          widthRatio: 12,
-          heightRatio: 24
-        },
-        {
-          id: 'p2',
           label: 'Right Panel',
-          dimension: '12" × 24"',
-          x: 2 / 3,
-          y: 0,
-          w: 1 / 3,
-          h: 1,
-          widthRatio: 12,
-          heightRatio: 24
+          dimension: '25x45 CM (10"x18")',
+          x: 0.5000,
+          y: 0.0000,
+          w: 0.5000,
+          h: 1.0000,
+          widthRatio: 10,
+          heightRatio: 18
         }
       ]
     },
     {
-      id: 'split-4panel-10x20',
+      id: 'split-2p-40x40-stacked',
       productTypeId: 'canvas-split',
-      name: '4-Piece Quad Split',
-      description: '1 wide photo split into 4 vertical panels',
+      name: '2-piece (2) 40x40 CM (16"x16")',
+      description: '1 photo split across 2 stacked square panels',
+      geometryType: 'split-canvas',
+      panelsCount: 2,
+      photoCount: 1,
+      arrangement: 'twoStacked',
+      dimensionsSummary: '2-piece (2) 40x40 CM (16"x16")',
+      aspectRatio: 0.5000,
+      overallWidthInches: 16,
+      overallHeightInches: 32,
+      price: 1096.30,
+      acrylicPrice: 985.00,
+      diagramType: 'split-2p-40x40-stacked' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Top Panel',
+          dimension: '40x40 CM (16"x16")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 1.0000,
+          h: 0.5000,
+          widthRatio: 16,
+          heightRatio: 16
+        },
+        {
+          id: 'p1',
+          label: 'Bottom Panel',
+          dimension: '40x40 CM (16"x16")',
+          x: 0.0000,
+          y: 0.5000,
+          w: 1.0000,
+          h: 0.5000,
+          widthRatio: 16,
+          heightRatio: 16
+        }
+      ]
+    },
+    {
+      id: 'split-4p-30x30-grid',
+      productTypeId: 'canvas-split',
+      name: '4-piece (4) 30x30 CM (12"x12")',
+      description: '1 photo split across a 2x2 grid of 4 square panels',
       geometryType: 'split-canvas',
       panelsCount: 4,
       photoCount: 1,
       arrangement: 'fourGrid',
-      dimensionsSummary: '40" × 20" total',
-      aspectRatio: 40 / 20,
+      dimensionsSummary: '4-piece (4) 30x30 CM (12"x12")',
+      aspectRatio: 1.0000,
+      overallWidthInches: 24,
+      overallHeightInches: 24,
+      price: 1330.00,
+      acrylicPrice: 1195.00,
+      diagramType: 'split-4p-30x30-grid' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Top Left',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.5000,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p1',
+          label: 'Top Right',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.5000,
+          y: 0.0000,
+          w: 0.5000,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p2',
+          label: 'Bottom Left',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.0000,
+          y: 0.5000,
+          w: 0.5000,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p3',
+          label: 'Bottom Right',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.5000,
+          y: 0.5000,
+          w: 0.5000,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        }
+      ]
+    },
+    {
+      id: 'split-2p-40x50',
+      productTypeId: 'canvas-split',
+      name: '2-piece (2) 40x50 CM (16"x20")',
+      description: '1 photo split across 2 wide landscape panels',
+      geometryType: 'split-canvas',
+      panelsCount: 2,
+      photoCount: 1,
+      arrangement: 'twoSplit',
+      dimensionsSummary: '2-piece (2) 40x50 CM (16"x20")',
+      aspectRatio: 2.5000,
       overallWidthInches: 40,
-      overallHeightInches: 20,
-      price: 2899.0,
-      acrylicPrice: 2450.00,
+      overallHeightInches: 16,
+      price: 1357.00,
+      acrylicPrice: 1220.00,
+      diagramType: 'split-2p-40x50' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Panel',
+          dimension: '50x40 CM (20"x16")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.5000,
+          h: 1.0000,
+          widthRatio: 20,
+          heightRatio: 16
+        },
+        {
+          id: 'p1',
+          label: 'Right Panel',
+          dimension: '50x40 CM (20"x16")',
+          x: 0.5000,
+          y: 0.0000,
+          w: 0.5000,
+          h: 1.0000,
+          widthRatio: 20,
+          heightRatio: 16
+        }
+      ]
+    },
+    {
+      id: 'split-3p-45x30',
+      productTypeId: 'canvas-split',
+      name: '3-piece (3) 45x30 CM (18"x12")',
+      description: '1 photo split across 3 vertical panels',
+      geometryType: 'split-canvas',
+      panelsCount: 3,
+      photoCount: 1,
+      arrangement: 'threeSplit',
+      dimensionsSummary: '3-piece (3) 45x30 CM (18"x12")',
+      aspectRatio: 2.0000,
+      overallWidthInches: 36,
+      overallHeightInches: 18,
+      price: 1495.20,
+      acrylicPrice: 1345.00,
+      diagramType: 'split-3p-45x30' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Panel',
+          dimension: '30x45 CM (12"x18")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 12,
+          heightRatio: 18
+        },
+        {
+          id: 'p1',
+          label: 'Center Panel',
+          dimension: '30x45 CM (12"x18")',
+          x: 0.3333,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 12,
+          heightRatio: 18
+        },
+        {
+          id: 'p2',
+          label: 'Right Panel',
+          dimension: '30x45 CM (12"x18")',
+          x: 0.6667,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 12,
+          heightRatio: 18
+        }
+      ]
+    },
+    {
+      id: 'split-3p-62x45-combo',
+      productTypeId: 'canvas-split',
+      name: '3-piece (1) 62x45 CM (25"x18"), (2) 30x30 CM (12"x12")',
+      description: '1 large panel on left with 2 stacked panels on right',
+      geometryType: 'split-canvas',
+      panelsCount: 3,
+      photoCount: 1,
+      arrangement: 'tSplitRight',
+      dimensionsSummary: '3-piece (1) 62x45 CM, (2) 30x30 CM',
+      aspectRatio: 2.0444,
+      overallWidthInches: 37,
+      overallHeightInches: 18,
+      price: 1637.00,
+      acrylicPrice: 1470.00,
+      diagramType: 'split-3p-62x45-combo' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Large',
+          dimension: '62x45 CM (25"x18")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.6739,
+          h: 1.0000,
+          widthRatio: 25,
+          heightRatio: 18
+        },
+        {
+          id: 'p1',
+          label: 'Right Top',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.6739,
+          y: 0.0000,
+          w: 0.3261,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p2',
+          label: 'Right Bottom',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.6739,
+          y: 0.5000,
+          w: 0.3261,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        }
+      ]
+    },
+    {
+      id: 'split-5p-stepped-chevron',
+      productTypeId: 'canvas-split',
+      name: '5-piece (2) 35x20 CM (14"x8"), (2) 45x20 CM (18"x8"), (1) 55x20 CM (22"x8")',
+      description: '5 vertical panels in stepped chevron cascade',
+      geometryType: 'split-canvas',
+      panelsCount: 5,
+      photoCount: 1,
+      arrangement: 'steppedChevron',
+      dimensionsSummary: '5-piece (2) 35x20 CM, (2) 45x20 CM, (1) 55x20 CM',
+      aspectRatio: 1.8182,
+      overallWidthInches: 40,
+      overallHeightInches: 22,
+      price: 1699.00,
+      acrylicPrice: 1525.00,
+      diagramType: 'split-5p-stepped-chevron' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Outer Left',
+          dimension: '20x35 CM (8"x14")',
+          x: 0.0000,
+          y: 0.1818,
+          w: 0.2000,
+          h: 0.6364,
+          widthRatio: 8,
+          heightRatio: 14
+        },
+        {
+          id: 'p1',
+          label: 'Inner Left',
+          dimension: '20x45 CM (8"x18")',
+          x: 0.2000,
+          y: 0.0909,
+          w: 0.2000,
+          h: 0.8182,
+          widthRatio: 8,
+          heightRatio: 18
+        },
+        {
+          id: 'p2',
+          label: 'Center Tall',
+          dimension: '20x55 CM (8"x22")',
+          x: 0.4000,
+          y: 0.0000,
+          w: 0.2000,
+          h: 1.0000,
+          widthRatio: 8,
+          heightRatio: 22
+        },
+        {
+          id: 'p3',
+          label: 'Inner Right',
+          dimension: '20x45 CM (8"x18")',
+          x: 0.6000,
+          y: 0.0909,
+          w: 0.2000,
+          h: 0.8182,
+          widthRatio: 8,
+          heightRatio: 18
+        },
+        {
+          id: 'p4',
+          label: 'Outer Right',
+          dimension: '20x35 CM (8"x14")',
+          x: 0.8000,
+          y: 0.1818,
+          w: 0.2000,
+          h: 0.6364,
+          widthRatio: 8,
+          heightRatio: 14
+        }
+      ]
+    },
+    {
+      id: 'split-4p-62x40-combo',
+      productTypeId: 'canvas-split',
+      name: '4-piece (1) 62x40 CM (25"x16"), (1) 27x45 CM (11"x18"), (2) 30x20 CM (12"x8")',
+      description: '1 tall panel with top landscape panel and 2 bottom panels',
+      geometryType: 'split-canvas',
+      panelsCount: 4,
+      photoCount: 1,
+      arrangement: 'tSplitCombo',
+      dimensionsSummary: '4-piece (1) 62x40, (1) 27x45, (2) 30x20 CM',
+      aspectRatio: 1.9778,
+      overallWidthInches: 36,
+      overallHeightInches: 18,
+      price: 1751.80,
+      acrylicPrice: 1575.00,
+      diagramType: 'split-4p-62x40-combo' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Tall',
+          dimension: '27x45 CM (11"x18")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.3034,
+          h: 1.0000,
+          widthRatio: 11,
+          heightRatio: 18
+        },
+        {
+          id: 'p1',
+          label: 'Right Top',
+          dimension: '62x40 CM (25"x16")',
+          x: 0.3034,
+          y: 0.0000,
+          w: 0.6966,
+          h: 0.5556,
+          widthRatio: 25,
+          heightRatio: 16
+        },
+        {
+          id: 'p2',
+          label: 'Right Bot-Left',
+          dimension: '30x20 CM (12"x8")',
+          x: 0.3034,
+          y: 0.5556,
+          w: 0.3483,
+          h: 0.4444,
+          widthRatio: 12,
+          heightRatio: 8
+        },
+        {
+          id: 'p3',
+          label: 'Right Bot-Right',
+          dimension: '30x20 CM (12"x8")',
+          x: 0.6517,
+          y: 0.5556,
+          w: 0.3483,
+          h: 0.4444,
+          widthRatio: 12,
+          heightRatio: 8
+        }
+      ]
+    },
+    {
+      id: 'split-3p-65x65-combo',
+      productTypeId: 'canvas-split',
+      name: '3-piece (1) 65x65 CM (26"x26"), (2) 30x30 CM (12"x12")',
+      description: '1 large square on left with 2 stacked panels on right',
+      geometryType: 'split-canvas',
+      panelsCount: 3,
+      photoCount: 1,
+      arrangement: 'tSplitRight',
+      dimensionsSummary: '3-piece (1) 65x65 CM, (2) 30x30 CM',
+      aspectRatio: 1.4615,
+      overallWidthInches: 38,
+      overallHeightInches: 26,
+      price: 2061.50,
+      acrylicPrice: 1850.00,
+      diagramType: 'split-3p-65x65-combo' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Square',
+          dimension: '65x65 CM (26"x26")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.6842,
+          h: 1.0000,
+          widthRatio: 26,
+          heightRatio: 26
+        },
+        {
+          id: 'p1',
+          label: 'Right Top',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.6842,
+          y: 0.0000,
+          w: 0.3158,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p2',
+          label: 'Right Bottom',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.6842,
+          y: 0.5000,
+          w: 0.3158,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        }
+      ]
+    },
+    {
+      id: 'split-9p-22x22-grid',
+      productTypeId: 'canvas-split',
+      name: '9-piece (9) 22x22 CM (10"x10")',
+      description: '3x3 grid of 9 square panels',
+      geometryType: 'split-canvas',
+      panelsCount: 9,
+      photoCount: 1,
+      arrangement: 'nineGrid',
+      dimensionsSummary: '9-piece (9) 22x22 CM (10"x10")',
+      aspectRatio: 1.0000,
+      overallWidthInches: 30,
+      overallHeightInches: 30,
+      price: 2778.75,
+      acrylicPrice: 2490.00,
+      diagramType: 'split-9p-22x22-grid' as any,
       panels: [
         {
           id: 'p0',
           label: 'Panel 1',
-          dimension: '10" × 20"',
-          x: 0,
-          y: 0,
-          w: 0.25,
-          h: 1,
+          dimension: '22x22 CM (10"x10")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.3333,
+          h: 0.3333,
           widthRatio: 10,
-          heightRatio: 20
+          heightRatio: 10
         },
         {
           id: 'p1',
           label: 'Panel 2',
-          dimension: '10" × 20"',
-          x: 0.25,
-          y: 0,
-          w: 0.25,
-          h: 1,
+          dimension: '22x22 CM (10"x10")',
+          x: 0.3333,
+          y: 0.0000,
+          w: 0.3333,
+          h: 0.3333,
           widthRatio: 10,
-          heightRatio: 20
+          heightRatio: 10
         },
         {
           id: 'p2',
           label: 'Panel 3',
-          dimension: '10" × 20"',
-          x: 0.5,
-          y: 0,
-          w: 0.25,
-          h: 1,
+          dimension: '22x22 CM (10"x10")',
+          x: 0.6667,
+          y: 0.0000,
+          w: 0.3333,
+          h: 0.3333,
           widthRatio: 10,
-          heightRatio: 20
+          heightRatio: 10
         },
         {
           id: 'p3',
           label: 'Panel 4',
-          dimension: '10" × 20"',
-          x: 0.75,
-          y: 0,
-          w: 0.25,
-          h: 1,
+          dimension: '22x22 CM (10"x10")',
+          x: 0.0000,
+          y: 0.3333,
+          w: 0.3333,
+          h: 0.3333,
           widthRatio: 10,
+          heightRatio: 10
+        },
+        {
+          id: 'p4',
+          label: 'Panel 5',
+          dimension: '22x22 CM (10"x10")',
+          x: 0.3333,
+          y: 0.3333,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 10,
+          heightRatio: 10
+        },
+        {
+          id: 'p5',
+          label: 'Panel 6',
+          dimension: '22x22 CM (10"x10")',
+          x: 0.6667,
+          y: 0.3333,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 10,
+          heightRatio: 10
+        },
+        {
+          id: 'p6',
+          label: 'Panel 7',
+          dimension: '22x22 CM (10"x10")',
+          x: 0.0000,
+          y: 0.6667,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 10,
+          heightRatio: 10
+        },
+        {
+          id: 'p7',
+          label: 'Panel 8',
+          dimension: '22x22 CM (10"x10")',
+          x: 0.3333,
+          y: 0.6667,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 10,
+          heightRatio: 10
+        },
+        {
+          id: 'p8',
+          label: 'Panel 9',
+          dimension: '22x22 CM (10"x10")',
+          x: 0.6667,
+          y: 0.6667,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 10,
+          heightRatio: 10
+        }
+      ]
+    },
+    {
+      id: 'split-5p-flanked-landscape',
+      productTypeId: 'canvas-split',
+      name: '5-piece (4) 27x27 CM (12"x12"), (1) 62x42 CM (25"x18")',
+      description: 'Center landscape panel flanked by 2 stacked panels on each side',
+      geometryType: 'split-canvas',
+      panelsCount: 5,
+      photoCount: 1,
+      arrangement: 'flankedCenter',
+      dimensionsSummary: '5-piece (4) 27x27 CM, (1) 62x42 CM',
+      aspectRatio: 2.1481,
+      overallWidthInches: 46,
+      overallHeightInches: 21,
+      price: 2272.40,
+      acrylicPrice: 2045.00,
+      diagramType: 'split-5p-flanked-landscape' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Top',
+          dimension: '27x27 CM (12"x12")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.2328,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p1',
+          label: 'Left Bottom',
+          dimension: '27x27 CM (12"x12")',
+          x: 0.0000,
+          y: 0.5000,
+          w: 0.2328,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p2',
+          label: 'Center Large',
+          dimension: '62x42 CM (25"x18")',
+          x: 0.2328,
+          y: 0.0000,
+          w: 0.5345,
+          h: 1.0000,
+          widthRatio: 25,
+          heightRatio: 18
+        },
+        {
+          id: 'p3',
+          label: 'Right Top',
+          dimension: '27x27 CM (12"x12")',
+          x: 0.7672,
+          y: 0.0000,
+          w: 0.2328,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p4',
+          label: 'Right Bottom',
+          dimension: '27x27 CM (12"x12")',
+          x: 0.7672,
+          y: 0.5000,
+          w: 0.2328,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        }
+      ]
+    },
+    {
+      id: 'split-4p-85x50-stacked-right',
+      productTypeId: 'canvas-split',
+      name: '4-piece (1) 85x50 CM (34"x20"), (3) 25x32 CM (10"x13")',
+      description: '1 large panel on left with 3 stacked panels on right',
+      geometryType: 'split-canvas',
+      panelsCount: 4,
+      photoCount: 1,
+      arrangement: 'tSplitRight3',
+      dimensionsSummary: '4-piece (1) 85x50 CM, (3) 25x32 CM',
+      aspectRatio: 0.8824,
+      overallWidthInches: 30,
+      overallHeightInches: 34,
+      price: 2390.00,
+      acrylicPrice: 2150.00,
+      diagramType: 'split-4p-85x50-stacked-right' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Large',
+          dimension: '50x85 CM (20"x34")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.6667,
+          h: 1.0000,
+          widthRatio: 20,
+          heightRatio: 34
+        },
+        {
+          id: 'p1',
+          label: 'Right Top',
+          dimension: '25x28 CM (10"x11")',
+          x: 0.6667,
+          y: 0.0000,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 10,
+          heightRatio: 11
+        },
+        {
+          id: 'p2',
+          label: 'Right Mid',
+          dimension: '25x28 CM (10"x11")',
+          x: 0.6667,
+          y: 0.3333,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 10,
+          heightRatio: 11
+        },
+        {
+          id: 'p3',
+          label: 'Right Bot',
+          dimension: '25x28 CM (10"x11")',
+          x: 0.6667,
+          y: 0.6667,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 10,
+          heightRatio: 11
+        }
+      ]
+    },
+    {
+      id: 'split-5p-flanked-square',
+      productTypeId: 'canvas-split',
+      name: '5-piece (4) 27x27 CM (12"x12"), (1) 60x60 CM (24"x24")',
+      description: 'Center square panel flanked by 2 stacked panels on each side',
+      geometryType: 'split-canvas',
+      panelsCount: 5,
+      photoCount: 1,
+      arrangement: 'flankedCenter',
+      dimensionsSummary: '5-piece (4) 27x27 CM, (1) 60x60 CM',
+      aspectRatio: 1.9000,
+      overallWidthInches: 45,
+      overallHeightInches: 24,
+      price: 2450.00,
+      acrylicPrice: 2200.00,
+      diagramType: 'split-5p-flanked-square' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Top',
+          dimension: '27x27 CM (12"x12")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.2368,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p1',
+          label: 'Left Bottom',
+          dimension: '27x27 CM (12"x12")',
+          x: 0.0000,
+          y: 0.5000,
+          w: 0.2368,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p2',
+          label: 'Center Square',
+          dimension: '60x60 CM (24"x24")',
+          x: 0.2368,
+          y: 0.0000,
+          w: 0.5263,
+          h: 1.0000,
+          widthRatio: 24,
+          heightRatio: 24
+        },
+        {
+          id: 'p3',
+          label: 'Right Top',
+          dimension: '27x27 CM (12"x12")',
+          x: 0.7632,
+          y: 0.0000,
+          w: 0.2368,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p4',
+          label: 'Right Bottom',
+          dimension: '27x27 CM (12"x12")',
+          x: 0.7632,
+          y: 0.5000,
+          w: 0.2368,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        }
+      ]
+    },
+    {
+      id: 'split-6p-checker-combo',
+      productTypeId: 'canvas-split',
+      name: '6-piece (3) 30x30 CM (12"x12"), (3) 45x30 CM (18"x12")',
+      description: '6 alternating staggered panels across 3 columns',
+      geometryType: 'split-canvas',
+      panelsCount: 6,
+      photoCount: 1,
+      arrangement: 'checkerColumns',
+      dimensionsSummary: '6-piece (3) 30x30 CM, (3) 45x30 CM',
+      aspectRatio: 1.2000,
+      overallWidthInches: 36,
+      overallHeightInches: 30,
+      price: 2550.00,
+      acrylicPrice: 2295.00,
+      diagramType: 'split-6p-checker-combo' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Col 1 Top',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.3333,
+          h: 0.4000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p1',
+          label: 'Col 1 Bot',
+          dimension: '30x45 CM (12"x18")',
+          x: 0.0000,
+          y: 0.4000,
+          w: 0.3333,
+          h: 0.6000,
+          widthRatio: 12,
+          heightRatio: 18
+        },
+        {
+          id: 'p2',
+          label: 'Col 2 Top',
+          dimension: '30x45 CM (12"x18")',
+          x: 0.3333,
+          y: 0.0000,
+          w: 0.3333,
+          h: 0.6000,
+          widthRatio: 12,
+          heightRatio: 18
+        },
+        {
+          id: 'p3',
+          label: 'Col 2 Bot',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.3333,
+          y: 0.6000,
+          w: 0.3333,
+          h: 0.4000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p4',
+          label: 'Col 3 Top',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.6667,
+          y: 0.0000,
+          w: 0.3333,
+          h: 0.4000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p5',
+          label: 'Col 3 Bot',
+          dimension: '30x45 CM (12"x18")',
+          x: 0.6667,
+          y: 0.4000,
+          w: 0.3333,
+          h: 0.6000,
+          widthRatio: 12,
+          heightRatio: 18
+        }
+      ]
+    },
+    {
+      id: 'split-3p-80x27-tall',
+      productTypeId: 'canvas-split',
+      name: '3-piece (3) 80x27 CM (32"x11")',
+      description: '3 tall vertical panels side by side',
+      geometryType: 'split-canvas',
+      panelsCount: 3,
+      photoCount: 1,
+      arrangement: 'threeSplit',
+      dimensionsSummary: '3-piece (3) 80x27 CM (32"x11")',
+      aspectRatio: 1.0125,
+      overallWidthInches: 32,
+      overallHeightInches: 32,
+      price: 2590.00,
+      acrylicPrice: 2330.00,
+      diagramType: 'split-3p-80x27-tall' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Panel',
+          dimension: '27x80 CM (11"x32")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 11,
+          heightRatio: 32
+        },
+        {
+          id: 'p1',
+          label: 'Center Panel',
+          dimension: '27x80 CM (11"x32")',
+          x: 0.3333,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 11,
+          heightRatio: 32
+        },
+        {
+          id: 'p2',
+          label: 'Right Panel',
+          dimension: '27x80 CM (11"x32")',
+          x: 0.6667,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 11,
+          heightRatio: 32
+        }
+      ]
+    },
+    {
+      id: 'split-3p-50x50-vertical',
+      productTypeId: 'canvas-split',
+      name: '3-piece (3) 50x50 CM (20"x20") (vertical stack)',
+      description: '1 vertical column of 3 stacked square panels',
+      geometryType: 'split-canvas',
+      panelsCount: 3,
+      photoCount: 1,
+      arrangement: 'verticalStack',
+      dimensionsSummary: '3-piece (3) 50x50 CM (Vertical Stack)',
+      aspectRatio: 0.3333,
+      overallWidthInches: 20,
+      overallHeightInches: 60,
+      price: 3278.91,
+      acrylicPrice: 2950.00,
+      diagramType: 'split-3p-50x50-vertical' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Top Panel',
+          dimension: '50x50 CM (20"x20")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 1.0000,
+          h: 0.3333,
+          widthRatio: 20,
           heightRatio: 20
+        },
+        {
+          id: 'p1',
+          label: 'Middle Panel',
+          dimension: '50x50 CM (20"x20")',
+          x: 0.0000,
+          y: 0.3333,
+          w: 1.0000,
+          h: 0.3333,
+          widthRatio: 20,
+          heightRatio: 20
+        },
+        {
+          id: 'p2',
+          label: 'Bottom Panel',
+          dimension: '50x50 CM (20"x20")',
+          x: 0.0000,
+          y: 0.6667,
+          w: 1.0000,
+          h: 0.3333,
+          widthRatio: 20,
+          heightRatio: 20
+        }
+      ]
+    },
+    {
+      id: 'split-3p-50x50-horizontal',
+      productTypeId: 'canvas-split',
+      name: '3-piece (3) 50x50 CM (20"x20") (horizontal row)',
+      description: '3 square panels side by side in a single row',
+      geometryType: 'split-canvas',
+      panelsCount: 3,
+      photoCount: 1,
+      arrangement: 'threeSplit',
+      dimensionsSummary: '3-piece (3) 50x50 CM (Horizontal Row)',
+      aspectRatio: 3.0000,
+      overallWidthInches: 60,
+      overallHeightInches: 20,
+      price: 3278.91,
+      acrylicPrice: 2950.00,
+      diagramType: 'split-3p-50x50-horizontal' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Panel',
+          dimension: '50x50 CM (20"x20")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 20,
+          heightRatio: 20
+        },
+        {
+          id: 'p1',
+          label: 'Center Panel',
+          dimension: '50x50 CM (20"x20")',
+          x: 0.3333,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 20,
+          heightRatio: 20
+        },
+        {
+          id: 'p2',
+          label: 'Right Panel',
+          dimension: '50x50 CM (20"x20")',
+          x: 0.6667,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 20,
+          heightRatio: 20
+        }
+      ]
+    },
+    {
+      id: 'split-3p-center-tall',
+      productTypeId: 'canvas-split',
+      name: '3-piece (2) 57x37 CM (24"x16"), (1) 72x37 CM (30"x16")',
+      description: '3 vertical panels with a taller center panel',
+      geometryType: 'split-canvas',
+      panelsCount: 3,
+      photoCount: 1,
+      arrangement: 'triptychCenterTall',
+      dimensionsSummary: '3-piece (2) 57x37 CM, (1) 72x37 CM',
+      aspectRatio: 1.5417,
+      overallWidthInches: 44,
+      overallHeightInches: 28,
+      price: 2619.15,
+      acrylicPrice: 2355.00,
+      diagramType: 'split-3p-center-tall' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Panel',
+          dimension: '37x57 CM (16"x24")',
+          x: 0.0000,
+          y: 0.1042,
+          w: 0.3333,
+          h: 0.7917,
+          widthRatio: 16,
+          heightRatio: 24
+        },
+        {
+          id: 'p1',
+          label: 'Center Tall',
+          dimension: '37x72 CM (16"x30")',
+          x: 0.3333,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 16,
+          heightRatio: 30
+        },
+        {
+          id: 'p2',
+          label: 'Right Panel',
+          dimension: '37x57 CM (16"x24")',
+          x: 0.6667,
+          y: 0.1042,
+          w: 0.3333,
+          h: 0.7917,
+          widthRatio: 16,
+          heightRatio: 24
+        }
+      ]
+    },
+    {
+      id: 'split-5p-30-45-60-stepped',
+      productTypeId: 'canvas-split',
+      name: '5-piece (2) 30x30 CM (12"x12"), (2) 45x30 CM (18"x12"), (1) 60x60 CM (24"x24")',
+      description: '5 panels tiered in stepped pyramid with center square',
+      geometryType: 'split-canvas',
+      panelsCount: 5,
+      photoCount: 1,
+      arrangement: 'steppedPyramid',
+      dimensionsSummary: '5-piece (2) 30x30, (2) 45x30, (1) 60x60 CM',
+      aspectRatio: 3.0000,
+      overallWidthInches: 72,
+      overallHeightInches: 24,
+      price: 3632.13,
+      acrylicPrice: 3265.00,
+      diagramType: 'split-5p-30-45-60-stepped' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Outer Left',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.0000,
+          y: 0.2500,
+          w: 0.1667,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p1',
+          label: 'Inner Left',
+          dimension: '30x45 CM (12"x18")',
+          x: 0.1667,
+          y: 0.1250,
+          w: 0.1667,
+          h: 0.7500,
+          widthRatio: 12,
+          heightRatio: 18
+        },
+        {
+          id: 'p2',
+          label: 'Center Square',
+          dimension: '60x60 CM (24"x24")',
+          x: 0.3333,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 24,
+          heightRatio: 24
+        },
+        {
+          id: 'p3',
+          label: 'Inner Right',
+          dimension: '30x45 CM (12"x18")',
+          x: 0.6667,
+          y: 0.1250,
+          w: 0.1667,
+          h: 0.7500,
+          widthRatio: 12,
+          heightRatio: 18
+        },
+        {
+          id: 'p4',
+          label: 'Outer Right',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.8333,
+          y: 0.2500,
+          w: 0.1667,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 12
+        }
+      ]
+    },
+    {
+      id: 'split-3p-37x75-horizontal',
+      productTypeId: 'canvas-split',
+      name: '3-piece (3) 37x75 CM (15"x30")',
+      description: '3 wide panoramic panels side by side',
+      geometryType: 'split-canvas',
+      panelsCount: 3,
+      photoCount: 1,
+      arrangement: 'threeSplit',
+      dimensionsSummary: '3-piece (3) 37x75 CM (15"x30")',
+      aspectRatio: 6.0811,
+      overallWidthInches: 90,
+      overallHeightInches: 15,
+      price: 2890.00,
+      acrylicPrice: 2599.00,
+      diagramType: 'split-3p-37x75-horizontal' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Panel',
+          dimension: '75x37 CM (30"x15")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 30,
+          heightRatio: 15
+        },
+        {
+          id: 'p1',
+          label: 'Center Panel',
+          dimension: '75x37 CM (30"x15")',
+          x: 0.3333,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 30,
+          heightRatio: 15
+        },
+        {
+          id: 'p2',
+          label: 'Right Panel',
+          dimension: '75x37 CM (30"x15")',
+          x: 0.6667,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 30,
+          heightRatio: 15
+        }
+      ]
+    },
+    {
+      id: 'split-3p-50x90-t-split',
+      productTypeId: 'canvas-split',
+      name: '3-piece (1) 50x90 CM (20"x36"), (2) 50x40 CM (20"x16")',
+      description: '1 top wide panel with 2 bottom panels side by side',
+      geometryType: 'split-canvas',
+      panelsCount: 3,
+      photoCount: 1,
+      arrangement: 'tSplitTop',
+      dimensionsSummary: '3-piece (1) 50x90 CM, (2) 50x40 CM',
+      aspectRatio: 0.9000,
+      overallWidthInches: 36,
+      overallHeightInches: 40,
+      price: 2990.00,
+      acrylicPrice: 2690.00,
+      diagramType: 'split-3p-50x90-t-split' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Top Wide',
+          dimension: '90x50 CM (36"x20")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 1.0000,
+          h: 0.5000,
+          widthRatio: 36,
+          heightRatio: 20
+        },
+        {
+          id: 'p1',
+          label: 'Bottom Left',
+          dimension: '45x50 CM (18"x20")',
+          x: 0.0000,
+          y: 0.5000,
+          w: 0.5000,
+          h: 0.5000,
+          widthRatio: 18,
+          heightRatio: 20
+        },
+        {
+          id: 'p2',
+          label: 'Bottom Right',
+          dimension: '45x50 CM (18"x20")',
+          x: 0.5000,
+          y: 0.5000,
+          w: 0.5000,
+          h: 0.5000,
+          widthRatio: 18,
+          heightRatio: 20
+        }
+      ]
+    },
+    {
+      id: 'split-9p-30x30-grid',
+      productTypeId: 'canvas-split',
+      name: '9-piece (9) 30x30 CM (12"x12")',
+      description: '3x3 grid of 9 square panels',
+      geometryType: 'split-canvas',
+      panelsCount: 9,
+      photoCount: 1,
+      arrangement: 'nineGrid',
+      dimensionsSummary: '9-piece (9) 30x30 CM (12"x12")',
+      aspectRatio: 1.0000,
+      overallWidthInches: 36,
+      overallHeightInches: 36,
+      price: 3150.00,
+      acrylicPrice: 2835.00,
+      diagramType: 'split-9p-30x30-grid' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Panel 1',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p1',
+          label: 'Panel 2',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.3333,
+          y: 0.0000,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p2',
+          label: 'Panel 3',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.6667,
+          y: 0.0000,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p3',
+          label: 'Panel 4',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.0000,
+          y: 0.3333,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p4',
+          label: 'Panel 5',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.3333,
+          y: 0.3333,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p5',
+          label: 'Panel 6',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.6667,
+          y: 0.3333,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p6',
+          label: 'Panel 7',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.0000,
+          y: 0.6667,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p7',
+          label: 'Panel 8',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.3333,
+          y: 0.6667,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p8',
+          label: 'Panel 9',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.6667,
+          y: 0.6667,
+          w: 0.3333,
+          h: 0.3333,
+          widthRatio: 12,
+          heightRatio: 12
+        }
+      ]
+    },
+    {
+      id: 'split-7p-25x35-combo',
+      productTypeId: 'canvas-split',
+      name: '7-piece (4) 25x35 CM (10"x14"), (3) 50x35 CM (20"x14")',
+      description: '7 panels in symmetrical 3-column wall display',
+      geometryType: 'split-canvas',
+      panelsCount: 7,
+      photoCount: 1,
+      arrangement: 'sevenDisplay',
+      dimensionsSummary: '7-piece (4) 25x35 CM, (3) 50x35 CM',
+      aspectRatio: 1.0500,
+      overallWidthInches: 42,
+      overallHeightInches: 40,
+      price: 3250.00,
+      acrylicPrice: 2925.00,
+      diagramType: 'split-7p-25x35-combo' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Top Left',
+          dimension: '35x25 CM (14"x10")',
+          x: 0.1667,
+          y: 0.0000,
+          w: 0.3333,
+          h: 0.2500,
+          widthRatio: 14,
+          heightRatio: 10
+        },
+        {
+          id: 'p1',
+          label: 'Top Right',
+          dimension: '35x25 CM (14"x10")',
+          x: 0.5000,
+          y: 0.0000,
+          w: 0.3333,
+          h: 0.2500,
+          widthRatio: 14,
+          heightRatio: 10
+        },
+        {
+          id: 'p2',
+          label: 'Mid Left',
+          dimension: '35x50 CM (14"x20")',
+          x: 0.0000,
+          y: 0.2500,
+          w: 0.3333,
+          h: 0.5000,
+          widthRatio: 14,
+          heightRatio: 20
+        },
+        {
+          id: 'p3',
+          label: 'Mid Center',
+          dimension: '35x50 CM (14"x20")',
+          x: 0.3333,
+          y: 0.2500,
+          w: 0.3333,
+          h: 0.5000,
+          widthRatio: 14,
+          heightRatio: 20
+        },
+        {
+          id: 'p4',
+          label: 'Mid Right',
+          dimension: '35x50 CM (14"x20")',
+          x: 0.6667,
+          y: 0.2500,
+          w: 0.3333,
+          h: 0.5000,
+          widthRatio: 14,
+          heightRatio: 20
+        },
+        {
+          id: 'p5',
+          label: 'Bot Left',
+          dimension: '35x25 CM (14"x10")',
+          x: 0.1667,
+          y: 0.7500,
+          w: 0.3333,
+          h: 0.2500,
+          widthRatio: 14,
+          heightRatio: 10
+        },
+        {
+          id: 'p6',
+          label: 'Bot Right',
+          dimension: '35x25 CM (14"x10")',
+          x: 0.5000,
+          y: 0.7500,
+          w: 0.3333,
+          h: 0.2500,
+          widthRatio: 14,
+          heightRatio: 10
+        }
+      ]
+    },
+    {
+      id: 'split-6p-mosaic-cluster',
+      productTypeId: 'canvas-split',
+      name: '6-piece (2) 45x30 CM (18"x12"), (3) 25x25 CM (10"x10"), (1) 50x65 CM (20"x36")',
+      description: 'Center feature panel with 3 top squares and 2 side panels',
+      geometryType: 'split-canvas',
+      panelsCount: 6,
+      photoCount: 1,
+      arrangement: 'centerFeatureCluster',
+      dimensionsSummary: '6-piece (2) 45x30, (3) 25x25, (1) 50x65 CM',
+      aspectRatio: 1.6667,
+      overallWidthInches: 50,
+      overallHeightInches: 30,
+      price: 3134.05,
+      acrylicPrice: 2820.00,
+      diagramType: 'split-6p-mosaic-cluster' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Top 1',
+          dimension: '25x25 CM (10"x10")',
+          x: 0.2500,
+          y: 0.0000,
+          w: 0.2000,
+          h: 0.3333,
+          widthRatio: 10,
+          heightRatio: 10
+        },
+        {
+          id: 'p1',
+          label: 'Top 2',
+          dimension: '25x25 CM (10"x10")',
+          x: 0.4500,
+          y: 0.0000,
+          w: 0.2000,
+          h: 0.3333,
+          widthRatio: 10,
+          heightRatio: 10
+        },
+        {
+          id: 'p2',
+          label: 'Top 3',
+          dimension: '25x25 CM (10"x10")',
+          x: 0.6500,
+          y: 0.0000,
+          w: 0.2000,
+          h: 0.3333,
+          widthRatio: 10,
+          heightRatio: 10
+        },
+        {
+          id: 'p3',
+          label: 'Left Panel',
+          dimension: '30x45 CM (12"x18")',
+          x: 0.0000,
+          y: 0.3333,
+          w: 0.2400,
+          h: 0.6667,
+          widthRatio: 12,
+          heightRatio: 18
+        },
+        {
+          id: 'p4',
+          label: 'Center Large',
+          dimension: '65x50 CM (26"x20")',
+          x: 0.2400,
+          y: 0.3333,
+          w: 0.5200,
+          h: 0.6667,
+          widthRatio: 26,
+          heightRatio: 20
+        },
+        {
+          id: 'p5',
+          label: 'Right Panel',
+          dimension: '30x45 CM (12"x18")',
+          x: 0.7600,
+          y: 0.3333,
+          w: 0.2400,
+          h: 0.6667,
+          widthRatio: 12,
+          heightRatio: 18
+        }
+      ]
+    },
+    {
+      id: 'split-4p-50x50-grid',
+      productTypeId: 'canvas-split',
+      name: '4-piece (4) 50x50 CM (20"x20")',
+      description: '2x2 grid of 4 large square panels',
+      geometryType: 'split-canvas',
+      panelsCount: 4,
+      photoCount: 1,
+      arrangement: 'fourGrid',
+      dimensionsSummary: '4-piece (4) 50x50 CM (20"x20")',
+      aspectRatio: 1.0000,
+      overallWidthInches: 40,
+      overallHeightInches: 40,
+      price: 4371.88,
+      acrylicPrice: 3935.00,
+      diagramType: 'split-4p-50x50-grid' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Top Left',
+          dimension: '50x50 CM (20"x20")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.5000,
+          h: 0.5000,
+          widthRatio: 20,
+          heightRatio: 20
+        },
+        {
+          id: 'p1',
+          label: 'Top Right',
+          dimension: '50x50 CM (20"x20")',
+          x: 0.5000,
+          y: 0.0000,
+          w: 0.5000,
+          h: 0.5000,
+          widthRatio: 20,
+          heightRatio: 20
+        },
+        {
+          id: 'p2',
+          label: 'Bottom Left',
+          dimension: '50x50 CM (20"x20")',
+          x: 0.0000,
+          y: 0.5000,
+          w: 0.5000,
+          h: 0.5000,
+          widthRatio: 20,
+          heightRatio: 20
+        },
+        {
+          id: 'p3',
+          label: 'Bottom Right',
+          dimension: '50x50 CM (20"x20")',
+          x: 0.5000,
+          y: 0.5000,
+          w: 0.5000,
+          h: 0.5000,
+          widthRatio: 20,
+          heightRatio: 20
+        }
+      ]
+    },
+    {
+      id: 'split-3p-75x50-triptych',
+      productTypeId: 'canvas-split',
+      name: '3-piece (3) 75x50 CM (30"x20")',
+      description: '3 large vertical panels side by side',
+      geometryType: 'split-canvas',
+      panelsCount: 3,
+      photoCount: 1,
+      arrangement: 'threeSplit',
+      dimensionsSummary: '3-piece (3) 75x50 CM (30"x20")',
+      aspectRatio: 2.0000,
+      overallWidthInches: 60,
+      overallHeightInches: 30,
+      price: 4412.31,
+      acrylicPrice: 3970.00,
+      diagramType: 'split-3p-75x50-triptych' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Panel',
+          dimension: '50x75 CM (20"x30")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 20,
+          heightRatio: 30
+        },
+        {
+          id: 'p1',
+          label: 'Center Panel',
+          dimension: '50x75 CM (20"x30")',
+          x: 0.3333,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 20,
+          heightRatio: 30
+        },
+        {
+          id: 'p2',
+          label: 'Right Panel',
+          dimension: '50x75 CM (20"x30")',
+          x: 0.6667,
+          y: 0.0000,
+          w: 0.3333,
+          h: 1.0000,
+          widthRatio: 20,
+          heightRatio: 30
+        }
+      ]
+    },
+    {
+      id: 'split-4p-97x72-combo',
+      productTypeId: 'canvas-split',
+      name: '4-piece (1) 97x72 CM (40"x30"), (3) 27x27 CM (12"x12")',
+      description: '1 grand vertical panel on left with 3 stacked panels on right',
+      geometryType: 'split-canvas',
+      panelsCount: 4,
+      photoCount: 1,
+      arrangement: 'tSplitRight3',
+      dimensionsSummary: '4-piece (1) 97x72 CM, (3) 27x27 CM',
+      aspectRatio: 1.0206,
+      overallWidthInches: 39,
+      overallHeightInches: 38,
+      price: 3441.85,
+      acrylicPrice: 3095.00,
+      diagramType: 'split-4p-97x72-combo' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Grand',
+          dimension: '72x97 CM (30"x40")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.7273,
+          h: 1.0000,
+          widthRatio: 30,
+          heightRatio: 40
+        },
+        {
+          id: 'p1',
+          label: 'Right Top',
+          dimension: '27x27 CM (12"x12")',
+          x: 0.7273,
+          y: 0.0000,
+          w: 0.2727,
+          h: 0.3333,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p2',
+          label: 'Right Mid',
+          dimension: '27x27 CM (12"x12")',
+          x: 0.7273,
+          y: 0.3333,
+          w: 0.2727,
+          h: 0.3333,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p3',
+          label: 'Right Bot',
+          dimension: '27x27 CM (12"x12")',
+          x: 0.7273,
+          y: 0.6667,
+          w: 0.2727,
+          h: 0.3333,
+          widthRatio: 12,
+          heightRatio: 12
+        }
+      ]
+    },
+    {
+      id: 'split-5p-50x30-stepped',
+      productTypeId: 'canvas-split',
+      name: '5-piece (2) 50x30 CM (20"x12"), (2) 75x30 CM (30"x12"), (1) 100x30 CM (40"x12")',
+      description: '5 vertical panels in stepped chevron cascade',
+      geometryType: 'split-canvas',
+      panelsCount: 5,
+      photoCount: 1,
+      arrangement: 'steppedChevron',
+      dimensionsSummary: '5-piece (2) 50x30, (2) 75x30, (1) 100x30 CM',
+      aspectRatio: 1.5000,
+      overallWidthInches: 60,
+      overallHeightInches: 40,
+      price: 3590.00,
+      acrylicPrice: 3230.00,
+      diagramType: 'split-5p-50x30-stepped' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Outer Left',
+          dimension: '30x50 CM (12"x20")',
+          x: 0.0000,
+          y: 0.2500,
+          w: 0.2000,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 20
+        },
+        {
+          id: 'p1',
+          label: 'Inner Left',
+          dimension: '30x75 CM (12"x30")',
+          x: 0.2000,
+          y: 0.1250,
+          w: 0.2000,
+          h: 0.7500,
+          widthRatio: 12,
+          heightRatio: 30
+        },
+        {
+          id: 'p2',
+          label: 'Center Tall',
+          dimension: '30x100 CM (12"x40")',
+          x: 0.4000,
+          y: 0.0000,
+          w: 0.2000,
+          h: 1.0000,
+          widthRatio: 12,
+          heightRatio: 40
+        },
+        {
+          id: 'p3',
+          label: 'Inner Right',
+          dimension: '30x75 CM (12"x30")',
+          x: 0.6000,
+          y: 0.1250,
+          w: 0.2000,
+          h: 0.7500,
+          widthRatio: 12,
+          heightRatio: 30
+        },
+        {
+          id: 'p4',
+          label: 'Outer Right',
+          dimension: '30x50 CM (12"x20")',
+          x: 0.8000,
+          y: 0.2500,
+          w: 0.2000,
+          h: 0.5000,
+          widthRatio: 12,
+          heightRatio: 20
+        }
+      ]
+    },
+    {
+      id: 'split-4p-75x40-alternating',
+      productTypeId: 'canvas-split',
+      name: '4-piece (2) 75x40 CM (30"x16"), (2) 40x60 CM (16"x24")',
+      description: '4 vertical panels in alternating stepped height',
+      geometryType: 'split-canvas',
+      panelsCount: 4,
+      photoCount: 1,
+      arrangement: 'alternatingStepped',
+      dimensionsSummary: '4-piece (2) 75x40 CM, (2) 40x60 CM',
+      aspectRatio: 2.1333,
+      overallWidthInches: 64,
+      overallHeightInches: 30,
+      price: 3750.00,
+      acrylicPrice: 3375.00,
+      diagramType: 'split-4p-75x40-alternating' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Panel 1',
+          dimension: '40x60 CM (16"x24")',
+          x: 0.0000,
+          y: 0.1000,
+          w: 0.2500,
+          h: 0.8000,
+          widthRatio: 16,
+          heightRatio: 24
+        },
+        {
+          id: 'p1',
+          label: 'Panel 2',
+          dimension: '40x75 CM (16"x30")',
+          x: 0.2500,
+          y: 0.0000,
+          w: 0.2500,
+          h: 1.0000,
+          widthRatio: 16,
+          heightRatio: 30
+        },
+        {
+          id: 'p2',
+          label: 'Panel 3',
+          dimension: '40x75 CM (16"x30")',
+          x: 0.5000,
+          y: 0.0000,
+          w: 0.2500,
+          h: 1.0000,
+          widthRatio: 16,
+          heightRatio: 30
+        },
+        {
+          id: 'p3',
+          label: 'Panel 4',
+          dimension: '40x60 CM (16"x24")',
+          x: 0.7500,
+          y: 0.1000,
+          w: 0.2500,
+          h: 0.8000,
+          widthRatio: 16,
+          heightRatio: 24
+        }
+      ]
+    },
+    {
+      id: 'split-4p-75x37-inner-tall',
+      productTypeId: 'canvas-split',
+      name: '4-piece (2) 75x37 CM (30"x16"), (2) 57x37 CM (24"x16")',
+      description: '4 vertical panels with taller inner panels',
+      geometryType: 'split-canvas',
+      panelsCount: 4,
+      photoCount: 1,
+      arrangement: 'innerTall4',
+      dimensionsSummary: '4-piece (2) 75x37 CM, (2) 57x37 CM',
+      aspectRatio: 1.9733,
+      overallWidthInches: 59,
+      overallHeightInches: 30,
+      price: 3820.00,
+      acrylicPrice: 3435.00,
+      diagramType: 'split-4p-75x37-inner-tall' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Outer Left',
+          dimension: '37x57 CM (16"x24")',
+          x: 0.0000,
+          y: 0.1200,
+          w: 0.2500,
+          h: 0.7600,
+          widthRatio: 16,
+          heightRatio: 24
+        },
+        {
+          id: 'p1',
+          label: 'Inner Left',
+          dimension: '37x75 CM (16"x30")',
+          x: 0.2500,
+          y: 0.0000,
+          w: 0.2500,
+          h: 1.0000,
+          widthRatio: 16,
+          heightRatio: 30
+        },
+        {
+          id: 'p2',
+          label: 'Inner Right',
+          dimension: '37x75 CM (16"x30")',
+          x: 0.5000,
+          y: 0.0000,
+          w: 0.2500,
+          h: 1.0000,
+          widthRatio: 16,
+          heightRatio: 30
+        },
+        {
+          id: 'p3',
+          label: 'Outer Right',
+          dimension: '37x57 CM (16"x24")',
+          x: 0.7500,
+          y: 0.1200,
+          w: 0.2500,
+          h: 0.7600,
+          widthRatio: 16,
+          heightRatio: 24
+        }
+      ]
+    },
+    {
+      id: 'split-5p-75x30-equal',
+      productTypeId: 'canvas-split',
+      name: '5-piece (5) 75x30 CM (30"x12")',
+      description: '5 equal vertical panels side by side',
+      geometryType: 'split-canvas',
+      panelsCount: 5,
+      photoCount: 1,
+      arrangement: 'fiveEqual',
+      dimensionsSummary: '5-piece (5) 75x30 CM (30"x12")',
+      aspectRatio: 2.0000,
+      overallWidthInches: 60,
+      overallHeightInches: 30,
+      price: 3950.00,
+      acrylicPrice: 3550.00,
+      diagramType: 'split-5p-75x30-equal' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Panel 1',
+          dimension: '30x75 CM (12"x30")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.2000,
+          h: 1.0000,
+          widthRatio: 12,
+          heightRatio: 30
+        },
+        {
+          id: 'p1',
+          label: 'Panel 2',
+          dimension: '30x75 CM (12"x30")',
+          x: 0.2000,
+          y: 0.0000,
+          w: 0.2000,
+          h: 1.0000,
+          widthRatio: 12,
+          heightRatio: 30
+        },
+        {
+          id: 'p2',
+          label: 'Panel 3',
+          dimension: '30x75 CM (12"x30")',
+          x: 0.4000,
+          y: 0.0000,
+          w: 0.2000,
+          h: 1.0000,
+          widthRatio: 12,
+          heightRatio: 30
+        },
+        {
+          id: 'p3',
+          label: 'Panel 4',
+          dimension: '30x75 CM (12"x30")',
+          x: 0.6000,
+          y: 0.0000,
+          w: 0.2000,
+          h: 1.0000,
+          widthRatio: 12,
+          heightRatio: 30
+        },
+        {
+          id: 'p4',
+          label: 'Panel 5',
+          dimension: '30x75 CM (12"x30")',
+          x: 0.8000,
+          y: 0.0000,
+          w: 0.2000,
+          h: 1.0000,
+          widthRatio: 12,
+          heightRatio: 30
+        }
+      ]
+    },
+    {
+      id: 'split-3p-90x30-center-wide',
+      productTypeId: 'canvas-split',
+      name: '3-piece (2) 90x30 CM (36"x12"), (1) 90x70 CM (36"x28")',
+      description: '3 vertical panels with a wide center feature panel',
+      geometryType: 'split-canvas',
+      panelsCount: 3,
+      photoCount: 1,
+      arrangement: 'centerWide3',
+      dimensionsSummary: '3-piece (2) 90x30 CM, (1) 90x70 CM',
+      aspectRatio: 1.4444,
+      overallWidthInches: 51,
+      overallHeightInches: 36,
+      price: 3893.10,
+      acrylicPrice: 3500.00,
+      diagramType: 'split-3p-90x30-center-wide' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Panel',
+          dimension: '30x90 CM (12"x36")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.2308,
+          h: 1.0000,
+          widthRatio: 12,
+          heightRatio: 36
+        },
+        {
+          id: 'p1',
+          label: 'Center Wide',
+          dimension: '70x90 CM (28"x36")',
+          x: 0.2308,
+          y: 0.0000,
+          w: 0.5385,
+          h: 1.0000,
+          widthRatio: 28,
+          heightRatio: 36
+        },
+        {
+          id: 'p2',
+          label: 'Right Panel',
+          dimension: '30x90 CM (12"x36")',
+          x: 0.7692,
+          y: 0.0000,
+          w: 0.2308,
+          h: 1.0000,
+          widthRatio: 12,
+          heightRatio: 36
+        }
+      ]
+    },
+    {
+      id: 'split-4p-75x40-stepped',
+      productTypeId: 'canvas-split',
+      name: '4-piece (4) 75x40 CM (30"x16")',
+      description: '4 vertical panels in staggered stepped elevation',
+      geometryType: 'split-canvas',
+      panelsCount: 4,
+      photoCount: 1,
+      arrangement: 'fourStepped',
+      dimensionsSummary: '4-piece (4) 75x40 CM (30"x16")',
+      aspectRatio: 1.8824,
+      overallWidthInches: 64,
+      overallHeightInches: 34,
+      price: 4016.60,
+      acrylicPrice: 3615.00,
+      diagramType: 'split-4p-75x40-stepped' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Panel 1',
+          dimension: '40x75 CM (16"x30")',
+          x: 0.0000,
+          y: 0.1176,
+          w: 0.2500,
+          h: 0.8824,
+          widthRatio: 16,
+          heightRatio: 30
+        },
+        {
+          id: 'p1',
+          label: 'Panel 2',
+          dimension: '40x75 CM (16"x30")',
+          x: 0.2500,
+          y: 0.0000,
+          w: 0.2500,
+          h: 0.8824,
+          widthRatio: 16,
+          heightRatio: 30
+        },
+        {
+          id: 'p2',
+          label: 'Panel 3',
+          dimension: '40x75 CM (16"x30")',
+          x: 0.5000,
+          y: 0.0000,
+          w: 0.2500,
+          h: 0.8824,
+          widthRatio: 16,
+          heightRatio: 30
+        },
+        {
+          id: 'p3',
+          label: 'Panel 4',
+          dimension: '40x75 CM (16"x30")',
+          x: 0.7500,
+          y: 0.1176,
+          w: 0.2500,
+          h: 0.8824,
+          widthRatio: 16,
+          heightRatio: 30
+        }
+      ]
+    },
+    {
+      id: 'split-8p-gallery-wall',
+      productTypeId: 'canvas-split',
+      name: '8-piece (2) 50x40 CM (20"x16"), (2) 25x40 CM (10"x16"), (3) 25x25 CM (10"x10"), (1) 50x80 CM (20"x32")',
+      description: '8-piece gallery wall display with center panorama panel',
+      geometryType: 'split-canvas',
+      panelsCount: 8,
+      photoCount: 1,
+      arrangement: 'eightGalleryWall',
+      dimensionsSummary: '8-piece (2) 50x40, (2) 25x40, (3) 25x25, (1) 50x80 CM',
+      aspectRatio: 1.3000,
+      overallWidthInches: 52,
+      overallHeightInches: 40,
+      price: 4125.85,
+      acrylicPrice: 3710.00,
+      diagramType: 'split-8p-gallery-wall' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Top 1',
+          dimension: '25x25 CM (10"x10")',
+          x: 0.2500,
+          y: 0.0000,
+          w: 0.1923,
+          h: 0.2500,
+          widthRatio: 10,
+          heightRatio: 10
+        },
+        {
+          id: 'p1',
+          label: 'Top 2',
+          dimension: '25x25 CM (10"x10")',
+          x: 0.4400,
+          y: 0.0000,
+          w: 0.1923,
+          h: 0.2500,
+          widthRatio: 10,
+          heightRatio: 10
+        },
+        {
+          id: 'p2',
+          label: 'Top 3',
+          dimension: '25x25 CM (10"x10")',
+          x: 0.6300,
+          y: 0.0000,
+          w: 0.1923,
+          h: 0.2500,
+          widthRatio: 10,
+          heightRatio: 10
+        },
+        {
+          id: 'p3',
+          label: 'Left Panel',
+          dimension: '25x40 CM (10"x16")',
+          x: 0.0000,
+          y: 0.2500,
+          w: 0.1923,
+          h: 0.4000,
+          widthRatio: 10,
+          heightRatio: 16
+        },
+        {
+          id: 'p4',
+          label: 'Center Large',
+          dimension: '80x50 CM (32"x20")',
+          x: 0.1923,
+          y: 0.2500,
+          w: 0.6154,
+          h: 0.5000,
+          widthRatio: 32,
+          heightRatio: 20
+        },
+        {
+          id: 'p5',
+          label: 'Right Panel',
+          dimension: '25x40 CM (10"x16")',
+          x: 0.8077,
+          y: 0.2500,
+          w: 0.1923,
+          h: 0.4000,
+          widthRatio: 10,
+          heightRatio: 16
+        },
+        {
+          id: 'p6',
+          label: 'Bottom Left',
+          dimension: '50x40 CM (20"x16")',
+          x: 0.1500,
+          y: 0.7500,
+          w: 0.3846,
+          h: 0.2500,
+          widthRatio: 20,
+          heightRatio: 10
+        },
+        {
+          id: 'p7',
+          label: 'Bottom Right',
+          dimension: '50x40 CM (20"x16")',
+          x: 0.5500,
+          y: 0.7500,
+          w: 0.3846,
+          h: 0.2500,
+          widthRatio: 20,
+          heightRatio: 10
+        }
+      ]
+    },
+    {
+      id: 'split-3p-90x35-center-wide',
+      productTypeId: 'canvas-split',
+      name: '3-piece (2) 90x35 CM (36"x14"), (1) 90x70 CM (36"x28")',
+      description: '3 vertical panels with a wide center feature panel',
+      geometryType: 'split-canvas',
+      panelsCount: 3,
+      photoCount: 1,
+      arrangement: 'centerWide3',
+      dimensionsSummary: '3-piece (2) 90x35 CM, (1) 90x70 CM',
+      aspectRatio: 1.5556,
+      overallWidthInches: 56,
+      overallHeightInches: 36,
+      price: 4180.00,
+      acrylicPrice: 3760.00,
+      diagramType: 'split-3p-90x35-center-wide' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Left Panel',
+          dimension: '35x90 CM (14"x36")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.2500,
+          h: 1.0000,
+          widthRatio: 14,
+          heightRatio: 36
+        },
+        {
+          id: 'p1',
+          label: 'Center Wide',
+          dimension: '70x90 CM (28"x36")',
+          x: 0.2500,
+          y: 0.0000,
+          w: 0.5000,
+          h: 1.0000,
+          widthRatio: 28,
+          heightRatio: 36
+        },
+        {
+          id: 'p2',
+          label: 'Right Panel',
+          dimension: '35x90 CM (14"x36")',
+          x: 0.7500,
+          y: 0.0000,
+          w: 0.2500,
+          h: 1.0000,
+          widthRatio: 14,
+          heightRatio: 36
+        }
+      ]
+    },
+    {
+      id: 'split-4p-60x60-grid',
+      productTypeId: 'canvas-split',
+      name: '4-piece (4) 60x60 CM (24"x24")',
+      description: '2x2 grid of 4 grand square panels',
+      geometryType: 'split-canvas',
+      panelsCount: 4,
+      photoCount: 1,
+      arrangement: 'fourGrid',
+      dimensionsSummary: '4-piece (4) 60x60 CM (24"x24")',
+      aspectRatio: 1.0000,
+      overallWidthInches: 48,
+      overallHeightInches: 48,
+      price: 4890.00,
+      acrylicPrice: 4400.00,
+      diagramType: 'split-4p-60x60-grid' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Top Left',
+          dimension: '60x60 CM (24"x24")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.5000,
+          h: 0.5000,
+          widthRatio: 24,
+          heightRatio: 24
+        },
+        {
+          id: 'p1',
+          label: 'Top Right',
+          dimension: '60x60 CM (24"x24")',
+          x: 0.5000,
+          y: 0.0000,
+          w: 0.5000,
+          h: 0.5000,
+          widthRatio: 24,
+          heightRatio: 24
+        },
+        {
+          id: 'p2',
+          label: 'Bottom Left',
+          dimension: '60x60 CM (24"x24")',
+          x: 0.0000,
+          y: 0.5000,
+          w: 0.5000,
+          h: 0.5000,
+          widthRatio: 24,
+          heightRatio: 24
+        },
+        {
+          id: 'p3',
+          label: 'Bottom Right',
+          dimension: '60x60 CM (24"x24")',
+          x: 0.5000,
+          y: 0.5000,
+          w: 0.5000,
+          h: 0.5000,
+          widthRatio: 24,
+          heightRatio: 24
+        }
+      ]
+    },
+    {
+      id: 'split-5p-57-75-97-stepped',
+      productTypeId: 'canvas-split',
+      name: '5-piece (2) 57x37 CM (24"x16"), (2) 75x37 CM (30"x16"), (1) 97x37 CM (40"x16")',
+      description: '5 grand vertical panels in stepped chevron cascade',
+      geometryType: 'split-canvas',
+      panelsCount: 5,
+      photoCount: 1,
+      arrangement: 'steppedChevron',
+      dimensionsSummary: '5-piece (2) 57x37, (2) 75x37, (1) 97x37 CM',
+      aspectRatio: 1.9072,
+      overallWidthInches: 74,
+      overallHeightInches: 39,
+      price: 4650.00,
+      acrylicPrice: 4185.00,
+      diagramType: 'split-5p-57-75-97-stepped' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Outer Left',
+          dimension: '37x57 CM (16"x24")',
+          x: 0.0000,
+          y: 0.2062,
+          w: 0.2000,
+          h: 0.5876,
+          widthRatio: 16,
+          heightRatio: 24
+        },
+        {
+          id: 'p1',
+          label: 'Inner Left',
+          dimension: '37x75 CM (16"x30")',
+          x: 0.2000,
+          y: 0.1134,
+          w: 0.2000,
+          h: 0.7732,
+          widthRatio: 16,
+          heightRatio: 30
+        },
+        {
+          id: 'p2',
+          label: 'Center Tall',
+          dimension: '37x97 CM (16"x40")',
+          x: 0.4000,
+          y: 0.0000,
+          w: 0.2000,
+          h: 1.0000,
+          widthRatio: 16,
+          heightRatio: 40
+        },
+        {
+          id: 'p3',
+          label: 'Inner Right',
+          dimension: '37x75 CM (16"x30")',
+          x: 0.6000,
+          y: 0.1134,
+          w: 0.2000,
+          h: 0.7732,
+          widthRatio: 16,
+          heightRatio: 30
+        },
+        {
+          id: 'p4',
+          label: 'Outer Right',
+          dimension: '37x57 CM (16"x24")',
+          x: 0.8000,
+          y: 0.2062,
+          w: 0.2000,
+          h: 0.5876,
+          widthRatio: 16,
+          heightRatio: 24
+        }
+      ]
+    },
+    {
+      id: 'split-8p-30x30-combo',
+      productTypeId: 'canvas-split',
+      name: '8-piece (2) 30x30 CM (12"x12"), (5) 45x50 CM (18"x12"), (1) 75x100 CM (30"x40")',
+      description: '8-piece gallery arrangement with grand center canvas',
+      geometryType: 'split-canvas',
+      panelsCount: 8,
+      photoCount: 1,
+      arrangement: 'eightGrandFeature',
+      dimensionsSummary: '8-piece (2) 30x30, (5) 45x50, (1) 75x100 CM',
+      aspectRatio: 1.6000,
+      overallWidthInches: 64,
+      overallHeightInches: 40,
+      price: 4980.00,
+      acrylicPrice: 4480.00,
+      diagramType: 'split-8p-30x30-combo' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Top 1',
+          dimension: '30x30 CM (12"x12")',
+          x: 0.1500,
+          y: 0.0000,
+          w: 0.1875,
+          h: 0.3000,
+          widthRatio: 12,
+          heightRatio: 12
+        },
+        {
+          id: 'p1',
+          label: 'Top 2',
+          dimension: '45x30 CM (18"x12")',
+          x: 0.3500,
+          y: 0.0000,
+          w: 0.2812,
+          h: 0.3000,
+          widthRatio: 18,
+          heightRatio: 12
+        },
+        {
+          id: 'p2',
+          label: 'Top 3',
+          dimension: '45x30 CM (18"x12")',
+          x: 0.6500,
+          y: 0.0000,
+          w: 0.2812,
+          h: 0.3000,
+          widthRatio: 18,
+          heightRatio: 12
+        },
+        {
+          id: 'p3',
+          label: 'Left Panel',
+          dimension: '30x45 CM (12"x18")',
+          x: 0.0000,
+          y: 0.3000,
+          w: 0.1875,
+          h: 0.4500,
+          widthRatio: 12,
+          heightRatio: 18
+        },
+        {
+          id: 'p4',
+          label: 'Center Grand',
+          dimension: '100x70 CM (40"x28")',
+          x: 0.1875,
+          y: 0.3000,
+          w: 0.6250,
+          h: 0.7000,
+          widthRatio: 40,
+          heightRatio: 28
+        },
+        {
+          id: 'p5',
+          label: 'Right Panel',
+          dimension: '30x45 CM (12"x18")',
+          x: 0.8125,
+          y: 0.3000,
+          w: 0.1875,
+          h: 0.4500,
+          widthRatio: 12,
+          heightRatio: 18
+        },
+        {
+          id: 'p6',
+          label: 'Bottom Left',
+          dimension: '45x25 CM (18"x10")',
+          x: 0.2500,
+          y: 0.7500,
+          w: 0.2812,
+          h: 0.2500,
+          widthRatio: 18,
+          heightRatio: 10
+        },
+        {
+          id: 'p7',
+          label: 'Bottom Right',
+          dimension: '45x25 CM (18"x10")',
+          x: 0.5500,
+          y: 0.7500,
+          w: 0.2812,
+          h: 0.2500,
+          widthRatio: 18,
+          heightRatio: 10
+        }
+      ]
+    },
+    {
+      id: 'split-8p-50x50-gallery',
+      productTypeId: 'canvas-split',
+      name: '8-piece (4) 50x50 CM (20"x20"), (2) 40x60 CM (16"x24"), (2) 60x60 CM (24"x24")',
+      description: '8-piece symmetrical gallery wall arrangement in 2 rows',
+      geometryType: 'split-canvas',
+      panelsCount: 8,
+      photoCount: 1,
+      arrangement: 'eightTwoRows',
+      dimensionsSummary: '8-piece (4) 50x50, (2) 40x60, (2) 60x60 CM',
+      aspectRatio: 1.6364,
+      overallWidthInches: 72,
+      overallHeightInches: 44,
+      price: 5250.00,
+      acrylicPrice: 4725.00,
+      diagramType: 'split-8p-50x50-gallery' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Row 1 Col 1',
+          dimension: '40x50 CM (16"x20")',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.2222,
+          h: 0.4545,
+          widthRatio: 16,
+          heightRatio: 20
+        },
+        {
+          id: 'p1',
+          label: 'Row 1 Col 2',
+          dimension: '50x50 CM (20"x20")',
+          x: 0.2222,
+          y: 0.0000,
+          w: 0.2778,
+          h: 0.4545,
+          widthRatio: 20,
+          heightRatio: 20
+        },
+        {
+          id: 'p2',
+          label: 'Row 1 Col 3',
+          dimension: '50x50 CM (20"x20")',
+          x: 0.5000,
+          y: 0.0000,
+          w: 0.2778,
+          h: 0.4545,
+          widthRatio: 20,
+          heightRatio: 20
+        },
+        {
+          id: 'p3',
+          label: 'Row 1 Col 4',
+          dimension: '40x50 CM (16"x20")',
+          x: 0.7778,
+          y: 0.0000,
+          w: 0.2222,
+          h: 0.4545,
+          widthRatio: 16,
+          heightRatio: 20
+        },
+        {
+          id: 'p4',
+          label: 'Row 2 Col 1',
+          dimension: '40x60 CM (16"x24")',
+          x: 0.0000,
+          y: 0.4545,
+          w: 0.2222,
+          h: 0.5455,
+          widthRatio: 16,
+          heightRatio: 24
+        },
+        {
+          id: 'p5',
+          label: 'Row 2 Col 2',
+          dimension: '60x60 CM (24"x24")',
+          x: 0.2222,
+          y: 0.4545,
+          w: 0.2778,
+          h: 0.5455,
+          widthRatio: 20,
+          heightRatio: 24
+        },
+        {
+          id: 'p6',
+          label: 'Row 2 Col 3',
+          dimension: '60x60 CM (24"x24")',
+          x: 0.5000,
+          y: 0.4545,
+          w: 0.2778,
+          h: 0.5455,
+          widthRatio: 20,
+          heightRatio: 24
+        },
+        {
+          id: 'p7',
+          label: 'Row 2 Col 4',
+          dimension: '40x60 CM (16"x24")',
+          x: 0.7778,
+          y: 0.4545,
+          w: 0.2222,
+          h: 0.5455,
+          widthRatio: 16,
+          heightRatio: 24
         }
       ]
     }
@@ -1637,12 +4181,12 @@ export function renderProductLayoutDiagram(
     );
   }
 
-  // 1c. Split Canvas (continuous rectangular product surface with hairline split divisions, 0 gaps)
+  // 1c. Split Canvas (multi-panel physical card icons matching reference screenshots)
   if (layout.geometryType === 'split-canvas') {
     const padding = 12;
     const availW = viewBoxW - padding * 2;
     const availH = viewBoxH - padding * 2;
-    const gridAspect = layout.aspectRatio || 1.5;
+    const gridAspect = Math.max(0.65, Math.min(2.4, layout.aspectRatio || 1.5));
     let drawW = availW;
     let drawH = drawW / gridAspect;
     if (drawH > availH) {
@@ -1651,33 +4195,25 @@ export function renderProductLayoutDiagram(
     }
     const startX = (viewBoxW - drawW) / 2;
     const startY = (viewBoxH - drawH) / 2;
+    const gap = 2;
 
     return (
       <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} className="w-full h-full max-h-24">
-        {/* Continuous single surface (0 gap) */}
-        <rect
-          x={startX}
-          y={startY}
-          width={drawW}
-          height={drawH}
-          rx={2}
-          fill={fillColor}
-          stroke={strokeColor}
-          strokeWidth="1.6"
-        />
-        {/* Internal split boundary lines (0 gap) */}
-        {layout.panels.slice(0, -1).map((p, idx) => {
-          const splitX = startX + (p.x + p.w) * drawW;
+        {layout.panels.map((p, idx) => {
+          const px = startX + p.x * drawW + gap / 2;
+          const py = startY + p.y * drawH + gap / 2;
+          const pw = Math.max(2, p.w * drawW - gap);
+          const ph = Math.max(2, p.h * drawH - gap);
           return (
-            <line
-              key={`sv-${idx}`}
-              x1={splitX}
-              y1={startY}
-              x2={splitX}
-              y2={startY + drawH}
-              stroke={strokeColor}
-              strokeWidth="1.1"
-              opacity="0.8"
+            <rect
+              key={p.id || idx}
+              x={px}
+              y={py}
+              width={pw}
+              height={ph}
+              rx={1.5}
+              fill={isSelected ? '#0E4A93' : '#9ca3af'}
+              opacity={isSelected ? 0.9 : 0.85}
             />
           );
         })}
