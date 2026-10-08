@@ -71,6 +71,25 @@ function sizeForShape(shape: string, sizes?: string[], isPilot?: boolean): strin
   return pickDefaultSize(sizes);
 }
 
+// Simple outline swatch standing in for each shape in the pilot product's
+// icon-based Shape tab, styled as a small rectangle whose own proportions
+// hint at the shape it represents.
+function PilotShapeIcon({ shape, active }: { shape: string; active: boolean }) {
+  const dims: Record<string, string> = {
+    standard: 'w-5 h-6',
+    square: 'w-6 h-6',
+    rectangle: 'w-7 h-5',
+    panoramic: 'w-8 h-4',
+  };
+  return (
+    <div
+      className={`${dims[shape.toLowerCase()] || 'w-6 h-6'} rounded-sm border-2 ${
+        active ? 'border-[#0E4A93]' : 'border-stone-400'
+      }`}
+    />
+  );
+}
+
 export const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
@@ -99,6 +118,7 @@ export const ProductDetailPage: React.FC = () => {
   const [isCustomSize, setIsCustomSize] = useState<boolean>(false);
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
+  const [pilotTab, setPilotTab] = useState<'size' | 'shape'>('size');
 
   // In-page customization state
   const [customText, setCustomText] = useState<string>('');
@@ -361,9 +381,233 @@ export const ProductDetailPage: React.FC = () => {
         </nav>
 
         {/* ========================================================================= */}
-        {/* 2. MAIN 2-COLUMN PRODUCT DISPLAY                                          */}
+        {/* 2. MAIN PRODUCT DISPLAY                                                   */}
         {/* ========================================================================= */}
-        <div className={`grid grid-cols-1 lg:grid-cols-12 items-start ${isPilotProduct ? 'gap-5 xl:gap-8' : 'gap-8 xl:gap-14'}`}>
+        {isPilotProduct ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 xl:gap-6 items-start">
+
+            {/* Thumbnails — vertical strip on desktop, horizontal row on mobile */}
+            <div className="order-2 lg:order-1 lg:col-span-1 flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0">
+              {galleryImages.map((img, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => { setUploadedFile(null); setActiveImageIndex(idx); }}
+                  className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                    activeImageIndex === idx && !uploadedFile
+                      ? 'border-emerald-600 ring-2 ring-emerald-600/20'
+                      : 'border-stone-200 hover:border-stone-400 opacity-80 hover:opacity-100'
+                  }`}
+                >
+                  {img === ROOM_VIEW_SENTINEL ? (
+                    <WallPreview imageSrc={roomViewSourceImage} shape={selectedShape} sizeLabel={selectedSize} finish={selectedFinish} className="w-full h-full" />
+                  ) : (
+                    <ProductImage src={img} alt={`View ${idx + 1}`} categorySlug={product.categorySlug} className="w-full h-full object-cover" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Main Image */}
+            <div className="order-1 lg:order-2 lg:col-span-5">
+              <div className="relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group aspect-[4/5]">
+                {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
+                  <WallPreview
+                    imageSrc={uploadedFile || roomViewSourceImage}
+                    shape={selectedShape}
+                    sizeLabel={selectedSize}
+                    finish={selectedFinish}
+                    className="w-full h-full"
+                  />
+                ) : (
+                  <SmartCropImage
+                    src={uploadedFile || galleryImages[activeImageIndex] || product.image}
+                    alt={product.name}
+                    containerAspect={4 / 5}
+                    className="w-full h-full"
+                  />
+                )}
+
+                {!uploadedFile && product.discountPercent > 0 && (
+                  <div className="absolute top-4 left-4 bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider">
+                    {product.discountPercent}% OFF
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => onToggleWishlist(product.id)}
+                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-700 hover:text-rose-600 shadow-md flex items-center justify-center transition-all cursor-pointer"
+                  title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+                >
+                  <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
+                </button>
+
+                {galleryImages.length > 1 && (
+                  <>
+                    <button type="button" onClick={handlePrevImage} aria-label="Previous image" className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100">
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button type="button" onClick={handleNextImage} aria-label="Next image" className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100">
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Info + Purchase Card */}
+            <div className="order-3 lg:col-span-4 flex flex-col gap-3.5 text-left">
+              <div>
+                <h1 className="text-lg sm:text-xl font-extrabold text-stone-900 tracking-tight">{product.name}</h1>
+                {product.rating !== null && product.rating > 0 && (
+                  <div className="flex items-center gap-2 text-xs text-stone-600 mt-1">
+                    <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded text-amber-800 font-bold">
+                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                      <span>{product.rating}</span>
+                    </div>
+                    <span className="underline decoration-stone-300">({product.reviewsCount || 48} reviews)</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-baseline gap-3">
+                <span className="text-2xl sm:text-3xl font-extrabold text-stone-950">₹{product.price.toLocaleString('en-IN')}</span>
+                <span className="text-base text-stone-400 line-through">
+                  ₹{(product.compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)).toLocaleString('en-IN')}
+                </span>
+                {product.discountPercent > 0 && (
+                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                    {product.discountPercent}% OFF
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-600">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <span>Lowest Price Guaranteed</span>
+              </div>
+
+              {/* Size / Shape Tabs */}
+              <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+                <div className="flex items-center gap-6 border-b border-stone-200 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setPilotTab('size')}
+                    className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors ${pilotTab === 'size' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                  >
+                    Size
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPilotTab('shape')}
+                    className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors ${pilotTab === 'shape' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                  >
+                    Shape
+                  </button>
+                </div>
+
+                {pilotTab === 'size' ? (
+                  <div className="grid grid-cols-4 gap-2">
+                    {(pilotSizesForShape(selectedShape) || product.sizes || []).map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => { setIsCustomSize(false); setSelectedSize(size); }}
+                        className={`px-1.5 py-2 text-[11px] leading-tight font-semibold rounded-lg border-2 text-center transition-all cursor-pointer ${
+                          selectedSize === size && !isCustomSize
+                            ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
+                            : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
+                        }`}
+                      >
+                        {size.replace(' inch', '')}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 gap-2">
+                    {availableShapes.map((shapeOpt) => (
+                      <button
+                        key={shapeOpt}
+                        type="button"
+                        onClick={() => {
+                          setSelectedShape(shapeOpt);
+                          setIsCustomSize(false);
+                          setSelectedSize(sizeForShape(shapeOpt, product.sizes, true) || selectedSize);
+                        }}
+                        className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
+                          selectedShape === shapeOpt
+                            ? 'border-[#0E4A93] bg-blue-50/60'
+                            : 'border-stone-200 bg-white hover:border-stone-400'
+                        }`}
+                      >
+                        <PilotShapeIcon shape={shapeOpt} active={selectedShape === shapeOpt} />
+                        <span className={`text-[10px] font-semibold ${selectedShape === shapeOpt ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{shapeOpt}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-4">
+                <span className="font-bold text-xs text-stone-800">Quantity:</span>
+                <div className="inline-flex items-center border border-stone-200 rounded-lg bg-white overflow-hidden shadow-2xs">
+                  <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-100 font-bold transition-colors cursor-pointer" aria-label="Decrease quantity">-</button>
+                  <span className="w-10 text-center text-xs font-extrabold text-stone-900">{quantity}</span>
+                  <button type="button" onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-100 font-bold transition-colors cursor-pointer" aria-label="Increase quantity">+</button>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={handleAddToCartWithVariants}
+                  className="flex-1 py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>Add to Cart</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onToggleWishlist(product.id)}
+                  className={`flex-1 py-3.5 px-6 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    isWishlisted ? 'border-rose-300 bg-rose-50 text-rose-600' : 'border-stone-300 text-stone-700 hover:border-stone-400'
+                  }`}
+                >
+                  <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600' : ''}`} />
+                  <span>{isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Live Preview — floating sticky card */}
+            <div className="order-4 hidden lg:block lg:col-span-2">
+              <div className="relative sticky top-24">
+                <div className="rounded-xl border border-stone-200 bg-white shadow-lg p-2.5">
+                  <div className="aspect-square rounded-lg overflow-hidden bg-stone-100">
+                    <WallPreview
+                      imageSrc={uploadedFile || roomViewSourceImage}
+                      shape={selectedShape}
+                      sizeLabel={selectedSize}
+                      finish={selectedFinish}
+                      className="w-full h-full"
+                    />
+                  </div>
+                  <div className="text-center text-[11px] font-bold text-stone-700 mt-2">{selectedSize}</div>
+                  <div className="text-center text-[10px] text-stone-400">{selectedShape}</div>
+                </div>
+                <div
+                  className="absolute -top-7 right-2 text-stone-400 text-xs -rotate-6 pointer-events-none"
+                  style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}
+                >
+                  Live Preview ↘
+                </div>
+              </div>
+            </div>
+
+          </div>
+        ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 items-start gap-8 xl:gap-14">
 
           {/* LEFT: GALLERY (Sticky on desktop, 6-7 columns) */}
           <div className={`${isPilotProduct ? 'lg:col-span-5 xl:col-span-6' : 'lg:col-span-6 xl:col-span-7'} flex flex-col gap-4 sticky ${isPilotProduct ? 'top-4' : 'top-24'}`}>
@@ -864,6 +1108,7 @@ export const ProductDetailPage: React.FC = () => {
           </div>
 
         </div>
+        )}
 
         {/* ========================================================================= */}
         {/* 3. PRODUCT SPECIFICATIONS & APPLICATIONS                                  */}
