@@ -3114,7 +3114,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     return (
       <div className={`w-full max-w-xl mx-auto my-auto ${isRoomView ? 'h-full p-2' : 'p-4'} flex flex-col items-center select-none`}>
         <div
-          className="grid gap-2 w-full p-3 bg-white/70 backdrop-blur-xs rounded-2xl border border-stone-200/90 shadow-xl"
+          className="grid gap-2 w-full select-none"
           style={{
             aspectRatio: String(layout.aspectRatio),
             gridTemplateColumns: `repeat(${totalCols}, 1fr)`,

@@ -342,7 +342,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       hardware: true,
       options: true,
       view3D: false,
-      view360: true,
+      view360: false,
       roomView: true
     }
   },
@@ -398,7 +398,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       hardware: true,
       options: true,
       view3D: false,
-      view360: true,
+      view360: false,
       roomView: true
     }
   },
@@ -426,7 +426,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       hardware: true,
       options: true,
       view3D: false,
-      view360: true,
+      view360: false,
       roomView: true
     }
   },
@@ -678,7 +678,7 @@ export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProdu
     hardware: true,
     options: true,
     view3D: pt.id === 'canvas-single',
-    view360: true,
+    view360: !['canvas-wall-art', 'canvas-split', 'canvas-hexagon'].includes(pt.id),
     roomView: true
   };
 }
