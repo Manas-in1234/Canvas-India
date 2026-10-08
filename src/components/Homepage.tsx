@@ -79,6 +79,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   const carouselRef = useRef<HTMLDivElement>(null);
   const testiRef = useRef<HTMLDivElement>(null);
   const categoryRowRef = useRef<HTMLDivElement>(null);
+  const occasionRowRef = useRef<HTMLDivElement>(null);
 
   const handleStartCreatingCanvas = () => {
     const first = allProducts.find((p) => p.categorySlug === 'canvas');
@@ -314,21 +315,52 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       <section id="shop-occasions" className="py-12 sm:py-16">
         <Container>
           <SectionTitle title="Shop by Occasion" sub="Thoughtful personalized gifts for life's most precious celebrations" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {OCCASIONS.map((o) => (
-              <button
-                key={o.slug}
-                type="button"
-                onClick={() => navigate(`/occasions/${o.slug}`)}
-                className="group relative aspect-[4/5] rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer text-left"
-              >
-                <img src={o.bannerImage} alt={o.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                <div className={`absolute inset-0 bg-gradient-to-t ${o.tint} via-transparent to-transparent`} />
-                <span className="absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center text-lg shadow">{o.emoji}</span>
-                <div className="absolute bottom-0 left-0 right-0 p-3 text-white font-bold text-sm" style={{ fontFamily: SERIF }}>{o.name}</div>
+
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Previous occasions" onClick={() => scrollRow(occasionRowRef, -1)} className={arrowBtn}>
+                <ChevronLeft className="w-5 h-5" />
               </button>
-            ))}
+            </div>
+            <div ref={occasionRowRef} className="flex gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+              {OCCASIONS.map((o) => (
+                <button
+                  key={o.slug}
+                  type="button"
+                  onClick={() => navigate(`/occasions/${o.slug}`)}
+                  className="group snap-start shrink-0 w-[42%] sm:w-[23%] lg:w-[16%] relative aspect-[4/5] rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer text-left"
+                >
+                  <img src={o.bannerImage} alt={o.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  <div className={`absolute inset-0 bg-gradient-to-t ${o.tint} via-transparent to-transparent`} />
+                  <span className="absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center text-lg shadow">{o.emoji}</span>
+                  <div className="absolute bottom-0 left-0 right-0 p-3 text-white font-bold text-sm" style={{ fontFamily: SERIF }}>{o.name}</div>
+                </button>
+              ))}
+            </div>
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Next occasions" onClick={() => scrollRow(occasionRowRef, 1)} className={arrowBtn}>
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
+
+          <div className="hidden sm:flex justify-end mt-6">
+            <button
+              type="button"
+              onClick={() => navigate('/occasions')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#0E4A93]/30 text-[#0E4A93] text-xs font-bold hover:bg-[#0E4A93] hover:text-white transition-colors cursor-pointer"
+            >
+              View All <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate('/occasions')}
+            className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#0E4A93]/30 text-[#0E4A93] text-xs font-bold cursor-pointer"
+          >
+            View All Occasions <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </Container>
       </section>
 
