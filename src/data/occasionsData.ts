@@ -172,16 +172,6 @@ export const OCCASIONS: OccasionDef[] = [
     categorySlugs: ['canvas', 'acrylic'],
   },
   {
-    slug: 'diwali',
-    name: 'Diwali',
-    emoji: '🪔',
-    tagline: 'Festive devotional art and motivational prints to light up the season',
-    bannerImage: u('photo-1605721911519-3dfeb3be25e7', 1600),
-    tint: 'from-[#EA580C]/90',
-    accent: '#EA580C',
-    categorySlugs: ['canvas', 'acrylic'],
-  },
-  {
     slug: 'festive-offers',
     name: 'Festive Offers',
     emoji: '✨',

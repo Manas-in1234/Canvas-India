@@ -250,8 +250,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             </div>
             <p className="text-sm mt-2 text-[#567477]">Explore our wide range of creative handmade products</p>
           </div>
+        </Container>
 
-          <div className="flex items-center gap-3">
+        <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
             {/* Nav arrows: desktop/tablet only - mobile scrolls by swipe, and
                 hiding these frees up width so cards aren't cramped. Wrapped
                 (rather than adding `hidden` next to arrowBtn's own `flex`)
@@ -289,8 +290,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
-          </div>
+        </div>
 
+        <Container>
           <div className="hidden sm:flex justify-end mt-6">
             <button
               type="button"
@@ -315,8 +317,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       <section id="shop-occasions" className="py-12 sm:py-16">
         <Container>
           <SectionTitle title="Shop by Occasion" sub="Thoughtful personalized gifts for life's most precious celebrations" />
+        </Container>
 
-          <div className="flex items-center gap-3">
+        <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
             <div className="hidden sm:block">
               <button type="button" aria-label="Previous occasions" onClick={() => scrollRow(occasionRowRef, -1)} className={arrowBtn}>
                 <ChevronLeft className="w-5 h-5" />
@@ -342,8 +345,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
-          </div>
+        </div>
 
+        <Container>
           <div className="hidden sm:flex justify-end mt-6">
             <button
               type="button"
@@ -368,7 +372,8 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       <section id="bestsellers-unboxed" className="pb-12 sm:pb-16">
         <Container>
           <SectionTitle title="Best Sellers" sub="Loved by artists, creators and home decorators" />
-          <div className="flex items-center gap-3">
+        </Container>
+        <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
             <button type="button" aria-label="Previous" onClick={() => scrollRow(carouselRef, -1)} className={arrowBtn}>
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -411,7 +416,8 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             <button type="button" aria-label="Next" onClick={() => scrollRow(carouselRef, 1)} className={arrowBtn}>
               <ChevronRight className="w-5 h-5" />
             </button>
-          </div>
+        </div>
+        <Container>
           <div className="text-center mt-5">
             <button
               type="button"
