@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ChevronRight, ArrowRight, Sparkles, Cake, Heart, Gem, Home, Flame, Gift, PartyPopper,
-  Users, GraduationCap, Baby, UserRound, Flag, CalendarHeart, HandHeart, Music2, Moon, Ghost, TreePine, Sun, Wheat,
+  Users, GraduationCap, Baby, UserRound, Flag, CalendarHeart, HandHeart, Music2, Moon, Ghost, TreePine, Sun, Wheat, Crown,
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { OCCASIONS, getOccasionBySlug } from '../data/occasionsData';
@@ -16,23 +16,25 @@ const OCCASION_ICONS: Record<string, React.ComponentType<{ className?: string }>
   diwali: Flame,
   'festive-offers': Sparkles,
   'corporate-gifts': Gift,
+  'mothers-day': Heart,
+  'brothers-day': Users,
+  'fathers-day': UserRound,
+  'friendship-day': HandHeart,
+  'teachers-day': GraduationCap,
+  'childrens-day': Baby,
+  'mens-day': UserRound,
+  'new-year': PartyPopper,
+  'republic-day': Flag,
+  'valentines-day': Heart,
+  'womens-day': Crown,
 };
 
-// Full festival/special-day list shown on the Festive Offers page, so every
-// occasion from the reference grid is browsable in one place, not just the
-// handful that get their own dedicated occasion page.
+// Festival/special-day list shown on the Festive Offers page. The 11 with
+// their own dedicated occasion page (Mother's/Brother's/Father's Day,
+// Friendship Day, Teacher's/Children's/Men's/Women's Day, New Year,
+// Republic Day, Valentine's Day) live there instead — this is just the
+// remainder, still worth a quick-pick grid but without a full page each.
 const ALL_FESTIVALS: { name: string; date: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }[] = [
-  { name: "Mother's Day", date: '10th May', icon: Heart },
-  { name: "Brother's Day", date: '24th May', icon: Users },
-  { name: "Father's Day", date: '21st June', icon: UserRound },
-  { name: 'Friendship Day', date: '2nd August', icon: HandHeart },
-  { name: "Teacher's Day", date: '5th September', icon: GraduationCap },
-  { name: "Children's Day", date: '14th November', icon: Baby },
-  { name: "Men's Day", date: '19th November', icon: UserRound },
-  { name: 'New Year', date: '1st January', icon: PartyPopper },
-  { name: 'Republic Day', date: '26th January', icon: Flag },
-  { name: "Valentine's Day", date: '14th February', icon: Heart },
-  { name: "Women's Day", date: '8th March', icon: UserRound },
   { name: 'Rakshabandhan', date: '28th August', icon: HandHeart },
   { name: 'Janmashtami', date: '4th September', icon: Music2 },
   { name: 'Ganesh Chaturthi', date: '14th September', icon: Sparkles },
