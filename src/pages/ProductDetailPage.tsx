@@ -19,7 +19,8 @@ import {
   Layers,
   Sliders,
   Type,
-  Maximize2
+  Maximize2,
+  Pencil
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
@@ -119,6 +120,9 @@ export const ProductDetailPage: React.FC = () => {
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [pilotTab, setPilotTab] = useState<'size' | 'shape'>('size');
+  const [pilotCustomOpen, setPilotCustomOpen] = useState<boolean>(false);
+  const [pilotCustomW, setPilotCustomW] = useState<string>('');
+  const [pilotCustomH, setPilotCustomH] = useState<string>('');
 
   // In-page customization state
   const [customText, setCustomText] = useState<string>('');
@@ -298,6 +302,14 @@ export const ProductDetailPage: React.FC = () => {
     setSelectedSize(`${width}" x ${height}" (Custom)`);
   };
 
+  const applyPilotCustomSize = () => {
+    const w = Number(pilotCustomW);
+    const h = Number(pilotCustomH);
+    if (w > 0 && h > 0) {
+      handleCustomSizeChange(w, h);
+    }
+  };
+
   const handlePrevImage = () => {
     setUploadedFile(null);
     setActiveImageIndex((idx) => (idx - 1 + galleryImages.length) % galleryImages.length);
@@ -410,7 +422,7 @@ export const ProductDetailPage: React.FC = () => {
 
             {/* Main Image */}
             <div className="order-1 lg:order-2 lg:col-span-5">
-              <div className="relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group aspect-[4/5]">
+              <div className={`relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group ${galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? 'aspect-[4/3]' : 'aspect-[4/5]'}`}>
                 {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
                   <WallPreview
                     imageSrc={uploadedFile || roomViewSourceImage}
@@ -524,7 +536,49 @@ export const ProductDetailPage: React.FC = () => {
                       </button>
                     ))}
                   </div>
-                ) : (
+                ) : null}
+
+                {pilotTab === 'size' && (
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={() => setPilotCustomOpen((v) => !v)}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-700 cursor-pointer"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      <span>Need a Custom Size?</span>
+                    </button>
+                    {pilotCustomOpen && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <input
+                          type="number"
+                          min={4}
+                          value={pilotCustomW}
+                          onChange={(e) => setPilotCustomW(e.target.value)}
+                          placeholder="Width [W] in"
+                          className="w-0 flex-1 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
+                        />
+                        <input
+                          type="number"
+                          min={4}
+                          value={pilotCustomH}
+                          onChange={(e) => setPilotCustomH(e.target.value)}
+                          placeholder="Height [H] in"
+                          className="w-0 flex-1 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
+                        />
+                        <button
+                          type="button"
+                          onClick={applyPilotCustomSize}
+                          className="shrink-0 px-4 py-2 text-xs font-bold rounded-full border-2 border-stone-300 text-stone-700 hover:border-stone-400 transition-colors cursor-pointer"
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {pilotTab === 'shape' && (
                   <div className="grid grid-cols-4 gap-2">
                     {availableShapes.map((shapeOpt) => (
                       <button
