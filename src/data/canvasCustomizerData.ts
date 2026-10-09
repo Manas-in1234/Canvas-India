@@ -537,7 +537,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       wrap: true,
       hardware: true,
       options: true,
-      view3D: false,
+      view3D: true,
       view360: true,
       roomView: true
     }

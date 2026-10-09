@@ -43,9 +43,12 @@ import {
   Shapes,
   FlipHorizontal2,
   AlertCircle,
-  Edit3
+  Edit3,
+  Quote
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
+import { QuotesTemplateSidebarPanel } from '../components/QuotesTemplateSidebarPanel';
+import { getQuoteTemplate, QuoteTemplateItem } from '../data/quoteTemplatesData';
 import { WordArtSizeRatioModal } from '../components/WordArtSizeRatioModal';
 import { WordArtPersonalizeModal } from '../components/WordArtPersonalizeModal';
 import {
@@ -625,16 +628,102 @@ const SIZE_OPTIONS: SizeOption[] = [
     dimensionsSummary: '8" × 8"',
     price: 999.0,
     categories: ['RECOMMENDED', 'SQUARE'],
+    widthInches: 8,
+    heightInches: 8,
+    panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '8" × 8"', widthRatio: 8, heightRatio: 8 }]
+  },
+  {
+    id: 'quotes-10x10',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 10" × 10"',
+    dimensionsSummary: '10" × 10"',
+    price: 1199.0,
+    categories: ['RECOMMENDED', 'SQUARE'],
+    widthInches: 10,
+    heightInches: 10,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }]
   },
   {
     id: 'quotes-12x12',
     productTypeId: 'canvas-quotes',
     label: 'Quotes Canvas: 12" × 12"',
     dimensionsSummary: '12" × 12"',
-    price: 299.0,
+    price: 1399.0,
     categories: ['RECOMMENDED', 'SQUARE'],
+    widthInches: 12,
+    heightInches: 12,
+    panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '12" × 12"', widthRatio: 12, heightRatio: 12 }]
+  },
+  {
+    id: 'quotes-16x16',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 16" × 16"',
+    dimensionsSummary: '16" × 16"',
+    price: 1799.0,
+    categories: ['SQUARE'],
+    widthInches: 16,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
+  },
+  {
+    id: 'quotes-12x18',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 12" × 18"',
+    dimensionsSummary: '12" × 18"',
+    price: 1499.0,
+    categories: ['RECOMMENDED'],
+    widthInches: 12,
+    heightInches: 18,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '12" × 18"', widthRatio: 12, heightRatio: 18 }]
+  },
+  {
+    id: 'quotes-18x12',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 18" × 12"',
+    dimensionsSummary: '18" × 12"',
+    price: 1499.0,
+    categories: ['PANORAMIC'],
+    widthInches: 18,
+    heightInches: 12,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '18" × 12"', widthRatio: 18, heightRatio: 12 }]
+  },
+  {
+    id: 'quotes-16x24',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 16" × 24"',
+    dimensionsSummary: '16" × 24"',
+    price: 2199.0,
+    categories: ['RECOMMENDED'],
+    widthInches: 16,
+    heightInches: 24,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '16" × 24"', widthRatio: 16, heightRatio: 24 }]
+  },
+  {
+    id: 'quotes-24x16',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 24" × 16"',
+    dimensionsSummary: '24" × 16"',
+    price: 2199.0,
+    categories: ['PANORAMIC'],
+    widthInches: 24,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '24" × 16"', widthRatio: 24, heightRatio: 16 }]
   },
 
   // 14. Bus Roll (canvas-bus-roll) - Starts at ₹705.60
@@ -1382,8 +1471,16 @@ export const CanvasCustomizerPage: React.FC = () => {
       { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid, enabled: productCapabilities.products !== false },
       {
         id: 'UPLOAD',
-        label: selectedProductTypeId === 'canvas-word-art' ? 'WORD ART' : 'UPLOAD',
-        icon: selectedProductTypeId === 'canvas-word-art' ? Type : UploadCloud,
+        label: selectedProductTypeId === 'canvas-word-art'
+          ? 'WORD ART'
+          : selectedProductTypeId === 'canvas-quotes'
+          ? 'SELECT TEMPLATE'
+          : 'UPLOAD',
+        icon: selectedProductTypeId === 'canvas-word-art'
+          ? Type
+          : selectedProductTypeId === 'canvas-quotes'
+          ? Quote
+          : UploadCloud,
         enabled: productCapabilities.upload !== false
       },
       { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSingleOrShapedCanvas && productCapabilities.sizes !== false },
@@ -1431,6 +1528,10 @@ export const CanvasCustomizerPage: React.FC = () => {
   const availableSizeOptions = useMemo(() => {
     if (isSinglePrintCanvas) {
       return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-single' || s.productTypeId === 'canvas-classic');
+    }
+
+    if (selectedProductTypeId === 'canvas-quotes') {
+      return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-quotes');
     }
 
     const isLayoutProduct = [
@@ -1488,9 +1589,12 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Category filter state for single prints: 'SQUARE' | 'PANORAMIC' | 'RECOMMENDED' (Default: 'SQUARE')
   const [sizeCategoryFilter, setSizeCategoryFilter] = useState<'SQUARE' | 'PANORAMIC' | 'RECOMMENDED'>('SQUARE');
 
-  // Selected Size Option - by default single-10x10
+  // Selected Size Option - by default single-10x10 or quotes-8x8
   const [selectedSizeId, setSelectedSizeId] = useState<string>(() => {
     const initialPt = resolveCanvasProductTypeId(productId, catalogProduct);
+    if (initialPt === 'canvas-quotes') {
+      return 'quotes-8x8';
+    }
     if (initialPt === 'canvas-single' || initialPt === 'canvas-classic') {
       return 'single-10x10';
     }
@@ -1499,14 +1603,14 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   useEffect(() => {
     if (!availableSizeOptions.some((s) => s.id === selectedSizeId)) {
-      if (isSinglePrintCanvas) {
+      if (isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes') {
         const matchingInCat = availableSizeOptions.filter((opt) => opt.categories.includes(sizeCategoryFilter));
-        setSelectedSizeId(matchingInCat[0]?.id || 'single-10x10');
+        setSelectedSizeId(matchingInCat[0]?.id || (selectedProductTypeId === 'canvas-quotes' ? 'quotes-8x8' : 'single-10x10'));
       } else {
         setSelectedSizeId(availableSizeOptions[0]?.id || 'single-10x10');
       }
     }
-  }, [availableSizeOptions, selectedSizeId, isSinglePrintCanvas, sizeCategoryFilter]);
+  }, [availableSizeOptions, selectedSizeId, isSinglePrintCanvas, selectedProductTypeId, sizeCategoryFilter]);
 
   const currentSizeOption = useMemo(() => {
     return availableSizeOptions.find((s) => s.id === selectedSizeId) || availableSizeOptions[0] || SIZE_OPTIONS[0];
@@ -1867,6 +1971,65 @@ export const CanvasCustomizerPage: React.FC = () => {
     setActiveTab('UPLOAD');
   };
 
+  // Quotes on Canvas State (Selected Quote Template -> Auto-mounts into Slot 0)
+  const [selectedQuoteTemplateId, setSelectedQuoteTemplateId] = useState<string>('quote-inspire-01');
+
+  const handleSelectQuoteTemplate = (templateOrId: QuoteTemplateItem | string) => {
+    const templateId = typeof templateOrId === 'string' ? templateOrId : templateOrId.id;
+    setSelectedQuoteTemplateId(templateId);
+    const tmpl = typeof templateOrId === 'string' ? getQuoteTemplate(templateId) : templateOrId;
+    if (!tmpl) return;
+
+    setPanelImages((prev) => ({
+      ...prev,
+      0: {
+        ...createDefaultPanel(),
+        imageUrl: tmpl.image,
+        fitMode: 'contain',
+        scale: 1,
+        rotation: 0,
+        panX: 0,
+        panY: 0,
+        uploadedImage: {
+          originalSrc: tmpl.image,
+          width: 800,
+          height: 800,
+          aspectRatio: 1
+        }
+      }
+    }));
+
+    setUploadedPhotos((prev) => [tmpl.image, ...prev.filter((p) => p !== tmpl.image)]);
+  };
+
+  // If initial product is Quotes on Canvas, initialize default quote template into slot 0
+  useEffect(() => {
+    if (selectedProductTypeId === 'canvas-quotes') {
+      const tmpl = getQuoteTemplate(selectedQuoteTemplateId) || getQuoteTemplate('quote-inspire-01');
+      if (tmpl && !panelImages[0]?.imageUrl) {
+        setPanelImages((prev) => ({
+          ...prev,
+          0: {
+            ...createDefaultPanel(),
+            imageUrl: tmpl.image,
+            fitMode: 'contain',
+            scale: 1,
+            rotation: 0,
+            panX: 0,
+            panY: 0,
+            uploadedImage: {
+              originalSrc: tmpl.image,
+              width: 800,
+              height: 800,
+              aspectRatio: 1
+            }
+          }
+        }));
+        setUploadedPhotos((prev) => [tmpl.image, ...prev.filter((p) => p !== tmpl.image)]);
+      }
+    }
+  }, [selectedProductTypeId]);
+
   // Automatically sync default shape, hardware, thickness, and layout when product selection changes
   useEffect(() => {
     const pt = CANVAS_PRODUCT_TYPES.find((p) => p.id === selectedProductTypeId);
@@ -1904,6 +2067,43 @@ export const CanvasCustomizerPage: React.FC = () => {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setIsWordArtSizeModalOpen(true);
+      return;
+    }
+
+    if (productId === 'canvas-quotes') {
+      setSelectedProductTypeId('canvas-quotes');
+      setIsCustomSize(false);
+      setActivePanelIndex(0);
+      setSelectedShapeId('shape-square');
+      setSelectedSizeId('quotes-8x8');
+      setSizeCategoryFilter('SQUARE');
+      setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
+      setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
+      const tmpl = getQuoteTemplate(selectedQuoteTemplateId) || getQuoteTemplate('quote-inspire-01');
+      if (tmpl) {
+        setPanelImages((prev) => ({
+          ...prev,
+          0: {
+            ...createDefaultPanel(),
+            imageUrl: tmpl.image,
+            fitMode: 'contain',
+            scale: 1,
+            rotation: 0,
+            panX: 0,
+            panY: 0,
+            uploadedImage: {
+              originalSrc: tmpl.image,
+              width: 800,
+              height: 800,
+              aspectRatio: 1
+            }
+          }
+        }));
+        setUploadedPhotos((prev) => [tmpl.image, ...prev.filter((p) => p !== tmpl.image)]);
+      }
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setActiveTab('UPLOAD');
       return;
     }
 
@@ -2930,6 +3130,8 @@ export const CanvasCustomizerPage: React.FC = () => {
         price: unitPrice,
         name: selectedProductTypeId === 'canvas-word-art'
           ? `${selectedProductType.name} - ${wordArtSizeOption.label}`
+          : selectedProductTypeId === 'canvas-quotes'
+          ? `${selectedProductType.name} - ${getQuoteTemplate(selectedQuoteTemplateId)?.title || 'Custom Quote'} (${currentSizeOption.label})`
           : `${selectedProductType.name} - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
       },
       size: selectedProductTypeId === 'canvas-word-art'
@@ -2958,6 +3160,7 @@ export const CanvasCustomizerPage: React.FC = () => {
         majorRetouchText: majorRetouchText || undefined,
         proofRequested,
         template: selectedTemplateId ? DESIGN_TEMPLATES.find((t) => t.id === selectedTemplateId)?.name : undefined,
+        quoteTemplate: selectedProductTypeId === 'canvas-quotes' ? getQuoteTemplate(selectedQuoteTemplateId)?.title : undefined,
         panels: panels.map((p, idx) => ({
           dimension: p.dimension,
           imageUrl: panelImages[idx]?.imageUrl || null,
@@ -3949,7 +4152,13 @@ export const CanvasCustomizerPage: React.FC = () => {
 
         {/* COLUMN 2: CONFIGURATION PANEL */}
         <CustomizerPanel
-          title={activeTab === 'UPLOAD' && selectedProductTypeId === 'canvas-word-art' ? 'WORD ART' : activeTab}
+          title={
+            activeTab === 'UPLOAD' && selectedProductTypeId === 'canvas-word-art'
+              ? 'WORD ART'
+              : activeTab === 'UPLOAD' && selectedProductTypeId === 'canvas-quotes'
+              ? undefined
+              : activeTab
+          }
           metaText={
             selectedProductTypeId === 'canvas-word-art' && activeTab === 'UPLOAD'
               ? `${wordArtSizeOption.label} (${wordArtSizeOption.ratioTab})`
@@ -3983,7 +4192,7 @@ export const CanvasCustomizerPage: React.FC = () => {
             />
           )}
 
-          {/* ----------------------------- UPLOAD / WORD ART ------------------------------ */}
+          {/* ----------------------------- UPLOAD / WORD ART / QUOTES ------------------------------ */}
           {activeTab === 'UPLOAD' && (
             selectedProductTypeId === 'canvas-word-art' ? (
               <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
@@ -4044,6 +4253,20 @@ export const CanvasCustomizerPage: React.FC = () => {
                   )}
                 </div>
               </div>
+            ) : selectedProductTypeId === 'canvas-quotes' ? (
+              <QuotesTemplateSidebarPanel
+                selectedTemplateId={selectedQuoteTemplateId}
+                onSelectTemplate={handleSelectQuoteTemplate}
+                onChangeSizeClick={() => setIsSizeShapeModalOpen(true)}
+                currentSizeLabel={currentSizeOption?.label || '8" × 8"'}
+                currentPrice={totalPrice}
+                onOpenTextModal={() => {
+                  if (textElements.length === 0) {
+                    handleAddText();
+                  }
+                  setShowTextModal(true);
+                }}
+              />
             ) : (
             <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
               <div>
@@ -4350,7 +4573,7 @@ export const CanvasCustomizerPage: React.FC = () => {
           {/* --------------------------- SELECT SIZE ---------------------------- */}
           {activeTab === 'SELECT SIZE' && (
             <div className="p-4 space-y-4">
-              {isSinglePrintCanvas ? (
+              {isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' ? (
                 <>
                   {/* Selected Size Summary Card */}
                   <div className="flex items-center justify-between p-3.5 bg-blue-50/70 rounded-2xl border border-blue-100 mb-3">
@@ -5626,7 +5849,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                         }}
                       >
                         {(() => {
-                          const isSingleCanvasPrint = selectedProductTypeId === 'canvas-single';
+                          const isSingleCanvasPrint = selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-quotes';
                           const imgMeta = panelImages[0]?.uploadedImage;
                           const natWidth = imgMeta?.width || 1200;
                           const natHeight = imgMeta?.height || 800;

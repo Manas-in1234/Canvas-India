@@ -48,9 +48,11 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const isQuotes = productId.toLowerCase() === 'canvas-quotes';
+
   const isSinglePrint = useMemo(() => {
     const norm = productId.toLowerCase();
-    return norm === 'canvas-single' || norm === 'canvas-classic' || norm === 'acrylic-print' || norm === 'acrylic-photo-panel';
+    return norm === 'canvas-single' || norm === 'canvas-classic' || norm === 'acrylic-print' || norm === 'acrylic-photo-panel' || norm === 'canvas-quotes';
   }, [productId]);
 
   // Active Category Tab for Single Print: SQUARE (default), PANORAMIC, RECOMMENDED
@@ -59,6 +61,140 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   // Single Print predefined sizes per category
   const singlePrintSizes = useMemo(() => {
     const isAcrylic = material === 'acrylic';
+
+    if (isQuotes) {
+      const squareSizes: SizeShapeOption[] = [
+        {
+          id: 'quotes-8x8',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '8" × 8"',
+          dimensionsSummary: '8" × 8"',
+          widthInches: 8,
+          heightInches: 8,
+          price: 999.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'quotes-10x10',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '10" × 10"',
+          dimensionsSummary: '10" × 10"',
+          widthInches: 10,
+          heightInches: 10,
+          price: 1199.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'quotes-12x12',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '12" × 12"',
+          dimensionsSummary: '12" × 12"',
+          widthInches: 12,
+          heightInches: 12,
+          price: 1399.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'quotes-16x16',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '16" × 16"',
+          dimensionsSummary: '16" × 16"',
+          widthInches: 16,
+          heightInches: 16,
+          price: 1799.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        }
+      ];
+
+      const panoramicSizes: SizeShapeOption[] = [
+        {
+          id: 'quotes-12x18',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Portrait',
+          label: '12" × 18"',
+          dimensionsSummary: '12" × 18"',
+          widthInches: 12,
+          heightInches: 18,
+          price: 1499.0,
+          aspectRatio: 12 / 18,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'quotes-18x12',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Landscape',
+          label: '18" × 12"',
+          dimensionsSummary: '18" × 12"',
+          widthInches: 18,
+          heightInches: 12,
+          price: 1499.0,
+          aspectRatio: 18 / 12,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'quotes-16x24',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Portrait',
+          label: '16" × 24"',
+          dimensionsSummary: '16" × 24"',
+          widthInches: 16,
+          heightInches: 24,
+          price: 2199.0,
+          aspectRatio: 16 / 24,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'quotes-24x16',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Landscape',
+          label: '24" × 16"',
+          dimensionsSummary: '24" × 16"',
+          widthInches: 24,
+          heightInches: 16,
+          price: 2199.0,
+          aspectRatio: 24 / 16,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        }
+      ];
+
+      const recommendedSizes: SizeShapeOption[] = [
+        squareSizes[0],
+        squareSizes[1],
+        squareSizes[2],
+        panoramicSizes[0],
+        panoramicSizes[1]
+      ];
+
+      return {
+        SQUARE: squareSizes,
+        PANORAMIC: panoramicSizes,
+        RECOMMENDED: recommendedSizes
+      };
+    }
 
     const squareSizes: SizeShapeOption[] = [
       {
@@ -237,7 +373,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
 
   // Selected Option state
   const defaultOptionId = isSinglePrint
-    ? (material === 'acrylic' ? 'sq-10x10' : 'single-10x10')
+    ? (isQuotes ? 'quotes-8x8' : material === 'acrylic' ? 'sq-10x10' : 'single-10x10')
     : (shapedProductOptions[0]?.id || '');
 
   const [selectedOptionId, setSelectedOptionId] = useState<string>(() => {
