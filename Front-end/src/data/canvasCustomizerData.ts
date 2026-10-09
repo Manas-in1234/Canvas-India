@@ -342,7 +342,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       hardware: true,
       options: true,
       view3D: false,
-      view360: true,
+      view360: false,
       roomView: true
     }
   },
@@ -382,9 +382,9 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     iconType: 'hexagon',
     panelsCount: 1,
     description: 'Geometric 6-sided honeycomb canvas prints for modular wall clusters.',
-    defaultSizeOptionId: 'shape-hexagon-10x10',
+    defaultSizeOptionId: 'hex-horizontal-single',
     defaultShape: 'shape-hexagon',
-    defaultLayoutId: 'layout-1-single',
+    defaultLayoutId: 'hex-horizontal-single',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
     supportedShapeIds: ['shape-hexagon'],
@@ -398,7 +398,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       hardware: true,
       options: true,
       view3D: false,
-      view360: true,
+      view360: false,
       roomView: true
     }
   },
@@ -426,7 +426,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       hardware: true,
       options: true,
       view3D: false,
-      view360: true,
+      view360: false,
       roomView: true
     }
   },
@@ -537,7 +537,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       wrap: true,
       hardware: true,
       options: true,
-      view3D: false,
+      view3D: true,
       view360: true,
       roomView: true
     }
@@ -678,7 +678,7 @@ export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProdu
     hardware: true,
     options: true,
     view3D: pt.id === 'canvas-single',
-    view360: true,
+    view360: !['canvas-wall-art', 'canvas-split', 'canvas-hexagon'].includes(pt.id),
     roomView: true
   };
 }
