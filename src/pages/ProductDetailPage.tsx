@@ -399,7 +399,7 @@ export const ProductDetailPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 xl:gap-6 items-start">
 
             {/* Thumbnails — vertical strip on desktop, horizontal row on mobile */}
-            <div className="order-2 lg:order-1 lg:col-span-1 flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0">
+            <div className="order-2 lg:order-1 lg:col-span-1 min-w-0 flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0">
               {galleryImages.map((img, idx) => (
                 <button
                   key={idx}
@@ -421,7 +421,7 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Main Image */}
-            <div className="order-1 lg:order-2 lg:col-span-5">
+            <div className="order-1 lg:order-2 lg:col-span-5 min-w-0">
               <div className={`relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group ${galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? 'aspect-[4/3]' : 'aspect-[4/5]'}`}>
                 {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
                   <WallPreview
@@ -469,7 +469,7 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Info + Purchase Card */}
-            <div className="order-3 lg:col-span-6 flex flex-col gap-3.5 text-left">
+            <div className="order-3 lg:col-span-6 min-w-0 flex flex-col gap-3.5 text-left">
               <div>
                 <h1 className="text-lg sm:text-xl font-extrabold text-stone-900 tracking-tight">{product.name}</h1>
                 {product.rating !== null && product.rating > 0 && (
