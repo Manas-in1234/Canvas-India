@@ -469,7 +469,7 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Info + Purchase Card */}
-            <div className="order-3 lg:col-span-4 flex flex-col gap-3.5 text-left">
+            <div className="order-3 lg:col-span-6 flex flex-col gap-3.5 text-left">
               <div>
                 <h1 className="text-lg sm:text-xl font-extrabold text-stone-900 tracking-tight">{product.name}</h1>
                 {product.rating !== null && product.rating > 0 && (
@@ -631,31 +631,6 @@ export const ProductDetailPage: React.FC = () => {
                   <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600' : ''}`} />
                   <span>{isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}</span>
                 </button>
-              </div>
-            </div>
-
-            {/* Live Preview — floating sticky card */}
-            <div className="order-4 hidden lg:block lg:col-span-2">
-              <div className="relative sticky top-24">
-                <div className="rounded-xl border border-stone-200 bg-white shadow-lg p-2.5">
-                  <div className="aspect-square rounded-lg overflow-hidden bg-stone-100">
-                    <WallPreview
-                      imageSrc={uploadedFile || roomViewSourceImage}
-                      shape={selectedShape}
-                      sizeLabel={selectedSize}
-                      finish={selectedFinish}
-                      className="w-full h-full"
-                    />
-                  </div>
-                  <div className="text-center text-[11px] font-bold text-stone-700 mt-2">{selectedSize}</div>
-                  <div className="text-center text-[10px] text-stone-400">{selectedShape}</div>
-                </div>
-                <div
-                  className="absolute -top-7 right-2 text-stone-400 text-xs -rotate-6 pointer-events-none"
-                  style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}
-                >
-                  Live Preview ↘
-                </div>
               </div>
             </div>
 
