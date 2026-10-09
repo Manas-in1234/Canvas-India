@@ -75,7 +75,7 @@ function sizeForShape(shape: string, sizes?: string[], isPilot?: boolean): strin
 // Simple outline swatch standing in for each shape in the pilot product's
 // icon-based Shape tab, styled as a small rectangle whose own proportions
 // hint at the shape it represents.
-function PilotShapeIcon({ shape, active, accentColor }: { shape: string; active: boolean; accentColor?: string | null }) {
+function PilotShapeIcon({ shape, active }: { shape: string; active: boolean }) {
   const dims: Record<string, string> = {
     standard: 'w-5 h-6',
     square: 'w-6 h-6',
@@ -84,8 +84,9 @@ function PilotShapeIcon({ shape, active, accentColor }: { shape: string; active:
   };
   return (
     <div
-      className={`${dims[shape.toLowerCase()] || 'w-6 h-6'} rounded-sm border-2 ${active ? '' : 'border-stone-400'}`}
-      style={active ? { borderColor: accentColor || '#0E4A93' } : undefined}
+      className={`${dims[shape.toLowerCase()] || 'w-6 h-6'} rounded-sm border-2 ${
+        active ? 'border-[#0E4A93]' : 'border-stone-400'
+      }`}
     />
   );
 }
@@ -122,10 +123,6 @@ export const ProductDetailPage: React.FC = () => {
   const [pilotCustomOpen, setPilotCustomOpen] = useState<boolean>(false);
   const [pilotCustomW, setPilotCustomW] = useState<string>('');
   const [pilotCustomH, setPilotCustomH] = useState<string>('');
-  // Dominant color sampled from the artwork itself, so the pilot product's
-  // buttons/selection states feel bespoke to each piece instead of using a
-  // fixed brand blue for every product.
-  const [accentColor, setAccentColor] = useState<string | null>(null);
 
   // In-page customization state
   const [customText, setCustomText] = useState<string>('');
@@ -231,72 +228,6 @@ export const ProductDetailPage: React.FC = () => {
     const real = galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL && img !== MULTI_SIZE_SENTINEL);
     return real || product?.image || '';
   }, [galleryImages, product]);
-
-  // Pilot product: sample a vibrant, non-background color out of the artwork
-  // itself (skipping near-white/near-black/greyish pixels, which are almost
-  // always the page/mat background rather than the art) so buttons and
-  // selection states visually match this specific piece.
-  useEffect(() => {
-    if (product?.id !== PILOT_PRODUCT_ID) {
-      setAccentColor(null);
-      return;
-    }
-    const src = uploadedFile || roomViewSourceImage;
-    if (!src) {
-      setAccentColor(null);
-      return;
-    }
-    let cancelled = false;
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      if (cancelled) return;
-      try {
-        const size = 24;
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        ctx.drawImage(img, 0, 0, size, size);
-        const { data } = ctx.getImageData(0, 0, size, size);
-        let r = 0, g = 0, b = 0, count = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          const pr = data[i], pg = data[i + 1], pb = data[i + 2];
-          const max = Math.max(pr, pg, pb);
-          const min = Math.min(pr, pg, pb);
-          const lightness = (max + min) / 2 / 255;
-          const saturation = max === min ? 0 : (max - min) / (255 - Math.abs(max + min - 255));
-          if (lightness > 0.9 || lightness < 0.08 || saturation < 0.18) continue;
-          r += pr; g += pg; b += pb; count++;
-        }
-        if (count === 0) {
-          for (let i = 0; i < data.length; i += 4) {
-            r += data[i]; g += data[i + 1]; b += data[i + 2]; count++;
-          }
-        }
-        if (cancelled || count === 0) return;
-        const toHex = (n: number) => Math.round(n / count).toString(16).padStart(2, '0');
-        setAccentColor(`#${toHex(r)}${toHex(g)}${toHex(b)}`);
-      } catch {
-        // Cross-origin image without CORS headers — keep the brand-blue fallback.
-      }
-    };
-    img.src = src;
-    return () => {
-      cancelled = true;
-    };
-  }, [product?.id, uploadedFile, roomViewSourceImage]);
-
-  // Readable text color for a solid button filled with accentColor.
-  const accentTextColor = useMemo(() => {
-    if (!accentColor) return '#ffffff';
-    const r = parseInt(accentColor.slice(1, 3), 16);
-    const g = parseInt(accentColor.slice(3, 5), 16);
-    const b = parseInt(accentColor.slice(5, 7), 16);
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.6 ? '#1c1917' : '#ffffff';
-  }, [accentColor]);
 
   // Related products from same category or catalog
   const relatedProducts = useMemo(() => {
@@ -476,10 +407,9 @@ export const ProductDetailPage: React.FC = () => {
                   onClick={() => { setUploadedFile(null); setActiveImageIndex(idx); }}
                   className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
                     activeImageIndex === idx && !uploadedFile
-                      ? 'shadow-md'
+                      ? 'border-emerald-600 ring-2 ring-emerald-600/20'
                       : 'border-stone-200 hover:border-stone-400 opacity-80 hover:opacity-100'
                   }`}
-                  style={activeImageIndex === idx && !uploadedFile ? { borderColor: accentColor || '#059669', boxShadow: `0 0 0 3px ${(accentColor || '#059669')}33` } : undefined}
                 >
                   {img === ROOM_VIEW_SENTINEL ? (
                     <WallPreview imageSrc={roomViewSourceImage} shape={selectedShape} sizeLabel={selectedSize} finish={selectedFinish} className="w-full h-full" />
@@ -582,16 +512,14 @@ export const ProductDetailPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setPilotTab('size')}
-                    className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors border-b-2 ${pilotTab === 'size' ? 'text-stone-900' : 'text-stone-400 border-transparent'}`}
-                    style={pilotTab === 'size' ? { borderColor: accentColor || '#059669' } : undefined}
+                    className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors ${pilotTab === 'size' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
                   >
                     Size
                   </button>
                   <button
                     type="button"
                     onClick={() => setPilotTab('shape')}
-                    className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors border-b-2 ${pilotTab === 'shape' ? 'text-stone-900' : 'text-stone-400 border-transparent'}`}
-                    style={pilotTab === 'shape' ? { borderColor: accentColor || '#059669' } : undefined}
+                    className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors ${pilotTab === 'shape' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
                   >
                     Shape
                   </button>
@@ -606,14 +534,9 @@ export const ProductDetailPage: React.FC = () => {
                         onClick={() => { setIsCustomSize(false); setSelectedSize(size); }}
                         className={`px-1.5 py-2 text-[11px] leading-tight font-semibold rounded-lg border-2 text-center transition-all cursor-pointer ${
                           selectedSize === size && !isCustomSize
-                            ? ''
+                            ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
                             : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
                         }`}
-                        style={
-                          selectedSize === size && !isCustomSize
-                            ? { borderColor: accentColor || '#0E4A93', color: accentColor || '#0E4A93', backgroundColor: `${accentColor || '#0E4A93'}1A` }
-                            : undefined
-                        }
                       >
                         {size.replace(' inch', '')}
                       </button>
@@ -674,17 +597,12 @@ export const ProductDetailPage: React.FC = () => {
                         }}
                         className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
                           selectedShape === shapeOpt
-                            ? ''
+                            ? 'border-[#0E4A93] bg-blue-50/60'
                             : 'border-stone-200 bg-white hover:border-stone-400'
                         }`}
-                        style={
-                          selectedShape === shapeOpt
-                            ? { borderColor: accentColor || '#0E4A93', backgroundColor: `${accentColor || '#0E4A93'}1A` }
-                            : undefined
-                        }
                       >
-                        <PilotShapeIcon shape={shapeOpt} active={selectedShape === shapeOpt} accentColor={accentColor} />
-                        <span className="text-[10px] font-semibold" style={{ color: selectedShape === shapeOpt ? (accentColor || '#0E4A93') : '#57534e' }}>{shapeOpt}</span>
+                        <PilotShapeIcon shape={shapeOpt} active={selectedShape === shapeOpt} />
+                        <span className={`text-[10px] font-semibold ${selectedShape === shapeOpt ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{shapeOpt}</span>
                       </button>
                     ))}
                   </div>
@@ -704,8 +622,7 @@ export const ProductDetailPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleAddToCartWithVariants}
-                  className="flex-1 py-3.5 px-6 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer hover:brightness-90"
-                  style={{ backgroundColor: accentColor || '#0E4A93', color: accentTextColor }}
+                  className="flex-1 py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span>Add to Cart</span>
