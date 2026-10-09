@@ -425,7 +425,7 @@ export const ProductDetailPage: React.FC = () => {
               <div
                 className={`relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group mx-auto w-auto max-w-full ${
                   galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL
-                    ? 'aspect-[4/3] h-[42vh] sm:h-[46vh] min-h-[260px] max-h-[420px]'
+                    ? 'aspect-[16/9] h-[42vh] sm:h-[46vh] min-h-[260px] max-h-[420px]'
                     : 'aspect-[4/5] h-[48vh] sm:h-[52vh] min-h-[300px] max-h-[500px]'
                 }`}
               >
