@@ -4,39 +4,26 @@ import {
   Star,
   Heart,
   ShoppingBag,
-  Check,
-  Truck,
   ShieldCheck,
-  Award,
-  MapPin,
   ChevronRight,
   ChevronLeft,
   Share2,
-  Sparkles,
   ArrowRight,
   CheckCircle2,
-  Upload,
   Layers,
-  Sliders,
-  Type,
-  Maximize2,
   Pencil
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
 import { ProductImage } from '../components/ProductImage';
 import { WallPreview } from '../components/WallPreview';
-import { WallMultiSizePreview } from '../components/WallMultiSizePreview';
 import { SmartCropImage } from '../components/SmartCropImage';
-import { CUSTOMER_REVIEWS } from '../data/storeData';
 import { Product } from '../types';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
-import { getFinishStyle } from '../utils/finishStyle';
 
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
 // the "Room View" thumbnail renders a live WallPreview instead of a static image.
 const ROOM_VIEW_SENTINEL = '__ROOM_VIEW__';
-const MULTI_SIZE_SENTINEL = '__MULTI_SIZE__';
 
 // Default to the largest available size so the product — and its Room View
 // — looks substantial right away, instead of starting on the tiniest
@@ -46,36 +33,10 @@ function pickDefaultSize(sizes?: string[]): string | undefined {
   return sizes[sizes.length - 1];
 }
 
-// Experimental changes are being piloted on this one product only, until
-// confirmed — then rolled out to the rest of the catalogue.
-const PILOT_PRODUCT_ID = 'tribal-ethnic-art-a-a-001';
-
-// Pilot product: each shape has its own size list, matching that shape's
-// own proportions (square sizes for Square, landscape for Rectangle, etc.)
-// instead of every shape reusing the same flat catalogue sizes.
-const PILOT_SHAPE_SIZES: Record<string, string[]> = {
-  standard: ['16x20 inch', '20x24 inch', '22x28 inch', '25x30 inch'],
-  square: ['16x16 inch', '20x20 inch', '24x24 inch', '28x28 inch'],
-  rectangle: ['24x16 inch', '30x20 inch', '36x24 inch'],
-  panoramic: ['36x16 inch', '44x20 inch', '55x25 inch'],
-};
-
-function pilotSizesForShape(shape: string): string[] | undefined {
-  return PILOT_SHAPE_SIZES[shape.toLowerCase()];
-}
-
-function sizeForShape(shape: string, sizes?: string[], isPilot?: boolean): string | undefined {
-  if (isPilot) {
-    const pilotSizes = pilotSizesForShape(shape);
-    if (pilotSizes) return pilotSizes[pilotSizes.length - 1];
-  }
-  return pickDefaultSize(sizes);
-}
-
-// Simple outline swatch standing in for each shape in the pilot product's
-// icon-based Shape tab, styled as a small rectangle whose own proportions
-// hint at the shape it represents.
-function PilotShapeIcon({ shape, active }: { shape: string; active: boolean }) {
+// Simple outline swatch standing in for each shape in the icon-based Shape
+// tab, styled as a small rectangle whose own proportions hint at the shape
+// it represents.
+function ShapeIcon({ shape, active }: { shape: string; active: boolean }) {
   const dims: Record<string, string> = {
     standard: 'w-5 h-6',
     square: 'w-6 h-6',
@@ -119,20 +80,15 @@ export const ProductDetailPage: React.FC = () => {
   const [isCustomSize, setIsCustomSize] = useState<boolean>(false);
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
-  const [pilotTab, setPilotTab] = useState<'size' | 'shape'>('size');
-  const [pilotCustomOpen, setPilotCustomOpen] = useState<boolean>(false);
-  const [pilotCustomW, setPilotCustomW] = useState<string>('');
-  const [pilotCustomH, setPilotCustomH] = useState<string>('');
+  const [sizeShapeTab, setSizeShapeTab] = useState<'size' | 'shape'>('size');
+  const [customSizeOpen, setCustomSizeOpen] = useState<boolean>(false);
+  const [customSizeW, setCustomSizeW] = useState<string>('');
+  const [customSizeH, setCustomSizeH] = useState<string>('');
 
   // In-page customization state
   const [customText, setCustomText] = useState<string>('');
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
-  const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
 
-  // Delivery check state
-  const [pincode, setPincode] = useState<string>('500001');
-  const [pincodeChecked, setPincodeChecked] = useState<boolean>(false);
-  const [checkingPincode, setCheckingPincode] = useState<boolean>(false);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
 
   // Materials available for this product
@@ -162,25 +118,22 @@ export const ProductDetailPage: React.FC = () => {
   const SIMPLE_VARIANT_CATEGORIES = ['cork', 'cork-art-patterns', 'yoga-fitness'];
 
   // Shape options for this product. Every wall-hangable category gets the
-  // full shape range by default (Cork and yoga mats don't use shapes).
+  // same reduced shape range by default (Cork and yoga mats don't use
+  // shapes); products can still override with their own explicit list.
   const availableShapes = useMemo(() => {
     if (!product) return [];
     if (product.shapes && product.shapes.length > 0) return product.shapes;
     if (SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug)) return [];
-    // Pilot product: Circle/Triangle removed, Popular renamed to Standard.
-    if (product.id === PILOT_PRODUCT_ID) return ['Standard', 'Square', 'Rectangle', 'Panoramic'];
-    return ['Popular', 'Square', 'Rectangle', 'Panoramic', 'Circle', 'Triangle'];
+    return ['Standard', 'Square', 'Rectangle', 'Panoramic'];
   }, [product]);
 
   const showCustomSize = product ? !SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug) : true;
-  const isPilotProduct = product?.id === PILOT_PRODUCT_ID;
 
   // Sync variants when product changes
   useEffect(() => {
     if (product) {
       const defaultShape = product.shape || availableShapes[0] || '';
-      const isPilot = product.id === PILOT_PRODUCT_ID;
-      setSelectedSize(sizeForShape(defaultShape, product.availableSizes, isPilot) || sizeForShape(defaultShape, product.sizes, isPilot) || '12x18 inch');
+      setSelectedSize(pickDefaultSize(product.availableSizes) || pickDefaultSize(product.sizes) || '12x18 inch');
       setSelectedFinish(product.finishes?.[0] || 'Standard Finish');
       setSelectedMaterial(availableMaterials[0] || 'Standard');
       setSelectedShape(defaultShape);
@@ -191,7 +144,9 @@ export const ProductDetailPage: React.FC = () => {
       setActiveImageIndex(0);
       setCustomText('');
       setUploadedFile(null);
-      setUploadSuccess(false);
+      setCustomSizeOpen(false);
+      setCustomSizeW('');
+      setCustomSizeH('');
       document.title = `${product.name} | Canvas India`;
 
       // Save to recently viewed
@@ -214,18 +169,12 @@ export const ProductDetailPage: React.FC = () => {
     if (!product) return [];
     const base = product.images && product.images.length > 0 ? product.images : [product.image];
     if (product.categorySlug === 'yoga-fitness') return base;
-    // Multi-size comparison gallery image removed on the pilot product per
-    // direct request — its sizes don't line up with how this product's
-    // shapes/sizes actually work now.
-    const hasMultipleSizes = product.sizes && product.sizes.length > 1 && product.id !== PILOT_PRODUCT_ID;
-    return hasMultipleSizes
-      ? [ROOM_VIEW_SENTINEL, MULTI_SIZE_SENTINEL, ...base]
-      : [ROOM_VIEW_SENTINEL, ...base];
+    return [ROOM_VIEW_SENTINEL, ...base];
   }, [product]);
 
   // The real product photo used inside the live Room View preview (first non-sentinel image)
   const roomViewSourceImage = useMemo(() => {
-    const real = galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL && img !== MULTI_SIZE_SENTINEL);
+    const real = galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL);
     return real || product?.image || '';
   }, [galleryImages, product]);
 
@@ -258,16 +207,6 @@ export const ProductDetailPage: React.FC = () => {
   }, [product?.id, allProducts]);
 
   // Handlers
-  const handleCheckPincode = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!pincode || pincode.trim().length < 6) return;
-    setCheckingPincode(true);
-    setTimeout(() => {
-      setCheckingPincode(false);
-      setPincodeChecked(true);
-    }, 350);
-  };
-
   const handleShare = () => {
     if (!product) return;
     if (navigator.share) {
@@ -283,18 +222,6 @@ export const ProductDetailPage: React.FC = () => {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setUploadedFile(reader.result as string);
-        setUploadSuccess(true);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleCustomSizeChange = (width: number, height: number) => {
     setCustomWidth(width);
     setCustomHeight(height);
@@ -302,9 +229,9 @@ export const ProductDetailPage: React.FC = () => {
     setSelectedSize(`${width}" x ${height}" (Custom)`);
   };
 
-  const applyPilotCustomSize = () => {
-    const w = Number(pilotCustomW);
-    const h = Number(pilotCustomH);
+  const applyCustomSize = () => {
+    const w = Number(customSizeW);
+    const h = Number(customSizeH);
     if (w > 0 && h > 0) {
       handleCustomSizeChange(w, h);
     }
@@ -323,12 +250,6 @@ export const ProductDetailPage: React.FC = () => {
   const handleAddToCartWithVariants = () => {
     if (!product) return;
     onAddToCart(product, selectedSize, selectedFinish, quantity, customText, uploadedFile || undefined, selectedMaterial);
-  };
-
-  const handleBuyNow = () => {
-    if (!product) return;
-    onAddToCart(product, selectedSize, selectedFinish, quantity, customText, uploadedFile || undefined, selectedMaterial);
-    navigate('/cart');
   };
 
   if (!product) {
@@ -395,8 +316,7 @@ export const ProductDetailPage: React.FC = () => {
         {/* ========================================================================= */}
         {/* 2. MAIN PRODUCT DISPLAY                                                   */}
         {/* ========================================================================= */}
-        {isPilotProduct ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 xl:gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 xl:gap-6 items-start">
 
             {/* Thumbnails — vertical strip on desktop, horizontal row on mobile */}
             <div className="order-2 lg:order-1 lg:col-span-1 min-w-0 flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0">
@@ -507,107 +427,109 @@ export const ProductDetailPage: React.FC = () => {
               </div>
 
               {/* Size / Shape Tabs */}
-              <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
-                <div className="flex items-center gap-6 border-b border-stone-200 mb-4">
-                  <button
-                    type="button"
-                    onClick={() => setPilotTab('size')}
-                    className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors ${pilotTab === 'size' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
-                  >
-                    Size
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPilotTab('shape')}
-                    className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors ${pilotTab === 'shape' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
-                  >
-                    Shape
-                  </button>
-                </div>
-
-                {pilotTab === 'size' ? (
-                  <div className="grid grid-cols-4 gap-2">
-                    {(pilotSizesForShape(selectedShape) || product.sizes || []).map((size) => (
+              {((product.sizes && product.sizes.length > 0) || availableShapes.length > 0) && (
+                <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+                  {availableShapes.length > 0 ? (
+                    <div className="flex items-center gap-6 border-b border-stone-200 mb-4">
                       <button
-                        key={size}
                         type="button"
-                        onClick={() => { setIsCustomSize(false); setSelectedSize(size); }}
-                        className={`px-1.5 py-2 text-[11px] leading-tight font-semibold rounded-lg border-2 text-center transition-all cursor-pointer ${
-                          selectedSize === size && !isCustomSize
-                            ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
-                            : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
-                        }`}
+                        onClick={() => setSizeShapeTab('size')}
+                        className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'size' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
                       >
-                        {size.replace(' inch', '')}
+                        Size
                       </button>
-                    ))}
-                  </div>
-                ) : null}
+                      <button
+                        type="button"
+                        onClick={() => setSizeShapeTab('shape')}
+                        className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'shape' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                      >
+                        Shape
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-sm font-bold text-stone-900 mb-4">Size</div>
+                  )}
 
-                {pilotTab === 'size' && (
-                  <div className="mt-3">
-                    <button
-                      type="button"
-                      onClick={() => setPilotCustomOpen((v) => !v)}
-                      className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-700 cursor-pointer"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                      <span>Need a Custom Size?</span>
-                    </button>
-                    {pilotCustomOpen && (
-                      <div className="flex items-center gap-2 mt-2">
-                        <input
-                          type="number"
-                          min={4}
-                          value={pilotCustomW}
-                          onChange={(e) => setPilotCustomW(e.target.value)}
-                          placeholder="Width [W] in"
-                          className="w-0 flex-1 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
-                        />
-                        <input
-                          type="number"
-                          min={4}
-                          value={pilotCustomH}
-                          onChange={(e) => setPilotCustomH(e.target.value)}
-                          placeholder="Height [H] in"
-                          className="w-0 flex-1 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
-                        />
+                  {(sizeShapeTab === 'size' || availableShapes.length === 0) && product.sizes && product.sizes.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {product.sizes.map((size) => (
                         <button
+                          key={size}
                           type="button"
-                          onClick={applyPilotCustomSize}
-                          className="shrink-0 px-4 py-2 text-xs font-bold rounded-full border-2 border-stone-300 text-stone-700 hover:border-stone-400 transition-colors cursor-pointer"
+                          onClick={() => { setIsCustomSize(false); setSelectedSize(size); }}
+                          className={`px-1.5 py-2 text-[11px] leading-tight font-semibold rounded-lg border-2 text-center transition-all cursor-pointer ${
+                            selectedSize === size && !isCustomSize
+                              ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
+                              : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
+                          }`}
                         >
-                          Apply
+                          {size.replace(' inch', '')}
                         </button>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
 
-                {pilotTab === 'shape' && (
-                  <div className="grid grid-cols-4 gap-2">
-                    {availableShapes.map((shapeOpt) => (
+                  {(sizeShapeTab === 'size' || availableShapes.length === 0) && showCustomSize && (
+                    <div className="mt-3">
                       <button
-                        key={shapeOpt}
                         type="button"
-                        onClick={() => {
-                          setSelectedShape(shapeOpt);
-                          setIsCustomSize(false);
-                          setSelectedSize(sizeForShape(shapeOpt, product.sizes, true) || selectedSize);
-                        }}
-                        className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
-                          selectedShape === shapeOpt
-                            ? 'border-[#0E4A93] bg-blue-50/60'
-                            : 'border-stone-200 bg-white hover:border-stone-400'
-                        }`}
+                        onClick={() => setCustomSizeOpen((v) => !v)}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-700 cursor-pointer"
                       >
-                        <PilotShapeIcon shape={shapeOpt} active={selectedShape === shapeOpt} />
-                        <span className={`text-[10px] font-semibold ${selectedShape === shapeOpt ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{shapeOpt}</span>
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>Need a Custom Size?</span>
                       </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+                      {customSizeOpen && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <input
+                            type="number"
+                            min={4}
+                            value={customSizeW}
+                            onChange={(e) => setCustomSizeW(e.target.value)}
+                            placeholder="Width [W] in"
+                            className="w-0 flex-1 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
+                          />
+                          <input
+                            type="number"
+                            min={4}
+                            value={customSizeH}
+                            onChange={(e) => setCustomSizeH(e.target.value)}
+                            placeholder="Height [H] in"
+                            className="w-0 flex-1 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
+                          />
+                          <button
+                            type="button"
+                            onClick={applyCustomSize}
+                            className="shrink-0 px-4 py-2 text-xs font-bold rounded-full border-2 border-stone-300 text-stone-700 hover:border-stone-400 transition-colors cursor-pointer"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {availableShapes.length > 0 && sizeShapeTab === 'shape' && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {availableShapes.map((shapeOpt) => (
+                        <button
+                          key={shapeOpt}
+                          type="button"
+                          onClick={() => setSelectedShape(shapeOpt)}
+                          className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
+                            selectedShape === shapeOpt
+                              ? 'border-[#0E4A93] bg-blue-50/60'
+                              : 'border-stone-200 bg-white hover:border-stone-400'
+                          }`}
+                        >
+                          <ShapeIcon shape={shapeOpt} active={selectedShape === shapeOpt} />
+                          <span className={`text-[10px] font-semibold ${selectedShape === shapeOpt ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{shapeOpt}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center gap-4">
                 <span className="font-bold text-xs text-stone-800">Quantity:</span>
@@ -641,509 +563,6 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
           </div>
-        ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 items-start gap-8 xl:gap-14">
-
-          {/* LEFT: GALLERY (Sticky on desktop, 6-7 columns) */}
-          <div className={`${isPilotProduct ? 'lg:col-span-5 xl:col-span-6' : 'lg:col-span-6 xl:col-span-7'} flex flex-col gap-4 sticky ${isPilotProduct ? 'top-4' : 'top-24'}`}>
-
-            {/* Main Primary Image */}
-            <div
-              className={`relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group ${
-                galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL || galleryImages[activeImageIndex] === MULTI_SIZE_SENTINEL
-                  ? (isPilotProduct ? 'w-full aspect-[4/3] max-h-[440px]' : 'w-full aspect-[4/3]')
-                  : isPilotProduct
-                  ? 'aspect-[3/4] h-[34vh] max-h-[400px] w-auto max-w-full mx-auto'
-                  : 'aspect-[3/4] h-[48vh] sm:h-[58vh] min-h-[320px] max-h-[600px] max-w-full mx-auto'
-              }`}
-            >
-              {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
-                <WallPreview
-                  imageSrc={uploadedFile || roomViewSourceImage}
-                  shape={selectedShape}
-                  sizeLabel={selectedSize}
-                  finish={selectedFinish}
-                  className="w-full h-full"
-                />
-              ) : galleryImages[activeImageIndex] === MULTI_SIZE_SENTINEL ? (
-                <WallMultiSizePreview
-                  imageSrc={uploadedFile || roomViewSourceImage}
-                  sizes={product.sizes || []}
-                  className="w-full h-full"
-                />
-              ) : (
-                <SmartCropImage
-                  src={uploadedFile || galleryImages[activeImageIndex] || product.image}
-                  alt={product.name}
-                  containerAspect={3 / 4}
-                  className="w-full h-full"
-                />
-              )}
-
-              {/* Live custom text preview on the product image */}
-              {customText.trim() && (
-                <div className="pointer-events-none absolute inset-x-6 top-1/2 -translate-y-1/2 text-center">
-                  <span
-                    className="inline-block max-w-full break-words text-white text-xl sm:text-3xl font-bold leading-tight"
-                    style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic', textShadow: '0 2px 10px rgba(0,0,0,0.65), 0 0 2px rgba(0,0,0,0.6)' }}
-                  >
-                    {customText}
-                  </span>
-                </div>
-              )}
-
-              {/* Uploaded User Photo Indicator Overlay */}
-              {uploadedFile && (
-                <div className="absolute top-4 left-4 bg-[#0E4A93] text-white text-[10px] font-bold px-2.5 py-1 rounded-md shadow-sm flex items-center gap-1">
-                  <Check className="w-3 h-3 text-emerald-400" />
-                  <span>Custom Artwork Applied</span>
-                </div>
-              )}
-
-              {/* Discount Tag */}
-              {!uploadedFile && product.discountPercent > 0 && (
-                <div className="absolute top-4 left-4 bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider">
-                  {product.discountPercent}% OFF
-                </div>
-              )}
-
-              {/* Wishlist Button */}
-              <button
-                type="button"
-                onClick={() => onToggleWishlist(product.id)}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-700 hover:text-rose-600 shadow-md flex items-center justify-center transition-all cursor-pointer"
-                title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-              >
-                <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
-              </button>
-
-              {/* Prev / Next Gallery Navigation Arrows */}
-              {galleryImages.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={handlePrevImage}
-                    aria-label="Previous image"
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleNextImage}
-                    aria-label="Next image"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </>
-              )}
-            </div>
-
-            {/* Gallery Thumbnails */}
-            {galleryImages.length > 1 && (
-              <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
-                {galleryImages.map((img, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      setUploadedFile(null);
-                      setActiveImageIndex(idx);
-                    }}
-                    className={`shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
-                      activeImageIndex === idx && !uploadedFile
-                        ? 'border-[#0E4A93] shadow-md ring-2 ring-[#0E4A93]/20'
-                        : 'border-stone-200 hover:border-stone-400 opacity-80 hover:opacity-100'
-                    }`}
-                  >
-                    {img === ROOM_VIEW_SENTINEL ? (
-                      <WallPreview imageSrc={roomViewSourceImage} shape={selectedShape} sizeLabel={selectedSize} finish={selectedFinish} className="w-full h-full" />
-                    ) : img === MULTI_SIZE_SENTINEL ? (
-                      <WallMultiSizePreview imageSrc={roomViewSourceImage} sizes={product.sizes || []} className="w-full h-full" />
-                    ) : (
-                      <ProductImage src={img} alt={`View ${idx + 1}`} categorySlug={product.categorySlug} className="w-full h-full object-cover" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Trust Badges Strip (Box-Free, underneath gallery) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-stone-200/80 text-left">
-              <div className="flex items-start gap-2.5">
-                <Award className="w-5 h-5 text-[#E8752A] shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-bold text-xs text-stone-900">Museum Grade</div>
-                  <div className="text-[11px] text-stone-500">12-color archival inks</div>
-                </div>
-              </div>
-
-              {isPilotProduct ? (
-                <div className="flex items-start gap-2.5">
-                  <Heart className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-                  <div>
-                    <div className="font-bold text-xs text-stone-900">Made with Love</div>
-                    <div className="text-[11px] text-stone-500">Handcrafted, every piece</div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-start gap-2.5">
-                  <Truck className="w-5 h-5 text-[#0E4A93] shrink-0 mt-0.5" />
-                  <div>
-                    <div className="font-bold text-xs text-stone-900">Free Delivery</div>
-                    <div className="text-[11px] text-stone-500">On orders ₹999+</div>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-start gap-2.5">
-                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-bold text-xs text-stone-900">Safe Payments</div>
-                  <div className="text-[11px] text-stone-500">UPI, NetBanking & Cards</div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2.5">
-                <MapPin className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-bold text-xs text-stone-900">Pan-India Ship</div>
-                  <div className="text-[11px] text-stone-500">19,000+ PIN codes</div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* RIGHT: PRODUCT INFO & PURCHASE CONTROLS (5-6 columns) */}
-          <div className={`${isPilotProduct ? 'lg:col-span-7 xl:col-span-6' : 'lg:col-span-6 xl:col-span-5'} flex flex-col text-left ${isPilotProduct ? 'gap-3.5' : 'gap-5'}`}>
-            
-            {/* Header: Category & Share */}
-            <div>
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <Link 
-                    to={categoryLink}
-                    className="text-xs uppercase font-bold tracking-widest text-[#0E4A93] hover:underline"
-                  >
-                    {categoryName}
-                  </Link>
-                  {product.subcategory && (
-                    <span className="text-xs text-stone-400 font-medium">/ {product.subcategory}</span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleShare}
-                  className="text-xs text-stone-500 hover:text-stone-900 flex items-center gap-1.5 transition-colors cursor-pointer py-1 px-2 rounded-md hover:bg-stone-100"
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>{copiedLink ? 'Link Copied!' : 'Share'}</span>
-                </button>
-              </div>
-
-              <h1 className={`font-extrabold text-stone-900 tracking-tight mt-1 ${isPilotProduct ? 'text-lg sm:text-xl' : 'text-2xl sm:text-3xl'}`}>
-                {product.name}
-              </h1>
-
-              {/* Status & Ratings */}
-              <div className={`flex items-center gap-2.5 text-xs text-stone-600 ${isPilotProduct ? 'mt-1' : 'mt-2.5'}`}>
-                {product.rating !== null && product.rating > 0 ? (
-                  <>
-                    <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded text-amber-800 font-bold">
-                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      <span>{product.rating}</span>
-                    </div>
-                    <span>•</span>
-                    <span className="underline decoration-stone-300">{product.reviewsCount || 48} Customer Reviews</span>
-                    <span>•</span>
-                  </>
-                ) : (
-                  !isPilotProduct && (
-                    <>
-                      <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-bold text-[11px] px-2 py-0.5 rounded">
-                        New Arrival
-                      </span>
-                      <span>•</span>
-                    </>
-                  )
-                )}
-                
-                <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>{product.stockStatus || 'In Stock & Handcrafted'}</span>
-                </span>
-              </div>
-            </div>
-
-            {/* Short Description — hidden on the pilot product to keep everything above the fold */}
-            {!isPilotProduct && (
-              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
-                {product.shortDescription || product.description}
-              </p>
-            )}
-
-            {/* Shape Selector (Canvas products: Popular/Square/Rectangle/Panoramic/Circle/Triangle) */}
-            {availableShapes.length > 0 && (
-              <div className={isPilotProduct ? 'space-y-1.5' : 'space-y-2'}>
-                <span className="font-bold text-xs text-stone-800">{categoryName} Shapes:</span>
-                <div className={`grid grid-cols-4 ${isPilotProduct ? 'gap-1.5' : 'gap-2'}`}>
-                  {availableShapes.map((shapeOpt) => (
-                    <button
-                      key={shapeOpt}
-                      type="button"
-                      onClick={() => {
-                        setSelectedShape(shapeOpt);
-                        if (product.id === PILOT_PRODUCT_ID) {
-                          setIsCustomSize(false);
-                          setSelectedSize(sizeForShape(shapeOpt, product.sizes, true) || selectedSize);
-                        }
-                      }}
-                      className={`${isPilotProduct ? 'px-2 py-1.5' : 'px-2 py-2'} text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
-                        selectedShape === shapeOpt
-                          ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
-                          : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
-                      }`}
-                    >
-                      {shapeOpt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 1. Size Selector */}
-            {product.sizes && product.sizes.length > 0 && (
-              <div className={isPilotProduct ? 'space-y-1.5' : 'space-y-2'}>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-stone-800">{availableShapes.length > 0 ? `${categoryName} Sizes:` : '1. Available Sizes:'}</span>
-                  <span className="text-stone-500 font-medium">{selectedSize}</span>
-                </div>
-                <div className={`grid grid-cols-4 ${isPilotProduct ? 'gap-1.5' : 'gap-2'}`}>
-                  {(product.id === PILOT_PRODUCT_ID ? pilotSizesForShape(selectedShape) || product.sizes : product.sizes).map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => { setIsCustomSize(false); setSelectedSize(size); }}
-                      className={`${isPilotProduct ? 'px-2 py-1.5' : 'px-2 py-2'} text-xs font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
-                        selectedSize === size && !isCustomSize
-                          ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
-                          : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Custom Size */}
-                {showCustomSize && (
-                  <div className="flex items-center gap-2.5 pt-1">
-                    <span className={`text-xs font-semibold ${isCustomSize ? 'text-[#0E4A93]' : 'text-stone-600'}`}>Custom:</span>
-                    <select
-                      value={customWidth}
-                      onChange={(e) => handleCustomSizeChange(Number(e.target.value), customHeight)}
-                      className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border bg-white cursor-pointer focus:outline-none ${isCustomSize ? 'border-[#0E4A93] text-[#0E4A93]' : 'border-stone-300 text-stone-700'}`}
-                    >
-                      {Array.from({ length: 37 }, (_, i) => i + 4).map((n) => (
-                        <option key={n} value={n}>{n}"</option>
-                      ))}
-                    </select>
-                    <span className="text-stone-400 text-xs font-bold">X</span>
-                    <select
-                      value={customHeight}
-                      onChange={(e) => handleCustomSizeChange(customWidth, Number(e.target.value))}
-                      className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border bg-white cursor-pointer focus:outline-none ${isCustomSize ? 'border-[#0E4A93] text-[#0E4A93]' : 'border-stone-300 text-stone-700'}`}
-                    >
-                      {Array.from({ length: 37 }, (_, i) => i + 4).map((n) => (
-                        <option key={n} value={n}>{n}"</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* 2. Material Selector — hidden on the pilot product */}
-            {!isPilotProduct && availableMaterials.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-stone-800">2. Material:</span>
-                  <span className="text-stone-500 font-medium">{selectedMaterial}</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {availableMaterials.map((mat) => (
-                    <button
-                      key={mat}
-                      type="button"
-                      onClick={() => setSelectedMaterial(mat)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-                        selectedMaterial === mat
-                          ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
-                          : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
-                      }`}
-                    >
-                      {mat}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 3. Finish Selector — hidden on the pilot product per direct request */}
-            {product.id !== PILOT_PRODUCT_ID && product.finishes && product.finishes.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-stone-800">3. Finish &amp; Style:</span>
-                  <span className="text-stone-500 font-medium">{selectedFinish}</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {product.finishes.map((finish) => {
-                    const fs = getFinishStyle(finish);
-                    const active = selectedFinish === finish;
-                    return (
-                      <button
-                        key={finish}
-                        type="button"
-                        onClick={() => setSelectedFinish(finish)}
-                        className={`p-1.5 text-left rounded-xl border-2 transition-all cursor-pointer ${
-                          active
-                            ? 'border-[#0E4A93] bg-blue-50/60 shadow-2xs'
-                            : 'border-stone-200 bg-white hover:border-stone-400'
-                        }`}
-                      >
-                        <div className="relative aspect-[4/3] bg-stone-200 rounded-md overflow-hidden flex items-center justify-center" style={{ background: fs.wall }}>
-                          <div
-                            className="relative w-[62%] aspect-[4/3] overflow-hidden bg-white"
-                            style={{ border: `${fs.border}px solid ${fs.color}`, boxShadow: fs.shadow, outline: fs.outline }}
-                          >
-                            <img src={galleryImages[0] || product.image} alt="" className="w-full h-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }} />
-                            {fs.overlay && <div className="absolute inset-0 pointer-events-none" style={{ background: fs.overlay }} />}
-                          </div>
-                        </div>
-                        <div className={`mt-1.5 px-0.5 text-[11px] font-semibold leading-tight ${active ? 'text-[#0E4A93]' : 'text-stone-700'}`}>{finish}</div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Quantity Selector */}
-            <div className="flex items-center gap-4 pt-1">
-              <span className="font-bold text-xs text-stone-800">6. Quantity:</span>
-              <div className="inline-flex items-center border border-stone-200 rounded-lg bg-white overflow-hidden shadow-2xs">
-                <button
-                  type="button"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-100 font-bold transition-colors cursor-pointer"
-                  aria-label="Decrease quantity"
-                >
-                  -
-                </button>
-                <span className="w-10 text-center text-xs font-extrabold text-stone-900">{quantity}</span>
-                <button
-                  type="button"
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-100 font-bold transition-colors cursor-pointer"
-                  aria-label="Increase quantity"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            {/* Pricing */}
-            <div className={`border-t border-stone-200 ${isPilotProduct ? 'pt-2 pb-1' : 'pt-2 pb-4'}`}>
-              <div className="flex items-baseline gap-3">
-                <span className={`font-extrabold text-stone-950 ${isPilotProduct ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl'}`}>
-                  ₹{product.price.toLocaleString('en-IN')}
-                </span>
-                <span className="text-base sm:text-lg text-stone-400 line-through">
-                  ₹{(product.compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)).toLocaleString('en-IN')}
-                </span>
-                {product.discountPercent > 0 && (
-                  <span className="text-sm font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                    Save ₹{((product.compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)) - product.price).toLocaleString('en-IN')} ({product.discountPercent}%)
-                  </span>
-                )}
-              </div>
-              {!isPilotProduct && (
-                <p className="text-[11px] text-stone-500 mt-1">Inclusive of GST taxes. Free shipping on orders above ₹999 across India.</p>
-              )}
-            </div>
-
-            {/* Action CTAs: Add to Cart & Buy Now */}
-            <div className={`flex flex-col sm:flex-row gap-3 ${isPilotProduct ? '' : 'pt-2'}`}>
-              <button
-                type="button"
-                onClick={handleAddToCartWithVariants}
-                className="flex-1 py-3.5 px-6 rounded-xl bg-[#E8752A] hover:bg-[#D3631A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                <span>7. Add to Cart</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                className="flex-1 py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
-              >
-                <span>Buy Now</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Indian Delivery Check Section — hidden on the pilot product to keep everything above the fold */}
-            {!isPilotProduct && (
-            <div className="p-4 rounded-xl bg-stone-50 border border-stone-200/80 space-y-2.5">
-              <div className="flex items-center gap-2 text-xs font-bold text-stone-800">
-                <Truck className="w-4 h-4 text-[#0E4A93]" />
-                <span>Delivery Options &amp; Timelines</span>
-              </div>
-              
-              <form onSubmit={handleCheckPincode} className="flex gap-2">
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={pincode}
-                  onChange={(e) => {
-                    setPincode(e.target.value.replace(/\D/g, ''));
-                    setPincodeChecked(false);
-                  }}
-                  placeholder="Enter 6-digit Pincode"
-                  className="flex-1 px-3 py-1.5 text-xs bg-white rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
-                />
-                <button
-                  type="submit"
-                  disabled={checkingPincode}
-                  className="px-4 py-1.5 text-xs font-bold bg-stone-800 hover:bg-stone-950 text-white rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  {checkingPincode ? 'Checking...' : 'Check'}
-                </button>
-              </form>
-
-              {pincodeChecked && (
-                <div className="text-xs text-stone-700 space-y-1 pt-1 border-t border-stone-200">
-                  <div className="flex items-center gap-1.5 text-emerald-700 font-semibold">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Delivery available to PIN {pincode} in 3–5 business days</span>
-                  </div>
-                  <div className="text-[11px] text-stone-500">
-                    • Free doorstep delivery eligible (Order ₹999+)
-                    <br />
-                    • Multi-layer insured packaging with protective corner guards
-                  </div>
-                </div>
-              )}
-            </div>
-            )}
-
-          </div>
-
-        </div>
-        )}
 
         {/* ========================================================================= */}
         {/* 3. PRODUCT SPECIFICATIONS & APPLICATIONS                                  */}
@@ -1152,43 +571,8 @@ export const ProductDetailPage: React.FC = () => {
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             
-            {/* Left: Product Description & Craftsmanship — removed on the pilot product */}
-            {!isPilotProduct && (
-            <div className="lg:col-span-7 space-y-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
-                Product Description &amp; Craftsmanship
-              </h2>
-
-              <p className="text-sm text-stone-700 leading-relaxed">
-                {product.description} Handcrafted at Canvas India&apos;s dedicated print studio, each personalized piece undergoes meticulous color grading, museum-grade pigment printing, and professional artisan assembly. Whether displayed in your living room, gifted for an anniversary, or installed in modern corporate spaces, our prints are built to retain vibrancy and depth for over 50 years.
-              </p>
-
-              {/* Recommended Applications */}
-              <div className="space-y-3 pt-2">
-                <h3 className="font-bold text-sm text-stone-900">Recommended Applications &amp; Spaces:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {(product.applications || ['Living Room', 'Master Bedroom', 'Home Office', 'Dining Foyer', 'Corridors']).map((app) => (
-                    <span key={app} className="px-3 py-1 bg-stone-100 text-stone-700 rounded-full text-xs font-semibold border border-stone-200">
-                      {app}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-3 pt-2">
-                <h3 className="font-bold text-sm text-stone-900">Care &amp; Handling Instructions:</h3>
-                <ul className="text-xs text-stone-600 space-y-1.5 list-disc pl-5 leading-relaxed">
-                  <li>Dust gently with a clean, dry microfiber cloth. Avoid abrasive cleaning pads.</li>
-                  <li>For acrylic glass surfaces, use a soft cotton cloth lightly dampened with water.</li>
-                  <li>Keep out of continuous direct rainfall and excessive humidity.</li>
-                  <li>Pre-installed hanging hardware makes mounting effortless on standard wall hooks or screws.</li>
-                </ul>
-              </div>
-            </div>
-            )}
-
-            {/* Right: Specifications Table — takes the Description's place on the pilot product */}
-            <div className={isPilotProduct ? 'lg:col-span-12 space-y-4' : 'lg:col-span-5 space-y-4'}>
+            {/* Specifications Table */}
+            <div className="lg:col-span-12 space-y-4">
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
                 Product Specifications
               </h2>
