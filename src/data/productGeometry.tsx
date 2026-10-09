@@ -41,6 +41,7 @@ export interface ProductPanelGeometry {
   y: number; // 0..1 normalized top
   w: number; // 0..1 normalized width
   h: number; // 0..1 normalized height
+  orientation?: 'horizontal' | 'vertical';
   clipPath?: string;
   borderRadius?: string;
   widthRatio?: number;
@@ -55,6 +56,7 @@ export interface ProductLayoutDefinition {
   geometryType: CanvasGeometryType;
   panelsCount: number;
   photoCount: number;
+  orientation?: 'horizontal' | 'vertical';
   arrangement?: string;
   dimensionsSummary: string;
   aspectRatio: number; // width / height of the overall arrangement
@@ -93,7 +95,9 @@ export interface CanvasGeometryConfig {
   }) => React.ReactNode;
 }
 
-export const HEXAGON_CLIP_PATH = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';
+export const HEXAGON_HORIZONTAL_CLIP_PATH = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';
+export const HEXAGON_VERTICAL_CLIP_PATH = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
+export const HEXAGON_CLIP_PATH = HEXAGON_HORIZONTAL_CLIP_PATH;
 export const TRIANGLE_CLIP_PATH = 'polygon(50% 0%, 0% 100%, 100% 100%)';
 export const CIRCLE_CLIP_PATH = 'circle(50% at 50% 50%)';
 export const OVAL_CLIP_PATH = 'ellipse(50% 50% at 50% 50%)';
@@ -105,200 +109,1335 @@ export const HEART_CLIP_PATH = 'url(#acrylic-clip-shape-heart)';
 // ============================================================================
 
 export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[]> = {
-  // 1. Hexagon Prints (canvas-hexagon)
+// 1. Hexagon Prints (canvas-hexagon) - 15 Reference Layouts
   'canvas-hexagon': [
     {
-      id: 'hexagon-1',
+      id: 'hex-horizontal-single',
       productTypeId: 'canvas-hexagon',
-      name: 'Single Hexagon Print',
-      description: '1 Individual Honeycomb Canvas Panel',
+      name: 'Horizontal Hexagonal Prints',
+      description: '1 Horizontal Hexagon Canvas Print (10" × 8.5")',
       geometryType: 'hexagon',
       panelsCount: 1,
       photoCount: 1,
-      arrangement: 'single',
-      dimensionsSummary: '10" × 11.5"',
-      aspectRatio: 10 / 11.5,
-      overallWidthInches: 10,
-      overallHeightInches: 11.5,
-      price: 799.0,
-      acrylicPrice: 650.0,
-      panels: [
-        {
-          id: 'p0',
-          label: 'Hexagon',
-          dimension: '10" × 11.5"',
-          x: 0.08,
-          y: 0.05,
-          w: 0.84,
-          h: 0.90,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
-        }
-      ]
-    },
-    {
-      id: 'hexagon-2',
-      productTypeId: 'canvas-hexagon',
-      name: 'Hexagon Bundle of 2',
-      description: '2 Interlocking Honeycomb Canvas Panels',
-      geometryType: 'hexagon-cluster',
-      panelsCount: 2,
-      photoCount: 2,
-      arrangement: 'twoHex',
-      dimensionsSummary: '19" × 10" (2 Hexagons)',
-      aspectRatio: 1.9,
-      overallWidthInches: 19,
-      overallHeightInches: 10,
-      price: 1399.0,
-      acrylicPrice: 1150.0,
+      orientation: 'horizontal',
+      arrangement: 'hex-horizontal-single',
+      dimensionsSummary: '10" × 8.5" (1 Hexagon)',
+      aspectRatio: 1.1765,
+      overallWidthInches: 10.0,
+      overallHeightInches: 8.5,
+      price: 449.00,
+      acrylicPrice: 399.00,
+      diagramType: 'hex-horizontal-single' as any,
       panels: [
         {
           id: 'p0',
           label: 'Hexagon 1',
-          dimension: '10" × 11.5"',
-          x: 0.04,
-          y: 0.08,
-          w: 0.44,
-          h: 0.84,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.0000,
+          w: 1.0000,
+          h: 1.0000,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+      ]
+    },
+    {
+      id: 'hex-vertical-single',
+      productTypeId: 'canvas-hexagon',
+      name: 'Vertical Hexagonal Prints',
+      description: '1 Vertical Hexagon Canvas Print (8.5" × 10")',
+      geometryType: 'hexagon',
+      panelsCount: 1,
+      photoCount: 1,
+      orientation: 'vertical',
+      arrangement: 'hex-vertical-single',
+      dimensionsSummary: '8.5" × 10" (1 Hexagon)',
+      aspectRatio: 0.85,
+      overallWidthInches: 8.5,
+      overallHeightInches: 10.0,
+      price: 449.00,
+      acrylicPrice: 399.00,
+      diagramType: 'hex-vertical-single' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon 1',
+          dimension: '8.5" × 10"',
+          x: 0.0000,
+          y: 0.0000,
+          w: 1.0000,
+          h: 1.0000,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+      ]
+    },
+    {
+      id: 'hex-vertical-bundle-3',
+      productTypeId: 'canvas-hexagon',
+      name: 'Vertical Hexagonal Prints Bundle of 3',
+      description: '3-Piece Vertical Triangular Honeycomb Cluster (19" × 17.5")',
+      geometryType: 'hexagon-cluster',
+      panelsCount: 3,
+      photoCount: 3,
+      orientation: 'vertical',
+      arrangement: 'hex-vertical-bundle-3',
+      dimensionsSummary: '19" × 17.5" (3 Hexagons)',
+      aspectRatio: 1.0857,
+      overallWidthInches: 19.0,
+      overallHeightInches: 17.5,
+      price: 1782.00,
+      acrylicPrice: 1590.00,
+      diagramType: 'hex-vertical-bundle-3' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon 1',
+          dimension: '8.5" × 10"',
+          x: 0.2763,
+          y: 0.0000,
+          w: 0.4474,
+          h: 0.5714,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
         },
         {
           id: 'p1',
           label: 'Hexagon 2',
-          dimension: '10" × 11.5"',
-          x: 0.52,
-          y: 0.08,
-          w: 0.44,
-          h: 0.84,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
-        }
+          dimension: '8.5" × 10"',
+          x: 0.0000,
+          y: 0.4286,
+          w: 0.4474,
+          h: 0.5714,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p2',
+          label: 'Hexagon 3',
+          dimension: '8.5" × 10"',
+          x: 0.5526,
+          y: 0.4286,
+          w: 0.4474,
+          h: 0.5714,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
       ]
     },
     {
-      id: 'hexagon-3',
+      id: 'hex-horizontal-bundle-3',
       productTypeId: 'canvas-hexagon',
-      name: 'Hexagon Bundle of 3',
-      description: '3 Honeycomb Cluster Panels (1 Top + 2 Bottom)',
+      name: 'Horizontal Hexagonal Prints Bundle of 3',
+      description: '3-Piece Horizontal Triangular Cluster (27" × 13.75")',
       geometryType: 'hexagon-cluster',
       panelsCount: 3,
       photoCount: 3,
-      arrangement: 'threeHex',
+      orientation: 'horizontal',
+      arrangement: 'hex-horizontal-bundle-3',
       dimensionsSummary: '27" × 13.75" (3 Hexagons)',
-      aspectRatio: 1.45,
-      overallWidthInches: 27,
+      aspectRatio: 1.9636,
+      overallWidthInches: 27.0,
       overallHeightInches: 13.75,
-      price: 1899.0,
-      acrylicPrice: 1650.0,
+      price: 1782.00,
+      acrylicPrice: 1590.00,
+      diagramType: 'hex-horizontal-bundle-3' as any,
       panels: [
         {
           id: 'p0',
-          label: 'Hexagon 1 (Top)',
-          dimension: '10" × 11.5"',
-          x: 0.27,
-          y: 0.04,
-          w: 0.46,
-          h: 0.46,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
+          label: 'Hexagon 1',
+          dimension: '10" × 8.5"',
+          x: 0.3148,
+          y: 0.0000,
+          w: 0.3704,
+          h: 0.6182,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
         },
         {
           id: 'p1',
-          label: 'Hexagon 2 (Left)',
-          dimension: '10" × 11.5"',
-          x: 0.04,
-          y: 0.50,
-          w: 0.46,
-          h: 0.46,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
+          label: 'Hexagon 2',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.3818,
+          w: 0.3704,
+          h: 0.6182,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
         },
         {
           id: 'p2',
-          label: 'Hexagon 3 (Right)',
-          dimension: '10" × 11.5"',
-          x: 0.50,
-          y: 0.50,
-          w: 0.46,
-          h: 0.46,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
-        }
+          label: 'Hexagon 3',
+          dimension: '10" × 8.5"',
+          x: 0.6296,
+          y: 0.3818,
+          w: 0.3704,
+          h: 0.6182,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
       ]
     },
     {
-      id: 'hexagon-4',
+      id: 'hex-horizontal-bundle-3-alt',
       productTypeId: 'canvas-hexagon',
-      name: 'Hexagon Bundle of 4',
-      description: '4-Piece Diamond Honeycomb Cluster',
+      name: 'Horizontal Hexagonal Prints Bundle of 3 (Alternate)',
+      description: '3-Piece Right-Wing Honeycomb Arrangement (18.5" × 19")',
       geometryType: 'hexagon-cluster',
-      panelsCount: 4,
-      photoCount: 4,
-      arrangement: 'fourHex',
-      dimensionsSummary: '27" × 19" (4 Hexagons)',
-      aspectRatio: 1.42,
-      overallWidthInches: 27,
-      overallHeightInches: 19,
-      price: 2399.0,
-      acrylicPrice: 2150.0,
+      panelsCount: 3,
+      photoCount: 3,
+      orientation: 'horizontal',
+      arrangement: 'hex-horizontal-bundle-3-alt',
+      dimensionsSummary: '18.5" × 19" (3 Hexagons)',
+      aspectRatio: 0.9737,
+      overallWidthInches: 18.5,
+      overallHeightInches: 19.0,
+      price: 1782.00,
+      acrylicPrice: 1590.00,
+      diagramType: 'hex-horizontal-bundle-3-alt' as any,
       panels: [
         {
           id: 'p0',
-          label: 'Hexagon 1 (Top)',
-          dimension: '10" × 11.5"',
-          x: 0.27,
-          y: 0.03,
-          w: 0.46,
-          h: 0.45,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
+          label: 'Hexagon 1',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.0263,
+          w: 0.5405,
+          h: 0.4474,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
         },
         {
           id: 'p1',
-          label: 'Hexagon 2 (Left)',
-          dimension: '10" × 11.5"',
-          x: 0.04,
-          y: 0.275,
-          w: 0.46,
-          h: 0.45,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
+          label: 'Hexagon 2',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.5263,
+          w: 0.5405,
+          h: 0.4474,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
         },
         {
           id: 'p2',
-          label: 'Hexagon 3 (Right)',
-          dimension: '10" × 11.5"',
-          x: 0.50,
-          y: 0.275,
-          w: 0.46,
-          h: 0.45,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
+          label: 'Hexagon 3',
+          dimension: '10" × 8.5"',
+          x: 0.4595,
+          y: 0.2763,
+          w: 0.5405,
+          h: 0.4474,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+      ]
+    },
+    {
+      id: 'hex-horizontal-bundle-4',
+      productTypeId: 'canvas-hexagon',
+      name: 'Horizontal Hexagonal Prints Bundle of 4',
+      description: '4-Piece Diamond Honeycomb Cluster (27" × 19")',
+      geometryType: 'hexagon-cluster',
+      panelsCount: 4,
+      photoCount: 4,
+      orientation: 'horizontal',
+      arrangement: 'hex-horizontal-bundle-4',
+      dimensionsSummary: '27" × 19" (4 Hexagons)',
+      aspectRatio: 1.4211,
+      overallWidthInches: 27.0,
+      overallHeightInches: 19.0,
+      price: 2377.00,
+      acrylicPrice: 2090.00,
+      diagramType: 'hex-horizontal-bundle-4' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon 1',
+          dimension: '10" × 8.5"',
+          x: 0.3148,
+          y: 0.0263,
+          w: 0.3704,
+          h: 0.4474,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p1',
+          label: 'Hexagon 2',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.2763,
+          w: 0.3704,
+          h: 0.4474,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p2',
+          label: 'Hexagon 3',
+          dimension: '10" × 8.5"',
+          x: 0.6296,
+          y: 0.2763,
+          w: 0.3704,
+          h: 0.4474,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
         },
         {
           id: 'p3',
-          label: 'Hexagon 4 (Bottom)',
-          dimension: '10" × 11.5"',
-          x: 0.27,
-          y: 0.52,
-          w: 0.46,
-          h: 0.45,
-          clipPath: HEXAGON_CLIP_PATH,
-          widthRatio: 10,
-          heightRatio: 11.5
-        }
+          label: 'Hexagon 4',
+          dimension: '10" × 8.5"',
+          x: 0.3148,
+          y: 0.5263,
+          w: 0.3704,
+          h: 0.4474,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
       ]
-    }
+    },
+    {
+      id: 'hex-vertical-bundle-4',
+      productTypeId: 'canvas-hexagon',
+      name: 'Vertical Hexagonal Prints Bundle of 4',
+      description: '4-Piece Vertical Diamond Honeycomb Cluster (19" × 27")',
+      geometryType: 'hexagon-cluster',
+      panelsCount: 4,
+      photoCount: 4,
+      orientation: 'vertical',
+      arrangement: 'hex-vertical-bundle-4',
+      dimensionsSummary: '19" × 27" (4 Hexagons)',
+      aspectRatio: 0.7037,
+      overallWidthInches: 19.0,
+      overallHeightInches: 27.0,
+      price: 2377.00,
+      acrylicPrice: 2090.00,
+      diagramType: 'hex-vertical-bundle-4' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon 1',
+          dimension: '8.5" × 10"',
+          x: 0.2763,
+          y: 0.0000,
+          w: 0.4474,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p1',
+          label: 'Hexagon 2',
+          dimension: '8.5" × 10"',
+          x: 0.0000,
+          y: 0.3148,
+          w: 0.4474,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p2',
+          label: 'Hexagon 3',
+          dimension: '8.5" × 10"',
+          x: 0.5526,
+          y: 0.3148,
+          w: 0.4474,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p3',
+          label: 'Hexagon 4',
+          dimension: '8.5" × 10"',
+          x: 0.2763,
+          y: 0.6296,
+          w: 0.4474,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+      ]
+    },
+    {
+      id: 'hex-horizontal-bundle-5',
+      productTypeId: 'canvas-hexagon',
+      name: 'Horizontal Hexagonal Prints Bundle of 5',
+      description: '5-Piece Center-Cross Honeycomb Display (27" × 19")',
+      geometryType: 'hexagon-cluster',
+      panelsCount: 5,
+      photoCount: 5,
+      orientation: 'horizontal',
+      arrangement: 'hex-horizontal-bundle-5',
+      dimensionsSummary: '27" × 19" (5 Hexagons)',
+      aspectRatio: 1.4211,
+      overallWidthInches: 27.0,
+      overallHeightInches: 19.0,
+      price: 2972.00,
+      acrylicPrice: 2590.00,
+      diagramType: 'hex-horizontal-bundle-5' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon 1',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.0263,
+          w: 0.3704,
+          h: 0.4474,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p1',
+          label: 'Hexagon 2',
+          dimension: '10" × 8.5"',
+          x: 0.6296,
+          y: 0.0263,
+          w: 0.3704,
+          h: 0.4474,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p2',
+          label: 'Hexagon 3',
+          dimension: '10" × 8.5"',
+          x: 0.3148,
+          y: 0.2763,
+          w: 0.3704,
+          h: 0.4474,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p3',
+          label: 'Hexagon 4',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.5263,
+          w: 0.3704,
+          h: 0.4474,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p4',
+          label: 'Hexagon 5',
+          dimension: '10" × 8.5"',
+          x: 0.6296,
+          y: 0.5263,
+          w: 0.3704,
+          h: 0.4474,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+      ]
+    },
+    {
+      id: 'hex-horizontal-bundle-5-alt',
+      productTypeId: 'canvas-hexagon',
+      name: 'Horizontal Hexagonal Prints Bundle of 5 (Alternate)',
+      description: '5-Piece U-Shape / Horseshoe Honeycomb Display (27" × 22.25")',
+      geometryType: 'hexagon-cluster',
+      panelsCount: 5,
+      photoCount: 5,
+      orientation: 'horizontal',
+      arrangement: 'hex-horizontal-bundle-5-alt',
+      dimensionsSummary: '27" × 22.25" (5 Hexagons)',
+      aspectRatio: 1.2135,
+      overallWidthInches: 27.0,
+      overallHeightInches: 22.25,
+      price: 2972.00,
+      acrylicPrice: 2590.00,
+      diagramType: 'hex-horizontal-bundle-5-alt' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon 1',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.3704,
+          h: 0.3820,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p1',
+          label: 'Hexagon 2',
+          dimension: '10" × 8.5"',
+          x: 0.6296,
+          y: 0.0000,
+          w: 0.3704,
+          h: 0.3820,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p2',
+          label: 'Hexagon 3',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.4270,
+          w: 0.3704,
+          h: 0.3820,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p3',
+          label: 'Hexagon 4',
+          dimension: '10" × 8.5"',
+          x: 0.6296,
+          y: 0.4270,
+          w: 0.3704,
+          h: 0.3820,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p4',
+          label: 'Hexagon 5',
+          dimension: '10" × 8.5"',
+          x: 0.3148,
+          y: 0.6180,
+          w: 0.3704,
+          h: 0.3820,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+      ]
+    },
+    {
+      id: 'hex-horizontal-bundle-7',
+      productTypeId: 'canvas-hexagon',
+      name: 'Horizontal Hexagonal Prints Bundle of 7',
+      description: '7-Piece Flower Rosette Honeycomb Display (27" × 27.5")',
+      geometryType: 'hexagon-cluster',
+      panelsCount: 7,
+      photoCount: 7,
+      orientation: 'horizontal',
+      arrangement: 'hex-horizontal-bundle-7',
+      dimensionsSummary: '27" × 27.5" (7 Hexagons)',
+      aspectRatio: 0.9818,
+      overallWidthInches: 27.0,
+      overallHeightInches: 27.5,
+      price: 4161.00,
+      acrylicPrice: 3690.00,
+      diagramType: 'hex-horizontal-bundle-7' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon 1',
+          dimension: '10" × 8.5"',
+          x: 0.3148,
+          y: 0.0000,
+          w: 0.3704,
+          h: 0.3091,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p1',
+          label: 'Hexagon 2',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.1727,
+          w: 0.3704,
+          h: 0.3091,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p2',
+          label: 'Hexagon 3',
+          dimension: '10" × 8.5"',
+          x: 0.6296,
+          y: 0.1727,
+          w: 0.3704,
+          h: 0.3091,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p3',
+          label: 'Hexagon 4',
+          dimension: '10" × 8.5"',
+          x: 0.3148,
+          y: 0.3455,
+          w: 0.3704,
+          h: 0.3091,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p4',
+          label: 'Hexagon 5',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.5182,
+          w: 0.3704,
+          h: 0.3091,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p5',
+          label: 'Hexagon 6',
+          dimension: '10" × 8.5"',
+          x: 0.6296,
+          y: 0.5182,
+          w: 0.3704,
+          h: 0.3091,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p6',
+          label: 'Hexagon 7',
+          dimension: '10" × 8.5"',
+          x: 0.3148,
+          y: 0.6909,
+          w: 0.3704,
+          h: 0.3091,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+      ]
+    },
+    {
+      id: 'hex-vertical-bundle-7',
+      productTypeId: 'canvas-hexagon',
+      name: 'Vertical Hexagonal Prints Bundle of 7',
+      description: '7-Piece Vertical Rosette Honeycomb Display (29.5" × 27")',
+      geometryType: 'hexagon-cluster',
+      panelsCount: 7,
+      photoCount: 7,
+      orientation: 'vertical',
+      arrangement: 'hex-vertical-bundle-7',
+      dimensionsSummary: '29.5" × 27" (7 Hexagons)',
+      aspectRatio: 1.0926,
+      overallWidthInches: 29.5,
+      overallHeightInches: 27.0,
+      price: 4161.00,
+      acrylicPrice: 3690.00,
+      diagramType: 'hex-vertical-bundle-7' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon 1',
+          dimension: '8.5" × 10"',
+          x: 0.1780,
+          y: 0.0000,
+          w: 0.2881,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p1',
+          label: 'Hexagon 2',
+          dimension: '8.5" × 10"',
+          x: 0.5339,
+          y: 0.0000,
+          w: 0.2881,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p2',
+          label: 'Hexagon 3',
+          dimension: '8.5" × 10"',
+          x: 0.0000,
+          y: 0.3148,
+          w: 0.2881,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p3',
+          label: 'Hexagon 4',
+          dimension: '8.5" × 10"',
+          x: 0.3559,
+          y: 0.3148,
+          w: 0.2881,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p4',
+          label: 'Hexagon 5',
+          dimension: '8.5" × 10"',
+          x: 0.7119,
+          y: 0.3148,
+          w: 0.2881,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p5',
+          label: 'Hexagon 6',
+          dimension: '8.5" × 10"',
+          x: 0.1780,
+          y: 0.6296,
+          w: 0.2881,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p6',
+          label: 'Hexagon 7',
+          dimension: '8.5" × 10"',
+          x: 0.5339,
+          y: 0.6296,
+          w: 0.2881,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+      ]
+    },
+    {
+      id: 'hex-horizontal-bundle-8',
+      productTypeId: 'canvas-hexagon',
+      name: 'Horizontal Hexagonal Prints Bundle of 8',
+      description: '8-Piece 3-Column Honeycomb Display (27" × 27.5")',
+      geometryType: 'hexagon-cluster',
+      panelsCount: 8,
+      photoCount: 8,
+      orientation: 'horizontal',
+      arrangement: 'hex-horizontal-bundle-8',
+      dimensionsSummary: '27" × 27.5" (8 Hexagons)',
+      aspectRatio: 0.9818,
+      overallWidthInches: 27.0,
+      overallHeightInches: 27.5,
+      price: 4756.00,
+      acrylicPrice: 4190.00,
+      diagramType: 'hex-horizontal-bundle-8' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon 1',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.3704,
+          h: 0.3091,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p1',
+          label: 'Hexagon 2',
+          dimension: '10" × 8.5"',
+          x: 0.6296,
+          y: 0.0000,
+          w: 0.3704,
+          h: 0.3091,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p2',
+          label: 'Hexagon 3',
+          dimension: '10" × 8.5"',
+          x: 0.3148,
+          y: 0.1727,
+          w: 0.3704,
+          h: 0.3091,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p3',
+          label: 'Hexagon 4',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.3455,
+          w: 0.3704,
+          h: 0.3091,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p4',
+          label: 'Hexagon 5',
+          dimension: '10" × 8.5"',
+          x: 0.6296,
+          y: 0.3455,
+          w: 0.3704,
+          h: 0.3091,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p5',
+          label: 'Hexagon 6',
+          dimension: '10" × 8.5"',
+          x: 0.3148,
+          y: 0.5182,
+          w: 0.3704,
+          h: 0.3091,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p6',
+          label: 'Hexagon 7',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.6909,
+          w: 0.3704,
+          h: 0.3091,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p7',
+          label: 'Hexagon 8',
+          dimension: '10" × 8.5"',
+          x: 0.6296,
+          y: 0.6909,
+          w: 0.3704,
+          h: 0.3091,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+      ]
+    },
+    {
+      id: 'hex-vertical-bundle-8',
+      productTypeId: 'canvas-hexagon',
+      name: 'Vertical Hexagonal Prints Bundle of 8',
+      description: '8-Piece 3-Row Honeycomb Display (29.5" × 27")',
+      geometryType: 'hexagon-cluster',
+      panelsCount: 8,
+      photoCount: 8,
+      orientation: 'vertical',
+      arrangement: 'hex-vertical-bundle-8',
+      dimensionsSummary: '29.5" × 27" (8 Hexagons)',
+      aspectRatio: 1.0926,
+      overallWidthInches: 29.5,
+      overallHeightInches: 27.0,
+      price: 4756.00,
+      acrylicPrice: 4190.00,
+      diagramType: 'hex-vertical-bundle-8' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon 1',
+          dimension: '8.5" × 10"',
+          x: 0.0000,
+          y: 0.0000,
+          w: 0.2881,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p1',
+          label: 'Hexagon 2',
+          dimension: '8.5" × 10"',
+          x: 0.3559,
+          y: 0.0000,
+          w: 0.2881,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p2',
+          label: 'Hexagon 3',
+          dimension: '8.5" × 10"',
+          x: 0.7119,
+          y: 0.0000,
+          w: 0.2881,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p3',
+          label: 'Hexagon 4',
+          dimension: '8.5" × 10"',
+          x: 0.1780,
+          y: 0.3148,
+          w: 0.2881,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p4',
+          label: 'Hexagon 5',
+          dimension: '8.5" × 10"',
+          x: 0.5339,
+          y: 0.3148,
+          w: 0.2881,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p5',
+          label: 'Hexagon 6',
+          dimension: '8.5" × 10"',
+          x: 0.0000,
+          y: 0.6296,
+          w: 0.2881,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p6',
+          label: 'Hexagon 7',
+          dimension: '8.5" × 10"',
+          x: 0.3559,
+          y: 0.6296,
+          w: 0.2881,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p7',
+          label: 'Hexagon 8',
+          dimension: '8.5" × 10"',
+          x: 0.7119,
+          y: 0.6296,
+          w: 0.2881,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+      ]
+    },
+    {
+      id: 'hex-vertical-bundle-10',
+      productTypeId: 'canvas-hexagon',
+      name: 'Vertical Hexagonal Prints Bundle of 10',
+      description: '10-Piece 3-Row Extended Honeycomb Display (40" × 27")',
+      geometryType: 'hexagon-cluster',
+      panelsCount: 10,
+      photoCount: 10,
+      orientation: 'vertical',
+      arrangement: 'hex-vertical-bundle-10',
+      dimensionsSummary: '40" × 27" (10 Hexagons)',
+      aspectRatio: 1.4815,
+      overallWidthInches: 40.0,
+      overallHeightInches: 27.0,
+      price: 5945.00,
+      acrylicPrice: 5190.00,
+      diagramType: 'hex-vertical-bundle-10' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon 1',
+          dimension: '8.5" × 10"',
+          x: 0.1313,
+          y: 0.0000,
+          w: 0.2125,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p1',
+          label: 'Hexagon 2',
+          dimension: '8.5" × 10"',
+          x: 0.3937,
+          y: 0.0000,
+          w: 0.2125,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p2',
+          label: 'Hexagon 3',
+          dimension: '8.5" × 10"',
+          x: 0.6562,
+          y: 0.0000,
+          w: 0.2125,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p3',
+          label: 'Hexagon 4',
+          dimension: '8.5" × 10"',
+          x: 0.0000,
+          y: 0.3148,
+          w: 0.2125,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p4',
+          label: 'Hexagon 5',
+          dimension: '8.5" × 10"',
+          x: 0.2625,
+          y: 0.3148,
+          w: 0.2125,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p5',
+          label: 'Hexagon 6',
+          dimension: '8.5" × 10"',
+          x: 0.5250,
+          y: 0.3148,
+          w: 0.2125,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p6',
+          label: 'Hexagon 7',
+          dimension: '8.5" × 10"',
+          x: 0.7875,
+          y: 0.3148,
+          w: 0.2125,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p7',
+          label: 'Hexagon 8',
+          dimension: '8.5" × 10"',
+          x: 0.1313,
+          y: 0.6296,
+          w: 0.2125,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p8',
+          label: 'Hexagon 9',
+          dimension: '8.5" × 10"',
+          x: 0.3937,
+          y: 0.6296,
+          w: 0.2125,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+        {
+          id: 'p9',
+          label: 'Hexagon 10',
+          dimension: '8.5" × 10"',
+          x: 0.6562,
+          y: 0.6296,
+          w: 0.2125,
+          h: 0.3704,
+          orientation: 'vertical',
+          clipPath: HEXAGON_VERTICAL_CLIP_PATH,
+          widthRatio: 8.5,
+          heightRatio: 10.0
+        },
+      ]
+    },
+    {
+      id: 'hex-horizontal-bundle-10',
+      productTypeId: 'canvas-hexagon',
+      name: 'Horizontal Hexagonal Prints Bundle of 10',
+      description: '10-Piece 3-Column Extended Honeycomb Display (27" × 40")',
+      geometryType: 'hexagon-cluster',
+      panelsCount: 10,
+      photoCount: 10,
+      orientation: 'horizontal',
+      arrangement: 'hex-horizontal-bundle-10',
+      dimensionsSummary: '27" × 40" (10 Hexagons)',
+      aspectRatio: 0.675,
+      overallWidthInches: 27.0,
+      overallHeightInches: 40.0,
+      price: 5945.00,
+      acrylicPrice: 5190.00,
+      diagramType: 'hex-horizontal-bundle-10' as any,
+      panels: [
+        {
+          id: 'p0',
+          label: 'Hexagon 1',
+          dimension: '10" × 8.5"',
+          x: 0.3148,
+          y: 0.0000,
+          w: 0.3704,
+          h: 0.2125,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p1',
+          label: 'Hexagon 2',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.1313,
+          w: 0.3704,
+          h: 0.2125,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p2',
+          label: 'Hexagon 3',
+          dimension: '10" × 8.5"',
+          x: 0.6296,
+          y: 0.1313,
+          w: 0.3704,
+          h: 0.2125,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p3',
+          label: 'Hexagon 4',
+          dimension: '10" × 8.5"',
+          x: 0.3148,
+          y: 0.2625,
+          w: 0.3704,
+          h: 0.2125,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p4',
+          label: 'Hexagon 5',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.3937,
+          w: 0.3704,
+          h: 0.2125,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p5',
+          label: 'Hexagon 6',
+          dimension: '10" × 8.5"',
+          x: 0.6296,
+          y: 0.3937,
+          w: 0.3704,
+          h: 0.2125,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p6',
+          label: 'Hexagon 7',
+          dimension: '10" × 8.5"',
+          x: 0.3148,
+          y: 0.5250,
+          w: 0.3704,
+          h: 0.2125,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p7',
+          label: 'Hexagon 8',
+          dimension: '10" × 8.5"',
+          x: 0.0000,
+          y: 0.6562,
+          w: 0.3704,
+          h: 0.2125,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p8',
+          label: 'Hexagon 9',
+          dimension: '10" × 8.5"',
+          x: 0.6296,
+          y: 0.6562,
+          w: 0.3704,
+          h: 0.2125,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+        {
+          id: 'p9',
+          label: 'Hexagon 10',
+          dimension: '10" × 8.5"',
+          x: 0.3148,
+          y: 0.7875,
+          w: 0.3704,
+          h: 0.2125,
+          orientation: 'horizontal',
+          clipPath: HEXAGON_HORIZONTAL_CLIP_PATH,
+          widthRatio: 10.0,
+          heightRatio: 8.5
+        },
+      ]
+    },
   ],
 
   // 2. Wall Display (canvas-wall-art)
@@ -6048,6 +7187,17 @@ export function getProductLayout(productTypeId: string, layoutId?: string): Prod
     if (lNorm === normKey) return true;
     if ((l as any).diagramType === layoutId) return true;
     if (layoutId.startsWith(l.id) || l.id.startsWith(layoutId)) return true;
+    // Map legacy hexagon IDs
+    if (layoutId === 'hexagon-1' && l.id === 'hex-horizontal-single') return true;
+    if (layoutId === 'hexagon-2' && l.id === 'hex-horizontal-bundle-3') return true;
+    if (layoutId === 'hexagon-3' && l.id === 'hex-horizontal-bundle-3') return true;
+    if (layoutId === 'hexagon-4' && l.id === 'hex-horizontal-bundle-4') return true;
+    if (layoutId === 'shape-hexagon-10x10' && l.id === 'hex-horizontal-single') return true;
+    if (layoutId === 'hexagon-1p-10x11' && l.id === 'hex-horizontal-single') return true;
+    if (layoutId === 'hexagon-2p-19x10' && l.id === 'hex-horizontal-bundle-3') return true;
+    if (layoutId === 'hexagon-3p-27x13.75' && l.id === 'hex-horizontal-bundle-3') return true;
+    if (layoutId === 'hexagon-4p-27x19' && l.id === 'hex-horizontal-bundle-4') return true;
+
     // Map legacy / alternative IDs for Mosaic
     if (normKey.includes('4x4') && lNorm.includes('4x4')) return true;
     if (normKey.includes('5x5') && lNorm.includes('5x5')) return true;
@@ -6066,10 +7216,10 @@ export function getProductLayout(productTypeId: string, layoutId?: string): Prod
  * Adjacent hexagons lock together along shared edges.
  */
 export function getHexagonClusterLayout(count: number): HexPanelLayout[] {
-  const key = count === 2 ? 'hexagon-2' : count === 3 ? 'hexagon-3' : count === 4 ? 'hexagon-4' : 'hexagon-1';
-  const layoutDef = PRODUCT_LAYOUT_DEFINITIONS['canvas-hexagon']?.find((l) => l.id === key);
-  if (layoutDef) {
-    return layoutDef.panels.map((p) => ({ x: p.x, y: p.y, w: p.w, h: p.h }));
+  const layouts = PRODUCT_LAYOUT_DEFINITIONS['canvas-hexagon'] || [];
+  const match = layouts.find((l) => l.panelsCount === count) || layouts[0];
+  if (match) {
+    return match.panels.map((p) => ({ x: p.x, y: p.y, w: p.w, h: p.h }));
   }
   if (count === 2) {
     const w = 0.44;
@@ -6217,7 +7367,17 @@ function renderPencilFace(cx: number, cy: number, h: number): React.ReactNode {
 /**
  * Generates regular hexagon polygon points string for SVG.
  */
-function hexPolygonPoints(cx: number, cy: number, w: number, h: number): string {
+function hexPolygonPoints(cx: number, cy: number, w: number, h: number, orientation?: 'horizontal' | 'vertical'): string {
+  if (orientation === 'vertical') {
+    return [
+      `${cx},${cy - h * 0.5}`,
+      `${cx + w * 0.5},${cy - h * 0.25}`,
+      `${cx + w * 0.5},${cy + h * 0.25}`,
+      `${cx},${cy + h * 0.5}`,
+      `${cx - w * 0.5},${cy + h * 0.25}`,
+      `${cx - w * 0.5},${cy - h * 0.25}`
+    ].join(' ');
+  }
   return [
     `${cx - w * 0.25},${cy - h * 0.5}`,
     `${cx + w * 0.25},${cy - h * 0.5}`,
@@ -6243,22 +7403,36 @@ export function renderProductLayoutDiagram(
 
   // 1. Hexagon Prints (true hexagon polygons with pencil faces)
   if (layout.geometryType === 'hexagon' || layout.geometryType === 'hexagon-cluster') {
+    const padding = 10;
+    const availW = viewBoxW - padding * 2;
+    const availH = viewBoxH - padding * 2;
+    const gridAspect = Math.max(0.65, Math.min(2.5, layout.aspectRatio || 1.15));
+    let drawW = availW;
+    let drawH = drawW / gridAspect;
+    if (drawH > availH) {
+      drawH = availH;
+      drawW = drawH * gridAspect;
+    }
+    const startX = (viewBoxW - drawW) / 2;
+    const startY = (viewBoxH - drawH) / 2;
+
     return (
       <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} className="w-full h-full max-h-24">
         {layout.panels.map((p, idx) => {
-          const cx = (p.x + p.w / 2) * viewBoxW;
-          const cy = (p.y + p.h / 2) * viewBoxH;
-          const w = p.w * viewBoxW;
-          const h = p.h * viewBoxH;
+          const cx = startX + (p.x + p.w / 2) * drawW;
+          const cy = startY + (p.y + p.h / 2) * drawH;
+          const w = p.w * drawW;
+          const h = p.h * drawH;
+          const isVert = p.orientation === 'vertical' || layout.orientation === 'vertical';
           return (
             <g key={p.id || idx}>
               <polygon
-                points={hexPolygonPoints(cx, cy, w, h)}
+                points={hexPolygonPoints(cx, cy, w, h, isVert ? 'vertical' : 'horizontal')}
                 fill={fillColor}
                 stroke={strokeColor}
                 strokeWidth="1.6"
               />
-              {renderPencilFace(cx, cy, h)}
+              {renderPencilFace(cx, cy, Math.min(w, h))}
             </g>
           );
         })}
@@ -6548,6 +7722,7 @@ export function getCanvasProductGeometry(
   if (normType.includes('hexagon')) {
     const layoutDef = getProductLayout('canvas-hexagon', sizeOption?.diagramType || sizeOption?.id);
     const hexLayout = layoutDef.panels.map((p) => ({ x: p.x, y: p.y, w: p.w, h: p.h }));
+    const isVert = layoutDef.orientation === 'vertical';
     return {
       productTypeId,
       geometryType: layoutDef.geometryType,
@@ -6555,7 +7730,7 @@ export function getCanvasProductGeometry(
       aspectRatio: layoutDef.aspectRatio,
       widthInches: layoutDef.overallWidthInches,
       heightInches: layoutDef.overallHeightInches,
-      clipPath: HEXAGON_CLIP_PATH,
+      clipPath: isVert ? HEXAGON_VERTICAL_CLIP_PATH : HEXAGON_HORIZONTAL_CLIP_PATH,
       borderRadius: '0px',
       isMultiPanel: layoutDef.panelsCount > 1,
       panelsCount: layoutDef.panelsCount,

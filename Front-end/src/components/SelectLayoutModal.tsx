@@ -45,6 +45,17 @@ const SPLIT_PANEL_FILTERS: Array<{ id: string; label: string; min?: number; max?
   { id: '6_PLUS', label: '6+ Panels', min: 6, max: 99 }
 ];
 
+const HEXAGON_PANEL_FILTERS: Array<{ id: string; label: string; min?: number; max?: number }> = [
+  { id: 'ALL', label: 'All' },
+  { id: '1', label: 'Single', min: 1, max: 1 },
+  { id: '3', label: '3 Panels', min: 3, max: 3 },
+  { id: '4', label: '4 Panels', min: 4, max: 4 },
+  { id: '5', label: '5 Panels', min: 5, max: 5 },
+  { id: '7', label: '7 Panels', min: 7, max: 7 },
+  { id: '8', label: '8 Panels', min: 8, max: 8 },
+  { id: '10', label: '10 Panels', min: 10, max: 10 }
+];
+
 export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
   isOpen,
   onClose,
@@ -65,6 +76,7 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
   const isCollageProduct = productId === 'canvas-collage' || productLayouts.some((l) => Boolean(l.collageCategory));
   const isWallDisplay = productId.includes('wall') || productId.includes('display');
   const isSplitCanvas = productId.includes('split');
+  const isHexagon = productId.includes('hexagon');
 
   // Category state for Photo Collage
   const [selectedCategory, setSelectedCategory] = useState<'landscape' | 'panoramic' | 'portrait' | 'square'>(() => {
@@ -144,8 +156,19 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
         return true;
       });
     }
+    if (isHexagon) {
+      if (panelFilter === 'ALL') return productLayouts;
+      const f = HEXAGON_PANEL_FILTERS.find((filter) => filter.id === panelFilter);
+      if (!f) return productLayouts;
+      return productLayouts.filter((l) => {
+        if (f.min !== undefined && f.max !== undefined) {
+          return l.panelsCount >= f.min && l.panelsCount <= f.max;
+        }
+        return true;
+      });
+    }
     return productLayouts;
-  }, [isCollageProduct, isWallDisplay, isSplitCanvas, productLayouts, selectedCategory, panelFilter]);
+  }, [isCollageProduct, isWallDisplay, isSplitCanvas, isHexagon, productLayouts, selectedCategory, panelFilter]);
 
   const currentSelected = useMemo(() => {
     return productLayouts.find((l) => l.id === selectedId) || filteredLayouts[0] || productLayouts[0];
@@ -254,10 +277,10 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
               </span>
             </div>
 
-            {/* Panel Count Filters for Wall Display and Split Canvas */}
-            {(isWallDisplay || isSplitCanvas) && (
+            {/* Panel Count Filters for Wall Display, Split Canvas, and Hexagon Prints */}
+            {(isWallDisplay || isSplitCanvas || isHexagon) && (
               <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 mb-3.5 no-scrollbar">
-                {(isWallDisplay ? WALL_PANEL_FILTERS : SPLIT_PANEL_FILTERS).map((filter) => {
+                {(isWallDisplay ? WALL_PANEL_FILTERS : isSplitCanvas ? SPLIT_PANEL_FILTERS : HEXAGON_PANEL_FILTERS).map((filter) => {
                   const isActive = panelFilter === filter.id;
                   const count =
                     filter.id === 'ALL'

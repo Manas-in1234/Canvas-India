@@ -88,6 +88,8 @@ import {
   getCanvasProductGeometry,
   getHexagonClusterLayout,
   HEXAGON_CLIP_PATH,
+  HEXAGON_HORIZONTAL_CLIP_PATH,
+  HEXAGON_VERTICAL_CLIP_PATH,
   getProductLayouts,
   getProductLayout,
   renderProductLayoutDiagram,
@@ -3418,92 +3420,135 @@ export const CanvasCustomizerPage: React.FC = () => {
     const layout = getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
     const hexPanels = layout.panels;
     const count = hexPanels.length;
-    const hexClip = HEXAGON_CLIP_PATH;
 
     return (
-      <div className="w-full max-w-xl mx-auto my-auto p-4 flex flex-col items-center select-none">
-        <div
-          className="relative w-full flex items-center justify-center"
-          style={{
-            aspectRatio: String(layout.aspectRatio),
-            maxHeight: '56vh'
-          }}
-        >
-          {hexPanels.map((pSpec, idx) => {
-            const panel = panelImages[idx] || createDefaultPanel();
-            const isTarget = activePanelIndex === idx;
+      <div className="relative flex flex-col items-center select-none w-full my-auto p-4">
+        {/* Ruler Top */}
+        <div className="w-full flex items-center justify-center py-1 mb-1 max-w-[28rem] relative">
+          <div className="absolute inset-x-0 h-px border-b border-dashed border-stone-300" />
+          <div className="relative bg-white px-2 py-0.5 rounded-full border border-stone-200 text-[10px] font-bold text-stone-600 shadow-2xs z-10">
+            {layout.overallWidthInches} inch ({layout.name})
+          </div>
+        </div>
 
-            return (
-              <div
-                key={pSpec.id || idx}
-                style={{
-                  position: 'absolute',
-                  left: `${pSpec.x * 100}%`,
-                  top: `${pSpec.y * 100}%`,
-                  width: `${pSpec.w * 100}%`,
-                  height: `${pSpec.h * 100}%`,
-                  clipPath: hexClip,
-                  WebkitClipPath: hexClip,
-                  filter: 'drop-shadow(0 12px 20px rgba(0,0,0,0.3)) drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
-                }}
-                className={`relative bg-white cursor-pointer group transition-all ${
-                  isTarget ? 'z-20 ring-2 ring-[#0E4A93]' : 'hover:brightness-95'
-                }`}
-                {...panelHandlers(idx)}
-                ref={registerWheelRef(idx)}
-              >
-                {/* 3D Bevel inner edge */}
+        <div className="relative flex items-center justify-center w-full">
+          {/* Ruler Left */}
+          <div className="absolute -left-10 inset-y-0 flex flex-col items-center justify-center">
+            <div className="absolute inset-y-0 w-px border-r border-dashed border-stone-300" />
+            <div className="relative bg-white px-1.5 py-0.5 rounded-full border border-stone-200 text-[9px] font-bold text-stone-600 shadow-2xs rotate-[-90deg] whitespace-nowrap z-10">
+              {layout.overallHeightInches} inch
+            </div>
+          </div>
+
+          <div
+            className="relative w-full max-w-2xl"
+            style={{
+              aspectRatio: String(layout.aspectRatio),
+              width: `min(34rem, calc(54vh * ${layout.aspectRatio}))`,
+              maxHeight: '56vh'
+            }}
+          >
+            {hexPanels.map((pSpec, idx) => {
+              const panel = panelImages[idx] || createDefaultPanel();
+              const isTarget = activePanelIndex === idx;
+              const isVertical = pSpec.orientation === 'vertical' || layout.orientation === 'vertical';
+              const hexClip = isVertical ? HEXAGON_VERTICAL_CLIP_PATH : HEXAGON_HORIZONTAL_CLIP_PATH;
+
+              return (
                 <div
-                  className="absolute inset-0 pointer-events-none z-10"
+                  key={pSpec.id || idx}
                   style={{
+                    position: 'absolute',
+                    left: `${pSpec.x * 100}%`,
+                    top: `${pSpec.y * 100}%`,
+                    width: `${pSpec.w * 100}%`,
+                    height: `${pSpec.h * 100}%`,
                     clipPath: hexClip,
                     WebkitClipPath: hexClip,
-                    boxShadow: 'inset 0 0 0 2px rgba(255, 255, 255, 0.7), inset 0 2px 6px rgba(0, 0, 0, 0.25)'
+                    filter: 'drop-shadow(0 12px 20px rgba(0,0,0,0.3)) drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
                   }}
-                />
-
-                {dragOverPanel === idx && (
-                  <div className="absolute inset-0 z-30 bg-[#E8752A]/25 border-4 border-dashed border-[#E8752A] pointer-events-none" />
-                )}
-
-                {panel.imageUrl ? (
-                  <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
-                    <img
-                      src={panel.imageUrl}
-                      alt={pSpec.label || `Hexagon ${idx + 1}`}
-                      style={{
-                        transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                        filter: getFilterCss(panel.filter),
-                        objectFit: panel.fitMode === 'contain' ? 'contain' : 'cover',
-                        transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                      }}
-                      className="max-w-none w-full h-full pointer-events-none"
-                    />
-                  </div>
-                ) : (
+                  className={`relative bg-white cursor-pointer group transition-all ${
+                    isTarget ? 'z-20' : 'hover:brightness-95'
+                  }`}
+                  {...panelHandlers(idx)}
+                  ref={registerWheelRef(idx)}
+                >
+                  {/* 3D Bevel inner edge */}
                   <div
-                    onClick={() => {
-                      setActivePanelIndex(idx);
-                      fileInputRef.current?.click();
+                    className="absolute inset-0 pointer-events-none z-10"
+                    style={{
+                      clipPath: hexClip,
+                      WebkitClipPath: hexClip,
+                      boxShadow: 'inset 0 0 0 2px rgba(255, 255, 255, 0.7), inset 0 2px 6px rgba(0, 0, 0, 0.25)'
                     }}
-                    className="w-full h-full flex flex-col items-center justify-center bg-stone-50/90 hover:bg-stone-100 transition-colors p-2 text-center"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-1">
-                      <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
-                    </div>
-                    <span className="text-[10px] font-bold text-stone-600">{pSpec.label || `Hexagon ${idx + 1}`}</span>
-                    {pSpec.dimension && <span className="text-[9px] text-stone-400">{pSpec.dimension}</span>}
-                  </div>
-                )}
+                  />
 
-                {pSpec.dimension && (
-                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
-                    {pSpec.dimension}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  {/* Active selection outline - true 6-sided hexagon SVG, never square */}
+                  {isTarget && (
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-30" viewBox="0 0 100 100" preserveAspectRatio="none">
+                      <polygon
+                        points={isVertical ? "50,0 100,25 100,75 50,100 0,75 0,25" : "25,0 75,0 100,50 75,100 25,100 0,50"}
+                        fill="none"
+                        stroke="#0E4A93"
+                        strokeWidth="4"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    </svg>
+                  )}
+
+                  {/* Drag-over indicator - true 6-sided hexagon SVG */}
+                  {dragOverPanel === idx && (
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-30" viewBox="0 0 100 100" preserveAspectRatio="none">
+                      <polygon
+                        points={isVertical ? "50,0 100,25 100,75 50,100 0,75 0,25" : "25,0 75,0 100,50 75,100 25,100 0,50"}
+                        fill="rgba(232, 117, 42, 0.25)"
+                        stroke="#E8752A"
+                        strokeWidth="4"
+                        strokeDasharray="6 4"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    </svg>
+                  )}
+
+                  {panel.imageUrl ? (
+                    <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
+                      <img
+                        src={panel.imageUrl}
+                        alt={pSpec.label || `Hexagon ${idx + 1}`}
+                        style={{
+                          transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                          filter: getFilterCss(panel.filter),
+                          objectFit: panel.fitMode === 'contain' ? 'contain' : 'cover',
+                          transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                        }}
+                        className="max-w-none w-full h-full pointer-events-none"
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => {
+                        setActivePanelIndex(idx);
+                        fileInputRef.current?.click();
+                      }}
+                      className="w-full h-full flex flex-col items-center justify-center bg-stone-50/90 hover:bg-stone-100 transition-colors p-2 text-center"
+                    >
+                      <div className="w-7 h-7 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-1">
+                        <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
+                      </div>
+                      <span className="text-[10px] font-bold text-stone-600">{pSpec.label || `Hexagon ${idx + 1}`}</span>
+                      {pSpec.dimension && <span className="text-[9px] text-stone-400">{pSpec.dimension}</span>}
+                    </div>
+                  )}
+
+                  {pSpec.dimension && (
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
+                      {pSpec.dimension}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
         <p className="text-[11px] font-semibold text-stone-500 mt-2.5 text-center">
           Hexagon Cluster • {count} {count === 1 ? 'Hexagon' : 'Hexagons'} • Click each hexagon to upload its own photo
@@ -6094,6 +6139,8 @@ export const CanvasCustomizerPage: React.FC = () => {
 
         const previewAspect = selectedProductTypeId === 'canvas-word-art'
           ? (wordArtSizeOption.aspectRatio || (wordArtSizeOption.widthInches / Math.max(1, wordArtSizeOption.heightInches)))
+          : selectedProductTypeId === 'canvas-hexagon'
+          ? (getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).aspectRatio || 1)
           : selectedProductTypeId === 'canvas-mosaic'
           ? (getProductLayout('canvas-mosaic', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).aspectRatio || 1)
           : selectedProductTypeId === 'canvas-split'
@@ -6108,7 +6155,7 @@ export const CanvasCustomizerPage: React.FC = () => {
         const isHexagonCluster = isHexagonProduct && panels.length > 1;
         const isRectShape = !geom.clipPath && ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
         const activeClipPath = isHexagonProduct
-          ? HEXAGON_CLIP_PATH
+          ? (geom.clipPath || HEXAGON_HORIZONTAL_CLIP_PATH)
           : isRectShape
           ? undefined
           : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined));
@@ -6556,8 +6603,9 @@ export const CanvasCustomizerPage: React.FC = () => {
           const wallLayout = selectedProductTypeId === 'canvas-wall-art' ? getProductLayout('canvas-wall-art', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
           const splitLayout = selectedProductTypeId === 'canvas-split' ? getProductLayout('canvas-split', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
           const mosaicLayout = selectedProductTypeId === 'canvas-mosaic' ? getProductLayout('canvas-mosaic', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
+          const hexagonLayout = selectedProductTypeId === 'canvas-hexagon' ? getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
 
-          const activeMultiLayout = collageLayout || wallLayout || splitLayout || mosaicLayout;
+          const activeMultiLayout = collageLayout || wallLayout || splitLayout || mosaicLayout || hexagonLayout;
           const canvasRoomWidthInches = activeMultiLayout ? activeMultiLayout.overallWidthInches : geom.widthInches;
           const canvasRoomHeightInches = activeMultiLayout ? activeMultiLayout.overallHeightInches : geom.heightInches;
 
@@ -6591,7 +6639,9 @@ export const CanvasCustomizerPage: React.FC = () => {
                   ? (splitLayout?.name || `${splitLayout?.panels.length || 3} Panel Split`)
                   : selectedProductTypeId === 'canvas-mosaic'
                   ? (mosaicLayout?.name || 'Photo Mosaic')
-                  : isHexagonProduct ? (isHexagonCluster ? `${panels.length} Hexagons` : 'Hexagon') : (shapeApplies ? currentShape.name : `${panels.length} Panels`)
+                  : selectedProductTypeId === 'canvas-hexagon'
+                  ? (hexagonLayout?.name || 'Hexagon Prints')
+                  : (shapeApplies ? currentShape.name : `${panels.length} Panels`)
               }
               widthInches={selectedProductTypeId === 'canvas-word-art' ? wordArtSizeOption.widthInches : canvasRoomWidthInches}
               heightInches={selectedProductTypeId === 'canvas-word-art' ? wordArtSizeOption.heightInches : canvasRoomHeightInches}
@@ -6600,31 +6650,33 @@ export const CanvasCustomizerPage: React.FC = () => {
               renderProduct={() => {
                 // 1. Hexagon Prints on Room Wall
                 if (selectedProductTypeId === 'canvas-hexagon') {
-                  const hexLayout = getHexagonClusterLayout(panels.length);
+                  const hexLayout = hexagonLayout || getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   return (
                     <div className="relative w-full h-full pointer-events-none select-none">
-                      {hexLayout.map((pos, idx) => {
+                      {hexLayout.panels.map((pSpec, idx) => {
                         const p = panelImages[idx];
                         const url = p?.imageUrl || (idx === 0 ? primaryPhotoUrl : null);
                         const panXPct = ((p?.panX || 0) / 420) * 100;
                         const panYPct = ((p?.panY || 0) / 420) * 100;
+                        const isVertical = pSpec.orientation === 'vertical' || hexLayout.orientation === 'vertical';
+                        const hexClip = isVertical ? HEXAGON_VERTICAL_CLIP_PATH : HEXAGON_HORIZONTAL_CLIP_PATH;
                         return (
                           <div
-                            key={idx}
+                            key={pSpec.id || idx}
                             style={{
                               position: 'absolute',
-                              left: `${pos.x * 100}%`,
-                              top: `${pos.y * 100}%`,
-                              width: `${pos.w * 100}%`,
-                              height: `${pos.h * 100}%`,
+                              left: `${pSpec.x * 100}%`,
+                              top: `${pSpec.y * 100}%`,
+                              width: `${pSpec.w * 100}%`,
+                              height: `${pSpec.h * 100}%`,
                               filter: 'drop-shadow(0 10px 18px rgba(0,0,0,0.35)) drop-shadow(0 2px 4px rgba(0,0,0,0.22))'
                             }}
                           >
                             <div
                               className="w-full h-full relative overflow-hidden bg-white"
                               style={{
-                                clipPath: HEXAGON_CLIP_PATH,
-                                WebkitClipPath: HEXAGON_CLIP_PATH
+                                clipPath: hexClip,
+                                WebkitClipPath: hexClip
                               }}
                             >
                               {url ? (
@@ -6641,7 +6693,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 />
                               ) : (
                                 <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-xs font-bold">
-                                  Hexagon {idx + 1}
+                                  {pSpec.label || `Hexagon ${idx + 1}`}
                                 </div>
                               )}
                             </div>
