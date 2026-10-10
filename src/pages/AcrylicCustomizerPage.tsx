@@ -168,6 +168,23 @@ const createDefaultPanelState = (imageUrl: string | null = null): PanelImageStat
 
 const CURVED_GEOMETRIC_SHAPES = ['shape-circle', 'shape-oval', 'shape-heart', 'shape-hexagon'];
 
+// Which tab a freshly-selected product should land on, so picking any
+// product from PRODUCTS always jumps straight into its first relevant
+// section instead of leaving the shopper on the product grid. Mirrors the
+// same ordering the left toolbar's tab list uses for that product.
+const SINGLE_PRINT_ACRYLIC_IDS = ['acrylic-print', 'acrylic-photo-panel', 'acrylic-single'];
+function getFirstTabForProduct(pt: AcrylicProductType): ToolbarTab {
+  if (pt.id === 'acrylic-bus-roll') return 'CREATE BUS ROLL';
+  const cap = pt.capabilities || {};
+  if (cap.upload !== false) return 'UPLOAD';
+  if (SINGLE_PRINT_ACRYLIC_IDS.includes(pt.id) && cap.sizes !== false) return 'SELECT SIZE';
+  if (cap.layouts === true) return 'LAYOUTS & DESIGNS';
+  if (cap.wrap !== false) return 'WRAP & BORDER';
+  if (cap.hardware !== false) return 'HARDWARE & FINISH';
+  if (cap.options !== false) return 'OPTIONS';
+  return 'PRODUCTS';
+}
+
 // ============================================================================
 // MAIN ACRYLIC CUSTOMIZER COMPONENT
 // ============================================================================
@@ -1973,11 +1990,14 @@ export const AcrylicCustomizerPage: React.FC = () => {
     // 1. Update selected product state (updates card checkmark, header title, and price)
     setSelectedProductTypeId(pt.id);
 
-    // Bus Roll jumps straight to its own line editor instead of landing on
-    // the generic PRODUCTS tab — there's no plain photo upload step for it.
-    if (pt.id === 'acrylic-bus-roll') {
-      setActiveTab('CREATE BUS ROLL');
-    }
+    // Selecting any product jumps straight to its first relevant section
+    // instead of leaving the shopper stranded on PRODUCTS — mirrors the
+    // same tab ordering the left toolbar itself uses (toolbarItems), just
+    // evaluated against the NEW product's own capabilities, since the
+    // component's existing `productCapabilities`/`toolbarItems` are still
+    // derived from the OLD selectedProductTypeId at this point in the
+    // handler (state updates haven't re-rendered yet).
+    setActiveTab(getFirstTabForProduct(pt));
 
     // 2. Apply the product's default layout (4-grid for Acrylic Collage, 2-split for Acrylic Split Panel; preserve manual layout between single-panel products)
     const isMultiSlotProduct = (id: string) =>
