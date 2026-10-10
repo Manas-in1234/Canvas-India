@@ -82,57 +82,77 @@ const MAX_SYMBOLS = 16;
 const MAX_OTHER_LINES = 10;
 const MAX_LINE_CHARS = 20;
 
-function buildShapePath(shape: ShapeKey, w: number, h: number): Path2D {
-  const path = new Path2D();
+// Returns one or more non-self-intersecting sub-paths whose UNION forms the
+// shape mask. A point counts as "inside the shape" if it falls inside ANY of
+// these — this avoids the classic bug where a single hand-built path with
+// multiple loops self-intersects and the canvas winding rule cancels out
+// most of its interior (which is what produced two disconnected blobs
+// instead of a butterfly previously: that whole shape was one tangled path).
+function buildShapePaths(shape: ShapeKey, w: number, h: number): Path2D[] {
   const cx = w / 2;
   const cy = h / 2;
 
   if (shape === 'circle') {
-    path.arc(cx, cy, (Math.min(w, h) / 2) * 0.94, 0, Math.PI * 2);
-    return path;
+    const p = new Path2D();
+    p.ellipse(cx, cy, (Math.min(w, h) / 2) * 0.94, (Math.min(w, h) / 2) * 0.94, 0, 0, Math.PI * 2);
+    return [p];
   }
 
   if (shape === 'star') {
+    const p = new Path2D();
     const spikes = 5;
     const outerR = (Math.min(w, h) / 2) * 0.95;
     const innerR = outerR * 0.45;
     let rot = (Math.PI / 2) * 3;
     const step = Math.PI / spikes;
-    path.moveTo(cx, cy - outerR);
+    p.moveTo(cx, cy - outerR);
     for (let i = 0; i < spikes; i++) {
       let x = cx + Math.cos(rot) * outerR;
       let y = cy + Math.sin(rot) * outerR;
-      path.lineTo(x, y);
+      p.lineTo(x, y);
       rot += step;
       x = cx + Math.cos(rot) * innerR;
       y = cy + Math.sin(rot) * innerR;
-      path.lineTo(x, y);
+      p.lineTo(x, y);
       rot += step;
     }
-    path.closePath();
-    return path;
+    p.closePath();
+    return [p];
   }
 
   if (shape === 'heart') {
-    path.moveTo(cx, cy + h * 0.35);
-    path.bezierCurveTo(cx - w * 0.5, cy - h * 0.06, cx - w * 0.5, cy - h * 0.38, cx, cy - h * 0.16);
-    path.bezierCurveTo(cx + w * 0.5, cy - h * 0.38, cx + w * 0.5, cy - h * 0.06, cx, cy + h * 0.35);
-    path.closePath();
-    return path;
+    // Two lobes (each its own clean loop) plus a V-shaped base so the dip
+    // between the lobes and the bottom point both read clearly.
+    const lobeRX = w * 0.26;
+    const lobeRY = h * 0.26;
+    const left = new Path2D();
+    left.ellipse(cx - w * 0.24, cy - h * 0.14, lobeRX, lobeRY, 0, 0, Math.PI * 2);
+    const right = new Path2D();
+    right.ellipse(cx + w * 0.24, cy - h * 0.14, lobeRX, lobeRY, 0, 0, Math.PI * 2);
+    const base = new Path2D();
+    base.moveTo(cx - w * 0.48, cy - h * 0.1);
+    base.lineTo(cx + w * 0.48, cy - h * 0.1);
+    base.lineTo(cx, cy + h * 0.42);
+    base.closePath();
+    return [left, right, base];
   }
 
-  // Butterfly: two stylised wing lobes mirrored across the vertical center line
-  path.moveTo(cx, cy - h * 0.03);
-  path.bezierCurveTo(cx - w * 0.08, cy - h * 0.5, cx - w * 0.52, cy - h * 0.42, cx - w * 0.46, cy - h * 0.08);
-  path.bezierCurveTo(cx - w * 0.42, cy + h * 0.1, cx - w * 0.1, cy + h * 0.02, cx, cy + h * 0.02);
-  path.bezierCurveTo(cx - w * 0.02, cy + h * 0.1, cx - w * 0.38, cy + h * 0.48, cx - w * 0.2, cy + h * 0.46);
-  path.bezierCurveTo(cx - w * 0.08, cy + h * 0.44, cx - w * 0.02, cy + h * 0.2, cx, cy + h * 0.06);
-  path.bezierCurveTo(cx + w * 0.02, cy + h * 0.2, cx + w * 0.08, cy + h * 0.44, cx + w * 0.2, cy + h * 0.46);
-  path.bezierCurveTo(cx + w * 0.38, cy + h * 0.48, cx + w * 0.02, cy + h * 0.1, cx, cy + h * 0.02);
-  path.bezierCurveTo(cx + w * 0.1, cy + h * 0.02, cx + w * 0.42, cy + h * 0.1, cx + w * 0.46, cy - h * 0.08);
-  path.bezierCurveTo(cx + w * 0.52, cy - h * 0.42, cx + w * 0.08, cy - h * 0.5, cx, cy - h * 0.03);
-  path.closePath();
-  return path;
+  // Butterfly: a slim body plus four independent wing-lobe ellipses — each
+  // ellipse is the FIRST operation on its own fresh Path2D, so it's a clean
+  // closed loop with no stray connecting lines between lobes.
+  const body = new Path2D();
+  body.ellipse(cx, cy, w * 0.025, h * 0.42, 0, 0, Math.PI * 2);
+
+  const upperLeft = new Path2D();
+  upperLeft.ellipse(cx - w * 0.26, cy - h * 0.2, w * 0.24, h * 0.27, -0.35, 0, Math.PI * 2);
+  const lowerLeft = new Path2D();
+  lowerLeft.ellipse(cx - w * 0.17, cy + h * 0.22, w * 0.16, h * 0.18, -0.2, 0, Math.PI * 2);
+  const upperRight = new Path2D();
+  upperRight.ellipse(cx + w * 0.26, cy - h * 0.2, w * 0.24, h * 0.27, 0.35, 0, Math.PI * 2);
+  const lowerRight = new Path2D();
+  lowerRight.ellipse(cx + w * 0.17, cy + h * 0.22, w * 0.16, h * 0.18, 0.2, 0, Math.PI * 2);
+
+  return [body, upperLeft, lowerLeft, upperRight, lowerRight];
 }
 
 export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose, onComplete }) => {
@@ -196,7 +216,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
       ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, w, h);
 
-      const shapePath = buildShapePath(shape, w, h);
+      const shapePaths = buildShapePaths(shape, w, h);
 
       const palette = COLOR_SCHEMES[colorSchemeName] || [fontColor];
       const name = primaryName.trim() || 'YOUR NAME';
@@ -244,7 +264,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
           [x + boxW / 2, y + boxH / 2],
           [x, y]
         ];
-        const insideShape = corners.every(([px, py]) => ctx.isPointInPath(shapePath, px, py));
+        const insideShape = corners.every(([px, py]) => shapePaths.some((sp) => ctx.isPointInPath(sp, px, py)));
         if (!insideShape) continue;
 
         const overlaps = placed.some(
