@@ -104,6 +104,7 @@ import {
 import { ClipartItem } from '../data/acrylicClipartData';
 import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
 import { SelectLayoutModal, LayoutModalOption } from '../components/SelectLayoutModal';
+import { WordArtStudioModal } from '../components/WordArtStudioModal';
 import { getProductSizeShapeOptions, getSizesForProductAndShape } from '../data/productSizeShapeConfig';
 import {
   getProductLayouts,
@@ -264,6 +265,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const selectedProductType = useMemo(() => {
     return ACRYLIC_PRODUCT_TYPES.find((pt) => pt.id === selectedProductTypeId) || ACRYLIC_PRODUCT_TYPES[0];
   }, [selectedProductTypeId]);
+
+  // Word Art on Acrylic opens a dedicated size -> personalize -> word-cloud
+  // preview flow instead of a plain photo upload.
+  const isWordArt = selectedProductTypeId === 'acrylic-word-art';
+  const [isWordArtModalOpen, setIsWordArtModalOpen] = useState(false);
 
   // Product-Specific Compatible Shapes (Centralized via AcrylicProductShapeConfig)
   const compatibleShapes = useMemo(() => {
@@ -1262,10 +1268,38 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
   }, [layoutSlots.length, activePanelIndex]);
 
-  // Click on empty frame opens picker for that specific frame
+  // Click on empty frame opens picker for that specific frame — Word Art
+  // opens its own studio flow instead of the plain file picker.
   const handleEmptyFrameClick = (panelIdx: number) => {
+    if (isWordArt) {
+      uploadTargetPanelRef.current = panelIdx;
+      setIsWordArtModalOpen(true);
+      return;
+    }
     uploadTargetPanelRef.current = panelIdx;
     singleFileInputRef.current?.click();
+  };
+
+  const handleWordArtComplete = (dataUrl: string, _sizeLabel: string, _price: number) => {
+    const targetIdx = uploadTargetPanelRef.current ?? 0;
+    const img = new Image();
+    img.onload = () => {
+      setPanelImages((prev) => ({
+        ...prev,
+        [targetIdx]: {
+          ...createDefaultPanelState(dataUrl),
+          uploadedImage: {
+            src: dataUrl,
+            naturalWidth: img.naturalWidth,
+            naturalHeight: img.naturalHeight,
+            aspectRatio: img.naturalWidth / img.naturalHeight
+          }
+        }
+      }));
+      imageDimsRef.current[targetIdx] = { naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight };
+    };
+    img.src = dataUrl;
+    setIsWordArtModalOpen(false);
   };
 
   // Single file picker change
@@ -2688,17 +2722,23 @@ export const AcrylicCustomizerPage: React.FC = () => {
               })()}
             </div>
           ) : (
-            /* CLEAN EMPTY SLOT: Blue upload icon + blue Upload an Image text */
+            /* CLEAN EMPTY SLOT: Blue upload icon + blue Upload an Image text (or the Word Art studio CTA) */
             <div className="w-full h-full flex flex-col items-center justify-center bg-white hover:bg-stone-50/50 transition-colors cursor-pointer group p-3 text-center select-none">
-              <div className="flex items-center gap-2 text-[#0E4A93] group-hover:scale-105 transition-transform mb-1">
-                <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
-                  <path d="M11 14.5V6.85l-2.6 2.6L7 8.05 12 3.05l5 5-1.4 1.4-2.6-2.6v7.65h-2zM4 20q-.825 0-1.412-.587Q2 18.825 2 18v-2q0-.425.288-.712Q2.575 15 3 15t.713.288Q4 15.575 4 16v2h16v-2q0-.425.288-.712Q20.575 15 21 15t.713.288Q22 15.575 22 16v2q0 .825-.587 1.413Q20.825 20 20 20Z"/>
-                </svg>
+              <div className={`flex items-center gap-2 ${isWordArt ? 'text-[#B91C1C]' : 'text-[#0E4A93]'} group-hover:scale-105 transition-transform mb-1`}>
+                {isWordArt ? (
+                  <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                    <path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v14h14V5H5zm2 2h2.2l2.3 6.2L13.8 7H16v10h-1.8V9.6l-2.3 6.2h-1.4L8.2 9.6V17H7V7z"/>
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                    <path d="M11 14.5V6.85l-2.6 2.6L7 8.05 12 3.05l5 5-1.4 1.4-2.6-2.6v7.65h-2zM4 20q-.825 0-1.412-.587Q2 18.825 2 18v-2q0-.425.288-.712Q2.575 15 3 15t.713.288Q4 15.575 4 16v2h16v-2q0-.425.288-.712Q20.575 15 21 15t.713.288Q22 15.575 22 16v2q0 .825-.587 1.413Q20.825 20 20 20Z"/>
+                  </svg>
+                )}
                 <span className={`${totalSlots === 1 ? 'text-sm font-semibold' : 'text-xs font-semibold'} tracking-tight`}>
-                  {totalSlots === 1 ? 'Upload an Image' : `Upload Slot ${panelIdx + 1}`}
+                  {isWordArt ? 'Create Word-Art' : totalSlots === 1 ? 'Upload an Image' : `Upload Slot ${panelIdx + 1}`}
                 </span>
               </div>
-              {totalSlots === 1 && (
+              {totalSlots === 1 && !isWordArt && (
                 <span className="text-xs text-stone-500">
                   Maximum upload size: 25MB per file
                 </span>
@@ -5087,6 +5127,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
         currentLayoutId={selectedLayoutId}
         onSelectLayout={handleApplyLayoutFromModal}
       />
+
+      {isWordArtModalOpen && (
+        <WordArtStudioModal
+          onClose={() => setIsWordArtModalOpen(false)}
+          onComplete={handleWordArtComplete}
+        />
+      )}
 
       {/* Change Material Modal */}
       {materialModalOpen && (
