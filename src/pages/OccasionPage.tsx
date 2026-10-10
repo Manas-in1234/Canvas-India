@@ -41,12 +41,23 @@ const OCCASION_ICONS: Record<string, React.ComponentType<{ className?: string }>
   holi: Sparkles,
 };
 
-// Festival/special-day quick-pick shown on every occasion page. Every
-// festival that previously lived only here now has its own dedicated
-// occasion page (reachable via the pill row above) — Diwali is the one
-// exception, kept inside Festive Offers only, per direct request.
-const ALL_FESTIVALS: { name: string; date: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }[] = [
-  { name: 'Diwali', date: '5th November', icon: Flame },
+// Festival/special-day quick-pick shown on every occasion page — every
+// festival listed together here, each opening its own full dedicated
+// occasion page (same hero/cards/shape-size/footer treatment as every
+// other Shop by Occasion page) on click.
+const ALL_FESTIVALS: { name: string; slug: string; date: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }[] = [
+  { name: 'Rakshabandhan', slug: 'rakshabandhan', date: '28th August', icon: HandHeart },
+  { name: 'Janmashtami', slug: 'janmashtami', date: '4th September', icon: Music2 },
+  { name: 'Ganesh Chaturthi', slug: 'ganesh-chaturthi', date: '14th September', icon: Sparkles },
+  { name: 'Karwa Chauth', slug: 'karwa-chauth', date: '29th October', icon: Moon },
+  { name: 'Halloween', slug: 'halloween', date: '31st October', icon: Ghost },
+  { name: 'Diwali', slug: 'diwali', date: '5th November', icon: Flame },
+  { name: 'Bhai Dooj', slug: 'bhai-dooj', date: '11th November', icon: CalendarHeart },
+  { name: 'Christmas', slug: 'christmas', date: '25th December', icon: TreePine },
+  { name: 'Lohri', slug: 'lohri', date: '13th January', icon: Flame },
+  { name: 'Makar Sankranti', slug: 'makar-sankranti', date: '14th January', icon: Sun },
+  { name: 'Pongal', slug: 'pongal', date: '14th January', icon: Wheat },
+  { name: 'Holi', slug: 'holi', date: '6th March', icon: Sparkles },
 ];
 
 // Format-level selling points (material, not occasion-specific — the same
@@ -303,7 +314,7 @@ export const OccasionPage: React.FC = () => {
                 <button
                   key={f.name}
                   type="button"
-                  onClick={handleCustomizeFestival}
+                  onClick={() => navigate(`/occasions/${f.slug}`)}
                   className="group flex flex-col items-center text-center p-4 rounded-xl border border-stone-200 bg-white hover:border-transparent hover:shadow-lg transition-all cursor-pointer"
                   onMouseEnter={(e) => (e.currentTarget.style.borderColor = occasion.accent)}
                   onMouseLeave={(e) => (e.currentTarget.style.borderColor = '')}

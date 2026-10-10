@@ -293,5 +293,21 @@ export const OCCASIONS: OccasionDef[] = [
   },
 ];
 
+// Diwali gets its own full page (reachable from the Festive Offers "Shop by
+// Festival" grid, same as every other festival) but is deliberately kept out
+// of the main OCCASIONS array so it doesn't also show up as a duplicate tile
+// in the site-wide Shop by Occasion row/switcher — it already lives inside
+// Festive Offers conceptually, per direct request.
+const DIWALI_OCCASION: OccasionDef = {
+  slug: 'diwali',
+  name: 'Diwali',
+  emoji: '🪔',
+  tagline: 'Festive devotional art and motivational prints to light up the season',
+  bannerImage: u('photo-1605721911519-3dfeb3be25e7', 1600),
+  tint: 'from-[#EA580C]/90',
+  accent: '#EA580C',
+  categorySlugs: ['canvas', 'acrylic'],
+};
+
 export const getOccasionBySlug = (slug: string | undefined): OccasionDef | undefined =>
-  OCCASIONS.find((o) => o.slug === slug);
+  OCCASIONS.find((o) => o.slug === slug) || (slug === DIWALI_OCCASION.slug ? DIWALI_OCCASION : undefined);
