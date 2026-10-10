@@ -121,36 +121,55 @@ function buildShapePaths(shape: ShapeKey, w: number, h: number): Path2D[] {
   }
 
   if (shape === 'heart') {
-    // Two lobes (each its own clean loop) plus a V-shaped base so the dip
-    // between the lobes and the bottom point both read clearly.
-    const lobeRX = w * 0.26;
-    const lobeRY = h * 0.26;
-    const left = new Path2D();
-    left.ellipse(cx - w * 0.24, cy - h * 0.14, lobeRX, lobeRY, 0, 0, Math.PI * 2);
-    const right = new Path2D();
-    right.ellipse(cx + w * 0.24, cy - h * 0.14, lobeRX, lobeRY, 0, 0, Math.PI * 2);
-    const base = new Path2D();
-    base.moveTo(cx - w * 0.48, cy - h * 0.1);
-    base.lineTo(cx + w * 0.48, cy - h * 0.1);
-    base.lineTo(cx, cy + h * 0.42);
-    base.closePath();
-    return [left, right, base];
+    // Exact parametric heart curve (x = 16sin³t, y = 13cos t − 5cos 2t − 2cos
+    // 3t − cos 4t) traced as a single smooth closed loop — mathematically a
+    // true heart outline (sharp bottom point, clean top notch), not an
+    // approximation built out of overlapping ellipses.
+    const p = new Path2D();
+    const scaleX = (w * 0.46) / 16;
+    const scaleY = (h * 0.42) / 17;
+    const steps = 120;
+    for (let i = 0; i <= steps; i++) {
+      const t = (i / steps) * Math.PI * 2;
+      const hx = 16 * Math.pow(Math.sin(t), 3);
+      const hy = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+      const px = cx + hx * scaleX;
+      const py = cy - hy * scaleY;
+      if (i === 0) p.moveTo(px, py);
+      else p.lineTo(px, py);
+    }
+    p.closePath();
+    return [p];
   }
 
-  // Butterfly: a slim body plus four independent wing-lobe ellipses — each
-  // ellipse is the FIRST operation on its own fresh Path2D, so it's a clean
-  // closed loop with no stray connecting lines between lobes.
+  // Butterfly: a slim body plus four independent, properly tapered wing
+  // shapes (rounded near the body, pointed at the tip) instead of plain
+  // ellipses — each wing is the first operation on its own fresh Path2D, so
+  // it's a clean closed loop with no stray connecting lines between wings.
   const body = new Path2D();
-  body.ellipse(cx, cy, w * 0.025, h * 0.42, 0, 0, Math.PI * 2);
+  body.ellipse(cx, cy, w * 0.022, h * 0.4, 0, 0, Math.PI * 2);
 
-  const upperLeft = new Path2D();
-  upperLeft.ellipse(cx - w * 0.26, cy - h * 0.2, w * 0.24, h * 0.27, -0.35, 0, Math.PI * 2);
-  const lowerLeft = new Path2D();
-  lowerLeft.ellipse(cx - w * 0.17, cy + h * 0.22, w * 0.16, h * 0.18, -0.2, 0, Math.PI * 2);
-  const upperRight = new Path2D();
-  upperRight.ellipse(cx + w * 0.26, cy - h * 0.2, w * 0.24, h * 0.27, 0.35, 0, Math.PI * 2);
-  const lowerRight = new Path2D();
-  lowerRight.ellipse(cx + w * 0.17, cy + h * 0.22, w * 0.16, h * 0.18, 0.2, 0, Math.PI * 2);
+  const buildWing = (s: 1 | -1, fore: boolean): Path2D => {
+    const p = new Path2D();
+    if (fore) {
+      p.moveTo(cx + s * w * 0.015, cy - h * 0.05);
+      p.bezierCurveTo(cx + s * w * 0.1, cy - h * 0.32, cx + s * w * 0.4, cy - h * 0.48, cx + s * w * 0.49, cy - h * 0.24);
+      p.bezierCurveTo(cx + s * w * 0.54, cy - h * 0.05, cx + s * w * 0.4, cy + h * 0.08, cx + s * w * 0.18, cy + h * 0.06);
+      p.bezierCurveTo(cx + s * w * 0.08, cy + h * 0.05, cx + s * w * 0.02, cy - h * 0.0, cx + s * w * 0.015, cy - h * 0.05);
+    } else {
+      p.moveTo(cx + s * w * 0.015, cy + h * 0.03);
+      p.bezierCurveTo(cx + s * w * 0.06, cy + h * 0.16, cx + s * w * 0.3, cy + h * 0.44, cx + s * w * 0.2, cy + h * 0.47);
+      p.bezierCurveTo(cx + s * w * 0.1, cy + h * 0.49, cx, cy + h * 0.24, cx, cy + h * 0.08);
+      p.bezierCurveTo(cx, cy + h * 0.05, cx + s * w * 0.005, cy + h * 0.03, cx + s * w * 0.015, cy + h * 0.03);
+    }
+    p.closePath();
+    return p;
+  };
+
+  const upperLeft = buildWing(-1, true);
+  const lowerLeft = buildWing(-1, false);
+  const upperRight = buildWing(1, true);
+  const lowerRight = buildWing(1, false);
 
   return [body, upperLeft, lowerLeft, upperRight, lowerRight];
 }
