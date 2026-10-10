@@ -743,9 +743,13 @@ export const generateBusRollSvgString = (config: BusRollConfig): string => {
 
   const textLinesSvg = config.lines.map((line, idx) => {
     const yCenter = marginPx + idx * (slotHeight + gap) + slotHeight * 0.72;
-    // Dynamic font sizing proportional to text length and slot height
+    // Dynamic font sizing proportional to text length and slot height.
+    // The 1.55x estimate ran real template text (wide bold uppercase
+    // characters, plus the 0.06em letter-spacing below) past the panel's
+    // edges — scaled down with an explicit safety margin so lines reliably
+    // fit the available width instead of visually overflowing it.
     const charLen = Math.max(1, line.text.trim().length);
-    const approxFontSize = Math.min(slotHeight * 0.82, (innerWidth / charLen) * 1.55);
+    const approxFontSize = Math.min(slotHeight * 0.82, (innerWidth * 0.9 / charLen) * 1.3);
     const clampedFontSize = Math.max(14, Math.round(approxFontSize));
 
     return `
