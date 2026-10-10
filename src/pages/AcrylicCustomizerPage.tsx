@@ -576,6 +576,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
         }
       }
     }));
+    setActivePanelIndex(0);
   }, [selectedProductTypeId, busRollConfig]);
 
   // Active Frame / Element Selection
@@ -1978,15 +1979,23 @@ export const AcrylicCustomizerPage: React.FC = () => {
     // 2. Apply the product's default layout (4-grid for Acrylic Collage, 2-split for Acrylic Split Panel; preserve manual layout between single-panel products)
     const isMultiSlotProduct = (id: string) =>
       id === 'acrylic-collage' || id === 'acrylic-split' || id === 'acrylic-wall-art' || id === 'acrylic-mosaic';
+    // Bus Roll (and Word Art) must always render as a single full-bleed
+    // slot — if the shopper had previously picked a custom layout on a
+    // different single-slot product (e.g. Digital Painting), the generic
+    // "preserve manual layout between single-panel products" rule below
+    // would otherwise carry that stale multi-slot layout over, leaving
+    // slot 0 pointed at an index the Bus Roll sync effect never writes to.
+    const forcesSingleSlot = (id: string) => id === 'acrylic-bus-roll' || id === 'acrylic-word-art';
     const shouldApplyDefaultLayout =
       isMultiSlotProduct(pt.id) ||
       isMultiSlotProduct(selectedProductTypeId) ||
+      forcesSingleSlot(pt.id) ||
       !hasUserSelectedCustomLayoutRef.current;
     const nextLayoutId = shouldApplyDefaultLayout
       ? (pt.defaultLayoutId || 'layout-1-single')
       : selectedLayoutId;
     setSelectedLayoutId(nextLayoutId);
-    if (isMultiSlotProduct(pt.id)) {
+    if (isMultiSlotProduct(pt.id) || forcesSingleSlot(pt.id)) {
       hasUserSelectedCustomLayoutRef.current = false;
     }
 
