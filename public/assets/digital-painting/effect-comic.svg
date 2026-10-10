@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <pattern id="halftone" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+      <circle cx="8" cy="8" r="3.5" fill="#E63946" opacity="0.35"/>
+    </pattern>
+    <linearGradient id="comicBurst" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD166"/>
+      <stop offset="100%" stop-color="#F4A261"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="400" height="400" fill="url(#comicBurst)"/>
+  <polygon points="200,200 0,40 0,90" fill="#EF476F" opacity="0.85"/>
+  <polygon points="200,200 0,160 0,220" fill="#EF476F" opacity="0.85"/>
+  <polygon points="200,200 0,310 0,370" fill="#EF476F" opacity="0.85"/>
+  <polygon points="200,200 70,400 130,400" fill="#EF476F" opacity="0.85"/>
+  <polygon points="200,200 240,400 300,400" fill="#EF476F" opacity="0.85"/>
+  <polygon points="200,200 400,340 400,280" fill="#EF476F" opacity="0.85"/>
+  <polygon points="200,200 400,200 400,140" fill="#EF476F" opacity="0.85"/>
+  <polygon points="200,200 400,60 360,0" fill="#EF476F" opacity="0.85"/>
+  <polygon points="200,200 270,0 210,0" fill="#EF476F" opacity="0.85"/>
+  <polygon points="200,200 120,0 60,0" fill="#EF476F" opacity="0.85"/>
+
+  <rect width="400" height="400" fill="url(#halftone)"/>
+
+  <path d="M80,360 C100,300 150,285 200,285 C250,285 300,300 320,360 L350,400 L50,400 Z" fill="#118AB2" stroke="#000000" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M150,300 L170,390" stroke="#000000" stroke-width="5" fill="none"/>
+  <path d="M250,300 L230,390" stroke="#000000" stroke-width="5" fill="none"/>
+  <path d="M175,320 L200,350 L225,320" stroke="#000000" stroke-width="5" fill="#FFD166"/>
+
+  <path d="M170,250 L170,295 L230,295 L230,250 Z" fill="#FFD6BA" stroke="#000000" stroke-width="6"/>
+  <path d="M170,250 L170,275 L230,250 Z" fill="#F4A261"/>
+
+  <ellipse cx="200" cy="195" rx="75" ry="95" fill="#FFD6BA" stroke="#000000" stroke-width="6"/>
+  <path d="M200,105 C250,110 275,160 270,220 C265,260 230,285 200,290 C225,275 250,240 245,190 C240,140 215,115 200,105 Z" fill="#F4A261"/>
+
+  <path d="M110,180 C90,140 100,100 130,80 C140,50 175,40 210,45 C250,35 285,55 295,90 C320,110 325,150 300,195 C305,170 295,145 280,135 C280,110 260,95 235,95 C215,95 200,105 190,120 C180,105 160,100 145,110 C130,120 125,145 125,170 Z" fill="#073B4C" stroke="#000000" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M160,70 Q200,60 240,70" stroke="#06D6A0" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M135,100 Q155,90 175,100" stroke="#06D6A0" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+  <path d="M155,170 L185,175 L180,190 L155,185 Z" fill="#FFFFFF" stroke="#000000" stroke-width="4" stroke-linejoin="round"/>
+  <circle cx="172" cy="180" r="6" fill="#00B4D8" stroke="#000000" stroke-width="2"/>
+  <circle cx="174" cy="178" r="2" fill="#FFFFFF"/>
+  <path d="M148,162 L190,168" stroke="#000000" stroke-width="5" stroke-linecap="round"/>
+
+  <path d="M215,175 L245,170 L245,185 L220,190 Z" fill="#FFFFFF" stroke="#000000" stroke-width="4" stroke-linejoin="round"/>
+  <circle cx="228" cy="180" r="6" fill="#00B4D8" stroke="#000000" stroke-width="2"/>
+  <circle cx="230" cy="178" r="2" fill="#FFFFFF"/>
+  <path d="M210,168 L252,162" stroke="#000000" stroke-width="5" stroke-linecap="round"/>
+
+  <path d="M196,190 L192,220 L204,222" stroke="#000000" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <path d="M175,245 Q200,240 225,248 Q200,268 175,245 Z" fill="#E63946" stroke="#000000" stroke-width="4.5" stroke-linejoin="round"/>
+  <path d="M182,246 Q200,243 218,248" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+  <line x1="80" y1="100" x2="100" y2="115" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+  <line x1="70" y1="120" x2="95" y2="130" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+  <line x1="320" y1="100" x2="300" y2="115" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+  <line x1="330" y1="120" x2="305" y2="130" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+
+  <rect x="16" y="348" width="155" height="36" rx="18" fill="#000000" stroke="#FFD166" stroke-width="2"/>
+  <circle cx="34" cy="366" r="6" fill="#EF476F"/>
+  <text x="48" y="372" font-family="system-ui, sans-serif" font-size="14" font-weight="900" fill="#FFF">COMIC POP ART</text>
+</svg>

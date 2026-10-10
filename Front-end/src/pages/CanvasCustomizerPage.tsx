@@ -44,19 +44,49 @@ import {
   FlipHorizontal2,
   AlertCircle,
   Edit3,
-  Quote
+  Quote,
+  Palette,
+  LayoutTemplate
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { QuotesTemplateSidebarPanel } from '../components/QuotesTemplateSidebarPanel';
 import { getQuoteTemplate, QuoteTemplateItem } from '../data/quoteTemplatesData';
 import { WordArtSizeRatioModal } from '../components/WordArtSizeRatioModal';
 import { WordArtPersonalizeModal } from '../components/WordArtPersonalizeModal';
+import { DigitalPaintingOptionsPanel } from '../components/DigitalPaintingOptionsPanel';
+import {
+  DEFAULT_DIGITAL_PAINTING_CONFIG,
+  type DigitalPaintingConfig,
+  getDigitalPaintingEffect
+} from '../data/digitalPaintingData';
+import { BusRollLineEditorPanel } from '../components/BusRollLineEditorPanel';
+import { BusRollBackgroundPanel } from '../components/BusRollBackgroundPanel';
+import { BusRollTemplatePanel } from '../components/BusRollTemplatePanel';
+import { BusRollTopToolbar } from '../components/BusRollTopToolbar';
+import {
+  DEFAULT_BUS_ROLL_CONFIG,
+  type BusRollConfig,
+  generateBusRollSvgDataUrl
+} from '../data/busRollData';
 import {
   WORD_ART_SIZE_CATALOG,
   DEFAULT_WORD_ART_CONFIG,
   type WordArtSizeOption,
   type WordArtConfig
 } from '../data/wordArtData';
+import { CanvasBannerSizePanel } from '../components/CanvasBannerSizePanel';
+import {
+  type CanvasBannerConfig,
+  type BannerSizeCategory,
+  DEFAULT_CANVAS_BANNER_CONFIG,
+  CANVAS_BANNER_SIZE_OPTIONS,
+  CANVAS_BANNER_HARDWARE_OPTIONS,
+  BANNER_BACKGROUND_PRESETS,
+  calculateBannerPrice,
+  formatDimension,
+  convertToInches,
+  convertFromInches
+} from '../data/canvasBannerData';
 import {
   CANVAS_SHAPES,
   CanvasShapeOption,
@@ -71,6 +101,7 @@ import {
   ACRYLIC_BORDER_WIDTHS,
   ACRYLIC_BORDER_COLORS,
   getCanvasProductCapabilities,
+  resolveCanvasProductTypeId,
   ClipartItem
 } from '../data/canvasCustomizerData';
 import {
@@ -115,6 +146,10 @@ type ToolbarTab =
   | 'PRODUCTS'
   | 'UPLOAD'
   | 'SELECT SIZE'
+  | 'EFFECTS & OPTIONS'
+  | 'CREATE BUS ROLL'
+  | 'BACKGROUND'
+  | 'TEMPLATE'
   | 'LAYOUTS & DESIGNS'
   | 'WRAP & BORDER'
   | 'HARDWARE & FINISH'
@@ -124,6 +159,10 @@ const TOOLBAR_ITEMS: { id: ToolbarTab; label: string; icon: React.ElementType }[
   { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
   { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud },
   { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
+  { id: 'EFFECTS & OPTIONS', label: 'EFFECTS & OPTIONS', icon: Palette },
+  { id: 'CREATE BUS ROLL', label: 'CREATE BUS ROLL', icon: Type },
+  { id: 'BACKGROUND', label: 'BACKGROUND', icon: Palette },
+  { id: 'TEMPLATE', label: 'TEMPLATE', icon: LayoutTemplate },
   { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers },
   { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
   { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
@@ -600,7 +639,59 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '12" × 18"', widthRatio: 12, heightRatio: 18 }]
   },
 
-  // 12. Digital Painting (canvas-digital-painting) - Starts at ₹2,598.00
+  // 12. Digital Painting (canvas-digital-painting) - Starts at ₹2,199.00
+  {
+    id: 'painting-10x10',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 10" × 10"',
+    dimensionsSummary: '10" × 10"',
+    price: 2199.0,
+    categories: ['RECOMMENDED', 'SQUARE'],
+    widthInches: 10,
+    heightInches: 10,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }]
+  },
+  {
+    id: 'painting-16x16',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 16" × 16"',
+    dimensionsSummary: '16" × 16"',
+    price: 2899.0,
+    categories: ['RECOMMENDED', 'SQUARE'],
+    widthInches: 16,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
+  },
+  {
+    id: 'painting-18x18',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 18" × 18"',
+    dimensionsSummary: '18" × 18"',
+    price: 3299.0,
+    categories: ['SQUARE'],
+    widthInches: 18,
+    heightInches: 18,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '18" × 18"', widthRatio: 18, heightRatio: 18 }]
+  },
+  {
+    id: 'painting-20x20',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 20" × 20"',
+    dimensionsSummary: '20" × 20"',
+    price: 3799.0,
+    categories: ['RECOMMENDED', 'SQUARE'],
+    widthInches: 20,
+    heightInches: 20,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '20" × 20"', widthRatio: 20, heightRatio: 20 }]
+  },
   {
     id: 'painting-12x18',
     productTypeId: 'canvas-digital-painting',
@@ -608,7 +699,24 @@ const SIZE_OPTIONS: SizeOption[] = [
     dimensionsSummary: '12" × 18"',
     price: 2598.0,
     categories: ['RECOMMENDED'],
+    widthInches: 12,
+    heightInches: 18,
+    panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '12" × 18"', widthRatio: 12, heightRatio: 18 }]
+  },
+  {
+    id: 'painting-18x12',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 18" × 12"',
+    dimensionsSummary: '18" × 12"',
+    price: 2598.0,
+    categories: ['PANORAMIC'],
+    widthInches: 18,
+    heightInches: 12,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '18" × 12"', widthRatio: 18, heightRatio: 12 }]
   },
   {
     id: 'painting-16x24',
@@ -617,7 +725,50 @@ const SIZE_OPTIONS: SizeOption[] = [
     dimensionsSummary: '16" × 24"',
     price: 3299.0,
     categories: ['RECOMMENDED'],
+    widthInches: 16,
+    heightInches: 24,
+    panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '16" × 24"', widthRatio: 16, heightRatio: 24 }]
+  },
+  {
+    id: 'painting-24x16',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 24" × 16"',
+    dimensionsSummary: '24" × 16"',
+    price: 3299.0,
+    categories: ['PANORAMIC'],
+    widthInches: 24,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '24" × 16"', widthRatio: 24, heightRatio: 16 }]
+  },
+  {
+    id: 'painting-20x30',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 20" × 30"',
+    dimensionsSummary: '20" × 30"',
+    price: 4499.0,
+    categories: ['RECOMMENDED'],
+    widthInches: 20,
+    heightInches: 30,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '20" × 30"', widthRatio: 20, heightRatio: 30 }]
+  },
+  {
+    id: 'painting-24x36',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 24" × 36"',
+    dimensionsSummary: '24" × 36"',
+    price: 5499.0,
+    categories: ['PANORAMIC'],
+    widthInches: 24,
+    heightInches: 36,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '24" × 36"', widthRatio: 24, heightRatio: 36 }]
   },
 
   // 13. Quotes on Canvas (canvas-quotes) - Starts at ₹999.00
@@ -726,13 +877,26 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '24" × 16"', widthRatio: 24, heightRatio: 16 }]
   },
 
-  // 14. Bus Roll (canvas-bus-roll) - Starts at ₹705.60
+  // 14. Bus Roll (canvas-bus-roll) - Starts at ₹599.00
+  {
+    id: 'bus-21x32',
+    productTypeId: 'canvas-bus-roll',
+    label: 'Bus Roll: 21" × 32"',
+    dimensionsSummary: '21" × 32"',
+    price: 1499.0,
+    widthInches: 21,
+    heightInches: 32,
+    categories: ['RECOMMENDED', 'RECTANGLE'],
+    panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '21" × 32"', widthRatio: 21, heightRatio: 32 }]
+  },
   {
     id: 'bus-12x36',
     productTypeId: 'canvas-bus-roll',
     label: 'Bus Roll: 12" × 36"',
     dimensionsSummary: '12" × 36"',
     price: 705.60,
+    widthInches: 12,
+    heightInches: 36,
     categories: ['RECOMMENDED', 'PANORAMIC'],
     panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '12" × 36"', widthRatio: 12, heightRatio: 36 }]
   },
@@ -742,8 +906,65 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Bus Roll: 16" × 48"',
     dimensionsSummary: '16" × 48"',
     price: 1199.0,
+    widthInches: 16,
+    heightInches: 48,
     categories: ['RECOMMENDED', 'LARGE'],
     panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '16" × 48"', widthRatio: 16, heightRatio: 48 }]
+  },
+  {
+    id: 'bus-8x24',
+    productTypeId: 'canvas-bus-roll',
+    label: 'Bus Roll: 8" × 24"',
+    dimensionsSummary: '8" × 24"',
+    price: 599.0,
+    widthInches: 8,
+    heightInches: 24,
+    categories: ['SMALL', 'PANORAMIC'],
+    panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '8" × 24"', widthRatio: 8, heightRatio: 24 }]
+  },
+  {
+    id: 'bus-10x30',
+    productTypeId: 'canvas-bus-roll',
+    label: 'Bus Roll: 10" × 30"',
+    dimensionsSummary: '10" × 30"',
+    price: 899.0,
+    widthInches: 10,
+    heightInches: 30,
+    categories: ['PANORAMIC'],
+    panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '10" × 30"', widthRatio: 10, heightRatio: 30 }]
+  },
+  {
+    id: 'bus-20x8',
+    productTypeId: 'canvas-bus-roll',
+    label: 'Bus Roll: 20" × 8"',
+    dimensionsSummary: '20" × 8"',
+    price: 699.0,
+    widthInches: 20,
+    heightInches: 8,
+    categories: ['RECOMMENDED', 'PANORAMIC'],
+    panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '20" × 8"', widthRatio: 20, heightRatio: 8 }]
+  },
+  {
+    id: 'bus-24x12',
+    productTypeId: 'canvas-bus-roll',
+    label: 'Bus Roll: 24" × 12"',
+    dimensionsSummary: '24" × 12"',
+    price: 899.0,
+    widthInches: 24,
+    heightInches: 12,
+    categories: ['RECTANGLE'],
+    panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '24" × 12"', widthRatio: 24, heightRatio: 12 }]
+  },
+  {
+    id: 'bus-36x12',
+    productTypeId: 'canvas-bus-roll',
+    label: 'Bus Roll: 36" × 12"',
+    dimensionsSummary: '36" × 12"',
+    price: 1199.0,
+    widthInches: 36,
+    heightInches: 12,
+    categories: ['LARGE', 'PANORAMIC'],
+    panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '36" × 12"', widthRatio: 36, heightRatio: 12 }]
   },
 
   // 15. Canvas Banner (canvas-banner) - Starts at ₹399.00
@@ -1310,6 +1531,44 @@ const renderHardwareIcon = (id: string) => {
       </svg>
     );
   }
+  if (id === 'banner-grommets') {
+    return (
+      <svg viewBox="0 0 60 50" className="w-12 h-10 mx-auto">
+        <rect x="2" y="2" width="56" height="46" fill="#f8fafc" rx="4" stroke="#cbd5e1" strokeWidth="1" />
+        <circle cx="12" cy="12" r="5" fill="#94a3b8" stroke="#475569" strokeWidth="1.5" />
+        <circle cx="12" cy="12" r="2" fill="#1e293b" />
+        <circle cx="48" cy="12" r="5" fill="#94a3b8" stroke="#475569" strokeWidth="1.5" />
+        <circle cx="48" cy="12" r="2" fill="#1e293b" />
+        <circle cx="12" cy="38" r="5" fill="#94a3b8" stroke="#475569" strokeWidth="1.5" />
+        <circle cx="12" cy="38" r="2" fill="#1e293b" />
+        <circle cx="48" cy="38" r="5" fill="#94a3b8" stroke="#475569" strokeWidth="1.5" />
+        <circle cx="48" cy="38" r="2" fill="#1e293b" />
+      </svg>
+    );
+  }
+  if (id === 'banner-pole-pocket') {
+    return (
+      <svg viewBox="0 0 60 50" className="w-12 h-10 mx-auto">
+        <rect x="6" y="2" width="48" height="46" fill="#f8fafc" rx="2" stroke="#cbd5e1" strokeWidth="1" />
+        <rect x="2" y="4" width="56" height="8" fill="#e2e8f0" rx="2" stroke="#94a3b8" strokeWidth="1" />
+        <line x1="6" y1="12" x2="54" y2="12" stroke="#0E4A93" strokeWidth="1.5" strokeDasharray="3 2" />
+        <rect x="2" y="38" width="56" height="8" fill="#e2e8f0" rx="2" stroke="#94a3b8" strokeWidth="1" />
+        <line x1="6" y1="38" x2="54" y2="38" stroke="#0E4A93" strokeWidth="1.5" strokeDasharray="3 2" />
+      </svg>
+    );
+  }
+  if (id === 'banner-hanging-rails') {
+    return (
+      <svg viewBox="0 0 60 50" className="w-12 h-10 mx-auto">
+        <polyline points="30,3 10,14" stroke="#78350f" strokeWidth="1.5" strokeLinecap="round" />
+        <polyline points="30,3 50,14" stroke="#78350f" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="30" cy="3" r="2" fill="#d97706" />
+        <rect x="4" y="14" width="52" height="6" fill="#92400e" rx="1.5" stroke="#78350f" strokeWidth="0.5" />
+        <rect x="8" y="20" width="44" height="22" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" />
+        <rect x="4" y="42" width="52" height="6" fill="#92400e" rx="1.5" stroke="#78350f" strokeWidth="0.5" />
+      </svg>
+    );
+  }
   return (
     <svg viewBox="0 0 60 50" className="w-12 h-10 mx-auto">
       <rect x="2" y="2" width="56" height="46" fill="#f1f5f9" rx="6" stroke="#cbd5e1" strokeWidth="1" />
@@ -1357,7 +1616,12 @@ export const CanvasCustomizerPage: React.FC = () => {
   }, [allProducts, productId]);
 
   // Active step in the left toolbar
-  const [activeTab, setActiveTab] = useState<ToolbarTab>('PRODUCTS');
+  const [activeTab, setActiveTab] = useState<ToolbarTab>(() => {
+    const initialPt = resolveCanvasProductTypeId(productId, catalogProduct);
+    if (initialPt === 'canvas-bus-roll') return 'CREATE BUS ROLL';
+    if (initialPt === 'canvas-banner') return 'UPLOAD';
+    return 'PRODUCTS';
+  });
 
   // Preloader overlay: visible for real async work (image reads) for however
   // long that actually takes, plus a short minimum so the brief, instant
@@ -1391,6 +1655,8 @@ export const CanvasCustomizerPage: React.FC = () => {
     if (tabId === 'SELECT SIZE') {
       if (selectedProductTypeId === 'canvas-word-art') {
         setIsWordArtSizeModalOpen(true);
+      } else if (selectedProductTypeId === 'canvas-banner') {
+        // Banner size selector renders directly in the left customization panel
       } else {
         setIsSizeShapeModalOpen(true);
       }
@@ -1399,30 +1665,6 @@ export const CanvasCustomizerPage: React.FC = () => {
     }
     beginPreloader();
     endPreloader(PRELOADER_MIN_MS);
-  };
-
-  // Selected Canvas Product Type (supports all 17 Canvas products via route param or sidebar switcher)
-  const resolveCanvasProductTypeId = (rawId?: string, catProd?: typeof catalogProduct): string => {
-    const key = (rawId || catProd?.slug || catProd?.id || catProd?.name || '').toLowerCase();
-    if (CANVAS_PRODUCT_TYPES.some((pt) => pt.id === key)) return key;
-    if (key.includes('single') || key.includes('classic')) return 'canvas-single';
-    if (key.includes('round')) return 'canvas-round';
-    if (key.includes('triangle')) return 'canvas-triangle';
-    if (key.includes('heart')) return 'canvas-heart';
-    if (key.includes('oval')) return 'canvas-oval';
-    if (key.includes('wall') || key.includes('display')) return 'canvas-wall-art';
-    if (key.includes('collage')) return 'canvas-collage';
-    if (key.includes('hexagon')) return 'canvas-hexagon';
-    if (key.includes('split')) return 'canvas-split';
-    if (key.includes('mosaic')) return 'canvas-mosaic';
-    if (key.includes('lyric')) return 'canvas-lyric';
-    if (key.includes('painting')) return 'canvas-digital-painting';
-    if (key.includes('quote')) return 'canvas-quotes';
-    if (key.includes('bus')) return 'canvas-bus-roll';
-    if (key.includes('banner')) return 'canvas-banner';
-    if (key.includes('pop')) return 'canvas-pop-art';
-    if (key.includes('word')) return 'canvas-word-art';
-    return 'canvas-single';
   };
 
   const [selectedProductTypeId, setSelectedProductTypeId] = useState<string>(() =>
@@ -1467,6 +1709,17 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Primary Toolbar items: dynamically filtered by selected product capabilities
   // EXACT ORDER: 1. PRODUCTS, 2. UPLOAD, 3. SELECT SIZE, 4. LAYOUTS & DESIGNS, 5. WRAP & BORDER, 6. HARDWARE & FINISH, 7. OPTIONS
   const toolbarItems = useMemo<{ id: ToolbarTab; label: string; icon: React.ElementType }[]>(() => {
+    if (selectedProductTypeId === 'canvas-bus-roll') {
+      return [
+        { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
+        { id: 'CREATE BUS ROLL', label: 'CREATE BUS ROLL', icon: Type },
+        { id: 'BACKGROUND', label: 'BACKGROUND', icon: Palette },
+        { id: 'TEMPLATE', label: 'TEMPLATE', icon: LayoutTemplate },
+        { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
+        { id: 'HARDWARE & FINISH', label: 'HARDWARE OPTION & STYLE', icon: SlidersHorizontal },
+        { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
+      ];
+    }
     const items: { id: ToolbarTab; label: string; icon: React.ElementType; enabled: boolean }[] = [
       { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid, enabled: productCapabilities.products !== false },
       {
@@ -1484,13 +1737,14 @@ export const CanvasCustomizerPage: React.FC = () => {
         enabled: productCapabilities.upload !== false
       },
       { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSingleOrShapedCanvas && productCapabilities.sizes !== false },
+      { id: 'EFFECTS & OPTIONS', label: 'EFFECTS & OPTIONS', icon: Palette, enabled: productCapabilities.effects === true },
       { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: productCapabilities.layouts === true },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
       { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal, enabled: productCapabilities.hardware !== false },
       { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false }
     ];
     return items.filter((item) => item.enabled);
-  }, [productCapabilities, isSingleOrShapedCanvas]);
+  }, [productCapabilities, isSingleOrShapedCanvas, selectedProductTypeId]);
 
   // If the active tab is not supported by the currently selected product, safely revert to PRODUCTS
   useEffect(() => {
@@ -1525,13 +1779,25 @@ export const CanvasCustomizerPage: React.FC = () => {
   }, [selectedProductTypeId, selectedShapeId]);
 
   // Available size options for the current product type and active shape (from centralized productSizeShapeConfig)
-  const availableSizeOptions = useMemo(() => {
+  const availableSizeOptions = useMemo<SizeOption[]>(() => {
     if (isSinglePrintCanvas) {
       return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-single' || s.productTypeId === 'canvas-classic');
     }
 
     if (selectedProductTypeId === 'canvas-quotes') {
       return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-quotes');
+    }
+
+    if (selectedProductTypeId === 'canvas-digital-painting') {
+      return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-digital-painting');
+    }
+
+    if (selectedProductTypeId === 'canvas-bus-roll') {
+      return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-bus-roll');
+    }
+
+    if (selectedProductTypeId === 'canvas-banner') {
+      return CANVAS_BANNER_SIZE_OPTIONS as unknown as SizeOption[];
     }
 
     const isLayoutProduct = [
@@ -1589,11 +1855,20 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Category filter state for single prints: 'SQUARE' | 'PANORAMIC' | 'RECOMMENDED' (Default: 'SQUARE')
   const [sizeCategoryFilter, setSizeCategoryFilter] = useState<'SQUARE' | 'PANORAMIC' | 'RECOMMENDED'>('SQUARE');
 
-  // Selected Size Option - by default single-10x10 or quotes-8x8
+  // Selected Size Option - by default single-10x10, painting-10x10, or quotes-8x8
   const [selectedSizeId, setSelectedSizeId] = useState<string>(() => {
     const initialPt = resolveCanvasProductTypeId(productId, catalogProduct);
     if (initialPt === 'canvas-quotes') {
       return 'quotes-8x8';
+    }
+    if (initialPt === 'canvas-digital-painting') {
+      return 'painting-10x10';
+    }
+    if (initialPt === 'canvas-bus-roll') {
+      return 'bus-21x32';
+    }
+    if (initialPt === 'canvas-banner') {
+      return 'banner-10x8';
     }
     if (initialPt === 'canvas-single' || initialPt === 'canvas-classic') {
       return 'single-10x10';
@@ -1603,9 +1878,10 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   useEffect(() => {
     if (!availableSizeOptions.some((s) => s.id === selectedSizeId)) {
-      if (isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes') {
+      if (isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-bus-roll' || selectedProductTypeId === 'canvas-banner') {
         const matchingInCat = availableSizeOptions.filter((opt) => opt.categories.includes(sizeCategoryFilter));
-        setSelectedSizeId(matchingInCat[0]?.id || (selectedProductTypeId === 'canvas-quotes' ? 'quotes-8x8' : 'single-10x10'));
+        const defaultId = selectedProductTypeId === 'canvas-quotes' ? 'quotes-8x8' : selectedProductTypeId === 'canvas-digital-painting' ? 'painting-10x10' : selectedProductTypeId === 'canvas-bus-roll' ? 'bus-21x32' : selectedProductTypeId === 'canvas-banner' ? 'banner-10x8' : 'single-10x10';
+        setSelectedSizeId(matchingInCat[0]?.id || defaultId);
       } else {
         setSelectedSizeId(availableSizeOptions[0]?.id || 'single-10x10');
       }
@@ -1629,7 +1905,7 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // Shapes, borders and outer frames only apply to single-panel canvases
   // (multi-panel collage / split / wall-art layouts stay rectangular slots).
-  const shapeApplies = panels.length === 1;
+  const shapeApplies = panels.length === 1 && selectedProductTypeId !== 'canvas-banner' && selectedProductTypeId !== 'canvas-bus-roll';
 
   // Panel Images State
   const [panelImages, setPanelImages] = useState<Record<number, PanelImageState>>({
@@ -2002,6 +2278,86 @@ export const CanvasCustomizerPage: React.FC = () => {
     setUploadedPhotos((prev) => [tmpl.image, ...prev.filter((p) => p !== tmpl.image)]);
   };
 
+  // Digital Painting State
+  const [digitalPaintingConfig, setDigitalPaintingConfig] = useState<DigitalPaintingConfig>(DEFAULT_DIGITAL_PAINTING_CONFIG);
+
+  const handleUpdateDigitalPaintingConfig = (updates: Partial<DigitalPaintingConfig>) => {
+    setDigitalPaintingConfig((prev) => ({ ...prev, ...updates }));
+  };
+
+  // Bus Roll State
+  const [busRollConfig, setBusRollConfig] = useState<BusRollConfig>(DEFAULT_BUS_ROLL_CONFIG);
+
+  const handleUpdateBusRollConfig = (updates: Partial<BusRollConfig>) => {
+    setBusRollConfig((prev) => {
+      const updated = { ...prev, ...updates };
+      if (updates.widthInches && updates.widthInches !== prev.widthInches && !updates.heightInches) {
+        const matchingSize = availableSizeOptions.find((s) => s.widthInches === updates.widthInches);
+        if (matchingSize && matchingSize.heightInches) {
+          updated.heightInches = matchingSize.heightInches;
+          setSelectedSizeId(matchingSize.id);
+        } else {
+          updated.heightInches = Math.round(updates.widthInches * 1.52);
+        }
+      }
+      return updated;
+    });
+  };
+
+  const handleStartOverBusRoll = () => {
+    setBusRollConfig(DEFAULT_BUS_ROLL_CONFIG);
+  };
+
+  // Canvas Banner State
+  const [bannerConfig, setBannerConfig] = useState<CanvasBannerConfig>(() => ({
+    ...DEFAULT_CANVAS_BANNER_CONFIG,
+    selectedSizeId: 'banner-10x8'
+  }));
+  const [bannerCategory, setBannerCategory] = useState<BannerSizeCategory>('RECOMMENDED');
+
+  const handleUpdateBannerConfig = (updates: Partial<CanvasBannerConfig>) => {
+    setBannerConfig((prev) => {
+      const next = { ...prev, ...updates };
+      if (next.isCustom) {
+        setIsCustomSize(true);
+        setCustomWidth(next.widthInches);
+        setCustomHeight(next.heightInches);
+        setSelectedSizeId('custom');
+      } else if (next.selectedSizeId) {
+        setIsCustomSize(false);
+        setSelectedSizeId(next.selectedSizeId);
+      }
+      return next;
+    });
+  };
+
+  // Sync Bus Roll live SVG artwork onto slot 0
+  useEffect(() => {
+    if (selectedProductTypeId === 'canvas-bus-roll') {
+      const svgDataUrl = generateBusRollSvgDataUrl(busRollConfig);
+      const imgWidth = Math.round(busRollConfig.widthInches * 40);
+      const imgHeight = Math.round(busRollConfig.heightInches * 40);
+      setPanelImages((prev) => ({
+        ...prev,
+        0: {
+          ...createDefaultPanel(),
+          imageUrl: svgDataUrl,
+          fitMode: 'contain',
+          scale: 1,
+          rotation: 0,
+          panX: 0,
+          panY: 0,
+          uploadedImage: {
+            originalSrc: svgDataUrl,
+            width: imgWidth,
+            height: imgHeight,
+            aspectRatio: busRollConfig.widthInches / Math.max(1, busRollConfig.heightInches)
+          }
+        }
+      }));
+    }
+  }, [selectedProductTypeId, busRollConfig]);
+
   // If initial product is Quotes on Canvas, initialize default quote template into slot 0
   useEffect(() => {
     if (selectedProductTypeId === 'canvas-quotes') {
@@ -2101,6 +2457,49 @@ export const CanvasCustomizerPage: React.FC = () => {
         }));
         setUploadedPhotos((prev) => [tmpl.image, ...prev.filter((p) => p !== tmpl.image)]);
       }
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setActiveTab('UPLOAD');
+      return;
+    }
+
+    if (productId === 'canvas-digital-painting') {
+      setSelectedProductTypeId('canvas-digital-painting');
+      setIsCustomSize(false);
+      setActivePanelIndex(0);
+      setSelectedShapeId('shape-square');
+      setSelectedSizeId('painting-10x10');
+      setSizeCategoryFilter('SQUARE');
+      setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
+      setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setActiveTab('UPLOAD');
+      return;
+    }
+
+    if (productId === 'canvas-bus-roll') {
+      setSelectedProductTypeId('canvas-bus-roll');
+      setIsCustomSize(false);
+      setActivePanelIndex(0);
+      setSelectedShapeId('shape-square');
+      setSelectedSizeId('bus-21x32');
+      setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
+      setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setActiveTab('CREATE BUS ROLL');
+      return;
+    }
+
+    if (productId === 'canvas-banner') {
+      setSelectedProductTypeId('canvas-banner');
+      setIsCustomSize(false);
+      setActivePanelIndex(0);
+      setSelectedShapeId('shape-rectangle');
+      setSelectedSizeId('banner-10x8');
+      setSelectedHardwareId('no-hooks');
+      setSelectedThicknessId('canvas-lite');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setActiveTab('UPLOAD');
@@ -2386,6 +2785,9 @@ export const CanvasCustomizerPage: React.FC = () => {
         clipartElements,
         panelImages,
         uploadedPhotos,
+        digitalPaintingConfig,
+        busRollConfig,
+        bannerConfig,
         updatedAt: new Date().toISOString()
       };
       localStorage.setItem(storageKey, JSON.stringify(stateToSave));
@@ -2400,6 +2802,10 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Dynamic Price Calculation
   const sizePrice = selectedProductTypeId === 'canvas-word-art'
     ? wordArtSizeOption.price
+    : selectedProductTypeId === 'canvas-banner'
+    ? (bannerConfig.isCustom
+        ? calculateBannerPrice(bannerConfig.widthInches, bannerConfig.heightInches)
+        : (CANVAS_BANNER_SIZE_OPTIONS.find((s) => s.id === bannerConfig.selectedSizeId)?.price || calculateBannerPrice(bannerConfig.widthInches, bannerConfig.heightInches)))
     : (isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price);
 
   const unitPrice = useMemo(() => {
@@ -2419,8 +2825,10 @@ export const CanvasCustomizerPage: React.FC = () => {
       if (frame) price += frame.price;
     }
 
-    const hardware = HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId);
-    if (hardware) price += hardware.price;
+    const hardwarePrice = selectedProductTypeId === 'canvas-banner'
+      ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
+      : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0);
+    price += hardwarePrice;
 
     const display = DISPLAY_OPTIONS.find((d) => d.id === selectedDisplayOptionId);
     if (display) price += display.price;
@@ -2450,6 +2858,9 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // Single source of truth for whether at least ONE valid customer image is currently uploaded
   const hasUploadedImage = useMemo(() => {
+    if (selectedProductTypeId === 'canvas-bus-roll') {
+      return true;
+    }
     const anySlotHasImage = Object.values(panelImages).some(
       (p) => Boolean(p?.imageUrl && p.imageUrl.trim().length > 0)
     );
@@ -2457,7 +2868,7 @@ export const CanvasCustomizerPage: React.FC = () => {
       (url) => Boolean(url && url.trim().length > 0)
     );
     return anySlotHasImage || anyTrayHasImage;
-  }, [panelImages, uploadedPhotos]);
+  }, [panelImages, uploadedPhotos, selectedProductTypeId]);
 
   // Validation: at least one uploaded photo
   const filledPanelsCount = useMemo(() => {
@@ -3033,11 +3444,17 @@ export const CanvasCustomizerPage: React.FC = () => {
     if (selectedProductTypeId === 'canvas-word-art') {
       return wordArtSizeOption.aspectRatio || (wordArtSizeOption.widthInches / Math.max(1, wordArtSizeOption.heightInches));
     }
+    if (selectedProductTypeId === 'canvas-bus-roll') {
+      return busRollConfig.widthInches / Math.max(1, busRollConfig.heightInches);
+    }
+    if (selectedProductTypeId === 'canvas-banner') {
+      return bannerConfig.widthInches / Math.max(1, bannerConfig.heightInches);
+    }
     if (shapeApplies && currentShape.isSingleDimension) return 1;
     if (isCustomSize && canUseCustomSize) return customWidth / customHeight;
     const p = panels[0];
     return p ? p.widthRatio / p.heightRatio : 1;
-  }, [selectedProductTypeId, wordArtSizeOption, shapeApplies, currentShape, isCustomSize, canUseCustomSize, customWidth, customHeight, panels]);
+  }, [selectedProductTypeId, wordArtSizeOption, busRollConfig.widthInches, busRollConfig.heightInches, bannerConfig.widthInches, bannerConfig.heightInches, shapeApplies, currentShape, isCustomSize, canUseCustomSize, customWidth, customHeight, panels]);
 
   const currentLayout = useMemo(() => {
     return STANDARD_LAYOUT_PRESETS.find((l) => l.id === selectedLayoutId) || STANDARD_LAYOUT_PRESETS[0];
@@ -3132,10 +3549,20 @@ export const CanvasCustomizerPage: React.FC = () => {
           ? `${selectedProductType.name} - ${wordArtSizeOption.label}`
           : selectedProductTypeId === 'canvas-quotes'
           ? `${selectedProductType.name} - ${getQuoteTemplate(selectedQuoteTemplateId)?.title || 'Custom Quote'} (${currentSizeOption.label})`
+          : selectedProductTypeId === 'canvas-digital-painting'
+          ? `${selectedProductType.name} (${getDigitalPaintingEffect(digitalPaintingConfig.selectedEffectId).name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
+          : selectedProductTypeId === 'canvas-bus-roll'
+          ? `${selectedProductType.name} - ${busRollConfig.widthInches}" × ${busRollConfig.heightInches}" (${busRollConfig.lines[0]?.text || 'Custom'})`
+          : selectedProductTypeId === 'canvas-banner'
+          ? `${selectedProductType.name} - ${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}${bannerConfig.isCustom ? ' (Custom)' : ''}`
           : `${selectedProductType.name} - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
       },
       size: selectedProductTypeId === 'canvas-word-art'
         ? `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`
+        : selectedProductTypeId === 'canvas-bus-roll'
+        ? `${busRollConfig.widthInches}" × ${busRollConfig.heightInches}"`
+        : selectedProductTypeId === 'canvas-banner'
+        ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
         : isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary,
       finish: WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label || 'Canvas Lite',
       quantity,
@@ -3144,7 +3571,9 @@ export const CanvasCustomizerPage: React.FC = () => {
       calculatedPrice: totalPrice,
       material: MATERIAL_VARIANTS.find((m) => m.id === selectedMaterialId)?.name || 'Standard 280 GSM Cotton Canvas',
       style: selectedProductType.name,
-      base: HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label || 'No Hooks',
+      base: selectedProductTypeId === 'canvas-banner'
+        ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware')
+        : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label || 'No Hooks'),
       customizationDetails: {
         productTypeId: selectedProductTypeId,
         sizeId: selectedSizeId,
@@ -3161,6 +3590,28 @@ export const CanvasCustomizerPage: React.FC = () => {
         proofRequested,
         template: selectedTemplateId ? DESIGN_TEMPLATES.find((t) => t.id === selectedTemplateId)?.name : undefined,
         quoteTemplate: selectedProductTypeId === 'canvas-quotes' ? getQuoteTemplate(selectedQuoteTemplateId)?.title : undefined,
+        digitalPaintingEffect: selectedProductTypeId === 'canvas-digital-painting' ? getDigitalPaintingEffect(digitalPaintingConfig.selectedEffectId).name : undefined,
+        digitalPaintingSubject: selectedProductTypeId === 'canvas-digital-painting' ? digitalPaintingConfig.subjectType : undefined,
+        digitalPaintingBackground: selectedProductTypeId === 'canvas-digital-painting' ? (
+          digitalPaintingConfig.backgroundOption === 'solid'
+            ? `Solid Background (${digitalPaintingConfig.backgroundColor})`
+            : digitalPaintingConfig.backgroundOption === 'artist_choice'
+            ? 'Let the Artist Choose'
+            : 'Original Background'
+        ) : undefined,
+        peopleCount: selectedProductTypeId === 'canvas-digital-painting' && digitalPaintingConfig.subjectType === 'people_pets' ? digitalPaintingConfig.peopleCount : undefined,
+        petsCount: selectedProductTypeId === 'canvas-digital-painting' && digitalPaintingConfig.subjectType === 'people_pets' ? digitalPaintingConfig.petsCount : undefined,
+        busRollLines: selectedProductTypeId === 'canvas-bus-roll' ? busRollConfig.lines.map((l) => l.text).join(' / ') : undefined,
+        busRollBackgroundColor: selectedProductTypeId === 'canvas-bus-roll' ? busRollConfig.backgroundColor : undefined,
+        busRollPattern: selectedProductTypeId === 'canvas-bus-roll' ? busRollConfig.patternId : undefined,
+        busRollFont: selectedProductTypeId === 'canvas-bus-roll' ? busRollConfig.fontFamily : undefined,
+        bannerUnit: selectedProductTypeId === 'canvas-banner' ? bannerConfig.unit : undefined,
+        bannerWidth: selectedProductTypeId === 'canvas-banner' ? bannerConfig.width : undefined,
+        bannerHeight: selectedProductTypeId === 'canvas-banner' ? bannerConfig.height : undefined,
+        bannerWidthInches: selectedProductTypeId === 'canvas-banner' ? bannerConfig.widthInches : undefined,
+        bannerHeightInches: selectedProductTypeId === 'canvas-banner' ? bannerConfig.heightInches : undefined,
+        bannerBackgroundColor: selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : undefined,
+        bannerHardware: selectedProductTypeId === 'canvas-banner' ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware') : undefined,
         panels: panels.map((p, idx) => ({
           dimension: p.dimension,
           imageUrl: panelImages[idx]?.imageUrl || null,
@@ -4103,10 +4554,10 @@ export const CanvasCustomizerPage: React.FC = () => {
             </div>
             <div className="space-y-1.5 py-2.5 text-stone-600">
               <div className="flex justify-between">
-                <span>Base ({isCustomSize && canUseCustomSize ? `${customWidth}"×${customHeight}"` : currentSizeOption.dimensionsSummary}):</span>
+                <span>Base ({selectedProductTypeId === 'canvas-banner' ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}` : isCustomSize && canUseCustomSize ? `${customWidth}"×${customHeight}"` : currentSizeOption.dimensionsSummary}):</span>
                 <span className="font-bold text-stone-900">₹{sizePrice}</span>
               </div>
-              {selectedWrapId !== 'canvas-lite' && (
+              {selectedWrapId !== 'canvas-lite' && selectedProductTypeId !== 'canvas-banner' && (
                 <div className="flex justify-between">
                   <span>Wrap:</span>
                   <span className="font-bold text-stone-900">+₹{WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.price}</span>
@@ -4115,7 +4566,11 @@ export const CanvasCustomizerPage: React.FC = () => {
               {selectedHardwareId !== 'no-hooks' && (
                 <div className="flex justify-between">
                   <span>Hardware:</span>
-                  <span className="font-bold text-stone-900">+₹{HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price}</span>
+                  <span className="font-bold text-stone-900">
+                    +₹{selectedProductTypeId === 'canvas-banner'
+                      ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
+                      : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)}
+                  </span>
                 </div>
               )}
               {selectedDisplayOptionId === 'dust-cover' && (
@@ -4157,17 +4612,39 @@ export const CanvasCustomizerPage: React.FC = () => {
               ? 'WORD ART'
               : activeTab === 'UPLOAD' && selectedProductTypeId === 'canvas-quotes'
               ? undefined
+              : activeTab === 'CREATE BUS ROLL'
+              ? 'Create Bus Roll'
+              : activeTab === 'BACKGROUND'
+              ? 'Background'
+              : activeTab === 'TEMPLATE'
+              ? 'Templates'
+              : activeTab === 'HARDWARE & FINISH' && selectedProductTypeId === 'canvas-bus-roll'
+              ? 'Hardware Option & Style'
+              : activeTab === 'SELECT SIZE' && selectedProductTypeId === 'canvas-banner'
+              ? 'Select Size'
+              : activeTab === 'HARDWARE & FINISH' && selectedProductTypeId === 'canvas-banner'
+              ? 'Hardware & Finish'
               : activeTab
           }
           metaText={
-            selectedProductTypeId === 'canvas-word-art' && activeTab === 'UPLOAD'
+            activeTab === 'CREATE BUS ROLL'
+              ? `${busRollConfig.lines.length} Lines`
+              : activeTab === 'BACKGROUND'
+              ? `${busRollConfig.backgroundColor}`
+              : activeTab === 'TEMPLATE'
+              ? 'Choose Preset'
+              : selectedProductTypeId === 'canvas-word-art' && activeTab === 'UPLOAD'
               ? `${wordArtSizeOption.label} (${wordArtSizeOption.ratioTab})`
               : activeTab === 'PRODUCTS'
               ? `${CANVAS_PRODUCT_TYPES.length} Styles`
               : activeTab === 'UPLOAD'
               ? `${uploadedPhotos.length} Photos`
+              : activeTab === 'SELECT SIZE' && selectedProductTypeId === 'canvas-banner'
+              ? `${CANVAS_BANNER_SIZE_OPTIONS.length} Sizes + Custom`
               : activeTab === 'SELECT SIZE'
               ? `${availableSizeOptions.length + (canUseCustomSize ? 1 : 0)} Options`
+              : activeTab === 'EFFECTS & OPTIONS'
+              ? `${getDigitalPaintingEffect(digitalPaintingConfig.selectedEffectId).name}`
               : activeTab === 'LAYOUTS & DESIGNS'
               ? selectedProductTypeId === 'canvas-lyric'
                 ? 'Lyrics & Typography'
@@ -4176,6 +4653,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                 : `${DESIGN_TEMPLATE_CATEGORIES.length} Categories`
               : activeTab === 'WRAP & BORDER'
               ? `${WRAP_OPTIONS.length} Options`
+              : activeTab === 'HARDWARE & FINISH' && selectedProductTypeId === 'canvas-banner'
+              ? `${CANVAS_BANNER_HARDWARE_OPTIONS.length} Options`
               : activeTab === 'HARDWARE & FINISH'
               ? `${HARDWARE_OPTIONS.length} Hardware`
               : 'Specifications'
@@ -4324,8 +4803,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Create Word Art Option for Shape Canvas Products (Excludes Single Print) */}
-              {!activeWordArtDataUrl && isSingleOrShapedCanvas && selectedProductTypeId !== 'canvas-single' && (
+              {/* Create Word Art Option for Shape Canvas Products (Excludes Single Print, Quotes, Digital Painting, Bus Roll, Canvas Banner) */}
+              {!activeWordArtDataUrl && isSingleOrShapedCanvas && selectedProductTypeId !== 'canvas-single' && selectedProductTypeId !== 'canvas-quotes' && selectedProductTypeId !== 'canvas-digital-painting' && selectedProductTypeId !== 'canvas-bus-roll' && selectedProductTypeId !== 'canvas-banner' && (
                 <button
                   type="button"
                   onClick={() => setIsWordArtPersonalizeModalOpen(true)}
@@ -4566,14 +5045,106 @@ export const CanvasCustomizerPage: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              {/* Canvas Banner Optional Background Selector (Reference Screenshot 2) */}
+              {selectedProductTypeId === 'canvas-banner' && (
+                <div className="pt-3 border-t border-stone-200 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-px bg-stone-200" />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-stone-400">
+                      -- OR --
+                    </span>
+                    <div className="flex-1 h-px bg-stone-200" />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-black uppercase tracking-wider text-stone-800 flex items-center gap-1.5">
+                        <Palette className="w-3.5 h-3.5 text-[#0E4A93]" />
+                        <span>Select Background</span>
+                      </label>
+                      <span className="text-[11px] font-mono font-bold text-stone-500 uppercase">
+                        {bannerConfig.backgroundColor}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-stone-500 mb-2.5">
+                      Choose a background color for your banner canvas. Photos will be centered on top.
+                    </p>
+
+                    {/* Swatches Grid */}
+                    <div className="grid grid-cols-4 gap-2">
+                      {BANNER_BACKGROUND_PRESETS.map((bg) => {
+                        const isSelected = bannerConfig.backgroundColor.toLowerCase() === bg.hex.toLowerCase();
+                        return (
+                          <button
+                            key={bg.hex}
+                            type="button"
+                            onClick={() => setBannerConfig((prev) => ({ ...prev, backgroundColor: bg.hex }))}
+                            className={`p-1.5 rounded-xl border-2 flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                              isSelected
+                                ? 'border-[#0E4A93] bg-blue-50/50 shadow-xs ring-1 ring-[#0E4A93]/20'
+                                : 'border-stone-200 hover:border-stone-300 bg-white'
+                            }`}
+                            title={bg.name}
+                          >
+                            <div
+                              className="w-full h-7 rounded-lg border border-stone-200/80 shadow-2xs relative flex items-center justify-center"
+                              style={{ backgroundColor: bg.hex }}
+                            >
+                              {isSelected && (
+                                <Check
+                                  className={`w-3.5 h-3.5 stroke-[3] ${
+                                    ['#ffffff', '#fffdf9', '#f1f5f9', '#faf8f5'].includes(bg.hex.toLowerCase())
+                                      ? 'text-[#0E4A93]'
+                                      : 'text-white'
+                                  }`}
+                                />
+                              )}
+                            </div>
+                            <span className="text-[9px] font-bold text-stone-700 truncate w-full text-center">
+                              {bg.name.split(' ')[0]}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Custom Color Input */}
+                    <div className="mt-2.5 flex items-center gap-2 p-2 bg-stone-50 rounded-xl border border-stone-200">
+                      <input
+                        type="color"
+                        value={bannerConfig.backgroundColor}
+                        onChange={(e) => setBannerConfig((prev) => ({ ...prev, backgroundColor: e.target.value }))}
+                        className="w-8 h-8 rounded-lg cursor-pointer border border-stone-300 p-0.5 bg-white"
+                        id="custom-banner-bg"
+                      />
+                      <label htmlFor="custom-banner-bg" className="text-xs font-bold text-stone-700 cursor-pointer flex-1">
+                        Custom Hex Color
+                      </label>
+                      <span className="text-xs font-mono font-bold text-stone-500 bg-white px-2 py-1 rounded border border-stone-200">
+                        {bannerConfig.backgroundColor.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )
         )}
 
           {/* --------------------------- SELECT SIZE ---------------------------- */}
           {activeTab === 'SELECT SIZE' && (
+            selectedProductTypeId === 'canvas-banner' ? (
+              <CanvasBannerSizePanel
+                config={bannerConfig}
+                onChangeConfig={handleUpdateBannerConfig}
+                activeCategory={bannerCategory}
+                onChangeCategory={setBannerCategory}
+                currentPrice={unitPrice}
+              />
+            ) : (
             <div className="p-4 space-y-4">
-              {isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' ? (
+              {isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' ? (
                 <>
                   {/* Selected Size Summary Card */}
                   <div className="flex items-center justify-between p-3.5 bg-blue-50/70 rounded-2xl border border-blue-100 mb-3">
@@ -4680,7 +5251,7 @@ export const CanvasCustomizerPage: React.FC = () => {
 
                             {/* Dimensions text */}
                             <div className="text-[11px] font-black text-stone-900 text-center mt-1">
-                              {opt.label.replace(/^Single:\s*/, '')}
+                              {opt.label.replace(/^Single:\s*/, '').replace(/^Quotes Canvas:\s*/, '').replace(/^Digital Painting:\s*/, '')}
                             </div>
 
                             {/* Price text */}
@@ -4790,6 +5361,52 @@ export const CanvasCustomizerPage: React.FC = () => {
                 </>
               )}
             </div>
+            )
+          )}
+
+          {/* ------------------------ EFFECTS & OPTIONS ------------------------- */}
+          {activeTab === 'EFFECTS & OPTIONS' && (
+            <DigitalPaintingOptionsPanel
+              config={digitalPaintingConfig}
+              onChangeConfig={handleUpdateDigitalPaintingConfig}
+              currentSizeLabel={isCustomSize ? `${customWidth}" × ${customHeight}" (Custom)` : currentSizeOption?.label || selectedSizeId}
+              currentPrice={totalPrice}
+              onOpenSizeModal={() => setIsSizeShapeModalOpen(true)}
+            />
+          )}
+
+          {/* ------------------------ CREATE BUS ROLL ------------------------- */}
+          {activeTab === 'CREATE BUS ROLL' && (
+            <BusRollLineEditorPanel
+              config={busRollConfig}
+              onChangeConfig={handleUpdateBusRollConfig}
+            />
+          )}
+
+          {/* --------------------------- BACKGROUND --------------------------- */}
+          {activeTab === 'BACKGROUND' && (
+            <BusRollBackgroundPanel
+              config={busRollConfig}
+              onChangeConfig={handleUpdateBusRollConfig}
+            />
+          )}
+
+          {/* ---------------------------- TEMPLATE ---------------------------- */}
+          {activeTab === 'TEMPLATE' && (
+            <BusRollTemplatePanel
+              config={busRollConfig}
+              onChangeConfig={(updates) => {
+                handleUpdateBusRollConfig(updates);
+                if (updates.widthInches && updates.heightInches) {
+                  const matchingSize = availableSizeOptions.find(
+                    (s) => s.widthInches === updates.widthInches && s.heightInches === updates.heightInches
+                  );
+                  if (matchingSize) {
+                    setSelectedSizeId(matchingSize.id);
+                  }
+                }
+              }}
+            />
           )}
 
           {/* ------------------------ LAYOUTS & DESIGNS ------------------------- */}
@@ -5304,43 +5921,58 @@ export const CanvasCustomizerPage: React.FC = () => {
           {/* -------------------------- HARDWARE & FINISH ------------------------- */}
           {activeTab === 'HARDWARE & FINISH' && (
             <div className="p-4 space-y-5">
-              {/* 1. Canvas Thickness / Stretcher Bar Depth */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">1. Canvas Stretcher Thickness</label>
-                  <span className="text-[11px] font-bold text-[#0E4A93]">{THICKNESS_OPTIONS.length} options</span>
+              {/* 1. Canvas Thickness / Stretcher Bar Depth (Excludes Canvas Banner) */}
+              {selectedProductTypeId !== 'canvas-banner' && (
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">1. Canvas Stretcher Thickness</label>
+                    <span className="text-[11px] font-bold text-[#0E4A93]">{THICKNESS_OPTIONS.length} options</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {THICKNESS_OPTIONS.map((th) => {
+                      const isSelected = selectedThicknessId === th.id;
+                      return (
+                        <CustomizerOptionCard
+                          key={th.id}
+                          selected={isSelected}
+                          onClick={() => setSelectedThicknessId(th.id)}
+                          badge={th.badge}
+                          title={th.label}
+                          priceText={th.price === 0 ? 'Included' : `+₹${th.price}`}
+                          previewHeightClass="h-16 p-1.5"
+                          preview={renderWrapPreview(th.id)}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {THICKNESS_OPTIONS.map((th) => {
-                    const isSelected = selectedThicknessId === th.id;
-                    return (
-                      <CustomizerOptionCard
-                        key={th.id}
-                        selected={isSelected}
-                        onClick={() => setSelectedThicknessId(th.id)}
-                        badge={th.badge}
-                        title={th.label}
-                        priceText={th.price === 0 ? 'Included' : `+₹${th.price}`}
-                        previewHeightClass="h-16 p-1.5"
-                        preview={renderWrapPreview(th.id)}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
+              )}
 
               {/* 2. Hardware Option & Style */}
-              <div className="space-y-2.5 pt-3 border-t border-stone-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">2. Hardware Option &amp; Style</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {HARDWARE_OPTIONS.map((hw) => {
+              <div className={`space-y-2.5 ${selectedProductTypeId !== 'canvas-banner' ? 'pt-3 border-t border-stone-200' : ''}`}>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">
+                    {selectedProductTypeId === 'canvas-banner' ? 'Hardware & Mounting Options' : '2. Hardware Option & Style'}
+                  </label>
+                  {selectedProductTypeId === 'canvas-banner' && (
+                    <span className="text-[11px] font-bold text-[#0E4A93]">{CANVAS_BANNER_HARDWARE_OPTIONS.length} options</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {(selectedProductTypeId === 'canvas-banner' ? CANVAS_BANNER_HARDWARE_OPTIONS : HARDWARE_OPTIONS).map((hw) => {
                     const isSelected = selectedHardwareId === hw.id;
+                    const title = 'label' in hw ? hw.label : hw.name;
                     return (
                       <CustomizerOptionCard
                         key={hw.id}
                         selected={isSelected}
-                        onClick={() => setSelectedHardwareId(hw.id)}
-                        title={hw.label}
+                        onClick={() => {
+                          setSelectedHardwareId(hw.id);
+                          if (selectedProductTypeId === 'canvas-banner') {
+                            setBannerConfig((prev) => ({ ...prev, hardwareId: hw.id }));
+                          }
+                        }}
+                        title={title}
                         priceText={hw.price === 0 ? 'Free' : `+₹${hw.price}`}
                         previewHeightClass="h-16 p-1.5"
                         preview={renderHardwareIcon(hw.id)}
@@ -5348,40 +5980,48 @@ export const CanvasCustomizerPage: React.FC = () => {
                     );
                   })}
                 </div>
+                {selectedProductTypeId === 'canvas-banner' && (
+                  <div className="p-3 bg-blue-50/70 rounded-xl border border-blue-100 text-[11px] text-[#0E4A93] font-medium leading-relaxed">
+                    <strong>{CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name}: </strong>
+                    {CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.description}
+                  </div>
+                )}
               </div>
 
-              {/* 3. Display Option */}
-              <div className="space-y-2.5 pt-3 border-t border-stone-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">3. Back Display Option</label>
-                <div className="space-y-2">
-                  {DISPLAY_OPTIONS.map((opt) => {
-                    const isSelected = selectedDisplayOptionId === opt.id;
-                    return (
-                      <label
-                        key={opt.id}
-                        className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl border-2 cursor-pointer transition-all ${
-                          isSelected ? 'border-[#0E4A93] bg-blue-50/20 shadow-xs' : 'border-stone-200 hover:border-stone-300 bg-white'
-                        }`}
-                      >
-                        <span className="flex items-center gap-2 text-xs font-bold text-stone-800">
-                          <input
-                            type="radio"
-                            name="display-option"
-                            checked={isSelected}
-                            onChange={() => setSelectedDisplayOptionId(opt.id)}
-                            className="accent-[#0E4A93]"
-                          />
-                          {opt.label}
-                        </span>
-                        <span className="flex items-center gap-1.5 text-xs font-extrabold text-[#0E4A93]">
-                          {opt.price === 0 ? 'Free' : `+₹${opt.price.toFixed(0)}`}
-                          <Info className="w-3.5 h-3.5 text-stone-400" />
-                        </span>
-                      </label>
-                    );
-                  })}
+              {/* 3. Display Option (Excludes Canvas Banner) */}
+              {selectedProductTypeId !== 'canvas-banner' && (
+                <div className="space-y-2.5 pt-3 border-t border-stone-200">
+                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">3. Back Display Option</label>
+                  <div className="space-y-2">
+                    {DISPLAY_OPTIONS.map((opt) => {
+                      const isSelected = selectedDisplayOptionId === opt.id;
+                      return (
+                        <label
+                          key={opt.id}
+                          className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl border-2 cursor-pointer transition-all ${
+                            isSelected ? 'border-[#0E4A93] bg-blue-50/20 shadow-xs' : 'border-stone-200 hover:border-stone-300 bg-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2 text-xs font-bold text-stone-800">
+                            <input
+                              type="radio"
+                              name="display-option"
+                              checked={isSelected}
+                              onChange={() => setSelectedDisplayOptionId(opt.id)}
+                              className="accent-[#0E4A93]"
+                            />
+                            {opt.label}
+                          </span>
+                          <span className="flex items-center gap-1.5 text-xs font-extrabold text-[#0E4A93]">
+                            {opt.price === 0 ? 'Free' : `+₹${opt.price.toFixed(0)}`}
+                            <Info className="w-3.5 h-3.5 text-stone-400" />
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* 4. Optional Color Finishing */}
               <div className="space-y-2.5 pt-3 border-t border-stone-200">
@@ -5538,56 +6178,65 @@ export const CanvasCustomizerPage: React.FC = () => {
         {/* COLUMN 3: MAIN RIGHT LIVE CANVAS PREVIEW WORKSPACE                  */}
         {/* ------------------------------------------------------------------- */}
         <main className="flex-1 flex flex-col h-full bg-[#E2E8F0]/60 relative overflow-hidden">
-          {/* Top Action Bar for Workspace (Shared with Acrylic Customizer) */}
-          <CustomizerTopToolbar
-            onSave={handleSaveDesign}
-            showTextPopover={showTextModal}
-            onToggleText={() => {
-              if (showTextModal) {
-                setShowTextModal(false);
-              } else if (textElements.length === 0) {
-                handleAddText();
-              } else {
-                if (!selectedElement || selectedElement.type !== 'text') {
-                  setSelectedElement({ type: 'text', id: textElements[0].id });
+          {/* Top Action Bar for Workspace */}
+          {selectedProductTypeId === 'canvas-bus-roll' ? (
+            <BusRollTopToolbar
+              config={busRollConfig}
+              onChangeConfig={handleUpdateBusRollConfig}
+              onSave={handleSaveDesign}
+              onStartOver={handleStartOverBusRoll}
+            />
+          ) : (
+            <CustomizerTopToolbar
+              onSave={handleSaveDesign}
+              showTextPopover={showTextModal}
+              onToggleText={() => {
+                if (showTextModal) {
+                  setShowTextModal(false);
+                } else if (textElements.length === 0) {
+                  handleAddText();
+                } else {
+                  if (!selectedElement || selectedElement.type !== 'text') {
+                    setSelectedElement({ type: 'text', id: textElements[0].id });
+                  }
+                  setShowTextModal(true);
+                  setShowClipartModal(false);
                 }
-                setShowTextModal(true);
-                setShowClipartModal(false);
-              }
-            }}
-            showClipartPopover={showClipartModal}
-            onToggleClipart={() => {
-              setShowClipartModal(!showClipartModal);
-              setShowTextModal(false);
-            }}
-            isRoomViewActive={viewerMode === 'room'}
-            isRoomViewDisabled={!hasUploadedImage}
-            onToggleRoomView={() => {
-              if (!hasUploadedImage) return;
-              setViewerRotation(0);
-              setViewerTiltX(0);
-              setViewerAutoRotate(false);
-              setViewerMode('room');
-            }}
-            is3DViewActive={viewerMode === '3d'}
-            onOpen3DView={productCapabilities.view3D ? () => {
-              if (!hasUploadedImage) return;
-              setViewerRotation(-28);
-              setViewerTiltX(8);
-              setViewerAutoRotate(false);
-              setViewerMode('3d');
-            } : undefined}
-            is360ViewActive={viewerMode === '360'}
-            onOpen360View={productCapabilities.view360 !== false ? () => {
-              if (!hasUploadedImage) return;
-              setViewerRotation(0);
-              setViewerTiltX(10);
-              setViewerAutoRotate(true);
-              setViewerMode('360');
-            } : undefined}
-            hasSelectedItem={Boolean(selectedElement)}
-            onDeleteSelectedItem={removeSelectedItem}
-          />
+              }}
+              showClipartPopover={showClipartModal}
+              onToggleClipart={() => {
+                setShowClipartModal(!showClipartModal);
+                setShowTextModal(false);
+              }}
+              isRoomViewActive={viewerMode === 'room'}
+              isRoomViewDisabled={!hasUploadedImage}
+              onToggleRoomView={() => {
+                if (!hasUploadedImage) return;
+                setViewerRotation(0);
+                setViewerTiltX(0);
+                setViewerAutoRotate(false);
+                setViewerMode('room');
+              }}
+              is3DViewActive={viewerMode === '3d'}
+              onOpen3DView={productCapabilities.view3D ? () => {
+                if (!hasUploadedImage) return;
+                setViewerRotation(-28);
+                setViewerTiltX(8);
+                setViewerAutoRotate(false);
+                setViewerMode('3d');
+              } : undefined}
+              is360ViewActive={viewerMode === '360'}
+              onOpen360View={productCapabilities.view360 !== false ? () => {
+                if (!hasUploadedImage) return;
+                setViewerRotation(0);
+                setViewerTiltX(10);
+                setViewerAutoRotate(true);
+                setViewerMode('360');
+              } : undefined}
+              hasSelectedItem={Boolean(selectedElement)}
+              onDeleteSelectedItem={removeSelectedItem}
+            />
+          )}
 
           {/* Live Typography Editor matching Acrylic Customizer */}
           {showTextModal && activeTextElement && (
@@ -5639,7 +6288,13 @@ export const CanvasCustomizerPage: React.FC = () => {
 
           {/* Shared Center Stage / Design Canvas Area */}
           <CustomizerPreviewArea
-            sizeLabel={isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary}
+            sizeLabel={
+              selectedProductTypeId === 'canvas-banner'
+                ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
+                : isCustomSize && canUseCustomSize
+                ? `${customWidth}" × ${customHeight}"`
+                : currentSizeOption.dimensionsSummary
+            }
             onZoomOut={handleZoomOut}
             onZoomIn={handleZoomIn}
             onRotateLeft={handleRotateLeft}
@@ -5708,21 +6363,38 @@ export const CanvasCustomizerPage: React.FC = () => {
                 <span>
                   Material:{' '}
                   <strong className="text-stone-900">
-                    {MATERIAL_VARIANTS.find((m) => m.id === selectedMaterialId)?.name || 'Artist Cotton Canvas'}
+                    {selectedProductTypeId === 'canvas-banner'
+                      ? 'Premium Flexible Canvas Banner'
+                      : (MATERIAL_VARIANTS.find((m) => m.id === selectedMaterialId)?.name || 'Artist Cotton Canvas')}
                   </strong>
                 </span>
-                <span>•</span>
-                <span>
-                  Thickness: <strong className="text-stone-900">{THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label}</strong>
-                </span>
-                <span>•</span>
-                <span>
-                  Wrap: <strong className="text-stone-900">{WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.name}</strong>
-                </span>
-                <span>•</span>
-                <span>
-                  Hardware: <strong className="text-stone-900">{HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label}</strong>
-                </span>
+                {selectedProductTypeId === 'canvas-banner' ? (
+                  <>
+                    <span>•</span>
+                    <span>
+                      Hardware: <strong className="text-stone-900">{CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware'}</strong>
+                    </span>
+                    <span>•</span>
+                    <span>
+                      Background: <strong className="text-stone-900">{bannerConfig.backgroundColor}</strong>
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span>•</span>
+                    <span>
+                      Thickness: <strong className="text-stone-900">{THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label}</strong>
+                    </span>
+                    <span>•</span>
+                    <span>
+                      Wrap: <strong className="text-stone-900">{WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.name}</strong>
+                    </span>
+                    <span>•</span>
+                    <span>
+                      Hardware: <strong className="text-stone-900">{HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label}</strong>
+                    </span>
+                  </>
+                )}
                 <button
                   type="button"
                   onClick={() => setMaterialModalOpen(true)}
@@ -5783,11 +6455,19 @@ export const CanvasCustomizerPage: React.FC = () => {
 
                 const displayWidthInches = selectedProductTypeId === 'canvas-word-art'
                   ? wordArtSizeOption.widthInches
+                  : selectedProductTypeId === 'canvas-bus-roll'
+                  ? busRollConfig.widthInches
+                  : selectedProductTypeId === 'canvas-banner'
+                  ? bannerConfig.widthInches
                   : isCustomSize && canUseCustomSize
                   ? customWidth
                   : currentSizeOption?.widthInches || panels[0]?.widthRatio || 8;
                 const displayHeightInches = selectedProductTypeId === 'canvas-word-art'
                   ? wordArtSizeOption.heightInches
+                  : selectedProductTypeId === 'canvas-bus-roll'
+                  ? busRollConfig.heightInches
+                  : selectedProductTypeId === 'canvas-banner'
+                  ? bannerConfig.heightInches
                   : isCustomSize && canUseCustomSize
                   ? customHeight
                   : currentSizeOption?.heightInches || panels[0]?.heightRatio || 8;
@@ -5816,7 +6496,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                     <div className="w-full flex items-center justify-center py-1 mb-1 max-w-[27rem] relative">
                       <div className="absolute inset-x-0 h-px border-b border-dashed border-stone-300" />
                       <div className="relative bg-white px-2 py-0.5 rounded-full border border-stone-200 text-[10px] font-bold text-stone-600 shadow-2xs z-10">
-                        {displayWidthInches} inch
+                        {selectedProductTypeId === 'canvas-banner' ? formatDimension(bannerConfig.widthInches, bannerConfig.unit) : `${displayWidthInches} inch`}
                       </div>
                     </div>
 
@@ -5835,7 +6515,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                       <div className="absolute -left-10 inset-y-0 flex flex-col items-center justify-center">
                         <div className="absolute inset-y-0 w-px border-r border-dashed border-stone-300" />
                         <div className="relative bg-white px-1.5 py-0.5 rounded-full border border-stone-200 text-[9px] font-bold text-stone-600 shadow-2xs rotate-[-90deg] whitespace-nowrap z-10">
-                          {displayHeightInches} inch
+                          {selectedProductTypeId === 'canvas-banner' ? formatDimension(bannerConfig.heightInches, bannerConfig.unit) : `${displayHeightInches} inch`}
                         </div>
                       </div>
 
@@ -5849,7 +6529,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                         }}
                       >
                         {(() => {
-                          const isSingleCanvasPrint = selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-quotes';
+                          const isSingleCanvasPrint = selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-bus-roll';
                           const imgMeta = panelImages[0]?.uploadedImage;
                           const natWidth = imgMeta?.width || 1200;
                           const natHeight = imgMeta?.height || 800;
@@ -6004,23 +6684,30 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 {...panelHandlers(0)}
                                 ref={registerWheelRef(0)}
                                 className={`relative w-full h-full ${
-                                  (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
+                                  (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? 'rounded-xs'
                                     : currentShape.borderRadiusClass
                                 } ${
-                                  isSingleCanvasPrint ? (panelImages[0]?.imageUrl ? 'bg-transparent' : 'bg-white') : 'bg-white'
+                                  selectedProductTypeId === 'canvas-banner'
+                                    ? 'border border-stone-300 shadow-md'
+                                    : isSingleCanvasPrint
+                                    ? (panelImages[0]?.imageUrl ? 'bg-transparent' : 'bg-white')
+                                    : 'bg-white'
                                 } transition-all cursor-pointer group ${
-                                  isSingleCanvasPrint
+                                  selectedProductTypeId === 'canvas-banner'
+                                    ? 'overflow-hidden'
+                                    : isSingleCanvasPrint
                                     ? 'border border-stone-300'
                                     : 'shadow-lg overflow-hidden'
                                 } ${
                                   activePanelIndex === 0 ? 'ring-2 ring-[#0E4A93]/50' : ''
                                 }`}
                                 style={{
-                                  clipPath: (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
+                                  backgroundColor: selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : undefined,
+                                  clipPath: (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? undefined
                                     : currentShape.clipPathStyle,
-                                  WebkitClipPath: (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
+                                  WebkitClipPath: (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? undefined
                                     : currentShape.clipPathStyle
                                 }}
@@ -6146,6 +6833,23 @@ export const CanvasCustomizerPage: React.FC = () => {
                                         Start Customizing
                                       </span>
                                     </div>
+                                  ) : selectedProductTypeId === 'canvas-banner' ? (
+                                    <div
+                                      onClick={() => fileInputRef.current?.click()}
+                                      className="w-full h-full flex flex-col items-center justify-center p-6 text-center cursor-pointer group select-none transition-colors"
+                                      style={{ backgroundColor: bannerConfig.backgroundColor }}
+                                    >
+                                      <div className="flex items-center gap-2 text-[#0E4A93] group-hover:scale-105 transition-transform mb-1.5">
+                                        <UploadCloud className="w-6 h-6 stroke-[2.2] shrink-0" />
+                                        <span className="text-sm font-bold tracking-tight">Upload an Image</span>
+                                      </div>
+                                      <span className="text-xs text-stone-500 font-medium mb-1">
+                                        Maximum upload size: 25MB per file
+                                      </span>
+                                      <span className="text-[11px] text-stone-400">
+                                        Supported formats: PNG, JPG, JPEG, WEBP, BMP
+                                      </span>
+                                    </div>
                                   ) : (
                                     <div
                                       onClick={() => fileInputRef.current?.click()}
@@ -6177,13 +6881,59 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 {/* Applied design template: real vector decoration */}
                                 {activeTemplate && renderDecorSvg(activeTemplate.decor, activeTemplate.accent, 'absolute inset-0 w-full h-full pointer-events-none z-25')}
 
-                                {/* Canvas Banner Hanging Wooden Bars */}
+                                {/* Canvas Banner Hardware Overlays */}
                                 {selectedProductTypeId === 'canvas-banner' && (
                                   <>
-                                    <div className="absolute -top-1 left-0 right-0 h-3.5 bg-amber-800 border-b border-amber-900 shadow-md z-30 flex items-center justify-center pointer-events-none">
-                                      <div className="w-2 h-2 rounded-full bg-stone-300 shadow-xs" />
-                                    </div>
-                                    <div className="absolute -bottom-1 left-0 right-0 h-3.5 bg-amber-800 border-t border-amber-900 shadow-md z-30 pointer-events-none" />
+                                    {/* Corner Eyelets / Metal Grommets */}
+                                    {selectedHardwareId === 'banner-grommets' && (
+                                      <>
+                                        <div className="absolute top-2 left-2 w-3.5 h-3.5 rounded-full bg-stone-300 border-2 border-stone-500 shadow-inner flex items-center justify-center pointer-events-none z-30">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-800" />
+                                        </div>
+                                        <div className="absolute top-2 right-2 w-3.5 h-3.5 rounded-full bg-stone-300 border-2 border-stone-500 shadow-inner flex items-center justify-center pointer-events-none z-30">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-800" />
+                                        </div>
+                                        <div className="absolute bottom-2 left-2 w-3.5 h-3.5 rounded-full bg-stone-300 border-2 border-stone-500 shadow-inner flex items-center justify-center pointer-events-none z-30">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-800" />
+                                        </div>
+                                        <div className="absolute bottom-2 right-2 w-3.5 h-3.5 rounded-full bg-stone-300 border-2 border-stone-500 shadow-inner flex items-center justify-center pointer-events-none z-30">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-800" />
+                                        </div>
+                                      </>
+                                    )}
+
+                                    {/* Pole Pockets: Top & Bottom Stitched Sleeves */}
+                                    {selectedHardwareId === 'banner-pole-pocket' && (
+                                      <>
+                                        <div className="absolute top-0 inset-x-0 h-5 bg-black/5 border-b border-dashed border-stone-400/80 pointer-events-none z-30 flex items-center justify-center">
+                                          <span className="text-[8px] font-mono uppercase tracking-widest text-stone-500/80">Pole Pocket (Top)</span>
+                                        </div>
+                                        <div className="absolute bottom-0 inset-x-0 h-5 bg-black/5 border-t border-dashed border-stone-400/80 pointer-events-none z-30 flex items-center justify-center">
+                                          <span className="text-[8px] font-mono uppercase tracking-widest text-stone-500/80">Pole Pocket (Bottom)</span>
+                                        </div>
+                                      </>
+                                    )}
+
+                                    {/* Solid Wood Hanging Rails */}
+                                    {selectedHardwareId === 'banner-hanging-rails' && (
+                                      <>
+                                        <div className="absolute -top-6 inset-x-0 flex items-center justify-center pointer-events-none z-30">
+                                          <svg className="w-32 h-6 overflow-visible" viewBox="0 0 100 24">
+                                            <line x1="50" y1="0" x2="10" y2="24" stroke="#78350F" strokeWidth="2" strokeLinecap="round" />
+                                            <line x1="50" y1="0" x2="90" y2="24" stroke="#78350F" strokeWidth="2" strokeLinecap="round" />
+                                            <circle cx="50" cy="0" r="2.5" fill="#B45309" stroke="#78350F" strokeWidth="1" />
+                                          </svg>
+                                        </div>
+                                        <div className="absolute -top-1.5 -inset-x-1 h-3.5 bg-linear-to-b from-[#854D0E] to-[#713F12] border border-[#5A320E] rounded-xs shadow-md z-30 pointer-events-none flex items-center justify-between px-2">
+                                          <div className="w-1 h-1 rounded-full bg-[#FEF08A]/70" />
+                                          <div className="w-1 h-1 rounded-full bg-[#FEF08A]/70" />
+                                        </div>
+                                        <div className="absolute -bottom-1.5 -inset-x-1 h-3.5 bg-linear-to-b from-[#854D0E] to-[#713F12] border border-[#5A320E] rounded-xs shadow-md z-30 pointer-events-none flex items-center justify-between px-2">
+                                          <div className="w-1 h-1 rounded-full bg-[#FEF08A]/70" />
+                                          <div className="w-1 h-1 rounded-full bg-[#FEF08A]/70" />
+                                        </div>
+                                      </>
+                                    )}
                                   </>
                                 )}
 
@@ -6842,6 +7592,8 @@ export const CanvasCustomizerPage: React.FC = () => {
               productDimensionLabel={
                 selectedProductTypeId === 'canvas-word-art'
                   ? `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`
+                  : selectedProductTypeId === 'canvas-banner'
+                  ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
                   : activeMultiLayout
                   ? (activeMultiLayout.dimensionsSummary || `${activeMultiLayout.overallWidthInches}" × ${activeMultiLayout.overallHeightInches}"`)
                   : isCustomSize && canUseCustomSize
@@ -6866,8 +7618,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                   ? (hexagonLayout?.name || 'Hexagon Prints')
                   : (shapeApplies ? currentShape.name : `${panels.length} Panels`)
               }
-              widthInches={selectedProductTypeId === 'canvas-word-art' ? wordArtSizeOption.widthInches : canvasRoomWidthInches}
-              heightInches={selectedProductTypeId === 'canvas-word-art' ? wordArtSizeOption.heightInches : canvasRoomHeightInches}
+              widthInches={selectedProductTypeId === 'canvas-word-art' ? wordArtSizeOption.widthInches : selectedProductTypeId === 'canvas-banner' ? bannerConfig.widthInches : canvasRoomWidthInches}
+              heightInches={selectedProductTypeId === 'canvas-word-art' ? wordArtSizeOption.heightInches : selectedProductTypeId === 'canvas-banner' ? bannerConfig.heightInches : canvasRoomHeightInches}
               initialRoomState={roomViewState}
               onRoomStateChange={setRoomViewState}
               renderProduct={() => {
@@ -7215,6 +7967,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                     <span>
                       {selectedProductTypeId === 'canvas-word-art'
                         ? (wordArtSizeOption.ratioTab || (wordArtSizeOption.widthInches === wordArtSizeOption.heightInches ? 'Square' : 'Rectangle'))
+                        : selectedProductTypeId === 'canvas-banner'
+                        ? 'Flat Banner'
                         : selectedProductTypeId === 'canvas-collage'
                         ? `${getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).name}`
                         : shapeApplies ? currentShape.name : `${panels.length} Panels`}
@@ -7223,6 +7977,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                     <span>
                       {selectedProductTypeId === 'canvas-word-art'
                         ? `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`
+                        : selectedProductTypeId === 'canvas-banner'
+                        ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
                         : selectedProductTypeId === 'canvas-collage'
                         ? (getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).dimensionsSummary)
                         : isCustomSize && canUseCustomSize
