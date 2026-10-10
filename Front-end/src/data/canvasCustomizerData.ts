@@ -146,6 +146,8 @@ export interface CanvasProductCapabilities {
   sizes?: boolean;
   shapes?: boolean;
   layouts?: boolean;
+  effects?: boolean;
+  busRoll?: boolean;
   wrap?: boolean;
   hardware?: boolean;
   options?: boolean;
@@ -489,27 +491,28 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
   {
     id: 'canvas-digital-painting',
     name: 'Digital Painting',
-    startingPrice: 2598.00,
+    startingPrice: 2199.00,
     image: '',
     iconType: 'painting',
     panelsCount: 1,
-    description: 'Turn your favorite memories and portraits into artistic digital oil and watercolor paintings on canvas.',
-    defaultSizeOptionId: 'painting-12x18',
-    defaultShape: 'shape-portrait',
+    description: 'Turn your favorite memories and portraits into artistic digital oil, charcoal, and palette knife paintings on canvas.',
+    defaultSizeOptionId: 'painting-10x10',
+    defaultShape: 'shape-square',
     defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS,
+    supportedShapeIds: ['shape-square', 'shape-rectangle'],
     capabilities: {
       products: true,
       upload: true,
       sizes: true,
       shapes: false,
       layouts: false,
+      effects: true,
       wrap: true,
       hardware: true,
       options: true,
-      view3D: false,
+      view3D: true,
       view360: true,
       roomView: true
     }
@@ -550,22 +553,23 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
     iconType: 'bus-roll',
     panelsCount: 1,
     description: 'Vintage vintage-transit and destination subway scroll canvas prints with custom places and memories.',
-    defaultSizeOptionId: 'bus-12x36',
+    defaultSizeOptionId: 'bus-21x32',
     defaultShape: 'shape-portrait',
     defaultLayoutId: 'layout-1-single',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: 'thin-gallery',
-    supportedShapeIds: ALL_CANVAS_SHAPE_IDS,
+    supportedShapeIds: ['shape-portrait', 'shape-rectangle'],
     capabilities: {
       products: true,
-      upload: true,
-      sizes: true,
+      upload: false,
+      busRoll: true,
+      sizes: false,
       shapes: false,
       layouts: false,
       wrap: true,
       hardware: true,
       options: true,
-      view3D: false,
+      view3D: true,
       view360: true,
       roomView: true
     }
@@ -681,6 +685,32 @@ export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProdu
     view360: !['canvas-wall-art', 'canvas-split', 'canvas-hexagon'].includes(pt.id),
     roomView: true
   };
+}
+
+export function resolveCanvasProductTypeId(
+  rawId?: string,
+  catProd?: { slug?: string; id?: string; name?: string } | null
+): string {
+  const key = (rawId || catProd?.slug || catProd?.id || catProd?.name || '').toLowerCase();
+  if (CANVAS_PRODUCT_TYPES.some((pt) => pt.id === key)) return key;
+  if (key.includes('single') || key.includes('classic')) return 'canvas-single';
+  if (key.includes('round')) return 'canvas-round';
+  if (key.includes('triangle')) return 'canvas-triangle';
+  if (key.includes('heart')) return 'canvas-heart';
+  if (key.includes('oval')) return 'canvas-oval';
+  if (key.includes('wall') || key.includes('display')) return 'canvas-wall-art';
+  if (key.includes('collage')) return 'canvas-collage';
+  if (key.includes('hexagon')) return 'canvas-hexagon';
+  if (key.includes('split')) return 'canvas-split';
+  if (key.includes('mosaic')) return 'canvas-mosaic';
+  if (key.includes('lyric')) return 'canvas-lyric';
+  if (key.includes('painting')) return 'canvas-digital-painting';
+  if (key.includes('quote')) return 'canvas-quotes';
+  if (key.includes('bus')) return 'canvas-bus-roll';
+  if (key.includes('banner')) return 'canvas-banner';
+  if (key.includes('pop')) return 'canvas-pop-art';
+  if (key.includes('word')) return 'canvas-word-art';
+  return 'canvas-single';
 }
 
 // ----------------------------------------------------------------------------

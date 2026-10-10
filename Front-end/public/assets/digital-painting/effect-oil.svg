@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="oilBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3D251E"/>
+      <stop offset="50%" stop-color="#8C4F2B"/>
+      <stop offset="100%" stop-color="#1F1610"/>
+    </linearGradient>
+    <linearGradient id="oilFace" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCE0C6"/>
+      <stop offset="50%" stop-color="#E8A87C"/>
+      <stop offset="100%" stop-color="#C3734B"/>
+    </linearGradient>
+    <linearGradient id="oilHair" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4A2E18"/>
+      <stop offset="100%" stop-color="#1C0E05"/>
+    </linearGradient>
+    <filter id="oilTexture" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" fill="url(#oilBg)"/>
+  <path d="M-20,60 Q120,40 220,90 T420,70" stroke="#C3734B" stroke-width="28" fill="none" opacity="0.4" stroke-linecap="round" filter="url(#oilTexture)"/>
+  <path d="M-10,180 Q140,140 280,210 T430,160" stroke="#8C4F2B" stroke-width="36" fill="none" opacity="0.45" stroke-linecap="round" filter="url(#oilTexture)"/>
+  <path d="M30,340 Q160,290 320,360 T430,320" stroke="#5C3119" stroke-width="40" fill="none" opacity="0.5" stroke-linecap="round" filter="url(#oilTexture)"/>
+  
+  <circle cx="200" cy="180" r="115" fill="url(#oilHair)" filter="url(#oilTexture)"/>
+  <ellipse cx="200" cy="200" rx="82" ry="105" fill="url(#oilFace)" filter="url(#oilTexture)"/>
+  
+  <path d="M160,285 L145,380 L255,380 L240,285 Z" fill="#D9926B" filter="url(#oilTexture)"/>
+  <path d="M90,360 Q200,320 310,360 L330,400 L70,400 Z" fill="#B84A39" filter="url(#oilTexture)"/>
+  
+  <path d="M120,170 C100,100 170,80 200,80 C240,80 300,100 280,180 C270,140 250,110 200,110 C150,110 130,140 120,170 Z" fill="#2B170B" filter="url(#oilTexture)"/>
+  <path d="M110,190 C100,230 115,280 135,300 C125,270 120,220 125,185 Z" fill="#1C0E05" filter="url(#oilTexture)"/>
+  <path d="M290,190 C300,230 285,280 265,300 C275,270 280,220 275,185 Z" fill="#1C0E05" filter="url(#oilTexture)"/>
+
+  <path d="M145,170 Q165,162 182,168" stroke="#4A2E18" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M218,168 Q235,162 255,170" stroke="#4A2E18" stroke-width="6" stroke-linecap="round" fill="none"/>
+  
+  <ellipse cx="165" cy="185" rx="14" ry="8" fill="#FFFFFF"/>
+  <circle cx="165" cy="185" r="6" fill="#2E1B10"/>
+  <circle cx="167" cy="183" r="2" fill="#FFFFFF"/>
+  
+  <ellipse cx="235" cy="185" rx="14" ry="8" fill="#FFFFFF"/>
+  <circle cx="235" cy="185" r="6" fill="#2E1B10"/>
+  <circle cx="237" cy="183" r="2" fill="#FFFFFF"/>
+  
+  <path d="M200,175 L196,220 Q202,226 208,220" stroke="#AF633C" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <ellipse cx="150" cy="218" rx="22" ry="14" fill="#E27D60" opacity="0.55" filter="url(#oilTexture)"/>
+  <ellipse cx="250" cy="218" rx="22" ry="14" fill="#E27D60" opacity="0.55" filter="url(#oilTexture)"/>
+  <ellipse cx="195" cy="155" rx="26" ry="10" fill="#FFF1E6" opacity="0.45" filter="url(#oilTexture)"/>
+  <path d="M178,245 Q200,240 222,245 Q200,262 178,245 Z" fill="#B84A39" filter="url(#oilTexture)"/>
+  
+  <rect x="16" y="348" width="130" height="36" rx="18" fill="rgba(0,0,0,0.75)" stroke="#E8A87C" stroke-width="1.5"/>
+  <circle cx="34" cy="366" r="6" fill="#E8A87C"/>
+  <text x="48" y="372" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#FFF">OIL EFFECT</text>
+</svg>

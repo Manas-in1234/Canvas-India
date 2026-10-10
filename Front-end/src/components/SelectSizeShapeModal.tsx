@@ -49,10 +49,18 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   if (!isOpen) return null;
 
   const isQuotes = productId.toLowerCase() === 'canvas-quotes';
+  const isDigitalPainting = productId.toLowerCase() === 'canvas-digital-painting';
 
   const isSinglePrint = useMemo(() => {
     const norm = productId.toLowerCase();
-    return norm === 'canvas-single' || norm === 'canvas-classic' || norm === 'acrylic-print' || norm === 'acrylic-photo-panel' || norm === 'canvas-quotes';
+    return (
+      norm === 'canvas-single' ||
+      norm === 'canvas-classic' ||
+      norm === 'acrylic-print' ||
+      norm === 'acrylic-photo-panel' ||
+      norm === 'canvas-quotes' ||
+      norm === 'canvas-digital-painting'
+    );
   }, [productId]);
 
   // Active Category Tab for Single Print: SQUARE (default), PANORAMIC, RECOMMENDED
@@ -187,6 +195,169 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
         squareSizes[2],
         panoramicSizes[0],
         panoramicSizes[1]
+      ];
+
+      return {
+        SQUARE: squareSizes,
+        PANORAMIC: panoramicSizes,
+        RECOMMENDED: recommendedSizes
+      };
+    }
+
+    if (isDigitalPainting) {
+      const squareSizes: SizeShapeOption[] = [
+        {
+          id: 'painting-10x10',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '10" × 10"',
+          dimensionsSummary: '10" × 10"',
+          widthInches: 10,
+          heightInches: 10,
+          price: 2199.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'painting-16x16',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '16" × 16"',
+          dimensionsSummary: '16" × 16"',
+          widthInches: 16,
+          heightInches: 16,
+          price: 2899.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'painting-18x18',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '18" × 18"',
+          dimensionsSummary: '18" × 18"',
+          widthInches: 18,
+          heightInches: 18,
+          price: 3299.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'painting-20x20',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '20" × 20"',
+          dimensionsSummary: '20" × 20"',
+          widthInches: 20,
+          heightInches: 20,
+          price: 3799.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        }
+      ];
+
+      const panoramicSizes: SizeShapeOption[] = [
+        {
+          id: 'painting-12x18',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Portrait',
+          label: '12" × 18"',
+          dimensionsSummary: '12" × 18"',
+          widthInches: 12,
+          heightInches: 18,
+          price: 2598.0,
+          aspectRatio: 12 / 18,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'painting-18x12',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Landscape',
+          label: '18" × 12"',
+          dimensionsSummary: '18" × 12"',
+          widthInches: 18,
+          heightInches: 12,
+          price: 2598.0,
+          aspectRatio: 18 / 12,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'painting-16x24',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Portrait',
+          label: '16" × 24"',
+          dimensionsSummary: '16" × 24"',
+          widthInches: 16,
+          heightInches: 24,
+          price: 3299.0,
+          aspectRatio: 16 / 24,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'painting-24x16',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Landscape',
+          label: '24" × 16"',
+          dimensionsSummary: '24" × 16"',
+          widthInches: 24,
+          heightInches: 16,
+          price: 3299.0,
+          aspectRatio: 24 / 16,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'painting-20x30',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Portrait',
+          label: '20" × 30"',
+          dimensionsSummary: '20" × 30"',
+          widthInches: 20,
+          heightInches: 30,
+          price: 4499.0,
+          aspectRatio: 20 / 30,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'painting-24x36',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Landscape',
+          label: '24" × 36"',
+          dimensionsSummary: '24" × 36"',
+          widthInches: 24,
+          heightInches: 36,
+          price: 5499.0,
+          aspectRatio: 24 / 36,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        }
+      ];
+
+      const recommendedSizes: SizeShapeOption[] = [
+        squareSizes[0],
+        squareSizes[1],
+        squareSizes[2],
+        panoramicSizes[0],
+        panoramicSizes[2],
+        panoramicSizes[4]
       ];
 
       return {
@@ -373,7 +544,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
 
   // Selected Option state
   const defaultOptionId = isSinglePrint
-    ? (isQuotes ? 'quotes-8x8' : material === 'acrylic' ? 'sq-10x10' : 'single-10x10')
+    ? (isQuotes ? 'quotes-8x8' : isDigitalPainting ? 'painting-10x10' : material === 'acrylic' ? 'sq-10x10' : 'single-10x10')
     : (shapedProductOptions[0]?.id || '');
 
   const [selectedOptionId, setSelectedOptionId] = useState<string>(() => {

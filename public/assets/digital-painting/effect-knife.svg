@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1D6FA5"/>
+      <stop offset="50%" stop-color="#6BB5D8"/>
+      <stop offset="100%" stop-color="#FCEBB6"/>
+    </linearGradient>
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFAA33"/>
+      <stop offset="100%" stop-color="#FF6B35"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#skyGrad)"/>
+  <polygon points="20,40 120,30 180,65 60,75" fill="#2A80B9" opacity="0.7"/>
+  <polygon points="140,25 290,15 320,50 190,60" fill="#1B6496" opacity="0.65"/>
+  <polygon points="270,45 380,35 410,75 290,85" fill="#4A9FD1" opacity="0.8"/>
+  <polygon points="40,90 190,80 230,120 70,130" fill="#85C6E5" opacity="0.75"/>
+
+  <polygon points="240,110 290,95 320,135 270,150" fill="url(#sunGrad)"/>
+
+  <polygon points="-10,210 90,140 160,200 70,220" fill="#394970"/>
+  <polygon points="90,140 170,110 240,185 160,200" fill="#273452"/>
+  <polygon points="170,110 260,85 340,180 240,185" fill="#4A5A82"/>
+  <polygon points="260,85 330,125 390,170 340,180" fill="#2D3C5E"/>
+  <polygon points="170,110 185,115 220,170 205,175" fill="#E8A87C" opacity="0.85"/>
+  <polygon points="260,85 275,90 310,150 295,155" fill="#FFD199" opacity="0.9"/>
+
+  <polygon points="-20,270 60,195 140,265 -10,285" fill="#1E4D2B"/>
+  <polygon points="60,195 150,175 220,250 140,265" fill="#2E6F40"/>
+  <polygon points="150,175 250,165 310,240 220,250" fill="#428A54"/>
+  <polygon points="250,165 340,185 420,260 310,240" fill="#1B4023"/>
+  <polygon points="110,210 160,195 190,230 140,245" fill="#DDA15E"/>
+  <polygon points="210,200 270,190 295,225 240,235" fill="#BC6C25"/>
+
+  <polygon points="0,265 400,260 400,320 0,325" fill="#1A535C"/>
+  <polygon points="30,280 150,278 170,295 40,298" fill="#4ECDC4" opacity="0.75"/>
+  <polygon points="180,285 320,282 340,300 190,302" fill="#F7FFF7" opacity="0.6"/>
+  <polygon points="120,305 260,303 280,318 135,320" fill="#FFAA33" opacity="0.8"/>
+
+  <polygon points="-20,340 180,315 280,355 -10,410" fill="#4A2E18"/>
+  <polygon points="160,320 320,310 420,370 260,390" fill="#6F4E37"/>
+  <polygon points="40,350 140,335 180,375 70,390" fill="#8C6239"/>
+  <polygon points="190,345 290,330 330,370 220,385" fill="#E07A5F"/>
+  <polygon points="80,370 160,360 190,395 100,405" fill="#F4A261" opacity="0.9"/>
+
+  <rect x="16" y="348" width="155" height="36" rx="18" fill="rgba(0,0,0,0.75)" stroke="#4ECDC4" stroke-width="1.5"/>
+  <circle cx="34" cy="366" r="6" fill="#4ECDC4"/>
+  <text x="48" y="372" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#FFF">PALETTE KNIFE</text>
+</svg>
