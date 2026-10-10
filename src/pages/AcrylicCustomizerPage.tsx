@@ -36,7 +36,9 @@ import {
   Laptop,
   Copy,
   ExternalLink,
-  QrCode
+  QrCode,
+  Image as ImageIcon,
+  LayoutTemplate
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import {
@@ -105,6 +107,11 @@ import { ClipartItem } from '../data/acrylicClipartData';
 import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
 import { SelectLayoutModal, LayoutModalOption } from '../components/SelectLayoutModal';
 import { WordArtStudioModal } from '../components/WordArtStudioModal';
+import { BusRollLineEditorPanel } from '../components/BusRollLineEditorPanel';
+import { BusRollBackgroundPanel } from '../components/BusRollBackgroundPanel';
+import { BusRollTemplatePanel } from '../components/BusRollTemplatePanel';
+import { BusRollTopToolbar } from '../components/BusRollTopToolbar';
+import { BusRollConfig, DEFAULT_BUS_ROLL_CONFIG, generateBusRollSvgDataUrl } from '../data/busRollData';
 import { getProductSizeShapeOptions, getSizesForProductAndShape } from '../data/productSizeShapeConfig';
 import {
   getProductLayouts,
@@ -270,6 +277,19 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // preview flow instead of a plain photo upload.
   const isWordArt = selectedProductTypeId === 'acrylic-word-art';
   const [isWordArtModalOpen, setIsWordArtModalOpen] = useState(false);
+
+  // Bus Roll on Acrylic: destination-sign-style line editor, reusing the
+  // same controlled BusRollConfig + components built for the Canvas
+  // customizer's Bus Roll product — the editor/background/template panels
+  // and the SVG generator are material-agnostic, so they're shared verbatim.
+  const isBusRoll = selectedProductTypeId === 'acrylic-bus-roll';
+  const [busRollConfig, setBusRollConfig] = useState<BusRollConfig>(DEFAULT_BUS_ROLL_CONFIG);
+  const handleUpdateBusRollConfig = (updates: Partial<BusRollConfig>) => {
+    setBusRollConfig((prev) => ({ ...prev, ...updates }));
+  };
+  const handleStartOverBusRoll = () => {
+    setBusRollConfig(DEFAULT_BUS_ROLL_CONFIG);
+  };
 
   // Product-Specific Compatible Shapes (Centralized via AcrylicProductShapeConfig)
   const compatibleShapes = useMemo(() => {
@@ -512,6 +532,27 @@ export const AcrylicCustomizerPage: React.FC = () => {
     2: createDefaultPanelState(null),
     3: createDefaultPanelState(null)
   });
+
+  // Bus Roll renders its lines/background/pattern as an SVG data URL and
+  // feeds it into the same panel-image slot a normal photo upload would use
+  // — every downstream feature (pan/zoom, Room View, add to cart) keeps
+  // working unmodified, same approach as the Canvas Bus Roll customizer.
+  useEffect(() => {
+    if (selectedProductTypeId !== 'acrylic-bus-roll') return;
+    const svgDataUrl = generateBusRollSvgDataUrl(busRollConfig);
+    setPanelImages((prev) => ({
+      ...prev,
+      0: {
+        ...createDefaultPanelState(svgDataUrl),
+        uploadedImage: {
+          src: svgDataUrl,
+          naturalWidth: Math.round(busRollConfig.widthInches * 40),
+          naturalHeight: Math.round(busRollConfig.heightInches * 40),
+          aspectRatio: busRollConfig.widthInches / Math.max(1, busRollConfig.heightInches)
+        }
+      }
+    }));
+  }, [selectedProductTypeId, busRollConfig]);
 
   // Active Frame / Element Selection
   const [activePanelIndex, setActivePanelIndex] = useState<number>(0);
@@ -3497,8 +3538,21 @@ export const AcrylicCustomizerPage: React.FC = () => {
     'acrylic-single'
   ].includes(selectedProductTypeId);
 
-  // Primary Toolbar items: dynamically filtered by selected product capabilities
+  // Primary Toolbar items: dynamically filtered by selected product capabilities.
+  // Bus Roll gets its own bespoke tab set (line editor / background / template)
+  // instead of the generic upload+size+layouts flow, same as Canvas's Bus Roll.
   const toolbarItems = useMemo<{ id: ToolbarTab; label: string; icon: React.ElementType }[]>(() => {
+    if (selectedProductTypeId === 'acrylic-bus-roll') {
+      return [
+        { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
+        { id: 'CREATE BUS ROLL', label: 'CREATE BUS ROLL', icon: Type },
+        { id: 'BACKGROUND', label: 'BACKGROUND', icon: ImageIcon },
+        { id: 'TEMPLATE', label: 'TEMPLATE', icon: LayoutTemplate },
+        { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
+        { id: 'HARDWARE & FINISH', label: 'HARDWARE OPTION & STYLE', icon: SlidersHorizontal },
+        { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
+      ];
+    }
     const items: { id: ToolbarTab; label: string; icon: React.ElementType; enabled: boolean }[] = [
       { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid, enabled: productCapabilities.products !== false },
       { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud, enabled: productCapabilities.upload !== false },
@@ -3509,7 +3563,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
       { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false }
     ];
     return items.filter((item) => item.enabled);
-  }, [productCapabilities, isSinglePrintAcrylic]);
+  }, [productCapabilities, isSinglePrintAcrylic, selectedProductTypeId]);
 
   // If the active tab is not supported by the currently selected product, safely revert to PRODUCTS
   useEffect(() => {
@@ -3655,7 +3709,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
         {/* COLUMN 2: CONFIGURATION PANEL */}
         <CustomizerPanel
-          title={activeTab}
+          title={toolbarItems.find((t) => t.id === activeTab)?.label || activeTab}
           metaText={
             activeTab === 'PRODUCTS'
               ? `${ACRYLIC_PRODUCT_TYPES.length} Styles`
@@ -3673,6 +3727,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
               ? '5 Options'
               : activeTab === 'HARDWARE & FINISH'
               ? `${compatibleHardware.length} Hardware`
+              : activeTab === 'CREATE BUS ROLL'
+              ? `${busRollConfig.lines.length} Lines`
+              : activeTab === 'BACKGROUND'
+              ? 'Color & Pattern'
+              : activeTab === 'TEMPLATE'
+              ? 'Ready-made Designs'
               : 'Specifications'
           }
         >
@@ -3948,6 +4008,18 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               )}
             </div>
+          )}
+
+          {/* BUS ROLL: line editor / background / template — same controlled
+              components and SVG generator as the Canvas Bus Roll customizer */}
+          {activeTab === 'CREATE BUS ROLL' && (
+            <BusRollLineEditorPanel config={busRollConfig} onChangeConfig={handleUpdateBusRollConfig} />
+          )}
+          {activeTab === 'BACKGROUND' && (
+            <BusRollBackgroundPanel config={busRollConfig} onChangeConfig={handleUpdateBusRollConfig} />
+          )}
+          {activeTab === 'TEMPLATE' && (
+            <BusRollTemplatePanel config={busRollConfig} onChangeConfig={handleUpdateBusRollConfig} />
           )}
 
           {/* SELECT SIZE */}
@@ -4879,22 +4951,32 @@ export const AcrylicCustomizerPage: React.FC = () => {
         {/* CENTER / MAIN WORKSPACE (Shared Customizer Workspace Shell) */}
         <main className="flex-1 flex flex-col bg-[#E2E8F0]/60 relative overflow-hidden">
           
-          {/* SHARED TOP WORKSPACE TOOLBAR: [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW] */}
-          <CustomizerTopToolbar
-            onSave={handleSaveDesign}
-            isTextActive={showTextModal}
-            onToggleText={handleAddNewText}
-            isClipartActive={showClipartModal}
-            onToggleClipart={() => setShowClipartModal(!showClipartModal)}
-            isRoomViewActive={showRoomView}
-            isRoomViewDisabled={!hasUploadedImage}
-            onOpenRoomView={() => {
-              if (!hasUploadedImage) return;
-              setShowRoomView(true);
-            }}
-            canDeleteSelectedItem={selectedElement.type !== 'image'}
-            onDeleteSelectedItem={handleDeleteSelectedElement}
-          />
+          {/* SHARED TOP WORKSPACE TOOLBAR: [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW] —
+              Bus Roll swaps this for its own line-spacing/margin/width/font toolbar */}
+          {selectedProductTypeId === 'acrylic-bus-roll' ? (
+            <BusRollTopToolbar
+              config={busRollConfig}
+              onChangeConfig={handleUpdateBusRollConfig}
+              onSave={handleSaveDesign}
+              onStartOver={handleStartOverBusRoll}
+            />
+          ) : (
+            <CustomizerTopToolbar
+              onSave={handleSaveDesign}
+              isTextActive={showTextModal}
+              onToggleText={handleAddNewText}
+              isClipartActive={showClipartModal}
+              onToggleClipart={() => setShowClipartModal(!showClipartModal)}
+              isRoomViewActive={showRoomView}
+              isRoomViewDisabled={!hasUploadedImage}
+              onOpenRoomView={() => {
+                if (!hasUploadedImage) return;
+                setShowRoomView(true);
+              }}
+              canDeleteSelectedItem={selectedElement.type !== 'image'}
+              onDeleteSelectedItem={handleDeleteSelectedElement}
+            />
+          )}
 
           {/* LIVE REAL-TIME TEXT EDITOR COMPONENT */}
           {showTextModal && activeTextElement && (

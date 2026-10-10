@@ -6,17 +6,20 @@
 
 import { STANDARD_SHAPE_SIZES } from './productSizeShapeConfig';
 
-export type ToolbarTab = 
-  | 'PRODUCTS' 
-  | 'UPLOAD' 
-  | 'SELECT SIZE' 
+export type ToolbarTab =
+  | 'PRODUCTS'
+  | 'UPLOAD'
+  | 'SELECT SIZE'
   | 'SHAPES'
   | 'SHAPE'
-  | 'LAYOUTS & DESIGNS' 
+  | 'LAYOUTS & DESIGNS'
   | 'WRAP & BORDER'
-  | 'HARDWARE & FINISH' 
+  | 'HARDWARE & FINISH'
   | 'OPTIONS'
-  | 'TEMPLATES';
+  | 'TEMPLATES'
+  | 'CREATE BUS ROLL'
+  | 'BACKGROUND'
+  | 'TEMPLATE';
 
 export interface ProductCapabilities {
   products?: boolean;
