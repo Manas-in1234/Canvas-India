@@ -2724,7 +2724,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           ) : (
             /* CLEAN EMPTY SLOT: Blue upload icon + blue Upload an Image text (or the Word Art studio CTA) */
             <div className="w-full h-full flex flex-col items-center justify-center bg-white hover:bg-stone-50/50 transition-colors cursor-pointer group p-3 text-center select-none">
-              <div className={`flex items-center gap-2 ${isWordArt ? 'text-[#B91C1C]' : 'text-[#0E4A93]'} group-hover:scale-105 transition-transform mb-1`}>
+              <div className="flex items-center gap-2 text-[#0E4A93] group-hover:scale-105 transition-transform mb-1">
                 {isWordArt ? (
                   <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
                     <path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v14h14V5H5zm2 2h2.2l2.3 6.2L13.8 7H16v10h-1.8V9.6l-2.3 6.2h-1.4L8.2 9.6V17H7V7z"/>
@@ -3691,7 +3691,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
           {/* TAB 2: UPLOAD — Word Art has no plain photo upload, it opens its own studio */}
           {activeTab === 'UPLOAD' && isWordArt && (
             <div className="flex-1 min-h-0 p-4 flex flex-col items-center justify-center text-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-[#B91C1C]">
+              <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-[#0E4A93]">
                 <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
                   <path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v14h14V5H5zm2 2h2.2l2.3 6.2L13.8 7H16v10h-1.8V9.6l-2.3 6.2h-1.4L8.2 9.6V17H7V7z" />
                 </svg>
@@ -3703,7 +3703,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsWordArtModalOpen(true)}
-                className="px-5 py-2.5 bg-[#B91C1C] hover:bg-[#991515] text-white text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
+                className="px-5 py-2.5 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
               >
                 {panelImages[0]?.imageUrl ? 'Edit Word-Art' : 'Create Word-Art'}
               </button>

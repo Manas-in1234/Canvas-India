@@ -484,7 +484,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       upload: true,
       sizes: true,
       shapes: true,
-      layouts: true,
+      layouts: false,
       wrap: true,
       hardware: true,
       options: true,
