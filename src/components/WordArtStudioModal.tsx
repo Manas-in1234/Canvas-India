@@ -429,7 +429,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
     <div className="fixed inset-0 z-[200] bg-black/60 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[92vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-[#B91C1C] text-white px-5 py-3 flex items-center justify-between shrink-0">
+        <div className="bg-[#0E4A93] text-white px-5 py-3 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             {step === 'personalize' && (
               <button type="button" onClick={() => setStep('size')} className="text-white/90 hover:text-white cursor-pointer" aria-label="Back to size">
@@ -454,7 +454,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
                   type="button"
                   onClick={() => setActiveRatio(r.key)}
                   className={`flex-1 py-3 text-sm font-semibold cursor-pointer transition-colors ${
-                    activeRatio === r.key ? 'text-stone-900 border-b-2 border-[#B91C1C]' : 'text-stone-500 hover:text-stone-700 bg-stone-50'
+                    activeRatio === r.key ? 'text-stone-900 border-b-2 border-[#0E4A93]' : 'text-stone-500 hover:text-stone-700 bg-stone-50'
                   }`}
                 >
                   {r.label}
@@ -483,7 +483,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
                       )}
                     </div>
                     <span className="text-xs font-semibold text-stone-800">{sz.label}</span>
-                    <span className="text-xs font-bold text-[#B91C1C]">₹{sz.price.toLocaleString('en-IN')}</span>
+                    <span className="text-xs font-bold text-[#0E4A93]">₹{sz.price.toLocaleString('en-IN')}</span>
                   </button>
                 );
               })}
@@ -492,7 +492,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
               <button
                 type="button"
                 onClick={() => setStep('personalize')}
-                className="px-8 py-3 bg-[#B91C1C] hover:bg-[#991515] text-white text-sm font-bold rounded-md shadow-sm transition-colors cursor-pointer"
+                className="px-8 py-3 bg-[#0E4A93] hover:bg-[#09356A] text-white text-sm font-bold rounded-md shadow-sm transition-colors cursor-pointer"
               >
                 CREATE WORD-ART
               </button>
@@ -509,7 +509,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
                   value={primaryName}
                   maxLength={15}
                   onChange={(e) => setPrimaryName(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-stone-300 rounded-md focus:outline-none focus:border-[#B91C1C]"
+                  className="w-full px-3 py-2 text-sm border border-stone-300 rounded-md focus:outline-none focus:border-[#0E4A93]"
                   placeholder="e.g. SARAH"
                 />
               </div>
@@ -530,7 +530,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
                 <select
                   value={fontFamily}
                   onChange={(e) => setFontFamily(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-stone-300 rounded-md focus:outline-none focus:border-[#B91C1C] cursor-pointer"
+                  className="w-full px-3 py-2 text-sm border border-stone-300 rounded-md focus:outline-none focus:border-[#0E4A93] cursor-pointer"
                 >
                   {FONT_OPTIONS.map((f) => (
                     <option key={f} value={f}>{f}</option>
@@ -544,7 +544,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
                   value={otherText}
                   onChange={(e) => setOtherText(e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 text-sm border border-stone-300 rounded-md focus:outline-none focus:border-[#B91C1C] resize-none"
+                  className="w-full px-3 py-2 text-sm border border-stone-300 rounded-md focus:outline-none focus:border-[#0E4A93] resize-none"
                   placeholder={'One phrase per line\nUp to 20 characters each'}
                 />
                 <p className="text-[10px] text-stone-400 mt-1">{otherTextLines.length} / {MAX_OTHER_LINES} lines used</p>
@@ -555,7 +555,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
                 <select
                   value={shape}
                   onChange={(e) => setShape(e.target.value as ShapeKey)}
-                  className="w-full px-3 py-2 text-sm border border-stone-300 rounded-md focus:outline-none focus:border-[#B91C1C] cursor-pointer"
+                  className="w-full px-3 py-2 text-sm border border-stone-300 rounded-md focus:outline-none focus:border-[#0E4A93] cursor-pointer"
                 >
                   {SHAPE_OPTIONS.map((s) => (
                     <option key={s.key} value={s.key}>{s.label} {s.emoji}</option>
@@ -596,7 +596,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
                               type="button"
                               onClick={() => toggleSymbol(sym)}
                               className={`w-7 h-7 rounded flex items-center justify-center text-sm border cursor-pointer ${
-                                selectedSymbols.includes(sym) ? 'border-[#B91C1C] bg-red-50' : 'border-stone-200 hover:border-stone-400'
+                                selectedSymbols.includes(sym) ? 'border-[#0E4A93] bg-blue-50' : 'border-stone-200 hover:border-stone-400'
                               }`}
                             >
                               {sym}
@@ -618,7 +618,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
                       type="button"
                       onClick={() => setColorSchemeName(name as keyof typeof COLOR_SCHEMES)}
                       className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md border text-[11px] font-semibold cursor-pointer ${
-                        colorSchemeName === name ? 'border-[#B91C1C] bg-red-50' : 'border-stone-200 hover:border-stone-400'
+                        colorSchemeName === name ? 'border-[#0E4A93] bg-blue-50' : 'border-stone-200 hover:border-stone-400'
                       }`}
                     >
                       <span className="flex">
@@ -637,7 +637,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
                 <select
                   value={textDirection}
                   onChange={(e) => setTextDirection(e.target.value as 'horizontal' | 'vertical')}
-                  className="w-full px-3 py-2 text-sm border border-stone-300 rounded-md focus:outline-none focus:border-[#B91C1C] cursor-pointer"
+                  className="w-full px-3 py-2 text-sm border border-stone-300 rounded-md focus:outline-none focus:border-[#0E4A93] cursor-pointer"
                 >
                   <option value="horizontal">Horizontal</option>
                   <option value="vertical">Vertical</option>
@@ -648,7 +648,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
                 type="button"
                 onClick={handleGeneratePreview}
                 disabled={generating}
-                className="w-full py-3 bg-[#B91C1C] hover:bg-[#991515] disabled:opacity-60 text-white text-sm font-bold rounded-md shadow-sm transition-colors cursor-pointer"
+                className="w-full py-3 bg-[#0E4A93] hover:bg-[#09356A] disabled:opacity-60 text-white text-sm font-bold rounded-md shadow-sm transition-colors cursor-pointer"
               >
                 {generating ? 'GENERATING...' : 'VIEW YOUR PERSONALIZATION'}
               </button>
@@ -688,7 +688,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
                   type="button"
                   onClick={handleAddToProduct}
                   disabled={!previewUrl}
-                  className="px-5 py-2.5 bg-[#B91C1C] hover:bg-[#991515] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-md shadow-sm transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-[#0E4A93] hover:bg-[#09356A] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-md shadow-sm transition-colors cursor-pointer"
                 >
                   ADD TO PRODUCT
                 </button>
