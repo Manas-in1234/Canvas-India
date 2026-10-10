@@ -3660,7 +3660,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
             activeTab === 'PRODUCTS'
               ? `${ACRYLIC_PRODUCT_TYPES.length} Styles`
               : activeTab === 'UPLOAD'
-              ? `${uploadedPhotos.length} Photos`
+              ? isWordArt ? 'Word Art' : `${uploadedPhotos.length} Photos`
               : activeTab === 'SELECT SIZE'
               ? `${shapeSizes.length + 1} Options`
               : activeTab === 'LAYOUTS & DESIGNS'
@@ -3688,8 +3688,28 @@ export const AcrylicCustomizerPage: React.FC = () => {
             />
           )}
 
-          {/* TAB 2: UPLOAD */}
-          {activeTab === 'UPLOAD' && (
+          {/* TAB 2: UPLOAD — Word Art has no plain photo upload, it opens its own studio */}
+          {activeTab === 'UPLOAD' && isWordArt && (
+            <div className="flex-1 min-h-0 p-4 flex flex-col items-center justify-center text-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-[#B91C1C]">
+                <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                  <path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v14h14V5H5zm2 2h2.2l2.3 6.2L13.8 7H16v10h-1.8V9.6l-2.3 6.2h-1.4L8.2 9.6V17H7V7z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-1">Word Art on Acrylic</h3>
+                <p className="text-[11px] text-stone-500">Build your personalized word-cloud design — no photo upload needed for this product.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsWordArtModalOpen(true)}
+                className="px-5 py-2.5 bg-[#B91C1C] hover:bg-[#991515] text-white text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
+              >
+                {panelImages[0]?.imageUrl ? 'Edit Word-Art' : 'Create Word-Art'}
+              </button>
+            </div>
+          )}
+          {activeTab === 'UPLOAD' && !isWordArt && (
             <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
               <div>
                 <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-1">
