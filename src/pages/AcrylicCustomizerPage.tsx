@@ -1273,6 +1273,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
   }, [isCustomSize, customWidth, customHeight, currentShape, currentSizeOption]);
 
   const effectiveWidthInches = useMemo(() => {
+    // Bus Roll's print panel should always match its own configured
+    // dimensions exactly (it's a plain rectangle, not one of the cut
+    // shapes) — otherwise the panel keeps whatever shape/size was selected
+    // before switching to Bus Roll and the generated design gets
+    // letterboxed inside a mismatched box instead of filling it.
+    if (isBusRoll) return busRollConfig.widthInches;
     const rawW = isCustomSize ? customWidth : (currentSizeOption?.widthInches || 12);
     const rawH = isCustomSize ? customHeight : (currentSizeOption?.heightInches || 12);
     if (['shape-square', 'shape-circle', 'shape-heart', 'shape-hexagon'].includes(selectedShapeId)) {
@@ -1286,9 +1292,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
       if (rawW > rawH) return rawH;
     }
     return rawW;
-  }, [isCustomSize, customWidth, customHeight, currentSizeOption, selectedShapeId]);
+  }, [isCustomSize, customWidth, customHeight, currentSizeOption, selectedShapeId, isBusRoll, busRollConfig.widthInches]);
 
   const effectiveHeightInches = useMemo(() => {
+    if (isBusRoll) return busRollConfig.heightInches;
     const rawW = isCustomSize ? customWidth : (currentSizeOption?.widthInches || 12);
     const rawH = isCustomSize ? customHeight : (currentSizeOption?.heightInches || 12);
     if (['shape-square', 'shape-circle', 'shape-heart', 'shape-hexagon'].includes(selectedShapeId)) {
@@ -1302,7 +1309,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
       if (rawH === rawW) return Math.round(rawW * 1.35);
     }
     return rawH;
-  }, [isCustomSize, customWidth, customHeight, currentSizeOption, selectedShapeId]);
+  }, [isCustomSize, customWidth, customHeight, currentSizeOption, selectedShapeId, isBusRoll, busRollConfig.heightInches]);
 
   const productAspectRatio = useMemo(() => {
     return Math.max(0.2, effectiveWidthInches / Math.max(1, effectiveHeightInches));
@@ -1961,6 +1968,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
     // 1. Update selected product state (updates card checkmark, header title, and price)
     setSelectedProductTypeId(pt.id);
+
+    // Bus Roll jumps straight to its own line editor instead of landing on
+    // the generic PRODUCTS tab — there's no plain photo upload step for it.
+    if (pt.id === 'acrylic-bus-roll') {
+      setActiveTab('CREATE BUS ROLL');
+    }
 
     // 2. Apply the product's default layout (4-grid for Acrylic Collage, 2-split for Acrylic Split Panel; preserve manual layout between single-panel products)
     const isMultiSlotProduct = (id: string) =>
