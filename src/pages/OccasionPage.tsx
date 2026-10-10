@@ -28,26 +28,25 @@ const OCCASION_ICONS: Record<string, React.ComponentType<{ className?: string }>
   'republic-day': Flag,
   'valentines-day': Heart,
   'womens-day': Crown,
+  rakshabandhan: HandHeart,
+  janmashtami: Music2,
+  'ganesh-chaturthi': Sparkles,
+  'karwa-chauth': Moon,
+  halloween: Ghost,
+  'bhai-dooj': CalendarHeart,
+  christmas: TreePine,
+  lohri: Flame,
+  'makar-sankranti': Sun,
+  pongal: Wheat,
+  holi: Sparkles,
 };
 
-// Festival/special-day list shown on the Festive Offers page. The 11 with
-// their own dedicated occasion page (Mother's/Brother's/Father's Day,
-// Friendship Day, Teacher's/Children's/Men's/Women's Day, New Year,
-// Republic Day, Valentine's Day) live there instead — this is just the
-// remainder, still worth a quick-pick grid but without a full page each.
+// Festival/special-day quick-pick shown on every occasion page. Every
+// festival that previously lived only here now has its own dedicated
+// occasion page (reachable via the pill row above) — Diwali is the one
+// exception, kept inside Festive Offers only, per direct request.
 const ALL_FESTIVALS: { name: string; date: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }[] = [
-  { name: 'Rakshabandhan', date: '28th August', icon: HandHeart },
-  { name: 'Janmashtami', date: '4th September', icon: Music2 },
-  { name: 'Ganesh Chaturthi', date: '14th September', icon: Sparkles },
-  { name: 'Karwa Chauth', date: '29th October', icon: Moon },
-  { name: 'Halloween', date: '31st October', icon: Ghost },
   { name: 'Diwali', date: '5th November', icon: Flame },
-  { name: 'Bhai Dooj', date: '11th November', icon: CalendarHeart },
-  { name: 'Christmas', date: '25th December', icon: TreePine },
-  { name: 'Lohri', date: '13th January', icon: Flame },
-  { name: 'Makar Sankranti', date: '14th January', icon: Sun },
-  { name: 'Pongal', date: '14th January', icon: Wheat },
-  { name: 'Holi', date: '6th March', icon: Sparkles },
 ];
 
 // Format-level selling points (material, not occasion-specific — the same
