@@ -346,6 +346,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
     if (isLayoutProduct) {
       const layouts = getProductLayouts(selectedProductTypeId);
       return layouts.map((layout) => ({
+        // Preserve every field from the layout definition (panels,
+        // diagramType, arrangement, etc.) — hand-picking fields here
+        // previously dropped `panels` silently, so every Wall Display
+        // layout fell back to the same hardcoded 3-panel default
+        // regardless of which one was selected.
+        ...layout,
         id: layout.id,
         productTypeId: selectedProductTypeId,
         category: 'RECTANGLE' as SizeCategory,
@@ -435,6 +441,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const configOpt = getProductSizeShapeOptions(selectedProductTypeId, 'acrylic').find((o) => o.id === selectedSizeId);
     if (configOpt) {
       return {
+        // Preserve every field from the matched preset (panels, diagramType,
+        // arrangement, etc.) — hand-picking fields here previously dropped
+        // `panels` silently, so every Wall Display layout fell back to the
+        // same hardcoded 3-panel default regardless of what was selected.
+        ...configOpt,
         id: configOpt.id,
         productTypeId: selectedProductTypeId,
         category: (configOpt.category === 'MULTI_PANEL' ? 'RECTANGLE' : configOpt.category) as SizeCategory,
