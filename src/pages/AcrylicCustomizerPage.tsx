@@ -107,6 +107,7 @@ import { ClipartItem } from '../data/acrylicClipartData';
 import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
 import { SelectLayoutModal, LayoutModalOption } from '../components/SelectLayoutModal';
 import { WordArtStudioModal } from '../components/WordArtStudioModal';
+import { WordArtPreferenceModal } from '../components/WordArtPreferenceModal';
 import { BusRollLineEditorPanel } from '../components/BusRollLineEditorPanel';
 import { BusRollBackgroundPanel } from '../components/BusRollBackgroundPanel';
 import { BusRollTemplatePanel } from '../components/BusRollTemplatePanel';
@@ -296,6 +297,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // preview flow instead of a plain photo upload.
   const isWordArt = selectedProductTypeId === 'acrylic-word-art';
   const [isWordArtModalOpen, setIsWordArtModalOpen] = useState(false);
+  // Picking Word Art first asks "Create Your Own" vs "Select From Our
+  // Collection" — only the Create Your Own path (the existing studio) has
+  // real content behind it right now.
+  const [isWordArtPreferenceModalOpen, setIsWordArtPreferenceModalOpen] = useState(false);
 
   // Bus Roll on Acrylic: destination-sign-style line editor, reusing the
   // same controlled BusRollConfig + components built for the Canvas
@@ -1392,7 +1397,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const handleEmptyFrameClick = (panelIdx: number) => {
     if (isWordArt) {
       uploadTargetPanelRef.current = panelIdx;
-      setIsWordArtModalOpen(true);
+      // Already have a design for this slot (re-editing) — skip straight
+      // back into the studio instead of asking the preference question again.
+      if (panelImages[panelIdx]?.imageUrl) {
+        setIsWordArtModalOpen(true);
+      } else {
+        setIsWordArtPreferenceModalOpen(true);
+      }
       return;
     }
     uploadTargetPanelRef.current = panelIdx;
@@ -2162,7 +2173,17 @@ export const AcrylicCustomizerPage: React.FC = () => {
       'acrylic-mosaic'
     ].includes(pt.id);
 
-    if (isSingle) {
+    if (pt.id === 'acrylic-word-art') {
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setActiveTab(getFirstTabForProduct(pt));
+      // Only ask Create-Your-Own-vs-Collection for a blank slot — if the
+      // shopper already has a design here (switched away and back), don't
+      // re-interrupt them with the preference popup.
+      if (!panelImages[0]?.imageUrl) {
+        setIsWordArtPreferenceModalOpen(true);
+      }
+    } else if (isSingle) {
       setIsSizeShapeModalOpen(true);
       setIsLayoutModalOpen(false);
     } else if (isLayoutProduct) {
@@ -3878,7 +3899,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
               </div>
               <button
                 type="button"
-                onClick={() => setIsWordArtModalOpen(true)}
+                onClick={() =>
+                  panelImages[0]?.imageUrl
+                    ? setIsWordArtModalOpen(true)
+                    : setIsWordArtPreferenceModalOpen(true)
+                }
                 className="px-5 py-2.5 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
               >
                 {panelImages[0]?.imageUrl ? 'Edit Word-Art' : 'Create Word-Art'}
@@ -5353,6 +5378,16 @@ export const AcrylicCustomizerPage: React.FC = () => {
         currentLayoutId={selectedLayoutId}
         onSelectLayout={handleApplyLayoutFromModal}
       />
+
+      {isWordArtPreferenceModalOpen && (
+        <WordArtPreferenceModal
+          onClose={() => setIsWordArtPreferenceModalOpen(false)}
+          onSelectCreateOwn={() => {
+            setIsWordArtPreferenceModalOpen(false);
+            setIsWordArtModalOpen(true);
+          }}
+        />
+      )}
 
       {isWordArtModalOpen && (
         <WordArtStudioModal
