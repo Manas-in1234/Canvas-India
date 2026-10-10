@@ -1988,16 +1988,24 @@ export const AcrylicCustomizerPage: React.FC = () => {
     if (!pt) return;
 
     // 1. Update selected product state (updates card checkmark, header title, and price)
+    const previousProductTypeId = selectedProductTypeId;
     setSelectedProductTypeId(pt.id);
 
-    // Selecting any product jumps straight to its first relevant section
-    // instead of leaving the shopper stranded on PRODUCTS — mirrors the
-    // same tab ordering the left toolbar itself uses (toolbarItems), just
-    // evaluated against the NEW product's own capabilities, since the
-    // component's existing `productCapabilities`/`toolbarItems` are still
-    // derived from the OLD selectedProductTypeId at this point in the
-    // handler (state updates haven't re-rendered yet).
-    setActiveTab(getFirstTabForProduct(pt));
+    // Bus Roll auto-generates its SVG straight into panelImages[0] (see the
+    // sync effect above), and Word Art's studio writes its generated PNG
+    // there too — leaving the product, neither gets cleared back out, so
+    // the "preserve uploaded images" step below would otherwise treat that
+    // leftover generated design as if it were a real photo the shopper
+    // uploaded and carry it into whatever product comes next.
+    if (
+      (previousProductTypeId === 'acrylic-bus-roll' || previousProductTypeId === 'acrylic-word-art') &&
+      pt.id !== previousProductTypeId
+    ) {
+      setPanelImages((prev) => ({
+        ...prev,
+        0: createDefaultPanelState(null)
+      }));
+    }
 
     // 2. Apply the product's default layout (4-grid for Acrylic Collage, 2-split for Acrylic Split Panel; preserve manual layout between single-panel products)
     const isMultiSlotProduct = (id: string) =>
@@ -2137,7 +2145,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
     } else {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
-      setActiveTab('UPLOAD');
+      // Jump straight to this product's first relevant section (UPLOAD for
+      // most, CREATE BUS ROLL for Bus Roll) instead of a hardcoded 'UPLOAD'
+      // — this used to unconditionally override an earlier attempt to set
+      // the Bus Roll-specific tab, since this runs later in the same
+      // handler and always wins.
+      setActiveTab(getFirstTabForProduct(pt));
     }
   };
 
