@@ -161,7 +161,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           {/* Stitched Circular Orange Leather Badge */}
           <button
             type="button"
-            onClick={() => navigate('/festive-offers')}
+            onClick={() => navigate('/occasions/festive-offers')}
             aria-label="View festive offers"
             className="ci-float -mt-1.5 w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#EA580C] via-[#DC2626] to-[#9A3412] text-white flex flex-col items-center justify-center p-2 shadow-2xl shadow-orange-950/50 border-4 border-[#78350F] relative overflow-hidden cursor-pointer hover:scale-105 hover:shadow-orange-900/60 transition-transform duration-300"
           >
