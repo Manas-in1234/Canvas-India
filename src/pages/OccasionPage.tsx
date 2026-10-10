@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ChevronRight, ArrowRight, Sparkles, Cake, Heart, Gem, Home, Flame, Gift, PartyPopper,
   Users, GraduationCap, Baby, UserRound, Flag, CalendarHeart, HandHeart, Music2, Moon, Ghost, TreePine, Sun, Wheat, Crown,
+  Check, ShieldCheck, Smile, Image as ImageIcon, RectangleHorizontal, Square, Circle, Plus,
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { OCCASIONS, getOccasionBySlug } from '../data/occasionsData';
@@ -47,6 +48,42 @@ const ALL_FESTIVALS: { name: string; date: string; icon: React.ComponentType<{ c
   { name: 'Makar Sankranti', date: '14th January', icon: Sun },
   { name: 'Pongal', date: '14th January', icon: Wheat },
   { name: 'Holi', date: '6th March', icon: Sparkles },
+];
+
+// Format-level selling points (material, not occasion-specific — the same
+// canvas/acrylic facts apply no matter which occasion page they appear on).
+const FORMAT_INFO: Record<string, { icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; tagline: string; description: string; bullets: string[]; cta: string }> = {
+  canvas: {
+    icon: ImageIcon,
+    tagline: 'Warm. Artistic. Timeless.',
+    description: 'Canvas prints give your photos a beautiful textured finish, creating a classic and heartfelt gift that feels personal and warm.',
+    bullets: ['Matte finish with rich colours', 'Sturdy & durable', 'Perfect for home or gifting'],
+    cta: 'Explore Canvas',
+  },
+  acrylic: {
+    icon: Sparkles,
+    tagline: 'Sleek. Vibrant. Modern.',
+    description: 'Acrylic prints bring your photos to life with vivid colours, a glossy finish and a premium, modern look.',
+    bullets: ['Crystal clear, high-gloss finish', 'Brighter & sharper colours', 'Looks premium and elegant'],
+    cta: 'Explore Acrylic',
+  },
+};
+
+const SHAPE_OPTIONS: { name: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }[] = [
+  { name: 'Rectangle', icon: RectangleHorizontal },
+  { name: 'Square', icon: Square },
+  { name: 'Circle', icon: Circle },
+  { name: 'Heart', icon: Heart },
+  { name: 'Custom Size', icon: Plus },
+];
+
+const STANDARD_SIZES = ['8x6', '12x8', '16x12', '20x16', '24x18'];
+
+const TRUST_BADGES: { label: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }[] = [
+  { label: 'High Quality Prints', icon: Gift },
+  { label: 'Safe & Secure Delivery', icon: ShieldCheck },
+  { label: 'Premium Finish', icon: Heart },
+  { label: 'Loved by Thousands', icon: Smile },
 ];
 
 export const OccasionPage: React.FC = () => {
@@ -190,78 +227,64 @@ export const OccasionPage: React.FC = () => {
         })}
       </div>
 
-      {/* START YOUR GIFT ORDER — one tile per relevant format, straight into the customizer */}
+      {/* FORMAT CARDS — Canvas / Acrylic, each with its own selling points, straight into the customizer */}
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 pb-16 sm:pb-20">
         {occasion.categorySlugs.length > 0 && (
-        <>
-        <div className="text-center mb-10">
-          <h2
-            className="text-2xl sm:text-3xl font-bold text-stone-900"
-            style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-          >
-            Start Your {occasion.name} Gift Order
-          </h2>
-          <p className="text-xs sm:text-sm text-stone-500 mt-1.5">Pick a format to start personalizing your {occasion.name.toLowerCase()} gift</p>
-          <div className="flex items-center justify-center gap-3 mt-4">
-            <span className="h-px w-16 bg-stone-300" />
-            <Heart className="w-3.5 h-3.5" style={{ color: occasion.accent }} fill={occasion.accent} />
-            <span className="h-px w-16 bg-stone-300" />
-          </div>
-        </div>
-
-        {giftTiles.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
-            {giftTiles.map((tile) => {
-              const isCanvas = tile.categorySlug === 'canvas';
-              const isAcrylic = tile.categorySlug === 'acrylic';
-              return (
-                <button
-                  key={tile.categorySlug}
-                  type="button"
-                  onClick={() => navigate(tile.destination)}
-                  className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer text-left ring-1 ring-black/5"
-                  style={{ backgroundColor: `${occasion.accent}14` }}
-                >
-                  {/* Canvas: inset like a framed/stretched canvas on a wall.
-                      Acrylic: full-bleed with a glossy diagonal sheen. */}
-                  <div className={isCanvas ? 'absolute inset-5 sm:inset-7 rounded-md overflow-hidden shadow-lg' : 'absolute inset-0'}>
-                    <img
-                      src={tile.image}
-                      alt={tile.name}
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    {isAcrylic && (
-                      <div
-                        className="absolute inset-0 pointer-events-none"
-                        style={{ background: 'linear-gradient(115deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 30%, rgba(255,255,255,0) 70%, rgba(255,255,255,0.2) 100%)' }}
+          giftTiles.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-7">
+              {giftTiles.map((tile) => {
+                const info = FORMAT_INFO[tile.categorySlug];
+                if (!info) return null;
+                const FormatIcon = info.icon;
+                return (
+                  <div
+                    key={tile.categorySlug}
+                    className="rounded-2xl border border-stone-200 bg-white shadow-sm overflow-hidden"
+                  >
+                    <div className="relative aspect-[16/9] overflow-hidden">
+                      <img src={tile.image} alt={tile.name} className="absolute inset-0 w-full h-full object-cover" />
+                      <span
+                        className="absolute bottom-3 right-3 w-14 h-14 rounded-full border-4 border-white shadow-md"
+                        style={{ background: tile.categorySlug === 'canvas' ? 'repeating-linear-gradient(45deg, #e7e5e4, #e7e5e4 2px, #f5f5f4 2px, #f5f5f4 6px)' : 'linear-gradient(135deg, #cbd5e1, #f8fafc, #93c5fd)' }}
                       />
-                    )}
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-
-                  {tile.customizerKey && (
-                    <span className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 flex items-center justify-center shadow-md">
-                      <Sparkles className="w-5 h-5" style={{ color: occasion.accent }} />
-                    </span>
-                  )}
-
-                  <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
-                    <div className="font-extrabold text-white text-xl sm:text-2xl leading-tight drop-shadow-sm">
-                      {tile.name}
                     </div>
-                    <div className="mt-2.5 inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-white/95 bg-white/15 backdrop-blur-sm px-3.5 py-1.5 rounded-full border border-white/30 group-hover:bg-white/25 transition-colors">
-                      <span>{tile.customizerKey ? 'Customize Now' : 'Shop Now'}</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    <div className="p-6 sm:p-7">
+                      <div className="flex items-center gap-3">
+                        <span className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${occasion.accent}14` }}>
+                          <FormatIcon className="w-5 h-5" style={{ color: occasion.accent }} />
+                        </span>
+                        <h3 className="text-xl sm:text-2xl font-bold text-stone-900" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+                          {tile.name}
+                        </h3>
+                      </div>
+                      <p className="mt-4 font-bold text-base" style={{ color: occasion.accent }}>{info.tagline}</p>
+                      <p className="mt-2 text-sm text-stone-600 leading-relaxed">{info.description}</p>
+                      <ul className="mt-4 space-y-2">
+                        {info.bullets.map((b) => (
+                          <li key={b} className="flex items-center gap-2 text-sm text-stone-700">
+                            <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${occasion.accent}14` }}>
+                              <Check className="w-3 h-3" style={{ color: occasion.accent }} />
+                            </span>
+                            {b}
+                          </li>
+                        ))}
+                      </ul>
+                      <button
+                        type="button"
+                        onClick={() => navigate(tile.destination)}
+                        className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#E8752A] hover:bg-[#D3631A] text-white text-sm font-bold shadow-sm transition-colors cursor-pointer"
+                      >
+                        <span>{info.cta}</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-center text-sm text-stone-500 py-12">New {occasion.name.toLowerCase()} picks are on the way — check back soon.</p>
-        )}
-        </>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-center text-sm text-stone-500 py-12">New {occasion.name.toLowerCase()} picks are on the way — check back soon.</p>
+          )
         )}
 
         {/* Shop by Festival — every special day from the reference grid,
@@ -310,6 +333,97 @@ export const OccasionPage: React.FC = () => {
           </Link>
         </div>
         )}
+      </div>
+
+      {/* CHOOSE YOUR SHAPE & SIZE — a visual teaser of the customizer's first
+          two steps, same on every occasion page, leading into Personalize Now */}
+      <div className="w-full bg-[#EFF6FF] py-14 sm:py-16">
+        <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-8 text-center">
+          <span className="text-xs font-bold tracking-widest uppercase" style={{ color: occasion.accent }}>Choose Your</span>
+          <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 mt-1" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+            Choose Your Shape &amp; Size
+          </h2>
+          <p className="text-xs sm:text-sm text-stone-500 mt-2 max-w-xl mx-auto">
+            Pick a shape and size, or go custom. Then upload your photo, add a message (optional), and we&apos;ll turn it into a beautiful keepsake.
+          </p>
+
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-5 text-left">
+            {/* Step 1: Choose Shape */}
+            <div className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0" style={{ backgroundColor: occasion.accent }}>1</span>
+                <span className="font-bold text-sm text-stone-900">Choose Shape</span>
+              </div>
+              <div className="grid grid-cols-5 gap-2">
+                {SHAPE_OPTIONS.map((s, i) => {
+                  const SIcon = s.icon;
+                  const active = i === 0;
+                  return (
+                    <div
+                      key={s.name}
+                      className={`aspect-square rounded-lg border-2 flex items-center justify-center ${active ? '' : 'border-stone-200 border-dashed'}`}
+                      style={active ? { borderColor: occasion.accent, backgroundColor: `${occasion.accent}14` } : undefined}
+                      title={s.name}
+                    >
+                      <SIcon className="w-4 h-4" style={{ color: active ? occasion.accent : '#a8a29e' }} />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Step 2: Select Size */}
+            <div className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0" style={{ backgroundColor: occasion.accent }}>2</span>
+                <span className="font-bold text-sm text-stone-900">Select Size</span>
+              </div>
+              <div className="flex rounded-lg border border-stone-200 p-1 text-xs font-bold mb-3">
+                <span className="flex-1 text-center py-1.5 rounded-md text-white" style={{ backgroundColor: occasion.accent }}>Standard Sizes</span>
+                <span className="flex-1 text-center py-1.5 rounded-md text-stone-500">Custom Size</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {STANDARD_SIZES.map((sz) => (
+                  <span key={sz} className="px-2.5 py-1 rounded-full border border-stone-200 text-[11px] font-semibold text-stone-600">{sz}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Step 3: Start Customizing */}
+            <div className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6 flex flex-col">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0" style={{ backgroundColor: occasion.accent }}>3</span>
+                <span className="font-bold text-sm text-stone-900">Start Customizing</span>
+              </div>
+              <p className="text-xs text-stone-500 leading-relaxed flex-1">
+                Upload your photo, add a message (if you want) and create something truly special.
+              </p>
+              <button
+                type="button"
+                onClick={handleCustomizeFestival}
+                className="mt-4 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#E8752A] hover:bg-[#D3631A] text-white text-sm font-bold shadow-sm transition-colors cursor-pointer"
+              >
+                <span>Personalize Now</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* TRUST BADGES FOOTER */}
+      <div className="w-full bg-[#FFFDF9] py-8 border-t border-stone-100">
+        <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-8 grid grid-cols-2 sm:grid-cols-4 gap-6">
+          {TRUST_BADGES.map((b) => {
+            const BIcon = b.icon;
+            return (
+              <div key={b.label} className="flex flex-col items-center text-center gap-2">
+                <BIcon className="w-5 h-5" style={{ color: occasion.accent }} />
+                <span className="text-[11px] sm:text-xs font-semibold text-stone-600">{b.label}</span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
