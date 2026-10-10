@@ -1267,11 +1267,14 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Dimension label helper
   const currentDimensionLabel = useMemo(() => {
+    if (isBusRoll) {
+      return `${busRollConfig.widthInches}" × ${busRollConfig.heightInches}"`;
+    }
     if (isCustomSize) {
       return `${customWidth}" × ${customHeight}"`;
     }
     return currentSizeOption?.label || currentShape.name;
-  }, [isCustomSize, customWidth, customHeight, currentShape, currentSizeOption]);
+  }, [isCustomSize, customWidth, customHeight, currentShape, currentSizeOption, isBusRoll, busRollConfig.widthInches, busRollConfig.heightInches]);
 
   const effectiveWidthInches = useMemo(() => {
     // Bus Roll's print panel should always match its own configured
@@ -5180,7 +5183,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     <span className="text-[#0E4A93] font-extrabold">Slot {activePanelIndex + 1}</span>
                   </>
                 )}
-                {activeFrameState.imageUrl && (
+                {activeFrameState.imageUrl && !isBusRoll && !isWordArt && (
                   <button
                     type="button"
                     onClick={(e) => {
@@ -5197,11 +5200,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
               </div>
             }
           >
-            {/* Top Adjustment Banner */}
-            <div className="w-full max-w-xl mx-auto mb-2 bg-[#FEF9C3] border border-[#FDE047] text-[#854D0E] text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs select-none">
-              <Move className="w-3.5 h-3.5 text-[#A16207]" />
-              <span>Click and drag within the print lines to Adjust your Photo.</span>
-            </div>
+            {/* Top Adjustment Banner — doesn't apply to generated designs like Bus Roll/Word Art */}
+            {!isBusRoll && !isWordArt && (
+              <div className="w-full max-w-xl mx-auto mb-2 bg-[#FEF9C3] border border-[#FDE047] text-[#854D0E] text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs select-none">
+                <Move className="w-3.5 h-3.5 text-[#A16207]" />
+                <span>Click and drag within the print lines to Adjust your Photo.</span>
+              </div>
+            )}
 
             {/* Acrylic Product Frame Wrapper with Dimension Rulers */}
             <div className="relative flex flex-col items-center select-none w-full max-w-2xl my-auto">
