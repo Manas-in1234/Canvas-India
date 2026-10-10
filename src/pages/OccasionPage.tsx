@@ -214,6 +214,25 @@ export const OccasionPage: React.FC = () => {
         </section>
       </div>
 
+      {/* PERSONAL PITCH — a short, occasion-specific line of warmth right
+          below the hero, same treatment on every occasion/festival page */}
+      <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 pt-10 sm:pt-12 text-center">
+        <h2
+          className="text-2xl sm:text-3xl font-bold text-stone-900"
+          style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+        >
+          {occasion.pitchHeadline}
+        </h2>
+        <p className="text-sm sm:text-base text-stone-500 max-w-xl mx-auto mt-3 leading-relaxed">
+          {occasion.pitchText}
+        </p>
+        <div className="flex items-center justify-center gap-3 mt-4">
+          <span className="h-px w-16 bg-stone-300" />
+          <Heart className="w-3.5 h-3.5" style={{ color: occasion.accent }} fill={occasion.accent} />
+          <span className="h-px w-16 bg-stone-300" />
+        </div>
+      </div>
+
       {/* OTHER OCCASIONS QUICK SWITCH */}
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-6 flex flex-wrap items-center justify-center gap-2.5">
         {OCCASIONS.map((o) => {
