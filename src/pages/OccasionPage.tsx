@@ -288,10 +288,9 @@ export const OccasionPage: React.FC = () => {
         )}
 
         {/* Shop by Festival — every special day from the reference grid,
-            not just the occasions with their own dedicated page. Festive
-            Offers only. */}
-        {occasion.slug === 'festive-offers' && (
-          <div className="mt-16 sm:mt-20">
+            shown on every occasion page so any page can jump straight to
+            any festival's gift order. */}
+        <div className="mt-16 sm:mt-20">
             <div className="text-center mb-8">
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
                 Shop by Festival
@@ -322,8 +321,7 @@ export const OccasionPage: React.FC = () => {
                 );
               })}
             </div>
-          </div>
-        )}
+        </div>
 
         {occasion.categorySlugs.length > 0 && (
         <div className="text-center mt-10">
