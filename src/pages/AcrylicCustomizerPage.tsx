@@ -111,7 +111,7 @@ import { BusRollLineEditorPanel } from '../components/BusRollLineEditorPanel';
 import { BusRollBackgroundPanel } from '../components/BusRollBackgroundPanel';
 import { BusRollTemplatePanel } from '../components/BusRollTemplatePanel';
 import { BusRollTopToolbar } from '../components/BusRollTopToolbar';
-import { BusRollConfig, DEFAULT_BUS_ROLL_CONFIG, generateBusRollSvgDataUrl } from '../data/busRollData';
+import { BusRollConfig, generateBusRollSvgDataUrl } from '../data/busRollData';
 import { getProductSizeShapeOptions, getSizesForProductAndShape } from '../data/productSizeShapeConfig';
 import {
   getProductLayouts,
@@ -282,13 +282,37 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // same controlled BusRollConfig + components built for the Canvas
   // customizer's Bus Roll product — the editor/background/template panels
   // and the SVG generator are material-agnostic, so they're shared verbatim.
+  //
+  // Acrylic starts from a genuinely blank config (empty lines, plain black
+  // background) rather than the shared DEFAULT_BUS_ROLL_CONFIG, which is
+  // pre-filled with a Canvas demo design ("THIS HOME RUNS ON LOVE...") —
+  // that's a reasonable Canvas default but not what a new Acrylic Bus Roll
+  // customer should see first; they should start from their own text.
   const isBusRoll = selectedProductTypeId === 'acrylic-bus-roll';
-  const [busRollConfig, setBusRollConfig] = useState<BusRollConfig>(DEFAULT_BUS_ROLL_CONFIG);
+  const BLANK_BUS_ROLL_CONFIG: BusRollConfig = {
+    lines: [
+      { id: 'line-1', text: '', color: '#FFFFFF', opacity: 1 },
+      { id: 'line-2', text: '', color: '#FFFFFF', opacity: 1 },
+      { id: 'line-3', text: '', color: '#FFFFFF', opacity: 1 },
+      { id: 'line-4', text: '', color: '#FFFFFF', opacity: 1 },
+      { id: 'line-5', text: '', color: '#FFFFFF', opacity: 1 }
+    ],
+    lineSpacing: 1,
+    margin: 2,
+    widthInches: 20,
+    heightInches: 8,
+    fontFamily: 'Rockwell, "Roboto Slab", serif',
+    fontStyle: 'Normal',
+    backgroundColor: '#000000',
+    patternId: 'solid',
+    patternOpacity: 0
+  };
+  const [busRollConfig, setBusRollConfig] = useState<BusRollConfig>(BLANK_BUS_ROLL_CONFIG);
   const handleUpdateBusRollConfig = (updates: Partial<BusRollConfig>) => {
     setBusRollConfig((prev) => ({ ...prev, ...updates }));
   };
   const handleStartOverBusRoll = () => {
-    setBusRollConfig(DEFAULT_BUS_ROLL_CONFIG);
+    setBusRollConfig(BLANK_BUS_ROLL_CONFIG);
   };
 
   // Product-Specific Compatible Shapes (Centralized via AcrylicProductShapeConfig)
