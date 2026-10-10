@@ -301,6 +301,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // Collection" — only the Create Your Own path (the existing studio) has
   // real content behind it right now.
   const [isWordArtPreferenceModalOpen, setIsWordArtPreferenceModalOpen] = useState(false);
+  // Tracks whether a Word Art design actually exists, separately from
+  // panelImages[0].imageUrl — that field can be non-empty just from a photo
+  // left over from a different product, which would otherwise make the
+  // preference popup think a Word Art design already exists and skip itself.
+  const [hasWordArtDesign, setHasWordArtDesign] = useState(false);
 
   // Bus Roll on Acrylic: destination-sign-style line editor, reusing the
   // same controlled BusRollConfig + components built for the Canvas
@@ -1399,7 +1404,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
       uploadTargetPanelRef.current = panelIdx;
       // Already have a design for this slot (re-editing) — skip straight
       // back into the studio instead of asking the preference question again.
-      if (panelImages[panelIdx]?.imageUrl) {
+      if (hasWordArtDesign) {
         setIsWordArtModalOpen(true);
       } else {
         setIsWordArtPreferenceModalOpen(true);
@@ -1430,6 +1435,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     };
     img.src = dataUrl;
     setIsWordArtModalOpen(false);
+    setHasWordArtDesign(true);
   };
 
   // Single file picker change
@@ -2042,6 +2048,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
         ...prev,
         0: createDefaultPanelState(null)
       }));
+      if (previousProductTypeId === 'acrylic-word-art') {
+        setHasWordArtDesign(false);
+      }
     }
 
     // 2. Apply the product's default layout (4-grid for Acrylic Collage, 2-split for Acrylic Split Panel; preserve manual layout between single-panel products)
@@ -2178,9 +2187,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
       setIsLayoutModalOpen(false);
       setActiveTab(getFirstTabForProduct(pt));
       // Only ask Create-Your-Own-vs-Collection for a blank slot — if the
-      // shopper already has a design here (switched away and back), don't
-      // re-interrupt them with the preference popup.
-      if (!panelImages[0]?.imageUrl) {
+      // shopper already has a Word Art design (switched away and back),
+      // don't re-interrupt them with the preference popup.
+      if (!hasWordArtDesign) {
         setIsWordArtPreferenceModalOpen(true);
       }
     } else if (isSingle) {
@@ -3900,13 +3909,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() =>
-                  panelImages[0]?.imageUrl
+                  hasWordArtDesign
                     ? setIsWordArtModalOpen(true)
                     : setIsWordArtPreferenceModalOpen(true)
                 }
                 className="px-5 py-2.5 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
               >
-                {panelImages[0]?.imageUrl ? 'Edit Word-Art' : 'Create Word-Art'}
+                {hasWordArtDesign ? 'Edit Word-Art' : 'Create Word-Art'}
               </button>
             </div>
           )}
