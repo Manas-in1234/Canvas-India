@@ -2065,6 +2065,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
       setSelectedThicknessId(pt.defaultThicknessId);
     }
 
+    // Wrap & Border has no per-product default — reset it to the universal
+    // default on every product switch instead of carrying over whatever
+    // edge treatment was picked on the previous product.
+    setSelectedEdgeWrapId('full-bleed');
+
     // 5. Preserve uploaded images non-destructively across slot count changes
     setPanelImages((prev) => {
       const next: Record<number, PanelImageState> = {
