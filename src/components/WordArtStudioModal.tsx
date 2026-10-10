@@ -12,7 +12,7 @@ interface WordArtStudioModalProps {
   onComplete: (dataUrl: string, sizeLabel: string, price: number) => void;
 }
 
-type ShapeKey = 'heart' | 'circle' | 'butterfly' | 'star';
+type ShapeKey = 'none' | 'butterfly' | 'diamond' | 'heart' | 'hexagon' | 'home' | 'pentagon' | 'round';
 type RatioKey = 'square' | '3:2' | '4:3' | '16:9';
 type Step = 'size' | 'personalize';
 
@@ -53,14 +53,18 @@ function buildSizesForRatio(ratio: number): SizeOption[] {
 const FONT_OPTIONS = ['Arial', 'Georgia', 'Times New Roman', 'Courier New', 'Verdana', 'Trebuchet MS', 'Comic Sans MS', 'Impact'];
 
 const SHAPE_OPTIONS: { key: ShapeKey; label: string; emoji: string }[] = [
-  { key: 'heart', label: 'Heart', emoji: '❤️' },
-  { key: 'circle', label: 'Circle', emoji: '⚪' },
+  { key: 'none', label: 'None', emoji: '' },
   { key: 'butterfly', label: 'Butterfly', emoji: '🦋' },
-  { key: 'star', label: 'Star', emoji: '⭐' }
+  { key: 'diamond', label: 'Diamond', emoji: '♦' },
+  { key: 'heart', label: 'Heart', emoji: '♥' },
+  { key: 'hexagon', label: 'Hexagon', emoji: '⬢' },
+  { key: 'home', label: 'Home', emoji: '🏠' },
+  { key: 'pentagon', label: 'Pentagon', emoji: '⬟' },
+  { key: 'round', label: 'Round', emoji: '○' }
 ];
 
 const SYMBOL_CATEGORIES: { name: string; symbols: string[] }[] = [
-  { name: 'Alphabets', symbols: ['🅰️', '🅱️', '🆎', '🆑', '🆒', '🆓', '🆔', '🆕', '🆖', '🆗'] },
+  { name: 'Alphabets', symbols: ['™', '@', '¶', '°C', '%', 'ε', 'λ', 'χ'] },
   { name: 'Animals', symbols: ['🐶', '🐱', '🐰', '🦋', '🐦', '🐠', '🦁', '🐯', '🐼', '🐨'] },
   { name: 'Arrows', symbols: ['➡️', '⬅️', '⬆️', '⬇️', '↗️', '↘️', '↙️', '↖️', '🔄', '↩️'] },
   { name: 'Common Shapes', symbols: ['⭐', '⬤', '◼️', '▲', '♦️', '⬡', '◆', '⭕', '◻️', '⬢'] },
@@ -88,34 +92,64 @@ const MAX_LINE_CHARS = 20;
 // multiple loops self-intersects and the canvas winding rule cancels out
 // most of its interior (which is what produced two disconnected blobs
 // instead of a butterfly previously: that whole shape was one tangled path).
+// Regular N-sided polygon centered at (cx, cy), point-up by default.
+function regularPolygon(cx: number, cy: number, radius: number, sides: number, rotationOffset = -Math.PI / 2): Path2D {
+  const p = new Path2D();
+  const step = (Math.PI * 2) / sides;
+  for (let i = 0; i <= sides; i++) {
+    const angle = rotationOffset + step * i;
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius;
+    if (i === 0) p.moveTo(x, y);
+    else p.lineTo(x, y);
+  }
+  p.closePath();
+  return p;
+}
+
 function buildShapePaths(shape: ShapeKey, w: number, h: number): Path2D[] {
   const cx = w / 2;
   const cy = h / 2;
+  const radius = (Math.min(w, h) / 2) * 0.95;
 
-  if (shape === 'circle') {
+  if (shape === 'none') {
+    // No mask — words can land anywhere on the canvas.
     const p = new Path2D();
-    p.ellipse(cx, cy, (Math.min(w, h) / 2) * 0.94, (Math.min(w, h) / 2) * 0.94, 0, 0, Math.PI * 2);
+    p.rect(0, 0, w, h);
     return [p];
   }
 
-  if (shape === 'star') {
+  if (shape === 'round') {
     const p = new Path2D();
-    const spikes = 5;
-    const outerR = (Math.min(w, h) / 2) * 0.95;
-    const innerR = outerR * 0.45;
-    let rot = (Math.PI / 2) * 3;
-    const step = Math.PI / spikes;
-    p.moveTo(cx, cy - outerR);
-    for (let i = 0; i < spikes; i++) {
-      let x = cx + Math.cos(rot) * outerR;
-      let y = cy + Math.sin(rot) * outerR;
-      p.lineTo(x, y);
-      rot += step;
-      x = cx + Math.cos(rot) * innerR;
-      y = cy + Math.sin(rot) * innerR;
-      p.lineTo(x, y);
-      rot += step;
-    }
+    p.ellipse(cx, cy, radius, radius, 0, 0, Math.PI * 2);
+    return [p];
+  }
+
+  if (shape === 'diamond') {
+    return [regularPolygon(cx, cy, radius, 4, -Math.PI / 2)];
+  }
+
+  if (shape === 'pentagon') {
+    return [regularPolygon(cx, cy, radius, 5, -Math.PI / 2)];
+  }
+
+  if (shape === 'hexagon') {
+    return [regularPolygon(cx, cy, radius, 6, -Math.PI / 2)];
+  }
+
+  if (shape === 'home') {
+    // A simple house silhouette: rectangular body + triangular roof, traced
+    // as one non-self-intersecting loop.
+    const p = new Path2D();
+    const bodyTop = cy - h * 0.05;
+    const left = cx - w * 0.42;
+    const right = cx + w * 0.42;
+    const bottom = cy + h * 0.46;
+    p.moveTo(left, bottom);
+    p.lineTo(left, bodyTop);
+    p.lineTo(cx, cy - h * 0.46);
+    p.lineTo(right, bodyTop);
+    p.lineTo(right, bottom);
     p.closePath();
     return [p];
   }
