@@ -218,6 +218,50 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
 
       const shapePaths = buildShapePaths(shape, w, h);
 
+      // Rasterize the shape mask once into pixel data. Sampling actual pixel
+      // coverage (instead of checking only a handful of bounding-box corners
+      // against vector paths) is what lets thin/pointed regions — star tips,
+      // the heart's notch, butterfly wing tips — actually get filled: those
+      // areas are tiny and a few random corner checks almost never land
+      // inside them, which is why the previous version only ever filled the
+      // large, easy central blob of each shape and never read as the real
+      // silhouette.
+      const maskCanvas = document.createElement('canvas');
+      maskCanvas.width = w;
+      maskCanvas.height = h;
+      const maskCtx = maskCanvas.getContext('2d');
+      if (!maskCtx) {
+        setGenerating(false);
+        return;
+      }
+      maskCtx.fillStyle = '#000';
+      shapePaths.forEach((sp) => maskCtx.fill(sp));
+      const maskData = maskCtx.getImageData(0, 0, w, h).data;
+      const isMaskedAt = (px: number, py: number) => {
+        const xi = Math.round(px);
+        const yi = Math.round(py);
+        if (xi < 0 || yi < 0 || xi >= w || yi >= h) return false;
+        return maskData[(yi * w + xi) * 4 + 3] > 10;
+      };
+      // A word box "fits" if most of a sampled grid across it falls inside
+      // the mask — a tolerant threshold (not 100%) so words can hug curved
+      // and pointed edges instead of being rejected outright near them.
+      const boxFits = (cx: number, cy: number, boxW: number, boxH: number) => {
+        const cols = 4;
+        const rows = 3;
+        let inside = 0;
+        let total = 0;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const px = cx - boxW / 2 + (boxW * c) / (cols - 1);
+            const py = cy - boxH / 2 + (boxH * r) / (rows - 1);
+            total++;
+            if (isMaskedAt(px, py)) inside++;
+          }
+        }
+        return inside / total >= 0.82;
+      };
+
       const palette = COLOR_SCHEMES[colorSchemeName] || [fontColor];
       const name = primaryName.trim() || 'YOUR NAME';
       const pool: { text: string; weight: 'large' | 'medium' | 'small' }[] = [
@@ -231,54 +275,80 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
       if (pool.length === 0) pool.push({ text: name, weight: 'large' });
 
       const placed: { x: number; y: number; w: number; h: number }[] = [];
-      const maxAttempts = 400;
-      const maxPlaced = 140;
-      let placedCount = 0;
-
-      for (let attempt = 0; attempt < maxAttempts && placedCount < maxPlaced; attempt++) {
-        const item = pool[Math.floor(Math.random() * pool.length)];
-        const fontSize =
-          item.weight === 'large'
-            ? Math.round(w * (0.08 + Math.random() * 0.04))
-            : item.weight === 'medium'
-            ? Math.round(w * (0.035 + Math.random() * 0.02))
-            : Math.round(w * (0.018 + Math.random() * 0.015));
-
-        ctx.font = `${fontSize}px ${fontFamily}`;
-        const metrics = ctx.measureText(item.text);
-        let boxW = metrics.width;
-        let boxH = fontSize;
-        if (textDirection === 'vertical') {
-          const tmp = boxW;
-          boxW = boxH;
-          boxH = tmp;
-        }
-
-        const x = Math.random() * (w - boxW) + boxW / 2;
-        const y = Math.random() * (h - boxH) + boxH / 2;
-
-        const corners: [number, number][] = [
-          [x - boxW / 2, y - boxH / 2],
-          [x + boxW / 2, y - boxH / 2],
-          [x - boxW / 2, y + boxH / 2],
-          [x + boxW / 2, y + boxH / 2],
-          [x, y]
-        ];
-        const insideShape = corners.every(([px, py]) => shapePaths.some((sp) => ctx.isPointInPath(sp, px, py)));
-        if (!insideShape) continue;
-
-        const overlaps = placed.some(
+      const overlapsAny = (x: number, y: number, boxW: number, boxH: number) =>
+        placed.some(
           (p) =>
             x - boxW / 2 < p.x + p.w / 2 &&
             x + boxW / 2 > p.x - p.w / 2 &&
             y - boxH / 2 < p.y + p.h / 2 &&
             y + boxH / 2 > p.y - p.h / 2
         );
-        if (overlaps) continue;
+
+      const cx = w / 2;
+      const cy = h / 2;
+      const maxRadius = Math.max(w, h) * 0.75;
+
+      // For each word, walk an outward Archimedean spiral from the shape's
+      // center and take the first spot where its box both fits the mask and
+      // doesn't collide with an already-placed word. A systematic search
+      // (not a single random guess per word) is what guarantees every part
+      // of the shape — including its thin extremities — eventually gets
+      // tried and filled, rather than only the spots random sampling
+      // happens to land on.
+      const findSpot = (boxW: number, boxH: number): { x: number; y: number } | null => {
+        const steps = 260;
+        for (let i = 0; i < steps; i++) {
+          const t = i / steps;
+          const angle = t * Math.PI * 16 + Math.random() * 0.6;
+          const radius = t * maxRadius;
+          const x = cx + Math.cos(angle) * radius;
+          const y = cy + Math.sin(angle) * radius;
+          if (x - boxW / 2 < 0 || x + boxW / 2 > w || y - boxH / 2 < 0 || y + boxH / 2 > h) continue;
+          if (!boxFits(x, y, boxW, boxH)) continue;
+          if (overlapsAny(x, y, boxW, boxH)) continue;
+          return { x, y };
+        }
+        return null;
+      };
+
+      const maxWords = 320;
+      let placedCount = 0;
+      let consecutiveMisses = 0;
+
+      while (placedCount < maxWords && consecutiveMisses < 40) {
+        const item = pool[Math.floor(Math.random() * pool.length)];
+        // Sizes scaled down and biased smaller as more words get placed, so
+        // later words are small enough to still slot into whatever gaps
+        // (including narrow extremities) remain — the classic word-cloud
+        // "shrink as you go" approach.
+        const shrink = 1 - (placedCount / maxWords) * 0.5;
+        const fontSize =
+          item.weight === 'large'
+            ? Math.round(w * (0.05 + Math.random() * 0.025) * shrink)
+            : item.weight === 'medium'
+            ? Math.round(w * (0.026 + Math.random() * 0.014) * shrink)
+            : Math.round(w * (0.014 + Math.random() * 0.01) * shrink);
+
+        ctx.font = `${fontSize}px ${fontFamily}`;
+        const metrics = ctx.measureText(item.text);
+        let boxW = metrics.width * 1.04;
+        let boxH = fontSize * 1.08;
+        if (textDirection === 'vertical') {
+          const tmp = boxW;
+          boxW = boxH;
+          boxH = tmp;
+        }
+
+        const spot = findSpot(boxW, boxH);
+        if (!spot) {
+          consecutiveMisses++;
+          continue;
+        }
+        consecutiveMisses = 0;
 
         const color = palette[Math.floor(Math.random() * palette.length)];
         ctx.save();
-        ctx.translate(x, y);
+        ctx.translate(spot.x, spot.y);
         if (textDirection === 'vertical') ctx.rotate(-Math.PI / 2);
         ctx.font = `${fontSize}px ${fontFamily}`;
         ctx.fillStyle = color;
@@ -288,7 +358,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
         ctx.fillText(item.text, 0, 0);
         ctx.restore();
 
-        placed.push({ x, y, w: boxW, h: boxH });
+        placed.push({ x: spot.x, y: spot.y, w: boxW, h: boxH });
         placedCount++;
       }
 
