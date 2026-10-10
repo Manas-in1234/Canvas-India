@@ -742,14 +742,24 @@ export const generateBusRollSvgString = (config: BusRollConfig): string => {
   const gap = slotHeight * 0.18 * lineSpacingRatio;
 
   const textLinesSvg = config.lines.map((line, idx) => {
-    const yCenter = marginPx + idx * (slotHeight + gap) + slotHeight * 0.72;
+    // Center placement was biased to 72% down each line's own slot (meant
+    // to compensate for how uppercase glyphs sit visually above true
+    // vertical-center) — combined with a near-max font size, that left too
+    // little room below the anchor point, so the LAST line's glyph
+    // descended past its slot (and the panel's bottom margin) entirely,
+    // getting clipped by the print border. A smaller bias still reads
+    // balanced for all-caps text without running out of room underneath.
+    const yCenter = marginPx + idx * (slotHeight + gap) + slotHeight * 0.56;
     // Dynamic font sizing proportional to text length and slot height.
     // The 1.55x estimate ran real template text (wide bold uppercase
     // characters, plus the 0.06em letter-spacing below) past the panel's
     // edges — scaled down with an explicit safety margin so lines reliably
-    // fit the available width instead of visually overflowing it.
+    // fit the available width instead of visually overflowing it. The
+    // height-based cap (was 0.82x) is tightened too, for the same reason
+    // the vertical bias above was reduced — less margin for the last
+    // line's glyph to overrun the bottom of the panel.
     const charLen = Math.max(1, line.text.trim().length);
-    const approxFontSize = Math.min(slotHeight * 0.82, (innerWidth * 0.9 / charLen) * 1.3);
+    const approxFontSize = Math.min(slotHeight * 0.68, (innerWidth * 0.9 / charLen) * 1.3);
     const clampedFontSize = Math.max(14, Math.round(approxFontSize));
 
     return `
