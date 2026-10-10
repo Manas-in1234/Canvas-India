@@ -112,6 +112,8 @@ import { BusRollBackgroundPanel } from '../components/BusRollBackgroundPanel';
 import { BusRollTemplatePanel } from '../components/BusRollTemplatePanel';
 import { BusRollTopToolbar } from '../components/BusRollTopToolbar';
 import { BusRollConfig, generateBusRollSvgDataUrl } from '../data/busRollData';
+import { QuotesTemplateSidebarPanel } from '../components/QuotesTemplateSidebarPanel';
+import { QuoteTemplateItem } from '../data/quoteTemplatesData';
 import { getProductSizeShapeOptions, getSizesForProductAndShape } from '../data/productSizeShapeConfig';
 import {
   getProductLayouts,
@@ -330,6 +332,30 @@ export const AcrylicCustomizerPage: React.FC = () => {
   };
   const handleStartOverBusRoll = () => {
     setBusRollConfig(BLANK_BUS_ROLL_CONFIG);
+  };
+
+  // Quotes on Acrylic: "Select From Our Collection" reuses the same curated
+  // quote template gallery built for Quotes on Canvas (real artwork, not
+  // generated text) — picking one just drops its finished image straight
+  // into the panel, same as any other upload.
+  const isQuotesProduct = selectedProductTypeId === 'acrylic-quotes';
+  const [selectedQuoteTemplateId, setSelectedQuoteTemplateId] = useState<string>('');
+  const handleSelectQuoteTemplate = (template: QuoteTemplateItem) => {
+    setSelectedQuoteTemplateId(template.id);
+    const naturalWidth = 900;
+    const naturalHeight = Math.round(900 / (template.aspectRatio || 1));
+    setPanelImages((prev) => ({
+      ...prev,
+      0: {
+        ...createDefaultPanelState(template.image),
+        uploadedImage: {
+          src: template.image,
+          naturalWidth,
+          naturalHeight,
+          aspectRatio: template.aspectRatio || 1
+        }
+      }
+    }));
   };
 
   // Product-Specific Compatible Shapes (Centralized via AcrylicProductShapeConfig)
@@ -3643,6 +3669,9 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const items: { id: ToolbarTab; label: string; icon: React.ElementType; enabled: boolean }[] = [
       { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid, enabled: productCapabilities.products !== false },
       { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud, enabled: productCapabilities.upload !== false },
+      // Quotes on Acrylic gets a curated "Select From Our Collection"
+      // template gallery alongside the normal upload-your-own flow.
+      { id: 'TEMPLATE', label: 'TEMPLATE', icon: LayoutTemplate, enabled: selectedProductTypeId === 'acrylic-quotes' },
       { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSinglePrintAcrylic && productCapabilities.sizes !== false },
       { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: productCapabilities.layouts === true },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
@@ -4105,8 +4134,14 @@ export const AcrylicCustomizerPage: React.FC = () => {
           {activeTab === 'BACKGROUND' && (
             <BusRollBackgroundPanel config={busRollConfig} onChangeConfig={handleUpdateBusRollConfig} />
           )}
-          {activeTab === 'TEMPLATE' && (
+          {activeTab === 'TEMPLATE' && isBusRoll && (
             <BusRollTemplatePanel config={busRollConfig} onChangeConfig={handleUpdateBusRollConfig} />
+          )}
+          {activeTab === 'TEMPLATE' && isQuotesProduct && (
+            <QuotesTemplateSidebarPanel
+              selectedTemplateId={selectedQuoteTemplateId}
+              onSelectTemplate={handleSelectQuoteTemplate}
+            />
           )}
 
           {/* SELECT SIZE */}
