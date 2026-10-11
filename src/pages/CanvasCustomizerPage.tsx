@@ -85,8 +85,18 @@ import {
   calculateBannerPrice,
   formatDimension,
   convertToInches,
-  convertFromInches
 } from '../data/canvasBannerData';
+import { PopArtStyleModal } from '../components/PopArtStyleModal';
+import {
+  type PopArtConfig,
+  type PopArtStyleId,
+  type PopArtStyleOption,
+  POP_ART_STYLES,
+  POP_ART_SIZE_OPTIONS,
+  getPopArtStyle,
+  DEFAULT_POP_ART_CONFIG
+} from '../data/popArtData';
+import { processPopArtImage } from '../utils/popArtProcessor';
 import {
   CANVAS_SHAPES,
   CanvasShapeOption,
@@ -144,6 +154,7 @@ import {
 
 type ToolbarTab =
   | 'PRODUCTS'
+  | 'POP ART STYLE'
   | 'UPLOAD'
   | 'SELECT SIZE'
   | 'EFFECTS & OPTIONS'
@@ -1652,6 +1663,10 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   const handleSelectTab = (tabId: ToolbarTab) => {
     setActiveTab(tabId);
+    if (tabId === 'POP ART STYLE') {
+      setIsPopArtStyleModalOpen(true);
+      return;
+    }
     if (tabId === 'SELECT SIZE') {
       if (selectedProductTypeId === 'canvas-word-art') {
         setIsWordArtSizeModalOpen(true);
@@ -1717,6 +1732,17 @@ export const CanvasCustomizerPage: React.FC = () => {
         { id: 'TEMPLATE', label: 'TEMPLATE', icon: LayoutTemplate },
         { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
         { id: 'HARDWARE & FINISH', label: 'HARDWARE OPTION & STYLE', icon: SlidersHorizontal },
+        { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
+      ];
+    }
+    if (selectedProductTypeId === 'canvas-pop-art') {
+      return [
+        { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
+        { id: 'POP ART STYLE', label: 'POP ART STYLE', icon: Sparkles },
+        { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud },
+        { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
+        { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
+        { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
         { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
       ];
     }
@@ -1800,6 +1826,10 @@ export const CanvasCustomizerPage: React.FC = () => {
       return CANVAS_BANNER_SIZE_OPTIONS as unknown as SizeOption[];
     }
 
+    if (selectedProductTypeId === 'canvas-pop-art') {
+      return POP_ART_SIZE_OPTIONS as unknown as SizeOption[];
+    }
+
     const isLayoutProduct = [
       'canvas-wall-art',
       'canvas-collage',
@@ -1870,6 +1900,9 @@ export const CanvasCustomizerPage: React.FC = () => {
     if (initialPt === 'canvas-banner') {
       return 'banner-10x8';
     }
+    if (initialPt === 'canvas-pop-art') {
+      return 'pop-12x12';
+    }
     if (initialPt === 'canvas-single' || initialPt === 'canvas-classic') {
       return 'single-10x10';
     }
@@ -1878,9 +1911,9 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   useEffect(() => {
     if (!availableSizeOptions.some((s) => s.id === selectedSizeId)) {
-      if (isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-bus-roll' || selectedProductTypeId === 'canvas-banner') {
+      if (isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-bus-roll' || selectedProductTypeId === 'canvas-banner' || selectedProductTypeId === 'canvas-pop-art') {
         const matchingInCat = availableSizeOptions.filter((opt) => opt.categories.includes(sizeCategoryFilter));
-        const defaultId = selectedProductTypeId === 'canvas-quotes' ? 'quotes-8x8' : selectedProductTypeId === 'canvas-digital-painting' ? 'painting-10x10' : selectedProductTypeId === 'canvas-bus-roll' ? 'bus-21x32' : selectedProductTypeId === 'canvas-banner' ? 'banner-10x8' : 'single-10x10';
+        const defaultId = selectedProductTypeId === 'canvas-quotes' ? 'quotes-8x8' : selectedProductTypeId === 'canvas-digital-painting' ? 'painting-10x10' : selectedProductTypeId === 'canvas-bus-roll' ? 'bus-21x32' : selectedProductTypeId === 'canvas-banner' ? 'banner-10x8' : selectedProductTypeId === 'canvas-pop-art' ? 'pop-12x12' : 'single-10x10';
         setSelectedSizeId(matchingInCat[0]?.id || defaultId);
       } else {
         setSelectedSizeId(availableSizeOptions[0]?.id || 'single-10x10');
@@ -2331,6 +2364,46 @@ export const CanvasCustomizerPage: React.FC = () => {
     });
   };
 
+  // Pop Art State & Live Processing Engine
+  const [isPopArtStyleModalOpen, setIsPopArtStyleModalOpen] = useState<boolean>(() => {
+    return resolveCanvasProductTypeId(productId, catalogProduct) === 'canvas-pop-art';
+  });
+  const [popArtConfig, setPopArtConfig] = useState<PopArtConfig>(DEFAULT_POP_ART_CONFIG);
+
+  // Pop Art Live Image Processing Effect
+  useEffect(() => {
+    if (selectedProductTypeId !== 'canvas-pop-art') return;
+    const sourceUrl = panelImages[0]?.uploadedImage?.originalSrc || panelImages[0]?.imageUrl;
+    if (!sourceUrl) {
+      setPopArtConfig((prev) => ({ ...prev, processedImageUrl: null, isProcessing: false }));
+      return;
+    }
+
+    let isMounted = true;
+    setPopArtConfig((prev) => ({ ...prev, isProcessing: true }));
+
+    processPopArtImage(sourceUrl, popArtConfig.selectedStyleId)
+      .then((processedUrl) => {
+        if (isMounted) {
+          setPopArtConfig((prev) => ({
+            ...prev,
+            processedImageUrl: processedUrl,
+            isProcessing: false
+          }));
+        }
+      })
+      .catch((err) => {
+        console.error('Error generating Pop Art preview:', err);
+        if (isMounted) {
+          setPopArtConfig((prev) => ({ ...prev, isProcessing: false }));
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedProductTypeId, panelImages[0]?.imageUrl, panelImages[0]?.uploadedImage?.originalSrc, popArtConfig.selectedStyleId]);
+
   // Sync Bus Roll live SVG artwork onto slot 0
   useEffect(() => {
     if (selectedProductTypeId === 'canvas-bus-roll') {
@@ -2502,6 +2575,21 @@ export const CanvasCustomizerPage: React.FC = () => {
       setSelectedThicknessId('canvas-lite');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
+      setActiveTab('UPLOAD');
+      return;
+    }
+
+    if (productId === 'canvas-pop-art') {
+      setSelectedProductTypeId('canvas-pop-art');
+      setIsCustomSize(false);
+      setActivePanelIndex(0);
+      setSelectedShapeId('shape-square');
+      setSelectedSizeId('pop-12x12');
+      setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
+      setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setIsPopArtStyleModalOpen(true);
       setActiveTab('UPLOAD');
       return;
     }
@@ -2788,6 +2876,7 @@ export const CanvasCustomizerPage: React.FC = () => {
         digitalPaintingConfig,
         busRollConfig,
         bannerConfig,
+        popArtConfig: selectedProductTypeId === 'canvas-pop-art' ? popArtConfig : undefined,
         updatedAt: new Date().toISOString()
       };
       localStorage.setItem(storageKey, JSON.stringify(stateToSave));
@@ -2800,12 +2889,16 @@ export const CanvasCustomizerPage: React.FC = () => {
   };
 
   // Dynamic Price Calculation
+  const selectedPopStyle = getPopArtStyle(popArtConfig.selectedStyleId);
+  const popStyleAdjustment = selectedProductTypeId === 'canvas-pop-art' ? (selectedPopStyle?.priceAdjustment || 0) : 0;
   const sizePrice = selectedProductTypeId === 'canvas-word-art'
     ? wordArtSizeOption.price
     : selectedProductTypeId === 'canvas-banner'
     ? (bannerConfig.isCustom
         ? calculateBannerPrice(bannerConfig.widthInches, bannerConfig.heightInches)
         : (CANVAS_BANNER_SIZE_OPTIONS.find((s) => s.id === bannerConfig.selectedSizeId)?.price || calculateBannerPrice(bannerConfig.widthInches, bannerConfig.heightInches)))
+    : selectedProductTypeId === 'canvas-pop-art'
+    ? ((isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price) + popStyleAdjustment)
     : (isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price);
 
   const unitPrice = useMemo(() => {
@@ -3555,6 +3648,8 @@ export const CanvasCustomizerPage: React.FC = () => {
           ? `${selectedProductType.name} - ${busRollConfig.widthInches}" × ${busRollConfig.heightInches}" (${busRollConfig.lines[0]?.text || 'Custom'})`
           : selectedProductTypeId === 'canvas-banner'
           ? `${selectedProductType.name} - ${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}${bannerConfig.isCustom ? ' (Custom)' : ''}`
+          : selectedProductTypeId === 'canvas-pop-art'
+          ? `${selectedProductType.name} (${getPopArtStyle(popArtConfig.selectedStyleId).name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
           : `${selectedProductType.name} - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
       },
       size: selectedProductTypeId === 'canvas-word-art'
@@ -3567,10 +3662,10 @@ export const CanvasCustomizerPage: React.FC = () => {
       finish: WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label || 'Canvas Lite',
       quantity,
       customText: customText || undefined,
-      photoUrl: firstImage,
+      photoUrl: (selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl) ? popArtConfig.processedImageUrl : firstImage,
       calculatedPrice: totalPrice,
       material: MATERIAL_VARIANTS.find((m) => m.id === selectedMaterialId)?.name || 'Standard 280 GSM Cotton Canvas',
-      style: selectedProductType.name,
+      style: selectedProductTypeId === 'canvas-pop-art' ? `Pop Art (${getPopArtStyle(popArtConfig.selectedStyleId).name})` : selectedProductType.name,
       base: selectedProductTypeId === 'canvas-banner'
         ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware')
         : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label || 'No Hooks'),
@@ -3612,6 +3707,10 @@ export const CanvasCustomizerPage: React.FC = () => {
         bannerHeightInches: selectedProductTypeId === 'canvas-banner' ? bannerConfig.heightInches : undefined,
         bannerBackgroundColor: selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : undefined,
         bannerHardware: selectedProductTypeId === 'canvas-banner' ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware') : undefined,
+        popArtStyleId: selectedProductTypeId === 'canvas-pop-art' ? popArtConfig.selectedStyleId : undefined,
+        popArtStyleName: selectedProductTypeId === 'canvas-pop-art' ? getPopArtStyle(popArtConfig.selectedStyleId).name : undefined,
+        popArtPriceAdjustment: selectedProductTypeId === 'canvas-pop-art' ? getPopArtStyle(popArtConfig.selectedStyleId).priceAdjustment : undefined,
+        popArtProcessedArtwork: selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl ? popArtConfig.processedImageUrl : undefined,
         panels: panels.map((p, idx) => ({
           dimension: p.dimension,
           imageUrl: panelImages[idx]?.imageUrl || null,
@@ -4803,8 +4902,64 @@ export const CanvasCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Create Word Art Option for Shape Canvas Products (Excludes Single Print, Quotes, Digital Painting, Bus Roll, Canvas Banner) */}
-              {!activeWordArtDataUrl && isSingleOrShapedCanvas && selectedProductTypeId !== 'canvas-single' && selectedProductTypeId !== 'canvas-quotes' && selectedProductTypeId !== 'canvas-digital-painting' && selectedProductTypeId !== 'canvas-bus-roll' && selectedProductTypeId !== 'canvas-banner' && (
+              {/* Pop Art Style Card in Sidebar */}
+              {selectedProductTypeId === 'canvas-pop-art' && (
+                <div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200/90 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#0E4A93] flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#E8752A]" />
+                      <span>Selected Pop Art Style</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsPopArtStyleModalOpen(true)}
+                      className="text-[11px] font-extrabold text-[#0E4A93] hover:text-[#0b3c77] hover:underline cursor-pointer flex items-center gap-1"
+                    >
+                      <Palette className="w-3 h-3 text-[#E8752A]" />
+                      <span>Change Style</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 bg-white p-2 rounded-lg border border-amber-100 shadow-2xs">
+                    <img
+                      src={selectedPopStyle.previewImage}
+                      alt={selectedPopStyle.name}
+                      className="w-10 h-10 rounded-md object-cover border border-stone-200 shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-xs font-black text-stone-900 truncate">
+                          {selectedPopStyle.name}
+                        </span>
+                        {selectedPopStyle.priceAdjustment > 0 && (
+                          <span className="text-[10px] font-extrabold text-[#E8752A] shrink-0">
+                            +₹{selectedPopStyle.priceAdjustment.toLocaleString('en-IN')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-stone-500 line-clamp-1 leading-tight mt-0.5">
+                        {selectedPopStyle.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {popArtConfig.selectedStyleId === 'caricatures' && (
+                    <div className="text-[10px] font-medium text-stone-600 bg-white/80 p-2 rounded-md border border-amber-100 leading-snug">
+                      <strong className="text-stone-800">Artist Preparation Note:</strong> Your uploaded photo will be transformed into high-detail digital caricature artwork by our artists prior to final canvas printing.
+                    </div>
+                  )}
+
+                  {popArtConfig.isProcessing && (
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#0E4A93]">
+                      <div className="w-3 h-3 border-2 border-[#0E4A93] border-t-transparent rounded-full animate-spin" />
+                      <span>Applying {selectedPopStyle.name} filter...</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Create Word Art Option for Shape Canvas Products (Excludes Single Print, Quotes, Digital Painting, Bus Roll, Canvas Banner, Pop Art) */}
+              {!activeWordArtDataUrl && isSingleOrShapedCanvas && selectedProductTypeId !== 'canvas-single' && selectedProductTypeId !== 'canvas-quotes' && selectedProductTypeId !== 'canvas-digital-painting' && selectedProductTypeId !== 'canvas-bus-roll' && selectedProductTypeId !== 'canvas-banner' && selectedProductTypeId !== 'canvas-pop-art' && (
                 <button
                   type="button"
                   onClick={() => setIsWordArtPersonalizeModalOpen(true)}
@@ -5144,7 +5299,7 @@ export const CanvasCustomizerPage: React.FC = () => {
               />
             ) : (
             <div className="p-4 space-y-4">
-              {isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' ? (
+              {isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-pop-art' ? (
                 <>
                   {/* Selected Size Summary Card */}
                   <div className="flex items-center justify-between p-3.5 bg-blue-50/70 rounded-2xl border border-blue-100 mb-3">
@@ -5251,12 +5406,12 @@ export const CanvasCustomizerPage: React.FC = () => {
 
                             {/* Dimensions text */}
                             <div className="text-[11px] font-black text-stone-900 text-center mt-1">
-                              {opt.label.replace(/^Single:\s*/, '').replace(/^Quotes Canvas:\s*/, '').replace(/^Digital Painting:\s*/, '')}
+                              {opt.label.replace(/^Single:\s*/, '').replace(/^Quotes Canvas:\s*/, '').replace(/^Digital Painting:\s*/, '').replace(/^Pop Art:\s*/, '')}
                             </div>
 
                             {/* Price text */}
                             <div className="text-[11px] text-[#0E4A93] text-center font-extrabold">
-                              ₹{opt.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              ₹{(opt.price + popStyleAdjustment).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                           </div>
                         );
@@ -6529,7 +6684,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                         }}
                       >
                         {(() => {
-                          const isSingleCanvasPrint = selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-bus-roll';
+                          const isSingleCanvasPrint = selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-bus-roll' || selectedProductTypeId === 'canvas-pop-art';
                           const imgMeta = panelImages[0]?.uploadedImage;
                           const natWidth = imgMeta?.width || 1200;
                           const natHeight = imgMeta?.height || 800;
@@ -6631,7 +6786,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                     }}
                                   >
                                     <img
-                                      src={panelImages[0].imageUrl}
+                                      src={(selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl) ? popArtConfig.processedImageUrl : panelImages[0].imageUrl}
                                       alt="Canvas Print"
                                       draggable={false}
                                       onLoad={(e) => {
@@ -6712,6 +6867,14 @@ export const CanvasCustomizerPage: React.FC = () => {
                                     : currentShape.clipPathStyle
                                 }}
                               >
+                                {/* Pop Art Live Processing Spinner Overlay */}
+                                {selectedProductTypeId === 'canvas-pop-art' && popArtConfig.isProcessing && (
+                                  <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-white/70 backdrop-blur-xs transition-opacity rounded-xs pointer-events-none select-none">
+                                    <div className="w-8 h-8 border-3 border-[#0E4A93] border-t-transparent rounded-full animate-spin mb-2" />
+                                    <span className="text-xs font-bold text-[#0E4A93] tracking-wide">Applying Pop Art Style...</span>
+                                  </div>
+                                )}
+
                                 {/* 90° Rotate Button Handle */}
                                 {panelImages[0]?.imageUrl && (
                                   <button
@@ -6766,7 +6929,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 {!isSingleCanvasPrint && panelImages[0]?.imageUrl && (
                                   <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
                                     <img
-                                      src={panelImages[0].imageUrl}
+                                      src={(selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl) ? popArtConfig.processedImageUrl : panelImages[0].imageUrl}
                                       alt="Canvas Print"
                                       draggable={false}
                                       onLoad={(e) => {
@@ -6848,6 +7011,24 @@ export const CanvasCustomizerPage: React.FC = () => {
                                       </span>
                                       <span className="text-[11px] text-stone-400">
                                         Supported formats: PNG, JPG, JPEG, WEBP, BMP
+                                      </span>
+                                    </div>
+                                  ) : selectedProductTypeId === 'canvas-pop-art' ? (
+                                    <div
+                                      onClick={() => fileInputRef.current?.click()}
+                                      className="w-full h-full flex flex-col items-center justify-center bg-white p-6 text-center cursor-pointer group select-none"
+                                    >
+                                      <div className="w-14 h-14 rounded-2xl bg-amber-50 text-[#E8752A] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-xs">
+                                        <Sparkles className="w-7 h-7" />
+                                      </div>
+                                      <span className="text-sm font-black text-[#0E4A93] mb-1">
+                                        Upload Photo for {selectedPopStyle?.name || 'Pop Art'}
+                                      </span>
+                                      <span className="text-xs text-stone-500 max-w-xs mb-3">
+                                        Upload your photo to transform it into this iconic Pop Art style
+                                      </span>
+                                      <span className="px-4 py-1.5 bg-[#0E4A93] hover:bg-[#0b3c77] text-white text-xs font-bold rounded-lg shadow-xs transition-colors">
+                                        Browse Files
                                       </span>
                                     </div>
                                   ) : (
@@ -7087,11 +7268,13 @@ export const CanvasCustomizerPage: React.FC = () => {
       {viewerMode && hasUploadedImage && (() => {
         // Shared live customization state values for all 3 preview modes (Room, 3D, 360)
         const primaryPhotoUrl =
-          panelImages[activePanelIndex]?.imageUrl ||
-          panelImages[0]?.imageUrl ||
-          Object.values(panelImages).find((p) => Boolean(p?.imageUrl))?.imageUrl ||
-          uploadedPhotos[0] ||
-          '';
+          (selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl)
+            ? popArtConfig.processedImageUrl
+            : (panelImages[activePanelIndex]?.imageUrl ||
+               panelImages[0]?.imageUrl ||
+               Object.values(panelImages).find((p) => Boolean(p?.imageUrl))?.imageUrl ||
+               uploadedPhotos[0] ||
+               '');
 
         const effectiveSizeForViewer = selectedProductTypeId === 'canvas-word-art'
           ? {
@@ -7213,7 +7396,9 @@ export const CanvasCustomizerPage: React.FC = () => {
         // Render a single slot's image with scaled pan, zoom, rotation, mirror, and filter
         const renderSlotPhoto = (idx: number, photoScaleFactor: number = 1) => {
           const p = panelImages[idx];
-          const url = p?.imageUrl || (idx === 0 ? primaryPhotoUrl : null);
+          const url = (selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl)
+            ? popArtConfig.processedImageUrl
+            : (p?.imageUrl || (idx === 0 ? primaryPhotoUrl : null));
           const panX = (p?.panX || 0) * photoScaleFactor;
           const panY = (p?.panY || 0) * photoScaleFactor;
           const sc = p?.scale || 1;
@@ -7601,7 +7786,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                   : currentSizeOption.dimensionsSummary
               }
               productId={selectedProductTypeId}
-              productName={selectedProductType.name}
+              productName={selectedProductTypeId === 'canvas-pop-art' ? `Pop Art (${selectedPopStyle?.name || 'Pop Art'})` : selectedProductType.name}
               shapeId={isHexagonProduct ? (isHexagonCluster ? 'shape-rectangle' : 'shape-hexagon') : (shapeApplies ? selectedShapeId : 'shape-rectangle')}
               shapeName={
                 selectedProductTypeId === 'canvas-word-art'
@@ -7962,7 +8147,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                     )}
                   </h3>
                   <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-stone-500 bg-stone-100 px-2.5 py-0.5 rounded-full">
-                    <span>{selectedProductType.name}</span>
+                    <span>{selectedProductTypeId === 'canvas-pop-art' ? `Pop Art (${selectedPopStyle?.name || 'Pop Art'})` : selectedProductType.name}</span>
                     <span>•</span>
                     <span>
                       {selectedProductTypeId === 'canvas-word-art'
@@ -8965,6 +9150,19 @@ export const CanvasCustomizerPage: React.FC = () => {
         initialConfig={wordArtConfig}
         onChangeSize={handleWordArtChangeSize}
         onAddToProduct={handleAddWordArtToProduct}
+      />
+
+      {/* Pop Art Style Selection Modal */}
+      <PopArtStyleModal
+        isOpen={isPopArtStyleModalOpen}
+        onClose={() => setIsPopArtStyleModalOpen(false)}
+        selectedStyleId={popArtConfig.selectedStyleId}
+        onSelectStyle={(style) => {
+          setPopArtConfig((prev) => ({
+            ...prev,
+            selectedStyleId: style.id
+          }));
+        }}
       />
     </div>
   );

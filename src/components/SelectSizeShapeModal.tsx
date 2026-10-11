@@ -59,7 +59,9 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
       norm === 'acrylic-print' ||
       norm === 'acrylic-photo-panel' ||
       norm === 'canvas-quotes' ||
-      norm === 'canvas-digital-painting'
+      norm === 'canvas-digital-painting' ||
+      norm === 'canvas-pop-art' ||
+      norm.includes('pop')
     );
   }, [productId]);
 

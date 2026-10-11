@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="240" height="180">
+      <!-- Left: Realistic Photo Representation -->
+      <rect x="0" y="0" width="120" height="180" fill="#F8FAFC" />
+      
+    <!-- Head / Hair -->
+    <path d="M 31.200000000000003 74.8 Q 26.4 43.6 60 41.199999999999996 Q 93.6 43.6 88.8 74.8 Q 98.4 101.19999999999999 81.6 115.6 L 86.4 137.2 L 33.6 137.2 L 38.400000000000006 115.6 Z" fill="#334155" />
+    <!-- Face Contour -->
+    <path d="M 43.2 70 Q 38.400000000000006 98.8 60 115.6 Q 81.6 98.8 76.8 70 Q 60 60.4 43.2 70 Z" fill="#E2E8F0" />
+    <!-- Glasses / Features -->
+    <circle cx="51.6" cy="82" r="6" fill="#334155" />
+    <circle cx="68.4" cy="82" r="6" fill="#334155" />
+    <path d="M 57.6 82 L 62.4 82" stroke="#334155" stroke-width="2.4" />
+    <!-- Smile / Lips -->
+    <path d="M 50.4 101.19999999999999 Q 60 108.39999999999999 69.6 101.19999999999999" stroke="#334155" stroke-width="2.4" fill="none" stroke-linecap="round" />
+  
+      <!-- Right: Exaggerated Caricature cartoon -->
+      <rect x="120" y="0" width="120" height="180" fill="#FFFBEB" />
+      <!-- Big Head Caricature -->
+      <circle cx="180" cy="72" r="42" fill="#FDE68A" stroke="#78350F" stroke-width="3" />
+      <ellipse cx="166" cy="68" rx="8" ry="11" fill="#FFFFFF" stroke="#78350F" stroke-width="2.5" />
+      <circle cx="167" cy="68" r="4.5" fill="#1E293B" />
+      <ellipse cx="194" cy="68" rx="8" ry="11" fill="#FFFFFF" stroke="#78350F" stroke-width="2.5" />
+      <circle cx="195" cy="68" r="4.5" fill="#1E293B" />
+      <path d="M 180 75 Q 183 86 177 88" stroke="#78350F" stroke-width="3" fill="none" stroke-linecap="round" />
+      <path d="M 166 98 Q 180 114 194 98" stroke="#78350F" stroke-width="3" fill="#DC2626" />
+      <!-- Petite Body -->
+      <path d="M 170 118 L 160 160 L 200 160 L 190 118 Z" fill="#2563EB" stroke="#1E3A8A" stroke-width="2" />
+      <line x1="120" y1="0" x2="120" y2="180" stroke="#CBD5E1" stroke-width="2" stroke-dasharray="4 3" />
+    </svg>
