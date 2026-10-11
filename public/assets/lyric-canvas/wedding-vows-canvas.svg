@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <!-- Canvas Drop Shadow -->
+    <filter id="canvasShadow" x="-15%" y="-15%" width="135%" height="135%">
+      <feDropShadow dx="8" dy="16" stdDeviation="12" flood-color="#0F172A" flood-opacity="0.22" />
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.12" />
+    </filter>
+
+    <!-- Subtle canvas weave pattern -->
+    <pattern id="canvasTexture" width="6" height="6" patternUnits="userSpaceOnUse">
+      <path d="M 0 3 L 6 3 M 3 0 L 3 6" stroke="#000000" stroke-width="0.35" opacity="0.04" />
+    </pattern>
+
+    <!-- Gradients -->
+    <linearGradient id="edgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#334155" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#1E293B" stop-opacity="0.95" />
+    </linearGradient>
+
+    <linearGradient id="topEdgeGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#475569" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#334155" stop-opacity="0.9" />
+    </linearGradient>
+
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="50%" stop-color="#EAB308" />
+      <stop offset="100%" stop-color="#CA8A04" />
+    </linearGradient>
+
+    <linearGradient id="sunsetGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FB7185" />
+      <stop offset="60%" stop-color="#F43F5E" />
+      <stop offset="100%" stop-color="#881337" />
+    </linearGradient>
+
+    <linearGradient id="parchmentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEFCE8" />
+      <stop offset="50%" stop-color="#FEF9C3" />
+      <stop offset="100%" stop-color="#FEF08A" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Canvas Staging Environment -->
+  <rect width="100%" height="100%" fill="#F8FAFC" />
+
+  <!-- 3D Canvas Assembly with realistic Perspective wrap -->
+  <g transform="translate(45, 30)">
+    <!-- Main 3D Canvas Group with shadow -->
+    <g filter="url(#canvasShadow)">
+      <!-- Right 3D Fold Edge (Thickness flap) -->
+      <polygon points="280,25 305,42 305,225 280,210" fill="url(#edgeGrad)" />
+
+      <!-- Top 3D Fold Edge -->
+      <polygon points="10,25 280,25 305,42 35,42" fill="url(#topEdgeGrad)" opacity="0.4" />
+
+      <!-- Front Canvas Face (270 x 185) -->
+      <g transform="translate(10, 25)">
+        <clipPath id="frontFaceClip_CanvasWallArtWeddingVowsCanvas">
+          <rect width="270" height="185" rx="3" />
+        </clipPath>
+
+        <rect width="270" height="185" rx="3" fill="#FFFFFF" />
+
+        <g clip-path="url(#frontFaceClip_CanvasWallArtWeddingVowsCanvas)">
+          
+      <!-- Soft floral / lace wedding backdrop -->
+      <rect width="270" height="185" fill="#FAF5FF" />
+      <rect x="15" y="15" width="240" height="155" fill="none" stroke="#E9D5FF" stroke-width="1" />
+      <rect x="19" y="19" width="232" height="147" fill="none" stroke="#C084FC" stroke-width="0.5" />
+      <text x="135" y="45" text-anchor="middle" font-family="'Cinzel', Georgia, serif" font-size="12" font-weight="bold" fill="#581C87" letter-spacing="2">TO HAVE AND TO HOLD</text>
+      <text x="135" y="58" text-anchor="middle" font-family="'Dancing Script', cursive, serif" font-size="11" fill="#7E22CE">From this day forward</text>
+      <text x="135" y="78" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="8.5" font-style="italic" fill="#3B0764">For better, for worse, for richer, for poorer,</text>
+      <text x="135" y="92" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="8.5" font-style="italic" fill="#3B0764">In sickness and in health, to love and to cherish,</text>
+      <text x="135" y="106" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="8.5" font-style="italic" fill="#3B0764">Till death do us part.</text>
+      <text x="135" y="125" text-anchor="middle" font-family="'Dancing Script', cursive, serif" font-size="12" font-weight="bold" fill="#6B21A8">I give you my hand, my heart &amp; my love</text>
+      <text x="135" y="150" text-anchor="middle" font-family="'Montserrat', sans-serif" font-size="8" font-weight="bold" fill="#9333EA" letter-spacing="1.5">ALEX &amp; TAYLOR</text>
+    
+        </g>
+
+        <!-- Canvas Weave Texture Overlay -->
+        <rect width="270" height="185" rx="3" fill="url(#canvasTexture)" pointer-events="none" />
+        <!-- Subtle border highlight -->
+        <rect width="270" height="185" rx="3" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.4" />
+      </g>
+    </g>
+  </g>
+</svg>

@@ -46,7 +46,8 @@ import {
   Edit3,
   Quote,
   Palette,
-  LayoutTemplate
+  LayoutTemplate,
+  Music
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { QuotesTemplateSidebarPanel } from '../components/QuotesTemplateSidebarPanel';
@@ -97,6 +98,17 @@ import {
   DEFAULT_POP_ART_CONFIG
 } from '../data/popArtData';
 import { processPopArtImage } from '../utils/popArtProcessor';
+import { SelectLyricTemplateModal } from '../components/SelectLyricTemplateModal';
+import { LyricStudioPanel } from '../components/LyricStudioPanel';
+import {
+  type LyricCanvasConfig,
+  type LyricCanvasTemplate,
+  type LyricTemplateId,
+  LYRIC_CANVAS_TEMPLATES,
+  LYRIC_CANVAS_SIZE_OPTIONS,
+  DEFAULT_LYRIC_CONFIG,
+  getLyricTemplate
+} from '../data/lyricCanvasData';
 import {
   CANVAS_SHAPES,
   CanvasShapeOption,
@@ -155,6 +167,7 @@ import {
 type ToolbarTab =
   | 'PRODUCTS'
   | 'POP ART STYLE'
+  | 'LYRIC TEMPLATE'
   | 'UPLOAD'
   | 'SELECT SIZE'
   | 'EFFECTS & OPTIONS'
@@ -1667,6 +1680,10 @@ export const CanvasCustomizerPage: React.FC = () => {
       setIsPopArtStyleModalOpen(true);
       return;
     }
+    if (tabId === 'LYRIC TEMPLATE') {
+      setIsLyricTemplateModalOpen(true);
+      return;
+    }
     if (tabId === 'SELECT SIZE') {
       if (selectedProductTypeId === 'canvas-word-art') {
         setIsWordArtSizeModalOpen(true);
@@ -1676,7 +1693,9 @@ export const CanvasCustomizerPage: React.FC = () => {
         setIsSizeShapeModalOpen(true);
       }
     } else if (tabId === 'LAYOUTS & DESIGNS') {
-      setIsLayoutModalOpen(true);
+      if (selectedProductTypeId !== 'canvas-lyric') {
+        setIsLayoutModalOpen(true);
+      }
     }
     beginPreloader();
     endPreloader(PRELOADER_MIN_MS);
@@ -1740,6 +1759,18 @@ export const CanvasCustomizerPage: React.FC = () => {
         { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
         { id: 'POP ART STYLE', label: 'POP ART STYLE', icon: Sparkles },
         { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud },
+        { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
+        { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
+        { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
+        { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
+      ];
+    }
+    if (selectedProductTypeId === 'canvas-lyric') {
+      return [
+        { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
+        { id: 'LYRIC TEMPLATE', label: 'SELECT TEMPLATE', icon: Music },
+        { id: 'UPLOAD', label: 'UPLOAD PHOTO', icon: UploadCloud },
+        { id: 'LAYOUTS & DESIGNS', label: 'LYRIC STUDIO', icon: Type },
         { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
         { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
         { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
@@ -1830,6 +1861,10 @@ export const CanvasCustomizerPage: React.FC = () => {
       return POP_ART_SIZE_OPTIONS as unknown as SizeOption[];
     }
 
+    if (selectedProductTypeId === 'canvas-lyric') {
+      return LYRIC_CANVAS_SIZE_OPTIONS as unknown as SizeOption[];
+    }
+
     const isLayoutProduct = [
       'canvas-wall-art',
       'canvas-collage',
@@ -1903,6 +1938,9 @@ export const CanvasCustomizerPage: React.FC = () => {
     if (initialPt === 'canvas-pop-art') {
       return 'pop-12x12';
     }
+    if (initialPt === 'canvas-lyric') {
+      return 'lyric-8x8';
+    }
     if (initialPt === 'canvas-single' || initialPt === 'canvas-classic') {
       return 'single-10x10';
     }
@@ -1911,9 +1949,9 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   useEffect(() => {
     if (!availableSizeOptions.some((s) => s.id === selectedSizeId)) {
-      if (isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-bus-roll' || selectedProductTypeId === 'canvas-banner' || selectedProductTypeId === 'canvas-pop-art') {
+      if (isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-bus-roll' || selectedProductTypeId === 'canvas-banner' || selectedProductTypeId === 'canvas-pop-art' || selectedProductTypeId === 'canvas-lyric') {
         const matchingInCat = availableSizeOptions.filter((opt) => opt.categories.includes(sizeCategoryFilter));
-        const defaultId = selectedProductTypeId === 'canvas-quotes' ? 'quotes-8x8' : selectedProductTypeId === 'canvas-digital-painting' ? 'painting-10x10' : selectedProductTypeId === 'canvas-bus-roll' ? 'bus-21x32' : selectedProductTypeId === 'canvas-banner' ? 'banner-10x8' : selectedProductTypeId === 'canvas-pop-art' ? 'pop-12x12' : 'single-10x10';
+        const defaultId = selectedProductTypeId === 'canvas-quotes' ? 'quotes-8x8' : selectedProductTypeId === 'canvas-digital-painting' ? 'painting-10x10' : selectedProductTypeId === 'canvas-bus-roll' ? 'bus-21x32' : selectedProductTypeId === 'canvas-banner' ? 'banner-10x8' : selectedProductTypeId === 'canvas-pop-art' ? 'pop-12x12' : selectedProductTypeId === 'canvas-lyric' ? 'lyric-8x8' : 'single-10x10';
         setSelectedSizeId(matchingInCat[0]?.id || defaultId);
       } else {
         setSelectedSizeId(availableSizeOptions[0]?.id || 'single-10x10');
@@ -2594,6 +2632,21 @@ export const CanvasCustomizerPage: React.FC = () => {
       return;
     }
 
+    if (productId === 'canvas-lyric') {
+      setSelectedProductTypeId('canvas-lyric');
+      setIsCustomSize(false);
+      setActivePanelIndex(0);
+      setSelectedShapeId('shape-square');
+      setSelectedSizeId('lyric-8x8');
+      setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
+      setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setIsLyricTemplateModalOpen(true);
+      setActiveTab('UPLOAD');
+      return;
+    }
+
     setSelectedProductTypeId(productId);
     setIsCustomSize(false);
     setActivePanelIndex(0);
@@ -2763,16 +2816,30 @@ export const CanvasCustomizerPage: React.FC = () => {
   const [selectedMaterialId, setSelectedMaterialId] = useState<string>('standard-cotton');
   const [materialModalOpen, setMaterialModalOpen] = useState<boolean>(false);
 
-  // Dedicated Lyric Canvas State (for canvas-lyric product typography overlay)
-  const [lyricTitle, setLyricTitle] = useState<string>('PERFECT');
-  const [lyricArtist, setLyricArtist] = useState<string>('ED SHEERAN');
-  const [lyricText, setLyricText] = useState<string>(
-    "Baby, I'm dancing in the dark\nWith you between my arms\nBarefoot on the grass\nListening to our favorite song\nWhen you said you looked a mess\nI whispered underneath my breath\nYou heard it, darling\nYou look perfect tonight"
-  );
-  const [lyricFontFamily, setLyricFontFamily] = useState<'serif' | 'script' | 'sans' | 'cinzel'>('serif');
-  const [lyricTextColor, setLyricTextColor] = useState<string>('#FFFFFF');
-  const [lyricTemplate, setLyricTemplate] = useState<'center-minimal' | 'music-player' | 'elegant-script' | 'split-card'>('center-minimal');
-  const [lyricOverlayDarkness, setLyricOverlayDarkness] = useState<number>(35);
+  // Dedicated Lyric Canvas State (for canvas-lyric product customization)
+  const [isLyricTemplateModalOpen, setIsLyricTemplateModalOpen] = useState<boolean>(() => {
+    return resolveCanvasProductTypeId(productId, catalogProduct) === 'canvas-lyric';
+  });
+  const [lyricConfig, setLyricConfig] = useState<LyricCanvasConfig>(DEFAULT_LYRIC_CONFIG);
+
+  const selectedLyricTemplate = useMemo(() => {
+    return getLyricTemplate(lyricConfig.selectedTemplateId);
+  }, [lyricConfig.selectedTemplateId]);
+
+  const handleSelectLyricTemplate = (tpl: LyricCanvasTemplate) => {
+    setLyricConfig((prev) => ({
+      ...prev,
+      selectedTemplateId: tpl.id,
+      title: tpl.defaultText.title,
+      artistOrSubtitle: tpl.defaultText.artistOrSubtitle,
+      lyrics: tpl.defaultText.lyrics,
+      dateOrNames: tpl.defaultText.dateOrNames || prev.dateOrNames,
+      fontFamily: tpl.defaultTypography.fontFamily,
+      textColor: tpl.defaultTypography.textColor,
+      alignment: tpl.defaultTypography.alignment,
+      overlayDarkness: tpl.defaultBackground.overlayDarkness
+    }));
+  };
 
   // Creative Tools State
   // Free-form text + clipart: unified with Acrylic system
@@ -2877,6 +2944,7 @@ export const CanvasCustomizerPage: React.FC = () => {
         busRollConfig,
         bannerConfig,
         popArtConfig: selectedProductTypeId === 'canvas-pop-art' ? popArtConfig : undefined,
+        lyricConfig: selectedProductTypeId === 'canvas-lyric' ? lyricConfig : undefined,
         updatedAt: new Date().toISOString()
       };
       localStorage.setItem(storageKey, JSON.stringify(stateToSave));
@@ -2891,6 +2959,7 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Dynamic Price Calculation
   const selectedPopStyle = getPopArtStyle(popArtConfig.selectedStyleId);
   const popStyleAdjustment = selectedProductTypeId === 'canvas-pop-art' ? (selectedPopStyle?.priceAdjustment || 0) : 0;
+  const lyricPriceAdjustment = selectedProductTypeId === 'canvas-lyric' ? (selectedLyricTemplate?.priceAdjustment || 0) : 0;
   const sizePrice = selectedProductTypeId === 'canvas-word-art'
     ? wordArtSizeOption.price
     : selectedProductTypeId === 'canvas-banner'
@@ -2899,6 +2968,8 @@ export const CanvasCustomizerPage: React.FC = () => {
         : (CANVAS_BANNER_SIZE_OPTIONS.find((s) => s.id === bannerConfig.selectedSizeId)?.price || calculateBannerPrice(bannerConfig.widthInches, bannerConfig.heightInches)))
     : selectedProductTypeId === 'canvas-pop-art'
     ? ((isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price) + popStyleAdjustment)
+    : selectedProductTypeId === 'canvas-lyric'
+    ? ((isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price) + lyricPriceAdjustment)
     : (isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price);
 
   const unitPrice = useMemo(() => {
@@ -2954,6 +3025,12 @@ export const CanvasCustomizerPage: React.FC = () => {
     if (selectedProductTypeId === 'canvas-bus-roll') {
       return true;
     }
+    if (
+      selectedProductTypeId === 'canvas-lyric' &&
+      (!selectedLyricTemplate.supportsPhoto || ((lyricConfig.lyrics || lyricConfig.lyricsText || '').trim().length > 0))
+    ) {
+      return true;
+    }
     const anySlotHasImage = Object.values(panelImages).some(
       (p) => Boolean(p?.imageUrl && p.imageUrl.trim().length > 0)
     );
@@ -2961,7 +3038,7 @@ export const CanvasCustomizerPage: React.FC = () => {
       (url) => Boolean(url && url.trim().length > 0)
     );
     return anySlotHasImage || anyTrayHasImage;
-  }, [panelImages, uploadedPhotos, selectedProductTypeId]);
+  }, [panelImages, uploadedPhotos, selectedProductTypeId, selectedLyricTemplate, lyricConfig.lyrics, lyricConfig.lyricsText]);
 
   // Validation: at least one uploaded photo
   const filledPanelsCount = useMemo(() => {
@@ -3650,6 +3727,8 @@ export const CanvasCustomizerPage: React.FC = () => {
           ? `${selectedProductType.name} - ${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}${bannerConfig.isCustom ? ' (Custom)' : ''}`
           : selectedProductTypeId === 'canvas-pop-art'
           ? `${selectedProductType.name} (${getPopArtStyle(popArtConfig.selectedStyleId).name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
+          : selectedProductTypeId === 'canvas-lyric'
+          ? `${selectedProductType.name} (${selectedLyricTemplate.name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
           : `${selectedProductType.name} - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
       },
       size: selectedProductTypeId === 'canvas-word-art'
@@ -3662,10 +3741,18 @@ export const CanvasCustomizerPage: React.FC = () => {
       finish: WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label || 'Canvas Lite',
       quantity,
       customText: customText || undefined,
-      photoUrl: (selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl) ? popArtConfig.processedImageUrl : firstImage,
+      photoUrl: (selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl)
+        ? popArtConfig.processedImageUrl
+        : (selectedProductTypeId === 'canvas-lyric' && !panelImages[0]?.imageUrl)
+        ? selectedLyricTemplate.previewImage
+        : firstImage,
       calculatedPrice: totalPrice,
       material: MATERIAL_VARIANTS.find((m) => m.id === selectedMaterialId)?.name || 'Standard 280 GSM Cotton Canvas',
-      style: selectedProductTypeId === 'canvas-pop-art' ? `Pop Art (${getPopArtStyle(popArtConfig.selectedStyleId).name})` : selectedProductType.name,
+      style: selectedProductTypeId === 'canvas-pop-art'
+        ? `Pop Art (${getPopArtStyle(popArtConfig.selectedStyleId).name})`
+        : selectedProductTypeId === 'canvas-lyric'
+        ? `Lyric on Canvas (${selectedLyricTemplate.name})`
+        : selectedProductType.name,
       base: selectedProductTypeId === 'canvas-banner'
         ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware')
         : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label || 'No Hooks'),
@@ -3711,6 +3798,16 @@ export const CanvasCustomizerPage: React.FC = () => {
         popArtStyleName: selectedProductTypeId === 'canvas-pop-art' ? getPopArtStyle(popArtConfig.selectedStyleId).name : undefined,
         popArtPriceAdjustment: selectedProductTypeId === 'canvas-pop-art' ? getPopArtStyle(popArtConfig.selectedStyleId).priceAdjustment : undefined,
         popArtProcessedArtwork: selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl ? popArtConfig.processedImageUrl : undefined,
+        lyricTemplateId: selectedProductTypeId === 'canvas-lyric' ? lyricConfig.selectedTemplateId : undefined,
+        lyricTemplateName: selectedProductTypeId === 'canvas-lyric' ? selectedLyricTemplate.name : undefined,
+        lyricTitle: selectedProductTypeId === 'canvas-lyric' ? (lyricConfig.title || lyricConfig.songTitle) : undefined,
+        lyricArtist: selectedProductTypeId === 'canvas-lyric' ? (lyricConfig.artistOrSubtitle || lyricConfig.artistOrNames) : undefined,
+        lyricDateOrNames: selectedProductTypeId === 'canvas-lyric' ? (lyricConfig.dateOrNames || lyricConfig.dateOrInscription) : undefined,
+        lyricText: selectedProductTypeId === 'canvas-lyric' ? (lyricConfig.lyrics || lyricConfig.lyricsText) : undefined,
+        lyricFontFamily: selectedProductTypeId === 'canvas-lyric' ? lyricConfig.fontFamily : undefined,
+        lyricTextColor: selectedProductTypeId === 'canvas-lyric' ? lyricConfig.textColor : undefined,
+        lyricLayout: selectedProductTypeId === 'canvas-lyric' ? (lyricConfig.layout || selectedLyricTemplate.defaultLayout) : undefined,
+        lyricOverlayDarkness: selectedProductTypeId === 'canvas-lyric' ? lyricConfig.overlayDarkness : undefined,
         panels: panels.map((p, idx) => ({
           dimension: p.dimension,
           imageUrl: panelImages[idx]?.imageUrl || null,
@@ -3935,69 +4032,403 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Dedicated Lyric Canvas Typography Overlay (for canvas-lyric)
   const renderLyricOverlay = (scaleFactor: number = 1) => {
     const fontFamilies: Record<string, string> = {
-      serif: 'Georgia, Cambria, "Times New Roman", serif',
-      script: '"Brush Script MT", "Caveat", "Dancing Script", cursive',
-      sans: 'system-ui, -apple-system, Montserrat, sans-serif',
-      cinzel: 'Cinzel, Georgia, serif'
+      'Playfair Display': '"Playfair Display", Georgia, "Times New Roman", serif',
+      'Cormorant Garamond': '"Cormorant Garamond", Garamond, "Times New Roman", serif',
+      'Dancing Script': '"Dancing Script", "Caveat", "Brush Script MT", cursive',
+      'Montserrat': '"Montserrat", system-ui, -apple-system, sans-serif',
+      'Cinzel': '"Cinzel", Georgia, serif'
     };
-    const resolvedFont = fontFamilies[lyricFontFamily] || fontFamilies.serif;
+    const font = fontFamilies[lyricConfig.fontFamily] || fontFamilies['Playfair Display'];
+    const s = (px: number) => Math.max(1, Math.round(px * scaleFactor));
+    const fs = (px: number, min = 7) => `${Math.max(min, Math.round(px * scaleFactor))}px`;
+    const scrimAlpha = Math.min(0.9, Math.max(0, (lyricConfig.overlayDarkness ?? 35) / 100));
+    const textColor = lyricConfig.textColor || '#FFFFFF';
+    const textAlign = lyricConfig.alignment || lyricConfig.textAlign || 'center';
+    const hasPhoto = Boolean(panelImages[0]?.imageUrl);
+    const layout = lyricConfig.layout || selectedLyricTemplate.defaultLayout || 'photo-lyrics-overlay';
+    const title = lyricConfig.title || lyricConfig.songTitle || selectedLyricTemplate.name;
+    const artist = lyricConfig.artistOrSubtitle || lyricConfig.artistOrNames || '';
+    const date = lyricConfig.dateOrNames || lyricConfig.dateOrInscription || '';
+    const text = lyricConfig.lyrics || lyricConfig.lyricsText || selectedLyricTemplate.defaultText.lyrics;
+    const textShadow = (scrimAlpha > 0.1 || hasPhoto)
+      ? '0 1px 3px rgba(0,0,0,0.85), 0 2px 6px rgba(0,0,0,0.6)'
+      : undefined;
 
+    // 1. First Dance Card (frosted glass badge in center/lower-center)
+    if (layout === 'first-dance-card') {
+      return (
+        <div
+          className="absolute inset-0 z-25 flex flex-col items-center justify-center pointer-events-none select-none"
+          style={{
+            padding: `${s(16)}px`,
+            background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.45})` : undefined,
+            color: textColor,
+            fontFamily: font
+          }}
+        >
+          <div
+            className="w-full max-w-[88%] rounded-2xl flex flex-col items-center text-center shadow-2xl backdrop-blur-md"
+            style={{
+              background: `rgba(15, 23, 42, ${Math.max(0.45, scrimAlpha * 0.9)})`,
+              border: '1px solid rgba(255, 255, 255, 0.28)',
+              padding: `${s(14)}px ${s(16)}px`,
+              gap: `${s(6)}px`
+            }}
+          >
+            <div className="flex items-center gap-1.5 opacity-90">
+              <span style={{ fontSize: fs(14) }}>♪</span>
+              <span className="font-extrabold uppercase tracking-widest" style={{ fontSize: fs(13) }}>
+                {title}
+              </span>
+              <span style={{ fontSize: fs(14) }}>♪</span>
+            </div>
+            {artist && (
+              <div className="italic opacity-85" style={{ fontSize: fs(10.5) }}>
+                {artist}
+              </div>
+            )}
+            <div className="w-16 h-px bg-current opacity-40 my-0.5" />
+            <div
+              className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden"
+              style={{
+                fontSize: fs(10),
+                maxHeight: `${s(120)}px`,
+                textAlign
+              }}
+            >
+              {text}
+            </div>
+            {date && (
+              <div className="font-mono tracking-wider opacity-75 mt-1" style={{ fontSize: fs(9) }}>
+                {date}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // 2. Wedding Vows Photo (framed vows with decorative flourish)
+    if (layout === 'wedding-vows-photo') {
+      return (
+        <div
+          className="absolute inset-0 z-25 flex flex-col justify-between pointer-events-none select-none"
+          style={{
+            padding: `${s(18)}px ${s(20)}px`,
+            background: hasPhoto
+              ? `linear-gradient(to bottom, rgba(0,0,0,${scrimAlpha * 0.85}) 0%, rgba(0,0,0,${scrimAlpha * 0.4}) 35%, rgba(0,0,0,${scrimAlpha * 0.4}) 65%, rgba(0,0,0,${scrimAlpha * 0.9}) 100%)`
+              : undefined,
+            color: textColor,
+            fontFamily: font,
+            textShadow
+          }}
+        >
+          <div className="text-center space-y-0.5">
+            <div className="font-serif tracking-widest uppercase font-bold" style={{ fontSize: fs(15) }}>
+              {title}
+            </div>
+            {artist && (
+              <div className="italic opacity-90" style={{ fontSize: fs(11) }}>
+                {artist}
+              </div>
+            )}
+            <div className="flex items-center justify-center gap-2 opacity-50 my-1">
+              <div className="w-10 h-px bg-current" />
+              <span style={{ fontSize: fs(9) }}>✦ • ✦</span>
+              <div className="w-10 h-px bg-current" />
+            </div>
+          </div>
+
+          <div
+            className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden my-auto"
+            style={{
+              fontSize: fs(10.5),
+              textAlign,
+              maxHeight: `${s(150)}px`
+            }}
+          >
+            {text}
+          </div>
+
+          <div className="text-center pt-1 border-t border-current/25">
+            <span className="tracking-widest uppercase font-semibold" style={{ fontSize: fs(9.5) }}>
+              {date || 'FOREVER & ALWAYS'}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    // 3. Split Side-by-Side (right side backdrop with text)
+    if (layout === 'split-side-by-side') {
+      return (
+        <div
+          className="absolute inset-y-0 right-0 w-1/2 z-25 flex flex-col justify-center pointer-events-none select-none"
+          style={{
+            padding: `${s(14)}px`,
+            background: `rgba(15, 23, 42, ${Math.max(0.6, scrimAlpha * 0.95)})`,
+            backdropFilter: 'blur(4px)',
+            color: textColor,
+            fontFamily: font,
+            borderLeft: '1px solid rgba(255, 255, 255, 0.2)'
+          }}
+        >
+          <div className="font-black uppercase tracking-wider mb-0.5" style={{ fontSize: fs(13) }}>
+            {title}
+          </div>
+          {artist && (
+            <div className="italic opacity-85 mb-1.5" style={{ fontSize: fs(10) }}>
+              {artist}
+            </div>
+          )}
+          <div className="w-8 h-px bg-current opacity-50 mb-2" />
+          <div
+            className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden"
+            style={{
+              fontSize: fs(9.5),
+              textAlign,
+              maxHeight: `${s(150)}px`
+            }}
+          >
+            {text}
+          </div>
+          {date && (
+            <div className="mt-2 pt-1 border-t border-current/20 font-mono tracking-wider opacity-80" style={{ fontSize: fs(8.5) }}>
+              {date}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // 4. Bottom Third Lyrics (lower banner with song details and flowing lines)
+    if (layout === 'bottom-third-lyrics') {
+      return (
+        <div
+          className="absolute inset-x-0 bottom-0 z-25 flex flex-col justify-end pointer-events-none select-none"
+          style={{
+            padding: `${s(14)}px ${s(16)}px`,
+            background: `linear-gradient(to top, rgba(0,0,0,${Math.max(0.85, scrimAlpha)}) 0%, rgba(0,0,0,${scrimAlpha * 0.8}) 65%, transparent 100%)`,
+            color: textColor,
+            fontFamily: font,
+            textShadow
+          }}
+        >
+          <div className="flex items-baseline justify-between gap-2 border-b border-current/30 pb-1 mb-1.5">
+            <span className="font-black uppercase tracking-wider truncate" style={{ fontSize: fs(13) }}>
+              {title}
+            </span>
+            {artist && (
+              <span className="italic opacity-85 shrink-0" style={{ fontSize: fs(10) }}>
+                {artist}
+              </span>
+            )}
+          </div>
+          <div
+            className="leading-relaxed whitespace-pre-line opacity-90 overflow-hidden"
+            style={{
+              fontSize: fs(10),
+              textAlign,
+              maxHeight: `${s(85)}px`
+            }}
+          >
+            {text}
+          </div>
+          {date && (
+            <div className="text-right mt-1 opacity-70 font-mono" style={{ fontSize: fs(8.5) }}>
+              {date}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // 5. Classic Centered Lyrics (timeless wedding / anniversary centered layout)
+    if (layout === 'classic-centered-lyrics') {
+      return (
+        <div
+          className="absolute inset-0 z-25 flex flex-col items-center justify-center text-center pointer-events-none select-none"
+          style={{
+            padding: `${s(20)}px`,
+            background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.7})` : undefined,
+            color: textColor,
+            fontFamily: font,
+            textShadow
+          }}
+        >
+          <div className="font-serif tracking-widest uppercase font-black mb-0.5" style={{ fontSize: fs(16) }}>
+            {title}
+          </div>
+          {artist && (
+            <div className="italic opacity-90 tracking-wide mb-1" style={{ fontSize: fs(11) }}>
+              {artist}
+            </div>
+          )}
+          <div className="flex items-center gap-2 opacity-50 my-1.5">
+            <div className="w-8 h-px bg-current" />
+            <span style={{ fontSize: fs(10) }}>❦</span>
+            <div className="w-8 h-px bg-current" />
+          </div>
+          <div
+            className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden my-1 max-w-[92%]"
+            style={{
+              fontSize: fs(10.5),
+              textAlign,
+              maxHeight: `${s(150)}px`
+            }}
+          >
+            {text}
+          </div>
+          {date && (
+            <div className="mt-2 font-mono tracking-widest opacity-80" style={{ fontSize: fs(9) }}>
+              {date}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // 6. Sheet Music Background (rendered with stylized musical staff and notes behind lyrics)
+    if (layout === 'sheet-music-bg') {
+      return (
+        <div
+          className="absolute inset-0 z-25 flex flex-col justify-between text-center pointer-events-none select-none relative overflow-hidden"
+          style={{
+            padding: `${s(18)}px`,
+            background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.75})` : selectedLyricTemplate.defaultBackground.color,
+            color: textColor,
+            fontFamily: font,
+            textShadow
+          }}
+        >
+          {/* Subtle Musical Staff Lines Background SVG */}
+          <svg className="absolute inset-0 w-full h-full opacity-15 pointer-events-none" viewBox="0 0 400 300" preserveAspectRatio="none">
+            <line x1="0" y1="40" x2="400" y2="40" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="48" x2="400" y2="48" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="56" x2="400" y2="56" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="64" x2="400" y2="64" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="72" x2="400" y2="72" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="220" x2="400" y2="220" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="228" x2="400" y2="228" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="236" x2="400" y2="236" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="244" x2="400" y2="244" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="252" x2="400" y2="252" stroke="currentColor" strokeWidth="1" />
+          </svg>
+
+          <div className="relative z-10 space-y-0.5">
+            <div className="font-serif tracking-widest uppercase font-bold" style={{ fontSize: fs(16) }}>
+              {title}
+            </div>
+            {artist && (
+              <div className="italic opacity-85" style={{ fontSize: fs(11) }}>
+                {artist}
+              </div>
+            )}
+          </div>
+
+          <div
+            className="relative z-10 leading-relaxed whitespace-pre-line opacity-95 overflow-hidden my-auto"
+            style={{
+              fontSize: fs(11),
+              textAlign,
+              maxHeight: `${s(160)}px`
+            }}
+          >
+            {text}
+          </div>
+
+          <div className="relative z-10 opacity-75 font-mono tracking-wider" style={{ fontSize: fs(9) }}>
+            {date || 'SHEET MUSIC CANVAS ART'}
+          </div>
+        </div>
+      );
+    }
+
+    // 7. Quote Solid Background (large decorative quotes)
+    if (layout === 'quote-solid-bg') {
+      return (
+        <div
+          className="absolute inset-0 z-25 flex flex-col justify-between items-center text-center pointer-events-none select-none relative"
+          style={{
+            padding: `${s(22)}px`,
+            background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.75})` : selectedLyricTemplate.defaultBackground.color,
+            color: textColor,
+            fontFamily: font,
+            textShadow
+          }}
+        >
+          <div className="font-serif opacity-30 select-none" style={{ fontSize: fs(34), lineHeight: 1 }}>
+            &ldquo;
+          </div>
+          <div
+            className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden my-auto max-w-[90%]"
+            style={{
+              fontSize: fs(11.5),
+              textAlign,
+              maxHeight: `${s(160)}px`
+            }}
+          >
+            {text}
+          </div>
+          <div className="space-y-0.5 pt-1 border-t border-current/20 w-3/4">
+            <div className="font-bold tracking-widest uppercase" style={{ fontSize: fs(11) }}>
+              {title}
+            </div>
+            {artist && (
+              <div className="italic opacity-80" style={{ fontSize: fs(9.5) }}>
+                {artist}
+              </div>
+            )}
+            {date && (
+              <div className="font-mono opacity-70" style={{ fontSize: fs(8.5) }}>
+                {date}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Default: photo-lyrics-overlay (bottom gradient with elegant typography)
     return (
       <div
-        className="absolute inset-0 z-25 flex flex-col justify-end p-4 sm:p-6 pointer-events-none select-none"
+        className="absolute inset-0 z-25 flex flex-col justify-end pointer-events-none select-none"
         style={{
-          background: `linear-gradient(to top, rgba(0,0,0,${lyricOverlayDarkness / 100}) 0%, rgba(0,0,0,${(lyricOverlayDarkness / 100) * 0.45}) 60%, transparent 100%)`,
-          color: lyricTextColor,
-          fontFamily: resolvedFont
+          padding: `${s(16)}px ${s(18)}px`,
+          background: `linear-gradient(to top, rgba(0,0,0,${scrimAlpha}) 0%, rgba(0,0,0,${scrimAlpha * 0.7}) 50%, rgba(0,0,0,${scrimAlpha * 0.15}) 80%, transparent 100%)`,
+          color: textColor,
+          fontFamily: font,
+          textShadow
         }}
       >
-        {lyricTemplate === 'music-player' ? (
-          <div className="space-y-2 max-w-full drop-shadow-md">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0">
-                <span className="text-xs">▶</span>
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm font-black tracking-wide truncate uppercase">{lyricTitle || 'Song Title'}</div>
-                <div className="text-[11px] font-semibold opacity-90 truncate">{lyricArtist || 'Artist Name'}</div>
-              </div>
-            </div>
-            <div className="w-full h-1 bg-white/30 rounded-full overflow-hidden my-1">
-              <div className="w-2/5 h-full bg-white rounded-full" />
-            </div>
-            <div className="text-[11px] leading-relaxed whitespace-pre-line opacity-95 max-h-36 overflow-hidden">
-              {lyricText}
-            </div>
+        <div className="space-y-1 drop-shadow-md">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="font-black uppercase tracking-wider truncate" style={{ fontSize: fs(14) }}>
+              {title}
+            </span>
+            {date && (
+              <span className="font-mono opacity-75 shrink-0" style={{ fontSize: fs(9) }}>
+                {date}
+              </span>
+            )}
           </div>
-        ) : lyricTemplate === 'elegant-script' ? (
-          <div className="text-center space-y-1.5 drop-shadow-lg my-auto">
-            <div className="text-xl sm:text-2xl font-normal italic tracking-wide">{lyricTitle || 'Perfect'}</div>
-            <div className="w-16 h-[1px] bg-current mx-auto opacity-70 my-1" />
-            <div className="text-[10px] sm:text-xs font-light tracking-widest uppercase opacity-80">{lyricArtist || 'Ed Sheeran'}</div>
-            <div className="text-xs sm:text-sm italic leading-relaxed whitespace-pre-line opacity-95 mt-2 max-h-40 overflow-hidden">
-              {lyricText}
+          {artist && (
+            <div className="italic opacity-90" style={{ fontSize: fs(11) }}>
+              {artist}
             </div>
+          )}
+          <div className="w-12 h-px bg-current opacity-40 my-1" />
+          <div
+            className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden"
+            style={{
+              fontSize: fs(10.5),
+              textAlign,
+              maxHeight: `${s(140)}px`
+            }}
+          >
+            {text}
           </div>
-        ) : lyricTemplate === 'split-card' ? (
-          <div className="bg-black/50 backdrop-blur-xs p-3.5 rounded-xl border border-white/20 space-y-1.5 drop-shadow-md">
-            <div className="flex justify-between items-baseline border-b border-white/20 pb-1">
-              <span className="text-xs font-black tracking-wider uppercase">{lyricTitle}</span>
-              <span className="text-[10px] opacity-80">{lyricArtist}</span>
-            </div>
-            <div className="text-[10px] leading-relaxed whitespace-pre-line opacity-90 max-h-32 overflow-hidden">
-              {lyricText}
-            </div>
-          </div>
-        ) : (
-          <div className="text-center space-y-1.5 drop-shadow-md mb-2">
-            <div className="text-xs sm:text-sm font-black tracking-widest uppercase">{lyricTitle || 'Song Title'}</div>
-            <div className="text-[10px] tracking-wider uppercase opacity-80">{lyricArtist || 'Artist Name'}</div>
-            <div className="w-12 h-[1px] bg-current mx-auto opacity-60 my-1" />
-            <div className="text-[11px] sm:text-xs leading-relaxed whitespace-pre-line font-medium opacity-95 max-h-36 overflow-hidden">
-              {lyricText}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     );
   };
@@ -4958,8 +5389,62 @@ export const CanvasCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Create Word Art Option for Shape Canvas Products (Excludes Single Print, Quotes, Digital Painting, Bus Roll, Canvas Banner, Pop Art) */}
-              {!activeWordArtDataUrl && isSingleOrShapedCanvas && selectedProductTypeId !== 'canvas-single' && selectedProductTypeId !== 'canvas-quotes' && selectedProductTypeId !== 'canvas-digital-painting' && selectedProductTypeId !== 'canvas-bus-roll' && selectedProductTypeId !== 'canvas-banner' && selectedProductTypeId !== 'canvas-pop-art' && (
+              {/* Lyric on Canvas Template Card in Sidebar */}
+              {selectedProductTypeId === 'canvas-lyric' && (
+                <div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200/90 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#0E4A93] flex items-center gap-1.5">
+                      <Music className="w-3.5 h-3.5 text-[#E8752A]" />
+                      <span>Lyric Template</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsLyricTemplateModalOpen(true)}
+                      className="text-[11px] font-extrabold text-[#0E4A93] hover:text-[#0b3c77] hover:underline cursor-pointer flex items-center gap-1"
+                    >
+                      <Layers className="w-3 h-3 text-[#E8752A]" />
+                      <span>Change Template</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 bg-white p-2 rounded-lg border border-blue-100 shadow-2xs">
+                    <img
+                      src={selectedLyricTemplate.previewImage}
+                      alt={selectedLyricTemplate.name}
+                      className="w-10 h-10 rounded-md object-cover border border-stone-200 shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-xs font-black text-stone-900 truncate">
+                          {selectedLyricTemplate.name}
+                        </span>
+                        {selectedLyricTemplate.priceAdjustment > 0 && (
+                          <span className="text-[10px] font-extrabold text-[#E8752A] shrink-0">
+                            +₹{selectedLyricTemplate.priceAdjustment.toLocaleString('en-IN')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-stone-500 line-clamp-1 leading-tight mt-0.5">
+                        {lyricConfig.title || lyricConfig.songTitle} • {lyricConfig.artistOrSubtitle || lyricConfig.artistOrNames}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('LAYOUTS & DESIGNS')}
+                      className="flex-1 py-1.5 px-3 bg-[#0E4A93] hover:bg-[#0b3c77] text-white font-bold text-[11px] rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                      <span>Customize Lyrics & Typography</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Create Word Art Option for Shape Canvas Products (Excludes Single Print, Quotes, Digital Painting, Bus Roll, Canvas Banner, Pop Art, Lyric) */}
+              {!activeWordArtDataUrl && isSingleOrShapedCanvas && selectedProductTypeId !== 'canvas-single' && selectedProductTypeId !== 'canvas-quotes' && selectedProductTypeId !== 'canvas-digital-painting' && selectedProductTypeId !== 'canvas-bus-roll' && selectedProductTypeId !== 'canvas-banner' && selectedProductTypeId !== 'canvas-pop-art' && selectedProductTypeId !== 'canvas-lyric' && (
                 <button
                   type="button"
                   onClick={() => setIsWordArtPersonalizeModalOpen(true)}
@@ -5299,7 +5784,7 @@ export const CanvasCustomizerPage: React.FC = () => {
               />
             ) : (
             <div className="p-4 space-y-4">
-              {isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-pop-art' ? (
+              {isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-pop-art' || selectedProductTypeId === 'canvas-lyric' ? (
                 <>
                   {/* Selected Size Summary Card */}
                   <div className="flex items-center justify-between p-3.5 bg-blue-50/70 rounded-2xl border border-blue-100 mb-3">
@@ -5566,175 +6051,15 @@ export const CanvasCustomizerPage: React.FC = () => {
 
           {/* ------------------------ LAYOUTS & DESIGNS ------------------------- */}
           {activeTab === 'LAYOUTS & DESIGNS' && (
-            <div className="p-4 space-y-4">
-              {selectedProductTypeId === 'canvas-lyric' ? (
-                <div className="space-y-4">
-                  <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 text-xs text-[#0E4A93]">
-                    <div className="font-extrabold uppercase tracking-wide">Lyric & Typography Canvas</div>
-                    <p className="text-[11px] text-stone-600 mt-0.5">Customize your song title, artist, and lyrics below. Live preview updates on the canvas.</p>
-                  </div>
-
-                  {/* Template Style */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Typography Layout</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { id: 'center-minimal' as const, label: 'Center Minimal', desc: 'Centered classic typography' },
-                        { id: 'music-player' as const, label: 'Spotify Style', desc: 'Player icon & progress bar' },
-                        { id: 'elegant-script' as const, label: 'Elegant Script', desc: 'Handwritten romantic vibe' },
-                        { id: 'split-card' as const, label: 'Lyric Card', desc: 'Frosted card with header' }
-                      ].map((tpl) => (
-                        <button
-                          key={tpl.id}
-                          type="button"
-                          onClick={() => setLyricTemplate(tpl.id)}
-                          className={`p-2.5 rounded-xl border-2 text-left transition-all cursor-pointer ${
-                            lyricTemplate === tpl.id
-                              ? 'border-[#0E4A93] bg-blue-50/30 text-[#0E4A93] shadow-xs'
-                              : 'border-stone-200 text-stone-700 bg-white hover:border-stone-300'
-                          }`}
-                        >
-                          <div className="text-xs font-black">{tpl.label}</div>
-                          <div className="text-[10px] text-stone-500 mt-0.5">{tpl.desc}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Quick Preset Songs */}
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-stone-600 uppercase">Popular Song Presets</label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {[
-                        {
-                          title: 'PERFECT',
-                          artist: 'ED SHEERAN',
-                          text: "Baby, I'm dancing in the dark\nWith you between my arms\nBarefoot on the grass\nListening to our favorite song\nWhen you said you looked a mess\nI whispered underneath my breath\nYou heard it, darling\nYou look perfect tonight"
-                        },
-                        {
-                          title: 'A THOUSAND YEARS',
-                          artist: 'CHRISTINA PERRI',
-                          text: "Heart beats fast\nColors and promises\nHow to be brave?\nHow can I love when I'm afraid to fall?\nI have died every day waiting for you\nDarling, don't be afraid\nI have loved you for a thousand years\nI'll love you for a thousand more"
-                        },
-                        {
-                          title: 'ALL OF ME',
-                          artist: 'JOHN LEGEND',
-                          text: "'Cause all of me\nLoves all of you\nLove your curves and all your edges\nAll your perfect imperfections\nGive your all to me\nI'll give my all to you\nYou're my end and my beginning\nEven when I lose I'm winning"
-                        },
-                        {
-                          title: 'WEDDING VOWS',
-                          artist: 'FOREVER & ALWAYS',
-                          text: "I promise to love you unconditionally,\nTo support your dreams as my own,\nTo laugh with you in joy,\nAnd hold your hand through every storm.\nToday and for all our tomorrows,\nMy heart is yours."
-                        }
-                      ].map((song) => (
-                        <button
-                          key={song.title}
-                          type="button"
-                          onClick={() => {
-                            setLyricTitle(song.title);
-                            setLyricArtist(song.artist);
-                            setLyricText(song.text);
-                          }}
-                          className="px-2.5 py-1 bg-stone-100 hover:bg-[#0E4A93] hover:text-white rounded-lg text-[10px] font-bold text-stone-700 transition-colors cursor-pointer"
-                        >
-                          {song.title}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Song Title & Artist Inputs */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Song / Vow Title</label>
-                      <input
-                        type="text"
-                        value={lyricTitle}
-                        onChange={(e) => setLyricTitle(e.target.value)}
-                        placeholder="e.g. Perfect"
-                        className="w-full px-2.5 py-1.5 text-xs font-bold border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Artist / Couple Name</label>
-                      <input
-                        type="text"
-                        value={lyricArtist}
-                        onChange={(e) => setLyricArtist(e.target.value)}
-                        placeholder="e.g. Ed Sheeran"
-                        className="w-full px-2.5 py-1.5 text-xs font-bold border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Lyrics Textarea */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Lyrics / Text</label>
-                    <textarea
-                      rows={5}
-                      value={lyricText}
-                      onChange={(e) => setLyricText(e.target.value)}
-                      placeholder="Paste your favorite lyrics or personal vows here..."
-                      className="w-full px-2.5 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93] resize-y"
-                    />
-                  </div>
-
-                  {/* Font & Color */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Typography Font</label>
-                      <select
-                        value={lyricFontFamily}
-                        onChange={(e) => setLyricFontFamily(e.target.value as any)}
-                        className="w-full px-2.5 py-1.5 text-xs font-bold bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93]"
-                      >
-                        <option value="serif">Playfair Serif</option>
-                        <option value="script">Dancing Script</option>
-                        <option value="sans">Montserrat Sans</option>
-                        <option value="cinzel">Cinzel Classic</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Text Color</label>
-                      <div className="flex gap-2 pt-1">
-                        {[
-                          { hex: '#FFFFFF', name: 'White' },
-                          { hex: '#FEF08A', name: 'Soft Gold' },
-                          { hex: '#F5EBE0', name: 'Cream' },
-                          { hex: '#1E293B', name: 'Charcoal' }
-                        ].map((c) => (
-                          <button
-                            key={c.hex}
-                            type="button"
-                            onClick={() => setLyricTextColor(c.hex)}
-                            style={{ backgroundColor: c.hex }}
-                            title={c.name}
-                            className={`w-6 h-6 rounded-full border-2 transition-transform cursor-pointer ${
-                              lyricTextColor === c.hex ? 'border-[#0E4A93] scale-110 shadow-sm' : 'border-stone-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Background Scrim Darkness */}
-                  <div>
-                    <div className="flex justify-between text-[11px] font-bold text-stone-700 uppercase mb-1">
-                      <span>Overlay Contrast</span>
-                      <span>{lyricOverlayDarkness}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={10}
-                      max={80}
-                      value={lyricOverlayDarkness}
-                      onChange={(e) => setLyricOverlayDarkness(Number(e.target.value))}
-                      className="w-full h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-[#0E4A93]"
-                    />
-                  </div>
-                </div>
-              ) : (
+            selectedProductTypeId === 'canvas-lyric' ? (
+              <LyricStudioPanel
+                config={lyricConfig}
+                template={selectedLyricTemplate}
+                onChangeConfig={setLyricConfig}
+                onOpenTemplateModal={() => setIsLyricTemplateModalOpen(true)}
+              />
+            ) : (
+              <div className="p-4 space-y-4">
                 <>
                   {/* Sub-tab toggle matching Acrylic pill filter style */}
                   <div className="flex flex-wrap gap-1.5">
@@ -5886,8 +6211,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                     </div>
                   )}
                 </>
-              )}
-            </div>
+              </div>
+            )
           )}
 
           {/* --------------------------- WRAP & BORDER --------------------------- */}
@@ -6684,7 +7009,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                         }}
                       >
                         {(() => {
-                          const isSingleCanvasPrint = selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-bus-roll' || selectedProductTypeId === 'canvas-pop-art';
+                          const isSingleCanvasPrint = selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-bus-roll' || selectedProductTypeId === 'canvas-pop-art' || selectedProductTypeId === 'canvas-lyric';
                           const imgMeta = panelImages[0]?.uploadedImage;
                           const natWidth = imgMeta?.width || 1200;
                           const natHeight = imgMeta?.height || 800;
@@ -6858,7 +7183,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   activePanelIndex === 0 ? 'ring-2 ring-[#0E4A93]/50' : ''
                                 }`}
                                 style={{
-                                  backgroundColor: selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : undefined,
+                                  backgroundColor: selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : selectedProductTypeId === 'canvas-lyric' ? selectedLyricTemplate.defaultBackground.color : undefined,
                                   clipPath: (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? undefined
                                     : currentShape.clipPathStyle,
@@ -7030,6 +7355,67 @@ export const CanvasCustomizerPage: React.FC = () => {
                                       <span className="px-4 py-1.5 bg-[#0E4A93] hover:bg-[#0b3c77] text-white text-xs font-bold rounded-lg shadow-xs transition-colors">
                                         Browse Files
                                       </span>
+                                    </div>
+                                  ) : selectedProductTypeId === 'canvas-lyric' ? (
+                                    <div
+                                      onClick={() => {
+                                        if (selectedLyricTemplate.supportsPhoto) {
+                                          fileInputRef.current?.click();
+                                        } else {
+                                          setActiveTab('LAYOUTS & DESIGNS');
+                                        }
+                                      }}
+                                      className="w-full h-full flex flex-col items-center justify-center p-6 text-center cursor-pointer group select-none relative"
+                                      style={{ backgroundColor: selectedLyricTemplate.defaultBackground.color }}
+                                    >
+                                      {/* Dropzone container matching Screenshot 2 */}
+                                      <div className="max-w-xs w-full bg-white/95 backdrop-blur-xs rounded-2xl p-4 sm:p-5 border-2 border-dashed border-[#0E4A93]/35 shadow-md flex flex-col items-center">
+                                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#0E4A93] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform shadow-2xs">
+                                          {selectedLyricTemplate.supportsPhoto ? (
+                                            <Upload className="w-6 h-6 stroke-[2.2]" />
+                                          ) : (
+                                            <Music className="w-6 h-6 stroke-[2.2] text-[#E8752A]" />
+                                          )}
+                                        </div>
+                                        <span className="text-xs sm:text-sm font-black text-stone-900 mb-0.5">
+                                          {selectedLyricTemplate.supportsPhoto ? 'Upload an Image' : 'Customize Lyrics'}
+                                        </span>
+                                        <span className="text-[11px] text-stone-500 font-medium mb-1">
+                                          {selectedLyricTemplate.supportsPhoto
+                                            ? 'Maximum upload size: 25MB per file'
+                                            : 'Click to edit song, artist & vows'}
+                                        </span>
+                                        {selectedLyricTemplate.supportsPhoto && (
+                                          <span className="text-[10px] text-stone-400 mb-2.5">
+                                            Supported formats: PNG, JPG, JPEG, WEBP, BMP
+                                          </span>
+                                        )}
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                          {selectedLyricTemplate.supportsPhoto && (
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                fileInputRef.current?.click();
+                                              }}
+                                              className="px-3.5 py-1.5 bg-[#0E4A93] hover:bg-[#0b3c77] text-white text-xs font-bold rounded-lg shadow-2xs transition-colors cursor-pointer"
+                                            >
+                                              Browse Photo
+                                            </button>
+                                          )}
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setActiveTab('LAYOUTS & DESIGNS');
+                                            }}
+                                            className="px-3.5 py-1.5 bg-[#E8752A] hover:bg-[#cf641e] text-white text-xs font-black rounded-lg shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                                          >
+                                            <Edit3 className="w-3.5 h-3.5" />
+                                            <span>ADD / EDIT LYRICS</span>
+                                          </button>
+                                        </div>
+                                      </div>
                                     </div>
                                   ) : (
                                     <div
@@ -7786,7 +8172,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                   : currentSizeOption.dimensionsSummary
               }
               productId={selectedProductTypeId}
-              productName={selectedProductTypeId === 'canvas-pop-art' ? `Pop Art (${selectedPopStyle?.name || 'Pop Art'})` : selectedProductType.name}
+              productName={selectedProductTypeId === 'canvas-pop-art' ? `Pop Art (${selectedPopStyle?.name || 'Pop Art'})` : selectedProductTypeId === 'canvas-lyric' ? `Lyric on Canvas (${selectedLyricTemplate.name})` : selectedProductType.name}
               shapeId={isHexagonProduct ? (isHexagonCluster ? 'shape-rectangle' : 'shape-hexagon') : (shapeApplies ? selectedShapeId : 'shape-rectangle')}
               shapeName={
                 selectedProductTypeId === 'canvas-word-art'
@@ -8147,7 +8533,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                     )}
                   </h3>
                   <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-stone-500 bg-stone-100 px-2.5 py-0.5 rounded-full">
-                    <span>{selectedProductTypeId === 'canvas-pop-art' ? `Pop Art (${selectedPopStyle?.name || 'Pop Art'})` : selectedProductType.name}</span>
+                    <span>{selectedProductTypeId === 'canvas-pop-art' ? `Pop Art (${selectedPopStyle?.name || 'Pop Art'})` : selectedProductTypeId === 'canvas-lyric' ? `Lyric on Canvas (${selectedLyricTemplate.name})` : selectedProductType.name}</span>
                     <span>•</span>
                     <span>
                       {selectedProductTypeId === 'canvas-word-art'
@@ -9163,6 +9549,14 @@ export const CanvasCustomizerPage: React.FC = () => {
             selectedStyleId: style.id
           }));
         }}
+      />
+
+      {/* Lyric on Canvas Template Selection Modal */}
+      <SelectLyricTemplateModal
+        isOpen={isLyricTemplateModalOpen}
+        onClose={() => setIsLyricTemplateModalOpen(false)}
+        selectedTemplateId={lyricConfig.selectedTemplateId}
+        onSelectTemplate={handleSelectLyricTemplate}
       />
     </div>
   );

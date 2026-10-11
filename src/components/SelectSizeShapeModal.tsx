@@ -50,6 +50,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
 
   const isQuotes = productId.toLowerCase() === 'canvas-quotes';
   const isDigitalPainting = productId.toLowerCase() === 'canvas-digital-painting';
+  const isLyric = productId.toLowerCase() === 'canvas-lyric' || productId.toLowerCase().includes('lyric');
 
   const isSinglePrint = useMemo(() => {
     const norm = productId.toLowerCase();
@@ -61,6 +62,8 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
       norm === 'canvas-quotes' ||
       norm === 'canvas-digital-painting' ||
       norm === 'canvas-pop-art' ||
+      norm === 'canvas-lyric' ||
+      norm.includes('lyric') ||
       norm.includes('pop')
     );
   }, [productId]);
@@ -71,6 +74,168 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   // Single Print predefined sizes per category
   const singlePrintSizes = useMemo(() => {
     const isAcrylic = material === 'acrylic';
+
+    if (isLyric) {
+      const squareSizes: SizeShapeOption[] = [
+        {
+          id: 'lyric-8x8',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '8" × 8"',
+          dimensionsSummary: '8" × 8"',
+          widthInches: 8,
+          heightInches: 8,
+          price: 1498.50,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'lyric-10x10',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '10" × 10"',
+          dimensionsSummary: '10" × 10"',
+          widthInches: 10,
+          heightInches: 10,
+          price: 1699.00,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'lyric-12x12',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '12" × 12"',
+          dimensionsSummary: '12" × 12"',
+          widthInches: 12,
+          heightInches: 12,
+          price: 1899.00,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'lyric-16x16',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '16" × 16"',
+          dimensionsSummary: '16" × 16"',
+          widthInches: 16,
+          heightInches: 16,
+          price: 2299.00,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'lyric-20x20',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '20" × 20"',
+          dimensionsSummary: '20" × 20"',
+          widthInches: 20,
+          heightInches: 20,
+          price: 2799.00,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        }
+      ];
+
+      const panoramicSizes: SizeShapeOption[] = [
+        {
+          id: 'lyric-12x18',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Portrait',
+          label: '12" × 18"',
+          dimensionsSummary: '12" × 18"',
+          widthInches: 12,
+          heightInches: 18,
+          price: 1999.00,
+          aspectRatio: 12 / 18,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'lyric-16x20',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Portrait',
+          label: '16" × 20"',
+          dimensionsSummary: '16" × 20"',
+          widthInches: 16,
+          heightInches: 20,
+          price: 2499.00,
+          aspectRatio: 16 / 20,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'lyric-18x24',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Portrait',
+          label: '18" × 24"',
+          dimensionsSummary: '18" × 24"',
+          widthInches: 18,
+          heightInches: 24,
+          price: 2999.00,
+          aspectRatio: 18 / 24,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'lyric-20x30',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Portrait',
+          label: '20" × 30"',
+          dimensionsSummary: '20" × 30"',
+          widthInches: 20,
+          heightInches: 30,
+          price: 3499.00,
+          aspectRatio: 20 / 30,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'lyric-24x36',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Portrait',
+          label: '24" × 36"',
+          dimensionsSummary: '24" × 36"',
+          widthInches: 24,
+          heightInches: 36,
+          price: 4299.00,
+          aspectRatio: 24 / 36,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        }
+      ];
+
+      const recommendedSizes: SizeShapeOption[] = [
+        squareSizes[0],
+        squareSizes[2],
+        panoramicSizes[0],
+        panoramicSizes[1],
+        panoramicSizes[2]
+      ];
+
+      return {
+        SQUARE: squareSizes,
+        PANORAMIC: panoramicSizes,
+        RECOMMENDED: recommendedSizes
+      };
+    }
 
     if (isQuotes) {
       const squareSizes: SizeShapeOption[] = [
