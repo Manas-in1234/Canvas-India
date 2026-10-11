@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
 import { X, Heart } from 'lucide-react';
 
-export interface WordArtPreferenceModalProps {
+export interface SelectPreferenceModalProps {
   onClose: () => void;
   onSelectCreateOwn: () => void;
+  /** When omitted, "Select From Our Collection" shows a Coming Soon state instead. */
+  onSelectCollection?: () => void;
+  comingSoonText?: string;
 }
 
-export const WordArtPreferenceModal: React.FC<WordArtPreferenceModalProps> = ({
+export const SelectPreferenceModal: React.FC<SelectPreferenceModalProps> = ({
   onClose,
-  onSelectCreateOwn
+  onSelectCreateOwn,
+  onSelectCollection,
+  comingSoonText = 'Our curated collection is on its way — check back shortly, or build your own design now.'
 }) => {
   const [showComingSoon, setShowComingSoon] = useState(false);
 
@@ -44,7 +49,7 @@ export const WordArtPreferenceModal: React.FC<WordArtPreferenceModalProps> = ({
             {/* Select From Our Collection */}
             <button
               type="button"
-              onClick={() => setShowComingSoon(true)}
+              onClick={() => (onSelectCollection ? onSelectCollection() : setShowComingSoon(true))}
               className="group text-center cursor-pointer"
             >
               <div className="relative aspect-square w-full rounded-lg border-2 border-stone-200 group-hover:border-[#0E4A93] bg-white p-2 transition-colors">
@@ -67,9 +72,7 @@ export const WordArtPreferenceModal: React.FC<WordArtPreferenceModalProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-1">Coming Soon</h3>
-              <p className="text-[11px] text-stone-500 max-w-xs">
-                Our curated Word Art collection is on its way — check back shortly, or build your own design now.
-              </p>
+              <p className="text-[11px] text-stone-500 max-w-xs">{comingSoonText}</p>
             </div>
             <div className="flex items-center gap-2 mt-1">
               <button

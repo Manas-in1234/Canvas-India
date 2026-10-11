@@ -107,7 +107,7 @@ import { ClipartItem } from '../data/acrylicClipartData';
 import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
 import { SelectLayoutModal, LayoutModalOption } from '../components/SelectLayoutModal';
 import { WordArtStudioModal } from '../components/WordArtStudioModal';
-import { WordArtPreferenceModal } from '../components/WordArtPreferenceModal';
+import { SelectPreferenceModal } from '../components/SelectPreferenceModal';
 import { BusRollLineEditorPanel } from '../components/BusRollLineEditorPanel';
 import { BusRollBackgroundPanel } from '../components/BusRollBackgroundPanel';
 import { BusRollTemplatePanel } from '../components/BusRollTemplatePanel';
@@ -310,9 +310,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // in-page product list (handleSelectProductType) AND landing on it
   // directly via URL (/customize/acrylic/acrylic-word-art), where
   // selectedProductTypeId is resolved straight from the route param on
-  // mount and handleSelectProductType never runs at all.
+  // mount and handleSelectProductType never runs at all. Fires on every
+  // fresh selection of the product, not just the first one.
   useEffect(() => {
-    if (selectedProductTypeId === 'acrylic-word-art' && !hasWordArtDesign) {
+    if (selectedProductTypeId === 'acrylic-word-art') {
       setIsWordArtPreferenceModalOpen(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -360,6 +361,17 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // generated text) — picking one just drops its finished image straight
   // into the panel, same as any other upload.
   const isQuotesProduct = selectedProductTypeId === 'acrylic-quotes';
+  // Quotes also opens the Select Preference popup first — unlike Word Art,
+  // "Select From Our Collection" here has real content (the 42-template
+  // gallery below), so it jumps straight to the TEMPLATE tab instead of a
+  // Coming Soon placeholder.
+  const [isQuotesPreferenceModalOpen, setIsQuotesPreferenceModalOpen] = useState(false);
+  useEffect(() => {
+    if (selectedProductTypeId === 'acrylic-quotes') {
+      setIsQuotesPreferenceModalOpen(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProductTypeId]);
   const [selectedQuoteTemplateId, setSelectedQuoteTemplateId] = useState<string>('');
   const handleSelectQuoteTemplate = (template: QuoteTemplateItem) => {
     setSelectedQuoteTemplateId(template.id);
@@ -5399,11 +5411,27 @@ export const AcrylicCustomizerPage: React.FC = () => {
       />
 
       {isWordArtPreferenceModalOpen && (
-        <WordArtPreferenceModal
+        <SelectPreferenceModal
           onClose={() => setIsWordArtPreferenceModalOpen(false)}
           onSelectCreateOwn={() => {
             setIsWordArtPreferenceModalOpen(false);
+            setActiveTab('UPLOAD');
             setIsWordArtModalOpen(true);
+          }}
+          comingSoonText="Our curated Word Art collection is on its way — check back shortly, or build your own design now."
+        />
+      )}
+
+      {isQuotesPreferenceModalOpen && (
+        <SelectPreferenceModal
+          onClose={() => setIsQuotesPreferenceModalOpen(false)}
+          onSelectCreateOwn={() => {
+            setIsQuotesPreferenceModalOpen(false);
+            setActiveTab('UPLOAD');
+          }}
+          onSelectCollection={() => {
+            setIsQuotesPreferenceModalOpen(false);
+            setActiveTab('TEMPLATE');
           }}
         />
       )}
