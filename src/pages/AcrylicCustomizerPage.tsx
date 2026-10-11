@@ -306,6 +306,17 @@ export const AcrylicCustomizerPage: React.FC = () => {
   // left over from a different product, which would otherwise make the
   // preference popup think a Word Art design already exists and skip itself.
   const [hasWordArtDesign, setHasWordArtDesign] = useState(false);
+  // Covers every way a shopper can "choose Word Art" — clicking it in the
+  // in-page product list (handleSelectProductType) AND landing on it
+  // directly via URL (/customize/acrylic/acrylic-word-art), where
+  // selectedProductTypeId is resolved straight from the route param on
+  // mount and handleSelectProductType never runs at all.
+  useEffect(() => {
+    if (selectedProductTypeId === 'acrylic-word-art' && !hasWordArtDesign) {
+      setIsWordArtPreferenceModalOpen(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProductTypeId]);
 
   // Bus Roll on Acrylic: destination-sign-style line editor, reusing the
   // same controlled BusRollConfig + components built for the Canvas
@@ -2186,12 +2197,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setActiveTab(getFirstTabForProduct(pt));
-      // Only ask Create-Your-Own-vs-Collection for a blank slot — if the
-      // shopper already has a Word Art design (switched away and back),
-      // don't re-interrupt them with the preference popup.
-      if (!hasWordArtDesign) {
-        setIsWordArtPreferenceModalOpen(true);
-      }
+      // The preference popup itself is opened by the selectedProductTypeId
+      // effect below, which also covers landing on Word Art directly via
+      // URL (/customize/acrylic/acrylic-word-art) — a path that never runs
+      // this handler at all, since the product type there is resolved
+      // straight from the route param on mount.
     } else if (isSingle) {
       setIsSizeShapeModalOpen(true);
       setIsLayoutModalOpen(false);
