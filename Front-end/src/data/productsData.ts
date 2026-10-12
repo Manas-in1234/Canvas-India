@@ -3662,7 +3662,12 @@ export const ALL_PRODUCTS: Product[] = [
     stockStatus: 'In Stock',
     applications: ['Franchise Stores', 'Popup Outlets', 'Showrooms'],
     isDemoData: true
-  }
+  },
+
+  // ==========================================
+  // Cork Yoga & Wellness Catalogue (15 products)
+  // ==========================================
+  ...CORK_CATALOG_PRODUCTS,
 
 ];
 
