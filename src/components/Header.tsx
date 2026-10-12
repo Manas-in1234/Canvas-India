@@ -872,7 +872,7 @@ export const Header: React.FC<HeaderProps> = ({
                                   {renderGroupIcon(menuData.groups[0].iconType)}
                                   <span>{menuData.groups[0].title}</span>
                                 </div>
-                                <ul className="space-y-0.5">
+                                <ul className={`space-y-0.5 ${menuData.groups[0].items.length > 8 ? 'max-h-[350px] overflow-y-auto pr-1 scrollbar-none' : ''}`}>
                                   {menuData.groups[0].items.map((item) => (
                                     <li key={item.name}>
                                       <button

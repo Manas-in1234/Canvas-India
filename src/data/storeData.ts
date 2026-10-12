@@ -813,27 +813,14 @@ export const MEGA_MENUS_DATA: Record<string, MegaMenuConfig> = {
     name: 'Gifts & Occasions',
     groups: [
       {
-        title: 'Occasions & Milestones',
+        title: 'Special Occasions',
         iconType: 'gift',
-        items: [
-          { name: 'Birthday Gifts', slug: 'gifts', description: 'Personalized memory collages & desk blocks' },
-          { name: 'Anniversary Gifts', slug: 'gifts', description: 'Timeline frames & romantic quote canvas' },
-          { name: 'Wedding Keepsakes', slug: 'gifts', description: 'Grand canvas portraits & guest memory boards' },
-          { name: 'Housewarming Gifts', slug: 'gifts', description: 'Living room wall art & entryway plaques' },
-          { name: "Valentine's Day", slug: 'gifts', description: 'Cherished couple prints & crystal hearts' },
-          { name: "Mother's & Father's Day", slug: 'gifts', description: 'Heartfelt family portraits & mother-child memories' },
-          { name: 'Festivals & Diwali', slug: 'gifts', description: 'Pooja room spiritual art & festive gift hampers' },
-        ],
+        items: SPECIAL_OCCASIONS.map((o) => ({ name: o.name, slug: 'gifts', href: `/occasions/${o.slug}` })),
       },
       {
-        title: 'Gift Formats',
+        title: 'Festive Occasions',
         iconType: 'sparkles',
-        items: [
-          { name: 'Personalized Gifts', slug: 'gifts', description: 'Custom names, special dates and photos' },
-          { name: 'Photo Gifts', slug: 'gifts', description: 'Tabletop acrylic blocks & collage frames' },
-          { name: 'Corporate Gifts', slug: 'gifts', description: 'Custom branded employee & client appreciation gifts' },
-          { name: 'Gift Wrapping Included', slug: 'gifts', description: 'Rigid safety packaging with greeting card' },
-        ],
+        items: FESTIVALS.map((o) => ({ name: o.name, slug: 'gifts', href: `/occasions/${o.slug}` })),
       },
     ],
     promo: {
