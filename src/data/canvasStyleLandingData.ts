@@ -27,7 +27,8 @@ const PHOTO = {
   paintTexture: u('1605721911519-3dfeb3be25e7'), // abstract painted canvas texture
   officeWorkspace: u('1497215728101-856f4ea42174'), // office desk with plants, city view
   officeHallway: u('1497366216548-37526070297c'), // office interior hallway
-  weddingGalleryWall: '/assets/canvas-styles/wall-display-wedding-gallery.png' // user-supplied: 6-panel asymmetric wedding photo gallery over a sofa
+  weddingGalleryWall: '/assets/canvas-styles/wall-display-wedding-gallery.png', // user-supplied: 6-panel asymmetric wedding photo gallery over a sofa
+  photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.png' // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
 };
 
 const STANDARD_FEATURES = [
@@ -154,19 +155,29 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       {
         id: 'canvas-collage',
         number: '01',
-        name: 'Photo Collage',
-        description: 'Multiple cherished photographs arranged edge-to-edge on a single canvas — pick from grid, mosaic, or freeform layouts.',
+        name: '6 Landscape Photo Collage',
+        description: '6-Photo Grid (3 Columns × 2 Rows) — six of your favorite moments arranged edge-to-edge on a single gallery-wrapped canvas.',
         price: 148.5,
-        visual: 'collage-grid',
+        image: PHOTO.photoCollageGrid,
         customizeHref: '/customize/canvas/canvas-collage'
       }
     ],
+    infoTitle: 'Explore Our Collage Layouts',
+    infoSubtitle: '28 real layouts across Landscape, Panoramic, Portrait and Square orientations — all available directly in the customizer.',
+    infoItems: [
+      { title: '2 Landscape Photo Collage', desc: '2 Equal Side-by-Side Vertical Photo Panels' },
+      { title: '3 Landscape Photo Collage', desc: '2 Stacked Photos on Left + 1 Tall Photo on Right' },
+      { title: '5 Landscape Photo Collage', desc: '5-Photo Pinwheel Collage with Center Focus' },
+      { title: '6 Landscape Photo Collage', desc: '6-Photo Grid (3 Columns × 2 Rows)' },
+      { title: '9 Landscape Photo Collage', desc: 'Center Feature Photo surrounded by 8 Border Photos' },
+      { title: 'Square & Portrait Collages', desc: 'Matching grid, pinwheel and feature layouts sized for square and portrait walls too' }
+    ],
     galleryTitle: 'Layouts for every memory',
     galleryItems: [
-      { label: '4-Photo Grid', visual: 'collage-grid' },
-      { label: 'Family Collage', visual: 'collage-grid' },
-      { label: 'Travel Memories', visual: 'collage-grid' },
-      { label: 'Milestones', visual: 'collage-grid' }
+      { label: '6-Photo Grid', image: PHOTO.photoCollageGrid },
+      { label: 'Pinwheel', visual: 'collage-grid' },
+      { label: 'Side-by-Side', visual: 'collage-grid' },
+      { label: 'Feature + Border', visual: 'collage-grid' }
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
