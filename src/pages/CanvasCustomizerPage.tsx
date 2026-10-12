@@ -2065,11 +2065,11 @@ export const CanvasCustomizerPage: React.FC = () => {
       const next: Record<number, PanelImageState> = {};
       Object.keys(prev).forEach((key) => {
         const idx = Number(key);
-        next[idx] = { ...prev[idx], fitMode: isSinglePrintCanvas ? 'cover' : 'contain', scale: 1, panX: 0, panY: 0 };
+        next[idx] = { ...prev[idx], fitMode: (isSinglePrintCanvas || selectedProductTypeId === 'canvas-lyric') ? 'cover' : 'contain', scale: 1, panX: 0, panY: 0 };
       });
       return next;
     });
-  }, [selectedSizeId, isSinglePrintCanvas]);
+  }, [selectedSizeId, isSinglePrintCanvas, selectedProductTypeId]);
 
   // Currently Active Panel Slot for drag/transform/upload targeting
   const [activePanelIndex, setActivePanelIndex] = useState<number>(0);
@@ -2716,6 +2716,13 @@ export const CanvasCustomizerPage: React.FC = () => {
       setIsLayoutModalOpen(false);
       setIsLyricTemplateModalOpen(true);
       setActiveTab('UPLOAD');
+      setPanelImages((prev) => ({
+        ...prev,
+        [0]: {
+          ...(prev[0] || createDefaultPanel()),
+          fitMode: 'cover'
+        }
+      }));
       return;
     }
 
@@ -2854,7 +2861,7 @@ export const CanvasCustomizerPage: React.FC = () => {
             scale: 1,
             panX: 0,
             panY: 0,
-            fitMode: isSinglePrintCanvas ? 'cover' : 'contain'
+            fitMode: (isSinglePrintCanvas || selectedProductTypeId === 'canvas-lyric') ? 'cover' : 'contain'
           };
         }
       });
@@ -2912,7 +2919,21 @@ export const CanvasCustomizerPage: React.FC = () => {
   const [isLyricTemplateModalOpen, setIsLyricTemplateModalOpen] = useState<boolean>(() => {
     return resolveCanvasProductTypeId(productId, catalogProduct) === 'canvas-lyric';
   });
-  const [lyricConfig, setLyricConfig] = useState<LyricCanvasConfig>(DEFAULT_LYRIC_CONFIG);
+  const [lyricConfig, setLyricConfig] = useState<LyricCanvasConfig>(() => {
+    try {
+      const storageKey = `ci_customization_${catalogProduct.id || catalogProduct.slug || 'canvas-custom'}`;
+      const savedRaw = localStorage.getItem(storageKey);
+      if (savedRaw) {
+        const saved = JSON.parse(savedRaw);
+        if (saved?.lyricConfig) {
+          return { ...DEFAULT_LYRIC_CONFIG, ...saved.lyricConfig };
+        }
+      }
+    } catch {
+      // Ignore parse error
+    }
+    return DEFAULT_LYRIC_CONFIG;
+  });
 
   const selectedLyricTemplate = useMemo(() => {
     return getLyricTemplate(lyricConfig.selectedTemplateId);
@@ -3249,7 +3270,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                   rotation: 0,
                   panX: 0,
                   panY: 0,
-                  fitMode: isSinglePrintCanvas ? 'cover' : 'contain'
+                  fitMode: (isSinglePrintCanvas || selectedProductTypeId === 'canvas-lyric') ? 'cover' : 'contain'
                 }
               }));
               setActivePanelIndex(idx);
@@ -3261,7 +3282,7 @@ export const CanvasCustomizerPage: React.FC = () => {
             setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
             if (i === 0 || target < panels.length) {
               const idx = target < panels.length ? target : startIdx;
-              setPanelImages((prev) => ({ ...prev, [idx]: { ...createDefaultPanel(), imageUrl: result } }));
+              setPanelImages((prev) => ({ ...prev, [idx]: { ...createDefaultPanel(), imageUrl: result, fitMode: (isSinglePrintCanvas || selectedProductTypeId === 'canvas-lyric') ? 'cover' : 'contain' } }));
               setActivePanelIndex(idx);
             }
             setValidationWarning(null);
@@ -3297,7 +3318,7 @@ export const CanvasCustomizerPage: React.FC = () => {
           rotation: 0,
           panX: 0,
           panY: 0,
-          fitMode: isSinglePrintCanvas ? 'cover' : 'contain'
+          fitMode: (isSinglePrintCanvas || selectedProductTypeId === 'canvas-lyric') ? 'cover' : 'contain'
         }
       }));
     };
@@ -4173,16 +4194,20 @@ export const CanvasCustomizerPage: React.FC = () => {
     const s = (px: number) => Math.max(1, Math.round(px * scaleFactor));
     const fs = (px: number, min = 7) => `${Math.max(min, Math.round(px * scaleFactor))}px`;
     const scrimAlpha = Math.min(0.9, Math.max(0, (lyricConfig.overlayDarkness ?? 35) / 100));
-    const textColor = lyricConfig.textColor || '#FFFFFF';
-    const textAlign = lyricConfig.alignment || lyricConfig.textAlign || 'center';
     const hasPhoto = Boolean(panelImages[0]?.imageUrl);
+    const effectiveTextColor = hasPhoto
+      ? (lyricConfig.textColor || '#FFFFFF')
+      : (lyricConfig.textColor && lyricConfig.textColor !== '#FFFFFF' ? lyricConfig.textColor : '#1E293B');
+    const textAlign = lyricConfig.alignment || lyricConfig.textAlign || 'center';
     const layout = lyricConfig.layout || selectedLyricTemplate.defaultLayout || 'photo-lyrics-overlay';
     const title = lyricConfig.title || lyricConfig.songTitle || selectedLyricTemplate.name;
     const artist = lyricConfig.artistOrSubtitle || lyricConfig.artistOrNames || '';
     const date = lyricConfig.dateOrNames || lyricConfig.dateOrInscription || '';
     const text = lyricConfig.lyrics || lyricConfig.lyricsText || selectedLyricTemplate.defaultText.lyrics;
-    const textShadow = (scrimAlpha > 0.1 || hasPhoto)
-      ? '0 1px 3px rgba(0,0,0,0.85), 0 2px 6px rgba(0,0,0,0.6)'
+    const textShadow = hasPhoto
+      ? (scrimAlpha > 0.05
+          ? '0 1px 3px rgba(0,0,0,0.85), 0 2px 6px rgba(0,0,0,0.6)'
+          : '0 1px 3px rgba(0,0,0,0.9), 0 2px 6px rgba(0,0,0,0.7)')
       : undefined;
 
     // 1. First Dance Card (frosted glass badge in center/lower-center)
@@ -4193,17 +4218,22 @@ export const CanvasCustomizerPage: React.FC = () => {
           style={{
             padding: `${s(16)}px`,
             background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.45})` : undefined,
-            color: textColor,
+            color: hasPhoto ? (lyricConfig.textColor || '#FFFFFF') : effectiveTextColor,
             fontFamily: font
           }}
         >
           <div
             className="w-full max-w-[88%] rounded-2xl flex flex-col items-center text-center shadow-2xl backdrop-blur-md"
             style={{
-              background: `rgba(15, 23, 42, ${Math.max(0.45, scrimAlpha * 0.9)})`,
-              border: '1px solid rgba(255, 255, 255, 0.28)',
+              background: hasPhoto
+                ? `rgba(15, 23, 42, ${Math.max(0.45, scrimAlpha * 0.9)})`
+                : 'rgba(255, 255, 255, 0.94)',
+              border: hasPhoto
+                ? '1px solid rgba(255, 255, 255, 0.28)'
+                : '1px solid rgba(15, 23, 42, 0.12)',
               padding: `${s(14)}px ${s(16)}px`,
-              gap: `${s(6)}px`
+              gap: `${s(6)}px`,
+              color: hasPhoto ? (lyricConfig.textColor || '#FFFFFF') : effectiveTextColor
             }}
           >
             <div className="flex items-center gap-1.5 opacity-90">
@@ -4249,7 +4279,7 @@ export const CanvasCustomizerPage: React.FC = () => {
             background: hasPhoto
               ? `linear-gradient(to bottom, rgba(0,0,0,${scrimAlpha * 0.85}) 0%, rgba(0,0,0,${scrimAlpha * 0.4}) 35%, rgba(0,0,0,${scrimAlpha * 0.4}) 65%, rgba(0,0,0,${scrimAlpha * 0.9}) 100%)`
               : undefined,
-            color: textColor,
+            color: effectiveTextColor,
             fontFamily: font,
             textShadow
           }}
@@ -4297,11 +4327,13 @@ export const CanvasCustomizerPage: React.FC = () => {
           className="absolute inset-y-0 right-0 w-1/2 z-25 flex flex-col justify-center pointer-events-none select-none"
           style={{
             padding: `${s(14)}px`,
-            background: `rgba(15, 23, 42, ${Math.max(0.6, scrimAlpha * 0.95)})`,
+            background: hasPhoto
+              ? `rgba(15, 23, 42, ${Math.max(0.6, scrimAlpha * 0.95)})`
+              : 'rgba(248, 250, 252, 0.95)',
             backdropFilter: 'blur(4px)',
-            color: textColor,
+            color: hasPhoto ? (lyricConfig.textColor || '#FFFFFF') : effectiveTextColor,
             fontFamily: font,
-            borderLeft: '1px solid rgba(255, 255, 255, 0.2)'
+            borderLeft: hasPhoto ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(15, 23, 42, 0.1)'
           }}
         >
           <div className="font-black uppercase tracking-wider mb-0.5" style={{ fontSize: fs(13) }}>
@@ -4339,8 +4371,10 @@ export const CanvasCustomizerPage: React.FC = () => {
           className="absolute inset-x-0 bottom-0 z-25 flex flex-col justify-end pointer-events-none select-none"
           style={{
             padding: `${s(14)}px ${s(16)}px`,
-            background: `linear-gradient(to top, rgba(0,0,0,${Math.max(0.85, scrimAlpha)}) 0%, rgba(0,0,0,${scrimAlpha * 0.8}) 65%, transparent 100%)`,
-            color: textColor,
+            background: hasPhoto
+              ? `linear-gradient(to top, rgba(0,0,0,${Math.max(0.85, scrimAlpha)}) 0%, rgba(0,0,0,${scrimAlpha * 0.8}) 65%, transparent 100%)`
+              : undefined,
+            color: effectiveTextColor,
             fontFamily: font,
             textShadow
           }}
@@ -4382,7 +4416,7 @@ export const CanvasCustomizerPage: React.FC = () => {
           style={{
             padding: `${s(20)}px`,
             background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.7})` : undefined,
-            color: textColor,
+            color: effectiveTextColor,
             fontFamily: font,
             textShadow
           }}
@@ -4426,8 +4460,8 @@ export const CanvasCustomizerPage: React.FC = () => {
           className="absolute inset-0 z-25 flex flex-col justify-between text-center pointer-events-none select-none relative overflow-hidden"
           style={{
             padding: `${s(18)}px`,
-            background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.75})` : selectedLyricTemplate.defaultBackground.color,
-            color: textColor,
+            background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.75})` : '#FAFAF9',
+            color: effectiveTextColor,
             fontFamily: font,
             textShadow
           }}
@@ -4482,8 +4516,8 @@ export const CanvasCustomizerPage: React.FC = () => {
           className="absolute inset-0 z-25 flex flex-col justify-between items-center text-center pointer-events-none select-none relative"
           style={{
             padding: `${s(22)}px`,
-            background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.75})` : selectedLyricTemplate.defaultBackground.color,
-            color: textColor,
+            background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.75})` : '#FFFFFF',
+            color: effectiveTextColor,
             fontFamily: font,
             textShadow
           }}
@@ -4526,8 +4560,10 @@ export const CanvasCustomizerPage: React.FC = () => {
         className="absolute inset-0 z-25 flex flex-col justify-end pointer-events-none select-none"
         style={{
           padding: `${s(16)}px ${s(18)}px`,
-          background: `linear-gradient(to top, rgba(0,0,0,${scrimAlpha}) 0%, rgba(0,0,0,${scrimAlpha * 0.7}) 50%, rgba(0,0,0,${scrimAlpha * 0.15}) 80%, transparent 100%)`,
-          color: textColor,
+          background: hasPhoto
+            ? `linear-gradient(to top, rgba(0,0,0,${scrimAlpha}) 0%, rgba(0,0,0,${scrimAlpha * 0.7}) 50%, rgba(0,0,0,${scrimAlpha * 0.15}) 80%, transparent 100%)`
+            : undefined,
+          color: effectiveTextColor,
           fontFamily: font,
           textShadow
         }}
@@ -6172,12 +6208,20 @@ export const CanvasCustomizerPage: React.FC = () => {
           {/* ------------------------ LAYOUTS & DESIGNS ------------------------- */}
           {activeTab === 'LAYOUTS & DESIGNS' && (
             selectedProductTypeId === 'canvas-lyric' ? (
-              <LyricStudioPanel
-                config={lyricConfig}
-                template={selectedLyricTemplate}
-                onChangeConfig={setLyricConfig}
-                onOpenTemplateModal={() => setIsLyricTemplateModalOpen(true)}
-              />
+              <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
+                <LyricStudioPanel
+                  config={lyricConfig}
+                  template={selectedLyricTemplate}
+                  photoUrl={panelImages[0]?.imageUrl || null}
+                  onTriggerUpload={() => {
+                    uploadTargetRef.current = 0;
+                    fileInputRef.current?.click();
+                  }}
+                  onRemovePhoto={() => handleRemoveSlotPhoto(0)}
+                  onChangeConfig={setLyricConfig}
+                  onOpenTemplateModal={() => setIsLyricTemplateModalOpen(true)}
+                />
+              </div>
             ) : (
               <div className="p-4 space-y-3.5">
                 <>
@@ -7326,7 +7370,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   activePanelIndex === 0 ? 'ring-2 ring-[#0E4A93]/50' : ''
                                 }`}
                                 style={{
-                                  backgroundColor: selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : selectedProductTypeId === 'canvas-lyric' ? selectedLyricTemplate.defaultBackground.color : undefined,
+                                  backgroundColor: selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : undefined,
                                   clipPath: (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? undefined
                                     : currentShape.clipPathStyle,
@@ -7501,63 +7545,25 @@ export const CanvasCustomizerPage: React.FC = () => {
                                     </div>
                                   ) : selectedProductTypeId === 'canvas-lyric' ? (
                                     <div
-                                      onClick={() => {
-                                        if (selectedLyricTemplate.supportsPhoto) {
-                                          fileInputRef.current?.click();
-                                        } else {
-                                          setActiveTab('LAYOUTS & DESIGNS');
-                                        }
-                                      }}
-                                      className="w-full h-full flex flex-col items-center justify-center p-6 text-center cursor-pointer group select-none relative"
-                                      style={{ backgroundColor: selectedLyricTemplate.defaultBackground.color }}
+                                      onClick={() => fileInputRef.current?.click()}
+                                      className="w-full h-full relative cursor-pointer group select-none"
                                     >
-                                      {/* Dropzone container matching Screenshot 2 */}
-                                      <div className="max-w-xs w-full bg-white/95 backdrop-blur-xs rounded-2xl p-4 sm:p-5 border-2 border-dashed border-[#0E4A93]/35 shadow-md flex flex-col items-center">
-                                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#0E4A93] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform shadow-2xs">
-                                          {selectedLyricTemplate.supportsPhoto ? (
-                                            <Upload className="w-6 h-6 stroke-[2.2]" />
-                                          ) : (
-                                            <Music className="w-6 h-6 stroke-[2.2] text-[#E8752A]" />
-                                          )}
+                                      {/* Clean, Non-Obtrusive Upload Prompt at Top of Canvas - Never blocks lyrics */}
+                                      <div className="absolute top-3 inset-x-3 sm:top-4 sm:inset-x-4 mx-auto max-w-[280px] bg-white/95 hover:bg-white backdrop-blur-xs rounded-xl p-2.5 sm:p-3 border-2 border-dashed border-[#0E4A93]/35 hover:border-[#0E4A93] shadow-sm hover:shadow-md flex items-center gap-2.5 transition-all z-30 pointer-events-auto">
+                                        <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#0E4A93] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                                          <Upload className="w-4 h-4 stroke-[2.2]" />
                                         </div>
-                                        <span className="text-xs sm:text-sm font-black text-stone-900 mb-0.5">
-                                          {selectedLyricTemplate.supportsPhoto ? 'Upload an Image' : 'Customize Lyrics'}
-                                        </span>
-                                        <span className="text-[11px] text-stone-500 font-medium mb-1">
-                                          {selectedLyricTemplate.supportsPhoto
-                                            ? 'Maximum upload size: 25MB per file'
-                                            : 'Click to edit song, artist & vows'}
-                                        </span>
-                                        {selectedLyricTemplate.supportsPhoto && (
-                                          <span className="text-[10px] text-stone-400 mb-2.5">
-                                            Supported formats: PNG, JPG, JPEG, WEBP, BMP
+                                        <div className="flex-1 min-w-0 text-left">
+                                          <span className="text-xs font-black text-stone-900 block leading-tight truncate">
+                                            Upload Photograph
                                           </span>
-                                        )}
-                                        <div className="flex items-center gap-2 mt-0.5">
-                                          {selectedLyricTemplate.supportsPhoto && (
-                                            <button
-                                              type="button"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                fileInputRef.current?.click();
-                                              }}
-                                              className="px-3.5 py-1.5 bg-[#0E4A93] hover:bg-[#0b3c77] text-white text-xs font-bold rounded-lg shadow-2xs transition-colors cursor-pointer"
-                                            >
-                                              Browse Photo
-                                            </button>
-                                          )}
-                                          <button
-                                            type="button"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setActiveTab('LAYOUTS & DESIGNS');
-                                            }}
-                                            className="px-3.5 py-1.5 bg-[#E8752A] hover:bg-[#cf641e] text-white text-xs font-black rounded-lg shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
-                                          >
-                                            <Edit3 className="w-3.5 h-3.5" />
-                                            <span>ADD / EDIT LYRICS</span>
-                                          </button>
+                                          <span className="text-[10px] text-stone-500 font-medium block leading-tight truncate">
+                                            Click to browse or drag photo
+                                          </span>
                                         </div>
+                                        <span className="px-2.5 py-1 bg-[#0E4A93] text-white text-[10px] font-bold rounded-lg shrink-0 shadow-2xs">
+                                          Browse
+                                        </span>
                                       </div>
                                     </div>
                                   ) : (

@@ -1,9 +1,10 @@
 import React from 'react';
-import { Palette, AlignCenter, AlignLeft, AlignRight, RefreshCw, Type, Sparkles } from 'lucide-react';
+import { Palette, AlignCenter, AlignLeft, AlignRight, RefreshCw, Type, Sparkles, Camera, Upload, Trash2, Layers } from 'lucide-react';
 import {
   LyricCanvasConfig,
   LyricCanvasTemplate,
   LyricFontFamily,
+  LyricTemplateLayout,
   POPULAR_LYRIC_PRESETS
 } from '../data/lyricCanvasData';
 
@@ -12,13 +13,19 @@ interface LyricStudioPanelProps {
   template: LyricCanvasTemplate;
   onChangeConfig: (updater: (prev: LyricCanvasConfig) => LyricCanvasConfig) => void;
   onOpenTemplateModal: () => void;
+  photoUrl?: string | null;
+  onTriggerUpload?: () => void;
+  onRemovePhoto?: () => void;
 }
 
 export const LyricStudioPanel: React.FC<LyricStudioPanelProps> = ({
   config,
   template,
   onChangeConfig,
-  onOpenTemplateModal
+  onOpenTemplateModal,
+  photoUrl,
+  onTriggerUpload,
+  onRemovePhoto
 }) => {
   const fontFamilies: { id: LyricFontFamily; label: string; previewStyle: string }[] = [
     { id: 'Playfair Display', label: 'Playfair Serif', previewStyle: 'font-serif' },
@@ -26,6 +33,17 @@ export const LyricStudioPanel: React.FC<LyricStudioPanelProps> = ({
     { id: 'Dancing Script', label: 'Dancing Script', previewStyle: 'italic font-serif' },
     { id: 'Montserrat', label: 'Montserrat Modern', previewStyle: 'font-sans' },
     { id: 'Cinzel', label: 'Cinzel Classic', previewStyle: 'tracking-wider font-serif' }
+  ];
+
+  const layoutOptions: { id: LyricTemplateLayout; label: string }[] = [
+    { id: 'photo-lyrics-overlay', label: 'Photo Overlay' },
+    { id: 'first-dance-card', label: 'First Dance Card' },
+    { id: 'wedding-vows-photo', label: 'Wedding Vows' },
+    { id: 'split-side-by-side', label: 'Side by Side' },
+    { id: 'bottom-third-lyrics', label: 'Lower Third' },
+    { id: 'classic-centered-lyrics', label: 'Classic Centered' },
+    { id: 'sheet-music-bg', label: 'Sheet Music' },
+    { id: 'quote-solid-bg', label: 'Quote Art' }
   ];
 
   const colorOptions = [
@@ -37,8 +55,80 @@ export const LyricStudioPanel: React.FC<LyricStudioPanelProps> = ({
     { hex: '#854D0E', name: 'Warm Bronze' }
   ];
 
+  const currentLayout = config.layout || template.defaultLayout || 'photo-lyrics-overlay';
+
   return (
     <div className="space-y-4">
+      {/* Background Photograph Status Card */}
+      <div className="p-3 bg-white rounded-xl border border-stone-200 shadow-2xs space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-black uppercase tracking-wider text-[#0E4A93] flex items-center gap-1.5">
+            <Camera className="w-3.5 h-3.5 text-[#0E4A93]" />
+            <span>Background Photograph</span>
+          </span>
+          <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${photoUrl ? 'bg-emerald-50 text-emerald-700' : 'bg-stone-100 text-stone-500'}`}>
+            {photoUrl ? 'Active' : 'No Photo'}
+          </span>
+        </div>
+
+        {photoUrl ? (
+          <div className="flex items-center gap-2.5 bg-stone-50 p-2 rounded-lg border border-stone-200">
+            <img
+              src={photoUrl}
+              alt="Uploaded background"
+              className="w-12 h-12 rounded-md object-cover border border-stone-200 shrink-0 shadow-2xs"
+            />
+            <div className="flex-1 min-w-0">
+              <span className="text-xs font-black text-stone-900 block truncate">
+                Couple Photograph
+              </span>
+              <p className="text-[10px] text-stone-500 line-clamp-1 mt-0.5">
+                Covers canvas print area edge-to-edge
+              </p>
+              <div className="flex items-center gap-2 mt-1">
+                {onTriggerUpload && (
+                  <button
+                    type="button"
+                    onClick={onTriggerUpload}
+                    className="text-[10px] font-bold text-[#0E4A93] hover:underline cursor-pointer"
+                  >
+                    Replace Photo
+                  </button>
+                )}
+                {onRemovePhoto && (
+                  <>
+                    <span className="text-stone-300">•</span>
+                    <button
+                      type="button"
+                      onClick={onRemovePhoto}
+                      className="text-[10px] font-bold text-rose-500 hover:underline cursor-pointer flex items-center gap-0.5"
+                    >
+                      <Trash2 className="w-2.5 h-2.5" />
+                      <span>Remove</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-2 bg-blue-50/50 p-2.5 rounded-lg border border-dashed border-[#0E4A93]/30">
+            <span className="text-[11px] text-stone-600 font-medium">
+              Upload a photograph to place behind your lyrics
+            </span>
+            {onTriggerUpload && (
+              <button
+                type="button"
+                onClick={onTriggerUpload}
+                className="px-3 py-1.5 bg-[#0E4A93] hover:bg-[#0b3c77] text-white text-[11px] font-bold rounded-lg shadow-2xs transition-colors shrink-0 cursor-pointer flex items-center gap-1"
+              >
+                <Upload className="w-3 h-3" />
+                <span>Upload</span>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
       {/* Active Template Card */}
       <div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200/90 space-y-2">
         <div className="flex items-center justify-between">
@@ -189,6 +279,33 @@ export const LyricStudioPanel: React.FC<LyricStudioPanelProps> = ({
           placeholder="Paste or type your favorite lyrics, vows, or words here..."
           className="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl focus:outline-none focus:border-[#0E4A93] bg-white text-stone-900 resize-y leading-relaxed font-normal"
         />
+      </div>
+
+      {/* Lyric Layout Preset Selection */}
+      <div className="space-y-1.5 pt-1">
+        <label className="block text-[11px] font-bold text-stone-700 uppercase flex items-center gap-1.5">
+          <Layers className="w-3.5 h-3.5 text-[#0E4A93]" />
+          <span>Artwork &amp; Lyrics Layout</span>
+        </label>
+        <div className="grid grid-cols-2 gap-1.5">
+          {layoutOptions.map((lo) => {
+            const isSel = currentLayout === lo.id;
+            return (
+              <button
+                key={lo.id}
+                type="button"
+                onClick={() => onChangeConfig((prev) => ({ ...prev, layout: lo.id }))}
+                className={`py-1.5 px-2.5 rounded-lg text-left text-[11px] font-bold transition-all border cursor-pointer truncate ${
+                  isSel
+                    ? 'bg-[#0E4A93] text-white border-[#0E4A93] shadow-2xs'
+                    : 'bg-stone-50 hover:bg-stone-100 text-stone-700 border-stone-200'
+                }`}
+              >
+                {lo.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Typography Font & Alignment */}
