@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <!-- Canvas Drop Shadow -->
+    <filter id="canvasShadow" x="-15%" y="-15%" width="135%" height="135%">
+      <feDropShadow dx="8" dy="16" stdDeviation="12" flood-color="#0F172A" flood-opacity="0.22" />
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.12" />
+    </filter>
+
+    <!-- Subtle canvas weave pattern -->
+    <pattern id="canvasTexture" width="6" height="6" patternUnits="userSpaceOnUse">
+      <path d="M 0 3 L 6 3 M 3 0 L 3 6" stroke="#000000" stroke-width="0.35" opacity="0.04" />
+    </pattern>
+
+    <!-- Gradients -->
+    <linearGradient id="edgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#334155" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#1E293B" stop-opacity="0.95" />
+    </linearGradient>
+
+    <linearGradient id="topEdgeGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#475569" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#334155" stop-opacity="0.9" />
+    </linearGradient>
+
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="50%" stop-color="#EAB308" />
+      <stop offset="100%" stop-color="#CA8A04" />
+    </linearGradient>
+
+    <linearGradient id="sunsetGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FB7185" />
+      <stop offset="60%" stop-color="#F43F5E" />
+      <stop offset="100%" stop-color="#881337" />
+    </linearGradient>
+
+    <linearGradient id="parchmentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEFCE8" />
+      <stop offset="50%" stop-color="#FEF9C3" />
+      <stop offset="100%" stop-color="#FEF08A" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Canvas Staging Environment -->
+  <rect width="100%" height="100%" fill="#F8FAFC" />
+
+  <!-- 3D Canvas Assembly with realistic Perspective wrap -->
+  <g transform="translate(45, 30)">
+    <!-- Main 3D Canvas Group with shadow -->
+    <g filter="url(#canvasShadow)">
+      <!-- Right 3D Fold Edge (Thickness flap) -->
+      <polygon points="280,25 305,42 305,225 280,210" fill="url(#edgeGrad)" />
+
+      <!-- Top 3D Fold Edge -->
+      <polygon points="10,25 280,25 305,42 35,42" fill="url(#topEdgeGrad)" opacity="0.4" />
+
+      <!-- Front Canvas Face (270 x 185) -->
+      <g transform="translate(10, 25)">
+        <clipPath id="frontFaceClip_SheetMusicCanvasPrintWallArt">
+          <rect width="270" height="185" rx="3" />
+        </clipPath>
+
+        <rect width="270" height="185" rx="3" fill="#FFFFFF" />
+
+        <g clip-path="url(#frontFaceClip_SheetMusicCanvasPrintWallArt)">
+          
+      <!-- Vintage sheet music background -->
+      <rect width="270" height="185" fill="url(#parchmentGrad)" />
+      <!-- Music staff staves (5 lines per stave) -->
+      <g stroke="#713F12" stroke-width="0.75" opacity="0.65">
+        <!-- Stave 1 -->
+        <line x1="20" y1="35" x2="250" y2="35" />
+        <line x1="20" y1="41" x2="250" y2="41" />
+        <line x1="20" y1="47" x2="250" y2="47" />
+        <line x1="20" y1="53" x2="250" y2="53" />
+        <line x1="20" y1="59" x2="250" y2="59" />
+
+        <!-- Stave 2 -->
+        <line x1="20" y1="75" x2="250" y2="75" />
+        <line x1="20" y1="81" x2="250" y2="81" />
+        <line x1="20" y1="87" x2="250" y2="87" />
+        <line x1="20" y1="93" x2="250" y2="93" />
+        <line x1="20" y1="99" x2="250" y2="99" />
+
+        <!-- Stave 3 -->
+        <line x1="20" y1="115" x2="250" y2="115" />
+        <line x1="20" y1="121" x2="250" y2="121" />
+        <line x1="20" y1="127" x2="250" y2="127" />
+        <line x1="20" y1="133" x2="250" y2="133" />
+        <line x1="20" y1="139" x2="250" y2="139" />
+      </g>
+      <!-- Treble Clefs & musical notes -->
+      <text x="25" y="55" font-family="serif" font-size="28" fill="#451A03" opacity="0.8">𝄞</text>
+      <text x="25" y="95" font-family="serif" font-size="28" fill="#451A03" opacity="0.8">𝄞</text>
+      <text x="25" y="135" font-family="serif" font-size="28" fill="#451A03" opacity="0.8">𝄞</text>
+      <!-- Musical notes scattered -->
+      <circle cx="70" cy="47" r="3.5" fill="#451A03" /><line x1="73.5" y1="47" x2="73.5" y2="30" stroke="#451A03" stroke-width="1.2" />
+      <circle cx="110" cy="41" r="3.5" fill="#451A03" /><line x1="113.5" y1="41" x2="113.5" y2="24" stroke="#451A03" stroke-width="1.2" />
+      <circle cx="150" cy="53" r="3.5" fill="#451A03" /><line x1="153.5" y1="53" x2="153.5" y2="36" stroke="#451A03" stroke-width="1.2" />
+      <circle cx="190" cy="47" r="3.5" fill="#451A03" /><line x1="193.5" y1="47" x2="193.5" y2="30" stroke="#451A03" stroke-width="1.2" />
+      <!-- Center parchment plaque for personal song -->
+      <rect x="45" y="55" width="180" height="75" rx="6" fill="#FEF3C7" opacity="0.95" stroke="#B45309" stroke-width="1" />
+      <text x="135" y="78" text-anchor="middle" font-family="'Cinzel', Georgia, serif" font-size="11" font-weight="bold" fill="#78350F">CANON IN D MAJOR</text>
+      <text x="135" y="93" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="9" font-style="italic" fill="#92400E">"Music is love in search of a word."</text>
+      <text x="135" y="112" text-anchor="middle" font-family="'Montserrat', sans-serif" font-size="7.5" font-weight="bold" fill="#B45309" letter-spacing="1.5">SARAH &amp; LUCAS • OUR SONG</text>
+      <!-- Bottom dedication -->
+      <text x="135" y="165" text-anchor="middle" font-family="'Dancing Script', cursive, serif" font-size="11" fill="#78350F">Our Song Written in the Stars</text>
+    
+        </g>
+
+        <!-- Canvas Weave Texture Overlay -->
+        <rect width="270" height="185" rx="3" fill="url(#canvasTexture)" pointer-events="none" />
+        <!-- Subtle border highlight -->
+        <rect width="270" height="185" rx="3" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.4" />
+      </g>
+    </g>
+  </g>
+</svg>

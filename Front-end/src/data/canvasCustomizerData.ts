@@ -483,7 +483,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       wrap: true,
       hardware: true,
       options: true,
-      view3D: false,
+      view3D: true,
       view360: true,
       roomView: true
     }
@@ -605,7 +605,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
   {
     id: 'canvas-pop-art',
     name: 'Pop Art',
-    startingPrice: 598.00,
+    startingPrice: 499.00,
     image: '',
     iconType: 'pop-art',
     panelsCount: 1,
@@ -625,7 +625,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       wrap: true,
       hardware: true,
       options: true,
-      view3D: false,
+      view3D: true,
       view360: true,
       roomView: true
     }
