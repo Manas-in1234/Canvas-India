@@ -294,11 +294,11 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
                 key={style.id}
                 className={`flex flex-col ${imageOnRight ? 'sm:flex-row-reverse' : 'sm:flex-row'} items-center gap-6 sm:gap-8`}
               >
-                <div className="w-full sm:w-64 shrink-0 rounded-2xl overflow-hidden bg-stone-100 border border-stone-200 aspect-[4/3]">
+                <div className="w-full sm:w-64 shrink-0 rounded-2xl overflow-hidden aspect-[4/3]">
                   {style.visual ? (
                     renderVisual(style.visual)
                   ) : style.image ? (
-                    <img src={style.image} alt={style.name} className="w-full h-full object-cover" loading="lazy" />
+                    <img src={style.image} alt={style.name} className="w-full h-full object-contain" loading="lazy" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-blue-50 to-orange-50 flex items-center justify-center text-[#0E4A93]">
                       {style.icon ? STYLE_ICONS[style.icon] : <Sparkles className="w-10 h-10" />}
@@ -390,11 +390,11 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {data.galleryItems.map((item) => (
               <div key={item.label} className="space-y-2">
-                <div className="aspect-square rounded-2xl overflow-hidden bg-stone-200 border border-stone-200">
+                <div className="aspect-square rounded-2xl overflow-hidden">
                   {item.visual ? (
                     renderVisual(item.visual)
                   ) : item.image ? (
-                    <img src={item.image} alt={item.label} className="w-full h-full object-cover" loading="lazy" />
+                    <img src={item.image} alt={item.label} className="w-full h-full object-contain" loading="lazy" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-blue-50 to-orange-50 flex items-center justify-center text-[#0E4A93]">
                       {item.icon ? STYLE_ICONS[item.icon] : <Sparkles className="w-8 h-8" />}
