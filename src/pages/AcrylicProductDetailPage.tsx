@@ -121,7 +121,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   const availableBases = product.availableBases || ['Without Base', 'Acrylic Base', 'Solid Wood Base'];
   const availableShapes = product.shapes && product.shapes.length > 0
     ? product.shapes
-    : ['Popular', 'Square', 'Rectangle', 'Panoramic', 'Circle', 'Triangle'];
+    : ['Popular', 'Square', 'Rectangle', 'Panoramic'];
 
   const [selectedStyle, setSelectedStyle] = useState<string>(availableStyles[0]);
   const [selectedThickness, setSelectedThickness] = useState<string>(availableThicknesses[0]);
