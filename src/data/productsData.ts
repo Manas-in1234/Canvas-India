@@ -467,6 +467,10 @@ export const ALL_PRODUCTS: Product[] = [
   // ==========================================
   ...CATALOGUE_CANVAS_ACRYLIC_PRODUCTS,
 
+  // ==========================================
+  // Cork Yoga & Wellness Catalogue (15 products)
+  // ==========================================
+  ...CORK_CATALOG_PRODUCTS,
 ];
 
 export const ALL_CATALOG_PRODUCTS: Product[] = ALL_PRODUCTS;

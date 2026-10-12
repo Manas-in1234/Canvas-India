@@ -26,6 +26,7 @@ import { ProductImage } from '../components/ProductImage';
 import { CUSTOMER_REVIEWS } from '../data/storeData';
 import { Product } from '../types';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
+import { CorkProductDetailPage } from './CorkProductDetailPage';
 
 interface FinishStyle { wall: string; border: number; color: string; shadow: string; outline: string; overlay: string; }
 
@@ -247,6 +248,11 @@ export const ProductDetailPage: React.FC = () => {
   // Dedicated Acrylic Product Detail Page with Reference 1 layout & customizer drawer
   if (product.categorySlug === 'acrylic') {
     return <AcrylicProductDetailPage product={product} />;
+  }
+
+  // Dedicated Cork Product Detail Page with Reference 1 layout matching Acrylic
+  if (product.categorySlug === 'cork') {
+    return <CorkProductDetailPage product={product} />;
   }
 
   const categoryName = product.category || 'Prints';

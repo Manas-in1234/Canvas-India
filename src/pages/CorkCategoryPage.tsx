@@ -19,7 +19,7 @@ import { Product } from '../types';
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'discount';
 
 const PRICE_MIN_DEFAULT = 200;
-const PRICE_MAX_DEFAULT = 500;
+const PRICE_MAX_DEFAULT = 2000;
 
 // Same layout as Canvas/Acrylic's dedicated category pages (hero + sidebar
 // filters + product grid), minus the Customize entry point — Cork products
@@ -356,36 +356,36 @@ export const CorkCategoryPage: React.FC = () => {
                 <div className="pt-1 flex flex-wrap gap-1.5">
                   <button
                     type="button"
-                    onClick={() => applyPricePreset(PRICE_MIN_DEFAULT, 299)}
+                    onClick={() => applyPricePreset(PRICE_MIN_DEFAULT, 499)}
                     className={`px-2.5 py-1 text-[11px] font-semibold rounded-md border transition-colors cursor-pointer ${
-                      minPrice === PRICE_MIN_DEFAULT && maxPrice === 299
+                      minPrice === PRICE_MIN_DEFAULT && maxPrice === 499
                         ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
                         : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100'
                     }`}
                   >
-                    Under ₹300
+                    Under ₹500
                   </button>
                   <button
                     type="button"
-                    onClick={() => applyPricePreset(300, 400)}
+                    onClick={() => applyPricePreset(500, 1000)}
                     className={`px-2.5 py-1 text-[11px] font-semibold rounded-md border transition-colors cursor-pointer ${
-                      minPrice === 300 && maxPrice === 400
+                      minPrice === 500 && maxPrice === 1000
                         ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
                         : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100'
                     }`}
                   >
-                    ₹300 – ₹400
+                    ₹500 – ₹1,000
                   </button>
                   <button
                     type="button"
-                    onClick={() => applyPricePreset(400, PRICE_MAX_DEFAULT)}
+                    onClick={() => applyPricePreset(1000, PRICE_MAX_DEFAULT)}
                     className={`px-2.5 py-1 text-[11px] font-semibold rounded-md border transition-colors cursor-pointer ${
-                      minPrice === 400 && maxPrice === PRICE_MAX_DEFAULT
+                      minPrice === 1000 && maxPrice === PRICE_MAX_DEFAULT
                         ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
                         : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100'
                     }`}
                   >
-                    ₹400+
+                    ₹1,000+
                   </button>
                 </div>
               </div>
@@ -580,24 +580,24 @@ export const CorkCategoryPage: React.FC = () => {
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   <button
                     type="button"
-                    onClick={() => applyPricePreset(PRICE_MIN_DEFAULT, 299)}
+                    onClick={() => applyPricePreset(PRICE_MIN_DEFAULT, 499)}
                     className="px-2 py-1 text-[10px] font-semibold rounded bg-stone-100 text-stone-700"
                   >
-                    Under ₹300
+                    Under ₹500
                   </button>
                   <button
                     type="button"
-                    onClick={() => applyPricePreset(300, 400)}
+                    onClick={() => applyPricePreset(500, 1000)}
                     className="px-2 py-1 text-[10px] font-semibold rounded bg-stone-100 text-stone-700"
                   >
-                    ₹300 – ₹400
+                    ₹500 – ₹1,000
                   </button>
                   <button
                     type="button"
-                    onClick={() => applyPricePreset(400, PRICE_MAX_DEFAULT)}
+                    onClick={() => applyPricePreset(1000, PRICE_MAX_DEFAULT)}
                     className="px-2 py-1 text-[10px] font-semibold rounded bg-stone-100 text-stone-700"
                   >
-                    ₹400+
+                    ₹1,000+
                   </button>
                 </div>
               </div>

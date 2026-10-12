@@ -134,6 +134,7 @@ export function App() {
 
             {/* Reusable Product Detail Page */}
             <Route path="/products/:productId" element={<ProductDetailPage />} />
+            <Route path="/product/:productId" element={<ProductDetailPage />} />
 
             {/* About & Policies */}
             <Route path="/about-us" element={<AboutUsPage />} />
