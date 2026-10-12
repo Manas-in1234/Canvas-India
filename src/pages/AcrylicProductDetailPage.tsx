@@ -16,7 +16,8 @@ import {
   SlidersHorizontal,
   ArrowRight,
   PackageCheck,
-  Info
+  Info,
+  Pencil
 } from 'lucide-react';
 import { Product } from '../types';
 import { useShop } from '../context/ShopContext';
@@ -53,6 +54,30 @@ function sizeForShape(shape: string, sizes?: string[]): string | undefined {
   return pickDefaultSize(sizes);
 }
 const MULTI_SIZE_SENTINEL = '__MULTI_SIZE__';
+
+// Simple outline swatch standing in for each shape in the icon-based Shape
+// tab, matching the Canvas product page's ShapeIcon — styled as a small
+// rectangle whose own proportions (or roundness, for Circle) hint at the
+// shape it represents.
+function ShapeIcon({ shape, active }: { shape: string; active: boolean }) {
+  const dims: Record<string, string> = {
+    popular: 'w-5 h-6',
+    square: 'w-6 h-6',
+    rectangle: 'w-7 h-5',
+    panoramic: 'w-8 h-4',
+    circle: 'w-6 h-6',
+    triangle: 'w-6 h-6'
+  };
+  const shapeKey = shape.toLowerCase();
+  const rounded = shapeKey === 'circle' ? 'rounded-full' : 'rounded-sm';
+  return (
+    <div
+      className={`${dims[shapeKey] || 'w-6 h-6'} ${rounded} border-2 ${
+        active ? 'border-[#0E4A93]' : 'border-stone-400'
+      }`}
+    />
+  );
+}
 
 export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> = ({ product }) => {
   const navigate = useNavigate();
@@ -109,6 +134,13 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   const [isCustomSize, setIsCustomSize] = useState<boolean>(false);
   const [quantity, setQuantity] = useState<number>(1);
 
+  // Size/Shape selector card state — matches the Canvas product page's
+  // tabbed Size|Shape card instead of two separately-labeled pill sections.
+  const [sizeShapeTab, setSizeShapeTab] = useState<'size' | 'shape'>('size');
+  const [customSizeOpen, setCustomSizeOpen] = useState<boolean>(false);
+  const [customSizeW, setCustomSizeW] = useState<string>('');
+  const [customSizeH, setCustomSizeH] = useState<string>('');
+
   // Bottom Tabs State ('description' | 'specifications' | 'shipping' | 'reviews')
   const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'shipping' | 'reviews'>('description');
 
@@ -126,6 +158,10 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
     setCustomHeight(8);
     setQuantity(1);
     setActiveImageIndex(0);
+    setSizeShapeTab('size');
+    setCustomSizeOpen(false);
+    setCustomSizeW('');
+    setCustomSizeH('');
     document.title = `${product.name} | Canvas India`;
   }, [product]);
 
@@ -134,6 +170,14 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
     setCustomHeight(height);
     setIsCustomSize(true);
     setSelectedSize(`${width}" x ${height}" (Custom)`);
+  };
+
+  const applyCustomSize = () => {
+    const w = Number(customSizeW);
+    const h = Number(customSizeH);
+    if (w > 0 && h > 0) {
+      handleCustomSizeChange(w, h);
+    }
   };
 
   // Gallery Navigation Controls
@@ -526,79 +570,113 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
             {/* =================================================================== */}
             <div className="space-y-4 pt-2 border-t border-stone-200">
               
-              {/* SELECT SHAPE */}
-              {availableShapes.length > 0 && (
-                <div className="space-y-2">
-                  <span className="text-xs font-bold text-stone-700">Select Shape:</span>
-                  <div className="grid grid-cols-4 gap-2">
-                    {availableShapes.map((shapeOpt) => (
+              {/* SIZE / SHAPE — matches the Canvas product page's tabbed card */}
+              {(availableSizes.length > 0 || availableShapes.length > 0) && (
+                <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+                  {availableShapes.length > 0 ? (
+                    <div className="flex items-center gap-6 border-b border-stone-200 mb-4">
                       <button
-                        key={shapeOpt}
                         type="button"
-                        onClick={() => {
-                          setSelectedShape(shapeOpt);
-                          if (shapeOpt.toLowerCase() === 'popular') setSelectedSize('25x30 inch');
-                        }}
-                        className={`px-2 py-2 text-xs font-semibold rounded-full border-2 text-center capitalize transition-all cursor-pointer ${
-                          selectedShape === shapeOpt
-                            ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
-                            : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
-                        }`}
+                        onClick={() => setSizeShapeTab('size')}
+                        className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'size' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
                       >
-                        {shapeOpt}
+                        Size
                       </button>
-                    ))}
-                  </div>
+                      <button
+                        type="button"
+                        onClick={() => setSizeShapeTab('shape')}
+                        className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'shape' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                      >
+                        Shape
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-sm font-bold text-stone-900 mb-4">Size</div>
+                  )}
+
+                  {(sizeShapeTab === 'size' || availableShapes.length === 0) && availableSizes.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {availableSizes.map((size) => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => { setIsCustomSize(false); setSelectedSize(size); }}
+                          className={`px-1.5 py-2 text-[11px] leading-tight font-semibold rounded-lg border-2 text-center transition-all cursor-pointer ${
+                            selectedSize === size && !isCustomSize
+                              ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
+                              : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
+                          }`}
+                        >
+                          {size.replace(' inch', '')}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {(sizeShapeTab === 'size' || availableShapes.length === 0) && (
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        onClick={() => setCustomSizeOpen((v) => !v)}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-700 cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>Need a Custom Size?</span>
+                      </button>
+                      {customSizeOpen && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <input
+                            type="number"
+                            min={4}
+                            value={customSizeW}
+                            onChange={(e) => setCustomSizeW(e.target.value)}
+                            placeholder="Width [W] in"
+                            className="w-0 flex-1 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
+                          />
+                          <input
+                            type="number"
+                            min={4}
+                            value={customSizeH}
+                            onChange={(e) => setCustomSizeH(e.target.value)}
+                            placeholder="Height [H] in"
+                            className="w-0 flex-1 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
+                          />
+                          <button
+                            type="button"
+                            onClick={applyCustomSize}
+                            className="shrink-0 px-4 py-2 text-xs font-bold rounded-full border-2 border-stone-300 text-stone-700 hover:border-stone-400 transition-colors cursor-pointer"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {availableShapes.length > 0 && sizeShapeTab === 'shape' && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {availableShapes.map((shapeOpt) => (
+                        <button
+                          key={shapeOpt}
+                          type="button"
+                          onClick={() => {
+                            setSelectedShape(shapeOpt);
+                            if (shapeOpt.toLowerCase() === 'popular') setSelectedSize('25x30 inch');
+                          }}
+                          className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
+                            selectedShape === shapeOpt
+                              ? 'border-[#0E4A93] bg-blue-50/60'
+                              : 'border-stone-200 bg-white hover:border-stone-400'
+                          }`}
+                        >
+                          <ShapeIcon shape={shapeOpt} active={selectedShape === shapeOpt} />
+                          <span className={`text-[10px] font-semibold ${selectedShape === shapeOpt ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{shapeOpt}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
-
-              {/* 3. SELECT SIZE */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-stone-700">Select Size:</span>
-                  <span className="text-stone-500 font-medium">{selectedSize}</span>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {availableSizes.map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => { setIsCustomSize(false); setSelectedSize(size); }}
-                      className={`px-2 py-2 text-[11px] font-semibold rounded-full border-2 text-center transition-all cursor-pointer ${
-                        selectedSize === size && !isCustomSize
-                          ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
-                          : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Custom Size */}
-                <div className="flex items-center gap-2.5 pt-1">
-                  <span className={`text-xs font-semibold ${isCustomSize ? 'text-[#0E4A93]' : 'text-stone-600'}`}>Custom:</span>
-                  <select
-                    value={customWidth}
-                    onChange={(e) => handleCustomSizeChange(Number(e.target.value), customHeight)}
-                    className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border bg-white cursor-pointer focus:outline-none ${isCustomSize ? 'border-[#0E4A93] text-[#0E4A93]' : 'border-stone-300 text-stone-700'}`}
-                  >
-                    {Array.from({ length: 37 }, (_, i) => i + 4).map((n) => (
-                      <option key={n} value={n}>{n}"</option>
-                    ))}
-                  </select>
-                  <span className="text-stone-400 text-xs font-bold">X</span>
-                  <select
-                    value={customHeight}
-                    onChange={(e) => handleCustomSizeChange(customWidth, Number(e.target.value))}
-                    className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border bg-white cursor-pointer focus:outline-none ${isCustomSize ? 'border-[#0E4A93] text-[#0E4A93]' : 'border-stone-300 text-stone-700'}`}
-                  >
-                    {Array.from({ length: 37 }, (_, i) => i + 4).map((n) => (
-                      <option key={n} value={n}>{n}"</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
 
               {/* 6. QUANTITY SELECTOR */}
               <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2 pt-1">
