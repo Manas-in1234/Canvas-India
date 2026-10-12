@@ -42,7 +42,11 @@ const PHOTO = {
   photoMosaicPhoenix: '/assets/canvas-styles/photo-mosaic-phoenix.png', // user-supplied: tile-mosaic phoenix/sunrise bird design
   photoMosaicFace: '/assets/canvas-styles/photo-mosaic-face.png', // user-supplied: tile-mosaic sleeping face with spiral hair
   photoMosaicBirdhouse: '/assets/canvas-styles/photo-mosaic-birdhouse.png', // user-supplied: tile-mosaic birdhouse with two birds
-  photoMosaicParrots: '/assets/canvas-styles/photo-mosaic-parrots.png' // user-supplied: round tile-mosaic of two parrots
+  photoMosaicParrots: '/assets/canvas-styles/photo-mosaic-parrots.png', // user-supplied: round tile-mosaic of two parrots
+  popArtWarholZebra: '/assets/canvas-styles/pop-art-warhol-zebra.png', // user-supplied: Warhol-style zebra painting
+  popArtCaricature: '/assets/canvas-styles/pop-art-caricature-takeabreak.png', // user-supplied: illustrated "Take a Break" portrait
+  popArtLichtenstein: '/assets/canvas-styles/pop-art-lichtenstein-crying.png', // user-supplied: Lichtenstein-style crying girl
+  popArtPixel: '/assets/canvas-styles/pop-art-pixel-mario.png' // user-supplied: pixel-art Mario painting
 };
 
 // The customizer's real tab order is Upload -> Size/Layout -> Wrap & Border
@@ -402,7 +406,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Andy-Warhol',
         description: 'Iconic 4-quadrant screenprint Pop Art with contrasting vibrant pop palettes across four quadrants.',
         price: 499,
-        image: '/assets/pop-art/andy-warhol.svg',
+        image: PHOTO.popArtWarholZebra,
         customizeHref: '/customize/canvas/canvas-pop-art'
       },
       {
@@ -411,7 +415,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Caricatures',
         description: 'Playful cartoon caricature styling with bold hand-drawn contours, comic cel shading, and warm tones.',
         price: 599,
-        image: '/assets/pop-art/caricatures.svg',
+        image: PHOTO.popArtCaricature,
         customizeHref: '/customize/canvas/canvas-pop-art'
       },
       {
@@ -420,7 +424,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Lichtenstein',
         description: 'Roy Lichtenstein comic strip pop art featuring Ben-Day halftone dots, ink contours, and primary comic colors.',
         price: 499,
-        image: '/assets/pop-art/lichtenstein.svg',
+        image: PHOTO.popArtLichtenstein,
         customizeHref: '/customize/canvas/canvas-pop-art'
       },
       {
@@ -429,7 +433,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Pixel Painting',
         description: 'Retro 8-bit digital pixel art mosaic transformation preserving facial likeness with sharp mosaic tiles.',
         price: 1750,
-        image: '/assets/pop-art/pixel-painting.svg',
+        image: PHOTO.popArtPixel,
         customizeHref: '/customize/canvas/canvas-pop-art'
       }
     ],
