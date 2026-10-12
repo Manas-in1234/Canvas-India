@@ -20,6 +20,7 @@ import { WallPreview } from '../components/WallPreview';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { Product } from '../types';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
+import { CorkProductDetailPage } from './CorkProductDetailPage';
 
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
 // the "Room View" thumbnail renders a live WallPreview instead of a static image.
@@ -285,6 +286,11 @@ export const ProductDetailPage: React.FC = () => {
   // Dedicated Acrylic Product Detail Page with Reference 1 layout & customizer drawer
   if (product.categorySlug === 'acrylic') {
     return <AcrylicProductDetailPage product={product} />;
+  }
+
+  // Dedicated Cork Product Detail Page with Reference 1 layout matching Acrylic
+  if (product.categorySlug === 'cork') {
+    return <CorkProductDetailPage product={product} />;
   }
 
   const categoryName = product.category || 'Prints';
