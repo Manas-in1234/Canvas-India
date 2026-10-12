@@ -1602,6 +1602,22 @@ const renderHardwareIcon = (id: string) => {
   );
 };
 
+export type Preset3DAngleId = 'top-left' | 'top-right' | 'left-bottom' | 'right-bottom';
+
+export interface Preset3DAngleOption {
+  id: Preset3DAngleId;
+  label: string;
+  tiltX: number;
+  rotY: number;
+}
+
+export const PRESET_3D_ANGLES: Preset3DAngleOption[] = [
+  { id: 'top-left', label: 'Top Left', tiltX: -20, rotY: 35 },
+  { id: 'top-right', label: 'Top Right', tiltX: -20, rotY: -35 },
+  { id: 'left-bottom', label: 'Left Bottom', tiltX: 20, rotY: 35 },
+  { id: 'right-bottom', label: 'Right Bottom', tiltX: 20, rotY: -35 },
+];
+
 // ============================================================================
 // 2. MAIN CANVAS CUSTOMIZER COMPONENT
 // ============================================================================
@@ -2902,6 +2918,7 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   const [viewerRotation, setViewerRotation] = useState<number>(-24);
   const [viewerTiltX, setViewerTiltX] = useState<number>(6);
+  const [preset3DAngle, setPreset3DAngle] = useState<Preset3DAngleId>('top-left');
   const [viewerAutoRotate, setViewerAutoRotate] = useState<boolean>(false);
   const [isViewerDragging, setIsViewerDragging] = useState<boolean>(false);
   const viewerDragRef = useRef<{ x: number; y: number; startRotation: number; startTiltX: number } | null>(null);
@@ -4023,7 +4040,7 @@ export const CanvasCustomizerPage: React.FC = () => {
         </div>
 
         <p className="text-[11px] font-semibold text-stone-500 mt-2.5 text-center">
-          1 Photo Split Continuously Across {N} Physical Panels • Drag photo to pan, use toolbar to Zoom/Rotate/Fill
+          1 Photo Split Continuously Across {N} Physical Panels • Drag photo to pan, use toolbar to Zoom/Rotate
         </p>
       </div>
     );
@@ -4938,23 +4955,6 @@ export const CanvasCustomizerPage: React.FC = () => {
                     title="Change Photo"
                   >
                     <RefreshCw className="w-2.5 h-2.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPanelImages((prev) => ({
-                        ...prev,
-                        [panelIdx]: {
-                          ...prev[panelIdx],
-                          fitMode: prev[panelIdx]?.fitMode === 'contain' ? 'cover' : 'contain'
-                        }
-                      }));
-                    }}
-                    className="px-1 py-0.5 rounded bg-black/70 hover:bg-black text-white text-[9px] font-bold shadow-xs transition-colors"
-                    title="Toggle Fit/Cover"
-                  >
-                    {panel.fitMode === 'contain' ? 'Cover' : 'Fit'}
                   </button>
                   <button
                     type="button"
@@ -6700,17 +6700,18 @@ export const CanvasCustomizerPage: React.FC = () => {
               is3DViewActive={viewerMode === '3d'}
               onOpen3DView={productCapabilities.view3D ? () => {
                 if (!hasUploadedImage) return;
-                setViewerRotation(-28);
-                setViewerTiltX(8);
+                setPreset3DAngle('top-left');
+                setViewerRotation(35);
+                setViewerTiltX(-20);
                 setViewerAutoRotate(false);
                 setViewerMode('3d');
               } : undefined}
               is360ViewActive={viewerMode === '360'}
               onOpen360View={productCapabilities.view360 !== false ? () => {
                 if (!hasUploadedImage) return;
-                setViewerRotation(0);
-                setViewerTiltX(10);
-                setViewerAutoRotate(true);
+                setViewerRotation(36);
+                setViewerTiltX(-18);
+                setViewerAutoRotate(false);
                 setViewerMode('360');
               } : undefined}
               hasSelectedItem={Boolean(selectedElement)}
@@ -6781,49 +6782,17 @@ export const CanvasCustomizerPage: React.FC = () => {
             onRotateRight={handleRotateRight}
             extraControls={
               hasUploadedImage && (
-                <div className="inline-flex rounded-lg border border-stone-200 bg-stone-100 p-0.5 gap-0.5 ml-1">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleFill(activePanelIndex);
-                    }}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                      panelImages[activePanelIndex]?.fitMode === 'cover'
-                        ? 'bg-[#0E4A93] text-white shadow-xs'
-                        : 'text-stone-700 hover:text-[#0E4A93] hover:bg-stone-200'
-                    }`}
-                    title="Fill: scale up to completely cover the canvas area"
-                  >
-                    Fill
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleFix(activePanelIndex);
-                    }}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                      panelImages[activePanelIndex]?.fitMode === 'contain'
-                        ? 'bg-[#0E4A93] text-white shadow-xs'
-                        : 'text-stone-700 hover:text-[#0E4A93] hover:bg-stone-200'
-                    }`}
-                    title="Fix (Fit): scale down to fit completely within the canvas area with no clipping"
-                  >
-                    Fix
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleReset();
-                    }}
-                    className="p-1 rounded-md text-stone-500 hover:text-stone-800 hover:bg-stone-200 transition-colors cursor-pointer"
-                    title="Reset zoom, position and rotation"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleReset();
+                  }}
+                  className="p-1 rounded-md text-stone-500 hover:text-stone-800 hover:bg-stone-200 transition-colors cursor-pointer ml-1"
+                  title="Reset zoom, position and rotation"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                </button>
               )
             }
             prevStep={{
@@ -8512,11 +8481,16 @@ export const CanvasCustomizerPage: React.FC = () => {
             onClick={() => setViewerMode(null)}
           >
             <div
-              className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden border border-stone-200 flex flex-col max-h-[94vh]"
+              className={`bg-white rounded-2xl w-full ${viewerMode === '3d' ? 'max-w-4xl' : 'max-w-3xl'} shadow-2xl overflow-hidden border border-stone-200 flex flex-col max-h-[94vh]`}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Informational Banner across top matching screenshots */}
+              <div className="bg-[#FEF9C3] border-b border-amber-200/90 px-4 py-2 text-center text-xs font-semibold text-amber-900 tracking-wide select-none shrink-0">
+                NOTE : Preview shown is for illustration purpose only may differ from the actual product
+              </div>
+
               {/* Modal Header */}
-              <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-stone-200 bg-white shrink-0">
+              <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-stone-200 bg-white shrink-0">
                 <div className="flex items-center gap-2.5">
                   <h3 className="text-sm sm:text-base font-black text-stone-900 uppercase tracking-wide flex items-center gap-2">
                     {viewerMode === '3d' && (
@@ -8569,6 +8543,9 @@ export const CanvasCustomizerPage: React.FC = () => {
               </div>
               {(viewerMode === '3d' || viewerMode === '360') && (() => {
                 const is360 = viewerMode === '360';
+                const currentPreset = PRESET_3D_ANGLES.find((p) => p.id === preset3DAngle) || PRESET_3D_ANGLES[0];
+                const activeRotY = is360 ? viewerRotation : currentPreset.rotY;
+                const activeTiltX = is360 ? viewerTiltX : currentPreset.tiltX;
 
                 // Physical thickness based on selected Canvas thickness option & frame
                 const thicknessOption = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId) || THICKNESS_OPTIONS[0];
@@ -8576,8 +8553,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                 const depthPx = hasOuterFrame ? Math.max(baseDepthPx, 34) : baseDepthPx;
 
                 // Maintain exact product aspect ratio without stretching
-                const maxBoxW = 310;
-                const maxBoxH = 290;
+                const maxBoxW = is360 ? 320 : 340;
+                const maxBoxH = is360 ? 300 : 320;
                 let cardW = maxBoxW;
                 let cardH = cardW / previewAspect;
                 if (cardH > maxBoxH) {
@@ -8587,10 +8564,23 @@ export const CanvasCustomizerPage: React.FC = () => {
                 cardW = Math.round(Math.max(140, cardW));
                 cardH = Math.round(Math.max(140, cardH));
 
+                // Thumbnail dimensions for 3D View:
+                const thumbBoxW = 68;
+                const thumbBoxH = 56;
+                let thumbW = thumbBoxW;
+                let thumbH = thumbW / previewAspect;
+                if (thumbH > thumbBoxH) {
+                  thumbH = thumbBoxH;
+                  thumbW = thumbH * previewAspect;
+                }
+                thumbW = Math.round(Math.max(36, thumbW));
+                thumbH = Math.round(Math.max(36, thumbH));
+                const thumbDepthPx = Math.max(7, Math.round(depthPx * (thumbW / cardW)));
+
                 // Normalized angle [0..360) and radians for dynamic lighting & shadow
-                const normalizedAngle = ((viewerRotation % 360) + 360) % 360;
+                const normalizedAngle = ((activeRotY % 360) + 360) % 360;
                 const angleRad = (normalizedAngle * Math.PI) / 180;
-                const effectiveTiltX = viewerTiltX;
+                const effectiveTiltX = activeTiltX;
 
                 // Dynamic directional shading based on rotationY
                 const frontCos = Math.cos(angleRad);
@@ -8659,51 +8649,55 @@ export const CanvasCustomizerPage: React.FC = () => {
                 );
 
                 return (
-                  <div className="flex flex-col flex-1 min-h-0">
+                  <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
                     {/* 3D / 360 Interactive Studio Stage */}
                     <div
-                      onPointerDown={handleViewerPointerDown}
-                      onPointerMove={handleViewerPointerMove}
-                      onPointerUp={handleViewerPointerUp}
-                      onPointerCancel={handleViewerPointerUp}
+                      onPointerDown={is360 ? handleViewerPointerDown : undefined}
+                      onPointerMove={is360 ? handleViewerPointerMove : undefined}
+                      onPointerUp={is360 ? handleViewerPointerUp : undefined}
+                      onPointerCancel={is360 ? handleViewerPointerUp : undefined}
                       onWheel={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                       }}
                       style={{
                         perspective: '1250px',
-                        touchAction: 'none',
+                        touchAction: is360 ? 'none' : 'auto',
                         background:
                           'radial-gradient(circle at 50% 44%, #ffffff 0%, #f8fafc 58%, #e2e8f0 100%)'
                       }}
-                      className={`relative h-[340px] sm:h-[430px] w-full flex items-center justify-center select-none overflow-hidden ${
-                        isViewerDragging ? 'cursor-grabbing' : 'cursor-grab'
+                      className={`relative flex-1 min-h-[380px] md:min-h-[460px] w-full flex items-center justify-center select-none overflow-hidden ${
+                        is360 ? (isViewerDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
                       }`}
                     >
-                      {/* Top-Left Mode Badge & Orientation Readout */}
+                      {/* Top-Left Mode / Preset Badge */}
                       <div className="absolute top-3 left-4 flex items-center gap-2 pointer-events-none z-20">
                         <span className="bg-white/90 backdrop-blur-xs border border-stone-200 text-stone-700 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-2xs">
-                          {normalizedAngle < 35 || normalizedAngle >= 325
-                            ? (viewerTiltX > 45 ? 'Bottom Edge' : viewerTiltX < -45 ? 'Top Edge' : 'Front Face')
-                            : normalizedAngle >= 35 && normalizedAngle < 75
-                            ? '3/4 Front-Side Angle'
-                            : normalizedAngle >= 75 && normalizedAngle < 115
-                            ? 'Side Edge Profile'
-                            : normalizedAngle >= 115 && normalizedAngle < 150
-                            ? '3/4 Rear Angle'
-                            : normalizedAngle >= 150 && normalizedAngle <= 210
-                            ? 'Canvas Back & Hardware'
-                            : normalizedAngle > 210 && normalizedAngle <= 245
-                            ? '3/4 Rear Angle'
-                            : normalizedAngle > 245 && normalizedAngle <= 285
-                            ? 'Side Edge Profile'
-                            : '3/4 Front-Side Angle'}
+                          {is360
+                            ? (normalizedAngle < 35 || normalizedAngle >= 325
+                                ? (effectiveTiltX > 45 ? 'Bottom Edge' : effectiveTiltX < -45 ? 'Top Edge' : 'Front Face')
+                                : normalizedAngle >= 35 && normalizedAngle < 75
+                                ? '3/4 Front-Side Angle'
+                                : normalizedAngle >= 75 && normalizedAngle < 115
+                                ? 'Side Edge Profile'
+                                : normalizedAngle >= 115 && normalizedAngle < 150
+                                ? '3/4 Rear Angle'
+                                : normalizedAngle >= 150 && normalizedAngle <= 210
+                                ? 'Canvas Back & Hardware'
+                                : normalizedAngle > 210 && normalizedAngle <= 245
+                                ? '3/4 Rear Angle'
+                                : normalizedAngle > 245 && normalizedAngle <= 285
+                                ? 'Side Edge Profile'
+                                : '3/4 Front-Side Angle')
+                            : (PRESET_3D_ANGLES.find((p) => p.id === preset3DAngle)?.label || '3D View')}
                         </span>
                       </div>
 
-                      <div className="absolute top-3 right-4 bg-white/90 backdrop-blur-xs border border-stone-200 text-stone-700 text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-2xs tabular-nums pointer-events-none z-20">
-                        {`${Math.round(normalizedAngle)}°`}
-                      </div>
+                      {is360 && (
+                        <div className="absolute top-3 right-4 bg-white/90 backdrop-blur-xs border border-stone-200 text-stone-700 text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-2xs tabular-nums pointer-events-none z-20">
+                          {`${Math.round(normalizedAngle)}°`}
+                        </div>
+                      )}
 
                       {/* Dynamic 3D Floor Shadow */}
                       <div
@@ -8727,11 +8721,10 @@ export const CanvasCustomizerPage: React.FC = () => {
                           height: `${cardH}px`,
                           transformStyle: 'preserve-3d',
                           WebkitTransformStyle: 'preserve-3d',
-                          transform: `rotateX(${effectiveTiltX}deg) rotateY(${viewerRotation}deg)`,
-                          transition:
-                            isViewerDragging || viewerAutoRotate
-                              ? 'none'
-                              : 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)'
+                          transform: `rotateX(${effectiveTiltX}deg) rotateY(${activeRotY}deg)`,
+                          transition: is360
+                            ? (isViewerDragging || viewerAutoRotate ? 'none' : 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)')
+                            : 'transform 0.38s cubic-bezier(0.22, 1, 0.36, 1)'
                         }}
                       >
                         {isHexagonCluster ? (
@@ -9280,139 +9273,151 @@ export const CanvasCustomizerPage: React.FC = () => {
                           </>
                         )}
                       </div>
-                    </div>
 
-                    {/* 360° View Controls Footer */}
-                    {is360 && (
-                      <div className="px-4 py-3 border-t border-stone-200 bg-stone-50 space-y-2.5">
-                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setViewerAutoRotate(false);
-                                setViewerRotation(0);
-                                setViewerTiltX(0);
-                              }}
-                              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-stone-700 border border-stone-300 hover:bg-stone-100 transition-all cursor-pointer shadow-2xs"
-                            >
-                              Reset View
-                            </button>
-                            {[
-                              { label: 'Front (0°)', rot: 0, tilt: 0 },
-                              { label: '3/4 View (35°)', rot: 35, tilt: -10 },
-                              { label: 'Side (90°)', rot: 90, tilt: 0 },
-                              { label: 'Back (180°)', rot: 180, tilt: 0 }
-                            ].map((preset) => (
-                              <button
-                                key={preset.label}
-                                type="button"
-                                onClick={() => {
-                                  setViewerAutoRotate(false);
-                                  setViewerRotation(preset.rot);
-                                  setViewerTiltX(preset.tilt);
-                                }}
-                                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                  Math.abs(normalizedAngle - preset.rot) < 15 && Math.abs(viewerTiltX - preset.tilt) < 15
-                                    ? 'bg-[#0E4A93] text-white shadow-xs'
-                                    : 'bg-white text-stone-700 border border-stone-300 hover:bg-stone-100'
-                                }`}
-                              >
-                                {preset.label}
-                              </button>
-                            ))}
+                      {is360 && (
+                          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-4 py-1.5 rounded-full pointer-events-none select-none z-20 shadow-md">
+                            Drag to rotate in full 360&deg;
                           </div>
-
-                          <button
-                            type="button"
-                            onClick={() => setViewerAutoRotate((v) => !v)}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 ${
-                              viewerAutoRotate
-                                ? 'bg-[#0E4A93] text-white shadow-xs'
-                                : 'bg-white text-stone-700 border border-stone-300 hover:bg-stone-100'
-                            }`}
-                          >
-                            <RotateCw className={`w-3.5 h-3.5 ${viewerAutoRotate ? 'animate-spin' : ''}`} />
-                            <span>{viewerAutoRotate ? 'Pause 360°' : 'Auto Spin'}</span>
-                          </button>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <span className="text-[11px] font-bold text-stone-500 w-16">
-                            Rotation
-                          </span>
-                          <input
-                            type="range"
-                            min={0}
-                            max={360}
-                            step={1}
-                            value={Math.round(normalizedAngle)}
-                            onChange={(e) => {
-                              setViewerAutoRotate(false);
-                              setViewerRotation(Number(e.target.value));
-                            }}
-                            aria-label="360 degree rotation angle"
-                            className="flex-1 accent-[#0E4A93] cursor-pointer"
-                          />
-                          <span className="text-xs font-black text-stone-700 w-12 text-right tabular-nums">
-                            {`${Math.round(normalizedAngle)}°`}
-                          </span>
-                        </div>
-
-                        <div className="text-center text-[11px] font-medium text-stone-500">
-                          Drag horizontally left or right to spin around Y-axis, or vertically up or down to tilt around X-axis. Drag diagonally to rotate freely in full 360°.
-                        </div>
+                        )}
                       </div>
-                    )}
 
-                    {/* 3D View Controls Footer: Exactly 6 Selectable Views */}
-                    {!is360 && (
-                      <div className="px-4 py-3 border-t border-stone-200 bg-stone-50 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-black uppercase tracking-wider text-stone-800">Select View</span>
-                          <span className="text-[11px] font-bold text-stone-500">Click to snap camera directly to any of the 6 sides</span>
+                      {/* Right-Hand Column: Exactly 4 Fixed Orientation Thumbnails (Screenshot 1) */}
+                      {!is360 && (
+                        <div className="w-full md:w-56 lg:w-64 border-t md:border-t-0 md:border-l border-stone-200 bg-stone-50/70 p-3.5 sm:p-4 flex flex-col justify-start overflow-y-auto">
+                          <div className="text-[11px] font-black uppercase tracking-wider text-stone-500 mb-3 px-1">
+                            Orientation Views
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5 sm:gap-3">
+                            {PRESET_3D_ANGLES.map((preset) => {
+                              const isSelected = preset3DAngle === preset.id;
+                              return (
+                                <button
+                                  key={preset.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setViewerAutoRotate(false);
+                                    setPreset3DAngle(preset.id);
+                                  }}
+                                  className={`relative group rounded-xl p-2.5 sm:p-3 transition-all cursor-pointer flex flex-col items-center justify-center border text-center ${
+                                    isSelected
+                                      ? 'bg-white border-[#0E4A93] shadow-sm ring-2 ring-[#0E4A93]/20'
+                                      : 'bg-white/80 border-stone-200 hover:border-stone-300 hover:bg-white'
+                                  }`}
+                                >
+                                  {/* Active Checkmark Badge */}
+                                  {isSelected && (
+                                    <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[#0E4A93] text-white flex items-center justify-center shadow-xs z-10">
+                                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                    </div>
+                                  )}
+
+                                  {/* Miniature 3D Model Representation */}
+                                  <div
+                                    className="relative flex items-center justify-center my-1"
+                                    style={{ width: `${thumbBoxW + 24}px`, height: `${thumbBoxH + 16}px` }}
+                                  >
+                                    <div
+                                      style={{
+                                        width: `${thumbW}px`,
+                                        height: `${thumbH}px`,
+                                        perspective: '450px'
+                                      }}
+                                      className="relative flex items-center justify-center"
+                                    >
+                                      <div
+                                        style={{
+                                          width: `${thumbW}px`,
+                                          height: `${thumbH}px`,
+                                          transformStyle: 'preserve-3d',
+                                          WebkitTransformStyle: 'preserve-3d',
+                                          transform: `rotateX(${preset.tiltX}deg) rotateY(${preset.rotY}deg) scale(0.85)`
+                                        }}
+                                        className="relative pointer-events-none transition-transform duration-200"
+                                      >
+                                        {/* Front Face with customized artwork */}
+                                        <div
+                                          className={`absolute inset-0 overflow-hidden ${shapeRadiusClass}`}
+                                          style={{
+                                            ...shapeClipStyle,
+                                            transform: `translateZ(${thumbDepthPx / 2}px)`,
+                                            boxShadow: '0 2px 6px rgba(0,0,0,0.18)'
+                                          }}
+                                        >
+                                          {renderCanvasFrontDesign(thumbW)}
+                                        </div>
+
+                                        {/* Top Edge */}
+                                        <div
+                                          className="absolute left-0 right-0"
+                                          style={{
+                                            top: 0,
+                                            height: `${thumbDepthPx}px`,
+                                            backgroundColor: sideBaseColor,
+                                            transform: `rotateX(90deg) translateZ(${thumbDepthPx / 2}px)`,
+                                            transformOrigin: 'top center',
+                                            filter: 'brightness(0.95)'
+                                          }}
+                                        />
+
+                                        {/* Bottom Edge */}
+                                        <div
+                                          className="absolute left-0 right-0"
+                                          style={{
+                                            bottom: 0,
+                                            height: `${thumbDepthPx}px`,
+                                            backgroundColor: sideBaseColor,
+                                            transform: `rotateX(-90deg) translateZ(${thumbDepthPx / 2}px)`,
+                                            transformOrigin: 'bottom center',
+                                            filter: 'brightness(0.7)'
+                                          }}
+                                        />
+
+                                        {/* Left Edge */}
+                                        <div
+                                          className="absolute top-0 bottom-0"
+                                          style={{
+                                            left: 0,
+                                            width: `${thumbDepthPx}px`,
+                                            backgroundColor: sideBaseColor,
+                                            transform: `rotateY(-90deg) translateZ(${thumbDepthPx / 2}px)`,
+                                            transformOrigin: 'left center',
+                                            filter: 'brightness(0.85)'
+                                          }}
+                                        />
+
+                                        {/* Right Edge */}
+                                        <div
+                                          className="absolute top-0 bottom-0"
+                                          style={{
+                                            right: 0,
+                                            width: `${thumbDepthPx}px`,
+                                            backgroundColor: sideBaseColor,
+                                            transform: `rotateY(90deg) translateZ(${thumbDepthPx / 2}px)`,
+                                            transformOrigin: 'right center',
+                                            filter: 'brightness(0.8)'
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Orientation Label */}
+                                  <span
+                                    className={`text-xs font-bold mt-1 transition-colors ${
+                                      isSelected ? 'text-[#0E4A93]' : 'text-stone-700'
+                                    }`}
+                                  >
+                                    {preset.label}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
-                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                          {[
-                            { label: 'FRONT', rotY: 0, tiltX: 0 },
-                            { label: 'BACK', rotY: 180, tiltX: 0 },
-                            { label: 'TOP', rotY: 0, tiltX: -90 },
-                            { label: 'BOTTOM', rotY: 0, tiltX: 90 },
-                            { label: 'LEFT', rotY: 90, tiltX: 0 },
-                            { label: 'RIGHT', rotY: -90, tiltX: 0 }
-                          ].map((v) => {
-                            const isCurrent =
-                              (v.label === 'TOP' && viewerTiltX <= -45) ||
-                              (v.label === 'BOTTOM' && viewerTiltX >= 45) ||
-                              (v.label === 'FRONT' && Math.abs(viewerTiltX) < 45 && (normalizedAngle < 25 || normalizedAngle > 335)) ||
-                              (v.label === 'BACK' && Math.abs(viewerTiltX) < 45 && Math.abs(normalizedAngle - 180) < 25) ||
-                              (v.label === 'LEFT' && Math.abs(viewerTiltX) < 45 && Math.abs(normalizedAngle - 90) < 25) ||
-                              (v.label === 'RIGHT' && Math.abs(viewerTiltX) < 45 && Math.abs(normalizedAngle - 270) < 25);
-                            return (
-                              <button
-                                key={v.label}
-                                type="button"
-                                onClick={() => {
-                                  setViewerAutoRotate(false);
-                                  setViewerRotation(v.rotY);
-                                  setViewerTiltX(v.tiltX);
-                                }}
-                                className={`py-2 px-3 rounded-xl text-xs font-black transition-all cursor-pointer text-center ${
-                                  isCurrent
-                                    ? 'bg-[#0E4A93] text-white shadow-sm ring-2 ring-[#0E4A93]/40'
-                                    : 'bg-white text-stone-700 border border-stone-300 hover:bg-stone-100 hover:border-stone-400'
-                                }`}
-                              >
-                                {v.label}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
+                      )}
+                    </div>
+                  );
+                })()}
             </div>
           </div>
         );

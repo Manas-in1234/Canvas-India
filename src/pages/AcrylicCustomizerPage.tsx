@@ -5211,39 +5211,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Containment / Fill Controls: [ Fill ] [ Fix ] */}
-                  <div className="inline-flex rounded-lg border border-stone-200 bg-stone-100 p-0.5 gap-0.5">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFill(activePanelIndex);
-                      }}
-                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                        activeFrameState.fitMode === 'cover'
-                          ? 'bg-[#0E4A93] text-white shadow-xs'
-                          : 'text-stone-700 hover:text-[#0E4A93] hover:bg-stone-200'
-                      }`}
-                      title="Fill: make image completely cover the frame area (visual crop)"
-                    >
-                      Fill
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFix(activePanelIndex);
-                      }}
-                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                        activeFrameState.fitMode === 'contain'
-                          ? 'bg-[#0E4A93] text-white shadow-xs'
-                          : 'text-stone-700 hover:text-[#0E4A93] hover:bg-stone-200'
-                      }`}
-                      title="Fix (Fit): fit full uncropped original image inside the product frame"
-                    >
-                      Fix
-                    </button>
-                  </div>
+
 
                   <button
                     type="button"
