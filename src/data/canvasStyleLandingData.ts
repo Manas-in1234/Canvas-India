@@ -28,7 +28,10 @@ const PHOTO = {
   officeWorkspace: u('1497215728101-856f4ea42174'), // office desk with plants, city view
   officeHallway: u('1497366216548-37526070297c'), // office interior hallway
   weddingGalleryWall: '/assets/canvas-styles/wall-display-wedding-gallery.png', // user-supplied: 6-panel asymmetric wedding photo gallery over a sofa
-  photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.png' // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
+  photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.png', // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
+  collageCluster: u('1541359927273-d76820fc43f9'), // cluster of photos/cards collaged on a wall
+  collageFramedGrid: u('1670726113933-4bb3940deaf3'), // wall densely covered in framed photos
+  collagePolaroids: u('1661009540506-e708c3288ec8') // polaroid photos strung up side by side
 };
 
 const STANDARD_FEATURES = [
@@ -183,9 +186,9 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     galleryTitle: 'Layouts for every memory',
     galleryItems: [
       { label: '6-Photo Grid', image: PHOTO.photoCollageGrid },
-      { label: 'Pinwheel', visual: 'collage-grid' },
-      { label: 'Side-by-Side', visual: 'collage-grid' },
-      { label: 'Feature + Border', visual: 'collage-grid' }
+      { label: 'Cluster Collage', image: PHOTO.collageCluster },
+      { label: 'Framed Grid Wall', image: PHOTO.collageFramedGrid },
+      { label: 'Polaroid Strip', image: PHOTO.collagePolaroids }
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
