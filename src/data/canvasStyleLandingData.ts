@@ -37,7 +37,8 @@ const PHOTO = {
   shapedCanvasRound: '/assets/canvas-styles/shaped-canvas-round.png', // user-supplied: round painted sunset lake landscape
   shapedCanvasTriangle: '/assets/canvas-styles/shaped-canvas-triangle.png', // user-supplied: triangle painted figure-in-doorway scene
   shapedCanvasHeart: '/assets/canvas-styles/shaped-canvas-heart.png', // user-supplied: heart-shaped painted island sunset
-  shapedCanvasOval: '/assets/canvas-styles/shaped-canvas-oval.png' // user-supplied: oval painted tulips
+  shapedCanvasOval: '/assets/canvas-styles/shaped-canvas-oval.png', // user-supplied: oval painted tulips
+  photoMosaicEye: '/assets/canvas-styles/photo-mosaic-eye.png' // user-supplied: tile-mosaic close-up of an eye
 };
 
 const STANDARD_FEATURES = [
@@ -266,7 +267,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Photo Mosaic',
         description: 'Intricate mosaic grid pattern blending dozens of micro photos into one artwork — ideal for anniversaries, reunions, and tributes.',
         price: 148.5,
-        visual: 'mosaic-grid',
+        image: PHOTO.photoMosaicEye,
         customizeHref: '/customize/canvas/canvas-mosaic'
       }
     ],
