@@ -315,13 +315,49 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     }),
     styles: [
       {
-        id: 'canvas-mosaic',
+        id: 'mosaic2-4x4',
         number: '01',
-        name: 'Photo Mosaic',
-        description: 'Intricate mosaic grid pattern blending dozens of micro photos into one artwork — ideal for anniversaries, reunions, and tributes.',
+        name: '16-Tile Mosaic (4×4 Grid)',
+        description: '16 mosaic tiles in a compact 4×4 grid — 16" × 16" overall, great for a first mosaic or a smaller wall.',
         price: 148.5,
         image: PHOTO.photoMosaicEye,
-        customizeHref: '/customize/canvas/canvas-mosaic'
+        customizeHref: '/customize/canvas/canvas-mosaic?layout=mosaic2-4x4'
+      },
+      {
+        id: 'mosaic3-3x4',
+        number: '02',
+        name: '12-Tile Landscape Mosaic (4×3 Grid)',
+        description: '12 mosaic tiles in a wide 4×3 landscape grid — 16" × 12" overall, suited to horizontal wall spaces.',
+        price: 405.0,
+        image: PHOTO.photoMosaicEye,
+        customizeHref: '/customize/canvas/canvas-mosaic?layout=mosaic3-3x4'
+      },
+      {
+        id: 'mosaic4-5x5',
+        number: '03',
+        name: '25-Tile Mosaic (5×5 Grid)',
+        description: '25 mosaic tiles in a 5×5 grid — 20" × 20" overall, with enough detail to hold a close-up portrait.',
+        price: 148.5,
+        image: PHOTO.photoMosaicEye,
+        customizeHref: '/customize/canvas/canvas-mosaic?layout=mosaic4-5x5'
+      },
+      {
+        id: 'mosaic5-4x5',
+        number: '04',
+        name: '20-Tile Portrait Mosaic (4×5 Grid)',
+        description: '20 mosaic tiles in a tall 4×5 portrait grid — 16" × 20" overall, suited to narrower wall spaces.',
+        price: 645.0,
+        image: PHOTO.photoMosaicEye,
+        customizeHref: '/customize/canvas/canvas-mosaic?layout=mosaic5-4x5'
+      },
+      {
+        id: 'mosaic6-6x6',
+        number: '05',
+        name: '36-Tile Mosaic (6×6 Grid)',
+        description: '36 mosaic tiles in a large 6×6 grid — 24" × 24" overall, our most detailed square mosaic.',
+        price: 148.5,
+        image: PHOTO.photoMosaicEye,
+        customizeHref: '/customize/canvas/canvas-mosaic?layout=mosaic6-6x6'
       }
     ],
     galleryTitle: 'Occasions people love',
