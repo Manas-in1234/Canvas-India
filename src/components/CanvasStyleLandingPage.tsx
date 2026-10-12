@@ -164,6 +164,10 @@ export interface CanvasStyleLandingData {
   infoTitle?: string;
   infoSubtitle?: string;
   infoItems?: CanvasStyleInfoItem[];
+  /** Optional educational tips section (e.g. how to choose photos, layout advice). */
+  tipsTitle?: string;
+  tipsSubtitle?: string;
+  tipsItems?: CanvasStyleInfoItem[];
   galleryTitle: string;
   galleryItems: CanvasStyleGalleryItem[];
   featuresTitle: string;
@@ -260,6 +264,29 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
                 <div className="text-[11px] text-stone-500 leading-relaxed">{item.desc}</div>
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Optional educational tips section */}
+      {data.tipsItems && data.tipsItems.length > 0 && (
+        <section className="w-full bg-white border-y border-stone-200/80 py-10">
+          <div className="w-full max-w-5xl mx-auto px-4 sm:px-8">
+            <h2 className="text-lg sm:text-xl font-black text-stone-900 mb-1">{data.tipsTitle}</h2>
+            {data.tipsSubtitle && <p className="text-xs sm:text-sm text-stone-600 mb-6 max-w-2xl">{data.tipsSubtitle}</p>}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {data.tipsItems.map((item, idx) => (
+                <div key={item.title} className="flex gap-3">
+                  <div className="shrink-0 w-7 h-7 rounded-full bg-[#0E4A93] text-white text-xs font-extrabold flex items-center justify-center">
+                    {idx + 1}
+                  </div>
+                  <div>
+                    <div className="text-xs font-extrabold text-stone-900 mb-0.5">{item.title}</div>
+                    <div className="text-[11px] text-stone-500 leading-relaxed">{item.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}

@@ -172,6 +172,14 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       { title: '9 Landscape Photo Collage', desc: 'Center Feature Photo surrounded by 8 Border Photos' },
       { title: 'Square & Portrait Collages', desc: 'Matching grid, pinwheel and feature layouts sized for square and portrait walls too' }
     ],
+    tipsTitle: 'How to Choose Photos for Your Collage',
+    tipsSubtitle: 'A few tips from photo printing guides worth following before you upload.',
+    tipsItems: [
+      { title: 'Pick a unifying theme', desc: 'A family collection, a trip, or a single occasion gives the collage a clear story instead of a random mix of photos.' },
+      { title: 'Use high-resolution images', desc: 'Low-resolution or blurry shots look pixelated once enlarged onto canvas — start with your sharpest, best-lit photos.' },
+      { title: 'Vary the orientation and size', desc: 'Mixing landscape, portrait, and close-up shots keeps a grid from feeling repetitive — pick the layout first, then slot photos in.' },
+      { title: 'Coordinate color and mood', desc: 'Photos that share a similar color palette or tone (or deliberately contrast) tie the whole piece together visually.' }
+    ],
     galleryTitle: 'Layouts for every memory',
     galleryItems: [
       { label: '6-Photo Grid', image: PHOTO.photoCollageGrid },
