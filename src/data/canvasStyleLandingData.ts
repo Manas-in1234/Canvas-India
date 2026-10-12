@@ -96,6 +96,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       { label: 'Heart', visual: 'shape-heart' },
       { label: 'Oval', visual: 'shape-oval' }
     ],
+    historyTitle: 'The History of Shaped Canvas',
+    historyParagraphs: [
+      'Painting on a non-rectangular surface is older than it looks. Renaissance masters like Raphael, Michelangelo, and Botticelli painted on round wooden panels called tondos, breaking from the standard rectangle centuries before it became a modern art movement.',
+      'The shaped canvas as we know it took shape in the 20th century. Sculptor Peter László Péri made polychromatic cut-out paintings in the early 1920s, and Uruguayan artist Rhod Rothfuss began his "marco irregular" (irregular frame) paintings in 1942, publishing an influential essay on the subject two years later.',
+      'By the 1960s, shaped canvases had become, in critic Frances Colpitt\'s words, "the dominant form of abstract painting" of the decade. Frank Stella, Kenneth Noland, and Ellsworth Kelly all worked in the form, and in 1964 the Solomon R. Guggenheim Museum staged a dedicated exhibition, The Shaped Canvas, cementing it as a serious artistic statement rather than a novelty.'
+    ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
   },
@@ -144,6 +150,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       { label: 'Asymmetric Wedding Wall', image: PHOTO.weddingGalleryWall },
       { label: 'Gallery Cluster', image: PHOTO.galleryWallFrames },
       { label: 'Living Room', image: PHOTO.livingRoomWallArt }
+    ],
+    historyTitle: 'The History of the Gallery Wall',
+    historyParagraphs: [
+      'The densely packed "gallery wall" look has a specific birthplace: the Paris Salon. Starting in 1667, the French Royal Academy\'s annual exhibition accepted far more paintings than its walls could reasonably hold, so organizers covered every inch, floor to ceiling, with almost no regard for matching styles or subjects.',
+      'This "salon-style hang" had its own hierarchy — the most prized works hung "on the line," at eye level, while lesser pieces were pushed toward the ceiling or the floor. London\'s Royal Academy adopted the same crowded hanging style soon after.',
+      'The look eventually left the gallery altogether. What was once a practical solution to too many paintings and too little wall space became, centuries later, a deliberate decorating style — the modern "gallery wall," named directly after the French salons that started it.'
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
@@ -261,6 +273,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       { label: 'Memorial Tribute', visual: 'mosaic-grid' },
       { label: 'Team Photo', visual: 'mosaic-grid' }
     ],
+    historyTitle: 'The History of Mosaic',
+    historyParagraphs: [
+      'Mosaic is one of the oldest art forms in the world. The earliest known mosaics, made from colored stones, shells, and ivory, were found at a temple in Mesopotamia dating back to the second half of the 3rd millennium BC.',
+      'The Greeks developed figural mosaics by the 4th century BC, and the Romans took the technique to new heights, decorating villa floors from Britain to Syria with intricate tesserae work. The art form reached another peak in Ravenna, Italy, where Byzantine artists covered church walls and ceilings in dazzling mosaic scenes from the 5th century onward.',
+      "Today's photo mosaic — built from hundreds of individual photographs instead of stone or glass tiles — is a thoroughly modern reinvention of that ancient technique: many small pieces, combining into one larger picture."
+    ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
   },
@@ -316,6 +334,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       { label: 'Coca Cola', image: '/assets/pop-art/coca-cola1.svg' },
       { label: 'Marilyn', image: '/assets/pop-art/marilyn1.svg' },
       { label: 'Che', image: '/assets/pop-art/che1.svg' }
+    ],
+    historyTitle: 'The History of Pop Art',
+    historyParagraphs: [
+      'Pop Art began in the mid-1950s in Britain, with the Independent Group in London discussing mass media, advertising, and consumer culture. Eduardo Paolozzi\'s 1947 collage "I was a Rich Man\'s Plaything," built from American magazine clippings, is often cited as the first artwork to use the word "pop."',
+      'Richard Hamilton\'s 1956 collage "Just what is it that makes today\'s homes so different, so appealing?" is widely considered one of the movement\'s founding works. The term "pop art" itself was popularized by critic Lawrence Alloway in a 1958 essay.',
+      "The movement found its most famous voice in New York in the early 1960s, through Andy Warhol's soup cans and celebrity silkscreens, Roy Lichtenstein's comic-strip paintings with their bold Ben-Day dots, and Claes Oldenburg's oversized sculptures of everyday objects. Warhol's first solo show, 32 Campbell's Soup Cans, opened at the Ferus Gallery in Los Angeles in July 1962 — a moment often marked as Pop Art's true arrival."
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
@@ -373,6 +397,11 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       { label: 'Couples', image: '/assets/lyric-canvas/couples-personalized-art.svg' },
       { label: 'Forever Young', image: '/assets/lyric-canvas/forever-young-lyrics.svg' }
     ],
+    historyTitle: 'A Modern Twist on an Old Tradition',
+    historyParagraphs: [
+      "Turning words into wall art is far from new — illuminated manuscripts and hand-lettered calligraphy have decorated walls and pages for centuries, long before printing presses existed.",
+      "What's changed is how personal it's become. Where lettering was once the domain of trained scribes and calligraphers, today anyone can pair a favorite song lyric, wedding vow, or quote with their own photograph and have it printed as a one-of-a-kind piece of canvas art — no calligraphy skills required."
+    ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
   },
@@ -401,6 +430,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       { label: 'Skylines', icon: 'mountain' },
       { label: 'Landscapes', icon: 'mountain' },
       { label: 'Group Shots', icon: 'users' }
+    ],
+    historyTitle: 'The History of the Panorama',
+    historyParagraphs: [
+      'Immersive, wide-format art is older than photography itself — murals designed to wrap around a viewer have been found in Pompeii, dating back to around 20 AD.',
+      "The word \"panorama\" itself was coined by Scottish painter Robert Barker, who patented his 360-degree painting technique in 1787 and opened a dedicated rotunda in London's Leicester Square that ran for 70 years, from 1793 to 1863.",
+      "Panoramic photography followed soon after the daguerreotype's invention in 1839, as photographers began joining multiple images into one sweeping view — the same idea behind today's panoramic canvas prints, just with a camera instead of a brush."
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
@@ -440,6 +475,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       { label: 'Landscape', icon: 'mountain' },
       { label: 'Portrait', icon: 'frame' }
     ],
+    historyTitle: 'The History of the Multi-Panel Format',
+    historyParagraphs: [
+      'Splitting an image or artwork across multiple hinged panels dates back to early Christian art, where the three-panel "triptych" became the standard format for altarpieces from the Middle Ages onward — valued partly because hinged panels folded shut and were easy to transport between churches.',
+      'During World War II, a U.S. citizens\' committee commissioned nearly 460 portable triptych altarpieces from about 70 artists for use by troops of different faiths — a reminder of how practical the multi-panel format has always been, not just decorative.',
+      "Today's split canvas print borrows that same structure — one image, divided across separate panels — reframed as a deliberate, modern design choice rather than a religious or practical necessity."
+    ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
   },
@@ -468,6 +509,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       { label: 'Honeycomb Cluster', icon: 'hexagon' },
       { label: 'Mixed Grid', visual: 'mosaic-grid' },
       { label: 'Office Wall', image: PHOTO.officeHallway }
+    ],
+    historyTitle: 'Why the Hexagon?',
+    historyParagraphs: [
+      "The hexagon's place in art and design isn't an accident — it's math. Roman scholar Marcus Terentius Varro first posed the question, in the 1st century BC, of why bees build their honeycomb in hexagons rather than any other shape.",
+      'Centuries later, mathematician Thomas Hales finally proved it in 1999: the hexagon is the most efficient shape for tiling a surface, enclosing the most area with the least material and no wasted gaps.',
+      'That same efficiency is what makes hexagons so satisfying on a wall — six-sided canvases interlock edge to edge into a honeycomb cluster with no awkward spacing, a pattern humans have been drawn to in tile work and architecture for centuries.'
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
@@ -532,6 +579,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       { label: 'Family', icon: 'images' },
       { label: 'Pets', icon: 'paw' }
     ],
+    historyTitle: 'The History of Caricature',
+    historyParagraphs: [
+      'The word "caricature" comes from the Italian caricare, meaning "to load" or "exaggerate." Leonardo da Vinci was already sketching people with unusual, striking features centuries before the term existed, and Italian artist Pier Leone Ghezzi is credited with popularizing the style among European aristocracy in the early 1700s.',
+      'The art form found its golden age in 18th-century London, where artists like William Hogarth, James Gillray, and Thomas Rowlandson turned caricature into a serious tool of political satire — Gillray\'s 1805 cartoon "The Plumb-pudding in Danger" is still considered one of the most famous political cartoons ever drawn.',
+      'Caricature has stayed personal and playful ever since, evolving from political satire into the warm, exaggerated portrait style used today for gifts and celebrations — the same spirit behind the digital caricature we offer on canvas.'
+    ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
   },
@@ -560,6 +613,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       { label: 'Pole Pockets', icon: 'scroll' },
       { label: 'Wood Rails', icon: 'scroll' },
       { label: 'Twine Hanging', icon: 'scroll' }
+    ],
+    historyTitle: 'The History of the Banner',
+    historyParagraphs: [
+      'The word "banner" traces back through Old French baniere to the Latin bandum, and the tradition is ancient: Roman legions carried cloth standards called vexilla, hung from a horizontal crossbar, into battle.',
+      "Banners have carried meaning for millennia beyond the battlefield — heraldic banners displayed a family's coat of arms, church banners have been carried in processions for centuries, and trade unions in Australia marched under elaborate banners during the Eight Hour Day parades of the late 1800s and early 1900s.",
+      'Banner-making is, in the words of one historian, "an ancient craft" — and the heavyweight canvas banner is simply that tradition continuing, now with your own photos and message instead of a coat of arms or a union crest.'
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
