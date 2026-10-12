@@ -509,6 +509,8 @@ export interface MegaMenuItem {
   description?: string;
   badge?: string;
   actionType?: 'category' | 'quote' | 'customize';
+  /** Dedicated landing page route for this specific item, taking precedence over `slug`. */
+  href?: string;
 }
 
 export interface MegaMenuGroup {
@@ -544,24 +546,24 @@ export const MEGA_MENUS_DATA: Record<string, MegaMenuConfig> = {
         iconType: 'palette',
         items: [
           { name: 'Canvas Prints', slug: 'canvas', description: 'Museum-grade 380 GSM cotton canvas prints' },
-          { name: 'Shaped Canvas Prints', slug: 'canvas', description: 'Custom cut round, oval, arch & geometric shapes' },
-          { name: 'Wall Display', slug: 'canvas', description: 'Multi-frame canvas clusters & gallery wall arrangements' },
-          { name: 'Photo Collage', slug: 'canvas', description: 'Multi-photo grid layout canvas displays' },
-          { name: 'Photo Mosaic', slug: 'canvas', description: 'Mosaic grid created from hundreds of micro photos' },
-          { name: 'Pop Art', slug: 'canvas', description: 'Vibrant comic & Andy Warhol style portrait art' },
-          { name: 'Lyrics on Canvas', slug: 'canvas', description: 'Song lyrics, wedding vows & custom typography art' },
+          { name: 'Shaped Canvas Prints', slug: 'canvas', href: '/canvas/shaped-canvas-prints', description: 'Custom cut round, oval, arch & geometric shapes' },
+          { name: 'Wall Display', slug: 'canvas', href: '/canvas/wall-display', description: 'Multi-frame canvas clusters & gallery wall arrangements' },
+          { name: 'Photo Collage', slug: 'canvas', href: '/canvas/photo-collage', description: 'Multi-photo grid layout canvas displays' },
+          { name: 'Photo Mosaic', slug: 'canvas', href: '/canvas/photo-mosaic', description: 'Mosaic grid created from hundreds of micro photos' },
+          { name: 'Pop Art', slug: 'canvas', href: '/canvas/pop-art', description: 'Vibrant comic & Andy Warhol style portrait art' },
+          { name: 'Lyrics on Canvas', slug: 'canvas', href: '/canvas/lyrics-on-canvas', description: 'Song lyrics, wedding vows & custom typography art' },
         ],
       },
       {
         title: 'Formats & Specialty Canvas',
         iconType: 'sliders',
         items: [
-          { name: 'Panoramic Canvas Prints', slug: 'canvas', description: 'Wide aspect landscape & horizon photo prints' },
-          { name: 'Split Canvas Prints', slug: 'canvas', description: 'Multi-panel triptych & 3-to-5 piece canvas sets' },
-          { name: 'Hexagon Canvas', slug: 'canvas', description: 'Honeycomb geometric multi-canvas clusters' },
-          { name: 'Wholesale Canvas Prints', slug: 'canvas', description: 'Bulk printing for artists, studios & interior designers' },
-          { name: 'Custom Caricature', slug: 'canvas', description: 'Digital caricature portraits printed on canvas' },
-          { name: 'Canvas Banner', slug: 'canvas', description: 'Heavyweight cotton canvas hanging scroll banners' },
+          { name: 'Panoramic Canvas Prints', slug: 'canvas', href: '/canvas/panoramic-canvas-prints', description: 'Wide aspect landscape & horizon photo prints' },
+          { name: 'Split Canvas Prints', slug: 'canvas', href: '/canvas/split-canvas-prints', description: 'Multi-panel triptych & 3-to-5 piece canvas sets' },
+          { name: 'Hexagon Canvas', slug: 'canvas', href: '/canvas/hexagon-canvas', description: 'Honeycomb geometric multi-canvas clusters' },
+          { name: 'Wholesale Canvas Prints', slug: 'canvas', href: '/canvas/wholesale-canvas-prints', description: 'Bulk printing for artists, studios & interior designers' },
+          { name: 'Custom Caricature', slug: 'canvas', href: '/canvas/custom-caricature', description: 'Digital caricature portraits printed on canvas' },
+          { name: 'Canvas Banner', slug: 'canvas', href: '/canvas/canvas-banner', description: 'Heavyweight cotton canvas hanging scroll banners' },
         ],
       },
     ],

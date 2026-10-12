@@ -6,17 +6,20 @@
 
 import { STANDARD_SHAPE_SIZES } from './productSizeShapeConfig';
 
-export type ToolbarTab = 
-  | 'PRODUCTS' 
-  | 'UPLOAD' 
-  | 'SELECT SIZE' 
+export type ToolbarTab =
+  | 'PRODUCTS'
+  | 'UPLOAD'
+  | 'SELECT SIZE'
   | 'SHAPES'
   | 'SHAPE'
-  | 'LAYOUTS & DESIGNS' 
+  | 'LAYOUTS & DESIGNS'
   | 'WRAP & BORDER'
-  | 'HARDWARE & FINISH' 
+  | 'HARDWARE & FINISH'
   | 'OPTIONS'
-  | 'TEMPLATES';
+  | 'TEMPLATES'
+  | 'CREATE BUS ROLL'
+  | 'BACKGROUND'
+  | 'TEMPLATE';
 
 export interface ProductCapabilities {
   products?: boolean;
@@ -112,7 +115,7 @@ export const AcrylicProductShapeConfig: Record<string, string[]> = {
   'acrylic-digital': ['shape-landscape', 'shape-rectangle', 'shape-portrait', 'shape-square'],
   'acrylic-quotes': ['shape-square', 'shape-portrait', 'shape-rectangle', 'shape-heart'],
   'acrylic-bus-roll': ['shape-portrait'],
-  'acrylic-word-art': ['shape-heart', 'shape-square', 'shape-circle', 'shape-rectangle'],
+  'acrylic-word-art': ['shape-square', 'shape-rectangle', 'shape-circle', 'shape-heart'],
   // Legacy alias fallbacks
   'acrylic-photo-panel': ALL_CANVAS_AND_ACRYLIC_SHAPE_IDS,
   'acrylic-signage': ALL_CANVAS_AND_ACRYLIC_SHAPE_IDS
@@ -323,6 +326,176 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       roomView: true
     },
     supportedLayoutIds: ['layout-4-grid', 'layout-mosaic-9']
+  },
+  {
+    id: 'acrylic-lyric',
+    name: 'Lyric on Acrylic',
+    price: 426.00,
+    startingPrice: 426.00,
+    image: '/assets/customizer/acrylic/templates/lyrics-on-acrylic.svg',
+    iconType: 'lyric',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-portrait',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-lyric'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Your favorite song lyrics beautifully typeset over a photo on crystal-clear acrylic.',
+    defaultSizeOptionId: 'shape-portrait-8x10',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-lyric'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-lyric'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: true,
+      layouts: true,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: false,
+      roomView: true
+    },
+    supportedLayoutIds: ['layout-1-single']
+  },
+  {
+    id: 'acrylic-digital',
+    name: 'Digital Painting',
+    price: 2854.00,
+    startingPrice: 2854.00,
+    image: '/images/acrylic/shapes/landscape.svg',
+    iconType: 'painting',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-landscape',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-digital'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Your photo transformed into a vivid digital painting, printed on premium optical acrylic.',
+    defaultSizeOptionId: 'shape-landscape-18x12',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-digital'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-digital'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: true,
+      layouts: true,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: false,
+      roomView: true
+    },
+    supportedLayoutIds: ['layout-1-single']
+  },
+  {
+    id: 'acrylic-quotes',
+    name: 'Quotes on Acrylic',
+    price: 355.00,
+    startingPrice: 355.00,
+    image: '/assets/customizer/acrylic/templates/love-quotes-acrylic.svg',
+    iconType: 'quotes',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-square',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-quotes'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'A favorite quote beautifully typeset on crystal acrylic — pick from curated templates.',
+    defaultSizeOptionId: 'shape-square-10x10',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-quotes'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-quotes'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: true,
+      layouts: true,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: false,
+      roomView: true
+    },
+    supportedLayoutIds: ['layout-1-single']
+  },
+  {
+    id: 'acrylic-bus-roll',
+    name: 'Bus Roll',
+    price: 1256.40,
+    startingPrice: 1256.40,
+    image: '/images/acrylic/shapes/landscape.svg',
+    iconType: 'bus-roll',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-portrait',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-bus-roll'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'A tall, roll-style acrylic print of names, moments or messages, bus-destination-board style.',
+    defaultSizeOptionId: 'shape-portrait-8x12',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-bus-roll'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-bus-roll'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: true,
+      layouts: true,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: false,
+      roomView: true
+    },
+    supportedLayoutIds: ['layout-1-single']
+  },
+  {
+    id: 'acrylic-word-art',
+    name: 'Word Art',
+    price: 454.00,
+    startingPrice: 454.00,
+    image: '/images/acrylic/shapes/landscape.svg',
+    iconType: 'word-art',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-square',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-word-art'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Meaningful words and names arranged into a beautiful personalized acrylic keepsake.',
+    defaultSizeOptionId: 'shape-square-10x10',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-word-art'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-word-art'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: true,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: false,
+      roomView: true
+    },
+    supportedLayoutIds: ['layout-1-single']
   }
 ];
 

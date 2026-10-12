@@ -112,7 +112,7 @@ export const AcrylicLiveTextEditor: React.FC<AcrylicLiveTextEditorProps> = ({
             rows={2}
             value={activeText.text}
             onChange={(e) => onUpdateText({ text: e.target.value })}
-            placeholder="Type your text..."
+            placeholder="Type your text here..."
             className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs font-medium text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0E4A93]/20 focus:border-[#0E4A93] bg-white transition-all resize-none"
           />
         </div>

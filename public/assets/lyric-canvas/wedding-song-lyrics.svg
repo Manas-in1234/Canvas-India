@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <!-- Canvas Drop Shadow -->
+    <filter id="canvasShadow" x="-15%" y="-15%" width="135%" height="135%">
+      <feDropShadow dx="8" dy="16" stdDeviation="12" flood-color="#0F172A" flood-opacity="0.22" />
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.12" />
+    </filter>
+
+    <!-- Subtle canvas weave pattern -->
+    <pattern id="canvasTexture" width="6" height="6" patternUnits="userSpaceOnUse">
+      <path d="M 0 3 L 6 3 M 3 0 L 3 6" stroke="#000000" stroke-width="0.35" opacity="0.04" />
+    </pattern>
+
+    <!-- Gradients -->
+    <linearGradient id="edgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#334155" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#1E293B" stop-opacity="0.95" />
+    </linearGradient>
+
+    <linearGradient id="topEdgeGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#475569" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#334155" stop-opacity="0.9" />
+    </linearGradient>
+
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="50%" stop-color="#EAB308" />
+      <stop offset="100%" stop-color="#CA8A04" />
+    </linearGradient>
+
+    <linearGradient id="sunsetGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FB7185" />
+      <stop offset="60%" stop-color="#F43F5E" />
+      <stop offset="100%" stop-color="#881337" />
+    </linearGradient>
+
+    <linearGradient id="parchmentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEFCE8" />
+      <stop offset="50%" stop-color="#FEF9C3" />
+      <stop offset="100%" stop-color="#FEF08A" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Canvas Staging Environment -->
+  <rect width="100%" height="100%" fill="#F8FAFC" />
+
+  <!-- 3D Canvas Assembly with realistic Perspective wrap -->
+  <g transform="translate(45, 30)">
+    <!-- Main 3D Canvas Group with shadow -->
+    <g filter="url(#canvasShadow)">
+      <!-- Right 3D Fold Edge (Thickness flap) -->
+      <polygon points="280,25 305,42 305,225 280,210" fill="url(#edgeGrad)" />
+
+      <!-- Top 3D Fold Edge -->
+      <polygon points="10,25 280,25 305,42 35,42" fill="url(#topEdgeGrad)" opacity="0.4" />
+
+      <!-- Front Canvas Face (270 x 185) -->
+      <g transform="translate(10, 25)">
+        <clipPath id="frontFaceClip_PersonalizedWeddingPictureCanvasPrintsWithSongLyrics">
+          <rect width="270" height="185" rx="3" />
+        </clipPath>
+
+        <rect width="270" height="185" rx="3" fill="#FFFFFF" />
+
+        <g clip-path="url(#frontFaceClip_PersonalizedWeddingPictureCanvasPrintsWithSongLyrics)">
+          
+      <!-- Romantic couple background -->
+      <rect width="270" height="185" fill="#1E293B" />
+      <path d="M 0 0 L 270 0 L 270 185 L 0 185 Z" fill="radial-gradient(circle at 30% 40%, #475569 0%, #0F172A 100%)" />
+      <!-- Couple silhouette on left -->
+      <circle cx="75" cy="65" r="28" fill="#E2E8F0" opacity="0.95" />
+      <circle cx="108" cy="72" r="24" fill="#CBD5E1" opacity="0.9" />
+      <path d="M 45 185 C 45 115 105 110 105 185 Z" fill="#FFFFFF" opacity="0.95" />
+      <path d="M 90 185 C 90 120 135 125 145 185 Z" fill="#0F172A" opacity="0.85" />
+      <!-- Romantic gradient overlay for typography readability -->
+      <rect x="130" width="140" height="185" fill="black" opacity="0.55" />
+      <!-- Floating lyrics script text -->
+      <text x="145" y="42" font-family="'Playfair Display', Georgia, serif" font-size="11" font-weight="bold" fill="#FDE047" letter-spacing="1">A THOUSAND YEARS</text>
+      <line x1="145" y1="48" x2="245" y2="48" stroke="#FDE047" stroke-width="0.8" opacity="0.8" />
+      <text x="145" y="62" font-family="'Dancing Script', cursive, serif" font-size="9" fill="#FFFFFF" opacity="0.9">Heart beats fast,</text>
+      <text x="145" y="75" font-family="'Dancing Script', cursive, serif" font-size="9" fill="#FFFFFF" opacity="0.9">Colors and promises</text>
+      <text x="145" y="88" font-family="'Dancing Script', cursive, serif" font-size="9" fill="#FFFFFF" opacity="0.9">How to be brave?</text>
+      <text x="145" y="101" font-family="'Dancing Script', cursive, serif" font-size="9" fill="#FFFFFF" opacity="0.9">How can I love when I'm afraid?</text>
+      <text x="145" y="118" font-family="'Dancing Script', cursive, serif" font-size="9.5" font-weight="bold" fill="#FEF08A">I have loved you for a</text>
+      <text x="145" y="132" font-family="'Dancing Script', cursive, serif" font-size="10.5" font-weight="bold" fill="#FEF08A">thousand years...</text>
+      <!-- Couple name and date -->
+      <text x="145" y="158" font-family="'Montserrat', sans-serif" font-size="8" font-weight="bold" fill="#94A3B8" letter-spacing="1.5">SARAH &amp; DAVID</text>
+      <text x="145" y="169" font-family="'Montserrat', sans-serif" font-size="7" fill="#64748B">OCTOBER 14, 2024</text>
+    
+        </g>
+
+        <!-- Canvas Weave Texture Overlay -->
+        <rect width="270" height="185" rx="3" fill="url(#canvasTexture)" pointer-events="none" />
+        <!-- Subtle border highlight -->
+        <rect width="270" height="185" rx="3" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.4" />
+      </g>
+    </g>
+  </g>
+</svg>

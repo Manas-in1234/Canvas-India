@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="240" height="180">
+      <defs>
+        <pattern id="gloDots" width="10" height="10" patternUnits="userSpaceOnUse">
+          <circle cx="5" cy="5" r="1.5" fill="#F59E0B" />
+        </pattern>
+      </defs>
+      <!-- Split Pop Background: Yellow top, Indigo bottom -->
+      <rect x="0" y="0" width="240" height="100" fill="#FDE047" />
+      <rect x="0" y="0" width="240" height="100" fill="url(#gloDots)" />
+      <rect x="0" y="100" width="240" height="80" fill="#3B82F6" />
+      <!-- Neon Cartoon Pet with Pink Glasses -->
+      <path d="M 100 45 Q 80 50 85 90 Q 90 125 120 125 Q 150 125 155 90 Q 160 50 140 45 Z" fill="#B45309" stroke="#78350F" stroke-width="3" />
+      <!-- Ears -->
+      <path d="M 90 55 Q 65 30 75 75 Z" fill="#D97706" stroke="#78350F" stroke-width="2.5" />
+      <path d="M 150 55 Q 175 30 165 75 Z" fill="#D97706" stroke="#78350F" stroke-width="2.5" />
+      <!-- Neon Pink Glasses -->
+      <rect x="88" y="72" width="28" height="22" rx="6" fill="none" stroke="#EC4899" stroke-width="4.5" />
+      <rect x="124" y="72" width="28" height="22" rx="6" fill="none" stroke="#EC4899" stroke-width="4.5" />
+      <line x1="116" y1="82" x2="124" y2="82" stroke="#EC4899" stroke-width="4.5" />
+      <!-- Pink Collar -->
+      <ellipse cx="120" cy="130" rx="20" ry="6" fill="#EC4899" />
+    </svg>

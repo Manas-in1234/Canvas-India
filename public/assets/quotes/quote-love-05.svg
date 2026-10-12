@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#064e3b" />
+      <stop offset="100%" stop-color="#022c22" />
+    </linearGradient>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+      <stop offset="40%" stop-color="#000000" stop-opacity="0" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.45" />
+    </radialGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.4" />
+    </filter>
+  </defs>
+  <rect width="800" height="800" fill="url(#bgGrad)" />
+  <rect width="800" height="800" fill="url(#vignette)" />
+  <rect x="32" y="32" width="736" height="736" fill="none" stroke="rgba(234, 179, 8, 0.5)" stroke-width="2" />
+  <rect x="40" y="40" width="720" height="720" fill="none" stroke="rgba(234, 179, 8, 0.5)" stroke-width="0.8" opacity="0.6" />
+  <circle cx="32" cy="32" r="3.5" fill="#facc15" opacity="0.85" />
+  <circle cx="32" cy="768" r="3.5" fill="#facc15" opacity="0.85" />
+  <circle cx="768" cy="32" r="3.5" fill="#facc15" opacity="0.85" />
+  <circle cx="768" cy="768" r="3.5" fill="#facc15" opacity="0.85" />
+  <path d="M 370 95 Q 400 85 430 95" stroke="#facc15" stroke-width="2" fill="none" opacity="0.8" />
+  <circle cx="400" cy="88" r="3" fill="#facc15" />
+  <text x="400" y="313.0" font-family="'Playfair Display', Georgia, serif" font-size="46.0" font-weight="700" fill="#ecfdf5" text-anchor="middle" letter-spacing="2.5" filter="url(#shadow)">WHERE THERE IS LOVE</text>
+  <text x="400" y="385.0" font-family="'Playfair Display', Georgia, serif" font-size="49.7" font-weight="800" fill="#facc15" text-anchor="middle" letter-spacing="2.5" filter="url(#shadow)">THERE IS LIFE</text>
+  <text x="400" y="457.0" font-family="'Playfair Display', Georgia, serif" font-size="46.0" font-weight="700" fill="#ecfdf5" text-anchor="middle" letter-spacing="2.5" filter="url(#shadow)">AND HOPE</text>
+  <line x1="330" y1="524.0" x2="470" y2="524.0" stroke="rgba(234, 179, 8, 0.5)" stroke-width="1.2" opacity="0.7" />
+  <text x="400" y="549.0" font-family="'Playfair Display', Georgia, serif" font-size="18" font-style="italic" fill="#a7f3d0" text-anchor="middle" letter-spacing="1.5">Mahatma Gandhi</text>
+  <path d="M 370 705 Q 400 715 430 705" stroke="#facc15" stroke-width="2" fill="none" opacity="0.8" />
+  <circle cx="400" cy="712" r="3" fill="#facc15" />
+</svg>

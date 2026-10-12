@@ -22,9 +22,11 @@ import { CancellationPolicyPage } from './pages/CancellationPolicyPage';
 import { RefundReturnPage } from './pages/RefundReturnPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { CanvasCategoryPage } from './pages/CanvasCategoryPage';
+import { CanvasStylePage } from './pages/CanvasStylePage';
 import { CorkCategoryPage } from './pages/CorkCategoryPage';
 import { AcrylicCustomizerPage } from './pages/AcrylicCustomizerPage';
 import { AllCategoriesPage } from './pages/AllCategoriesPage';
+import { AllOccasionsPage } from './pages/AllOccasionsPage';
 import { CanvasCustomizerPage } from './pages/CanvasCustomizerPage';
 import { MobileUploadPage } from './pages/MobileUploadPage';
 import { FestiveOffersPage } from './pages/FestiveOffersPage';
@@ -87,9 +89,12 @@ export function App() {
 
             {/* Canvas — dedicated product listing page (feature/canvas-category-page) */}
             <Route path="/categories" element={<AllCategoriesPage />} />
+            <Route path="/occasions" element={<AllOccasionsPage />} />
             <Route path="/canvas" element={<CanvasCategoryPage />} />
             {/* /canvas-prints is an alias that uses the generic CategoryPage for SEO parity */}
             <Route path="/canvas-prints" element={<CategoryPage categorySlug="canvas" />} />
+            {/* Dedicated landing page per Canvas dropdown style (Pop Art, Wall Display, etc.) */}
+            <Route path="/canvas/:styleSlug" element={<CanvasStylePage />} />
             {/* Acrylic — dedicated category page */}
             <Route path="/acrylic" element={<AcrylicCategoryPage />} />
             <Route path="/acrylic-prints" element={<AcrylicCategoryPage />} />

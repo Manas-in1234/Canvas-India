@@ -42,9 +42,73 @@ import {
   FileText,
   Shapes,
   FlipHorizontal2,
-  AlertCircle
+  AlertCircle,
+  Edit3,
+  Quote,
+  Palette,
+  LayoutTemplate,
+  Music
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
+import { QuotesTemplateSidebarPanel } from '../components/QuotesTemplateSidebarPanel';
+import { getQuoteTemplate, QuoteTemplateItem } from '../data/quoteTemplatesData';
+import { WordArtSizeRatioModal } from '../components/WordArtSizeRatioModal';
+import { WordArtPersonalizeModal } from '../components/WordArtPersonalizeModal';
+import { DigitalPaintingOptionsPanel } from '../components/DigitalPaintingOptionsPanel';
+import {
+  DEFAULT_DIGITAL_PAINTING_CONFIG,
+  type DigitalPaintingConfig,
+  getDigitalPaintingEffect
+} from '../data/digitalPaintingData';
+import { BusRollLineEditorPanel } from '../components/BusRollLineEditorPanel';
+import { BusRollBackgroundPanel } from '../components/BusRollBackgroundPanel';
+import { BusRollTemplatePanel } from '../components/BusRollTemplatePanel';
+import { BusRollTopToolbar } from '../components/BusRollTopToolbar';
+import {
+  DEFAULT_BUS_ROLL_CONFIG,
+  type BusRollConfig,
+  generateBusRollSvgDataUrl
+} from '../data/busRollData';
+import {
+  WORD_ART_SIZE_CATALOG,
+  DEFAULT_WORD_ART_CONFIG,
+  type WordArtSizeOption,
+  type WordArtConfig
+} from '../data/wordArtData';
+import { CanvasBannerSizePanel } from '../components/CanvasBannerSizePanel';
+import {
+  type CanvasBannerConfig,
+  type BannerSizeCategory,
+  DEFAULT_CANVAS_BANNER_CONFIG,
+  CANVAS_BANNER_SIZE_OPTIONS,
+  CANVAS_BANNER_HARDWARE_OPTIONS,
+  BANNER_BACKGROUND_PRESETS,
+  calculateBannerPrice,
+  formatDimension,
+  convertToInches,
+} from '../data/canvasBannerData';
+import { PopArtStyleModal } from '../components/PopArtStyleModal';
+import {
+  type PopArtConfig,
+  type PopArtStyleId,
+  type PopArtStyleOption,
+  POP_ART_STYLES,
+  POP_ART_SIZE_OPTIONS,
+  getPopArtStyle,
+  DEFAULT_POP_ART_CONFIG
+} from '../data/popArtData';
+import { processPopArtImage } from '../utils/popArtProcessor';
+import { SelectLyricTemplateModal } from '../components/SelectLyricTemplateModal';
+import { LyricStudioPanel } from '../components/LyricStudioPanel';
+import {
+  type LyricCanvasConfig,
+  type LyricCanvasTemplate,
+  type LyricTemplateId,
+  LYRIC_CANVAS_TEMPLATES,
+  LYRIC_CANVAS_SIZE_OPTIONS,
+  DEFAULT_LYRIC_CONFIG,
+  getLyricTemplate
+} from '../data/lyricCanvasData';
 import {
   CANVAS_SHAPES,
   CanvasShapeOption,
@@ -59,6 +123,7 @@ import {
   ACRYLIC_BORDER_WIDTHS,
   ACRYLIC_BORDER_COLORS,
   getCanvasProductCapabilities,
+  resolveCanvasProductTypeId,
   ClipartItem
 } from '../data/canvasCustomizerData';
 import {
@@ -79,6 +144,8 @@ import {
   getCanvasProductGeometry,
   getHexagonClusterLayout,
   HEXAGON_CLIP_PATH,
+  HEXAGON_HORIZONTAL_CLIP_PATH,
+  HEXAGON_VERTICAL_CLIP_PATH,
   getProductLayouts,
   getProductLayout,
   renderProductLayoutDiagram,
@@ -99,8 +166,14 @@ import {
 
 type ToolbarTab =
   | 'PRODUCTS'
+  | 'POP ART STYLE'
+  | 'LYRIC TEMPLATE'
   | 'UPLOAD'
   | 'SELECT SIZE'
+  | 'EFFECTS & OPTIONS'
+  | 'CREATE BUS ROLL'
+  | 'BACKGROUND'
+  | 'TEMPLATE'
   | 'LAYOUTS & DESIGNS'
   | 'WRAP & BORDER'
   | 'HARDWARE & FINISH'
@@ -110,6 +183,10 @@ const TOOLBAR_ITEMS: { id: ToolbarTab; label: string; icon: React.ElementType }[
   { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
   { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud },
   { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
+  { id: 'EFFECTS & OPTIONS', label: 'EFFECTS & OPTIONS', icon: Palette },
+  { id: 'CREATE BUS ROLL', label: 'CREATE BUS ROLL', icon: Type },
+  { id: 'BACKGROUND', label: 'BACKGROUND', icon: Palette },
+  { id: 'TEMPLATE', label: 'TEMPLATE', icon: LayoutTemplate },
   { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers },
   { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
   { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
@@ -170,7 +247,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: '10" × 10"',
     dimensionsSummary: '10" × 10"',
     price: 250.0,
-    categories: ['SQUARE', 'RECOMMENDED'],
+    categories: ['SQUARE', 'RECOMMENDED', 'SMALL'],
     widthInches: 10,
     heightInches: 10,
     panelsCount: 1,
@@ -183,7 +260,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: '16" × 16"',
     dimensionsSummary: '16" × 16"',
     price: 577.0,
-    categories: ['SQUARE', 'RECOMMENDED'],
+    categories: ['SQUARE', 'RECOMMENDED', 'SMALL'],
     widthInches: 16,
     heightInches: 16,
     panelsCount: 1,
@@ -196,7 +273,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: '18" × 18"',
     dimensionsSummary: '18" × 18"',
     price: 749.0,
-    categories: ['SQUARE'],
+    categories: ['SQUARE', 'RECOMMENDED', 'LARGE'],
     widthInches: 18,
     heightInches: 18,
     panelsCount: 1,
@@ -209,7 +286,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: '20" × 20"',
     dimensionsSummary: '20" × 20"',
     price: 999.0,
-    categories: ['SQUARE', 'RECOMMENDED'],
+    categories: ['SQUARE', 'LARGE'],
     widthInches: 20,
     heightInches: 20,
     panelsCount: 1,
@@ -217,14 +294,14 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Canvas', dimension: '20" × 20"', widthRatio: 20, heightRatio: 20 }]
   },
 
-  // PANORAMIC (6 rectangle sizes)
+  // PANORAMIC (8 rectangle/panoramic sizes)
   {
     id: 'single-12x8',
     productTypeId: 'canvas-single',
     label: '12" × 8"',
     dimensionsSummary: '12" × 8"',
     price: 299.0,
-    categories: ['PANORAMIC'],
+    categories: ['PANORAMIC', 'SMALL'],
     widthInches: 12,
     heightInches: 8,
     panelsCount: 1,
@@ -237,7 +314,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: '18" × 12"',
     dimensionsSummary: '18" × 12"',
     price: 449.0,
-    categories: ['PANORAMIC', 'RECOMMENDED'],
+    categories: ['PANORAMIC', 'RECOMMENDED', 'SMALL'],
     widthInches: 18,
     heightInches: 12,
     panelsCount: 1,
@@ -258,6 +335,19 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Canvas', dimension: '20" × 16"', widthRatio: 20, heightRatio: 16 }]
   },
   {
+    id: 'single-24x12',
+    productTypeId: 'canvas-single',
+    label: '24" × 12"',
+    dimensionsSummary: '24" × 12"',
+    price: 599.0,
+    categories: ['PANORAMIC'],
+    widthInches: 24,
+    heightInches: 12,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Canvas', dimension: '24" × 12"', widthRatio: 24, heightRatio: 12 }]
+  },
+  {
     id: 'single-24x16',
     productTypeId: 'canvas-single',
     label: '24" × 16"',
@@ -271,12 +361,25 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Canvas', dimension: '24" × 16"', widthRatio: 24, heightRatio: 16 }]
   },
   {
+    id: 'single-32x16',
+    productTypeId: 'canvas-single',
+    label: '32" × 16"',
+    dimensionsSummary: '32" × 16"',
+    price: 999.0,
+    categories: ['PANORAMIC', 'LARGE'],
+    widthInches: 32,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Canvas', dimension: '32" × 16"', widthRatio: 32, heightRatio: 16 }]
+  },
+  {
     id: 'single-30x20',
     productTypeId: 'canvas-single',
     label: '30" × 20"',
     dimensionsSummary: '30" × 20"',
     price: 1199.0,
-    categories: ['PANORAMIC', 'RECOMMENDED'],
+    categories: ['PANORAMIC', 'RECOMMENDED', 'LARGE'],
     widthInches: 30,
     heightInches: 20,
     panelsCount: 1,
@@ -289,7 +392,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: '36" × 24"',
     dimensionsSummary: '36" × 24"',
     price: 1599.0,
-    categories: ['PANORAMIC'],
+    categories: ['PANORAMIC', 'LARGE'],
     widthInches: 36,
     heightInches: 24,
     panelsCount: 1,
@@ -566,13 +669,13 @@ const SIZE_OPTIONS: SizeOption[] = [
     ]
   },
 
-  // 11. Lyric on Canvas (canvas-lyric) - Starts at ₹148.50
+  // 11. Lyric on Canvas (canvas-lyric) - Starts at ₹1,498.50
   {
     id: 'lyric-8x8',
     productTypeId: 'canvas-lyric',
     label: 'Lyric Canvas: 8" × 8"',
     dimensionsSummary: '8" × 8"',
-    price: 148.50,
+    price: 1498.50,
     categories: ['RECOMMENDED', 'SQUARE'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '8" × 8"', widthRatio: 8, heightRatio: 8 }]
   },
@@ -581,12 +684,64 @@ const SIZE_OPTIONS: SizeOption[] = [
     productTypeId: 'canvas-lyric',
     label: 'Lyric Canvas: 12" × 18"',
     dimensionsSummary: '12" × 18"',
-    price: 499.0,
+    price: 1999.0,
     categories: ['RECOMMENDED'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '12" × 18"', widthRatio: 12, heightRatio: 18 }]
   },
 
-  // 12. Digital Painting (canvas-digital-painting) - Starts at ₹2,598.00
+  // 12. Digital Painting (canvas-digital-painting) - Starts at ₹2,199.00
+  {
+    id: 'painting-10x10',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 10" × 10"',
+    dimensionsSummary: '10" × 10"',
+    price: 2199.0,
+    categories: ['RECOMMENDED', 'SQUARE'],
+    widthInches: 10,
+    heightInches: 10,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }]
+  },
+  {
+    id: 'painting-16x16',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 16" × 16"',
+    dimensionsSummary: '16" × 16"',
+    price: 2899.0,
+    categories: ['RECOMMENDED', 'SQUARE'],
+    widthInches: 16,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
+  },
+  {
+    id: 'painting-18x18',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 18" × 18"',
+    dimensionsSummary: '18" × 18"',
+    price: 3299.0,
+    categories: ['SQUARE'],
+    widthInches: 18,
+    heightInches: 18,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '18" × 18"', widthRatio: 18, heightRatio: 18 }]
+  },
+  {
+    id: 'painting-20x20',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 20" × 20"',
+    dimensionsSummary: '20" × 20"',
+    price: 3799.0,
+    categories: ['RECOMMENDED', 'SQUARE'],
+    widthInches: 20,
+    heightInches: 20,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '20" × 20"', widthRatio: 20, heightRatio: 20 }]
+  },
   {
     id: 'painting-12x18',
     productTypeId: 'canvas-digital-painting',
@@ -594,7 +749,24 @@ const SIZE_OPTIONS: SizeOption[] = [
     dimensionsSummary: '12" × 18"',
     price: 2598.0,
     categories: ['RECOMMENDED'],
+    widthInches: 12,
+    heightInches: 18,
+    panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '12" × 18"', widthRatio: 12, heightRatio: 18 }]
+  },
+  {
+    id: 'painting-18x12',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 18" × 12"',
+    dimensionsSummary: '18" × 12"',
+    price: 2598.0,
+    categories: ['PANORAMIC'],
+    widthInches: 18,
+    heightInches: 12,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '18" × 12"', widthRatio: 18, heightRatio: 12 }]
   },
   {
     id: 'painting-16x24',
@@ -603,36 +775,178 @@ const SIZE_OPTIONS: SizeOption[] = [
     dimensionsSummary: '16" × 24"',
     price: 3299.0,
     categories: ['RECOMMENDED'],
+    widthInches: 16,
+    heightInches: 24,
+    panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '16" × 24"', widthRatio: 16, heightRatio: 24 }]
   },
+  {
+    id: 'painting-24x16',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 24" × 16"',
+    dimensionsSummary: '24" × 16"',
+    price: 3299.0,
+    categories: ['PANORAMIC'],
+    widthInches: 24,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '24" × 16"', widthRatio: 24, heightRatio: 16 }]
+  },
+  {
+    id: 'painting-20x30',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 20" × 30"',
+    dimensionsSummary: '20" × 30"',
+    price: 4499.0,
+    categories: ['RECOMMENDED'],
+    widthInches: 20,
+    heightInches: 30,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '20" × 30"', widthRatio: 20, heightRatio: 30 }]
+  },
+  {
+    id: 'painting-24x36',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 24" × 36"',
+    dimensionsSummary: '24" × 36"',
+    price: 5499.0,
+    categories: ['PANORAMIC'],
+    widthInches: 24,
+    heightInches: 36,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '24" × 36"', widthRatio: 24, heightRatio: 36 }]
+  },
 
-  // 13. Quotes on Canvas (canvas-quotes) - Starts at ₹99.00
+  // 13. Quotes on Canvas (canvas-quotes) - Starts at ₹999.00
   {
     id: 'quotes-8x8',
     productTypeId: 'canvas-quotes',
     label: 'Quotes Canvas: 8" × 8"',
     dimensionsSummary: '8" × 8"',
-    price: 99.0,
+    price: 999.0,
     categories: ['RECOMMENDED', 'SQUARE'],
+    widthInches: 8,
+    heightInches: 8,
+    panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '8" × 8"', widthRatio: 8, heightRatio: 8 }]
+  },
+  {
+    id: 'quotes-10x10',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 10" × 10"',
+    dimensionsSummary: '10" × 10"',
+    price: 1199.0,
+    categories: ['RECOMMENDED', 'SQUARE'],
+    widthInches: 10,
+    heightInches: 10,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }]
   },
   {
     id: 'quotes-12x12',
     productTypeId: 'canvas-quotes',
     label: 'Quotes Canvas: 12" × 12"',
     dimensionsSummary: '12" × 12"',
-    price: 299.0,
+    price: 1399.0,
     categories: ['RECOMMENDED', 'SQUARE'],
+    widthInches: 12,
+    heightInches: 12,
+    panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '12" × 12"', widthRatio: 12, heightRatio: 12 }]
   },
+  {
+    id: 'quotes-16x16',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 16" × 16"',
+    dimensionsSummary: '16" × 16"',
+    price: 1799.0,
+    categories: ['SQUARE'],
+    widthInches: 16,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
+  },
+  {
+    id: 'quotes-12x18',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 12" × 18"',
+    dimensionsSummary: '12" × 18"',
+    price: 1499.0,
+    categories: ['RECOMMENDED'],
+    widthInches: 12,
+    heightInches: 18,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '12" × 18"', widthRatio: 12, heightRatio: 18 }]
+  },
+  {
+    id: 'quotes-18x12',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 18" × 12"',
+    dimensionsSummary: '18" × 12"',
+    price: 1499.0,
+    categories: ['PANORAMIC'],
+    widthInches: 18,
+    heightInches: 12,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '18" × 12"', widthRatio: 18, heightRatio: 12 }]
+  },
+  {
+    id: 'quotes-16x24',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 16" × 24"',
+    dimensionsSummary: '16" × 24"',
+    price: 2199.0,
+    categories: ['RECOMMENDED'],
+    widthInches: 16,
+    heightInches: 24,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '16" × 24"', widthRatio: 16, heightRatio: 24 }]
+  },
+  {
+    id: 'quotes-24x16',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 24" × 16"',
+    dimensionsSummary: '24" × 16"',
+    price: 2199.0,
+    categories: ['PANORAMIC'],
+    widthInches: 24,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '24" × 16"', widthRatio: 24, heightRatio: 16 }]
+  },
 
-  // 14. Bus Roll (canvas-bus-roll) - Starts at ₹705.60
+  // 14. Bus Roll (canvas-bus-roll) - Starts at ₹599.00
+  {
+    id: 'bus-21x32',
+    productTypeId: 'canvas-bus-roll',
+    label: 'Bus Roll: 21" × 32"',
+    dimensionsSummary: '21" × 32"',
+    price: 1499.0,
+    widthInches: 21,
+    heightInches: 32,
+    categories: ['RECOMMENDED', 'RECTANGLE'],
+    panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '21" × 32"', widthRatio: 21, heightRatio: 32 }]
+  },
   {
     id: 'bus-12x36',
     productTypeId: 'canvas-bus-roll',
     label: 'Bus Roll: 12" × 36"',
     dimensionsSummary: '12" × 36"',
     price: 705.60,
+    widthInches: 12,
+    heightInches: 36,
     categories: ['RECOMMENDED', 'PANORAMIC'],
     panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '12" × 36"', widthRatio: 12, heightRatio: 36 }]
   },
@@ -642,8 +956,65 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Bus Roll: 16" × 48"',
     dimensionsSummary: '16" × 48"',
     price: 1199.0,
+    widthInches: 16,
+    heightInches: 48,
     categories: ['RECOMMENDED', 'LARGE'],
     panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '16" × 48"', widthRatio: 16, heightRatio: 48 }]
+  },
+  {
+    id: 'bus-8x24',
+    productTypeId: 'canvas-bus-roll',
+    label: 'Bus Roll: 8" × 24"',
+    dimensionsSummary: '8" × 24"',
+    price: 599.0,
+    widthInches: 8,
+    heightInches: 24,
+    categories: ['SMALL', 'PANORAMIC'],
+    panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '8" × 24"', widthRatio: 8, heightRatio: 24 }]
+  },
+  {
+    id: 'bus-10x30',
+    productTypeId: 'canvas-bus-roll',
+    label: 'Bus Roll: 10" × 30"',
+    dimensionsSummary: '10" × 30"',
+    price: 899.0,
+    widthInches: 10,
+    heightInches: 30,
+    categories: ['PANORAMIC'],
+    panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '10" × 30"', widthRatio: 10, heightRatio: 30 }]
+  },
+  {
+    id: 'bus-20x8',
+    productTypeId: 'canvas-bus-roll',
+    label: 'Bus Roll: 20" × 8"',
+    dimensionsSummary: '20" × 8"',
+    price: 699.0,
+    widthInches: 20,
+    heightInches: 8,
+    categories: ['RECOMMENDED', 'PANORAMIC'],
+    panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '20" × 8"', widthRatio: 20, heightRatio: 8 }]
+  },
+  {
+    id: 'bus-24x12',
+    productTypeId: 'canvas-bus-roll',
+    label: 'Bus Roll: 24" × 12"',
+    dimensionsSummary: '24" × 12"',
+    price: 899.0,
+    widthInches: 24,
+    heightInches: 12,
+    categories: ['RECTANGLE'],
+    panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '24" × 12"', widthRatio: 24, heightRatio: 12 }]
+  },
+  {
+    id: 'bus-36x12',
+    productTypeId: 'canvas-bus-roll',
+    label: 'Bus Roll: 36" × 12"',
+    dimensionsSummary: '36" × 12"',
+    price: 1199.0,
+    widthInches: 36,
+    heightInches: 12,
+    categories: ['LARGE', 'PANORAMIC'],
+    panels: [{ id: 'p0', label: 'Bus Roll Canvas', dimension: '36" × 12"', widthRatio: 36, heightRatio: 12 }]
   },
 
   // 15. Canvas Banner (canvas-banner) - Starts at ₹399.00
@@ -686,7 +1057,27 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
   },
 
-  // 17. Classic Canvas Print (canvas-classic) - Starts at ₹99.00
+  // 17. Word Art (canvas-word-art) - Starts at ₹198.00
+  {
+    id: 'word-12x12',
+    productTypeId: 'canvas-word-art',
+    label: 'Word Art: 12" × 12"',
+    dimensionsSummary: '12" × 12"',
+    price: 198.0,
+    categories: ['RECOMMENDED', 'SQUARE'],
+    panels: [{ id: 'p0', label: 'Word Art Canvas', dimension: '12" × 12"', widthRatio: 12, heightRatio: 12 }]
+  },
+  {
+    id: 'word-16x16',
+    productTypeId: 'canvas-word-art',
+    label: 'Word Art: 16" × 16"',
+    dimensionsSummary: '16" × 16"',
+    price: 399.0,
+    categories: ['RECOMMENDED', 'SQUARE'],
+    panels: [{ id: 'p0', label: 'Word Art Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
+  },
+
+  // 18. Classic Canvas Print (canvas-classic) - Starts at ₹99.00
   {
     id: 'classic-8x8',
     productTypeId: 'canvas-classic',
@@ -822,16 +1213,44 @@ interface DesignTemplate {
   swatchClass: string;
 }
 
-const DESIGN_TEMPLATE_CATEGORIES = ["Father's Day", 'Birthday', 'Wedding', 'Anniversary'];
+const DESIGN_TEMPLATE_CATEGORIES = [
+  "Father's Day",
+  "Mother's Day",
+  "Summer Day",
+  "Valentine's Day",
+  'Birthday',
+  'Wedding',
+  'Anniversary'
+];
 
 const DESIGN_TEMPLATES: DesignTemplate[] = [
+  // Father's Day
   { id: 'tpl-fd-1', category: "Father's Day", name: 'Love You Dad', textPreset: 'Love You Dad', decor: 'necktie', accent: '#0f172a', swatchClass: 'bg-stone-900 text-white' },
   { id: 'tpl-fd-2', category: "Father's Day", name: "Happy Father's Day", textPreset: "Happy Father's Day", decor: 'ribbon', accent: '#0284c7', swatchClass: 'bg-sky-100 text-sky-900' },
   { id: 'tpl-fd-3', category: "Father's Day", name: 'Dad, The Hero', textPreset: 'Dad, The Hero', decor: 'confetti', accent: '#f59e0b', swatchClass: 'bg-emerald-50 text-emerald-900' },
+
+  // Mother's Day
+  { id: 'tpl-md-1', category: "Mother's Day", name: 'Best Mom Ever', textPreset: 'Best Mom Ever', decor: 'floral', accent: '#ec4899', swatchClass: 'bg-pink-100 text-pink-900' },
+  { id: 'tpl-md-2', category: "Mother's Day", name: "Love You Mom", textPreset: "Love You Mom", decor: 'hearts', accent: '#e11d48', swatchClass: 'bg-rose-50 text-rose-900' },
+
+  // Summer Day
+  { id: 'tpl-sd-1', category: 'Summer Day', name: 'Summer Vibes', textPreset: 'Summer Vibes', decor: 'confetti', accent: '#f59e0b', swatchClass: 'bg-amber-100 text-amber-900' },
+  { id: 'tpl-sd-2', category: 'Summer Day', name: 'Hello Sunshine', textPreset: 'Hello Sunshine', decor: 'ribbon', accent: '#0284c7', swatchClass: 'bg-cyan-50 text-cyan-900' },
+
+  // Valentine's Day
+  { id: 'tpl-vd-1', category: "Valentine's Day", name: 'Be My Valentine', textPreset: 'Be My Valentine', decor: 'hearts', accent: '#e11d48', swatchClass: 'bg-red-100 text-red-900' },
+  { id: 'tpl-vd-2', category: "Valentine's Day", name: 'With All My Love', textPreset: 'With All My Love', decor: 'hearts', accent: '#be123c', swatchClass: 'bg-rose-100 text-rose-900' },
+  { id: 'tpl-vd-3', category: "Valentine's Day", name: 'Together Forever', textPreset: 'Together Forever', decor: 'hearts', accent: '#e11d48', swatchClass: 'bg-rose-50 text-rose-900' },
+
+  // Birthday
   { id: 'tpl-bd-1', category: 'Birthday', name: 'Happy Birthday', textPreset: 'Happy Birthday!', decor: 'balloons', accent: '#e11d48', swatchClass: 'bg-rose-100 text-rose-900' },
   { id: 'tpl-bd-2', category: 'Birthday', name: 'Another Year Wiser', textPreset: 'Another Year Wiser', decor: 'confetti', accent: '#d97706', swatchClass: 'bg-amber-100 text-amber-900' },
+
+  // Wedding
   { id: 'tpl-wd-1', category: 'Wedding', name: 'Mr & Mrs', textPreset: 'Mr & Mrs', decor: 'floral', accent: '#be123c', swatchClass: 'bg-rose-50 text-rose-900' },
   { id: 'tpl-wd-2', category: 'Wedding', name: 'Forever & Always', textPreset: 'Forever & Always', decor: 'floral', accent: '#78716c', swatchClass: 'bg-white text-stone-900 border border-stone-200' },
+
+  // Anniversary
   { id: 'tpl-an-1', category: 'Anniversary', name: 'Happy Anniversary', textPreset: 'Happy Anniversary', decor: 'hearts', accent: '#dc2626', swatchClass: 'bg-red-50 text-red-900' },
   { id: 'tpl-an-2', category: 'Anniversary', name: 'Together Forever', textPreset: 'Together Forever', decor: 'hearts', accent: '#4338ca', swatchClass: 'bg-indigo-50 text-indigo-900' }
 ];
@@ -1190,6 +1609,44 @@ const renderHardwareIcon = (id: string) => {
       </svg>
     );
   }
+  if (id === 'banner-grommets') {
+    return (
+      <svg viewBox="0 0 60 50" className="w-12 h-10 mx-auto">
+        <rect x="2" y="2" width="56" height="46" fill="#f8fafc" rx="4" stroke="#cbd5e1" strokeWidth="1" />
+        <circle cx="12" cy="12" r="5" fill="#94a3b8" stroke="#475569" strokeWidth="1.5" />
+        <circle cx="12" cy="12" r="2" fill="#1e293b" />
+        <circle cx="48" cy="12" r="5" fill="#94a3b8" stroke="#475569" strokeWidth="1.5" />
+        <circle cx="48" cy="12" r="2" fill="#1e293b" />
+        <circle cx="12" cy="38" r="5" fill="#94a3b8" stroke="#475569" strokeWidth="1.5" />
+        <circle cx="12" cy="38" r="2" fill="#1e293b" />
+        <circle cx="48" cy="38" r="5" fill="#94a3b8" stroke="#475569" strokeWidth="1.5" />
+        <circle cx="48" cy="38" r="2" fill="#1e293b" />
+      </svg>
+    );
+  }
+  if (id === 'banner-pole-pocket') {
+    return (
+      <svg viewBox="0 0 60 50" className="w-12 h-10 mx-auto">
+        <rect x="6" y="2" width="48" height="46" fill="#f8fafc" rx="2" stroke="#cbd5e1" strokeWidth="1" />
+        <rect x="2" y="4" width="56" height="8" fill="#e2e8f0" rx="2" stroke="#94a3b8" strokeWidth="1" />
+        <line x1="6" y1="12" x2="54" y2="12" stroke="#0E4A93" strokeWidth="1.5" strokeDasharray="3 2" />
+        <rect x="2" y="38" width="56" height="8" fill="#e2e8f0" rx="2" stroke="#94a3b8" strokeWidth="1" />
+        <line x1="6" y1="38" x2="54" y2="38" stroke="#0E4A93" strokeWidth="1.5" strokeDasharray="3 2" />
+      </svg>
+    );
+  }
+  if (id === 'banner-hanging-rails') {
+    return (
+      <svg viewBox="0 0 60 50" className="w-12 h-10 mx-auto">
+        <polyline points="30,3 10,14" stroke="#78350f" strokeWidth="1.5" strokeLinecap="round" />
+        <polyline points="30,3 50,14" stroke="#78350f" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="30" cy="3" r="2" fill="#d97706" />
+        <rect x="4" y="14" width="52" height="6" fill="#92400e" rx="1.5" stroke="#78350f" strokeWidth="0.5" />
+        <rect x="8" y="20" width="44" height="22" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" />
+        <rect x="4" y="42" width="52" height="6" fill="#92400e" rx="1.5" stroke="#78350f" strokeWidth="0.5" />
+      </svg>
+    );
+  }
   return (
     <svg viewBox="0 0 60 50" className="w-12 h-10 mx-auto">
       <rect x="2" y="2" width="56" height="46" fill="#f1f5f9" rx="6" stroke="#cbd5e1" strokeWidth="1" />
@@ -1198,6 +1655,22 @@ const renderHardwareIcon = (id: string) => {
     </svg>
   );
 };
+
+export type Preset3DAngleId = 'top-left' | 'top-right' | 'left-bottom' | 'right-bottom';
+
+export interface Preset3DAngleOption {
+  id: Preset3DAngleId;
+  label: string;
+  tiltX: number;
+  rotY: number;
+}
+
+export const PRESET_3D_ANGLES: Preset3DAngleOption[] = [
+  { id: 'top-left', label: 'Top Left', tiltX: -20, rotY: 35 },
+  { id: 'top-right', label: 'Top Right', tiltX: -20, rotY: -35 },
+  { id: 'left-bottom', label: 'Left Bottom', tiltX: 20, rotY: 35 },
+  { id: 'right-bottom', label: 'Right Bottom', tiltX: 20, rotY: -35 },
+];
 
 // ============================================================================
 // 2. MAIN CANVAS CUSTOMIZER COMPONENT
@@ -1237,7 +1710,12 @@ export const CanvasCustomizerPage: React.FC = () => {
   }, [allProducts, productId]);
 
   // Active step in the left toolbar
-  const [activeTab, setActiveTab] = useState<ToolbarTab>('PRODUCTS');
+  const [activeTab, setActiveTab] = useState<ToolbarTab>(() => {
+    const initialPt = resolveCanvasProductTypeId(productId, catalogProduct);
+    if (initialPt === 'canvas-bus-roll') return 'CREATE BUS ROLL';
+    if (initialPt === 'canvas-banner') return 'UPLOAD';
+    return 'PRODUCTS';
+  });
 
   // Preloader overlay: visible for real async work (image reads) for however
   // long that actually takes, plus a short minimum so the brief, instant
@@ -1268,30 +1746,29 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   const handleSelectTab = (tabId: ToolbarTab) => {
     setActiveTab(tabId);
+    if (tabId === 'POP ART STYLE') {
+      setIsPopArtStyleModalOpen(true);
+      return;
+    }
+    if (tabId === 'LYRIC TEMPLATE') {
+      setIsLyricTemplateModalOpen(true);
+      return;
+    }
     if (tabId === 'SELECT SIZE') {
-      setIsSizeShapeModalOpen(true);
+      if (selectedProductTypeId === 'canvas-word-art') {
+        setIsWordArtSizeModalOpen(true);
+      } else if (selectedProductTypeId === 'canvas-banner') {
+        // Banner size selector renders directly in the left customization panel
+      } else {
+        setIsSizeShapeModalOpen(true);
+      }
     } else if (tabId === 'LAYOUTS & DESIGNS') {
-      setIsLayoutModalOpen(true);
+      if (selectedProductTypeId !== 'canvas-lyric') {
+        setIsLayoutModalOpen(true);
+      }
     }
     beginPreloader();
     endPreloader(PRELOADER_MIN_MS);
-  };
-
-  // Selected Canvas Product Type (supports all 10 Canvas products via route param or sidebar switcher)
-  const resolveCanvasProductTypeId = (rawId?: string, catProd?: typeof catalogProduct): string => {
-    const key = (rawId || catProd?.slug || catProd?.id || catProd?.name || '').toLowerCase();
-    if (CANVAS_PRODUCT_TYPES.some((pt) => pt.id === key)) return key;
-    if (key.includes('single') || key.includes('classic')) return 'canvas-single';
-    if (key.includes('round')) return 'canvas-round';
-    if (key.includes('triangle')) return 'canvas-triangle';
-    if (key.includes('heart')) return 'canvas-heart';
-    if (key.includes('oval')) return 'canvas-oval';
-    if (key.includes('wall') || key.includes('display')) return 'canvas-wall-art';
-    if (key.includes('collage')) return 'canvas-collage';
-    if (key.includes('hexagon')) return 'canvas-hexagon';
-    if (key.includes('split')) return 'canvas-split';
-    if (key.includes('mosaic')) return 'canvas-mosaic';
-    return 'canvas-single';
   };
 
   const [selectedProductTypeId, setSelectedProductTypeId] = useState<string>(() =>
@@ -1316,30 +1793,85 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Check if current product is single print
   const isSinglePrintCanvas = selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-classic';
 
-  // Check if current product is single print or shaped canvas (only these 5 shapes/types allow size selection)
+  // Check if current product is single print, shaped canvas, or standard format canvas
   const isSingleOrShapedCanvas = [
     'canvas-single',
     'canvas-classic',
     'canvas-round',
     'canvas-triangle',
     'canvas-heart',
-    'canvas-oval'
+    'canvas-oval',
+    'canvas-lyric',
+    'canvas-digital-painting',
+    'canvas-quotes',
+    'canvas-bus-roll',
+    'canvas-banner',
+    'canvas-pop-art',
+    'canvas-word-art'
   ].includes(selectedProductTypeId);
 
   // Primary Toolbar items: dynamically filtered by selected product capabilities
   // EXACT ORDER: 1. PRODUCTS, 2. UPLOAD, 3. SELECT SIZE, 4. LAYOUTS & DESIGNS, 5. WRAP & BORDER, 6. HARDWARE & FINISH, 7. OPTIONS
   const toolbarItems = useMemo<{ id: ToolbarTab; label: string; icon: React.ElementType }[]>(() => {
+    if (selectedProductTypeId === 'canvas-bus-roll') {
+      return [
+        { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
+        { id: 'CREATE BUS ROLL', label: 'CREATE BUS ROLL', icon: Type },
+        { id: 'BACKGROUND', label: 'BACKGROUND', icon: Palette },
+        { id: 'TEMPLATE', label: 'TEMPLATE', icon: LayoutTemplate },
+        { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
+        { id: 'HARDWARE & FINISH', label: 'HARDWARE OPTION & STYLE', icon: SlidersHorizontal },
+        { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
+      ];
+    }
+    if (selectedProductTypeId === 'canvas-pop-art') {
+      return [
+        { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
+        { id: 'POP ART STYLE', label: 'POP ART STYLE', icon: Sparkles },
+        { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud },
+        { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
+        { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
+        { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
+        { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
+      ];
+    }
+    if (selectedProductTypeId === 'canvas-lyric') {
+      return [
+        { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
+        { id: 'LYRIC TEMPLATE', label: 'SELECT TEMPLATE', icon: Music },
+        { id: 'UPLOAD', label: 'UPLOAD PHOTO', icon: UploadCloud },
+        { id: 'LAYOUTS & DESIGNS', label: 'LYRIC STUDIO', icon: Type },
+        { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
+        { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
+        { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
+        { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
+      ];
+    }
     const items: { id: ToolbarTab; label: string; icon: React.ElementType; enabled: boolean }[] = [
       { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid, enabled: productCapabilities.products !== false },
-      { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud, enabled: productCapabilities.upload !== false },
+      {
+        id: 'UPLOAD',
+        label: selectedProductTypeId === 'canvas-word-art'
+          ? 'WORD ART'
+          : selectedProductTypeId === 'canvas-quotes'
+          ? 'SELECT TEMPLATE'
+          : 'UPLOAD',
+        icon: selectedProductTypeId === 'canvas-word-art'
+          ? Type
+          : selectedProductTypeId === 'canvas-quotes'
+          ? Quote
+          : UploadCloud,
+        enabled: productCapabilities.upload !== false
+      },
       { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSingleOrShapedCanvas && productCapabilities.sizes !== false },
+      { id: 'EFFECTS & OPTIONS', label: 'EFFECTS & OPTIONS', icon: Palette, enabled: productCapabilities.effects === true },
       { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: productCapabilities.layouts === true },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
       { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal, enabled: productCapabilities.hardware !== false },
       { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false }
     ];
     return items.filter((item) => item.enabled);
-  }, [productCapabilities, isSingleOrShapedCanvas]);
+  }, [productCapabilities, isSingleOrShapedCanvas, selectedProductTypeId]);
 
   // If the active tab is not supported by the currently selected product, safely revert to PRODUCTS
   useEffect(() => {
@@ -1374,9 +1906,33 @@ export const CanvasCustomizerPage: React.FC = () => {
   }, [selectedProductTypeId, selectedShapeId]);
 
   // Available size options for the current product type and active shape (from centralized productSizeShapeConfig)
-  const availableSizeOptions = useMemo(() => {
+  const availableSizeOptions = useMemo<SizeOption[]>(() => {
     if (isSinglePrintCanvas) {
       return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-single' || s.productTypeId === 'canvas-classic');
+    }
+
+    if (selectedProductTypeId === 'canvas-quotes') {
+      return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-quotes');
+    }
+
+    if (selectedProductTypeId === 'canvas-digital-painting') {
+      return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-digital-painting');
+    }
+
+    if (selectedProductTypeId === 'canvas-bus-roll') {
+      return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-bus-roll');
+    }
+
+    if (selectedProductTypeId === 'canvas-banner') {
+      return CANVAS_BANNER_SIZE_OPTIONS as unknown as SizeOption[];
+    }
+
+    if (selectedProductTypeId === 'canvas-pop-art') {
+      return POP_ART_SIZE_OPTIONS as unknown as SizeOption[];
+    }
+
+    if (selectedProductTypeId === 'canvas-lyric') {
+      return LYRIC_CANVAS_SIZE_OPTIONS as unknown as SizeOption[];
     }
 
     const isLayoutProduct = [
@@ -1431,12 +1987,30 @@ export const CanvasCustomizerPage: React.FC = () => {
     return filteredOptions.length > 0 ? filteredOptions : SIZE_OPTIONS.filter((s) => s.productTypeId === selectedProductTypeId);
   }, [selectedProductTypeId, selectedShapeId, isSinglePrintCanvas]);
 
-  // Category filter state for single prints: 'SQUARE' | 'PANORAMIC' | 'RECOMMENDED' (Default: 'SQUARE')
-  const [sizeCategoryFilter, setSizeCategoryFilter] = useState<'SQUARE' | 'PANORAMIC' | 'RECOMMENDED'>('SQUARE');
+  // Category filter state for single prints: 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL' (Default: 'RECOMMENDED')
+  const [sizeCategoryFilter, setSizeCategoryFilter] = useState<'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL'>('RECOMMENDED');
 
-  // Selected Size Option - by default single-10x10
+  // Selected Size Option - by default single-10x10, painting-10x10, or quotes-8x8
   const [selectedSizeId, setSelectedSizeId] = useState<string>(() => {
     const initialPt = resolveCanvasProductTypeId(productId, catalogProduct);
+    if (initialPt === 'canvas-quotes') {
+      return 'quotes-8x8';
+    }
+    if (initialPt === 'canvas-digital-painting') {
+      return 'painting-10x10';
+    }
+    if (initialPt === 'canvas-bus-roll') {
+      return 'bus-21x32';
+    }
+    if (initialPt === 'canvas-banner') {
+      return 'banner-10x8';
+    }
+    if (initialPt === 'canvas-pop-art') {
+      return 'pop-12x12';
+    }
+    if (initialPt === 'canvas-lyric') {
+      return 'lyric-8x8';
+    }
     if (initialPt === 'canvas-single' || initialPt === 'canvas-classic') {
       return 'single-10x10';
     }
@@ -1445,14 +2019,15 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   useEffect(() => {
     if (!availableSizeOptions.some((s) => s.id === selectedSizeId)) {
-      if (isSinglePrintCanvas) {
+      if (isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-bus-roll' || selectedProductTypeId === 'canvas-banner' || selectedProductTypeId === 'canvas-pop-art' || selectedProductTypeId === 'canvas-lyric') {
         const matchingInCat = availableSizeOptions.filter((opt) => opt.categories.includes(sizeCategoryFilter));
-        setSelectedSizeId(matchingInCat[0]?.id || 'single-10x10');
+        const defaultId = selectedProductTypeId === 'canvas-quotes' ? 'quotes-8x8' : selectedProductTypeId === 'canvas-digital-painting' ? 'painting-10x10' : selectedProductTypeId === 'canvas-bus-roll' ? 'bus-21x32' : selectedProductTypeId === 'canvas-banner' ? 'banner-10x8' : selectedProductTypeId === 'canvas-pop-art' ? 'pop-12x12' : selectedProductTypeId === 'canvas-lyric' ? 'lyric-8x8' : 'single-10x10';
+        setSelectedSizeId(matchingInCat[0]?.id || defaultId);
       } else {
         setSelectedSizeId(availableSizeOptions[0]?.id || 'single-10x10');
       }
     }
-  }, [availableSizeOptions, selectedSizeId, isSinglePrintCanvas, sizeCategoryFilter]);
+  }, [availableSizeOptions, selectedSizeId, isSinglePrintCanvas, selectedProductTypeId, sizeCategoryFilter]);
 
   const currentSizeOption = useMemo(() => {
     return availableSizeOptions.find((s) => s.id === selectedSizeId) || availableSizeOptions[0] || SIZE_OPTIONS[0];
@@ -1471,7 +2046,7 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // Shapes, borders and outer frames only apply to single-panel canvases
   // (multi-panel collage / split / wall-art layouts stay rectangular slots).
-  const shapeApplies = panels.length === 1;
+  const shapeApplies = panels.length === 1 && selectedProductTypeId !== 'canvas-banner' && selectedProductTypeId !== 'canvas-bus-roll';
 
   // Panel Images State
   const [panelImages, setPanelImages] = useState<Record<number, PanelImageState>>({
@@ -1481,13 +2056,7 @@ export const CanvasCustomizerPage: React.FC = () => {
     3: createDefaultPanel()
   });
 
-  // Changing the selected size changes the frame's aspect ratio. If a panel
-  // was left in 'cover' (Fill) mode from a previous size, re-displaying it in
-  // a differently-shaped frame crops a different region of the photo — which
-  // reads as "the image got cropped just from picking a size". Resetting to
-  // 'contain' (no crop, auto letterboxed) whenever size changes guarantees
-  // the full uploaded photo is always visible right after a size change; the
-  // user can still choose Fill afterward if they want edge-to-edge cropping.
+  // When selected size changes: for Single Print, maintain 'cover' placement so the image covers edge-to-edge
   const prevSelectedSizeIdRef = useRef(selectedSizeId);
   useEffect(() => {
     if (prevSelectedSizeIdRef.current === selectedSizeId) return;
@@ -1496,11 +2065,11 @@ export const CanvasCustomizerPage: React.FC = () => {
       const next: Record<number, PanelImageState> = {};
       Object.keys(prev).forEach((key) => {
         const idx = Number(key);
-        next[idx] = { ...prev[idx], fitMode: 'contain', scale: 1, panX: 0, panY: 0 };
+        next[idx] = { ...prev[idx], fitMode: isSinglePrintCanvas ? 'cover' : 'contain', scale: 1, panX: 0, panY: 0 };
       });
       return next;
     });
-  }, [selectedSizeId]);
+  }, [selectedSizeId, isSinglePrintCanvas]);
 
   // Currently Active Panel Slot for drag/transform/upload targeting
   const [activePanelIndex, setActivePanelIndex] = useState<number>(0);
@@ -1567,7 +2136,10 @@ export const CanvasCustomizerPage: React.FC = () => {
       const aspectRatio = naturalWidth / naturalHeight;
 
       let targetSlot = activePanelIndex;
-      if (panels.length > 1) {
+      if (selectedProductTypeId === 'canvas-split' || selectedProductTypeId === 'canvas-mosaic') {
+        targetSlot = 0;
+        setActivePanelIndex(0);
+      } else if (panels.length > 1) {
         const emptyIdx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
           .slice(0, panels.length)
           .find((idx) => !panelImages[idx]?.imageUrl);
@@ -1710,11 +2282,19 @@ export const CanvasCustomizerPage: React.FC = () => {
   // LAYOUTS & DESIGNS tab
   const [layoutSubTab, setLayoutSubTab] = useState<'DESIGNS' | 'LAYOUTS'>('LAYOUTS');
   const [designCategory, setDesignCategory] = useState<string>(DESIGN_TEMPLATE_CATEGORIES[0]);
+  const [expandedDesignCategory, setExpandedDesignCategory] = useState<string | null>("Valentine's Day");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [expandedLayoutId, setExpandedLayoutId] = useState<string | null>('layout-1');
   const [selectedLayoutId, setSelectedLayoutId] = useState<string>(() => {
     const initialPt = resolveCanvasProductTypeId(productId, catalogProduct);
     const layouts = getProductLayouts(initialPt);
+    // A deep link like /customize/canvas/canvas-collage?layout=collage-land-9p-feature
+    // (used by the Canvas style landing pages' "Customize This Style" buttons)
+    // preselects that specific layout instead of always falling back to the first one.
+    const requestedLayoutId = searchParams.get('layout');
+    if (requestedLayoutId && layouts.some((l) => l.id === requestedLayoutId)) {
+      return requestedLayoutId;
+    }
     return layouts[0]?.id || 'layout-1-single';
   });
 
@@ -1748,7 +2328,246 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // Select Size & Shape Modal State
   const [isSizeShapeModalOpen, setIsSizeShapeModalOpen] = useState<boolean>(false);
-  const [isLayoutModalOpen, setIsLayoutModalOpen] = useState<boolean>(false);
+  const [isLayoutModalOpen, setIsLayoutModalOpen] = useState<boolean>(() => resolveCanvasProductTypeId(productId, catalogProduct) === 'canvas-collage');
+
+  // Word Art Flow State (Size + Ratio -> Details / Personalization -> Product Workspace)
+  const [isWordArtSizeModalOpen, setIsWordArtSizeModalOpen] = useState<boolean>(false);
+  const [isWordArtPersonalizeModalOpen, setIsWordArtPersonalizeModalOpen] = useState<boolean>(false);
+  const [wordArtSizeOption, setWordArtSizeOption] = useState<WordArtSizeOption>(
+    WORD_ART_SIZE_CATALOG.Square[0]
+  );
+  const [wordArtConfig, setWordArtConfig] = useState<WordArtConfig>(DEFAULT_WORD_ART_CONFIG);
+  const [activeWordArtDataUrl, setActiveWordArtDataUrl] = useState<string | null>(null);
+
+  const handleSelectWordArtSize = (size: WordArtSizeOption) => {
+    setWordArtSizeOption(size);
+    setSelectedSizeId(size.id);
+    setCustomWidth(size.widthInches);
+    setCustomHeight(size.heightInches);
+  };
+
+  const handleCreateWordArtFromSize = (size: WordArtSizeOption) => {
+    setWordArtSizeOption(size);
+    setSelectedSizeId(size.id);
+    setCustomWidth(size.widthInches);
+    setCustomHeight(size.heightInches);
+    setIsWordArtSizeModalOpen(false);
+    setIsWordArtPersonalizeModalOpen(true);
+  };
+
+  const handleWordArtChangeSize = () => {
+    setIsWordArtPersonalizeModalOpen(false);
+    setIsWordArtSizeModalOpen(true);
+  };
+
+  const handleAddWordArtToProduct = (dataUrl: string, config: WordArtConfig) => {
+    setActiveWordArtDataUrl(dataUrl);
+    setWordArtConfig(config);
+
+    // Apply high-res Word Art artwork directly into slot 0
+    setPanelImages((prev) => ({
+      ...prev,
+      0: {
+        ...createDefaultPanel(),
+        imageUrl: dataUrl,
+        fitMode: 'contain',
+        scale: 1,
+        rotation: 0,
+        panX: 0,
+        panY: 0
+      }
+    }));
+
+    setUploadedPhotos((prev) => [dataUrl, ...prev.filter((p) => p !== dataUrl)]);
+
+    if (selectedProductTypeId === 'canvas-word-art') {
+      setIsCustomSize(true);
+      setCustomWidth(wordArtSizeOption.widthInches);
+      setCustomHeight(wordArtSizeOption.heightInches);
+    }
+
+    setIsWordArtPersonalizeModalOpen(false);
+    setActiveTab('UPLOAD');
+  };
+
+  // Quotes on Canvas State (Selected Quote Template -> Auto-mounts into Slot 0)
+  const [selectedQuoteTemplateId, setSelectedQuoteTemplateId] = useState<string>('quote-inspire-01');
+
+  const handleSelectQuoteTemplate = (templateOrId: QuoteTemplateItem | string) => {
+    const templateId = typeof templateOrId === 'string' ? templateOrId : templateOrId.id;
+    setSelectedQuoteTemplateId(templateId);
+    const tmpl = typeof templateOrId === 'string' ? getQuoteTemplate(templateId) : templateOrId;
+    if (!tmpl) return;
+
+    setPanelImages((prev) => ({
+      ...prev,
+      0: {
+        ...createDefaultPanel(),
+        imageUrl: tmpl.image,
+        fitMode: 'contain',
+        scale: 1,
+        rotation: 0,
+        panX: 0,
+        panY: 0,
+        uploadedImage: {
+          originalSrc: tmpl.image,
+          width: 800,
+          height: 800,
+          aspectRatio: 1
+        }
+      }
+    }));
+
+    setUploadedPhotos((prev) => [tmpl.image, ...prev.filter((p) => p !== tmpl.image)]);
+  };
+
+  // Digital Painting State
+  const [digitalPaintingConfig, setDigitalPaintingConfig] = useState<DigitalPaintingConfig>(DEFAULT_DIGITAL_PAINTING_CONFIG);
+
+  const handleUpdateDigitalPaintingConfig = (updates: Partial<DigitalPaintingConfig>) => {
+    setDigitalPaintingConfig((prev) => ({ ...prev, ...updates }));
+  };
+
+  // Bus Roll State
+  const [busRollConfig, setBusRollConfig] = useState<BusRollConfig>(DEFAULT_BUS_ROLL_CONFIG);
+
+  const handleUpdateBusRollConfig = (updates: Partial<BusRollConfig>) => {
+    setBusRollConfig((prev) => {
+      const updated = { ...prev, ...updates };
+      if (updates.widthInches && updates.widthInches !== prev.widthInches && !updates.heightInches) {
+        const matchingSize = availableSizeOptions.find((s) => s.widthInches === updates.widthInches);
+        if (matchingSize && matchingSize.heightInches) {
+          updated.heightInches = matchingSize.heightInches;
+          setSelectedSizeId(matchingSize.id);
+        } else {
+          updated.heightInches = Math.round(updates.widthInches * 1.52);
+        }
+      }
+      return updated;
+    });
+  };
+
+  const handleStartOverBusRoll = () => {
+    setBusRollConfig(DEFAULT_BUS_ROLL_CONFIG);
+  };
+
+  // Canvas Banner State
+  const [bannerConfig, setBannerConfig] = useState<CanvasBannerConfig>(() => ({
+    ...DEFAULT_CANVAS_BANNER_CONFIG,
+    selectedSizeId: 'banner-10x8'
+  }));
+  const [bannerCategory, setBannerCategory] = useState<BannerSizeCategory>('RECOMMENDED');
+
+  const handleUpdateBannerConfig = (updates: Partial<CanvasBannerConfig>) => {
+    setBannerConfig((prev) => {
+      const next = { ...prev, ...updates };
+      if (next.isCustom) {
+        setIsCustomSize(true);
+        setCustomWidth(next.widthInches);
+        setCustomHeight(next.heightInches);
+        setSelectedSizeId('custom');
+      } else if (next.selectedSizeId) {
+        setIsCustomSize(false);
+        setSelectedSizeId(next.selectedSizeId);
+      }
+      return next;
+    });
+  };
+
+  // Pop Art State & Live Processing Engine
+  const [isPopArtStyleModalOpen, setIsPopArtStyleModalOpen] = useState<boolean>(() => {
+    return resolveCanvasProductTypeId(productId, catalogProduct) === 'canvas-pop-art';
+  });
+  const [popArtConfig, setPopArtConfig] = useState<PopArtConfig>(DEFAULT_POP_ART_CONFIG);
+
+  // Pop Art Live Image Processing Effect
+  useEffect(() => {
+    if (selectedProductTypeId !== 'canvas-pop-art') return;
+    const sourceUrl = panelImages[0]?.uploadedImage?.originalSrc || panelImages[0]?.imageUrl;
+    if (!sourceUrl) {
+      setPopArtConfig((prev) => ({ ...prev, processedImageUrl: null, isProcessing: false }));
+      return;
+    }
+
+    let isMounted = true;
+    setPopArtConfig((prev) => ({ ...prev, isProcessing: true }));
+
+    processPopArtImage(sourceUrl, popArtConfig.selectedStyleId)
+      .then((processedUrl) => {
+        if (isMounted) {
+          setPopArtConfig((prev) => ({
+            ...prev,
+            processedImageUrl: processedUrl,
+            isProcessing: false
+          }));
+        }
+      })
+      .catch((err) => {
+        console.error('Error generating Pop Art preview:', err);
+        if (isMounted) {
+          setPopArtConfig((prev) => ({ ...prev, isProcessing: false }));
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedProductTypeId, panelImages[0]?.imageUrl, panelImages[0]?.uploadedImage?.originalSrc, popArtConfig.selectedStyleId]);
+
+  // Sync Bus Roll live SVG artwork onto slot 0
+  useEffect(() => {
+    if (selectedProductTypeId === 'canvas-bus-roll') {
+      const svgDataUrl = generateBusRollSvgDataUrl(busRollConfig);
+      const imgWidth = Math.round(busRollConfig.widthInches * 40);
+      const imgHeight = Math.round(busRollConfig.heightInches * 40);
+      setPanelImages((prev) => ({
+        ...prev,
+        0: {
+          ...createDefaultPanel(),
+          imageUrl: svgDataUrl,
+          fitMode: 'contain',
+          scale: 1,
+          rotation: 0,
+          panX: 0,
+          panY: 0,
+          uploadedImage: {
+            originalSrc: svgDataUrl,
+            width: imgWidth,
+            height: imgHeight,
+            aspectRatio: busRollConfig.widthInches / Math.max(1, busRollConfig.heightInches)
+          }
+        }
+      }));
+    }
+  }, [selectedProductTypeId, busRollConfig]);
+
+  // If initial product is Quotes on Canvas, initialize default quote template into slot 0
+  useEffect(() => {
+    if (selectedProductTypeId === 'canvas-quotes') {
+      const tmpl = getQuoteTemplate(selectedQuoteTemplateId) || getQuoteTemplate('quote-inspire-01');
+      if (tmpl && !panelImages[0]?.imageUrl) {
+        setPanelImages((prev) => ({
+          ...prev,
+          0: {
+            ...createDefaultPanel(),
+            imageUrl: tmpl.image,
+            fitMode: 'contain',
+            scale: 1,
+            rotation: 0,
+            panX: 0,
+            panY: 0,
+            uploadedImage: {
+              originalSrc: tmpl.image,
+              width: 800,
+              height: 800,
+              aspectRatio: 1
+            }
+          }
+        }));
+        setUploadedPhotos((prev) => [tmpl.image, ...prev.filter((p) => p !== tmpl.image)]);
+      }
+    }
+  }, [selectedProductTypeId]);
 
   // Automatically sync default shape, hardware, thickness, and layout when product selection changes
   useEffect(() => {
@@ -1774,6 +2593,131 @@ export const CanvasCustomizerPage: React.FC = () => {
   const selectCanvasProduct = (productId: string) => {
     const pt = CANVAS_PRODUCT_TYPES.find((p) => p.id === productId);
     if (!pt) return;
+
+    if (productId === 'canvas-word-art') {
+      setSelectedProductTypeId('canvas-word-art');
+      setIsCustomSize(true);
+      setCustomWidth(wordArtSizeOption.widthInches);
+      setCustomHeight(wordArtSizeOption.heightInches);
+      setActivePanelIndex(0);
+      setSelectedShapeId('shape-square');
+      setSelectedHardwareId('no-hooks');
+      setSelectedThicknessId('thin-gallery');
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setIsWordArtSizeModalOpen(true);
+      return;
+    }
+
+    if (productId === 'canvas-quotes') {
+      setSelectedProductTypeId('canvas-quotes');
+      setIsCustomSize(false);
+      setActivePanelIndex(0);
+      setSelectedShapeId('shape-square');
+      setSelectedSizeId('quotes-8x8');
+      setSizeCategoryFilter('SQUARE');
+      setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
+      setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
+      const tmpl = getQuoteTemplate(selectedQuoteTemplateId) || getQuoteTemplate('quote-inspire-01');
+      if (tmpl) {
+        setPanelImages((prev) => ({
+          ...prev,
+          0: {
+            ...createDefaultPanel(),
+            imageUrl: tmpl.image,
+            fitMode: 'contain',
+            scale: 1,
+            rotation: 0,
+            panX: 0,
+            panY: 0,
+            uploadedImage: {
+              originalSrc: tmpl.image,
+              width: 800,
+              height: 800,
+              aspectRatio: 1
+            }
+          }
+        }));
+        setUploadedPhotos((prev) => [tmpl.image, ...prev.filter((p) => p !== tmpl.image)]);
+      }
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setActiveTab('UPLOAD');
+      return;
+    }
+
+    if (productId === 'canvas-digital-painting') {
+      setSelectedProductTypeId('canvas-digital-painting');
+      setIsCustomSize(false);
+      setActivePanelIndex(0);
+      setSelectedShapeId('shape-square');
+      setSelectedSizeId('painting-10x10');
+      setSizeCategoryFilter('SQUARE');
+      setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
+      setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setActiveTab('UPLOAD');
+      return;
+    }
+
+    if (productId === 'canvas-bus-roll') {
+      setSelectedProductTypeId('canvas-bus-roll');
+      setIsCustomSize(false);
+      setActivePanelIndex(0);
+      setSelectedShapeId('shape-square');
+      setSelectedSizeId('bus-21x32');
+      setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
+      setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setActiveTab('CREATE BUS ROLL');
+      return;
+    }
+
+    if (productId === 'canvas-banner') {
+      setSelectedProductTypeId('canvas-banner');
+      setIsCustomSize(false);
+      setActivePanelIndex(0);
+      setSelectedShapeId('shape-rectangle');
+      setSelectedSizeId('banner-10x8');
+      setSelectedHardwareId('no-hooks');
+      setSelectedThicknessId('canvas-lite');
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setActiveTab('UPLOAD');
+      return;
+    }
+
+    if (productId === 'canvas-pop-art') {
+      setSelectedProductTypeId('canvas-pop-art');
+      setIsCustomSize(false);
+      setActivePanelIndex(0);
+      setSelectedShapeId('shape-square');
+      setSelectedSizeId('pop-12x12');
+      setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
+      setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setIsPopArtStyleModalOpen(true);
+      setActiveTab('UPLOAD');
+      return;
+    }
+
+    if (productId === 'canvas-lyric') {
+      setSelectedProductTypeId('canvas-lyric');
+      setIsCustomSize(false);
+      setActivePanelIndex(0);
+      setSelectedShapeId('shape-square');
+      setSelectedSizeId('lyric-8x8');
+      setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
+      setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setIsLyricTemplateModalOpen(true);
+      setActiveTab('UPLOAD');
+      return;
+    }
 
     setSelectedProductTypeId(productId);
     setIsCustomSize(false);
@@ -1816,9 +2760,13 @@ export const CanvasCustomizerPage: React.FC = () => {
       if (pt.defaultShape) {
         setSelectedShapeId(pt.defaultShape);
       }
-      const matchingSizes = SIZE_OPTIONS.filter((s) => s.productTypeId === productId);
-      if (matchingSizes.length > 0) {
-        setSelectedSizeId(matchingSizes[0].id);
+      if (pt.defaultSizeOptionId) {
+        setSelectedSizeId(pt.defaultSizeOptionId);
+      } else {
+        const matchingSizes = SIZE_OPTIONS.filter((s) => s.productTypeId === productId);
+        if (matchingSizes.length > 0) {
+          setSelectedSizeId(matchingSizes[0].id);
+        }
       }
     }
 
@@ -1870,6 +2818,22 @@ export const CanvasCustomizerPage: React.FC = () => {
       setSelectedShapeId(config.shapeId);
       setSelectedSizeId(config.sizeId);
 
+      // Keep sidebar size category filter aligned with selected size
+      if (isSinglePrintCanvas) {
+        const matchingOpt = SIZE_OPTIONS.find((s) => s.id === config.sizeId);
+        if (matchingOpt && !matchingOpt.categories.includes(sizeCategoryFilter)) {
+          if (matchingOpt.categories.includes('PANORAMIC')) {
+            setSizeCategoryFilter('PANORAMIC');
+          } else if (matchingOpt.categories.includes('SQUARE')) {
+            setSizeCategoryFilter('SQUARE');
+          } else if (matchingOpt.categories.includes('LARGE')) {
+            setSizeCategoryFilter('LARGE');
+          } else if (matchingOpt.categories.includes('SMALL')) {
+            setSizeCategoryFilter('SMALL');
+          }
+        }
+      }
+
       if (config.arrangement) {
         if (config.arrangement === 'threeCollage' || config.arrangement === 'threeSplit') {
           setExpandedLayoutId('layout-3-collage');
@@ -1879,7 +2843,7 @@ export const CanvasCustomizerPage: React.FC = () => {
       }
     }
 
-    // Uploaded customer images remain attached and refitted cleanly
+    // Uploaded customer images remain attached and refitted cleanly (cover for single print)
     setPanelImages((prev) => {
       const next = { ...prev };
       Object.keys(next).forEach((k) => {
@@ -1890,7 +2854,7 @@ export const CanvasCustomizerPage: React.FC = () => {
             scale: 1,
             panX: 0,
             panY: 0,
-            fitMode: 'contain'
+            fitMode: isSinglePrintCanvas ? 'cover' : 'contain'
           };
         }
       });
@@ -1901,11 +2865,34 @@ export const CanvasCustomizerPage: React.FC = () => {
     setActiveTab('UPLOAD');
   };
 
+  // Handler for highlighted preview from SelectLayoutModal (live workspace updates)
+  const handleHighlightLayoutFromModal = (layout: LayoutModalOption) => {
+    setSelectedLayoutId(layout.id);
+    setExpandedLayoutId(layout.id);
+    if (!isSinglePrintCanvas) {
+      setSelectedSizeId(layout.id);
+      if (layout.shapeId) {
+        setSelectedShapeId(layout.shapeId);
+      }
+      if (activePanelIndex >= layout.panelsCount) {
+        setActivePanelIndex(0);
+      }
+    }
+  };
+
   // Handler for applied selection from SelectLayoutModal
   const handleApplyLayoutFromModal = (layout: LayoutModalOption) => {
     setSelectedLayoutId(layout.id);
     setExpandedLayoutId(layout.id);
-    setSelectedSizeId(layout.id);
+    if (!isSinglePrintCanvas) {
+      setSelectedSizeId(layout.id);
+      if (layout.shapeId) {
+        setSelectedShapeId(layout.shapeId);
+      }
+      if (activePanelIndex >= layout.panelsCount) {
+        setActivePanelIndex(0);
+      }
+    }
     setIsLayoutModalOpen(false);
     setActiveTab('UPLOAD');
   };
@@ -1921,16 +2908,30 @@ export const CanvasCustomizerPage: React.FC = () => {
   const [selectedMaterialId, setSelectedMaterialId] = useState<string>('standard-cotton');
   const [materialModalOpen, setMaterialModalOpen] = useState<boolean>(false);
 
-  // Dedicated Lyric Canvas State (for canvas-lyric product typography overlay)
-  const [lyricTitle, setLyricTitle] = useState<string>('PERFECT');
-  const [lyricArtist, setLyricArtist] = useState<string>('ED SHEERAN');
-  const [lyricText, setLyricText] = useState<string>(
-    "Baby, I'm dancing in the dark\nWith you between my arms\nBarefoot on the grass\nListening to our favorite song\nWhen you said you looked a mess\nI whispered underneath my breath\nYou heard it, darling\nYou look perfect tonight"
-  );
-  const [lyricFontFamily, setLyricFontFamily] = useState<'serif' | 'script' | 'sans' | 'cinzel'>('serif');
-  const [lyricTextColor, setLyricTextColor] = useState<string>('#FFFFFF');
-  const [lyricTemplate, setLyricTemplate] = useState<'center-minimal' | 'music-player' | 'elegant-script' | 'split-card'>('center-minimal');
-  const [lyricOverlayDarkness, setLyricOverlayDarkness] = useState<number>(35);
+  // Dedicated Lyric Canvas State (for canvas-lyric product customization)
+  const [isLyricTemplateModalOpen, setIsLyricTemplateModalOpen] = useState<boolean>(() => {
+    return resolveCanvasProductTypeId(productId, catalogProduct) === 'canvas-lyric';
+  });
+  const [lyricConfig, setLyricConfig] = useState<LyricCanvasConfig>(DEFAULT_LYRIC_CONFIG);
+
+  const selectedLyricTemplate = useMemo(() => {
+    return getLyricTemplate(lyricConfig.selectedTemplateId);
+  }, [lyricConfig.selectedTemplateId]);
+
+  const handleSelectLyricTemplate = (tpl: LyricCanvasTemplate) => {
+    setLyricConfig((prev) => ({
+      ...prev,
+      selectedTemplateId: tpl.id,
+      title: tpl.defaultText.title,
+      artistOrSubtitle: tpl.defaultText.artistOrSubtitle,
+      lyrics: tpl.defaultText.lyrics,
+      dateOrNames: tpl.defaultText.dateOrNames || prev.dateOrNames,
+      fontFamily: tpl.defaultTypography.fontFamily,
+      textColor: tpl.defaultTypography.textColor,
+      alignment: tpl.defaultTypography.alignment,
+      overlayDarkness: tpl.defaultBackground.overlayDarkness
+    }));
+  };
 
   // Creative Tools State
   // Free-form text + clipart: unified with Acrylic system
@@ -1974,12 +2975,15 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Room / 3D / 360 viewer
   const [viewerMode, setViewerMode] = useState<'room' | '3d' | '360' | null>(null);
 
-  // Automatically close 3D view if the selected product does not support 3D (Single Print only)
+  // Automatically close 3D / 360 view if the selected product does not support it
   useEffect(() => {
     if (viewerMode === '3d' && !productCapabilities.view3D) {
       setViewerMode(null);
     }
-  }, [viewerMode, productCapabilities.view3D]);
+    if (viewerMode === '360' && productCapabilities.view360 === false) {
+      setViewerMode(null);
+    }
+  }, [viewerMode, productCapabilities.view3D, productCapabilities.view360]);
 
   const [roomViewState, setRoomViewState] = useState<RoomPlacementState>({
     roomPreset: 'office',
@@ -1990,6 +2994,7 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   const [viewerRotation, setViewerRotation] = useState<number>(-24);
   const [viewerTiltX, setViewerTiltX] = useState<number>(6);
+  const [preset3DAngle, setPreset3DAngle] = useState<Preset3DAngleId>('top-left');
   const [viewerAutoRotate, setViewerAutoRotate] = useState<boolean>(false);
   const [isViewerDragging, setIsViewerDragging] = useState<boolean>(false);
   const viewerDragRef = useRef<{ x: number; y: number; startRotation: number; startTiltX: number } | null>(null);
@@ -2024,10 +3029,15 @@ export const CanvasCustomizerPage: React.FC = () => {
         selectedLaminationId,
         selectedMaterialId,
         quantity,
-        textElements,
+        textElements: textElements.filter((t) => Boolean(t.text && t.text.trim())),
         clipartElements,
         panelImages,
         uploadedPhotos,
+        digitalPaintingConfig,
+        busRollConfig,
+        bannerConfig,
+        popArtConfig: selectedProductTypeId === 'canvas-pop-art' ? popArtConfig : undefined,
+        lyricConfig: selectedProductTypeId === 'canvas-lyric' ? lyricConfig : undefined,
         updatedAt: new Date().toISOString()
       };
       localStorage.setItem(storageKey, JSON.stringify(stateToSave));
@@ -2040,7 +3050,20 @@ export const CanvasCustomizerPage: React.FC = () => {
   };
 
   // Dynamic Price Calculation
-  const sizePrice = isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price;
+  const selectedPopStyle = getPopArtStyle(popArtConfig.selectedStyleId);
+  const popStyleAdjustment = selectedProductTypeId === 'canvas-pop-art' ? (selectedPopStyle?.priceAdjustment || 0) : 0;
+  const lyricPriceAdjustment = selectedProductTypeId === 'canvas-lyric' ? (selectedLyricTemplate?.priceAdjustment || 0) : 0;
+  const sizePrice = selectedProductTypeId === 'canvas-word-art'
+    ? wordArtSizeOption.price
+    : selectedProductTypeId === 'canvas-banner'
+    ? (bannerConfig.isCustom
+        ? calculateBannerPrice(bannerConfig.widthInches, bannerConfig.heightInches)
+        : (CANVAS_BANNER_SIZE_OPTIONS.find((s) => s.id === bannerConfig.selectedSizeId)?.price || calculateBannerPrice(bannerConfig.widthInches, bannerConfig.heightInches)))
+    : selectedProductTypeId === 'canvas-pop-art'
+    ? ((isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price) + popStyleAdjustment)
+    : selectedProductTypeId === 'canvas-lyric'
+    ? ((isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price) + lyricPriceAdjustment)
+    : (isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price);
 
   const unitPrice = useMemo(() => {
     let price = sizePrice;
@@ -2059,8 +3082,10 @@ export const CanvasCustomizerPage: React.FC = () => {
       if (frame) price += frame.price;
     }
 
-    const hardware = HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId);
-    if (hardware) price += hardware.price;
+    const hardwarePrice = selectedProductTypeId === 'canvas-banner'
+      ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
+      : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0);
+    price += hardwarePrice;
 
     const display = DISPLAY_OPTIONS.find((d) => d.id === selectedDisplayOptionId);
     if (display) price += display.price;
@@ -2090,6 +3115,15 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // Single source of truth for whether at least ONE valid customer image is currently uploaded
   const hasUploadedImage = useMemo(() => {
+    if (selectedProductTypeId === 'canvas-bus-roll') {
+      return true;
+    }
+    if (
+      selectedProductTypeId === 'canvas-lyric' &&
+      (!selectedLyricTemplate.supportsPhoto || ((lyricConfig.lyrics || lyricConfig.lyricsText || '').trim().length > 0))
+    ) {
+      return true;
+    }
     const anySlotHasImage = Object.values(panelImages).some(
       (p) => Boolean(p?.imageUrl && p.imageUrl.trim().length > 0)
     );
@@ -2097,7 +3131,7 @@ export const CanvasCustomizerPage: React.FC = () => {
       (url) => Boolean(url && url.trim().length > 0)
     );
     return anySlotHasImage || anyTrayHasImage;
-  }, [panelImages, uploadedPhotos]);
+  }, [panelImages, uploadedPhotos, selectedProductTypeId, selectedLyricTemplate, lyricConfig.lyrics, lyricConfig.lyricsText]);
 
   // Validation: at least one uploaded photo
   const filledPanelsCount = useMemo(() => {
@@ -2215,7 +3249,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                   rotation: 0,
                   panX: 0,
                   panY: 0,
-                  fitMode: 'contain'
+                  fitMode: isSinglePrintCanvas ? 'cover' : 'contain'
                 }
               }));
               setActivePanelIndex(idx);
@@ -2263,7 +3297,7 @@ export const CanvasCustomizerPage: React.FC = () => {
           rotation: 0,
           panX: 0,
           panY: 0,
-          fitMode: 'contain'
+          fitMode: isSinglePrintCanvas ? 'cover' : 'contain'
         }
       }));
     };
@@ -2305,6 +3339,11 @@ export const CanvasCustomizerPage: React.FC = () => {
       setUploadedPhotos((prev) => (prev.includes(galleryUrl) ? prev : [galleryUrl, ...prev]));
       return;
     }
+    const plainUrl = e.dataTransfer.getData('text/plain');
+    if (plainUrl && (plainUrl.startsWith('data:image') || plainUrl.startsWith('http://') || plainUrl.startsWith('https://') || plainUrl.startsWith('blob:'))) {
+      handleAssignPhotoToPanel(plainUrl, panelIdx);
+      return;
+    }
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFilesUpload(e.dataTransfer.files, panelIdx);
     }
@@ -2331,7 +3370,15 @@ export const CanvasCustomizerPage: React.FC = () => {
   };
 
   // --- Text & Clipart Items (Shared with Acrylic Customizer) ---
-  const handleAddText = (initialText = 'Your text') => {
+  const handleAddText = (initialText = '') => {
+    // If there is already an empty text element, focus that instead of adding a second empty one
+    const existingEmpty = textElements.find((t) => !t.text.trim());
+    if (existingEmpty) {
+      setSelectedElement({ type: 'text', id: existingEmpty.id });
+      setShowTextModal(true);
+      setShowClipartModal(false);
+      return;
+    }
     const id = `txt-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const newText: TextElement = {
       id,
@@ -2582,17 +3629,12 @@ export const CanvasCustomizerPage: React.FC = () => {
     e.preventDefault();
     const deltaX = e.clientX - viewerDragRef.current.x;
     const deltaY = e.clientY - viewerDragRef.current.y;
-    if (viewerMode === '360') {
-      // Free 360: Horizontal drag rotates Y-axis, vertical drag tilts X-axis, diagonal rotates both freely
-      const nextRot = (viewerDragRef.current.startRotation + deltaX * 0.65) % 360;
-      const nextTilt = Math.max(-85, Math.min(85, viewerDragRef.current.startTiltX - deltaY * 0.65));
-      setViewerRotation(nextRot < 0 ? nextRot + 360 : nextRot);
-      setViewerTiltX(nextTilt);
-    } else {
-      // 3D View mode: full spherical inspection including top and bottom
-      setViewerRotation(viewerDragRef.current.startRotation + deltaX * 0.65);
-      setViewerTiltX(Math.max(-90, Math.min(90, viewerDragRef.current.startTiltX - deltaY * 0.38)));
-    }
+    // Free accumulated continuous rotation: horizontal drag rotates Y-axis, vertical drag tilts/rotates X-axis, diagonal rotates both
+    const sensitivity = 0.65;
+    const nextRot = viewerDragRef.current.startRotation + deltaX * sensitivity;
+    const nextTilt = viewerDragRef.current.startTiltX - deltaY * sensitivity;
+    setViewerRotation(nextRot);
+    setViewerTiltX(nextTilt);
   };
   const handleViewerPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     if (viewerDragRef.current) {
@@ -2670,11 +3712,50 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // Width / height ratio of the print: fixed for symmetric shapes (circle, heart...), otherwise follows the chosen size.
   const printAspect = useMemo(() => {
+    if (selectedProductTypeId === 'canvas-word-art') {
+      return wordArtSizeOption.aspectRatio || (wordArtSizeOption.widthInches / Math.max(1, wordArtSizeOption.heightInches));
+    }
+    if (selectedProductTypeId === 'canvas-bus-roll') {
+      return busRollConfig.widthInches / Math.max(1, busRollConfig.heightInches);
+    }
+    if (selectedProductTypeId === 'canvas-banner') {
+      return bannerConfig.widthInches / Math.max(1, bannerConfig.heightInches);
+    }
+    // Single print canvas: Authoritative aspect ratio directly from selected size (or layout preset if explicit)
+    if (isSinglePrintCanvas) {
+      if (selectedLayoutId === 'single-layout-landscape') return 1.5;
+      if (selectedLayoutId === 'single-layout-portrait') return 2 / 3;
+      if (selectedLayoutId === 'single-layout-square') return 1;
+      const w = isCustomSize && canUseCustomSize
+        ? customWidth
+        : (currentSizeOption?.widthInches || currentSizeOption?.panels?.[0]?.widthRatio || 10);
+      const h = isCustomSize && canUseCustomSize
+        ? customHeight
+        : (currentSizeOption?.heightInches || currentSizeOption?.panels?.[0]?.heightRatio || 10);
+      return w / Math.max(1, h);
+    }
     if (shapeApplies && currentShape.isSingleDimension) return 1;
     if (isCustomSize && canUseCustomSize) return customWidth / customHeight;
     const p = panels[0];
     return p ? p.widthRatio / p.heightRatio : 1;
-  }, [shapeApplies, currentShape, isCustomSize, canUseCustomSize, customWidth, customHeight, panels]);
+  }, [
+    selectedProductTypeId,
+    isSinglePrintCanvas,
+    selectedLayoutId,
+    currentSizeOption,
+    wordArtSizeOption,
+    busRollConfig.widthInches,
+    busRollConfig.heightInches,
+    bannerConfig.widthInches,
+    bannerConfig.heightInches,
+    shapeApplies,
+    currentShape,
+    isCustomSize,
+    canUseCustomSize,
+    customWidth,
+    customHeight,
+    panels
+  ]);
 
   const currentLayout = useMemo(() => {
     return STANDARD_LAYOUT_PRESETS.find((l) => l.id === selectedLayoutId) || STANDARD_LAYOUT_PRESETS[0];
@@ -2765,17 +3846,47 @@ export const CanvasCustomizerPage: React.FC = () => {
       product: {
         ...catalogProduct,
         price: unitPrice,
-        name: `${selectedProductType.name} - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
+        name: selectedProductTypeId === 'canvas-word-art'
+          ? `${selectedProductType.name} - ${wordArtSizeOption.label}`
+          : selectedProductTypeId === 'canvas-quotes'
+          ? `${selectedProductType.name} - ${getQuoteTemplate(selectedQuoteTemplateId)?.title || 'Custom Quote'} (${currentSizeOption.label})`
+          : selectedProductTypeId === 'canvas-digital-painting'
+          ? `${selectedProductType.name} (${getDigitalPaintingEffect(digitalPaintingConfig.selectedEffectId).name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
+          : selectedProductTypeId === 'canvas-bus-roll'
+          ? `${selectedProductType.name} - ${busRollConfig.widthInches}" × ${busRollConfig.heightInches}" (${busRollConfig.lines[0]?.text || 'Custom'})`
+          : selectedProductTypeId === 'canvas-banner'
+          ? `${selectedProductType.name} - ${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}${bannerConfig.isCustom ? ' (Custom)' : ''}`
+          : selectedProductTypeId === 'canvas-pop-art'
+          ? `${selectedProductType.name} (${getPopArtStyle(popArtConfig.selectedStyleId).name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
+          : selectedProductTypeId === 'canvas-lyric'
+          ? `${selectedProductType.name} (${selectedLyricTemplate.name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
+          : `${selectedProductType.name} - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
       },
-      size: isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary,
+      size: selectedProductTypeId === 'canvas-word-art'
+        ? `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`
+        : selectedProductTypeId === 'canvas-bus-roll'
+        ? `${busRollConfig.widthInches}" × ${busRollConfig.heightInches}"`
+        : selectedProductTypeId === 'canvas-banner'
+        ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
+        : isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary,
       finish: WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label || 'Canvas Lite',
       quantity,
       customText: customText || undefined,
-      photoUrl: firstImage,
+      photoUrl: (selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl)
+        ? popArtConfig.processedImageUrl
+        : (selectedProductTypeId === 'canvas-lyric' && !panelImages[0]?.imageUrl)
+        ? selectedLyricTemplate.previewImage
+        : firstImage,
       calculatedPrice: totalPrice,
       material: MATERIAL_VARIANTS.find((m) => m.id === selectedMaterialId)?.name || 'Standard 280 GSM Cotton Canvas',
-      style: selectedProductType.name,
-      base: HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label || 'No Hooks',
+      style: selectedProductTypeId === 'canvas-pop-art'
+        ? `Pop Art (${getPopArtStyle(popArtConfig.selectedStyleId).name})`
+        : selectedProductTypeId === 'canvas-lyric'
+        ? `Lyric on Canvas (${selectedLyricTemplate.name})`
+        : selectedProductType.name,
+      base: selectedProductTypeId === 'canvas-banner'
+        ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware')
+        : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label || 'No Hooks'),
       customizationDetails: {
         productTypeId: selectedProductTypeId,
         sizeId: selectedSizeId,
@@ -2791,6 +3902,43 @@ export const CanvasCustomizerPage: React.FC = () => {
         majorRetouchText: majorRetouchText || undefined,
         proofRequested,
         template: selectedTemplateId ? DESIGN_TEMPLATES.find((t) => t.id === selectedTemplateId)?.name : undefined,
+        quoteTemplate: selectedProductTypeId === 'canvas-quotes' ? getQuoteTemplate(selectedQuoteTemplateId)?.title : undefined,
+        digitalPaintingEffect: selectedProductTypeId === 'canvas-digital-painting' ? getDigitalPaintingEffect(digitalPaintingConfig.selectedEffectId).name : undefined,
+        digitalPaintingSubject: selectedProductTypeId === 'canvas-digital-painting' ? digitalPaintingConfig.subjectType : undefined,
+        digitalPaintingBackground: selectedProductTypeId === 'canvas-digital-painting' ? (
+          digitalPaintingConfig.backgroundOption === 'solid'
+            ? `Solid Background (${digitalPaintingConfig.backgroundColor})`
+            : digitalPaintingConfig.backgroundOption === 'artist_choice'
+            ? 'Let the Artist Choose'
+            : 'Original Background'
+        ) : undefined,
+        peopleCount: selectedProductTypeId === 'canvas-digital-painting' && digitalPaintingConfig.subjectType === 'people_pets' ? digitalPaintingConfig.peopleCount : undefined,
+        petsCount: selectedProductTypeId === 'canvas-digital-painting' && digitalPaintingConfig.subjectType === 'people_pets' ? digitalPaintingConfig.petsCount : undefined,
+        busRollLines: selectedProductTypeId === 'canvas-bus-roll' ? busRollConfig.lines.map((l) => l.text).join(' / ') : undefined,
+        busRollBackgroundColor: selectedProductTypeId === 'canvas-bus-roll' ? busRollConfig.backgroundColor : undefined,
+        busRollPattern: selectedProductTypeId === 'canvas-bus-roll' ? busRollConfig.patternId : undefined,
+        busRollFont: selectedProductTypeId === 'canvas-bus-roll' ? busRollConfig.fontFamily : undefined,
+        bannerUnit: selectedProductTypeId === 'canvas-banner' ? bannerConfig.unit : undefined,
+        bannerWidth: selectedProductTypeId === 'canvas-banner' ? bannerConfig.width : undefined,
+        bannerHeight: selectedProductTypeId === 'canvas-banner' ? bannerConfig.height : undefined,
+        bannerWidthInches: selectedProductTypeId === 'canvas-banner' ? bannerConfig.widthInches : undefined,
+        bannerHeightInches: selectedProductTypeId === 'canvas-banner' ? bannerConfig.heightInches : undefined,
+        bannerBackgroundColor: selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : undefined,
+        bannerHardware: selectedProductTypeId === 'canvas-banner' ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware') : undefined,
+        popArtStyleId: selectedProductTypeId === 'canvas-pop-art' ? popArtConfig.selectedStyleId : undefined,
+        popArtStyleName: selectedProductTypeId === 'canvas-pop-art' ? getPopArtStyle(popArtConfig.selectedStyleId).name : undefined,
+        popArtPriceAdjustment: selectedProductTypeId === 'canvas-pop-art' ? getPopArtStyle(popArtConfig.selectedStyleId).priceAdjustment : undefined,
+        popArtProcessedArtwork: selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl ? popArtConfig.processedImageUrl : undefined,
+        lyricTemplateId: selectedProductTypeId === 'canvas-lyric' ? lyricConfig.selectedTemplateId : undefined,
+        lyricTemplateName: selectedProductTypeId === 'canvas-lyric' ? selectedLyricTemplate.name : undefined,
+        lyricTitle: selectedProductTypeId === 'canvas-lyric' ? (lyricConfig.title || lyricConfig.songTitle) : undefined,
+        lyricArtist: selectedProductTypeId === 'canvas-lyric' ? (lyricConfig.artistOrSubtitle || lyricConfig.artistOrNames) : undefined,
+        lyricDateOrNames: selectedProductTypeId === 'canvas-lyric' ? (lyricConfig.dateOrNames || lyricConfig.dateOrInscription) : undefined,
+        lyricText: selectedProductTypeId === 'canvas-lyric' ? (lyricConfig.lyrics || lyricConfig.lyricsText) : undefined,
+        lyricFontFamily: selectedProductTypeId === 'canvas-lyric' ? lyricConfig.fontFamily : undefined,
+        lyricTextColor: selectedProductTypeId === 'canvas-lyric' ? lyricConfig.textColor : undefined,
+        lyricLayout: selectedProductTypeId === 'canvas-lyric' ? (lyricConfig.layout || selectedLyricTemplate.defaultLayout) : undefined,
+        lyricOverlayDarkness: selectedProductTypeId === 'canvas-lyric' ? lyricConfig.overlayDarkness : undefined,
         panels: panels.map((p, idx) => ({
           dimension: p.dimension,
           imageUrl: panelImages[idx]?.imageUrl || null,
@@ -2870,7 +4018,7 @@ export const CanvasCustomizerPage: React.FC = () => {
     </div>
   );
 
-  // Split Product: Single continuous image sliced across physical canvas panels
+  // Split Product: Single continuous physical canvas surface sliced internally across panels
   const renderContinuousSplitCanvas = () => {
     const layout = getProductLayout('canvas-split', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
     const splitPanels = layout.panels;
@@ -2878,83 +4026,135 @@ export const CanvasCustomizerPage: React.FC = () => {
     const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
     const master = panelImages[0] || createDefaultPanel();
 
-    return (
-      <div className="w-full max-w-2xl mx-auto my-auto p-4 flex flex-col items-center select-none">
-        <div
-          className="relative w-full"
-          style={{
-            aspectRatio: String(layout.aspectRatio),
-            maxHeight: '56vh',
-            filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.22)) drop-shadow(0 8px 10px rgba(0, 0, 0, 0.12))'
-          }}
-        >
-          {splitPanels.map((pSpec, i) => (
-            <div
-              key={pSpec.id || i}
-              {...panelHandlers(0)}
-              style={{
-                position: 'absolute',
-                left: `${pSpec.x * 100}%`,
-                top: `${pSpec.y * 100}%`,
-                width: `${pSpec.w * 100}%`,
-                height: `${pSpec.h * 100}%`,
-                boxShadow: '0 10px 20px -3px rgba(0, 0, 0, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-              }}
-              className={`relative bg-stone-100 rounded-lg overflow-hidden transition-all group ${
-                masterImage ? 'cursor-grab active:cursor-grabbing ring-1 ring-black/10' : 'cursor-pointer hover:border-[#0E4A93]'
-              }`}
-              onClick={() => {
-                if (!masterImage) fileInputRef.current?.click();
-              }}
-            >
-              {masterImage ? (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: `${(-pSpec.y / pSpec.h) * 100}%`,
-                    left: `${(-pSpec.x / pSpec.w) * 100}%`,
-                    width: `${(1 / pSpec.w) * 100}%`,
-                    height: `${(1 / pSpec.h) * 100}%`,
-                    pointerEvents: 'none'
-                  }}
-                >
-                  <img
-                    src={masterImage}
-                    alt={`Split Panel ${i + 1}`}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
-                      transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                      filter: getFilterCss(master.filter),
-                      transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                    }}
-                    className="pointer-events-none"
-                  />
-                </div>
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-stone-50/90 group-hover:bg-blue-50/40 transition-colors">
-                  <div className="w-9 h-9 rounded-full bg-white shadow-xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-110 transition-all mb-1">
-                    <Upload className="w-4 h-4 stroke-[2.2]" />
-                  </div>
-                  <span className="text-[10px] font-bold text-stone-600 group-hover:text-[#0E4A93]">
-                    {pSpec.label || `Panel ${i + 1}`}
-                  </span>
-                  <span className="text-[9px] text-stone-400">
-                    {pSpec.dimension}
-                  </span>
-                </div>
-              )}
+    const displayWidthInches = layout.overallWidthInches || 36;
+    const displayHeightInches = layout.overallHeightInches || 24;
 
-              {/* Panel Dimension Tag */}
-              <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[8.5px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
-                {pSpec.dimension || `Panel ${i + 1}`}
-              </div>
-            </div>
-          ))}
+    return (
+      <div className="relative flex flex-col items-center select-none w-full my-auto">
+        {/* Ruler Top */}
+        <div className="w-full flex items-center justify-center py-1 mb-1 max-w-[28rem] relative">
+          <div className="absolute inset-x-0 h-px border-b border-dashed border-stone-300" />
+          <div className="relative bg-white px-2 py-0.5 rounded-full border border-stone-200 text-[10px] font-bold text-stone-600 shadow-2xs z-10">
+            {displayWidthInches} inch ({layout.name})
+          </div>
         </div>
-        <p className="text-[11px] font-semibold text-stone-500 mt-3 text-center">
-          1 Photo Split Continuously Across {N} Physical Panels • Drag photo to pan, use toolbar to Zoom/Rotate/Fill/Fix
+
+        <div className="relative flex items-center justify-center w-full">
+          {/* Ruler Left */}
+          <div className="absolute -left-10 inset-y-0 flex flex-col items-center justify-center">
+            <div className="absolute inset-y-0 w-px border-r border-dashed border-stone-300" />
+            <div className="relative bg-white px-1.5 py-0.5 rounded-full border border-stone-200 text-[9px] font-bold text-stone-600 shadow-2xs rotate-[-90deg] whitespace-nowrap z-10">
+              {displayHeightInches} inch
+            </div>
+          </div>
+
+          {/* CONTINUOUS SPLIT PHYSICAL CANVAS SURFACE */}
+          <div
+            {...panelHandlers(0)}
+            ref={registerWheelRef(0)}
+            onClick={() => {
+              if (!masterImage) fileInputRef.current?.click();
+            }}
+            className={`relative select-none ${
+              masterImage ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
+            }`}
+            style={{
+              aspectRatio: String(layout.aspectRatio),
+              width: `min(34rem, calc(54vh * ${layout.aspectRatio}))`,
+              maxWidth: '100%'
+            }}
+          >
+            {splitPanels.map((p, idx) => (
+              <div
+                key={p.id || idx}
+                style={{
+                  position: 'absolute',
+                  left: `${p.x * 100}%`,
+                  top: `${p.y * 100}%`,
+                  width: `${p.w * 100}%`,
+                  height: `${p.h * 100}%`,
+                  boxShadow: '0 12px 24px -4px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0,0,0,0.08)'
+                }}
+                className="relative bg-white rounded-[2px] overflow-hidden border border-stone-300/80 transition-all select-none group"
+              >
+                {/* 3D Canvas Edge highlight */}
+                <div
+                  className="absolute inset-0 pointer-events-none z-10"
+                  style={{
+                    boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.7), inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+
+                {masterImage ? (
+                  <div className="w-full h-full relative overflow-hidden">
+                    <div
+                      style={{
+                        position: 'absolute',
+                        width: `${(1 / p.w) * 100}%`,
+                        height: `${(1 / p.h) * 100}%`,
+                        left: `${-(p.x / p.w) * 100}%`,
+                        top: `${-(p.y / p.h) * 100}%`
+                      }}
+                      className="pointer-events-none select-none"
+                    >
+                      <img
+                        src={masterImage}
+                        alt={`Split Canvas Panel ${idx + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
+                          transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                          filter: getFilterCss(master.filter),
+                          transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                        }}
+                        className="w-full h-full pointer-events-none select-none"
+                      />
+                      {/* Subtle canvas weave micro-texture */}
+                      <div
+                        className="absolute inset-0 pointer-events-none opacity-20 mix-blend-multiply"
+                        style={{
+                          backgroundImage:
+                            'repeating-linear-gradient(0deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px)'
+                        }}
+                      />
+                    </div>
+                    {/* Dimension badge for each panel */}
+                    {p.dimension && (
+                      <div className="absolute bottom-1 left-1 bg-black/55 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
+                        {p.dimension}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Empty state panel */
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-[#dcdfe4] text-center p-2 relative">
+                    <span className="text-[10px] font-bold text-stone-600">{p.label || `Panel ${idx + 1}`}</span>
+                    {p.dimension && <span className="text-[9px] text-stone-500">{p.dimension}</span>}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* If empty, central single upload action overlay */}
+            {!masterImage && (
+              <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-4 text-center group pointer-events-none">
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-12 h-12 rounded-2xl bg-white shadow-lg border border-stone-200 flex items-center justify-center text-[#0E4A93] group-hover:scale-110 transition-all mb-2 pointer-events-auto cursor-pointer"
+                >
+                  <Upload className="w-5 h-5 stroke-[2.4] text-[#0E4A93]" />
+                </div>
+                <span className="text-xs sm:text-sm font-black text-stone-800 bg-white/90 px-3 py-1 rounded-full shadow-xs">
+                  Upload Image for Split Canvas ({N} Panels)
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <p className="text-[11px] font-semibold text-stone-500 mt-2.5 text-center">
+          1 Photo Split Continuously Across {N} Physical Panels • Drag photo to pan, use toolbar to Zoom/Rotate
         </p>
       </div>
     );
@@ -2963,182 +4163,567 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Dedicated Lyric Canvas Typography Overlay (for canvas-lyric)
   const renderLyricOverlay = (scaleFactor: number = 1) => {
     const fontFamilies: Record<string, string> = {
-      serif: 'Georgia, Cambria, "Times New Roman", serif',
-      script: '"Brush Script MT", "Caveat", "Dancing Script", cursive',
-      sans: 'system-ui, -apple-system, Montserrat, sans-serif',
-      cinzel: 'Cinzel, Georgia, serif'
+      'Playfair Display': '"Playfair Display", Georgia, "Times New Roman", serif',
+      'Cormorant Garamond': '"Cormorant Garamond", Garamond, "Times New Roman", serif',
+      'Dancing Script': '"Dancing Script", "Caveat", "Brush Script MT", cursive',
+      'Montserrat': '"Montserrat", system-ui, -apple-system, sans-serif',
+      'Cinzel': '"Cinzel", Georgia, serif'
     };
-    const resolvedFont = fontFamilies[lyricFontFamily] || fontFamilies.serif;
+    const font = fontFamilies[lyricConfig.fontFamily] || fontFamilies['Playfair Display'];
+    const s = (px: number) => Math.max(1, Math.round(px * scaleFactor));
+    const fs = (px: number, min = 7) => `${Math.max(min, Math.round(px * scaleFactor))}px`;
+    const scrimAlpha = Math.min(0.9, Math.max(0, (lyricConfig.overlayDarkness ?? 35) / 100));
+    const textColor = lyricConfig.textColor || '#FFFFFF';
+    const textAlign = lyricConfig.alignment || lyricConfig.textAlign || 'center';
+    const hasPhoto = Boolean(panelImages[0]?.imageUrl);
+    const layout = lyricConfig.layout || selectedLyricTemplate.defaultLayout || 'photo-lyrics-overlay';
+    const title = lyricConfig.title || lyricConfig.songTitle || selectedLyricTemplate.name;
+    const artist = lyricConfig.artistOrSubtitle || lyricConfig.artistOrNames || '';
+    const date = lyricConfig.dateOrNames || lyricConfig.dateOrInscription || '';
+    const text = lyricConfig.lyrics || lyricConfig.lyricsText || selectedLyricTemplate.defaultText.lyrics;
+    const textShadow = (scrimAlpha > 0.1 || hasPhoto)
+      ? '0 1px 3px rgba(0,0,0,0.85), 0 2px 6px rgba(0,0,0,0.6)'
+      : undefined;
 
+    // 1. First Dance Card (frosted glass badge in center/lower-center)
+    if (layout === 'first-dance-card') {
+      return (
+        <div
+          className="absolute inset-0 z-25 flex flex-col items-center justify-center pointer-events-none select-none"
+          style={{
+            padding: `${s(16)}px`,
+            background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.45})` : undefined,
+            color: textColor,
+            fontFamily: font
+          }}
+        >
+          <div
+            className="w-full max-w-[88%] rounded-2xl flex flex-col items-center text-center shadow-2xl backdrop-blur-md"
+            style={{
+              background: `rgba(15, 23, 42, ${Math.max(0.45, scrimAlpha * 0.9)})`,
+              border: '1px solid rgba(255, 255, 255, 0.28)',
+              padding: `${s(14)}px ${s(16)}px`,
+              gap: `${s(6)}px`
+            }}
+          >
+            <div className="flex items-center gap-1.5 opacity-90">
+              <span style={{ fontSize: fs(14) }}>♪</span>
+              <span className="font-extrabold uppercase tracking-widest" style={{ fontSize: fs(13) }}>
+                {title}
+              </span>
+              <span style={{ fontSize: fs(14) }}>♪</span>
+            </div>
+            {artist && (
+              <div className="italic opacity-85" style={{ fontSize: fs(10.5) }}>
+                {artist}
+              </div>
+            )}
+            <div className="w-16 h-px bg-current opacity-40 my-0.5" />
+            <div
+              className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden"
+              style={{
+                fontSize: fs(10),
+                maxHeight: `${s(120)}px`,
+                textAlign
+              }}
+            >
+              {text}
+            </div>
+            {date && (
+              <div className="font-mono tracking-wider opacity-75 mt-1" style={{ fontSize: fs(9) }}>
+                {date}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // 2. Wedding Vows Photo (framed vows with decorative flourish)
+    if (layout === 'wedding-vows-photo') {
+      return (
+        <div
+          className="absolute inset-0 z-25 flex flex-col justify-between pointer-events-none select-none"
+          style={{
+            padding: `${s(18)}px ${s(20)}px`,
+            background: hasPhoto
+              ? `linear-gradient(to bottom, rgba(0,0,0,${scrimAlpha * 0.85}) 0%, rgba(0,0,0,${scrimAlpha * 0.4}) 35%, rgba(0,0,0,${scrimAlpha * 0.4}) 65%, rgba(0,0,0,${scrimAlpha * 0.9}) 100%)`
+              : undefined,
+            color: textColor,
+            fontFamily: font,
+            textShadow
+          }}
+        >
+          <div className="text-center space-y-0.5">
+            <div className="font-serif tracking-widest uppercase font-bold" style={{ fontSize: fs(15) }}>
+              {title}
+            </div>
+            {artist && (
+              <div className="italic opacity-90" style={{ fontSize: fs(11) }}>
+                {artist}
+              </div>
+            )}
+            <div className="flex items-center justify-center gap-2 opacity-50 my-1">
+              <div className="w-10 h-px bg-current" />
+              <span style={{ fontSize: fs(9) }}>✦ • ✦</span>
+              <div className="w-10 h-px bg-current" />
+            </div>
+          </div>
+
+          <div
+            className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden my-auto"
+            style={{
+              fontSize: fs(10.5),
+              textAlign,
+              maxHeight: `${s(150)}px`
+            }}
+          >
+            {text}
+          </div>
+
+          <div className="text-center pt-1 border-t border-current/25">
+            <span className="tracking-widest uppercase font-semibold" style={{ fontSize: fs(9.5) }}>
+              {date || 'FOREVER & ALWAYS'}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    // 3. Split Side-by-Side (right side backdrop with text)
+    if (layout === 'split-side-by-side') {
+      return (
+        <div
+          className="absolute inset-y-0 right-0 w-1/2 z-25 flex flex-col justify-center pointer-events-none select-none"
+          style={{
+            padding: `${s(14)}px`,
+            background: `rgba(15, 23, 42, ${Math.max(0.6, scrimAlpha * 0.95)})`,
+            backdropFilter: 'blur(4px)',
+            color: textColor,
+            fontFamily: font,
+            borderLeft: '1px solid rgba(255, 255, 255, 0.2)'
+          }}
+        >
+          <div className="font-black uppercase tracking-wider mb-0.5" style={{ fontSize: fs(13) }}>
+            {title}
+          </div>
+          {artist && (
+            <div className="italic opacity-85 mb-1.5" style={{ fontSize: fs(10) }}>
+              {artist}
+            </div>
+          )}
+          <div className="w-8 h-px bg-current opacity-50 mb-2" />
+          <div
+            className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden"
+            style={{
+              fontSize: fs(9.5),
+              textAlign,
+              maxHeight: `${s(150)}px`
+            }}
+          >
+            {text}
+          </div>
+          {date && (
+            <div className="mt-2 pt-1 border-t border-current/20 font-mono tracking-wider opacity-80" style={{ fontSize: fs(8.5) }}>
+              {date}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // 4. Bottom Third Lyrics (lower banner with song details and flowing lines)
+    if (layout === 'bottom-third-lyrics') {
+      return (
+        <div
+          className="absolute inset-x-0 bottom-0 z-25 flex flex-col justify-end pointer-events-none select-none"
+          style={{
+            padding: `${s(14)}px ${s(16)}px`,
+            background: `linear-gradient(to top, rgba(0,0,0,${Math.max(0.85, scrimAlpha)}) 0%, rgba(0,0,0,${scrimAlpha * 0.8}) 65%, transparent 100%)`,
+            color: textColor,
+            fontFamily: font,
+            textShadow
+          }}
+        >
+          <div className="flex items-baseline justify-between gap-2 border-b border-current/30 pb-1 mb-1.5">
+            <span className="font-black uppercase tracking-wider truncate" style={{ fontSize: fs(13) }}>
+              {title}
+            </span>
+            {artist && (
+              <span className="italic opacity-85 shrink-0" style={{ fontSize: fs(10) }}>
+                {artist}
+              </span>
+            )}
+          </div>
+          <div
+            className="leading-relaxed whitespace-pre-line opacity-90 overflow-hidden"
+            style={{
+              fontSize: fs(10),
+              textAlign,
+              maxHeight: `${s(85)}px`
+            }}
+          >
+            {text}
+          </div>
+          {date && (
+            <div className="text-right mt-1 opacity-70 font-mono" style={{ fontSize: fs(8.5) }}>
+              {date}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // 5. Classic Centered Lyrics (timeless wedding / anniversary centered layout)
+    if (layout === 'classic-centered-lyrics') {
+      return (
+        <div
+          className="absolute inset-0 z-25 flex flex-col items-center justify-center text-center pointer-events-none select-none"
+          style={{
+            padding: `${s(20)}px`,
+            background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.7})` : undefined,
+            color: textColor,
+            fontFamily: font,
+            textShadow
+          }}
+        >
+          <div className="font-serif tracking-widest uppercase font-black mb-0.5" style={{ fontSize: fs(16) }}>
+            {title}
+          </div>
+          {artist && (
+            <div className="italic opacity-90 tracking-wide mb-1" style={{ fontSize: fs(11) }}>
+              {artist}
+            </div>
+          )}
+          <div className="flex items-center gap-2 opacity-50 my-1.5">
+            <div className="w-8 h-px bg-current" />
+            <span style={{ fontSize: fs(10) }}>❦</span>
+            <div className="w-8 h-px bg-current" />
+          </div>
+          <div
+            className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden my-1 max-w-[92%]"
+            style={{
+              fontSize: fs(10.5),
+              textAlign,
+              maxHeight: `${s(150)}px`
+            }}
+          >
+            {text}
+          </div>
+          {date && (
+            <div className="mt-2 font-mono tracking-widest opacity-80" style={{ fontSize: fs(9) }}>
+              {date}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // 6. Sheet Music Background (rendered with stylized musical staff and notes behind lyrics)
+    if (layout === 'sheet-music-bg') {
+      return (
+        <div
+          className="absolute inset-0 z-25 flex flex-col justify-between text-center pointer-events-none select-none relative overflow-hidden"
+          style={{
+            padding: `${s(18)}px`,
+            background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.75})` : selectedLyricTemplate.defaultBackground.color,
+            color: textColor,
+            fontFamily: font,
+            textShadow
+          }}
+        >
+          {/* Subtle Musical Staff Lines Background SVG */}
+          <svg className="absolute inset-0 w-full h-full opacity-15 pointer-events-none" viewBox="0 0 400 300" preserveAspectRatio="none">
+            <line x1="0" y1="40" x2="400" y2="40" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="48" x2="400" y2="48" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="56" x2="400" y2="56" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="64" x2="400" y2="64" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="72" x2="400" y2="72" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="220" x2="400" y2="220" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="228" x2="400" y2="228" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="236" x2="400" y2="236" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="244" x2="400" y2="244" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="252" x2="400" y2="252" stroke="currentColor" strokeWidth="1" />
+          </svg>
+
+          <div className="relative z-10 space-y-0.5">
+            <div className="font-serif tracking-widest uppercase font-bold" style={{ fontSize: fs(16) }}>
+              {title}
+            </div>
+            {artist && (
+              <div className="italic opacity-85" style={{ fontSize: fs(11) }}>
+                {artist}
+              </div>
+            )}
+          </div>
+
+          <div
+            className="relative z-10 leading-relaxed whitespace-pre-line opacity-95 overflow-hidden my-auto"
+            style={{
+              fontSize: fs(11),
+              textAlign,
+              maxHeight: `${s(160)}px`
+            }}
+          >
+            {text}
+          </div>
+
+          <div className="relative z-10 opacity-75 font-mono tracking-wider" style={{ fontSize: fs(9) }}>
+            {date || 'SHEET MUSIC CANVAS ART'}
+          </div>
+        </div>
+      );
+    }
+
+    // 7. Quote Solid Background (large decorative quotes)
+    if (layout === 'quote-solid-bg') {
+      return (
+        <div
+          className="absolute inset-0 z-25 flex flex-col justify-between items-center text-center pointer-events-none select-none relative"
+          style={{
+            padding: `${s(22)}px`,
+            background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.75})` : selectedLyricTemplate.defaultBackground.color,
+            color: textColor,
+            fontFamily: font,
+            textShadow
+          }}
+        >
+          <div className="font-serif opacity-30 select-none" style={{ fontSize: fs(34), lineHeight: 1 }}>
+            &ldquo;
+          </div>
+          <div
+            className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden my-auto max-w-[90%]"
+            style={{
+              fontSize: fs(11.5),
+              textAlign,
+              maxHeight: `${s(160)}px`
+            }}
+          >
+            {text}
+          </div>
+          <div className="space-y-0.5 pt-1 border-t border-current/20 w-3/4">
+            <div className="font-bold tracking-widest uppercase" style={{ fontSize: fs(11) }}>
+              {title}
+            </div>
+            {artist && (
+              <div className="italic opacity-80" style={{ fontSize: fs(9.5) }}>
+                {artist}
+              </div>
+            )}
+            {date && (
+              <div className="font-mono opacity-70" style={{ fontSize: fs(8.5) }}>
+                {date}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Default: photo-lyrics-overlay (bottom gradient with elegant typography)
     return (
       <div
-        className="absolute inset-0 z-25 flex flex-col justify-end p-4 sm:p-6 pointer-events-none select-none"
+        className="absolute inset-0 z-25 flex flex-col justify-end pointer-events-none select-none"
         style={{
-          background: `linear-gradient(to top, rgba(0,0,0,${lyricOverlayDarkness / 100}) 0%, rgba(0,0,0,${(lyricOverlayDarkness / 100) * 0.45}) 60%, transparent 100%)`,
-          color: lyricTextColor,
-          fontFamily: resolvedFont
+          padding: `${s(16)}px ${s(18)}px`,
+          background: `linear-gradient(to top, rgba(0,0,0,${scrimAlpha}) 0%, rgba(0,0,0,${scrimAlpha * 0.7}) 50%, rgba(0,0,0,${scrimAlpha * 0.15}) 80%, transparent 100%)`,
+          color: textColor,
+          fontFamily: font,
+          textShadow
         }}
       >
-        {lyricTemplate === 'music-player' ? (
-          <div className="space-y-2 max-w-full drop-shadow-md">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0">
-                <span className="text-xs">▶</span>
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm font-black tracking-wide truncate uppercase">{lyricTitle || 'Song Title'}</div>
-                <div className="text-[11px] font-semibold opacity-90 truncate">{lyricArtist || 'Artist Name'}</div>
-              </div>
-            </div>
-            <div className="w-full h-1 bg-white/30 rounded-full overflow-hidden my-1">
-              <div className="w-2/5 h-full bg-white rounded-full" />
-            </div>
-            <div className="text-[11px] leading-relaxed whitespace-pre-line opacity-95 max-h-36 overflow-hidden">
-              {lyricText}
-            </div>
+        <div className="space-y-1 drop-shadow-md">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="font-black uppercase tracking-wider truncate" style={{ fontSize: fs(14) }}>
+              {title}
+            </span>
+            {date && (
+              <span className="font-mono opacity-75 shrink-0" style={{ fontSize: fs(9) }}>
+                {date}
+              </span>
+            )}
           </div>
-        ) : lyricTemplate === 'elegant-script' ? (
-          <div className="text-center space-y-1.5 drop-shadow-lg my-auto">
-            <div className="text-xl sm:text-2xl font-normal italic tracking-wide">{lyricTitle || 'Perfect'}</div>
-            <div className="w-16 h-[1px] bg-current mx-auto opacity-70 my-1" />
-            <div className="text-[10px] sm:text-xs font-light tracking-widest uppercase opacity-80">{lyricArtist || 'Ed Sheeran'}</div>
-            <div className="text-xs sm:text-sm italic leading-relaxed whitespace-pre-line opacity-95 mt-2 max-h-40 overflow-hidden">
-              {lyricText}
+          {artist && (
+            <div className="italic opacity-90" style={{ fontSize: fs(11) }}>
+              {artist}
             </div>
+          )}
+          <div className="w-12 h-px bg-current opacity-40 my-1" />
+          <div
+            className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden"
+            style={{
+              fontSize: fs(10.5),
+              textAlign,
+              maxHeight: `${s(140)}px`
+            }}
+          >
+            {text}
           </div>
-        ) : lyricTemplate === 'split-card' ? (
-          <div className="bg-black/50 backdrop-blur-xs p-3.5 rounded-xl border border-white/20 space-y-1.5 drop-shadow-md">
-            <div className="flex justify-between items-baseline border-b border-white/20 pb-1">
-              <span className="text-xs font-black tracking-wider uppercase">{lyricTitle}</span>
-              <span className="text-[10px] opacity-80">{lyricArtist}</span>
-            </div>
-            <div className="text-[10px] leading-relaxed whitespace-pre-line opacity-90 max-h-32 overflow-hidden">
-              {lyricText}
-            </div>
-          </div>
-        ) : (
-          <div className="text-center space-y-1.5 drop-shadow-md mb-2">
-            <div className="text-xs sm:text-sm font-black tracking-widest uppercase">{lyricTitle || 'Song Title'}</div>
-            <div className="text-[10px] tracking-wider uppercase opacity-80">{lyricArtist || 'Artist Name'}</div>
-            <div className="w-12 h-[1px] bg-current mx-auto opacity-60 my-1" />
-            <div className="text-[11px] sm:text-xs leading-relaxed whitespace-pre-line font-medium opacity-95 max-h-36 overflow-hidden">
-              {lyricText}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     );
   };
 
-  // Photo Mosaic (canvas-mosaic): Multi-tile grid geometry with physical seams and live size updates
+  // Photo Mosaic (canvas-mosaic): Single continuous physical rectangular product surface with internal mosaic grid divisions
   const renderMosaicCanvas = () => {
     const layout = getProductLayout('canvas-mosaic', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
-    const tilePanels = layout.panels;
-    const count = tilePanels.length;
+    const count = layout.panelsCount || layout.panels.length;
     const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
     const master = panelImages[0] || createDefaultPanel();
 
-    const totalCols = count === 4 ? 2 : count === 6 ? 3 : count === 9 ? 3 : 4;
-    const totalRows = count === 4 ? 2 : count === 6 ? 2 : count === 9 ? 3 : 4;
+    const totalCols = layout.cols || (count === 16 ? 4 : count === 25 ? 5 : count === 36 ? 6 : count === 20 ? 4 : count === 15 ? 3 : count === 12 && layout.aspectRatio > 1 ? 4 : 3);
+    const totalRows = layout.rows || Math.ceil(count / totalCols);
+
+    const displayWidthInches = currentSizeOption?.widthInches || layout.overallWidthInches || 24;
+    const displayHeightInches = currentSizeOption?.heightInches || layout.overallHeightInches || 16;
 
     return (
-      <div className="w-full max-w-xl mx-auto my-auto p-4 flex flex-col items-center select-none">
-        <div
-          className="grid gap-2 sm:gap-2.5 w-full p-3 bg-stone-100/90 rounded-2xl border border-stone-200 shadow-xl"
-          style={{
-            aspectRatio: String(layout.aspectRatio),
-            gridTemplateColumns: `repeat(${totalCols}, 1fr)`,
-            gridTemplateRows: `repeat(${totalRows}, 1fr)`,
-            maxWidth: count === 6 ? '32rem' : '26rem',
-            boxShadow: '0 20px 30px -10px rgba(15, 23, 42, 0.15)'
-          }}
-        >
-          {tilePanels.map((pSpec, i) => {
-            const panel = panelImages[i];
-            const hasIndividualPhoto = Boolean(panel?.imageUrl) && panel.imageUrl !== masterImage;
-            const displayPhoto = hasIndividualPhoto ? panel.imageUrl : masterImage;
-            const isTarget = activePanelIndex === i;
+      <div className="relative flex flex-col items-center select-none w-full my-auto">
+        {/* Ruler Top */}
+        <div className="w-full flex items-center justify-center py-1 mb-1 max-w-[28rem] relative">
+          <div className="absolute inset-x-0 h-px border-b border-dashed border-stone-300" />
+          <div className="relative bg-white px-2 py-0.5 rounded-full border border-stone-200 text-[10px] font-bold text-stone-600 shadow-2xs z-10">
+            {displayWidthInches} inch ({layout.name})
+          </div>
+        </div>
 
-            const colIdx = i % totalCols;
-            const rowIdx = Math.floor(i / totalCols);
+        <div className="relative flex items-center justify-center w-full">
+          {/* Ruler Left */}
+          <div className="absolute -left-10 inset-y-0 flex flex-col items-center justify-center">
+            <div className="absolute inset-y-0 w-px border-r border-dashed border-stone-300" />
+            <div className="relative bg-white px-1.5 py-0.5 rounded-full border border-stone-200 text-[9px] font-bold text-stone-600 shadow-2xs rotate-[-90deg] whitespace-nowrap z-10">
+              {displayHeightInches} inch
+            </div>
+          </div>
 
-            return (
-              <div
-                key={pSpec.id || i}
-                {...panelHandlers(hasIndividualPhoto ? i : 0)}
-                ref={registerWheelRef(hasIndividualPhoto ? i : 0)}
-                className={`relative w-full h-full bg-white rounded-lg overflow-hidden transition-all cursor-pointer group border ${
-                  isTarget
-                    ? 'border-[#0E4A93] shadow-md ring-2 ring-[#0E4A93]/40 z-20'
-                    : 'border-stone-200 hover:border-stone-400 shadow-xs'
-                }`}
-                style={{
-                  boxShadow: '0 4px 10px -2px rgba(15, 23, 42, 0.08)'
-                }}
-              >
-                {dragOverPanel === i && (
-                  <div className="absolute inset-0 z-30 bg-[#E8752A]/25 border-4 border-dashed border-[#E8752A] pointer-events-none" />
-                )}
-
-                {displayPhoto ? (
-                  <div className="w-full h-full overflow-hidden relative">
-                    {hasIndividualPhoto ? (
-                      <img
-                        src={panel.imageUrl!}
-                        alt={`Tile ${i + 1}`}
-                        style={{
-                          transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                          filter: getFilterCss(panel.filter),
-                          objectFit: 'cover'
-                        }}
-                        className="w-full h-full pointer-events-none"
+          {/* CONTINUOUS MOSAIC PHYSICAL CANVAS SURFACE (Zero Gaps) */}
+          <div
+            {...panelHandlers(0)}
+            ref={registerWheelRef(0)}
+            onClick={() => {
+              if (!masterImage) fileInputRef.current?.click();
+            }}
+            className={`relative bg-[#d8dce2] rounded-[2px] overflow-hidden border border-stone-300/80 transition-all select-none ${
+              masterImage ? 'cursor-grab active:cursor-grabbing shadow-2xl' : 'cursor-pointer hover:border-[#0E4A93] shadow-xl'
+            }`}
+            style={{
+              aspectRatio: String(layout.aspectRatio),
+              width: `min(30rem, calc(52vh * ${layout.aspectRatio}))`,
+              maxWidth: '100%',
+              boxShadow: '0 20px 35px -8px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0,0,0,0.06)'
+            }}
+          >
+            {masterImage ? (
+              <div className="w-full h-full relative overflow-hidden">
+                <img
+                  src={masterImage}
+                  alt="Photo Mosaic"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
+                    transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                    filter: getFilterCss(master.filter),
+                    transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                  }}
+                  className="w-full h-full pointer-events-none select-none"
+                />
+                {/* Subtle physical cotton canvas weave micro-texture */}
+                <div
+                  className="absolute inset-0 pointer-events-none opacity-20 mix-blend-multiply"
+                  style={{
+                    backgroundImage:
+                      'repeating-linear-gradient(0deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px)'
+                  }}
+                />
+                {/* Visual tile boundary grid lines (Zero physical gaps) overlaid on image */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
+                  {Array.from({ length: totalCols - 1 }).map((_, c) => {
+                    const xPct = ((c + 1) / totalCols) * 100;
+                    return (
+                      <line
+                        key={`mv-${c}`}
+                        x1={`${xPct}%`}
+                        y1="0"
+                        x2={`${xPct}%`}
+                        y2="100%"
+                        stroke="rgba(255, 255, 255, 0.45)"
+                        strokeWidth="1.5"
+                        style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
                       />
-                    ) : (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: `${-rowIdx * 100}%`,
-                          left: `${-colIdx * 100}%`,
-                          width: `${totalCols * 100}%`,
-                          height: `${totalRows * 100}%`,
-                          pointerEvents: 'none'
-                        }}
-                      >
-                        <img
-                          src={masterImage || undefined}
-                          alt={`Tile ${i + 1}`}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
-                            transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                            filter: getFilterCss(master.filter),
-                            transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                          }}
-                          className="pointer-events-none"
-                        />
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50 hover:bg-stone-100 transition-colors p-1 text-center">
-                    <div className="w-6 h-6 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-0.5">
-                      <Upload className="w-3 h-3 stroke-[2.2]" />
-                    </div>
-                    <span className="text-[9px] font-bold text-stone-600">Tile {i + 1}</span>
-                    <span className="text-[8px] text-stone-400">{pSpec.dimension || '6"×6"'}</span>
-                  </div>
-                )}
+                    );
+                  })}
+                  {Array.from({ length: totalRows - 1 }).map((_, r) => {
+                    const yPct = ((r + 1) / totalRows) * 100;
+                    return (
+                      <line
+                        key={`mh-${r}`}
+                        x1="0"
+                        y1={`${yPct}%`}
+                        x2="100%"
+                        y2={`${yPct}%`}
+                        stroke="rgba(255, 255, 255, 0.45)"
+                        strokeWidth="1.5"
+                        style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
+                      />
+                    );
+                  })}
+                </svg>
+              </div>
+            ) : (
+              /* Empty state: Canvas India single central upload button + internal divisions */
+              <div className="w-full h-full relative flex items-center justify-center bg-[#dcdfe4]">
+                {/* Internal tile divisions drawn on empty canvas surface (Zero physical gaps) */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
+                  {Array.from({ length: totalCols - 1 }).map((_, c) => {
+                    const xPct = ((c + 1) / totalCols) * 100;
+                    return (
+                      <line
+                        key={`emv-${c}`}
+                        x1={`${xPct}%`}
+                        y1="0"
+                        x2={`${xPct}%`}
+                        y2="100%"
+                        stroke="rgba(0, 0, 0, 0.16)"
+                        strokeWidth="1.5"
+                      />
+                    );
+                  })}
+                  {Array.from({ length: totalRows - 1 }).map((_, r) => {
+                    const yPct = ((r + 1) / totalRows) * 100;
+                    return (
+                      <line
+                        key={`emh-${r}`}
+                        x1="0"
+                        y1={`${yPct}%`}
+                        x2="100%"
+                        y2={`${yPct}%`}
+                        stroke="rgba(0, 0, 0, 0.16)"
+                        strokeWidth="1.5"
+                      />
+                    );
+                  })}
+                </svg>
 
-                <div className="absolute bottom-1 left-1 bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold px-1 py-0.5 rounded z-20 pointer-events-none">
-                  {pSpec.dimension || `Tile ${i + 1}`}
+                {/* Centered Single Upload Action (Canvas India Branding) */}
+                <div className="relative z-20 flex flex-col items-center justify-center p-4 text-center group cursor-pointer">
+                  <div className="w-12 h-12 rounded-2xl bg-white shadow-md border border-stone-200/90 flex items-center justify-center text-[#0E4A93] group-hover:scale-110 group-hover:shadow-lg transition-all mb-2">
+                    <Upload className="w-5 h-5 stroke-[2.4] text-[#0E4A93]" />
+                  </div>
+                  <span className="text-xs sm:text-sm font-black text-stone-800 group-hover:text-[#0E4A93] transition-colors">
+                    Upload Image
+                  </span>
+                  <span className="text-[10px] font-semibold text-stone-500 mt-0.5">
+                    Click anywhere to upload photo for {layout.name} ({totalCols}×{totalRows})
+                  </span>
                 </div>
               </div>
-            );
-          })}
+            )}
+          </div>
         </div>
+
         <p className="text-[11px] font-semibold text-stone-500 mt-2.5 text-center">
-          Photo Mosaic • {count} Canvas Tiles Grid • Upload 1 photo to tile across seams, or click individual tiles to customize
+          Photo Mosaic • {layout.name} ({count} Tiles Grid) • 1 continuous photo spanning seamless mosaic tiles
         </p>
       </div>
     );
@@ -3150,92 +4735,135 @@ export const CanvasCustomizerPage: React.FC = () => {
     const layout = getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
     const hexPanels = layout.panels;
     const count = hexPanels.length;
-    const hexClip = HEXAGON_CLIP_PATH;
 
     return (
-      <div className="w-full max-w-xl mx-auto my-auto p-4 flex flex-col items-center select-none">
-        <div
-          className="relative w-full flex items-center justify-center"
-          style={{
-            aspectRatio: String(layout.aspectRatio),
-            maxHeight: '56vh'
-          }}
-        >
-          {hexPanels.map((pSpec, idx) => {
-            const panel = panelImages[idx] || createDefaultPanel();
-            const isTarget = activePanelIndex === idx;
+      <div className="relative flex flex-col items-center select-none w-full my-auto p-4">
+        {/* Ruler Top */}
+        <div className="w-full flex items-center justify-center py-1 mb-1 max-w-[28rem] relative">
+          <div className="absolute inset-x-0 h-px border-b border-dashed border-stone-300" />
+          <div className="relative bg-white px-2 py-0.5 rounded-full border border-stone-200 text-[10px] font-bold text-stone-600 shadow-2xs z-10">
+            {layout.overallWidthInches} inch ({layout.name})
+          </div>
+        </div>
 
-            return (
-              <div
-                key={pSpec.id || idx}
-                style={{
-                  position: 'absolute',
-                  left: `${pSpec.x * 100}%`,
-                  top: `${pSpec.y * 100}%`,
-                  width: `${pSpec.w * 100}%`,
-                  height: `${pSpec.h * 100}%`,
-                  clipPath: hexClip,
-                  WebkitClipPath: hexClip,
-                  filter: 'drop-shadow(0 12px 20px rgba(0,0,0,0.3)) drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
-                }}
-                className={`relative bg-white cursor-pointer group transition-all ${
-                  isTarget ? 'z-20 ring-2 ring-[#0E4A93]' : 'hover:brightness-95'
-                }`}
-                {...panelHandlers(idx)}
-                ref={registerWheelRef(idx)}
-              >
-                {/* 3D Bevel inner edge */}
+        <div className="relative flex items-center justify-center w-full">
+          {/* Ruler Left */}
+          <div className="absolute -left-10 inset-y-0 flex flex-col items-center justify-center">
+            <div className="absolute inset-y-0 w-px border-r border-dashed border-stone-300" />
+            <div className="relative bg-white px-1.5 py-0.5 rounded-full border border-stone-200 text-[9px] font-bold text-stone-600 shadow-2xs rotate-[-90deg] whitespace-nowrap z-10">
+              {layout.overallHeightInches} inch
+            </div>
+          </div>
+
+          <div
+            className="relative w-full max-w-2xl"
+            style={{
+              aspectRatio: String(layout.aspectRatio),
+              width: `min(34rem, calc(54vh * ${layout.aspectRatio}))`,
+              maxHeight: '56vh'
+            }}
+          >
+            {hexPanels.map((pSpec, idx) => {
+              const panel = panelImages[idx] || createDefaultPanel();
+              const isTarget = activePanelIndex === idx;
+              const isVertical = pSpec.orientation === 'vertical' || layout.orientation === 'vertical';
+              const hexClip = isVertical ? HEXAGON_VERTICAL_CLIP_PATH : HEXAGON_HORIZONTAL_CLIP_PATH;
+
+              return (
                 <div
-                  className="absolute inset-0 pointer-events-none z-10"
+                  key={pSpec.id || idx}
                   style={{
+                    position: 'absolute',
+                    left: `${pSpec.x * 100}%`,
+                    top: `${pSpec.y * 100}%`,
+                    width: `${pSpec.w * 100}%`,
+                    height: `${pSpec.h * 100}%`,
                     clipPath: hexClip,
                     WebkitClipPath: hexClip,
-                    boxShadow: 'inset 0 0 0 2px rgba(255, 255, 255, 0.7), inset 0 2px 6px rgba(0, 0, 0, 0.25)'
+                    filter: 'drop-shadow(0 12px 20px rgba(0,0,0,0.3)) drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
                   }}
-                />
-
-                {dragOverPanel === idx && (
-                  <div className="absolute inset-0 z-30 bg-[#E8752A]/25 border-4 border-dashed border-[#E8752A] pointer-events-none" />
-                )}
-
-                {panel.imageUrl ? (
-                  <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
-                    <img
-                      src={panel.imageUrl}
-                      alt={pSpec.label || `Hexagon ${idx + 1}`}
-                      style={{
-                        transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                        filter: getFilterCss(panel.filter),
-                        objectFit: panel.fitMode === 'contain' ? 'contain' : 'cover',
-                        transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                      }}
-                      className="max-w-none w-full h-full pointer-events-none"
-                    />
-                  </div>
-                ) : (
+                  className={`relative bg-white cursor-pointer group transition-all ${
+                    isTarget ? 'z-20' : 'hover:brightness-95'
+                  }`}
+                  {...panelHandlers(idx)}
+                  ref={registerWheelRef(idx)}
+                >
+                  {/* 3D Bevel inner edge */}
                   <div
-                    onClick={() => {
-                      setActivePanelIndex(idx);
-                      fileInputRef.current?.click();
+                    className="absolute inset-0 pointer-events-none z-10"
+                    style={{
+                      clipPath: hexClip,
+                      WebkitClipPath: hexClip,
+                      boxShadow: 'inset 0 0 0 2px rgba(255, 255, 255, 0.7), inset 0 2px 6px rgba(0, 0, 0, 0.25)'
                     }}
-                    className="w-full h-full flex flex-col items-center justify-center bg-stone-50/90 hover:bg-stone-100 transition-colors p-2 text-center"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-1">
-                      <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
-                    </div>
-                    <span className="text-[10px] font-bold text-stone-600">{pSpec.label || `Hexagon ${idx + 1}`}</span>
-                    {pSpec.dimension && <span className="text-[9px] text-stone-400">{pSpec.dimension}</span>}
-                  </div>
-                )}
+                  />
 
-                {pSpec.dimension && (
-                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
-                    {pSpec.dimension}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  {/* Active selection outline - true 6-sided hexagon SVG, never square */}
+                  {isTarget && (
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-30" viewBox="0 0 100 100" preserveAspectRatio="none">
+                      <polygon
+                        points={isVertical ? "50,0 100,25 100,75 50,100 0,75 0,25" : "25,0 75,0 100,50 75,100 25,100 0,50"}
+                        fill="none"
+                        stroke="#0E4A93"
+                        strokeWidth="4"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    </svg>
+                  )}
+
+                  {/* Drag-over indicator - true 6-sided hexagon SVG */}
+                  {dragOverPanel === idx && (
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-30" viewBox="0 0 100 100" preserveAspectRatio="none">
+                      <polygon
+                        points={isVertical ? "50,0 100,25 100,75 50,100 0,75 0,25" : "25,0 75,0 100,50 75,100 25,100 0,50"}
+                        fill="rgba(232, 117, 42, 0.25)"
+                        stroke="#E8752A"
+                        strokeWidth="4"
+                        strokeDasharray="6 4"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    </svg>
+                  )}
+
+                  {panel.imageUrl ? (
+                    <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
+                      <img
+                        src={panel.imageUrl}
+                        alt={pSpec.label || `Hexagon ${idx + 1}`}
+                        style={{
+                          transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                          filter: getFilterCss(panel.filter),
+                          objectFit: panel.fitMode === 'contain' ? 'contain' : 'cover',
+                          transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                        }}
+                        className="max-w-none w-full h-full pointer-events-none"
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => {
+                        setActivePanelIndex(idx);
+                        fileInputRef.current?.click();
+                      }}
+                      className="w-full h-full flex flex-col items-center justify-center bg-stone-50/90 hover:bg-stone-100 transition-colors p-2 text-center"
+                    >
+                      <div className="w-7 h-7 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-1">
+                        <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
+                      </div>
+                      <span className="text-[10px] font-bold text-stone-600">{pSpec.label || `Hexagon ${idx + 1}`}</span>
+                      {pSpec.dimension && <span className="text-[9px] text-stone-400">{pSpec.dimension}</span>}
+                    </div>
+                  )}
+
+                  {pSpec.dimension && (
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
+                      {pSpec.dimension}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
         <p className="text-[11px] font-semibold text-stone-500 mt-2.5 text-center">
           Hexagon Cluster • {count} {count === 1 ? 'Hexagon' : 'Hexagons'} • Click each hexagon to upload its own photo
@@ -3250,102 +4878,121 @@ export const CanvasCustomizerPage: React.FC = () => {
     const wallPanels = layout.panels;
 
     return (
-      <div className="w-full max-w-2xl mx-auto my-auto p-4 flex flex-col items-center select-none">
-        <div
-          className="relative w-full"
-          style={{
-            aspectRatio: String(layout.aspectRatio),
-            maxHeight: '56vh'
-          }}
-        >
-          {wallPanels.map((pSpec, idx) => {
-            const panel = panelImages[idx] || createDefaultPanel();
-            const isTarget = activePanelIndex === idx;
+      <div className="relative flex flex-col items-center select-none w-full my-auto">
+        {/* Ruler Top */}
+        <div className="w-full flex items-center justify-center py-1 mb-1 max-w-[28rem] relative">
+          <div className="absolute inset-x-0 h-px border-b border-dashed border-stone-300" />
+          <div className="relative bg-white px-2 py-0.5 rounded-full border border-stone-200 text-[10px] font-bold text-stone-600 shadow-2xs z-10">
+            {layout.overallWidthInches} inch ({layout.name})
+          </div>
+        </div>
 
-            return (
-              <div
-                key={pSpec.id || idx}
-                style={{
-                  position: 'absolute',
-                  left: `${pSpec.x * 100}%`,
-                  top: `${pSpec.y * 100}%`,
-                  width: `${pSpec.w * 100}%`,
-                  height: `${pSpec.h * 100}%`,
-                  boxShadow: '0 10px 20px -4px rgba(15, 23, 42, 0.18)'
-                }}
-                className={`relative bg-white rounded-lg overflow-hidden transition-all cursor-pointer group border ${
-                  isTarget
-                    ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/40 z-20 shadow-md'
-                    : 'border-stone-200 hover:border-stone-400 shadow-xs'
-                }`}
-                {...panelHandlers(idx)}
-                ref={registerWheelRef(idx)}
-              >
-                {/* 3D Canvas Chamfer Edge / White Edge */}
+        <div className="relative flex items-center justify-center w-full">
+          {/* Ruler Left */}
+          <div className="absolute -left-10 inset-y-0 flex flex-col items-center justify-center">
+            <div className="absolute inset-y-0 w-px border-r border-dashed border-stone-300" />
+            <div className="relative bg-white px-1.5 py-0.5 rounded-full border border-stone-200 text-[9px] font-bold text-stone-600 shadow-2xs rotate-[-90deg] whitespace-nowrap z-10">
+              {layout.overallHeightInches} inch
+            </div>
+          </div>
+
+          <div
+            className="relative w-full max-w-2xl"
+            style={{
+              aspectRatio: String(layout.aspectRatio),
+              width: `min(34rem, calc(54vh * ${layout.aspectRatio}))`,
+              maxHeight: '56vh'
+            }}
+          >
+            {wallPanels.map((pSpec, idx) => {
+              const panel = panelImages[idx] || createDefaultPanel();
+              const isTarget = activePanelIndex === idx;
+
+              return (
                 <div
-                  className="absolute inset-0 pointer-events-none z-10"
+                  key={pSpec.id || idx}
                   style={{
-                    boxShadow: 'inset 0 0 0 1.5px rgba(255, 255, 255, 0.8), inset 0 2px 4px rgba(0, 0, 0, 0.12)'
+                    position: 'absolute',
+                    left: `${pSpec.x * 100}%`,
+                    top: `${pSpec.y * 100}%`,
+                    width: `${pSpec.w * 100}%`,
+                    height: `${pSpec.h * 100}%`,
+                    boxShadow: '0 10px 20px -4px rgba(15, 23, 42, 0.18)'
                   }}
-                />
-
-                {/* 90° Rotate Button Handle for active panel */}
-                {panel.imageUrl && isTarget && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRotate90();
-                    }}
-                    className="absolute top-2 left-2 z-30 w-7 h-7 rounded-full bg-white/90 backdrop-blur-xs border border-stone-300 shadow-md hover:scale-110 flex items-center justify-center text-stone-700 transition-transform cursor-pointer"
-                    title="Rotate photo 90°"
-                  >
-                    <RotateCw className="w-3.5 h-3.5" />
-                  </button>
-                )}
-
-                {dragOverPanel === idx && (
-                  <div className="absolute inset-0 z-30 bg-[#E8752A]/25 border-4 border-dashed border-[#E8752A] pointer-events-none" />
-                )}
-
-                {panel.imageUrl ? (
-                  <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
-                    <img
-                      src={panel.imageUrl}
-                      alt={pSpec.label || `Panel ${idx + 1}`}
-                      style={{
-                        transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                        filter: getFilterCss(panel.filter),
-                        objectFit: panel.fitMode === 'contain' ? 'contain' : 'cover',
-                        transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                      }}
-                      className="max-w-none w-full h-full pointer-events-none"
-                    />
-                  </div>
-                ) : (
+                  className={`relative bg-white rounded-lg overflow-hidden transition-all cursor-pointer group border ${
+                    isTarget
+                      ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/40 z-20 shadow-md'
+                      : 'border-stone-200 hover:border-stone-400 shadow-xs'
+                  }`}
+                  {...panelHandlers(idx)}
+                  ref={registerWheelRef(idx)}
+                >
+                  {/* 3D Canvas Chamfer Edge / White Edge */}
                   <div
-                    onClick={() => {
-                      setActivePanelIndex(idx);
-                      fileInputRef.current?.click();
+                    className="absolute inset-0 pointer-events-none z-10"
+                    style={{
+                      boxShadow: 'inset 0 0 0 1.5px rgba(255, 255, 255, 0.8), inset 0 2px 4px rgba(0, 0, 0, 0.12)'
                     }}
-                    className="w-full h-full flex flex-col items-center justify-center bg-stone-50/90 hover:bg-stone-100 transition-colors p-2 text-center"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-1">
-                      <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
-                    </div>
-                    <span className="text-[10px] font-bold text-stone-600">{pSpec.label || `Panel ${idx + 1}`}</span>
-                    {pSpec.dimension && <span className="text-[9px] text-stone-400">{pSpec.dimension}</span>}
-                  </div>
-                )}
+                  />
 
-                {pSpec.dimension && (
-                  <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
-                    {pSpec.dimension}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  {/* 90° Rotate Button Handle for active panel */}
+                  {panel.imageUrl && isTarget && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRotate90();
+                      }}
+                      className="absolute top-2 left-2 z-30 w-7 h-7 rounded-full bg-white/90 backdrop-blur-xs border border-stone-300 shadow-md hover:scale-110 flex items-center justify-center text-stone-700 transition-transform cursor-pointer"
+                      title="Rotate photo 90°"
+                    >
+                      <RotateCw className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+
+                  {dragOverPanel === idx && (
+                    <div className="absolute inset-0 z-30 bg-[#E8752A]/25 border-4 border-dashed border-[#E8752A] pointer-events-none" />
+                  )}
+
+                  {panel.imageUrl ? (
+                    <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
+                      <img
+                        src={panel.imageUrl}
+                        alt={pSpec.label || `Panel ${idx + 1}`}
+                        style={{
+                          transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                          filter: getFilterCss(panel.filter),
+                          objectFit: panel.fitMode === 'contain' ? 'contain' : 'cover',
+                          transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                        }}
+                        className="max-w-none w-full h-full pointer-events-none"
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => {
+                        setActivePanelIndex(idx);
+                        fileInputRef.current?.click();
+                      }}
+                      className="w-full h-full flex flex-col items-center justify-center bg-stone-50/90 hover:bg-stone-100 transition-colors p-2 text-center"
+                    >
+                      <div className="w-7 h-7 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-1">
+                        <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
+                      </div>
+                      <span className="text-[10px] font-bold text-stone-600">{pSpec.label || `Panel ${idx + 1}`}</span>
+                      {pSpec.dimension && <span className="text-[9px] text-stone-400">{pSpec.dimension}</span>}
+                    </div>
+                  )}
+
+                  {pSpec.dimension && (
+                    <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
+                      {pSpec.dimension}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     );
@@ -3379,39 +5026,72 @@ export const CanvasCustomizerPage: React.FC = () => {
             onClick={() => {
               setActivePanelIndex(panelIdx);
               if (!panel.imageUrl) {
+                uploadTargetRef.current = panelIdx;
                 fileInputRef.current?.click();
               }
             }}
-            className={`relative w-full h-full min-h-[60px] bg-stone-50 rounded-lg overflow-hidden transition-all cursor-pointer group ${
+            className={`relative w-full h-full min-h-[50px] bg-stone-100 rounded-lg overflow-hidden transition-all cursor-pointer group ${
               isTarget
                 ? 'ring-2 ring-inset ring-[#0E4A93] z-20 shadow-md'
-                : 'border border-stone-200/90 hover:border-stone-300'
+                : 'border border-stone-200 hover:border-stone-400'
             }`}
           >
             {dragOverPanel === panelIdx && (
-              <div className="absolute inset-0 z-30 bg-blue-500/20 border-2 border-dashed border-[#0E4A93] pointer-events-none" />
+              <div className="absolute inset-0 z-30 bg-blue-500/20 border-2 border-dashed border-[#0E4A93] flex items-center justify-center pointer-events-none">
+                <span className="bg-[#0E4A93] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">
+                  Drop Here
+                </span>
+              </div>
             )}
             {panel.imageUrl ? (
-              <img
-                src={panel.imageUrl}
-                alt={`Slot ${panelIdx + 1}`}
-                style={{
-                  transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                  filter: getFilterCss(panel.filter),
-                  objectFit: panel.fitMode === 'contain' ? 'contain' : 'cover',
-                  transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                }}
-                className="w-full h-full pointer-events-none"
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50 hover:bg-stone-100 transition-colors p-2 text-center">
-                <div className="w-7 h-7 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-1">
-                  <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
+              <>
+                <img
+                  src={panel.imageUrl}
+                  alt={`Slot ${panelIdx + 1}`}
+                  style={{
+                    transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                    filter: getFilterCss(panel.filter),
+                    objectFit: panel.fitMode === 'contain' ? 'contain' : 'cover',
+                    transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                  }}
+                  className="w-full h-full pointer-events-none"
+                />
+                {/* Slot quick overlay buttons */}
+                <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 z-30">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      uploadTargetRef.current = panelIdx;
+                      fileInputRef.current?.click();
+                    }}
+                    className="p-1 rounded bg-black/70 hover:bg-black text-white text-[9px] font-bold shadow-xs transition-colors"
+                    title="Change Photo"
+                  >
+                    <RefreshCw className="w-2.5 h-2.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveSlotPhoto(panelIdx);
+                    }}
+                    className="p-1 rounded bg-rose-600/90 hover:bg-rose-700 text-white text-[9px] font-bold shadow-xs transition-colors"
+                    title="Remove Photo"
+                  >
+                    <Trash2 className="w-2.5 h-2.5" />
+                  </button>
                 </div>
-                <span className="text-[10px] font-bold text-stone-600 group-hover:text-[#0E4A93]">
+              </>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-stone-100 hover:bg-stone-200/70 transition-colors p-2 text-center select-none">
+                <div className="w-8 h-8 rounded-full bg-white shadow-xs border border-stone-200 flex items-center justify-center text-[#0E4A93] group-hover:bg-[#0E4A93] group-hover:text-white group-hover:scale-105 transition-all mb-1">
+                  <Upload className="w-4 h-4 stroke-[2.2]" />
+                </div>
+                <span className="text-[10px] font-black text-stone-700 group-hover:text-[#0E4A93]">
                   {pSpec.label || `Slot ${panelIdx + 1}`}
                 </span>
-                <span className="text-[9px] text-stone-400">{pSpec.dimension || 'Click to upload'}</span>
+                <span className="text-[9px] text-stone-400 font-semibold">{pSpec.dimension || 'Upload Photo'}</span>
               </div>
             )}
             {pSpec.dimension && (
@@ -3426,15 +5106,15 @@ export const CanvasCustomizerPage: React.FC = () => {
 
     return (
       <div
-        className="relative rounded-2xl bg-white p-2.5 sm:p-3 overflow-hidden transition-all shadow-lg border border-stone-200 mx-auto my-auto"
+        className="relative bg-[#d8dce2] rounded-[2px] overflow-hidden border border-stone-300/80 transition-all select-none shadow-xl mx-auto my-auto"
         style={{
           aspectRatio: String(layout.aspectRatio),
-          width: `min(28rem, calc(50vh * ${layout.aspectRatio}))`,
+          width: `min(30rem, calc(52vh * ${layout.aspectRatio}))`,
           maxWidth: '100%',
-          boxShadow: '0 15px 30px -5px rgba(15, 23, 42, 0.16)'
+          boxShadow: '0 20px 35px -8px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0,0,0,0.06)'
         }}
       >
-        <div className="relative w-full h-full bg-stone-100/60 rounded-xl overflow-hidden">
+        <div className="relative w-full h-full">
           {collageSlots.map((slot, idx) => renderCollageSlot(idx, slot))}
         </div>
       </div>
@@ -3518,10 +5198,10 @@ export const CanvasCustomizerPage: React.FC = () => {
             </div>
             <div className="space-y-1.5 py-2.5 text-stone-600">
               <div className="flex justify-between">
-                <span>Base ({isCustomSize && canUseCustomSize ? `${customWidth}"×${customHeight}"` : currentSizeOption.dimensionsSummary}):</span>
+                <span>Base ({selectedProductTypeId === 'canvas-banner' ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}` : isCustomSize && canUseCustomSize ? `${customWidth}"×${customHeight}"` : currentSizeOption.dimensionsSummary}):</span>
                 <span className="font-bold text-stone-900">₹{sizePrice}</span>
               </div>
-              {selectedWrapId !== 'canvas-lite' && (
+              {selectedWrapId !== 'canvas-lite' && selectedProductTypeId !== 'canvas-banner' && (
                 <div className="flex justify-between">
                   <span>Wrap:</span>
                   <span className="font-bold text-stone-900">+₹{WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.price}</span>
@@ -3530,7 +5210,11 @@ export const CanvasCustomizerPage: React.FC = () => {
               {selectedHardwareId !== 'no-hooks' && (
                 <div className="flex justify-between">
                   <span>Hardware:</span>
-                  <span className="font-bold text-stone-900">+₹{HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price}</span>
+                  <span className="font-bold text-stone-900">
+                    +₹{selectedProductTypeId === 'canvas-banner'
+                      ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
+                      : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)}
+                  </span>
                 </div>
               )}
               {selectedDisplayOptionId === 'dust-cover' && (
@@ -3567,14 +5251,44 @@ export const CanvasCustomizerPage: React.FC = () => {
 
         {/* COLUMN 2: CONFIGURATION PANEL */}
         <CustomizerPanel
-          title={activeTab}
+          title={
+            activeTab === 'UPLOAD' && selectedProductTypeId === 'canvas-word-art'
+              ? 'WORD ART'
+              : activeTab === 'UPLOAD' && selectedProductTypeId === 'canvas-quotes'
+              ? undefined
+              : activeTab === 'CREATE BUS ROLL'
+              ? 'Create Bus Roll'
+              : activeTab === 'BACKGROUND'
+              ? 'Background'
+              : activeTab === 'TEMPLATE'
+              ? 'Templates'
+              : activeTab === 'HARDWARE & FINISH' && selectedProductTypeId === 'canvas-bus-roll'
+              ? 'Hardware Option & Style'
+              : activeTab === 'SELECT SIZE' && selectedProductTypeId === 'canvas-banner'
+              ? 'Select Size'
+              : activeTab === 'HARDWARE & FINISH' && selectedProductTypeId === 'canvas-banner'
+              ? 'Hardware & Finish'
+              : activeTab
+          }
           metaText={
-            activeTab === 'PRODUCTS'
+            activeTab === 'CREATE BUS ROLL'
+              ? `${busRollConfig.lines.length} Lines`
+              : activeTab === 'BACKGROUND'
+              ? `${busRollConfig.backgroundColor}`
+              : activeTab === 'TEMPLATE'
+              ? 'Choose Preset'
+              : selectedProductTypeId === 'canvas-word-art' && activeTab === 'UPLOAD'
+              ? `${wordArtSizeOption.label} (${wordArtSizeOption.ratioTab})`
+              : activeTab === 'PRODUCTS'
               ? `${CANVAS_PRODUCT_TYPES.length} Styles`
               : activeTab === 'UPLOAD'
               ? `${uploadedPhotos.length} Photos`
+              : activeTab === 'SELECT SIZE' && selectedProductTypeId === 'canvas-banner'
+              ? `${CANVAS_BANNER_SIZE_OPTIONS.length} Sizes + Custom`
               : activeTab === 'SELECT SIZE'
               ? `${availableSizeOptions.length + (canUseCustomSize ? 1 : 0)} Options`
+              : activeTab === 'EFFECTS & OPTIONS'
+              ? `${getDigitalPaintingEffect(digitalPaintingConfig.selectedEffectId).name}`
               : activeTab === 'LAYOUTS & DESIGNS'
               ? selectedProductTypeId === 'canvas-lyric'
                 ? 'Lyrics & Typography'
@@ -3583,6 +5297,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                 : `${DESIGN_TEMPLATE_CATEGORIES.length} Categories`
               : activeTab === 'WRAP & BORDER'
               ? `${WRAP_OPTIONS.length} Options`
+              : activeTab === 'HARDWARE & FINISH' && selectedProductTypeId === 'canvas-banner'
+              ? `${CANVAS_BANNER_HARDWARE_OPTIONS.length} Options`
               : activeTab === 'HARDWARE & FINISH'
               ? `${HARDWARE_OPTIONS.length} Hardware`
               : 'Specifications'
@@ -3599,8 +5315,82 @@ export const CanvasCustomizerPage: React.FC = () => {
             />
           )}
 
-          {/* ----------------------------- UPLOAD ------------------------------ */}
+          {/* ----------------------------- UPLOAD / WORD ART / QUOTES ------------------------------ */}
           {activeTab === 'UPLOAD' && (
+            selectedProductTypeId === 'canvas-word-art' ? (
+              <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
+                <div>
+                  <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-1">
+                    Word Art Personalization
+                  </h3>
+                  <p className="text-[11px] text-stone-500">
+                    Personalize your canvas with custom names, words, shapes, and color palettes.
+                  </p>
+                </div>
+
+                {/* Primary CTA button matching reference screenshot */}
+                <button
+                  type="button"
+                  onClick={() => setIsWordArtPersonalizeModalOpen(true)}
+                  className="w-full py-3.5 px-4 bg-[#0E4A93] hover:bg-[#0b3c77] active:scale-[0.99] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Type className="w-4 h-4" />
+                  <span>{activeWordArtDataUrl ? 'EDIT PERSONALIZED WORD ART' : 'CLICK HERE TO CREATE PERSONALIZED WORDART'}</span>
+                </button>
+
+                {/* Size & Ratio Summary Box */}
+                <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200/80 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-stone-200">
+                    <span className="text-[11px] font-black uppercase text-stone-500 tracking-wider">Canvas Size</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsWordArtSizeModalOpen(true)}
+                      className="text-xs font-black text-[#0E4A93] hover:underline cursor-pointer"
+                    >
+                      Change Size
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between text-xs font-bold text-stone-800">
+                    <span>{wordArtSizeOption.label}</span>
+                    <span className="text-[#0E4A93] font-black">₹{wordArtSizeOption.price.toFixed(2)}</span>
+                  </div>
+                  <div className="text-[11px] text-stone-500 font-medium">
+                    Ratio: <span className="font-bold text-stone-700">{wordArtSizeOption.ratioTab}</span> ({wordArtSizeOption.widthInches}" × {wordArtSizeOption.heightInches}")
+                  </div>
+
+                  {activeWordArtDataUrl && (
+                    <div className="pt-2 border-t border-stone-200 space-y-1.5 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-stone-500 font-medium">Primary Name:</span>
+                        <span className="font-bold text-stone-900">{wordArtConfig.primaryName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-stone-500 font-medium">Font:</span>
+                        <span className="font-bold text-stone-900">{wordArtConfig.fontFamily}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-stone-500 font-medium">Shape:</span>
+                        <span className="font-bold capitalize text-stone-900">{wordArtConfig.shape}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : selectedProductTypeId === 'canvas-quotes' ? (
+              <QuotesTemplateSidebarPanel
+                selectedTemplateId={selectedQuoteTemplateId}
+                onSelectTemplate={handleSelectQuoteTemplate}
+                onChangeSizeClick={() => setIsSizeShapeModalOpen(true)}
+                currentSizeLabel={currentSizeOption?.label || '8" × 8"'}
+                currentPrice={totalPrice}
+                onOpenTextModal={() => {
+                  if (textElements.length === 0) {
+                    handleAddText();
+                  }
+                  setShowTextModal(true);
+                }}
+              />
+            ) : (
             <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
               <div>
                 <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-1">
@@ -3610,6 +5400,174 @@ export const CanvasCustomizerPage: React.FC = () => {
                   Add high-resolution photos from your PC or laptop or scan the QR code to upload directly from your mobile phone.
                 </p>
               </div>
+
+              {/* Active Word Art Card for Shape-based Products */}
+              {activeWordArtDataUrl && (
+                <div className="p-3.5 bg-blue-50/80 rounded-2xl border border-blue-200/80 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-black text-[#0E4A93]">
+                      <Type className="w-4 h-4" />
+                      <span>ACTIVE WORD ART</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wide">
+                      {selectedProductType.name}
+                    </span>
+                  </div>
+                  <div className="text-xs text-stone-700 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">Primary Name:</span>
+                      <span className="font-bold text-stone-900">{wordArtConfig.primaryName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">Design Silhouette:</span>
+                      <span className="font-bold capitalize text-stone-900">{wordArtConfig.shape}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsWordArtPersonalizeModalOpen(true)}
+                      className="flex-1 py-2 px-3 bg-[#0E4A93] hover:bg-[#0b3c77] text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Edit Word Art</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleRemoveSlotPhoto(0);
+                        setActiveWordArtDataUrl(null);
+                      }}
+                      className="py-2 px-3 bg-white hover:bg-rose-50 text-rose-600 border border-stone-200 hover:border-rose-300 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                      title="Remove Word Art"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Pop Art Style Card in Sidebar */}
+              {selectedProductTypeId === 'canvas-pop-art' && (
+                <div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200/90 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#0E4A93] flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#E8752A]" />
+                      <span>Selected Pop Art Style</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsPopArtStyleModalOpen(true)}
+                      className="text-[11px] font-extrabold text-[#0E4A93] hover:text-[#0b3c77] hover:underline cursor-pointer flex items-center gap-1"
+                    >
+                      <Palette className="w-3 h-3 text-[#E8752A]" />
+                      <span>Change Style</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 bg-white p-2 rounded-lg border border-amber-100 shadow-2xs">
+                    <img
+                      src={selectedPopStyle.previewImage}
+                      alt={selectedPopStyle.name}
+                      className="w-10 h-10 rounded-md object-cover border border-stone-200 shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-xs font-black text-stone-900 truncate">
+                          {selectedPopStyle.name}
+                        </span>
+                        {selectedPopStyle.priceAdjustment > 0 && (
+                          <span className="text-[10px] font-extrabold text-[#E8752A] shrink-0">
+                            +₹{selectedPopStyle.priceAdjustment.toLocaleString('en-IN')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-stone-500 line-clamp-1 leading-tight mt-0.5">
+                        {selectedPopStyle.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {popArtConfig.selectedStyleId === 'caricatures' && (
+                    <div className="text-[10px] font-medium text-stone-600 bg-white/80 p-2 rounded-md border border-amber-100 leading-snug">
+                      <strong className="text-stone-800">Artist Preparation Note:</strong> Your uploaded photo will be transformed into high-detail digital caricature artwork by our artists prior to final canvas printing.
+                    </div>
+                  )}
+
+                  {popArtConfig.isProcessing && (
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#0E4A93]">
+                      <div className="w-3 h-3 border-2 border-[#0E4A93] border-t-transparent rounded-full animate-spin" />
+                      <span>Applying {selectedPopStyle.name} filter...</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Lyric on Canvas Template Card in Sidebar */}
+              {selectedProductTypeId === 'canvas-lyric' && (
+                <div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200/90 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#0E4A93] flex items-center gap-1.5">
+                      <Music className="w-3.5 h-3.5 text-[#E8752A]" />
+                      <span>Lyric Template</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsLyricTemplateModalOpen(true)}
+                      className="text-[11px] font-extrabold text-[#0E4A93] hover:text-[#0b3c77] hover:underline cursor-pointer flex items-center gap-1"
+                    >
+                      <Layers className="w-3 h-3 text-[#E8752A]" />
+                      <span>Change Template</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 bg-white p-2 rounded-lg border border-blue-100 shadow-2xs">
+                    <img
+                      src={selectedLyricTemplate.previewImage}
+                      alt={selectedLyricTemplate.name}
+                      className="w-10 h-10 rounded-md object-cover border border-stone-200 shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-xs font-black text-stone-900 truncate">
+                          {selectedLyricTemplate.name}
+                        </span>
+                        {selectedLyricTemplate.priceAdjustment > 0 && (
+                          <span className="text-[10px] font-extrabold text-[#E8752A] shrink-0">
+                            +₹{selectedLyricTemplate.priceAdjustment.toLocaleString('en-IN')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-stone-500 line-clamp-1 leading-tight mt-0.5">
+                        {lyricConfig.title || lyricConfig.songTitle} • {lyricConfig.artistOrSubtitle || lyricConfig.artistOrNames}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('LAYOUTS & DESIGNS')}
+                      className="flex-1 py-1.5 px-3 bg-[#0E4A93] hover:bg-[#0b3c77] text-white font-bold text-[11px] rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                      <span>Customize Lyrics & Typography</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Create Word Art Option for Shape Canvas Products (Excludes Single Print, Quotes, Digital Painting, Bus Roll, Canvas Banner, Pop Art, Lyric) */}
+              {!activeWordArtDataUrl && isSingleOrShapedCanvas && selectedProductTypeId !== 'canvas-single' && selectedProductTypeId !== 'canvas-quotes' && selectedProductTypeId !== 'canvas-digital-painting' && selectedProductTypeId !== 'canvas-bus-roll' && selectedProductTypeId !== 'canvas-banner' && selectedProductTypeId !== 'canvas-pop-art' && selectedProductTypeId !== 'canvas-lyric' && (
+                <button
+                  type="button"
+                  onClick={() => setIsWordArtPersonalizeModalOpen(true)}
+                  className="w-full py-2.5 px-3.5 bg-blue-50 hover:bg-blue-100/80 active:scale-[0.99] text-[#0E4A93] border border-blue-200/80 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+                >
+                  <Type className="w-4 h-4 text-[#0E4A93]" />
+                  <span>Personalize With Word Art</span>
+                </button>
+              )}
 
               {/* Segmented Control: Computer vs Mobile QR */}
               <div className="flex border border-stone-200 rounded-xl p-1 bg-stone-100">
@@ -3639,15 +5597,17 @@ export const CanvasCustomizerPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Split Canvas single image notification */}
-              {selectedProductTypeId === 'canvas-split' && (
+              {/* Split Canvas & Photo Mosaic single image notification */}
+              {(selectedProductTypeId === 'canvas-split' || selectedProductTypeId === 'canvas-mosaic') && (
                 <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 text-xs font-semibold text-[#0E4A93]">
-                  Upload 1 photo — it is divided seamlessly across the {panels.length || 3} physical canvas panels.
+                  {selectedProductTypeId === 'canvas-mosaic'
+                    ? 'Upload 1 photo — it spans seamlessly across the entire mosaic product.'
+                    : `Upload 1 photo — it is divided seamlessly across the ${panels.length || 3} physical canvas panels.`}
                 </div>
               )}
 
               {/* Multi-slot assignment selector */}
-              {panels.length > 1 && selectedProductTypeId !== 'canvas-split' && (
+              {panels.length > 1 && selectedProductTypeId !== 'canvas-split' && selectedProductTypeId !== 'canvas-mosaic' && selectedProductTypeId !== 'canvas-collage' && (
                 <div className="p-2.5 bg-stone-100 rounded-xl space-y-1.5">
                   <div className="text-[11px] font-bold text-stone-700">Assign to Slot:</div>
                   <div className="flex flex-wrap gap-1.5">
@@ -3678,13 +5638,13 @@ export const CanvasCustomizerPage: React.FC = () => {
                 /* COMPUTER UPLOAD ZONE */
                 <div
                   onClick={() => {
-                    uploadTargetRef.current = activePanelIndex;
+                    uploadTargetRef.current = (selectedProductTypeId === 'canvas-split' || selectedProductTypeId === 'canvas-mosaic') ? 0 : activePanelIndex;
                     fileInputRef.current?.click();
                   }}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => {
                     e.preventDefault();
-                    handleFilesUpload(e.dataTransfer.files, activePanelIndex);
+                    handleFilesUpload(e.dataTransfer.files, (selectedProductTypeId === 'canvas-split' || selectedProductTypeId === 'canvas-mosaic') ? 0 : activePanelIndex);
                   }}
                   className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-6 text-center cursor-pointer transition-all group"
                 >
@@ -3803,7 +5763,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                           onDragEnd={() => {
                             setDraggingPhotoIndex(null);
                           }}
-                          onClick={() => handleAssignPhotoToPanel(photo, activePanelIndex)}
+                          onClick={() => handleAssignPhotoToPanel(photo, (selectedProductTypeId === 'canvas-split' || selectedProductTypeId === 'canvas-mosaic') ? 0 : activePanelIndex)}
                           className={`aspect-square rounded-lg overflow-hidden border transition-all relative group bg-white shadow-2xs select-none ${
                             isDraggingThis
                               ? 'opacity-40 scale-95 ring-2 ring-[#0E4A93] cursor-grabbing'
@@ -3839,13 +5799,106 @@ export const CanvasCustomizerPage: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              {/* Canvas Banner Optional Background Selector (Reference Screenshot 2) */}
+              {selectedProductTypeId === 'canvas-banner' && (
+                <div className="pt-3 border-t border-stone-200 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-px bg-stone-200" />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-stone-400">
+                      -- OR --
+                    </span>
+                    <div className="flex-1 h-px bg-stone-200" />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-black uppercase tracking-wider text-stone-800 flex items-center gap-1.5">
+                        <Palette className="w-3.5 h-3.5 text-[#0E4A93]" />
+                        <span>Select Background</span>
+                      </label>
+                      <span className="text-[11px] font-mono font-bold text-stone-500 uppercase">
+                        {bannerConfig.backgroundColor}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-stone-500 mb-2.5">
+                      Choose a background color for your banner canvas. Photos will be centered on top.
+                    </p>
+
+                    {/* Swatches Grid */}
+                    <div className="grid grid-cols-4 gap-2">
+                      {BANNER_BACKGROUND_PRESETS.map((bg) => {
+                        const isSelected = bannerConfig.backgroundColor.toLowerCase() === bg.hex.toLowerCase();
+                        return (
+                          <button
+                            key={bg.hex}
+                            type="button"
+                            onClick={() => setBannerConfig((prev) => ({ ...prev, backgroundColor: bg.hex }))}
+                            className={`p-1.5 rounded-xl border-2 flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                              isSelected
+                                ? 'border-[#0E4A93] bg-blue-50/50 shadow-xs ring-1 ring-[#0E4A93]/20'
+                                : 'border-stone-200 hover:border-stone-300 bg-white'
+                            }`}
+                            title={bg.name}
+                          >
+                            <div
+                              className="w-full h-7 rounded-lg border border-stone-200/80 shadow-2xs relative flex items-center justify-center"
+                              style={{ backgroundColor: bg.hex }}
+                            >
+                              {isSelected && (
+                                <Check
+                                  className={`w-3.5 h-3.5 stroke-[3] ${
+                                    ['#ffffff', '#fffdf9', '#f1f5f9', '#faf8f5'].includes(bg.hex.toLowerCase())
+                                      ? 'text-[#0E4A93]'
+                                      : 'text-white'
+                                  }`}
+                                />
+                              )}
+                            </div>
+                            <span className="text-[9px] font-bold text-stone-700 truncate w-full text-center">
+                              {bg.name.split(' ')[0]}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Custom Color Input */}
+                    <div className="mt-2.5 flex items-center gap-2 p-2 bg-stone-50 rounded-xl border border-stone-200">
+                      <input
+                        type="color"
+                        value={bannerConfig.backgroundColor}
+                        onChange={(e) => setBannerConfig((prev) => ({ ...prev, backgroundColor: e.target.value }))}
+                        className="w-8 h-8 rounded-lg cursor-pointer border border-stone-300 p-0.5 bg-white"
+                        id="custom-banner-bg"
+                      />
+                      <label htmlFor="custom-banner-bg" className="text-xs font-bold text-stone-700 cursor-pointer flex-1">
+                        Custom Hex Color
+                      </label>
+                      <span className="text-xs font-mono font-bold text-stone-500 bg-white px-2 py-1 rounded border border-stone-200">
+                        {bannerConfig.backgroundColor.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          )
+        )}
 
           {/* --------------------------- SELECT SIZE ---------------------------- */}
           {activeTab === 'SELECT SIZE' && (
+            selectedProductTypeId === 'canvas-banner' ? (
+              <CanvasBannerSizePanel
+                config={bannerConfig}
+                onChangeConfig={handleUpdateBannerConfig}
+                activeCategory={bannerCategory}
+                onChangeCategory={setBannerCategory}
+                currentPrice={unitPrice}
+              />
+            ) : (
             <div className="p-4 space-y-4">
-              {isSinglePrintCanvas ? (
+              {isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-pop-art' || selectedProductTypeId === 'canvas-lyric' ? (
                 <>
                   {/* Selected Size Summary Card */}
                   <div className="flex items-center justify-between p-3.5 bg-blue-50/70 rounded-2xl border border-blue-100 mb-3">
@@ -3867,17 +5920,23 @@ export const CanvasCustomizerPage: React.FC = () => {
                     </button>
                   </div>
 
-                  {/* 3 Categories in Header matching Canvas India brand */}
-                  <div className="flex gap-1.5 p-1 bg-stone-100 rounded-xl mb-3">
-                    {(['SQUARE', 'PANORAMIC', 'RECOMMENDED'] as const).map((cat) => {
-                      const isActive = sizeCategoryFilter === cat;
+                  {/* 5 Size Categories matching Canvas India brand */}
+                  <div className="flex flex-wrap gap-1 p-1 bg-stone-100 rounded-xl mb-3">
+                    {([
+                      { id: 'RECOMMENDED' as const, label: 'Recommended' },
+                      { id: 'SQUARE' as const, label: 'Square' },
+                      { id: 'PANORAMIC' as const, label: 'Panoramic' },
+                      { id: 'LARGE' as const, label: 'Large' },
+                      { id: 'SMALL' as const, label: 'Small' }
+                    ]).map((cat) => {
+                      const isActive = sizeCategoryFilter === cat.id;
                       return (
                         <button
-                          key={cat}
+                          key={cat.id}
                           type="button"
                           onClick={() => {
-                            setSizeCategoryFilter(cat);
-                            const matchingInCat = availableSizeOptions.filter((opt) => opt.categories.includes(cat));
+                            setSizeCategoryFilter(cat.id);
+                            const matchingInCat = availableSizeOptions.filter((opt) => opt.categories.includes(cat.id));
                             if (!matchingInCat.some((opt) => opt.id === selectedSizeId)) {
                               if (matchingInCat.length > 0) {
                                 setSelectedSizeId(matchingInCat[0].id);
@@ -3892,13 +5951,13 @@ export const CanvasCustomizerPage: React.FC = () => {
                               }
                             }
                           }}
-                          className={`flex-1 py-2 px-2 text-center text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                          className={`flex-1 min-w-[62px] py-1.5 px-1.5 text-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${
                             isActive
                               ? 'bg-[#0E4A93] text-white shadow-xs'
                               : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
                           }`}
                         >
-                          {cat === 'SQUARE' ? 'Square' : cat === 'PANORAMIC' ? 'Panoramic' : 'Recommended'}
+                          {cat.label}
                         </button>
                       );
                     })}
@@ -3952,12 +6011,12 @@ export const CanvasCustomizerPage: React.FC = () => {
 
                             {/* Dimensions text */}
                             <div className="text-[11px] font-black text-stone-900 text-center mt-1">
-                              {opt.label.replace(/^Single:\s*/, '')}
+                              {opt.label.replace(/^Single:\s*/, '').replace(/^Quotes Canvas:\s*/, '').replace(/^Digital Painting:\s*/, '').replace(/^Pop Art:\s*/, '')}
                             </div>
 
                             {/* Price text */}
                             <div className="text-[11px] text-[#0E4A93] text-center font-extrabold">
-                              ₹{opt.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              ₹{(opt.price + popStyleAdjustment).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                           </div>
                         );
@@ -4062,208 +6121,195 @@ export const CanvasCustomizerPage: React.FC = () => {
                 </>
               )}
             </div>
+            )
+          )}
+
+          {/* ------------------------ EFFECTS & OPTIONS ------------------------- */}
+          {activeTab === 'EFFECTS & OPTIONS' && (
+            <DigitalPaintingOptionsPanel
+              config={digitalPaintingConfig}
+              onChangeConfig={handleUpdateDigitalPaintingConfig}
+              currentSizeLabel={isCustomSize ? `${customWidth}" × ${customHeight}" (Custom)` : currentSizeOption?.label || selectedSizeId}
+              currentPrice={totalPrice}
+              onOpenSizeModal={() => setIsSizeShapeModalOpen(true)}
+            />
+          )}
+
+          {/* ------------------------ CREATE BUS ROLL ------------------------- */}
+          {activeTab === 'CREATE BUS ROLL' && (
+            <BusRollLineEditorPanel
+              config={busRollConfig}
+              onChangeConfig={handleUpdateBusRollConfig}
+            />
+          )}
+
+          {/* --------------------------- BACKGROUND --------------------------- */}
+          {activeTab === 'BACKGROUND' && (
+            <BusRollBackgroundPanel
+              config={busRollConfig}
+              onChangeConfig={handleUpdateBusRollConfig}
+            />
+          )}
+
+          {/* ---------------------------- TEMPLATE ---------------------------- */}
+          {activeTab === 'TEMPLATE' && (
+            <BusRollTemplatePanel
+              config={busRollConfig}
+              onChangeConfig={(updates) => {
+                handleUpdateBusRollConfig(updates);
+                if (updates.widthInches && updates.heightInches) {
+                  const matchingSize = availableSizeOptions.find(
+                    (s) => s.widthInches === updates.widthInches && s.heightInches === updates.heightInches
+                  );
+                  if (matchingSize) {
+                    setSelectedSizeId(matchingSize.id);
+                  }
+                }
+              }}
+            />
           )}
 
           {/* ------------------------ LAYOUTS & DESIGNS ------------------------- */}
           {activeTab === 'LAYOUTS & DESIGNS' && (
-            <div className="p-4 space-y-4">
-              {selectedProductTypeId === 'canvas-lyric' ? (
-                <div className="space-y-4">
-                  <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 text-xs text-[#0E4A93]">
-                    <div className="font-extrabold uppercase tracking-wide">Lyric & Typography Canvas</div>
-                    <p className="text-[11px] text-stone-600 mt-0.5">Customize your song title, artist, and lyrics below. Live preview updates on the canvas.</p>
-                  </div>
-
-                  {/* Template Style */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Typography Layout</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { id: 'center-minimal' as const, label: 'Center Minimal', desc: 'Centered classic typography' },
-                        { id: 'music-player' as const, label: 'Spotify Style', desc: 'Player icon & progress bar' },
-                        { id: 'elegant-script' as const, label: 'Elegant Script', desc: 'Handwritten romantic vibe' },
-                        { id: 'split-card' as const, label: 'Lyric Card', desc: 'Frosted card with header' }
-                      ].map((tpl) => (
-                        <button
-                          key={tpl.id}
-                          type="button"
-                          onClick={() => setLyricTemplate(tpl.id)}
-                          className={`p-2.5 rounded-xl border-2 text-left transition-all cursor-pointer ${
-                            lyricTemplate === tpl.id
-                              ? 'border-[#0E4A93] bg-blue-50/30 text-[#0E4A93] shadow-xs'
-                              : 'border-stone-200 text-stone-700 bg-white hover:border-stone-300'
-                          }`}
-                        >
-                          <div className="text-xs font-black">{tpl.label}</div>
-                          <div className="text-[10px] text-stone-500 mt-0.5">{tpl.desc}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Quick Preset Songs */}
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-stone-600 uppercase">Popular Song Presets</label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {[
-                        {
-                          title: 'PERFECT',
-                          artist: 'ED SHEERAN',
-                          text: "Baby, I'm dancing in the dark\nWith you between my arms\nBarefoot on the grass\nListening to our favorite song\nWhen you said you looked a mess\nI whispered underneath my breath\nYou heard it, darling\nYou look perfect tonight"
-                        },
-                        {
-                          title: 'A THOUSAND YEARS',
-                          artist: 'CHRISTINA PERRI',
-                          text: "Heart beats fast\nColors and promises\nHow to be brave?\nHow can I love when I'm afraid to fall?\nI have died every day waiting for you\nDarling, don't be afraid\nI have loved you for a thousand years\nI'll love you for a thousand more"
-                        },
-                        {
-                          title: 'ALL OF ME',
-                          artist: 'JOHN LEGEND',
-                          text: "'Cause all of me\nLoves all of you\nLove your curves and all your edges\nAll your perfect imperfections\nGive your all to me\nI'll give my all to you\nYou're my end and my beginning\nEven when I lose I'm winning"
-                        },
-                        {
-                          title: 'WEDDING VOWS',
-                          artist: 'FOREVER & ALWAYS',
-                          text: "I promise to love you unconditionally,\nTo support your dreams as my own,\nTo laugh with you in joy,\nAnd hold your hand through every storm.\nToday and for all our tomorrows,\nMy heart is yours."
-                        }
-                      ].map((song) => (
-                        <button
-                          key={song.title}
-                          type="button"
-                          onClick={() => {
-                            setLyricTitle(song.title);
-                            setLyricArtist(song.artist);
-                            setLyricText(song.text);
-                          }}
-                          className="px-2.5 py-1 bg-stone-100 hover:bg-[#0E4A93] hover:text-white rounded-lg text-[10px] font-bold text-stone-700 transition-colors cursor-pointer"
-                        >
-                          {song.title}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Song Title & Artist Inputs */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Song / Vow Title</label>
-                      <input
-                        type="text"
-                        value={lyricTitle}
-                        onChange={(e) => setLyricTitle(e.target.value)}
-                        placeholder="e.g. Perfect"
-                        className="w-full px-2.5 py-1.5 text-xs font-bold border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Artist / Couple Name</label>
-                      <input
-                        type="text"
-                        value={lyricArtist}
-                        onChange={(e) => setLyricArtist(e.target.value)}
-                        placeholder="e.g. Ed Sheeran"
-                        className="w-full px-2.5 py-1.5 text-xs font-bold border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Lyrics Textarea */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Lyrics / Text</label>
-                    <textarea
-                      rows={5}
-                      value={lyricText}
-                      onChange={(e) => setLyricText(e.target.value)}
-                      placeholder="Paste your favorite lyrics or personal vows here..."
-                      className="w-full px-2.5 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93] resize-y"
-                    />
-                  </div>
-
-                  {/* Font & Color */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Typography Font</label>
-                      <select
-                        value={lyricFontFamily}
-                        onChange={(e) => setLyricFontFamily(e.target.value as any)}
-                        className="w-full px-2.5 py-1.5 text-xs font-bold bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93]"
-                      >
-                        <option value="serif">Playfair Serif</option>
-                        <option value="script">Dancing Script</option>
-                        <option value="sans">Montserrat Sans</option>
-                        <option value="cinzel">Cinzel Classic</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-stone-700 uppercase mb-1">Text Color</label>
-                      <div className="flex gap-2 pt-1">
-                        {[
-                          { hex: '#FFFFFF', name: 'White' },
-                          { hex: '#FEF08A', name: 'Soft Gold' },
-                          { hex: '#F5EBE0', name: 'Cream' },
-                          { hex: '#1E293B', name: 'Charcoal' }
-                        ].map((c) => (
-                          <button
-                            key={c.hex}
-                            type="button"
-                            onClick={() => setLyricTextColor(c.hex)}
-                            style={{ backgroundColor: c.hex }}
-                            title={c.name}
-                            className={`w-6 h-6 rounded-full border-2 transition-transform cursor-pointer ${
-                              lyricTextColor === c.hex ? 'border-[#0E4A93] scale-110 shadow-sm' : 'border-stone-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Background Scrim Darkness */}
-                  <div>
-                    <div className="flex justify-between text-[11px] font-bold text-stone-700 uppercase mb-1">
-                      <span>Overlay Contrast</span>
-                      <span>{lyricOverlayDarkness}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={10}
-                      max={80}
-                      value={lyricOverlayDarkness}
-                      onChange={(e) => setLyricOverlayDarkness(Number(e.target.value))}
-                      className="w-full h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-[#0E4A93]"
-                    />
-                  </div>
-                </div>
-              ) : (
+            selectedProductTypeId === 'canvas-lyric' ? (
+              <LyricStudioPanel
+                config={lyricConfig}
+                template={selectedLyricTemplate}
+                onChangeConfig={setLyricConfig}
+                onOpenTemplateModal={() => setIsLyricTemplateModalOpen(true)}
+              />
+            ) : (
+              <div className="p-4 space-y-3.5">
                 <>
-                  {/* Sub-tab toggle matching Acrylic pill filter style */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {[
-                      { id: 'LAYOUTS' as const, label: 'Layouts' },
-                      { id: 'DESIGNS' as const, label: 'Design Templates' }
-                    ].map((sub) => (
-                      <button
-                        key={sub.id}
-                        type="button"
-                        onClick={() => setLayoutSubTab(sub.id)}
-                        className={`flex-1 px-3 py-2 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
-                          layoutSubTab === sub.id
-                            ? 'bg-[#0E4A93] text-white shadow-xs'
-                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                        }`}
-                      >
-                        {sub.label}
-                      </button>
-                    ))}
+                  {/* Remove Design/Template Header Action Tile (Matching Screenshot 1) */}
+                  <div className="pb-1 border-b border-stone-200">
+                    <span className="text-xs font-bold text-stone-700 block mb-1.5">
+                      Remove Design/Template
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedTemplateId(null);
+                        setTextElements((prev) => prev.filter((t) => t.id !== 'tpl-text'));
+                      }}
+                      className={`w-20 h-20 rounded-xl border-2 flex items-center justify-center transition-all cursor-pointer ${
+                        selectedTemplateId
+                          ? 'border-orange-500 bg-orange-50/40 hover:bg-orange-100 shadow-xs'
+                          : 'border-stone-300 bg-stone-50 hover:bg-stone-100'
+                      }`}
+                      title="Clear active design or template"
+                    >
+                      <div className="relative w-14 h-14 border border-stone-400 bg-white rounded-lg flex items-center justify-center shadow-2xs">
+                        <X className="w-8 h-8 text-stone-400 stroke-[2.5]" />
+                      </div>
+                    </button>
                   </div>
 
-                  {/* Selected Layout Summary Banner */}
-                  {(() => {
+                  {/* DESIGNS vs LAYOUTS Tabs (Matching Screenshot 1) */}
+                  <div className="flex border border-stone-200 rounded-xl overflow-hidden bg-stone-100 p-1 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setLayoutSubTab('DESIGNS')}
+                      className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                        layoutSubTab === 'DESIGNS'
+                          ? 'bg-[#0E4A93] text-white shadow-xs'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
+                      }`}
+                    >
+                      DESIGNS
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLayoutSubTab('LAYOUTS')}
+                      className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                        layoutSubTab === 'LAYOUTS'
+                          ? 'bg-[#0E4A93] text-white shadow-xs'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
+                      }`}
+                    >
+                      LAYOUTS
+                    </button>
+                  </div>
+
+                  {/* ==================== DESIGNS TAB ==================== */}
+                  {layoutSubTab === 'DESIGNS' && (
+                    <div className="space-y-2 pt-1">
+                      {DESIGN_TEMPLATE_CATEGORIES.map((cat) => {
+                        const isExpanded = expandedDesignCategory === cat;
+                        const categoryTemplates = DESIGN_TEMPLATES.filter((t) => t.category === cat);
+                        return (
+                          <div
+                            key={cat}
+                            className="border border-stone-200 rounded-xl overflow-hidden bg-white shadow-2xs transition-all"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => setExpandedDesignCategory(isExpanded ? null : cat)}
+                              className="w-full px-3.5 py-3 flex items-center justify-between text-left font-bold text-xs text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
+                            >
+                              <span>{cat}</span>
+                              {isExpanded ? (
+                                <ChevronDown className="w-4 h-4 text-stone-600" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 text-stone-400" />
+                              )}
+                            </button>
+
+                            {isExpanded && (
+                              <div className="p-2.5 pt-0 border-t border-stone-100 bg-stone-50/40">
+                                <div className="grid grid-cols-2 gap-2 pt-2">
+                                  {categoryTemplates.map((tpl) => {
+                                    const isSelected = selectedTemplateId === tpl.id;
+                                    return (
+                                      <div
+                                        key={tpl.id}
+                                        onClick={() => handleApplyTemplate(tpl)}
+                                        className={`group relative rounded-xl border-2 transition-all overflow-hidden flex flex-col justify-between cursor-pointer ${
+                                          isSelected
+                                            ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
+                                            : 'border-stone-200 hover:border-stone-400 bg-white'
+                                        }`}
+                                      >
+                                        {isSelected && (
+                                          <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-xs z-10">
+                                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                          </div>
+                                        )}
+
+                                        <div className={`relative w-full h-24 flex items-center justify-center p-2.5 ${tpl.swatchClass}`}>
+                                          {renderDecorSvg(tpl.decor, tpl.accent, 'absolute inset-0 w-full h-full pointer-events-none')}
+                                          <div className="relative w-12 h-14 rounded bg-white/90 border border-black/10 shadow-xs flex items-center justify-center text-center p-1">
+                                            <span className="text-[8px] font-black leading-tight text-stone-800 line-clamp-2">
+                                              {tpl.textPreset}
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        <div className="p-1.5 bg-white text-center border-t border-stone-100">
+                                          <div className="text-[11px] font-bold text-stone-900 leading-tight truncate">
+                                            {tpl.name}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* ==================== LAYOUTS TAB ==================== */}
+                  {layoutSubTab === 'LAYOUTS' && (() => {
                     const currentProductLayouts = getProductLayouts(selectedProductTypeId);
                     const activeLayout = currentProductLayouts.find((l) => l.id === selectedLayoutId) || currentProductLayouts[0];
                     return (
-                      <>
-                        <div className="flex items-center justify-between p-3 bg-blue-50/70 rounded-xl border border-blue-100 my-2">
+                      <div className="space-y-3">
+                        {/* Selected Layout Summary Banner */}
+                        <div className="flex items-center justify-between p-3 bg-blue-50/70 rounded-xl border border-blue-100 my-1">
                           <div>
                             <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Active Layout</span>
                             <div className="text-xs font-black text-stone-900 mt-0.5">
@@ -4280,114 +6326,59 @@ export const CanvasCustomizerPage: React.FC = () => {
                           </button>
                         </div>
 
-                        {layoutSubTab === 'LAYOUTS' && (
-                          <div className="space-y-3">
-                            <p className="text-xs text-stone-500">
-                              Choose a layout arrangement compatible with {selectedProductType.name}.
-                            </p>
-                            <div className="grid grid-cols-2 gap-2">
-                              {currentProductLayouts.map((layout) => {
-                                const isSelected = selectedLayoutId === layout.id;
-                                return (
-                                  <div
-                                    key={layout.id}
-                                    onClick={() => {
-                                      setSelectedLayoutId(layout.id);
-                                      setExpandedLayoutId(layout.id);
-                                      setSelectedSizeId(layout.id);
-                                    }}
-                                    className={`group relative rounded-xl border-2 transition-all overflow-hidden flex flex-col justify-between cursor-pointer ${
-                                      isSelected
-                                        ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
-                                        : 'border-stone-200 hover:border-stone-400 bg-white'
-                                    }`}
-                                  >
-                                    {isSelected && (
-                                      <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
-                                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                                      </div>
-                                    )}
+                        <p className="text-xs text-stone-500">
+                          Choose a layout arrangement compatible with {selectedProductType.name}.
+                        </p>
 
-                                    <div className="w-full h-24 bg-stone-50 border-b border-stone-100 p-2 flex items-center justify-center">
-                                      <div className="w-full h-full flex items-center justify-center group-hover:scale-105 transition-transform">
-                                        {renderProductLayoutDiagram(layout, isSelected)}
-                                      </div>
-                                    </div>
-
-                                    <div className="p-2 bg-white text-center">
-                                      <div className="text-[11px] font-bold text-stone-900 leading-tight truncate">
-                                        {layout.name}
-                                      </div>
-                                      <div className="text-[10px] font-medium text-stone-500 truncate">
-                                        {layout.panelsCount} {layout.panelsCount === 1 ? 'Panel' : 'Panels'} • {layout.dimensionsSummary}
-                                      </div>
-                                    </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {currentProductLayouts.map((layout) => {
+                            const isSelected = selectedLayoutId === layout.id;
+                            return (
+                              <div
+                                key={layout.id}
+                                onClick={() => {
+                                  setSelectedLayoutId(layout.id);
+                                  setExpandedLayoutId(layout.id);
+                                  if (!isSinglePrintCanvas) {
+                                    setSelectedSizeId(layout.id);
+                                  }
+                                }}
+                                className={`group relative rounded-xl border-2 transition-all overflow-hidden flex flex-col justify-between cursor-pointer ${
+                                  isSelected
+                                    ? 'border-[#0E4A93] bg-blue-50/20 shadow-sm ring-1 ring-[#0E4A93]/20'
+                                    : 'border-stone-200 hover:border-stone-400 bg-white'
+                                }`}
+                              >
+                                {isSelected && (
+                                  <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0E4A93] text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                                    <Check className="w-3.5 h-3.5 stroke-[3]" />
                                   </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-                      </>
+                                )}
+
+                                <div className="w-full h-24 bg-stone-50 border-b border-stone-100 p-2 flex items-center justify-center">
+                                  <div className="w-full h-full flex items-center justify-center group-hover:scale-105 transition-transform">
+                                    {renderProductLayoutDiagram(layout, isSelected)}
+                                  </div>
+                                </div>
+
+                                <div className="p-2 bg-white text-center">
+                                  <div className="text-[11px] font-bold text-stone-900 leading-tight truncate">
+                                    {layout.name}
+                                  </div>
+                                  <div className="text-[10px] font-medium text-stone-500 truncate">
+                                    {layout.dimensionsSummary || layout.description || `${layout.panelsCount} ${layout.panelsCount === 1 ? 'Panel' : 'Panels'}`}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
                     );
                   })()}
-
-                  {layoutSubTab === 'DESIGNS' && (
-                    <div className="space-y-3">
-                      <div className="relative">
-                        <select
-                          value={designCategory}
-                          onChange={(e) => setDesignCategory(e.target.value)}
-                          className="w-full pl-3 pr-8 py-2.5 bg-white border border-stone-200 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] appearance-none shadow-2xs"
-                        >
-                          {DESIGN_TEMPLATE_CATEGORIES.map((cat) => (
-                            <option key={cat} value={cat}>
-                              {cat}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="w-4 h-4 text-stone-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        {DESIGN_TEMPLATES.filter((t) => t.category === designCategory).map((tpl) => {
-                          const isSelected = selectedTemplateId === tpl.id;
-                          return (
-                            <CustomizerOptionCard
-                              key={tpl.id}
-                              selected={isSelected}
-                              onClick={() => handleApplyTemplate(tpl)}
-                              title={tpl.name}
-                              subtitle={tpl.category}
-                              previewHeightClass="h-28 p-0"
-                              preview={
-                                <div className={`relative w-full h-full flex flex-col items-center justify-center p-2.5 ${tpl.swatchClass}`}>
-                                  {renderDecorSvg(tpl.decor, tpl.accent, 'absolute inset-0 w-full h-full pointer-events-none')}
-                                  <div className="relative w-12 h-12 rounded-md bg-white/80 border border-black/10 shadow-xs" />
-                                </div>
-                              }
-                            />
-                          );
-                        })}
-                      </div>
-
-                      {selectedTemplateId && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedTemplateId(null);
-                            setTextElements((prev) => prev.filter((t) => t.id !== 'tpl-text'));
-                          }}
-                          className="w-full py-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-center text-xs cursor-pointer transition-colors"
-                        >
-                          Remove Design / Template
-                        </button>
-                      )}
-                    </div>
-                  )}
                 </>
-              )}
-            </div>
+              </div>
+            )
           )}
 
           {/* --------------------------- WRAP & BORDER --------------------------- */}
@@ -4576,43 +6567,58 @@ export const CanvasCustomizerPage: React.FC = () => {
           {/* -------------------------- HARDWARE & FINISH ------------------------- */}
           {activeTab === 'HARDWARE & FINISH' && (
             <div className="p-4 space-y-5">
-              {/* 1. Canvas Thickness / Stretcher Bar Depth */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">1. Canvas Stretcher Thickness</label>
-                  <span className="text-[11px] font-bold text-[#0E4A93]">{THICKNESS_OPTIONS.length} options</span>
+              {/* 1. Canvas Thickness / Stretcher Bar Depth (Excludes Canvas Banner) */}
+              {selectedProductTypeId !== 'canvas-banner' && (
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">1. Canvas Stretcher Thickness</label>
+                    <span className="text-[11px] font-bold text-[#0E4A93]">{THICKNESS_OPTIONS.length} options</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {THICKNESS_OPTIONS.map((th) => {
+                      const isSelected = selectedThicknessId === th.id;
+                      return (
+                        <CustomizerOptionCard
+                          key={th.id}
+                          selected={isSelected}
+                          onClick={() => setSelectedThicknessId(th.id)}
+                          badge={th.badge}
+                          title={th.label}
+                          priceText={th.price === 0 ? 'Included' : `+₹${th.price}`}
+                          previewHeightClass="h-16 p-1.5"
+                          preview={renderWrapPreview(th.id)}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {THICKNESS_OPTIONS.map((th) => {
-                    const isSelected = selectedThicknessId === th.id;
-                    return (
-                      <CustomizerOptionCard
-                        key={th.id}
-                        selected={isSelected}
-                        onClick={() => setSelectedThicknessId(th.id)}
-                        badge={th.badge}
-                        title={th.label}
-                        priceText={th.price === 0 ? 'Included' : `+₹${th.price}`}
-                        previewHeightClass="h-16 p-1.5"
-                        preview={renderWrapPreview(th.id)}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
+              )}
 
               {/* 2. Hardware Option & Style */}
-              <div className="space-y-2.5 pt-3 border-t border-stone-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">2. Hardware Option &amp; Style</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {HARDWARE_OPTIONS.map((hw) => {
+              <div className={`space-y-2.5 ${selectedProductTypeId !== 'canvas-banner' ? 'pt-3 border-t border-stone-200' : ''}`}>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">
+                    {selectedProductTypeId === 'canvas-banner' ? 'Hardware & Mounting Options' : '2. Hardware Option & Style'}
+                  </label>
+                  {selectedProductTypeId === 'canvas-banner' && (
+                    <span className="text-[11px] font-bold text-[#0E4A93]">{CANVAS_BANNER_HARDWARE_OPTIONS.length} options</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {(selectedProductTypeId === 'canvas-banner' ? CANVAS_BANNER_HARDWARE_OPTIONS : HARDWARE_OPTIONS).map((hw) => {
                     const isSelected = selectedHardwareId === hw.id;
+                    const title = 'label' in hw ? hw.label : hw.name;
                     return (
                       <CustomizerOptionCard
                         key={hw.id}
                         selected={isSelected}
-                        onClick={() => setSelectedHardwareId(hw.id)}
-                        title={hw.label}
+                        onClick={() => {
+                          setSelectedHardwareId(hw.id);
+                          if (selectedProductTypeId === 'canvas-banner') {
+                            setBannerConfig((prev) => ({ ...prev, hardwareId: hw.id }));
+                          }
+                        }}
+                        title={title}
                         priceText={hw.price === 0 ? 'Free' : `+₹${hw.price}`}
                         previewHeightClass="h-16 p-1.5"
                         preview={renderHardwareIcon(hw.id)}
@@ -4620,40 +6626,48 @@ export const CanvasCustomizerPage: React.FC = () => {
                     );
                   })}
                 </div>
+                {selectedProductTypeId === 'canvas-banner' && (
+                  <div className="p-3 bg-blue-50/70 rounded-xl border border-blue-100 text-[11px] text-[#0E4A93] font-medium leading-relaxed">
+                    <strong>{CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name}: </strong>
+                    {CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.description}
+                  </div>
+                )}
               </div>
 
-              {/* 3. Display Option */}
-              <div className="space-y-2.5 pt-3 border-t border-stone-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">3. Back Display Option</label>
-                <div className="space-y-2">
-                  {DISPLAY_OPTIONS.map((opt) => {
-                    const isSelected = selectedDisplayOptionId === opt.id;
-                    return (
-                      <label
-                        key={opt.id}
-                        className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl border-2 cursor-pointer transition-all ${
-                          isSelected ? 'border-[#0E4A93] bg-blue-50/20 shadow-xs' : 'border-stone-200 hover:border-stone-300 bg-white'
-                        }`}
-                      >
-                        <span className="flex items-center gap-2 text-xs font-bold text-stone-800">
-                          <input
-                            type="radio"
-                            name="display-option"
-                            checked={isSelected}
-                            onChange={() => setSelectedDisplayOptionId(opt.id)}
-                            className="accent-[#0E4A93]"
-                          />
-                          {opt.label}
-                        </span>
-                        <span className="flex items-center gap-1.5 text-xs font-extrabold text-[#0E4A93]">
-                          {opt.price === 0 ? 'Free' : `+₹${opt.price.toFixed(0)}`}
-                          <Info className="w-3.5 h-3.5 text-stone-400" />
-                        </span>
-                      </label>
-                    );
-                  })}
+              {/* 3. Display Option (Excludes Canvas Banner) */}
+              {selectedProductTypeId !== 'canvas-banner' && (
+                <div className="space-y-2.5 pt-3 border-t border-stone-200">
+                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">3. Back Display Option</label>
+                  <div className="space-y-2">
+                    {DISPLAY_OPTIONS.map((opt) => {
+                      const isSelected = selectedDisplayOptionId === opt.id;
+                      return (
+                        <label
+                          key={opt.id}
+                          className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl border-2 cursor-pointer transition-all ${
+                            isSelected ? 'border-[#0E4A93] bg-blue-50/20 shadow-xs' : 'border-stone-200 hover:border-stone-300 bg-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2 text-xs font-bold text-stone-800">
+                            <input
+                              type="radio"
+                              name="display-option"
+                              checked={isSelected}
+                              onChange={() => setSelectedDisplayOptionId(opt.id)}
+                              className="accent-[#0E4A93]"
+                            />
+                            {opt.label}
+                          </span>
+                          <span className="flex items-center gap-1.5 text-xs font-extrabold text-[#0E4A93]">
+                            {opt.price === 0 ? 'Free' : `+₹${opt.price.toFixed(0)}`}
+                            <Info className="w-3.5 h-3.5 text-stone-400" />
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* 4. Optional Color Finishing */}
               <div className="space-y-2.5 pt-3 border-t border-stone-200">
@@ -4810,56 +6824,67 @@ export const CanvasCustomizerPage: React.FC = () => {
         {/* COLUMN 3: MAIN RIGHT LIVE CANVAS PREVIEW WORKSPACE                  */}
         {/* ------------------------------------------------------------------- */}
         <main className="flex-1 flex flex-col h-full bg-[#E2E8F0]/60 relative overflow-hidden">
-          {/* Top Action Bar for Workspace (Shared with Acrylic Customizer) */}
-          <CustomizerTopToolbar
-            onSave={handleSaveDesign}
-            showTextPopover={showTextModal}
-            onToggleText={() => {
-              if (showTextModal) {
-                setShowTextModal(false);
-              } else if (textElements.length === 0) {
-                handleAddText();
-              } else {
-                if (!selectedElement || selectedElement.type !== 'text') {
-                  setSelectedElement({ type: 'text', id: textElements[0].id });
+          {/* Top Action Bar for Workspace */}
+          {selectedProductTypeId === 'canvas-bus-roll' ? (
+            <BusRollTopToolbar
+              config={busRollConfig}
+              onChangeConfig={handleUpdateBusRollConfig}
+              onSave={handleSaveDesign}
+              onStartOver={handleStartOverBusRoll}
+            />
+          ) : (
+            <CustomizerTopToolbar
+              onSave={handleSaveDesign}
+              showTextPopover={showTextModal}
+              onToggleText={() => {
+                if (showTextModal) {
+                  setShowTextModal(false);
+                  setTextElements((prev) => prev.filter((t) => Boolean(t.text && t.text.trim())));
+                } else if (textElements.length === 0) {
+                  handleAddText();
+                } else {
+                  if (!selectedElement || selectedElement.type !== 'text') {
+                    setSelectedElement({ type: 'text', id: textElements[0].id });
+                  }
+                  setShowTextModal(true);
+                  setShowClipartModal(false);
                 }
-                setShowTextModal(true);
-                setShowClipartModal(false);
-              }
-            }}
-            showClipartPopover={showClipartModal}
-            onToggleClipart={() => {
-              setShowClipartModal(!showClipartModal);
-              setShowTextModal(false);
-            }}
-            isRoomViewActive={viewerMode === 'room'}
-            isRoomViewDisabled={!hasUploadedImage}
-            onToggleRoomView={() => {
-              if (!hasUploadedImage) return;
-              setViewerRotation(0);
-              setViewerTiltX(0);
-              setViewerAutoRotate(false);
-              setViewerMode('room');
-            }}
-            is3DViewActive={viewerMode === '3d'}
-            onOpen3DView={productCapabilities.view3D ? () => {
-              if (!hasUploadedImage) return;
-              setViewerRotation(-28);
-              setViewerTiltX(8);
-              setViewerAutoRotate(false);
-              setViewerMode('3d');
-            } : undefined}
-            is360ViewActive={viewerMode === '360'}
-            onOpen360View={() => {
-              if (!hasUploadedImage) return;
-              setViewerRotation(0);
-              setViewerTiltX(10);
-              setViewerAutoRotate(true);
-              setViewerMode('360');
-            }}
-            hasSelectedItem={Boolean(selectedElement)}
-            onDeleteSelectedItem={removeSelectedItem}
-          />
+              }}
+              showClipartPopover={showClipartModal}
+              onToggleClipart={() => {
+                setShowClipartModal(!showClipartModal);
+                setShowTextModal(false);
+              }}
+              isRoomViewActive={viewerMode === 'room'}
+              isRoomViewDisabled={!hasUploadedImage}
+              onToggleRoomView={() => {
+                if (!hasUploadedImage) return;
+                setViewerRotation(0);
+                setViewerTiltX(0);
+                setViewerAutoRotate(false);
+                setViewerMode('room');
+              }}
+              is3DViewActive={viewerMode === '3d'}
+              onOpen3DView={productCapabilities.view3D ? () => {
+                if (!hasUploadedImage) return;
+                setPreset3DAngle('top-left');
+                setViewerRotation(35);
+                setViewerTiltX(-20);
+                setViewerAutoRotate(false);
+                setViewerMode('3d');
+              } : undefined}
+              is360ViewActive={viewerMode === '360'}
+              onOpen360View={productCapabilities.view360 !== false ? () => {
+                if (!hasUploadedImage) return;
+                setViewerRotation(36);
+                setViewerTiltX(-18);
+                setViewerAutoRotate(false);
+                setViewerMode('360');
+              } : undefined}
+              hasSelectedItem={Boolean(selectedElement)}
+              onDeleteSelectedItem={removeSelectedItem}
+            />
+          )}
 
           {/* Live Typography Editor matching Acrylic Customizer */}
           {showTextModal && activeTextElement && (
@@ -4870,6 +6895,7 @@ export const CanvasCustomizerPage: React.FC = () => {
               onDeleteText={handleDeleteActiveText}
               onClose={() => {
                 setShowTextModal(false);
+                setTextElements((prev) => prev.filter((t) => Boolean(t.text && t.text.trim())));
               }}
             />
           )}
@@ -4911,56 +6937,30 @@ export const CanvasCustomizerPage: React.FC = () => {
 
           {/* Shared Center Stage / Design Canvas Area */}
           <CustomizerPreviewArea
-            sizeLabel={isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary}
+            sizeLabel={
+              selectedProductTypeId === 'canvas-banner'
+                ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
+                : isCustomSize && canUseCustomSize
+                ? `${customWidth}" × ${customHeight}"`
+                : currentSizeOption.dimensionsSummary
+            }
             onZoomOut={handleZoomOut}
             onZoomIn={handleZoomIn}
             onRotateLeft={handleRotateLeft}
             onRotateRight={handleRotateRight}
             extraControls={
               hasUploadedImage && (
-                <div className="inline-flex rounded-lg border border-stone-200 bg-stone-100 p-0.5 gap-0.5 ml-1">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleFill(activePanelIndex);
-                    }}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                      panelImages[activePanelIndex]?.fitMode === 'cover'
-                        ? 'bg-[#0E4A93] text-white shadow-xs'
-                        : 'text-stone-700 hover:text-[#0E4A93] hover:bg-stone-200'
-                    }`}
-                    title="Fill: scale up to completely cover the canvas area"
-                  >
-                    Fill
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleFix(activePanelIndex);
-                    }}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                      panelImages[activePanelIndex]?.fitMode === 'contain'
-                        ? 'bg-[#0E4A93] text-white shadow-xs'
-                        : 'text-stone-700 hover:text-[#0E4A93] hover:bg-stone-200'
-                    }`}
-                    title="Fix (Fit): scale down to fit completely within the canvas area with no clipping"
-                  >
-                    Fix
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleReset();
-                    }}
-                    className="p-1 rounded-md text-stone-500 hover:text-stone-800 hover:bg-stone-200 transition-colors cursor-pointer"
-                    title="Reset zoom, position and rotation"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleReset();
+                  }}
+                  className="p-1 rounded-md text-stone-500 hover:text-stone-800 hover:bg-stone-200 transition-colors cursor-pointer ml-1"
+                  title="Reset zoom, position and rotation"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                </button>
               )
             }
             prevStep={{
@@ -4980,21 +6980,38 @@ export const CanvasCustomizerPage: React.FC = () => {
                 <span>
                   Material:{' '}
                   <strong className="text-stone-900">
-                    {MATERIAL_VARIANTS.find((m) => m.id === selectedMaterialId)?.name || 'Artist Cotton Canvas'}
+                    {selectedProductTypeId === 'canvas-banner'
+                      ? 'Premium Flexible Canvas Banner'
+                      : (MATERIAL_VARIANTS.find((m) => m.id === selectedMaterialId)?.name || 'Artist Cotton Canvas')}
                   </strong>
                 </span>
-                <span>•</span>
-                <span>
-                  Thickness: <strong className="text-stone-900">{THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label}</strong>
-                </span>
-                <span>•</span>
-                <span>
-                  Wrap: <strong className="text-stone-900">{WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.name}</strong>
-                </span>
-                <span>•</span>
-                <span>
-                  Hardware: <strong className="text-stone-900">{HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label}</strong>
-                </span>
+                {selectedProductTypeId === 'canvas-banner' ? (
+                  <>
+                    <span>•</span>
+                    <span>
+                      Hardware: <strong className="text-stone-900">{CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware'}</strong>
+                    </span>
+                    <span>•</span>
+                    <span>
+                      Background: <strong className="text-stone-900">{bannerConfig.backgroundColor}</strong>
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span>•</span>
+                    <span>
+                      Thickness: <strong className="text-stone-900">{THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label}</strong>
+                    </span>
+                    <span>•</span>
+                    <span>
+                      Wrap: <strong className="text-stone-900">{WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.name}</strong>
+                    </span>
+                    <span>•</span>
+                    <span>
+                      Hardware: <strong className="text-stone-900">{HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label}</strong>
+                    </span>
+                  </>
+                )}
                 <button
                   type="button"
                   onClick={() => setMaterialModalOpen(true)}
@@ -5053,10 +7070,22 @@ export const CanvasCustomizerPage: React.FC = () => {
                     ? 28
                     : 14;
 
-                const displayWidthInches = isCustomSize && canUseCustomSize
+                const displayWidthInches = selectedProductTypeId === 'canvas-word-art'
+                  ? wordArtSizeOption.widthInches
+                  : selectedProductTypeId === 'canvas-bus-roll'
+                  ? busRollConfig.widthInches
+                  : selectedProductTypeId === 'canvas-banner'
+                  ? bannerConfig.widthInches
+                  : isCustomSize && canUseCustomSize
                   ? customWidth
                   : currentSizeOption?.widthInches || panels[0]?.widthRatio || 8;
-                const displayHeightInches = isCustomSize && canUseCustomSize
+                const displayHeightInches = selectedProductTypeId === 'canvas-word-art'
+                  ? wordArtSizeOption.heightInches
+                  : selectedProductTypeId === 'canvas-bus-roll'
+                  ? busRollConfig.heightInches
+                  : selectedProductTypeId === 'canvas-banner'
+                  ? bannerConfig.heightInches
+                  : isCustomSize && canUseCustomSize
                   ? customHeight
                   : currentSizeOption?.heightInches || panels[0]?.heightRatio || 8;
 
@@ -5081,10 +7110,16 @@ export const CanvasCustomizerPage: React.FC = () => {
                 const panelBox = (
                   <div className="relative flex flex-col items-center select-none w-full">
                     {/* Ruler Top */}
-                    <div className="w-full flex items-center justify-center py-1 mb-1 max-w-[27rem] relative">
+                    <div
+                      className="w-full flex items-center justify-center py-1 mb-1 relative"
+                      style={{
+                        width: `min(${printAspect > 1.4 ? '35rem' : printAspect > 1.15 ? '30rem' : '27rem'}, calc(52vh * ${printAspect}))`,
+                        maxWidth: '100%'
+                      }}
+                    >
                       <div className="absolute inset-x-0 h-px border-b border-dashed border-stone-300" />
                       <div className="relative bg-white px-2 py-0.5 rounded-full border border-stone-200 text-[10px] font-bold text-stone-600 shadow-2xs z-10">
-                        {displayWidthInches} inch
+                        {selectedProductTypeId === 'canvas-banner' ? formatDimension(bannerConfig.widthInches, bannerConfig.unit) : `${displayWidthInches} inch`}
                       </div>
                     </div>
 
@@ -5103,7 +7138,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                       <div className="absolute -left-10 inset-y-0 flex flex-col items-center justify-center">
                         <div className="absolute inset-y-0 w-px border-r border-dashed border-stone-300" />
                         <div className="relative bg-white px-1.5 py-0.5 rounded-full border border-stone-200 text-[9px] font-bold text-stone-600 shadow-2xs rotate-[-90deg] whitespace-nowrap z-10">
-                          {displayHeightInches} inch
+                          {selectedProductTypeId === 'canvas-banner' ? formatDimension(bannerConfig.heightInches, bannerConfig.unit) : `${displayHeightInches} inch`}
                         </div>
                       </div>
 
@@ -5112,12 +7147,12 @@ export const CanvasCustomizerPage: React.FC = () => {
                         className="relative"
                         style={{
                           aspectRatio: String(printAspect),
-                          width: `min(27rem, calc(52vh * ${printAspect}))`,
+                          width: `min(${printAspect > 1.4 ? '35rem' : printAspect > 1.15 ? '30rem' : '27rem'}, calc(52vh * ${printAspect}))`,
                           maxWidth: '100%'
                         }}
                       >
                         {(() => {
-                          const isSingleCanvasPrint = selectedProductTypeId === 'canvas-single';
+                          const isSingleCanvasPrint = selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-bus-roll' || selectedProductTypeId === 'canvas-pop-art' || selectedProductTypeId === 'canvas-lyric';
                           const imgMeta = panelImages[0]?.uploadedImage;
                           const natWidth = imgMeta?.width || 1200;
                           const natHeight = imgMeta?.height || 800;
@@ -5219,7 +7254,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                     }}
                                   >
                                     <img
-                                      src={panelImages[0].imageUrl}
+                                      src={(selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl) ? popArtConfig.processedImageUrl : panelImages[0].imageUrl}
                                       alt="Canvas Print"
                                       draggable={false}
                                       onLoad={(e) => {
@@ -5271,20 +7306,43 @@ export const CanvasCustomizerPage: React.FC = () => {
                               <div
                                 {...panelHandlers(0)}
                                 ref={registerWheelRef(0)}
-                                className={`relative w-full h-full ${currentShape.borderRadiusClass} ${
-                                  isSingleCanvasPrint ? (panelImages[0]?.imageUrl ? 'bg-transparent' : 'bg-white') : 'bg-white'
+                                className={`relative w-full h-full ${
+                                  (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
+                                    ? 'rounded-xs'
+                                    : currentShape.borderRadiusClass
+                                } ${
+                                  selectedProductTypeId === 'canvas-banner'
+                                    ? 'border border-stone-300 shadow-md'
+                                    : isSingleCanvasPrint
+                                    ? (panelImages[0]?.imageUrl ? 'bg-transparent' : 'bg-white')
+                                    : 'bg-white'
                                 } transition-all cursor-pointer group ${
-                                  isSingleCanvasPrint
+                                  selectedProductTypeId === 'canvas-banner'
+                                    ? 'overflow-hidden'
+                                    : isSingleCanvasPrint
                                     ? 'border border-stone-300'
                                     : 'shadow-lg overflow-hidden'
                                 } ${
                                   activePanelIndex === 0 ? 'ring-2 ring-[#0E4A93]/50' : ''
                                 }`}
                                 style={{
-                                  clipPath: isSingleCanvasPrint ? undefined : currentShape.clipPathStyle,
-                                  WebkitClipPath: isSingleCanvasPrint ? undefined : currentShape.clipPathStyle
+                                  backgroundColor: selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : selectedProductTypeId === 'canvas-lyric' ? selectedLyricTemplate.defaultBackground.color : undefined,
+                                  clipPath: (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
+                                    ? undefined
+                                    : currentShape.clipPathStyle,
+                                  WebkitClipPath: (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
+                                    ? undefined
+                                    : currentShape.clipPathStyle
                                 }}
                               >
+                                {/* Pop Art Live Processing Spinner Overlay */}
+                                {selectedProductTypeId === 'canvas-pop-art' && popArtConfig.isProcessing && (
+                                  <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-white/70 backdrop-blur-xs transition-opacity rounded-xs pointer-events-none select-none">
+                                    <div className="w-8 h-8 border-3 border-[#0E4A93] border-t-transparent rounded-full animate-spin mb-2" />
+                                    <span className="text-xs font-bold text-[#0E4A93] tracking-wide">Applying Pop Art Style...</span>
+                                  </div>
+                                )}
+
                                 {/* 90° Rotate Button Handle */}
                                 {panelImages[0]?.imageUrl && (
                                   <button
@@ -5300,6 +7358,37 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   </button>
                                 )}
 
+                                {/* Word Art Floating Controls (EDIT / DELETE) as shown in reference */}
+                                {(selectedProductTypeId === 'canvas-word-art' || Boolean(activeWordArtDataUrl)) && panelImages[0]?.imageUrl && (
+                                  <div className="absolute top-2 right-2 z-35 flex items-center bg-white/95 backdrop-blur-xs rounded-lg shadow-md border border-stone-200 divide-x divide-stone-200 overflow-hidden">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsWordArtPersonalizeModalOpen(true);
+                                      }}
+                                      className="px-3 py-1.5 flex items-center gap-1.5 text-xs font-black text-stone-700 hover:text-[#0E4A93] hover:bg-stone-50 cursor-pointer transition-colors"
+                                      title="Edit Word Art details"
+                                    >
+                                      <Edit3 className="w-3.5 h-3.5" />
+                                      <span>EDIT</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRemoveSlotPhoto(0);
+                                        setActiveWordArtDataUrl(null);
+                                      }}
+                                      className="px-3 py-1.5 flex items-center gap-1.5 text-xs font-black text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors"
+                                      title="Delete Word Art"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                      <span>DELETE</span>
+                                    </button>
+                                  </div>
+                                )}
+
                                 {dragOverPanel === 0 && (
                                   <div className="absolute inset-0 z-30 bg-[#0E4A93]/20 border-4 border-dashed border-[#0E4A93] pointer-events-none" />
                                 )}
@@ -5308,7 +7397,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 {!isSingleCanvasPrint && panelImages[0]?.imageUrl && (
                                   <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
                                     <img
-                                      src={panelImages[0].imageUrl}
+                                      src={(selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl) ? popArtConfig.processedImageUrl : panelImages[0].imageUrl}
                                       alt="Canvas Print"
                                       draggable={false}
                                       onLoad={(e) => {
@@ -5357,20 +7446,136 @@ export const CanvasCustomizerPage: React.FC = () => {
 
                                 {/* Empty State when no image is uploaded */}
                                 {!panelImages[0]?.imageUrl && (
-                                  <div
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="w-full h-full flex flex-col items-center justify-center bg-white p-6 text-center cursor-pointer group select-none"
-                                  >
-                                    <div className="flex items-center gap-2 text-[#0E4A93] group-hover:scale-105 transition-transform mb-1">
-                                      <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
-                                        <path d="M11 14.5V6.85l-2.6 2.6L7 8.05 12 3.05l5 5-1.4 1.4-2.6-2.6v7.65h-2zM4 20q-.825 0-1.412-.587Q2 18.825 2 18v-2q0-.425.288-.712Q2.575 15 3 15t.713.288Q4 15.575 4 16v2h16v-2q0-.425.288-.712Q20.575 15 21 15t.713.288Q22 15.575 22 16v2q0 .825-.587 1.413Q20.825 20 20 20Z"/>
-                                      </svg>
-                                      <span className="text-sm font-semibold tracking-tight">Upload an Image</span>
+                                  selectedProductTypeId === 'canvas-word-art' ? (
+                                    <div
+                                      onClick={() => setIsWordArtPersonalizeModalOpen(true)}
+                                      className="w-full h-full flex flex-col items-center justify-center bg-white p-6 text-center cursor-pointer group select-none"
+                                    >
+                                      <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#0E4A93] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-xs">
+                                        <Type className="w-7 h-7" />
+                                      </div>
+                                      <span className="text-sm font-black text-[#0E4A93] mb-1">
+                                        Create Personalized Word Art
+                                      </span>
+                                      <span className="text-xs text-stone-500 max-w-xs">
+                                        Click here to customize names, words, shapes, and color palettes
+                                      </span>
+                                      <span className="mt-3 px-4 py-1.5 bg-[#0E4A93] text-white text-xs font-bold rounded-lg shadow-xs group-hover:bg-[#0b3c77] transition-colors">
+                                        Start Customizing
+                                      </span>
                                     </div>
-                                    <span className="text-xs text-stone-500">
-                                      Maximum upload size: 25MB per file
-                                    </span>
-                                  </div>
+                                  ) : selectedProductTypeId === 'canvas-banner' ? (
+                                    <div
+                                      onClick={() => fileInputRef.current?.click()}
+                                      className="w-full h-full flex flex-col items-center justify-center p-6 text-center cursor-pointer group select-none transition-colors"
+                                      style={{ backgroundColor: bannerConfig.backgroundColor }}
+                                    >
+                                      <div className="flex items-center gap-2 text-[#0E4A93] group-hover:scale-105 transition-transform mb-1.5">
+                                        <UploadCloud className="w-6 h-6 stroke-[2.2] shrink-0" />
+                                        <span className="text-sm font-bold tracking-tight">Upload an Image</span>
+                                      </div>
+                                      <span className="text-xs text-stone-500 font-medium mb-1">
+                                        Maximum upload size: 25MB per file
+                                      </span>
+                                      <span className="text-[11px] text-stone-400">
+                                        Supported formats: PNG, JPG, JPEG, WEBP, BMP
+                                      </span>
+                                    </div>
+                                  ) : selectedProductTypeId === 'canvas-pop-art' ? (
+                                    <div
+                                      onClick={() => fileInputRef.current?.click()}
+                                      className="w-full h-full flex flex-col items-center justify-center bg-white p-6 text-center cursor-pointer group select-none"
+                                    >
+                                      <div className="w-14 h-14 rounded-2xl bg-amber-50 text-[#E8752A] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-xs">
+                                        <Sparkles className="w-7 h-7" />
+                                      </div>
+                                      <span className="text-sm font-black text-[#0E4A93] mb-1">
+                                        Upload Photo for {selectedPopStyle?.name || 'Pop Art'}
+                                      </span>
+                                      <span className="text-xs text-stone-500 max-w-xs mb-3">
+                                        Upload your photo to transform it into this iconic Pop Art style
+                                      </span>
+                                      <span className="px-4 py-1.5 bg-[#0E4A93] hover:bg-[#0b3c77] text-white text-xs font-bold rounded-lg shadow-xs transition-colors">
+                                        Browse Files
+                                      </span>
+                                    </div>
+                                  ) : selectedProductTypeId === 'canvas-lyric' ? (
+                                    <div
+                                      onClick={() => {
+                                        if (selectedLyricTemplate.supportsPhoto) {
+                                          fileInputRef.current?.click();
+                                        } else {
+                                          setActiveTab('LAYOUTS & DESIGNS');
+                                        }
+                                      }}
+                                      className="w-full h-full flex flex-col items-center justify-center p-6 text-center cursor-pointer group select-none relative"
+                                      style={{ backgroundColor: selectedLyricTemplate.defaultBackground.color }}
+                                    >
+                                      {/* Dropzone container matching Screenshot 2 */}
+                                      <div className="max-w-xs w-full bg-white/95 backdrop-blur-xs rounded-2xl p-4 sm:p-5 border-2 border-dashed border-[#0E4A93]/35 shadow-md flex flex-col items-center">
+                                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#0E4A93] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform shadow-2xs">
+                                          {selectedLyricTemplate.supportsPhoto ? (
+                                            <Upload className="w-6 h-6 stroke-[2.2]" />
+                                          ) : (
+                                            <Music className="w-6 h-6 stroke-[2.2] text-[#E8752A]" />
+                                          )}
+                                        </div>
+                                        <span className="text-xs sm:text-sm font-black text-stone-900 mb-0.5">
+                                          {selectedLyricTemplate.supportsPhoto ? 'Upload an Image' : 'Customize Lyrics'}
+                                        </span>
+                                        <span className="text-[11px] text-stone-500 font-medium mb-1">
+                                          {selectedLyricTemplate.supportsPhoto
+                                            ? 'Maximum upload size: 25MB per file'
+                                            : 'Click to edit song, artist & vows'}
+                                        </span>
+                                        {selectedLyricTemplate.supportsPhoto && (
+                                          <span className="text-[10px] text-stone-400 mb-2.5">
+                                            Supported formats: PNG, JPG, JPEG, WEBP, BMP
+                                          </span>
+                                        )}
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                          {selectedLyricTemplate.supportsPhoto && (
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                fileInputRef.current?.click();
+                                              }}
+                                              className="px-3.5 py-1.5 bg-[#0E4A93] hover:bg-[#0b3c77] text-white text-xs font-bold rounded-lg shadow-2xs transition-colors cursor-pointer"
+                                            >
+                                              Browse Photo
+                                            </button>
+                                          )}
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setActiveTab('LAYOUTS & DESIGNS');
+                                            }}
+                                            className="px-3.5 py-1.5 bg-[#E8752A] hover:bg-[#cf641e] text-white text-xs font-black rounded-lg shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                                          >
+                                            <Edit3 className="w-3.5 h-3.5" />
+                                            <span>ADD / EDIT LYRICS</span>
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div
+                                      onClick={() => fileInputRef.current?.click()}
+                                      className="w-full h-full flex flex-col items-center justify-center bg-white p-6 text-center cursor-pointer group select-none"
+                                    >
+                                      <div className="flex items-center gap-2 text-[#0E4A93] group-hover:scale-105 transition-transform mb-1">
+                                        <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                                          <path d="M11 14.5V6.85l-2.6 2.6L7 8.05 12 3.05l5 5-1.4 1.4-2.6-2.6v7.65h-2zM4 20q-.825 0-1.412-.587Q2 18.825 2 18v-2q0-.425.288-.712Q2.575 15 3 15t.713.288Q4 15.575 4 16v2h16v-2q0-.425.288-.712Q20.575 15 21 15t.713.288Q22 15.575 22 16v2q0 .825-.587 1.413Q20.825 20 20 20Z"/>
+                                        </svg>
+                                        <span className="text-sm font-semibold tracking-tight">Upload an Image</span>
+                                      </div>
+                                      <span className="text-xs text-stone-500 mb-2">
+                                        Maximum upload size: 25MB per file
+                                      </span>
+                                    </div>
+                                  )
                                 )}
 
                                 {borderWidthPx > 0 && (
@@ -5386,13 +7591,59 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 {/* Applied design template: real vector decoration */}
                                 {activeTemplate && renderDecorSvg(activeTemplate.decor, activeTemplate.accent, 'absolute inset-0 w-full h-full pointer-events-none z-25')}
 
-                                {/* Canvas Banner Hanging Wooden Bars */}
+                                {/* Canvas Banner Hardware Overlays */}
                                 {selectedProductTypeId === 'canvas-banner' && (
                                   <>
-                                    <div className="absolute -top-1 left-0 right-0 h-3.5 bg-amber-800 border-b border-amber-900 shadow-md z-30 flex items-center justify-center pointer-events-none">
-                                      <div className="w-2 h-2 rounded-full bg-stone-300 shadow-xs" />
-                                    </div>
-                                    <div className="absolute -bottom-1 left-0 right-0 h-3.5 bg-amber-800 border-t border-amber-900 shadow-md z-30 pointer-events-none" />
+                                    {/* Corner Eyelets / Metal Grommets */}
+                                    {selectedHardwareId === 'banner-grommets' && (
+                                      <>
+                                        <div className="absolute top-2 left-2 w-3.5 h-3.5 rounded-full bg-stone-300 border-2 border-stone-500 shadow-inner flex items-center justify-center pointer-events-none z-30">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-800" />
+                                        </div>
+                                        <div className="absolute top-2 right-2 w-3.5 h-3.5 rounded-full bg-stone-300 border-2 border-stone-500 shadow-inner flex items-center justify-center pointer-events-none z-30">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-800" />
+                                        </div>
+                                        <div className="absolute bottom-2 left-2 w-3.5 h-3.5 rounded-full bg-stone-300 border-2 border-stone-500 shadow-inner flex items-center justify-center pointer-events-none z-30">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-800" />
+                                        </div>
+                                        <div className="absolute bottom-2 right-2 w-3.5 h-3.5 rounded-full bg-stone-300 border-2 border-stone-500 shadow-inner flex items-center justify-center pointer-events-none z-30">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-800" />
+                                        </div>
+                                      </>
+                                    )}
+
+                                    {/* Pole Pockets: Top & Bottom Stitched Sleeves */}
+                                    {selectedHardwareId === 'banner-pole-pocket' && (
+                                      <>
+                                        <div className="absolute top-0 inset-x-0 h-5 bg-black/5 border-b border-dashed border-stone-400/80 pointer-events-none z-30 flex items-center justify-center">
+                                          <span className="text-[8px] font-mono uppercase tracking-widest text-stone-500/80">Pole Pocket (Top)</span>
+                                        </div>
+                                        <div className="absolute bottom-0 inset-x-0 h-5 bg-black/5 border-t border-dashed border-stone-400/80 pointer-events-none z-30 flex items-center justify-center">
+                                          <span className="text-[8px] font-mono uppercase tracking-widest text-stone-500/80">Pole Pocket (Bottom)</span>
+                                        </div>
+                                      </>
+                                    )}
+
+                                    {/* Solid Wood Hanging Rails */}
+                                    {selectedHardwareId === 'banner-hanging-rails' && (
+                                      <>
+                                        <div className="absolute -top-6 inset-x-0 flex items-center justify-center pointer-events-none z-30">
+                                          <svg className="w-32 h-6 overflow-visible" viewBox="0 0 100 24">
+                                            <line x1="50" y1="0" x2="10" y2="24" stroke="#78350F" strokeWidth="2" strokeLinecap="round" />
+                                            <line x1="50" y1="0" x2="90" y2="24" stroke="#78350F" strokeWidth="2" strokeLinecap="round" />
+                                            <circle cx="50" cy="0" r="2.5" fill="#B45309" stroke="#78350F" strokeWidth="1" />
+                                          </svg>
+                                        </div>
+                                        <div className="absolute -top-1.5 -inset-x-1 h-3.5 bg-linear-to-b from-[#854D0E] to-[#713F12] border border-[#5A320E] rounded-xs shadow-md z-30 pointer-events-none flex items-center justify-between px-2">
+                                          <div className="w-1 h-1 rounded-full bg-[#FEF08A]/70" />
+                                          <div className="w-1 h-1 rounded-full bg-[#FEF08A]/70" />
+                                        </div>
+                                        <div className="absolute -bottom-1.5 -inset-x-1 h-3.5 bg-linear-to-b from-[#854D0E] to-[#713F12] border border-[#5A320E] rounded-xs shadow-md z-30 pointer-events-none flex items-center justify-between px-2">
+                                          <div className="w-1 h-1 rounded-full bg-[#FEF08A]/70" />
+                                          <div className="w-1 h-1 rounded-full bg-[#FEF08A]/70" />
+                                        </div>
+                                      </>
+                                    )}
                                   </>
                                 )}
 
@@ -5423,11 +7674,17 @@ export const CanvasCustomizerPage: React.FC = () => {
               {/* PHOTO COLLAGE (Single Canvas Frame containing internal Photo Layout Grid) */}
               {selectedProductTypeId === 'canvas-collage' && (
                 <div className="relative flex flex-col items-center select-none w-full">
+                  {/* Yellow tip banner from reference */}
+                  <div className="mb-2 px-3 py-1 bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1.5 shadow-2xs">
+                    <Move className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Click and drag within the print lines to Adjust your Photo.</span>
+                  </div>
+
                   {/* Ruler Top */}
-                  <div className="w-full flex items-center justify-center py-1 mb-1 max-w-[27rem] relative">
+                  <div className="w-full flex items-center justify-center py-1 mb-1 max-w-[30rem] relative">
                     <div className="absolute inset-x-0 h-px border-b border-dashed border-stone-300" />
                     <div className="relative bg-white px-2 py-0.5 rounded-full border border-stone-200 text-[10px] font-bold text-stone-600 shadow-2xs z-10">
-                      {currentSizeOption?.widthInches || 12} inch
+                      {getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).overallWidthInches || currentSizeOption?.widthInches || 16} inch ({getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).name})
                     </div>
                   </div>
 
@@ -5436,7 +7693,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                     <div className="absolute -left-10 inset-y-0 flex flex-col items-center justify-center">
                       <div className="absolute inset-y-0 w-px border-r border-dashed border-stone-300" />
                       <div className="relative bg-white px-1.5 py-0.5 rounded-full border border-stone-200 text-[9px] font-bold text-stone-600 shadow-2xs rotate-[-90deg] whitespace-nowrap z-10">
-                        {currentSizeOption?.heightInches || 12} inch
+                        {getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).overallHeightInches || currentSizeOption?.heightInches || 16} inch
                       </div>
                     </div>
 
@@ -5540,24 +7797,52 @@ export const CanvasCustomizerPage: React.FC = () => {
       {viewerMode && hasUploadedImage && (() => {
         // Shared live customization state values for all 3 preview modes (Room, 3D, 360)
         const primaryPhotoUrl =
-          panelImages[activePanelIndex]?.imageUrl ||
-          panelImages[0]?.imageUrl ||
-          Object.values(panelImages).find((p) => Boolean(p?.imageUrl))?.imageUrl ||
-          uploadedPhotos[0] ||
-          '';
+          (selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl)
+            ? popArtConfig.processedImageUrl
+            : (panelImages[activePanelIndex]?.imageUrl ||
+               panelImages[0]?.imageUrl ||
+               Object.values(panelImages).find((p) => Boolean(p?.imageUrl))?.imageUrl ||
+               uploadedPhotos[0] ||
+               '');
+
+        const effectiveSizeForViewer = selectedProductTypeId === 'canvas-word-art'
+          ? {
+              id: wordArtSizeOption.id,
+              widthInches: wordArtSizeOption.widthInches,
+              heightInches: wordArtSizeOption.heightInches,
+              dimensionsSummary: `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`,
+              aspectRatio: wordArtSizeOption.aspectRatio || (wordArtSizeOption.widthInches / Math.max(1, wordArtSizeOption.heightInches)),
+              panelsCount: 1
+            }
+          : currentSizeOption;
 
         const geom = getCanvasProductGeometry(
           selectedProductTypeId,
-          currentSizeOption,
+          effectiveSizeForViewer,
           currentShape.id
         );
 
-        const previewAspect = geom.aspectRatio || (panels.length === 1 ? printAspect : 1);
+        const previewAspect = selectedProductTypeId === 'canvas-word-art'
+          ? (wordArtSizeOption.aspectRatio || (wordArtSizeOption.widthInches / Math.max(1, wordArtSizeOption.heightInches)))
+          : selectedProductTypeId === 'canvas-hexagon'
+          ? (getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).aspectRatio || 1)
+          : selectedProductTypeId === 'canvas-mosaic'
+          ? (getProductLayout('canvas-mosaic', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).aspectRatio || 1)
+          : selectedProductTypeId === 'canvas-split'
+          ? (getProductLayout('canvas-split', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).aspectRatio || 1)
+          : selectedProductTypeId === 'canvas-wall-art'
+          ? (getProductLayout('canvas-wall-art', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).aspectRatio || 1)
+          : selectedProductTypeId === 'canvas-collage'
+          ? (getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).aspectRatio || 1)
+          : (geom.aspectRatio || (panels.length === 1 ? printAspect : 1));
 
         const isHexagonProduct = selectedProductTypeId === 'canvas-hexagon';
         const isHexagonCluster = isHexagonProduct && panels.length > 1;
+        const isRectShape = !geom.clipPath && ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
         const activeClipPath = isHexagonProduct
-          ? HEXAGON_CLIP_PATH
+          ? (geom.clipPath || HEXAGON_HORIZONTAL_CLIP_PATH)
+          : isRectShape
+          ? undefined
           : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined));
 
         const frameOption = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
@@ -5637,27 +7922,36 @@ export const CanvasCustomizerPage: React.FC = () => {
           );
         };
 
-        // Render a single slot's image with locked percentage pan, zoom, rotation, mirror, and filter
-        const renderSlotPhoto = (idx: number) => {
+        // Render a single slot's image with scaled pan, zoom, rotation, mirror, and filter
+        const renderSlotPhoto = (idx: number, photoScaleFactor: number = 1) => {
           const p = panelImages[idx];
-          const url = p?.imageUrl || (idx === 0 ? primaryPhotoUrl : null);
-          const panXPct = ((p?.panX || 0) / 420) * 100;
-          const panYPct = ((p?.panY || 0) / 420) * 100;
+          const url = (selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl)
+            ? popArtConfig.processedImageUrl
+            : (p?.imageUrl || (idx === 0 ? primaryPhotoUrl : null));
+          const panX = (p?.panX || 0) * photoScaleFactor;
+          const panY = (p?.panY || 0) * photoScaleFactor;
           const sc = p?.scale || 1;
           const rot = p?.rotation || 0;
           const flt = p?.filter || 'original';
+          const isContain = p?.fitMode === 'contain';
 
           return url ? (
-            <div className="w-full h-full overflow-hidden relative flex items-center justify-center bg-stone-100 pointer-events-none select-none">
+            <div
+              className="w-full h-full overflow-hidden relative flex items-center justify-center bg-stone-100 pointer-events-none select-none"
+              style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+            >
               <img
                 src={url}
                 alt={`Canvas Panel ${idx + 1}`}
                 draggable={false}
                 style={{
                   filter: getFilterCss(flt),
-                  transform: `translate3d(${panXPct}%, ${panYPct}%, 0) scale(${sc}) rotate(${rot}deg) scaleX(${mirrorImage ? -1 : 1})`
+                  objectFit: isContain ? 'contain' : 'cover',
+                  transform: `translate(${panX}px, ${panY}px) scale(${sc}) rotate(${rot}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden'
                 }}
-                className="max-w-none w-full h-full object-cover pointer-events-none select-none"
+                className={`max-w-none w-full h-full ${isContain ? 'object-contain' : 'object-cover'} pointer-events-none select-none`}
               />
               {/* Subtle physical cotton canvas weave micro-texture */}
               <div
@@ -5681,10 +7975,13 @@ export const CanvasCustomizerPage: React.FC = () => {
           const scaledBorderPx = Math.max(0, Math.round(borderWidthPx * scaleFactor));
 
           return (
-            <div className="relative w-full h-full overflow-hidden pointer-events-none select-none">
-              {panels.length === 1 && selectedProductTypeId !== 'canvas-hexagon' ? (
+            <div
+              className="relative w-full h-full overflow-hidden pointer-events-none select-none"
+              style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+            >
+              {panels.length === 1 && selectedProductTypeId !== 'canvas-hexagon' && selectedProductTypeId !== 'canvas-collage' ? (
                 <div className="relative w-full h-full">
-                  {renderSlotPhoto(0)}
+                  {renderSlotPhoto(0, scaleFactor)}
                   {selectedProductTypeId === 'canvas-lyric' && renderLyricOverlay(scaleFactor)}
                 </div>
               ) : selectedProductTypeId === 'canvas-hexagon' ? (
@@ -5696,8 +7993,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                       {hexLayout.map((pos, i) => {
                         const p = panelImages[i];
                         const url = p?.imageUrl || (i === 0 ? primaryPhotoUrl : null);
-                        const panXPct = ((p?.panX || 0) / 420) * 100;
-                        const panYPct = ((p?.panY || 0) / 420) * 100;
+                        const panX = (p?.panX || 0) * scaleFactor;
+                        const panY = (p?.panY || 0) * scaleFactor;
                         return (
                           <div
                             key={i}
@@ -5721,8 +8018,10 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   width: '100%',
                                   height: '100%',
                                   objectFit: p?.fitMode === 'contain' ? 'contain' : 'cover',
-                                  transform: `translate3d(${panXPct}%, ${panYPct}%, 0) scale(${p?.scale || 1}) rotate(${p?.rotation || 0}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                                  filter: getFilterCss(p?.filter || 'original')
+                                  transform: `translate(${panX}px, ${panY}px) scale(${p?.scale || 1}) rotate(${p?.rotation || 0}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                  filter: getFilterCss(p?.filter || 'original'),
+                                  backfaceVisibility: 'hidden',
+                                  WebkitBackfaceVisibility: 'hidden'
                                 }}
                               />
                             ) : (
@@ -5736,69 +8035,129 @@ export const CanvasCustomizerPage: React.FC = () => {
                 })()
               ) : selectedProductTypeId === 'canvas-split' ? (
                 (() => {
-                  const splitPanels = currentSizeOption.panels && currentSizeOption.panels.length >= 2
-                    ? currentSizeOption.panels
-                    : [{ id: 'p0', widthRatio: 12, heightRatio: 24 }, { id: 'p1', widthRatio: 12, heightRatio: 24 }, { id: 'p2', widthRatio: 12, heightRatio: 24 }];
-                  const N = splitPanels.length;
+                  const layoutDef = getProductLayout('canvas-split', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                  const splitPanels = layoutDef.panels;
                   const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
                   const master = panelImages[0] || createDefaultPanel();
-                  const gapPx = Math.max(2, Math.round(targetWidthPx * 0.015));
-                  const panXPct = ((master.panX || 0) / 420) * 100;
-                  const panYPct = ((master.panY || 0) / 420) * 100;
+                  const panX = (master.panX || 0) * scaleFactor;
+                  const panY = (master.panY || 0) * scaleFactor;
+
                   return (
-                    <div className="relative w-full h-full pointer-events-none select-none flex items-center justify-center" style={{ gap: `${gapPx}px` }}>
-                      {splitPanels.map((_, i) => (
-                        <div
-                          key={i}
-                          className="relative h-full rounded-xs bg-white overflow-hidden shadow-xs"
-                          style={{ flex: 1 }}
-                        >
-                          {masterImage ? (
-                            <div
-                              style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: `calc(-${i * 100}% - ${i * gapPx}px)`,
-                                width: `calc(${N * 100}% + ${(N - 1) * gapPx}px)`,
-                                height: '100%'
-                              }}
-                            >
-                              <img
-                                src={masterImage}
-                                alt=""
-                                draggable={false}
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
-                                  transform: `translate3d(${panXPct}%, ${panYPct}%, 0) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                                  filter: getFilterCss(master.filter)
-                                }}
+                    <div className="relative w-full h-full pointer-events-none select-none bg-stone-100 overflow-hidden">
+                      {masterImage ? (
+                        <div className="w-full h-full relative">
+                          <img
+                            src={masterImage}
+                            alt=""
+                            draggable={false}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
+                              transform: `translate(${panX}px, ${panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                              filter: getFilterCss(master.filter),
+                              backfaceVisibility: 'hidden',
+                              WebkitBackfaceVisibility: 'hidden'
+                            }}
+                            className="w-full h-full pointer-events-none"
+                          />
+                          {/* Internal split division lines (0 gap) */}
+                          <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
+                            {splitPanels.map((p, idx) => (
+                              <rect
+                                key={`front-split-${idx}`}
+                                x={`${p.x * 100}%`}
+                                y={`${p.y * 100}%`}
+                                width={`${p.w * 100}%`}
+                                height={`${p.h * 100}%`}
+                                fill="none"
+                                stroke="rgba(255, 255, 255, 0.45)"
+                                strokeWidth="1.5"
+                                style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
                               />
-                            </div>
-                          ) : (
-                            <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-[10px] font-bold">
-                              Panel {i + 1}
-                            </div>
-                          )}
+                            ))}
+                          </svg>
                         </div>
-                      ))}
+                      ) : (
+                        <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-[10px] font-bold">
+                          Split Canvas ({splitPanels.length} Panels)
+                        </div>
+                      )}
                     </div>
                   );
                 })()
               ) : selectedProductTypeId === 'canvas-mosaic' ? (
-                <div
-                  className="w-full h-full grid gap-1.5 p-1.5 bg-stone-200/80 pointer-events-none"
-                  style={{
-                    gridTemplateColumns: `repeat(${panels.length === 4 ? 2 : panels.length === 6 ? 3 : panels.length === 9 ? 3 : panels.length === 16 ? 4 : 2}, minmax(0, 1fr))`
-                  }}
-                >
-                  {panels.map((_, i) => (
-                    <div key={i} className="min-h-0 rounded-xs overflow-hidden shadow-xs bg-white">
-                      {panelImages[i]?.imageUrl ? renderSlotPhoto(i) : renderSlotPhoto(0)}
+                (() => {
+                  const layoutDef = getProductLayout('canvas-mosaic', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                  const count = layoutDef.panelsCount || layoutDef.panels.length;
+                  const totalCols = layoutDef.cols || (count === 16 ? 4 : count === 25 ? 5 : count === 36 ? 6 : count === 20 ? 4 : count === 15 ? 3 : count === 12 && layoutDef.aspectRatio > 1 ? 4 : 3);
+                  const totalRows = layoutDef.rows || Math.ceil(count / totalCols);
+                  const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
+                  const master = panelImages[0] || createDefaultPanel();
+                  const panX = (master.panX || 0) * scaleFactor;
+                  const panY = (master.panY || 0) * scaleFactor;
+
+                  return (
+                    <div className="relative w-full h-full pointer-events-none select-none bg-stone-100 overflow-hidden">
+                      {masterImage ? (
+                        <div className="w-full h-full relative">
+                          <img
+                            src={masterImage}
+                            alt=""
+                            draggable={false}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
+                              transform: `translate(${panX}px, ${panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                              filter: getFilterCss(master.filter),
+                              backfaceVisibility: 'hidden',
+                              WebkitBackfaceVisibility: 'hidden'
+                            }}
+                            className="w-full h-full pointer-events-none"
+                          />
+                          {/* Internal mosaic division grid lines (0 gap) */}
+                          <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
+                            {Array.from({ length: totalCols - 1 }).map((_, c) => {
+                              const xPct = ((c + 1) / totalCols) * 100;
+                              return (
+                                <line
+                                  key={`front-mv-${c}`}
+                                  x1={`${xPct}%`}
+                                  y1="0"
+                                  x2={`${xPct}%`}
+                                  y2="100%"
+                                  stroke="rgba(255, 255, 255, 0.45)"
+                                  strokeWidth="1.5"
+                                  style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
+                                />
+                              );
+                            })}
+                            {Array.from({ length: totalRows - 1 }).map((_, r) => {
+                              const yPct = ((r + 1) / totalRows) * 100;
+                              return (
+                                <line
+                                  key={`front-mh-${r}`}
+                                  x1="0"
+                                  y1={`${yPct}%`}
+                                  x2="100%"
+                                  y2={`${yPct}%`}
+                                  stroke="rgba(255, 255, 255, 0.45)"
+                                  strokeWidth="1.5"
+                                  style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
+                                />
+                              );
+                            })}
+                          </svg>
+                        </div>
+                      ) : (
+                        <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-[10px] font-bold">
+                          Photo Mosaic ({count} Tiles)
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  );
+                })()
               ) : selectedProductTypeId === 'canvas-wall-art' ? (
                 (() => {
                   const layoutDef = getProductLayout('canvas-wall-art', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
@@ -5817,37 +8176,40 @@ export const CanvasCustomizerPage: React.FC = () => {
                           }}
                           className="rounded-xs overflow-hidden shadow-xs bg-white"
                         >
-                          {panelImages[i]?.imageUrl ? renderSlotPhoto(i) : renderSlotPhoto(0)}
+                          {panelImages[i]?.imageUrl ? renderSlotPhoto(i, scaleFactor) : renderSlotPhoto(0, scaleFactor)}
                         </div>
                       ))}
                     </div>
                   );
                 })()
               ) : selectedProductTypeId === 'canvas-collage' ? (
-                panels.length === 3 ? (
-                  <div className="w-full h-full flex flex-col gap-1.5 p-1.5 bg-stone-200/80 pointer-events-none">
-                    <div className="flex-[1.35] min-h-0 rounded-xs overflow-hidden shadow-xs">
-                      {renderSlotPhoto(0)}
-                    </div>
-                    <div className="flex-1 min-h-0 grid grid-cols-2 gap-1.5">
-                      <div className="rounded-xs overflow-hidden shadow-xs">{renderSlotPhoto(1)}</div>
-                      <div className="rounded-xs overflow-hidden shadow-xs">{renderSlotPhoto(2)}</div>
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    className="w-full h-full grid gap-1.5 p-1.5 bg-stone-200/80 pointer-events-none"
-                    style={{
-                      gridTemplateColumns: `repeat(${panels.length === 2 ? 2 : panels.length === 9 ? 3 : 2}, minmax(0, 1fr))`
-                    }}
-                  >
-                    {panels.map((_, i) => (
-                      <div key={i} className="min-h-0 rounded-xs overflow-hidden shadow-xs">
-                        {renderSlotPhoto(i)}
+                (() => {
+                  const layout = getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                  return (
+                    <div className="relative w-full h-full bg-[#d8dce2] pointer-events-none select-none">
+                      <div className="relative w-full h-full overflow-hidden">
+                        {layout.panels.map((pSpec, idx) => (
+                          <div
+                            key={pSpec.id || idx}
+                            style={{
+                              position: 'absolute',
+                              left: `${pSpec.x * 100}%`,
+                              top: `${pSpec.y * 100}%`,
+                              width: `${pSpec.w * 100}%`,
+                              height: `${pSpec.h * 100}%`,
+                              padding: '2px',
+                              boxSizing: 'border-box'
+                            }}
+                          >
+                            <div className="w-full h-full rounded-xs overflow-hidden bg-stone-200">
+                              {renderSlotPhoto(idx, scaleFactor)}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                )
+                    </div>
+                  );
+                })()
               ) : (
                 <div
                   className="w-full h-full grid gap-1.5 p-1.5 bg-stone-200/80 pointer-events-none"
@@ -5857,7 +8219,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                 >
                   {panels.map((_, i) => (
                     <div key={i} className="min-h-0 rounded-xs overflow-hidden shadow-xs">
-                      {renderSlotPhoto(i)}
+                      {renderSlotPhoto(i, scaleFactor)}
                     </div>
                   ))}
                 </div>
@@ -5924,8 +8286,15 @@ export const CanvasCustomizerPage: React.FC = () => {
         // MODE 1: ROOM VIEW (Shared AcrylicRoomViewModal Component)
         // ===================================================================
         if (viewerMode === 'room') {
-          const canvasRoomWidthInches = geom.widthInches;
-          const canvasRoomHeightInches = geom.heightInches;
+          const collageLayout = selectedProductTypeId === 'canvas-collage' ? getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
+          const wallLayout = selectedProductTypeId === 'canvas-wall-art' ? getProductLayout('canvas-wall-art', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
+          const splitLayout = selectedProductTypeId === 'canvas-split' ? getProductLayout('canvas-split', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
+          const mosaicLayout = selectedProductTypeId === 'canvas-mosaic' ? getProductLayout('canvas-mosaic', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
+          const hexagonLayout = selectedProductTypeId === 'canvas-hexagon' ? getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
+
+          const activeMultiLayout = collageLayout || wallLayout || splitLayout || mosaicLayout || hexagonLayout;
+          const canvasRoomWidthInches = activeMultiLayout ? activeMultiLayout.overallWidthInches : geom.widthInches;
+          const canvasRoomHeightInches = activeMultiLayout ? activeMultiLayout.overallHeightInches : geom.heightInches;
 
           const thicknessOption = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId) || THICKNESS_OPTIONS[0];
           const wrapDepthPx = thicknessOption?.depthPx || 26;
@@ -5935,46 +8304,68 @@ export const CanvasCustomizerPage: React.FC = () => {
               isOpen={true}
               onClose={() => setViewerMode(null)}
               productDimensionLabel={
-                isCustomSize && canUseCustomSize
+                selectedProductTypeId === 'canvas-word-art'
+                  ? `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`
+                  : selectedProductTypeId === 'canvas-banner'
+                  ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
+                  : activeMultiLayout
+                  ? (activeMultiLayout.dimensionsSummary || `${activeMultiLayout.overallWidthInches}" × ${activeMultiLayout.overallHeightInches}"`)
+                  : isCustomSize && canUseCustomSize
                   ? `${customWidth}" × ${customHeight}"`
                   : currentSizeOption.dimensionsSummary
               }
               productId={selectedProductTypeId}
-              productName={selectedProductType.name}
+              productName={selectedProductTypeId === 'canvas-pop-art' ? `Pop Art (${selectedPopStyle?.name || 'Pop Art'})` : selectedProductTypeId === 'canvas-lyric' ? `Lyric on Canvas (${selectedLyricTemplate.name})` : selectedProductType.name}
               shapeId={isHexagonProduct ? (isHexagonCluster ? 'shape-rectangle' : 'shape-hexagon') : (shapeApplies ? selectedShapeId : 'shape-rectangle')}
-              shapeName={isHexagonProduct ? (isHexagonCluster ? `${panels.length} Hexagons` : 'Hexagon') : (shapeApplies ? currentShape.name : `${panels.length} Panels`)}
-              widthInches={canvasRoomWidthInches}
-              heightInches={canvasRoomHeightInches}
+              shapeName={
+                selectedProductTypeId === 'canvas-word-art'
+                  ? (wordArtSizeOption.ratioTab || (wordArtSizeOption.widthInches === wordArtSizeOption.heightInches ? 'Square' : 'Rectangle'))
+                  : selectedProductTypeId === 'canvas-collage'
+                  ? (collageLayout?.name || 'Photo Collage')
+                  : selectedProductTypeId === 'canvas-wall-art'
+                  ? (wallLayout?.name || 'Wall Display')
+                  : selectedProductTypeId === 'canvas-split'
+                  ? (splitLayout?.name || `${splitLayout?.panels.length || 3} Panel Split`)
+                  : selectedProductTypeId === 'canvas-mosaic'
+                  ? (mosaicLayout?.name || 'Photo Mosaic')
+                  : selectedProductTypeId === 'canvas-hexagon'
+                  ? (hexagonLayout?.name || 'Hexagon Prints')
+                  : (shapeApplies ? currentShape.name : `${panels.length} Panels`)
+              }
+              widthInches={selectedProductTypeId === 'canvas-word-art' ? wordArtSizeOption.widthInches : selectedProductTypeId === 'canvas-banner' ? bannerConfig.widthInches : canvasRoomWidthInches}
+              heightInches={selectedProductTypeId === 'canvas-word-art' ? wordArtSizeOption.heightInches : selectedProductTypeId === 'canvas-banner' ? bannerConfig.heightInches : canvasRoomHeightInches}
               initialRoomState={roomViewState}
               onRoomStateChange={setRoomViewState}
               renderProduct={() => {
                 // 1. Hexagon Prints on Room Wall
                 if (selectedProductTypeId === 'canvas-hexagon') {
-                  const hexLayout = getHexagonClusterLayout(panels.length);
+                  const hexLayout = hexagonLayout || getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   return (
                     <div className="relative w-full h-full pointer-events-none select-none">
-                      {hexLayout.map((pos, idx) => {
+                      {hexLayout.panels.map((pSpec, idx) => {
                         const p = panelImages[idx];
                         const url = p?.imageUrl || (idx === 0 ? primaryPhotoUrl : null);
                         const panXPct = ((p?.panX || 0) / 420) * 100;
                         const panYPct = ((p?.panY || 0) / 420) * 100;
+                        const isVertical = pSpec.orientation === 'vertical' || hexLayout.orientation === 'vertical';
+                        const hexClip = isVertical ? HEXAGON_VERTICAL_CLIP_PATH : HEXAGON_HORIZONTAL_CLIP_PATH;
                         return (
                           <div
-                            key={idx}
+                            key={pSpec.id || idx}
                             style={{
                               position: 'absolute',
-                              left: `${pos.x * 100}%`,
-                              top: `${pos.y * 100}%`,
-                              width: `${pos.w * 100}%`,
-                              height: `${pos.h * 100}%`,
+                              left: `${pSpec.x * 100}%`,
+                              top: `${pSpec.y * 100}%`,
+                              width: `${pSpec.w * 100}%`,
+                              height: `${pSpec.h * 100}%`,
                               filter: 'drop-shadow(0 10px 18px rgba(0,0,0,0.35)) drop-shadow(0 2px 4px rgba(0,0,0,0.22))'
                             }}
                           >
                             <div
                               className="w-full h-full relative overflow-hidden bg-white"
                               style={{
-                                clipPath: HEXAGON_CLIP_PATH,
-                                WebkitClipPath: HEXAGON_CLIP_PATH
+                                clipPath: hexClip,
+                                WebkitClipPath: hexClip
                               }}
                             >
                               {url ? (
@@ -5991,7 +8382,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 />
                               ) : (
                                 <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-xs font-bold">
-                                  Hexagon {idx + 1}
+                                  {pSpec.label || `Hexagon ${idx + 1}`}
                                 </div>
                               )}
                             </div>
@@ -6054,10 +8445,9 @@ export const CanvasCustomizerPage: React.FC = () => {
                 // 2. Photo Mosaic on Room Wall
                 if (selectedProductTypeId === 'canvas-mosaic') {
                   const layoutDef = getProductLayout('canvas-mosaic', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
-                  const tilePanels = layoutDef.panels;
-                  const count = tilePanels.length;
-                  const totalCols = count === 4 ? 2 : count === 6 ? 3 : count === 9 ? 3 : 4;
-                  const totalRows = count === 4 ? 2 : count === 6 ? 2 : count === 9 ? 3 : 4;
+                  const count = layoutDef.panelsCount || layoutDef.panels.length;
+                  const totalCols = layoutDef.cols || (count === 16 ? 4 : count === 25 ? 5 : count === 36 ? 6 : count === 20 ? 4 : count === 15 ? 3 : count === 12 && layoutDef.aspectRatio > 1 ? 4 : 3);
+                  const totalRows = layoutDef.rows || Math.ceil(count / totalCols);
                   const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
                   const master = panelImages[0] || createDefaultPanel();
                   const panXPct = ((master.panX || 0) / 420) * 100;
@@ -6065,43 +8455,103 @@ export const CanvasCustomizerPage: React.FC = () => {
 
                   return (
                     <div
-                      className="w-full h-full grid gap-2 p-1 pointer-events-none select-none"
+                      className="relative w-full h-full pointer-events-none select-none flex items-center justify-center"
                       style={{
-                        gridTemplateColumns: `repeat(${totalCols}, minmax(0, 1fr))`,
-                        gridTemplateRows: `repeat(${totalRows}, minmax(0, 1fr))`
+                        filter: 'drop-shadow(0 14px 24px rgba(0,0,0,0.36)) drop-shadow(0 3px 6px rgba(0,0,0,0.22))'
                       }}
                     >
-                      {tilePanels.map((pSpec, idx) => {
-                        const panel = panelImages[idx];
-                        const hasIndividualPhoto = Boolean(panel?.imageUrl) && panel.imageUrl !== masterImage;
-                        const url = hasIndividualPhoto ? panel.imageUrl : masterImage;
-                        const colIdx = idx % totalCols;
-                        const rowIdx = Math.floor(idx / totalCols);
+                      <div className="relative w-full h-full rounded-xs bg-white overflow-hidden">
+                        {masterImage ? (
+                          <div className="w-full h-full relative">
+                            <img
+                              src={masterImage}
+                              alt=""
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
+                                transform: `translate3d(${panXPct}%, ${panYPct}%, 0) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                filter: getFilterCss(master.filter)
+                              }}
+                            />
+                            {/* Internal mosaic division grid lines (0 gap) */}
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
+                              {Array.from({ length: totalCols - 1 }).map((_, c) => {
+                                const xPct = ((c + 1) / totalCols) * 100;
+                                return (
+                                  <line
+                                    key={`room-mv-${c}`}
+                                    x1={`${xPct}%`}
+                                    y1="0"
+                                    x2={`${xPct}%`}
+                                    y2="100%"
+                                    stroke="rgba(255, 255, 255, 0.45)"
+                                    strokeWidth="1.5"
+                                    style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
+                                  />
+                                );
+                              })}
+                              {Array.from({ length: totalRows - 1 }).map((_, r) => {
+                                const yPct = ((r + 1) / totalRows) * 100;
+                                return (
+                                  <line
+                                    key={`room-mh-${r}`}
+                                    x1="0"
+                                    y1={`${yPct}%`}
+                                    x2="100%"
+                                    y2={`${yPct}%`}
+                                    stroke="rgba(255, 255, 255, 0.45)"
+                                    strokeWidth="1.5"
+                                    style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
+                                  />
+                                );
+                              })}
+                            </svg>
+                          </div>
+                        ) : (
+                          <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-xs font-bold">
+                            Photo Mosaic ({count} Tiles)
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
 
-                        return (
-                          <div
-                            key={idx}
-                            className="relative aspect-square bg-white rounded-xs overflow-hidden"
-                            style={{
-                              boxShadow: '0 8px 16px rgba(0,0,0,0.32), 0 2px 4px rgba(0,0,0,0.2)'
-                            }}
-                          >
-                            {hasIndividualPhoto && url ? (
-                              <img
-                                src={url}
-                                alt=""
-                                className="w-full h-full object-cover"
-                                style={{ filter: getFilterCss(panel?.filter || 'original') }}
-                              />
-                            ) : masterImage ? (
+                // 3. Split Canvas on Room Wall
+                if (selectedProductTypeId === 'canvas-split') {
+                  const layoutDef = getProductLayout('canvas-split', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                  const splitPanels = layoutDef.panels;
+                  const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
+                  const master = panelImages[0] || createDefaultPanel();
+                  const panXPct = ((master.panX || 0) / 420) * 100;
+                  const panYPct = ((master.panY || 0) / 420) * 100;
+
+                  return (
+                    <div className="relative w-full h-full pointer-events-none select-none">
+                      {splitPanels.map((p, idx) => (
+                        <div
+                          key={p.id || idx}
+                          style={{
+                            position: 'absolute',
+                            left: `${p.x * 100}%`,
+                            top: `${p.y * 100}%`,
+                            width: `${p.w * 100}%`,
+                            height: `${p.h * 100}%`,
+                            filter: 'drop-shadow(0 10px 18px rgba(0,0,0,0.35)) drop-shadow(0 2px 4px rgba(0,0,0,0.22))'
+                          }}
+                        >
+                          <div className="w-full h-full relative overflow-hidden bg-white rounded-xs">
+                            {masterImage ? (
                               <div
                                 style={{
                                   position: 'absolute',
-                                  top: `${-rowIdx * 100}%`,
-                                  left: `${-colIdx * 100}%`,
-                                  width: `${totalCols * 100}%`,
-                                  height: `${totalRows * 100}%`
+                                  width: `${(1 / p.w) * 100}%`,
+                                  height: `${(1 / p.h) * 100}%`,
+                                  left: `${-(p.x / p.w) * 100}%`,
+                                  top: `${-(p.y / p.h) * 100}%`
                                 }}
+                                className="pointer-events-none select-none"
                               >
                                 <img
                                   src={masterImage}
@@ -6115,66 +8565,56 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   }}
                                 />
                               </div>
-                            ) : null}
+                            ) : (
+                              <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-xs font-bold">
+                                {p.label || `Panel ${idx + 1}`}
+                              </div>
+                            )}
                           </div>
-                        );
-                      })}
-                    </div>
-                  );
-                }
-
-                // 3. Split Canvas on Room Wall
-                if (selectedProductTypeId === 'canvas-split') {
-                  const layoutDef = getProductLayout('canvas-split', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
-                  const splitPanels = layoutDef.panels;
-                  const N = splitPanels.length;
-                  const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
-                  const master = panelImages[0] || createDefaultPanel();
-                  const gapPx = 6;
-                  const panXPct = ((master.panX || 0) / 420) * 100;
-                  const panYPct = ((master.panY || 0) / 420) * 100;
-                  return (
-                    <div className="relative w-full h-full pointer-events-none select-none flex items-center justify-center" style={{ gap: `${gapPx}px` }}>
-                      {splitPanels.map((_, i) => (
-                        <div
-                          key={i}
-                          className="relative h-full rounded-xs bg-white overflow-hidden"
-                          style={{
-                            flex: 1,
-                            boxShadow: '0 10px 18px rgba(0,0,0,0.32), 0 2px 4px rgba(0,0,0,0.2)'
-                          }}
-                        >
-                          {masterImage && (
-                            <div
-                              style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: `calc(-${i * 100}% - ${i * gapPx}px)`,
-                                width: `calc(${N * 100}% + ${(N - 1) * gapPx}px)`,
-                                height: '100%'
-                              }}
-                            >
-                              <img
-                                src={masterImage}
-                                alt=""
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
-                                  transform: `translate3d(${panXPct}%, ${panYPct}%, 0) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                                  filter: getFilterCss(master.filter)
-                                }}
-                              />
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>
                   );
                 }
 
+                // 3b. Photo Collage on Room Wall
+                if (selectedProductTypeId === 'canvas-collage') {
+                  const collageDef = getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                  return (
+                    <div
+                      className="relative w-full h-full pointer-events-none select-none flex items-center justify-center"
+                      style={{
+                        filter: 'drop-shadow(0 14px 24px rgba(0,0,0,0.36)) drop-shadow(0 3px 6px rgba(0,0,0,0.22))'
+                      }}
+                    >
+                      <div className="relative w-full h-full rounded-xs bg-[#d8dce2] shadow-sm overflow-hidden">
+                        <div className="relative w-full h-full overflow-hidden">
+                          {collageDef.panels.map((pSpec, idx) => (
+                            <div
+                              key={pSpec.id || idx}
+                              style={{
+                                position: 'absolute',
+                                left: `${pSpec.x * 100}%`,
+                                top: `${pSpec.y * 100}%`,
+                                width: `${pSpec.w * 100}%`,
+                                height: `${pSpec.h * 100}%`,
+                                padding: '2px',
+                                boxSizing: 'border-box'
+                              }}
+                            >
+                              <div className="w-full h-full rounded-xs overflow-hidden bg-stone-200 flex items-center justify-center">
+                                {renderSlotPhoto(idx)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
                 // 4. Single Non-Rectangular or Rectangular Canvas on Room Wall
-                const clipStyle = isHexagonProduct ? HEXAGON_CLIP_PATH : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined));
+                const clipStyle = isHexagonProduct ? HEXAGON_CLIP_PATH : (isRectangularShape ? undefined : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined)));
                 const hasClip = Boolean(clipStyle);
 
                 return (
@@ -6215,11 +8655,16 @@ export const CanvasCustomizerPage: React.FC = () => {
             onClick={() => setViewerMode(null)}
           >
             <div
-              className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden border border-stone-200 flex flex-col max-h-[94vh]"
+              className={`bg-white rounded-2xl w-full ${viewerMode === '3d' ? 'max-w-4xl' : 'max-w-3xl'} shadow-2xl overflow-hidden border border-stone-200 flex flex-col max-h-[94vh]`}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Informational Banner across top matching screenshots */}
+              <div className="bg-[#FEF9C3] border-b border-amber-200/90 px-4 py-2 text-center text-xs font-semibold text-amber-900 tracking-wide select-none shrink-0">
+                NOTE : Preview shown is for illustration purpose only may differ from the actual product
+              </div>
+
               {/* Modal Header */}
-              <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-stone-200 bg-white shrink-0">
+              <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-stone-200 bg-white shrink-0">
                 <div className="flex items-center gap-2.5">
                   <h3 className="text-sm sm:text-base font-black text-stone-900 uppercase tracking-wide flex items-center gap-2">
                     {viewerMode === '3d' && (
@@ -6236,12 +8681,26 @@ export const CanvasCustomizerPage: React.FC = () => {
                     )}
                   </h3>
                   <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-stone-500 bg-stone-100 px-2.5 py-0.5 rounded-full">
-                    <span>{selectedProductType.name}</span>
-                    <span>•</span>
-                    <span>{shapeApplies ? currentShape.name : `${panels.length} Panels`}</span>
+                    <span>{selectedProductTypeId === 'canvas-pop-art' ? `Pop Art (${selectedPopStyle?.name || 'Pop Art'})` : selectedProductTypeId === 'canvas-lyric' ? `Lyric on Canvas (${selectedLyricTemplate.name})` : selectedProductType.name}</span>
                     <span>•</span>
                     <span>
-                      {isCustomSize && canUseCustomSize
+                      {selectedProductTypeId === 'canvas-word-art'
+                        ? (wordArtSizeOption.ratioTab || (wordArtSizeOption.widthInches === wordArtSizeOption.heightInches ? 'Square' : 'Rectangle'))
+                        : selectedProductTypeId === 'canvas-banner'
+                        ? 'Flat Banner'
+                        : selectedProductTypeId === 'canvas-collage'
+                        ? `${getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).name}`
+                        : shapeApplies ? currentShape.name : `${panels.length} Panels`}
+                    </span>
+                    <span>•</span>
+                    <span>
+                      {selectedProductTypeId === 'canvas-word-art'
+                        ? `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`
+                        : selectedProductTypeId === 'canvas-banner'
+                        ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
+                        : selectedProductTypeId === 'canvas-collage'
+                        ? (getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).dimensionsSummary)
+                        : isCustomSize && canUseCustomSize
                         ? `${customWidth}" × ${customHeight}"`
                         : currentSizeOption.dimensionsSummary}
                     </span>
@@ -6258,6 +8717,9 @@ export const CanvasCustomizerPage: React.FC = () => {
               </div>
               {(viewerMode === '3d' || viewerMode === '360') && (() => {
                 const is360 = viewerMode === '360';
+                const currentPreset = PRESET_3D_ANGLES.find((p) => p.id === preset3DAngle) || PRESET_3D_ANGLES[0];
+                const activeRotY = is360 ? viewerRotation : currentPreset.rotY;
+                const activeTiltX = is360 ? viewerTiltX : currentPreset.tiltX;
 
                 // Physical thickness based on selected Canvas thickness option & frame
                 const thicknessOption = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId) || THICKNESS_OPTIONS[0];
@@ -6265,8 +8727,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                 const depthPx = hasOuterFrame ? Math.max(baseDepthPx, 34) : baseDepthPx;
 
                 // Maintain exact product aspect ratio without stretching
-                const maxBoxW = 310;
-                const maxBoxH = 290;
+                const maxBoxW = is360 ? 320 : 340;
+                const maxBoxH = is360 ? 300 : 320;
                 let cardW = maxBoxW;
                 let cardH = cardW / previewAspect;
                 if (cardH > maxBoxH) {
@@ -6276,10 +8738,23 @@ export const CanvasCustomizerPage: React.FC = () => {
                 cardW = Math.round(Math.max(140, cardW));
                 cardH = Math.round(Math.max(140, cardH));
 
+                // Thumbnail dimensions for 3D View:
+                const thumbBoxW = 68;
+                const thumbBoxH = 56;
+                let thumbW = thumbBoxW;
+                let thumbH = thumbW / previewAspect;
+                if (thumbH > thumbBoxH) {
+                  thumbH = thumbBoxH;
+                  thumbW = thumbH * previewAspect;
+                }
+                thumbW = Math.round(Math.max(36, thumbW));
+                thumbH = Math.round(Math.max(36, thumbH));
+                const thumbDepthPx = Math.max(7, Math.round(depthPx * (thumbW / cardW)));
+
                 // Normalized angle [0..360) and radians for dynamic lighting & shadow
-                const normalizedAngle = ((viewerRotation % 360) + 360) % 360;
+                const normalizedAngle = ((activeRotY % 360) + 360) % 360;
                 const angleRad = (normalizedAngle * Math.PI) / 180;
-                const effectiveTiltX = viewerTiltX;
+                const effectiveTiltX = activeTiltX;
 
                 // Dynamic directional shading based on rotationY
                 const frontCos = Math.cos(angleRad);
@@ -6348,51 +8823,55 @@ export const CanvasCustomizerPage: React.FC = () => {
                 );
 
                 return (
-                  <div className="flex flex-col flex-1 min-h-0">
+                  <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
                     {/* 3D / 360 Interactive Studio Stage */}
                     <div
-                      onPointerDown={handleViewerPointerDown}
-                      onPointerMove={handleViewerPointerMove}
-                      onPointerUp={handleViewerPointerUp}
-                      onPointerCancel={handleViewerPointerUp}
+                      onPointerDown={is360 ? handleViewerPointerDown : undefined}
+                      onPointerMove={is360 ? handleViewerPointerMove : undefined}
+                      onPointerUp={is360 ? handleViewerPointerUp : undefined}
+                      onPointerCancel={is360 ? handleViewerPointerUp : undefined}
                       onWheel={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                       }}
                       style={{
                         perspective: '1250px',
-                        touchAction: 'none',
+                        touchAction: is360 ? 'none' : 'auto',
                         background:
                           'radial-gradient(circle at 50% 44%, #ffffff 0%, #f8fafc 58%, #e2e8f0 100%)'
                       }}
-                      className={`relative h-[340px] sm:h-[430px] w-full flex items-center justify-center select-none overflow-hidden ${
-                        isViewerDragging ? 'cursor-grabbing' : 'cursor-grab'
+                      className={`relative flex-1 min-h-[380px] md:min-h-[460px] w-full flex items-center justify-center select-none overflow-hidden ${
+                        is360 ? (isViewerDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
                       }`}
                     >
-                      {/* Top-Left Mode Badge & Orientation Readout */}
+                      {/* Top-Left Mode / Preset Badge */}
                       <div className="absolute top-3 left-4 flex items-center gap-2 pointer-events-none z-20">
                         <span className="bg-white/90 backdrop-blur-xs border border-stone-200 text-stone-700 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-2xs">
-                          {normalizedAngle < 35 || normalizedAngle >= 325
-                            ? (viewerTiltX > 45 ? 'Bottom Edge' : viewerTiltX < -45 ? 'Top Edge' : 'Front Face')
-                            : normalizedAngle >= 35 && normalizedAngle < 75
-                            ? '3/4 Front-Side Angle'
-                            : normalizedAngle >= 75 && normalizedAngle < 115
-                            ? 'Side Edge Profile'
-                            : normalizedAngle >= 115 && normalizedAngle < 150
-                            ? '3/4 Rear Angle'
-                            : normalizedAngle >= 150 && normalizedAngle <= 210
-                            ? 'Canvas Back & Hardware'
-                            : normalizedAngle > 210 && normalizedAngle <= 245
-                            ? '3/4 Rear Angle'
-                            : normalizedAngle > 245 && normalizedAngle <= 285
-                            ? 'Side Edge Profile'
-                            : '3/4 Front-Side Angle'}
+                          {is360
+                            ? (normalizedAngle < 35 || normalizedAngle >= 325
+                                ? (effectiveTiltX > 45 ? 'Bottom Edge' : effectiveTiltX < -45 ? 'Top Edge' : 'Front Face')
+                                : normalizedAngle >= 35 && normalizedAngle < 75
+                                ? '3/4 Front-Side Angle'
+                                : normalizedAngle >= 75 && normalizedAngle < 115
+                                ? 'Side Edge Profile'
+                                : normalizedAngle >= 115 && normalizedAngle < 150
+                                ? '3/4 Rear Angle'
+                                : normalizedAngle >= 150 && normalizedAngle <= 210
+                                ? 'Canvas Back & Hardware'
+                                : normalizedAngle > 210 && normalizedAngle <= 245
+                                ? '3/4 Rear Angle'
+                                : normalizedAngle > 245 && normalizedAngle <= 285
+                                ? 'Side Edge Profile'
+                                : '3/4 Front-Side Angle')
+                            : (PRESET_3D_ANGLES.find((p) => p.id === preset3DAngle)?.label || '3D View')}
                         </span>
                       </div>
 
-                      <div className="absolute top-3 right-4 bg-white/90 backdrop-blur-xs border border-stone-200 text-stone-700 text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-2xs tabular-nums pointer-events-none z-20">
-                        {`${Math.round(normalizedAngle)}°`}
-                      </div>
+                      {is360 && (
+                        <div className="absolute top-3 right-4 bg-white/90 backdrop-blur-xs border border-stone-200 text-stone-700 text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-2xs tabular-nums pointer-events-none z-20">
+                          {`${Math.round(normalizedAngle)}°`}
+                        </div>
+                      )}
 
                       {/* Dynamic 3D Floor Shadow */}
                       <div
@@ -6416,11 +8895,10 @@ export const CanvasCustomizerPage: React.FC = () => {
                           height: `${cardH}px`,
                           transformStyle: 'preserve-3d',
                           WebkitTransformStyle: 'preserve-3d',
-                          transform: `rotateX(${effectiveTiltX}deg) rotateY(${viewerRotation}deg)`,
-                          transition:
-                            isViewerDragging || viewerAutoRotate
-                              ? 'none'
-                              : 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)'
+                          transform: `rotateX(${effectiveTiltX}deg) rotateY(${activeRotY}deg)`,
+                          transition: is360
+                            ? (isViewerDragging || viewerAutoRotate ? 'none' : 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)')
+                            : 'transform 0.38s cubic-bezier(0.22, 1, 0.36, 1)'
                         }}
                       >
                         {isHexagonCluster ? (
@@ -6969,139 +9447,151 @@ export const CanvasCustomizerPage: React.FC = () => {
                           </>
                         )}
                       </div>
-                    </div>
 
-                    {/* 360° View Controls Footer */}
-                    {is360 && (
-                      <div className="px-4 py-3 border-t border-stone-200 bg-stone-50 space-y-2.5">
-                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setViewerAutoRotate(false);
-                                setViewerRotation(0);
-                                setViewerTiltX(0);
-                              }}
-                              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-stone-700 border border-stone-300 hover:bg-stone-100 transition-all cursor-pointer shadow-2xs"
-                            >
-                              Reset View
-                            </button>
-                            {[
-                              { label: 'Front (0°)', rot: 0, tilt: 0 },
-                              { label: '3/4 View (35°)', rot: 35, tilt: -10 },
-                              { label: 'Side (90°)', rot: 90, tilt: 0 },
-                              { label: 'Back (180°)', rot: 180, tilt: 0 }
-                            ].map((preset) => (
-                              <button
-                                key={preset.label}
-                                type="button"
-                                onClick={() => {
-                                  setViewerAutoRotate(false);
-                                  setViewerRotation(preset.rot);
-                                  setViewerTiltX(preset.tilt);
-                                }}
-                                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                  Math.abs(normalizedAngle - preset.rot) < 15 && Math.abs(viewerTiltX - preset.tilt) < 15
-                                    ? 'bg-[#0E4A93] text-white shadow-xs'
-                                    : 'bg-white text-stone-700 border border-stone-300 hover:bg-stone-100'
-                                }`}
-                              >
-                                {preset.label}
-                              </button>
-                            ))}
+                      {is360 && (
+                          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-4 py-1.5 rounded-full pointer-events-none select-none z-20 shadow-md">
+                            Drag to rotate in full 360&deg;
                           </div>
-
-                          <button
-                            type="button"
-                            onClick={() => setViewerAutoRotate((v) => !v)}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 ${
-                              viewerAutoRotate
-                                ? 'bg-[#0E4A93] text-white shadow-xs'
-                                : 'bg-white text-stone-700 border border-stone-300 hover:bg-stone-100'
-                            }`}
-                          >
-                            <RotateCw className={`w-3.5 h-3.5 ${viewerAutoRotate ? 'animate-spin' : ''}`} />
-                            <span>{viewerAutoRotate ? 'Pause 360°' : 'Auto Spin'}</span>
-                          </button>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <span className="text-[11px] font-bold text-stone-500 w-16">
-                            Rotation
-                          </span>
-                          <input
-                            type="range"
-                            min={0}
-                            max={360}
-                            step={1}
-                            value={Math.round(normalizedAngle)}
-                            onChange={(e) => {
-                              setViewerAutoRotate(false);
-                              setViewerRotation(Number(e.target.value));
-                            }}
-                            aria-label="360 degree rotation angle"
-                            className="flex-1 accent-[#0E4A93] cursor-pointer"
-                          />
-                          <span className="text-xs font-black text-stone-700 w-12 text-right tabular-nums">
-                            {`${Math.round(normalizedAngle)}°`}
-                          </span>
-                        </div>
-
-                        <div className="text-center text-[11px] font-medium text-stone-500">
-                          Drag horizontally left or right to spin around Y-axis, or vertically up or down to tilt around X-axis. Drag diagonally to rotate freely in full 360°.
-                        </div>
+                        )}
                       </div>
-                    )}
 
-                    {/* 3D View Controls Footer: Exactly 6 Selectable Views */}
-                    {!is360 && (
-                      <div className="px-4 py-3 border-t border-stone-200 bg-stone-50 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-black uppercase tracking-wider text-stone-800">Select View</span>
-                          <span className="text-[11px] font-bold text-stone-500">Click to snap camera directly to any of the 6 sides</span>
+                      {/* Right-Hand Column: Exactly 4 Fixed Orientation Thumbnails (Screenshot 1) */}
+                      {!is360 && (
+                        <div className="w-full md:w-56 lg:w-64 border-t md:border-t-0 md:border-l border-stone-200 bg-stone-50/70 p-3.5 sm:p-4 flex flex-col justify-start overflow-y-auto">
+                          <div className="text-[11px] font-black uppercase tracking-wider text-stone-500 mb-3 px-1">
+                            Orientation Views
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5 sm:gap-3">
+                            {PRESET_3D_ANGLES.map((preset) => {
+                              const isSelected = preset3DAngle === preset.id;
+                              return (
+                                <button
+                                  key={preset.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setViewerAutoRotate(false);
+                                    setPreset3DAngle(preset.id);
+                                  }}
+                                  className={`relative group rounded-xl p-2.5 sm:p-3 transition-all cursor-pointer flex flex-col items-center justify-center border text-center ${
+                                    isSelected
+                                      ? 'bg-white border-[#0E4A93] shadow-sm ring-2 ring-[#0E4A93]/20'
+                                      : 'bg-white/80 border-stone-200 hover:border-stone-300 hover:bg-white'
+                                  }`}
+                                >
+                                  {/* Active Checkmark Badge */}
+                                  {isSelected && (
+                                    <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[#0E4A93] text-white flex items-center justify-center shadow-xs z-10">
+                                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                    </div>
+                                  )}
+
+                                  {/* Miniature 3D Model Representation */}
+                                  <div
+                                    className="relative flex items-center justify-center my-1"
+                                    style={{ width: `${thumbBoxW + 24}px`, height: `${thumbBoxH + 16}px` }}
+                                  >
+                                    <div
+                                      style={{
+                                        width: `${thumbW}px`,
+                                        height: `${thumbH}px`,
+                                        perspective: '450px'
+                                      }}
+                                      className="relative flex items-center justify-center"
+                                    >
+                                      <div
+                                        style={{
+                                          width: `${thumbW}px`,
+                                          height: `${thumbH}px`,
+                                          transformStyle: 'preserve-3d',
+                                          WebkitTransformStyle: 'preserve-3d',
+                                          transform: `rotateX(${preset.tiltX}deg) rotateY(${preset.rotY}deg) scale(0.85)`
+                                        }}
+                                        className="relative pointer-events-none transition-transform duration-200"
+                                      >
+                                        {/* Front Face with customized artwork */}
+                                        <div
+                                          className={`absolute inset-0 overflow-hidden ${shapeRadiusClass}`}
+                                          style={{
+                                            ...shapeClipStyle,
+                                            transform: `translateZ(${thumbDepthPx / 2}px)`,
+                                            boxShadow: '0 2px 6px rgba(0,0,0,0.18)'
+                                          }}
+                                        >
+                                          {renderCanvasFrontDesign(thumbW)}
+                                        </div>
+
+                                        {/* Top Edge */}
+                                        <div
+                                          className="absolute left-0 right-0"
+                                          style={{
+                                            top: 0,
+                                            height: `${thumbDepthPx}px`,
+                                            backgroundColor: sideBaseColor,
+                                            transform: `rotateX(90deg) translateZ(${thumbDepthPx / 2}px)`,
+                                            transformOrigin: 'top center',
+                                            filter: 'brightness(0.95)'
+                                          }}
+                                        />
+
+                                        {/* Bottom Edge */}
+                                        <div
+                                          className="absolute left-0 right-0"
+                                          style={{
+                                            bottom: 0,
+                                            height: `${thumbDepthPx}px`,
+                                            backgroundColor: sideBaseColor,
+                                            transform: `rotateX(-90deg) translateZ(${thumbDepthPx / 2}px)`,
+                                            transformOrigin: 'bottom center',
+                                            filter: 'brightness(0.7)'
+                                          }}
+                                        />
+
+                                        {/* Left Edge */}
+                                        <div
+                                          className="absolute top-0 bottom-0"
+                                          style={{
+                                            left: 0,
+                                            width: `${thumbDepthPx}px`,
+                                            backgroundColor: sideBaseColor,
+                                            transform: `rotateY(-90deg) translateZ(${thumbDepthPx / 2}px)`,
+                                            transformOrigin: 'left center',
+                                            filter: 'brightness(0.85)'
+                                          }}
+                                        />
+
+                                        {/* Right Edge */}
+                                        <div
+                                          className="absolute top-0 bottom-0"
+                                          style={{
+                                            right: 0,
+                                            width: `${thumbDepthPx}px`,
+                                            backgroundColor: sideBaseColor,
+                                            transform: `rotateY(90deg) translateZ(${thumbDepthPx / 2}px)`,
+                                            transformOrigin: 'right center',
+                                            filter: 'brightness(0.8)'
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Orientation Label */}
+                                  <span
+                                    className={`text-xs font-bold mt-1 transition-colors ${
+                                      isSelected ? 'text-[#0E4A93]' : 'text-stone-700'
+                                    }`}
+                                  >
+                                    {preset.label}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
-                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                          {[
-                            { label: 'FRONT', rotY: 0, tiltX: 0 },
-                            { label: 'BACK', rotY: 180, tiltX: 0 },
-                            { label: 'TOP', rotY: 0, tiltX: -90 },
-                            { label: 'BOTTOM', rotY: 0, tiltX: 90 },
-                            { label: 'LEFT', rotY: 90, tiltX: 0 },
-                            { label: 'RIGHT', rotY: -90, tiltX: 0 }
-                          ].map((v) => {
-                            const isCurrent =
-                              (v.label === 'TOP' && viewerTiltX <= -45) ||
-                              (v.label === 'BOTTOM' && viewerTiltX >= 45) ||
-                              (v.label === 'FRONT' && Math.abs(viewerTiltX) < 45 && (normalizedAngle < 25 || normalizedAngle > 335)) ||
-                              (v.label === 'BACK' && Math.abs(viewerTiltX) < 45 && Math.abs(normalizedAngle - 180) < 25) ||
-                              (v.label === 'LEFT' && Math.abs(viewerTiltX) < 45 && Math.abs(normalizedAngle - 90) < 25) ||
-                              (v.label === 'RIGHT' && Math.abs(viewerTiltX) < 45 && Math.abs(normalizedAngle - 270) < 25);
-                            return (
-                              <button
-                                key={v.label}
-                                type="button"
-                                onClick={() => {
-                                  setViewerAutoRotate(false);
-                                  setViewerRotation(v.rotY);
-                                  setViewerTiltX(v.tiltX);
-                                }}
-                                className={`py-2 px-3 rounded-xl text-xs font-black transition-all cursor-pointer text-center ${
-                                  isCurrent
-                                    ? 'bg-[#0E4A93] text-white shadow-sm ring-2 ring-[#0E4A93]/40'
-                                    : 'bg-white text-stone-700 border border-stone-300 hover:bg-stone-100 hover:border-stone-400'
-                                }`}
-                              >
-                                {v.label}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
+                      )}
+                    </div>
+                  );
+                })()}
             </div>
           </div>
         );
@@ -7205,6 +9695,47 @@ export const CanvasCustomizerPage: React.FC = () => {
         productName={selectedProductType.name}
         currentLayoutId={selectedLayoutId}
         onSelectLayout={handleApplyLayoutFromModal}
+        onHighlightLayout={handleHighlightLayoutFromModal}
+      />
+
+      {/* Word Art Size + Ratio Modal */}
+      <WordArtSizeRatioModal
+        isOpen={isWordArtSizeModalOpen}
+        onClose={() => setIsWordArtSizeModalOpen(false)}
+        selectedSizeId={wordArtSizeOption.id}
+        onSelectSize={handleSelectWordArtSize}
+        onCreateWordArt={handleCreateWordArtFromSize}
+      />
+
+      {/* Word Art Personalization Modal */}
+      <WordArtPersonalizeModal
+        isOpen={isWordArtPersonalizeModalOpen}
+        onClose={() => setIsWordArtPersonalizeModalOpen(false)}
+        selectedSize={wordArtSizeOption}
+        initialConfig={wordArtConfig}
+        onChangeSize={handleWordArtChangeSize}
+        onAddToProduct={handleAddWordArtToProduct}
+      />
+
+      {/* Pop Art Style Selection Modal */}
+      <PopArtStyleModal
+        isOpen={isPopArtStyleModalOpen}
+        onClose={() => setIsPopArtStyleModalOpen(false)}
+        selectedStyleId={popArtConfig.selectedStyleId}
+        onSelectStyle={(style) => {
+          setPopArtConfig((prev) => ({
+            ...prev,
+            selectedStyleId: style.id
+          }));
+        }}
+      />
+
+      {/* Lyric on Canvas Template Selection Modal */}
+      <SelectLyricTemplateModal
+        isOpen={isLyricTemplateModalOpen}
+        onClose={() => setIsLyricTemplateModalOpen(false)}
+        selectedTemplateId={lyricConfig.selectedTemplateId}
+        onSelectTemplate={handleSelectLyricTemplate}
       />
     </div>
   );

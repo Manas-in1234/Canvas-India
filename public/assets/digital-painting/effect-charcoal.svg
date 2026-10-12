@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="charcoalBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5F5F0"/>
+      <stop offset="100%" stop-color="#E5E5DE"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#charcoalBg)"/>
+  <rect width="400" height="400" fill="#000000" opacity="0.03"/>
+
+  <path d="M40,60 Q180,40 360,110" stroke="#404040" stroke-width="22" fill="none" opacity="0.15" stroke-linecap="round"/>
+  <path d="M20,180 Q200,210 380,160" stroke="#262626" stroke-width="32" fill="none" opacity="0.12" stroke-linecap="round"/>
+  <path d="M50,330 Q220,310 370,360" stroke="#171717" stroke-width="28" fill="none" opacity="0.2" stroke-linecap="round"/>
+
+  <ellipse cx="200" cy="195" rx="88" ry="112" fill="none" stroke="#1F1F1F" stroke-width="3.5" stroke-dasharray="12 4"/>
+  <ellipse cx="198" cy="196" rx="85" ry="110" fill="none" stroke="#333333" stroke-width="2"/>
+
+  <g stroke="#262626" stroke-width="1.8" opacity="0.45">
+    <line x1="130" y1="240" x2="170" y2="270"/>
+    <line x1="135" y1="248" x2="175" y2="278"/>
+    <line x1="140" y1="256" x2="180" y2="286"/>
+    <line x1="145" y1="264" x2="185" y2="294"/>
+    
+    <line x1="270" y1="240" x2="230" y2="270"/>
+    <line x1="265" y1="248" x2="225" y2="278"/>
+    <line x1="260" y1="256" x2="220" y2="286"/>
+    <line x1="255" y1="264" x2="215" y2="294"/>
+  </g>
+
+  <path d="M165,285 C160,330 140,365 110,385" stroke="#171717" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+  <path d="M235,285 C240,330 260,365 290,385" stroke="#171717" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+  <path d="M140,350 Q200,365 260,350" stroke="#262626" stroke-width="3" fill="none"/>
+
+  <path d="M110,180 C90,95 165,65 200,65 C245,65 315,95 290,180 C270,120 245,95 200,95 C150,95 130,125 110,180 Z" fill="#171717" opacity="0.9"/>
+  <path d="M105,175 C95,120 145,80 185,75" stroke="#0A0A0A" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M295,175 C305,120 255,80 215,75" stroke="#0A0A0A" stroke-width="6" fill="none" stroke-linecap="round"/>
+  
+  <path d="M150,178 Q165,168 180,178" stroke="#171717" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M152,180 Q165,188 178,180" stroke="#333333" stroke-width="2" fill="none"/>
+  <circle cx="165" cy="178" r="5.5" fill="#0F0F0F"/>
+  <path d="M142,165 Q165,155 185,165" stroke="#171717" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+  <path d="M220,178 Q235,168 250,178" stroke="#171717" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M222,180 Q235,188 248,180" stroke="#333333" stroke-width="2" fill="none"/>
+  <circle cx="235" cy="178" r="5.5" fill="#0F0F0F"/>
+  <path d="M215,165 Q235,155 258,165" stroke="#171717" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+  <path d="M200,175 L196,218 Q200,224 206,218" stroke="#171717" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M190,218 Q196,222 200,221" stroke="#333333" stroke-width="2" fill="none"/>
+  <path d="M210,218 Q204,222 200,221" stroke="#333333" stroke-width="2" fill="none"/>
+
+  <path d="M180,244 Q200,238 220,244" stroke="#171717" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <path d="M182,246 Q200,258 218,246" stroke="#333333" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M188,245 Q200,248 212,245" stroke="#555555" stroke-width="2.5" fill="none"/>
+
+  <ellipse cx="198" cy="270" rx="16" ry="8" fill="#000000" opacity="0.12"/>
+  
+  <rect x="16" y="348" width="165" height="36" rx="18" fill="rgba(20,20,20,0.85)" stroke="#999999" stroke-width="1.5"/>
+  <circle cx="34" cy="366" r="6" fill="#DDDDDD"/>
+  <text x="48" y="372" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#FFF">CHARCOAL SKETCH</text>
+</svg>

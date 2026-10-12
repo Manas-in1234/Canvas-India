@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, UploadCloud, Check, ShoppingCart, SlidersHorizontal, Sparkles, Layers, Box, CheckCircle2, ZoomIn, ZoomOut, RotateCw, Maximize2, AlignStartVertical, AlignCenterVertical, AlignEndVertical } from 'lucide-react';
+import { X, UploadCloud, Check, ShoppingCart, SlidersHorizontal, Sparkles, Layers, Box, CheckCircle2, ZoomIn, ZoomOut, RotateCw, RefreshCw, AlignStartVertical, AlignCenterVertical, AlignEndVertical } from 'lucide-react';
 import { Product } from '../types';
 
 type TextPosition = 'top' | 'center' | 'bottom';
@@ -88,9 +88,9 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
       return;
     }
 
-    // Validate size (max 25MB)
-    if (file.size > 25 * 1024 * 1024) {
-      setUploadError('File size exceeds 25MB limit. Please upload a smaller file.');
+    // Validate size (max 40MB)
+    if (file.size > 40 * 1024 * 1024) {
+      setUploadError('File size exceeds 40MB limit. Please upload a smaller file.');
       return;
     }
 
@@ -181,11 +181,11 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
             {/* Live Visual Preview Frame with Realistic Acrylic Glass Effect */}
             <div className="space-y-2">
-              <div className="relative aspect-[4/3] bg-stone-100 rounded-xl overflow-hidden border-2 border-stone-200 shadow-md">
+              <div className="relative aspect-[4/3] bg-stone-100 rounded-xl overflow-hidden border-2 border-stone-200 shadow-md flex items-center justify-center">
                 <img
                   src={photoPreview}
                   alt="Customized Preview"
-                  className="w-full h-full object-cover transition-transform duration-150 ease-out"
+                  className="w-full h-full object-contain transition-transform duration-150 ease-out"
                   style={{ transform: `scale(${zoom}) rotate(${rotation}deg)` }}
                 />
 
@@ -215,7 +215,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                 )}
               </div>
 
-              {/* Image Zoom / Rotate / Fit Controls */}
+              {/* Image Zoom / Rotate / Reset Controls */}
               <div className="flex items-center justify-center gap-1.5">
                 <button
                   type="button"
@@ -252,11 +252,11 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                   type="button"
                   onClick={handleFitReset}
                   className="flex items-center gap-1 px-2 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-700 hover:bg-stone-50 transition-colors cursor-pointer text-[10px] font-bold"
-                  aria-label="Fit image to frame"
-                  title="Fit / Reset"
+                  aria-label="Reset image"
+                  title="Reset image"
                 >
-                  <Maximize2 className="w-3.5 h-3.5" />
-                  <span>Fit</span>
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Reset</span>
                 </button>
               </div>
             </div>
@@ -282,8 +282,8 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
 
               <label className="border-2 border-dashed border-stone-300 hover:border-[#0E4A93] bg-stone-50 rounded-xl p-4 text-center cursor-pointer flex flex-col items-center justify-center gap-1.5 transition-colors">
                 <UploadCloud className="w-6 h-6 text-[#0E4A93]" />
-                <span className="text-xs font-semibold text-stone-700">Click to upload from device</span>
-                <span className="text-[10px] text-stone-400">JPG, PNG, WEBP (Up to 25MB)</span>
+                <span className="text-xs font-semibold text-stone-700">Click to upload from PC or laptop</span>
+                <span className="text-[10px] text-stone-400">JPG, PNG, WEBP (Up to 40MB)</span>
                 <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
               </label>
 

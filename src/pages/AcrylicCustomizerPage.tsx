@@ -36,7 +36,9 @@ import {
   Laptop,
   Copy,
   ExternalLink,
-  QrCode
+  QrCode,
+  Image as ImageIcon,
+  LayoutTemplate
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import {
@@ -104,6 +106,15 @@ import {
 import { ClipartItem } from '../data/acrylicClipartData';
 import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
 import { SelectLayoutModal, LayoutModalOption } from '../components/SelectLayoutModal';
+import { WordArtStudioModal } from '../components/WordArtStudioModal';
+import { SelectPreferenceModal } from '../components/SelectPreferenceModal';
+import { BusRollLineEditorPanel } from '../components/BusRollLineEditorPanel';
+import { BusRollBackgroundPanel } from '../components/BusRollBackgroundPanel';
+import { BusRollTemplatePanel } from '../components/BusRollTemplatePanel';
+import { BusRollTopToolbar } from '../components/BusRollTopToolbar';
+import { BusRollConfig, generateBusRollSvgDataUrl } from '../data/busRollData';
+import { QuotesTemplateSidebarPanel } from '../components/QuotesTemplateSidebarPanel';
+import { QuoteTemplateItem } from '../data/quoteTemplatesData';
 import { getProductSizeShapeOptions, getSizesForProductAndShape } from '../data/productSizeShapeConfig';
 import {
   getProductLayouts,
@@ -159,6 +170,23 @@ const createDefaultPanelState = (imageUrl: string | null = null): PanelImageStat
 });
 
 const CURVED_GEOMETRIC_SHAPES = ['shape-circle', 'shape-oval', 'shape-heart', 'shape-hexagon'];
+
+// Which tab a freshly-selected product should land on, so picking any
+// product from PRODUCTS always jumps straight into its first relevant
+// section instead of leaving the shopper on the product grid. Mirrors the
+// same ordering the left toolbar's tab list uses for that product.
+const SINGLE_PRINT_ACRYLIC_IDS = ['acrylic-print', 'acrylic-photo-panel', 'acrylic-single'];
+function getFirstTabForProduct(pt: AcrylicProductType): ToolbarTab {
+  if (pt.id === 'acrylic-bus-roll') return 'CREATE BUS ROLL';
+  const cap = pt.capabilities || {};
+  if (cap.upload !== false) return 'UPLOAD';
+  if (SINGLE_PRINT_ACRYLIC_IDS.includes(pt.id) && cap.sizes !== false) return 'SELECT SIZE';
+  if (cap.layouts === true) return 'LAYOUTS & DESIGNS';
+  if (cap.wrap !== false) return 'WRAP & BORDER';
+  if (cap.hardware !== false) return 'HARDWARE & FINISH';
+  if (cap.options !== false) return 'OPTIONS';
+  return 'PRODUCTS';
+}
 
 // ============================================================================
 // MAIN ACRYLIC CUSTOMIZER COMPONENT
@@ -265,6 +293,104 @@ export const AcrylicCustomizerPage: React.FC = () => {
     return ACRYLIC_PRODUCT_TYPES.find((pt) => pt.id === selectedProductTypeId) || ACRYLIC_PRODUCT_TYPES[0];
   }, [selectedProductTypeId]);
 
+  // Word Art on Acrylic opens a dedicated size -> personalize -> word-cloud
+  // preview flow instead of a plain photo upload.
+  const isWordArt = selectedProductTypeId === 'acrylic-word-art';
+  const [isWordArtModalOpen, setIsWordArtModalOpen] = useState(false);
+  // Picking Word Art first asks "Create Your Own" vs "Select From Our
+  // Collection" — only the Create Your Own path (the existing studio) has
+  // real content behind it right now.
+  const [isWordArtPreferenceModalOpen, setIsWordArtPreferenceModalOpen] = useState(false);
+  // Tracks whether a Word Art design actually exists, separately from
+  // panelImages[0].imageUrl — that field can be non-empty just from a photo
+  // left over from a different product, which would otherwise make the
+  // preference popup think a Word Art design already exists and skip itself.
+  const [hasWordArtDesign, setHasWordArtDesign] = useState(false);
+  // Covers every way a shopper can "choose Word Art" — clicking it in the
+  // in-page product list (handleSelectProductType) AND landing on it
+  // directly via URL (/customize/acrylic/acrylic-word-art), where
+  // selectedProductTypeId is resolved straight from the route param on
+  // mount and handleSelectProductType never runs at all. Fires on every
+  // fresh selection of the product, not just the first one.
+  useEffect(() => {
+    if (selectedProductTypeId === 'acrylic-word-art') {
+      setIsWordArtPreferenceModalOpen(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProductTypeId]);
+
+  // Bus Roll on Acrylic: destination-sign-style line editor, reusing the
+  // same controlled BusRollConfig + components built for the Canvas
+  // customizer's Bus Roll product — the editor/background/template panels
+  // and the SVG generator are material-agnostic, so they're shared verbatim.
+  //
+  // Acrylic starts from a genuinely blank config (empty lines, plain black
+  // background) rather than the shared DEFAULT_BUS_ROLL_CONFIG, which is
+  // pre-filled with a Canvas demo design ("THIS HOME RUNS ON LOVE...") —
+  // that's a reasonable Canvas default but not what a new Acrylic Bus Roll
+  // customer should see first; they should start from their own text.
+  const isBusRoll = selectedProductTypeId === 'acrylic-bus-roll';
+  const BLANK_BUS_ROLL_CONFIG: BusRollConfig = {
+    lines: [
+      { id: 'line-1', text: '', color: '#FFFFFF', opacity: 1 },
+      { id: 'line-2', text: '', color: '#FFFFFF', opacity: 1 },
+      { id: 'line-3', text: '', color: '#FFFFFF', opacity: 1 },
+      { id: 'line-4', text: '', color: '#FFFFFF', opacity: 1 },
+      { id: 'line-5', text: '', color: '#FFFFFF', opacity: 1 }
+    ],
+    lineSpacing: 1,
+    margin: 2,
+    widthInches: 20,
+    heightInches: 8,
+    fontFamily: 'Rockwell, "Roboto Slab", serif',
+    fontStyle: 'Normal',
+    backgroundColor: '#000000',
+    patternId: 'solid',
+    patternOpacity: 0
+  };
+  const [busRollConfig, setBusRollConfig] = useState<BusRollConfig>(BLANK_BUS_ROLL_CONFIG);
+  const handleUpdateBusRollConfig = (updates: Partial<BusRollConfig>) => {
+    setBusRollConfig((prev) => ({ ...prev, ...updates }));
+  };
+  const handleStartOverBusRoll = () => {
+    setBusRollConfig(BLANK_BUS_ROLL_CONFIG);
+  };
+
+  // Quotes on Acrylic: "Select From Our Collection" reuses the same curated
+  // quote template gallery built for Quotes on Canvas (real artwork, not
+  // generated text) — picking one just drops its finished image straight
+  // into the panel, same as any other upload.
+  const isQuotesProduct = selectedProductTypeId === 'acrylic-quotes';
+  // Quotes also opens the Select Preference popup first — unlike Word Art,
+  // "Select From Our Collection" here has real content (the 42-template
+  // gallery below), so it jumps straight to the TEMPLATE tab instead of a
+  // Coming Soon placeholder.
+  const [isQuotesPreferenceModalOpen, setIsQuotesPreferenceModalOpen] = useState(false);
+  useEffect(() => {
+    if (selectedProductTypeId === 'acrylic-quotes') {
+      setIsQuotesPreferenceModalOpen(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProductTypeId]);
+  const [selectedQuoteTemplateId, setSelectedQuoteTemplateId] = useState<string>('');
+  const handleSelectQuoteTemplate = (template: QuoteTemplateItem) => {
+    setSelectedQuoteTemplateId(template.id);
+    const naturalWidth = 900;
+    const naturalHeight = Math.round(900 / (template.aspectRatio || 1));
+    setPanelImages((prev) => ({
+      ...prev,
+      0: {
+        ...createDefaultPanelState(template.image),
+        uploadedImage: {
+          src: template.image,
+          naturalWidth,
+          naturalHeight,
+          aspectRatio: template.aspectRatio || 1
+        }
+      }
+    }));
+  };
+
   // Product-Specific Compatible Shapes (Centralized via AcrylicProductShapeConfig)
   const compatibleShapes = useMemo(() => {
     return getCompatibleShapesForProduct(selectedProductTypeId);
@@ -346,6 +472,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
     if (isLayoutProduct) {
       const layouts = getProductLayouts(selectedProductTypeId);
       return layouts.map((layout) => ({
+        // Preserve every field from the layout definition (panels,
+        // diagramType, arrangement, etc.) — hand-picking fields here
+        // previously dropped `panels` silently, so every Wall Display
+        // layout fell back to the same hardcoded 3-panel default
+        // regardless of which one was selected.
+        ...layout,
         id: layout.id,
         productTypeId: selectedProductTypeId,
         category: 'RECTANGLE' as SizeCategory,
@@ -435,6 +567,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
     const configOpt = getProductSizeShapeOptions(selectedProductTypeId, 'acrylic').find((o) => o.id === selectedSizeId);
     if (configOpt) {
       return {
+        // Preserve every field from the matched preset (panels, diagramType,
+        // arrangement, etc.) — hand-picking fields here previously dropped
+        // `panels` silently, so every Wall Display layout fell back to the
+        // same hardcoded 3-panel default regardless of what was selected.
+        ...configOpt,
         id: configOpt.id,
         productTypeId: selectedProductTypeId,
         category: (configOpt.category === 'MULTI_PANEL' ? 'RECTANGLE' : configOpt.category) as SizeCategory,
@@ -495,6 +632,28 @@ export const AcrylicCustomizerPage: React.FC = () => {
     2: createDefaultPanelState(null),
     3: createDefaultPanelState(null)
   });
+
+  // Bus Roll renders its lines/background/pattern as an SVG data URL and
+  // feeds it into the same panel-image slot a normal photo upload would use
+  // — every downstream feature (pan/zoom, Room View, add to cart) keeps
+  // working unmodified, same approach as the Canvas Bus Roll customizer.
+  useEffect(() => {
+    if (selectedProductTypeId !== 'acrylic-bus-roll') return;
+    const svgDataUrl = generateBusRollSvgDataUrl(busRollConfig);
+    setPanelImages((prev) => ({
+      ...prev,
+      0: {
+        ...createDefaultPanelState(svgDataUrl),
+        uploadedImage: {
+          src: svgDataUrl,
+          naturalWidth: Math.round(busRollConfig.widthInches * 40),
+          naturalHeight: Math.round(busRollConfig.heightInches * 40),
+          aspectRatio: busRollConfig.widthInches / Math.max(1, busRollConfig.heightInches)
+        }
+      }
+    }));
+    setActivePanelIndex(0);
+  }, [selectedProductTypeId, busRollConfig]);
 
   // Active Frame / Element Selection
   const [activePanelIndex, setActivePanelIndex] = useState<number>(0);
@@ -1184,13 +1343,22 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
   // Dimension label helper
   const currentDimensionLabel = useMemo(() => {
+    if (isBusRoll) {
+      return `${busRollConfig.widthInches}" × ${busRollConfig.heightInches}"`;
+    }
     if (isCustomSize) {
       return `${customWidth}" × ${customHeight}"`;
     }
     return currentSizeOption?.label || currentShape.name;
-  }, [isCustomSize, customWidth, customHeight, currentShape, currentSizeOption]);
+  }, [isCustomSize, customWidth, customHeight, currentShape, currentSizeOption, isBusRoll, busRollConfig.widthInches, busRollConfig.heightInches]);
 
   const effectiveWidthInches = useMemo(() => {
+    // Bus Roll's print panel should always match its own configured
+    // dimensions exactly (it's a plain rectangle, not one of the cut
+    // shapes) — otherwise the panel keeps whatever shape/size was selected
+    // before switching to Bus Roll and the generated design gets
+    // letterboxed inside a mismatched box instead of filling it.
+    if (isBusRoll) return busRollConfig.widthInches;
     const rawW = isCustomSize ? customWidth : (currentSizeOption?.widthInches || 12);
     const rawH = isCustomSize ? customHeight : (currentSizeOption?.heightInches || 12);
     if (['shape-square', 'shape-circle', 'shape-heart', 'shape-hexagon'].includes(selectedShapeId)) {
@@ -1204,9 +1372,10 @@ export const AcrylicCustomizerPage: React.FC = () => {
       if (rawW > rawH) return rawH;
     }
     return rawW;
-  }, [isCustomSize, customWidth, customHeight, currentSizeOption, selectedShapeId]);
+  }, [isCustomSize, customWidth, customHeight, currentSizeOption, selectedShapeId, isBusRoll, busRollConfig.widthInches]);
 
   const effectiveHeightInches = useMemo(() => {
+    if (isBusRoll) return busRollConfig.heightInches;
     const rawW = isCustomSize ? customWidth : (currentSizeOption?.widthInches || 12);
     const rawH = isCustomSize ? customHeight : (currentSizeOption?.heightInches || 12);
     if (['shape-square', 'shape-circle', 'shape-heart', 'shape-hexagon'].includes(selectedShapeId)) {
@@ -1220,7 +1389,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
       if (rawH === rawW) return Math.round(rawW * 1.35);
     }
     return rawH;
-  }, [isCustomSize, customWidth, customHeight, currentSizeOption, selectedShapeId]);
+  }, [isCustomSize, customWidth, customHeight, currentSizeOption, selectedShapeId, isBusRoll, busRollConfig.heightInches]);
 
   const productAspectRatio = useMemo(() => {
     return Math.max(0.2, effectiveWidthInches / Math.max(1, effectiveHeightInches));
@@ -1251,10 +1420,45 @@ export const AcrylicCustomizerPage: React.FC = () => {
     }
   }, [layoutSlots.length, activePanelIndex]);
 
-  // Click on empty frame opens picker for that specific frame
+  // Click on empty frame opens picker for that specific frame — Word Art
+  // opens its own studio flow instead of the plain file picker.
   const handleEmptyFrameClick = (panelIdx: number) => {
+    if (isWordArt) {
+      uploadTargetPanelRef.current = panelIdx;
+      // Already have a design for this slot (re-editing) — skip straight
+      // back into the studio instead of asking the preference question again.
+      if (hasWordArtDesign) {
+        setIsWordArtModalOpen(true);
+      } else {
+        setIsWordArtPreferenceModalOpen(true);
+      }
+      return;
+    }
     uploadTargetPanelRef.current = panelIdx;
     singleFileInputRef.current?.click();
+  };
+
+  const handleWordArtComplete = (dataUrl: string, _sizeLabel: string, _price: number) => {
+    const targetIdx = uploadTargetPanelRef.current ?? 0;
+    const img = new Image();
+    img.onload = () => {
+      setPanelImages((prev) => ({
+        ...prev,
+        [targetIdx]: {
+          ...createDefaultPanelState(dataUrl),
+          uploadedImage: {
+            src: dataUrl,
+            naturalWidth: img.naturalWidth,
+            naturalHeight: img.naturalHeight,
+            aspectRatio: img.naturalWidth / img.naturalHeight
+          }
+        }
+      }));
+      imageDimsRef.current[targetIdx] = { naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight };
+    };
+    img.src = dataUrl;
+    setIsWordArtModalOpen(false);
+    setHasWordArtDesign(true);
   };
 
   // Single file picker change
@@ -1850,20 +2054,48 @@ export const AcrylicCustomizerPage: React.FC = () => {
     if (!pt) return;
 
     // 1. Update selected product state (updates card checkmark, header title, and price)
+    const previousProductTypeId = selectedProductTypeId;
     setSelectedProductTypeId(pt.id);
+
+    // Bus Roll auto-generates its SVG straight into panelImages[0] (see the
+    // sync effect above), and Word Art's studio writes its generated PNG
+    // there too — leaving the product, neither gets cleared back out, so
+    // the "preserve uploaded images" step below would otherwise treat that
+    // leftover generated design as if it were a real photo the shopper
+    // uploaded and carry it into whatever product comes next.
+    if (
+      (previousProductTypeId === 'acrylic-bus-roll' || previousProductTypeId === 'acrylic-word-art') &&
+      pt.id !== previousProductTypeId
+    ) {
+      setPanelImages((prev) => ({
+        ...prev,
+        0: createDefaultPanelState(null)
+      }));
+      if (previousProductTypeId === 'acrylic-word-art') {
+        setHasWordArtDesign(false);
+      }
+    }
 
     // 2. Apply the product's default layout (4-grid for Acrylic Collage, 2-split for Acrylic Split Panel; preserve manual layout between single-panel products)
     const isMultiSlotProduct = (id: string) =>
       id === 'acrylic-collage' || id === 'acrylic-split' || id === 'acrylic-wall-art' || id === 'acrylic-mosaic';
+    // Bus Roll (and Word Art) must always render as a single full-bleed
+    // slot — if the shopper had previously picked a custom layout on a
+    // different single-slot product (e.g. Digital Painting), the generic
+    // "preserve manual layout between single-panel products" rule below
+    // would otherwise carry that stale multi-slot layout over, leaving
+    // slot 0 pointed at an index the Bus Roll sync effect never writes to.
+    const forcesSingleSlot = (id: string) => id === 'acrylic-bus-roll' || id === 'acrylic-word-art';
     const shouldApplyDefaultLayout =
       isMultiSlotProduct(pt.id) ||
       isMultiSlotProduct(selectedProductTypeId) ||
+      forcesSingleSlot(pt.id) ||
       !hasUserSelectedCustomLayoutRef.current;
     const nextLayoutId = shouldApplyDefaultLayout
       ? (pt.defaultLayoutId || 'layout-1-single')
       : selectedLayoutId;
     setSelectedLayoutId(nextLayoutId);
-    if (isMultiSlotProduct(pt.id)) {
+    if (isMultiSlotProduct(pt.id) || forcesSingleSlot(pt.id)) {
       hasUserSelectedCustomLayoutRef.current = false;
     }
 
@@ -1901,6 +2133,11 @@ export const AcrylicCustomizerPage: React.FC = () => {
     if (pt.defaultThicknessId) {
       setSelectedThicknessId(pt.defaultThicknessId);
     }
+
+    // Wrap & Border has no per-product default — reset it to the universal
+    // default on every product switch instead of carrying over whatever
+    // edge treatment was picked on the previous product.
+    setSelectedEdgeWrapId('full-bleed');
 
     // 5. Preserve uploaded images non-destructively across slot count changes
     setPanelImages((prev) => {
@@ -1968,7 +2205,16 @@ export const AcrylicCustomizerPage: React.FC = () => {
       'acrylic-mosaic'
     ].includes(pt.id);
 
-    if (isSingle) {
+    if (pt.id === 'acrylic-word-art') {
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      setActiveTab(getFirstTabForProduct(pt));
+      // The preference popup itself is opened by the selectedProductTypeId
+      // effect below, which also covers landing on Word Art directly via
+      // URL (/customize/acrylic/acrylic-word-art) — a path that never runs
+      // this handler at all, since the product type there is resolved
+      // straight from the route param on mount.
+    } else if (isSingle) {
       setIsSizeShapeModalOpen(true);
       setIsLayoutModalOpen(false);
     } else if (isLayoutProduct) {
@@ -1982,7 +2228,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
     } else {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
-      setActiveTab('UPLOAD');
+      // Jump straight to this product's first relevant section (UPLOAD for
+      // most, CREATE BUS ROLL for Bus Roll) instead of a hardcoded 'UPLOAD'
+      // — this used to unconditionally override an earlier attempt to set
+      // the Bus Roll-specific tab, since this runs later in the same
+      // handler and always wins.
+      setActiveTab(getFirstTabForProduct(pt));
     }
   };
 
@@ -2677,17 +2928,23 @@ export const AcrylicCustomizerPage: React.FC = () => {
               })()}
             </div>
           ) : (
-            /* CLEAN EMPTY SLOT: Blue upload icon + blue Upload an Image text */
+            /* CLEAN EMPTY SLOT: Blue upload icon + blue Upload an Image text (or the Word Art studio CTA) */
             <div className="w-full h-full flex flex-col items-center justify-center bg-white hover:bg-stone-50/50 transition-colors cursor-pointer group p-3 text-center select-none">
               <div className="flex items-center gap-2 text-[#0E4A93] group-hover:scale-105 transition-transform mb-1">
-                <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
-                  <path d="M11 14.5V6.85l-2.6 2.6L7 8.05 12 3.05l5 5-1.4 1.4-2.6-2.6v7.65h-2zM4 20q-.825 0-1.412-.587Q2 18.825 2 18v-2q0-.425.288-.712Q2.575 15 3 15t.713.288Q4 15.575 4 16v2h16v-2q0-.425.288-.712Q20.575 15 21 15t.713.288Q22 15.575 22 16v2q0 .825-.587 1.413Q20.825 20 20 20Z"/>
-                </svg>
+                {isWordArt ? (
+                  <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                    <path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v14h14V5H5zm2 2h2.2l2.3 6.2L13.8 7H16v10h-1.8V9.6l-2.3 6.2h-1.4L8.2 9.6V17H7V7z"/>
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                    <path d="M11 14.5V6.85l-2.6 2.6L7 8.05 12 3.05l5 5-1.4 1.4-2.6-2.6v7.65h-2zM4 20q-.825 0-1.412-.587Q2 18.825 2 18v-2q0-.425.288-.712Q2.575 15 3 15t.713.288Q4 15.575 4 16v2h16v-2q0-.425.288-.712Q20.575 15 21 15t.713.288Q22 15.575 22 16v2q0 .825-.587 1.413Q20.825 20 20 20Z"/>
+                  </svg>
+                )}
                 <span className={`${totalSlots === 1 ? 'text-sm font-semibold' : 'text-xs font-semibold'} tracking-tight`}>
-                  {totalSlots === 1 ? 'Upload an Image' : `Upload Slot ${panelIdx + 1}`}
+                  {isWordArt ? 'Create Word-Art' : totalSlots === 1 ? 'Upload an Image' : `Upload Slot ${panelIdx + 1}`}
                 </span>
               </div>
-              {totalSlots === 1 && (
+              {totalSlots === 1 && !isWordArt && (
                 <span className="text-xs text-stone-500">
                   Maximum upload size: 25MB per file
                 </span>
@@ -3114,7 +3371,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     return (
       <div className={`w-full max-w-xl mx-auto my-auto ${isRoomView ? 'h-full p-2' : 'p-4'} flex flex-col items-center select-none`}>
         <div
-          className="grid gap-2 w-full p-3 bg-white/70 backdrop-blur-xs rounded-2xl border border-stone-200/90 shadow-xl"
+          className="grid gap-2 w-full select-none"
           style={{
             aspectRatio: String(layout.aspectRatio),
             gridTemplateColumns: `repeat(${totalCols}, 1fr)`,
@@ -3446,11 +3703,27 @@ export const AcrylicCustomizerPage: React.FC = () => {
     'acrylic-single'
   ].includes(selectedProductTypeId);
 
-  // Primary Toolbar items: dynamically filtered by selected product capabilities
+  // Primary Toolbar items: dynamically filtered by selected product capabilities.
+  // Bus Roll gets its own bespoke tab set (line editor / background / template)
+  // instead of the generic upload+size+layouts flow, same as Canvas's Bus Roll.
   const toolbarItems = useMemo<{ id: ToolbarTab; label: string; icon: React.ElementType }[]>(() => {
+    if (selectedProductTypeId === 'acrylic-bus-roll') {
+      return [
+        { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
+        { id: 'CREATE BUS ROLL', label: 'CREATE BUS ROLL', icon: Type },
+        { id: 'BACKGROUND', label: 'BACKGROUND', icon: ImageIcon },
+        { id: 'TEMPLATE', label: 'TEMPLATE', icon: LayoutTemplate },
+        { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
+        { id: 'HARDWARE & FINISH', label: 'HARDWARE OPTION & STYLE', icon: SlidersHorizontal },
+        { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
+      ];
+    }
     const items: { id: ToolbarTab; label: string; icon: React.ElementType; enabled: boolean }[] = [
       { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid, enabled: productCapabilities.products !== false },
       { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud, enabled: productCapabilities.upload !== false },
+      // Quotes on Acrylic gets a curated "Select From Our Collection"
+      // template gallery alongside the normal upload-your-own flow.
+      { id: 'TEMPLATE', label: 'TEMPLATE', icon: LayoutTemplate, enabled: selectedProductTypeId === 'acrylic-quotes' },
       { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSinglePrintAcrylic && productCapabilities.sizes !== false },
       { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: productCapabilities.layouts === true },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
@@ -3458,7 +3731,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
       { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false }
     ];
     return items.filter((item) => item.enabled);
-  }, [productCapabilities, isSinglePrintAcrylic]);
+  }, [productCapabilities, isSinglePrintAcrylic, selectedProductTypeId]);
 
   // If the active tab is not supported by the currently selected product, safely revert to PRODUCTS
   useEffect(() => {
@@ -3604,12 +3877,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
 
         {/* COLUMN 2: CONFIGURATION PANEL */}
         <CustomizerPanel
-          title={activeTab}
+          title={toolbarItems.find((t) => t.id === activeTab)?.label || activeTab}
           metaText={
             activeTab === 'PRODUCTS'
               ? `${ACRYLIC_PRODUCT_TYPES.length} Styles`
               : activeTab === 'UPLOAD'
-              ? `${uploadedPhotos.length} Photos`
+              ? isWordArt ? 'Word Art' : `${uploadedPhotos.length} Photos`
               : activeTab === 'SELECT SIZE'
               ? `${shapeSizes.length + 1} Options`
               : activeTab === 'LAYOUTS & DESIGNS'
@@ -3622,6 +3895,12 @@ export const AcrylicCustomizerPage: React.FC = () => {
               ? '5 Options'
               : activeTab === 'HARDWARE & FINISH'
               ? `${compatibleHardware.length} Hardware`
+              : activeTab === 'CREATE BUS ROLL'
+              ? `${busRollConfig.lines.length} Lines`
+              : activeTab === 'BACKGROUND'
+              ? 'Color & Pattern'
+              : activeTab === 'TEMPLATE'
+              ? 'Ready-made Designs'
               : 'Specifications'
           }
         >
@@ -3637,8 +3916,32 @@ export const AcrylicCustomizerPage: React.FC = () => {
             />
           )}
 
-          {/* TAB 2: UPLOAD */}
-          {activeTab === 'UPLOAD' && (
+          {/* TAB 2: UPLOAD — Word Art has no plain photo upload, it opens its own studio */}
+          {activeTab === 'UPLOAD' && isWordArt && (
+            <div className="flex-1 min-h-0 p-4 flex flex-col items-center justify-center text-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-[#0E4A93]">
+                <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                  <path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v14h14V5H5zm2 2h2.2l2.3 6.2L13.8 7H16v10h-1.8V9.6l-2.3 6.2h-1.4L8.2 9.6V17H7V7z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-1">Word Art on Acrylic</h3>
+                <p className="text-[11px] text-stone-500">Build your personalized word-cloud design — no photo upload needed for this product.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  hasWordArtDesign
+                    ? setIsWordArtModalOpen(true)
+                    : setIsWordArtPreferenceModalOpen(true)
+                }
+                className="px-5 py-2.5 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
+              >
+                {hasWordArtDesign ? 'Edit Word-Art' : 'Create Word-Art'}
+              </button>
+            </div>
+          )}
+          {activeTab === 'UPLOAD' && !isWordArt && (
             <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
               <div>
                 <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-1">
@@ -3877,6 +4180,24 @@ export const AcrylicCustomizerPage: React.FC = () => {
                 </div>
               )}
             </div>
+          )}
+
+          {/* BUS ROLL: line editor / background / template — same controlled
+              components and SVG generator as the Canvas Bus Roll customizer */}
+          {activeTab === 'CREATE BUS ROLL' && (
+            <BusRollLineEditorPanel config={busRollConfig} onChangeConfig={handleUpdateBusRollConfig} />
+          )}
+          {activeTab === 'BACKGROUND' && (
+            <BusRollBackgroundPanel config={busRollConfig} onChangeConfig={handleUpdateBusRollConfig} />
+          )}
+          {activeTab === 'TEMPLATE' && isBusRoll && (
+            <BusRollTemplatePanel config={busRollConfig} onChangeConfig={handleUpdateBusRollConfig} />
+          )}
+          {activeTab === 'TEMPLATE' && isQuotesProduct && (
+            <QuotesTemplateSidebarPanel
+              selectedTemplateId={selectedQuoteTemplateId}
+              onSelectTemplate={handleSelectQuoteTemplate}
+            />
           )}
 
           {/* SELECT SIZE */}
@@ -4808,22 +5129,32 @@ export const AcrylicCustomizerPage: React.FC = () => {
         {/* CENTER / MAIN WORKSPACE (Shared Customizer Workspace Shell) */}
         <main className="flex-1 flex flex-col bg-[#E2E8F0]/60 relative overflow-hidden">
           
-          {/* SHARED TOP WORKSPACE TOOLBAR: [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW] */}
-          <CustomizerTopToolbar
-            onSave={handleSaveDesign}
-            isTextActive={showTextModal}
-            onToggleText={handleAddNewText}
-            isClipartActive={showClipartModal}
-            onToggleClipart={() => setShowClipartModal(!showClipartModal)}
-            isRoomViewActive={showRoomView}
-            isRoomViewDisabled={!hasUploadedImage}
-            onOpenRoomView={() => {
-              if (!hasUploadedImage) return;
-              setShowRoomView(true);
-            }}
-            canDeleteSelectedItem={selectedElement.type !== 'image'}
-            onDeleteSelectedItem={handleDeleteSelectedElement}
-          />
+          {/* SHARED TOP WORKSPACE TOOLBAR: [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW] —
+              Bus Roll swaps this for its own line-spacing/margin/width/font toolbar */}
+          {selectedProductTypeId === 'acrylic-bus-roll' ? (
+            <BusRollTopToolbar
+              config={busRollConfig}
+              onChangeConfig={handleUpdateBusRollConfig}
+              onSave={handleSaveDesign}
+              onStartOver={handleStartOverBusRoll}
+            />
+          ) : (
+            <CustomizerTopToolbar
+              onSave={handleSaveDesign}
+              isTextActive={showTextModal}
+              onToggleText={handleAddNewText}
+              isClipartActive={showClipartModal}
+              onToggleClipart={() => setShowClipartModal(!showClipartModal)}
+              isRoomViewActive={showRoomView}
+              isRoomViewDisabled={!hasUploadedImage}
+              onOpenRoomView={() => {
+                if (!hasUploadedImage) return;
+                setShowRoomView(true);
+              }}
+              canDeleteSelectedItem={selectedElement.type !== 'image'}
+              onDeleteSelectedItem={handleDeleteSelectedElement}
+            />
+          )}
 
           {/* LIVE REAL-TIME TEXT EDITOR COMPONENT */}
           {showTextModal && activeTextElement && (
@@ -4880,39 +5211,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Containment / Fill Controls: [ Fill ] [ Fix ] */}
-                  <div className="inline-flex rounded-lg border border-stone-200 bg-stone-100 p-0.5 gap-0.5">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFill(activePanelIndex);
-                      }}
-                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                        activeFrameState.fitMode === 'cover'
-                          ? 'bg-[#0E4A93] text-white shadow-xs'
-                          : 'text-stone-700 hover:text-[#0E4A93] hover:bg-stone-200'
-                      }`}
-                      title="Fill: make image completely cover the frame area (visual crop)"
-                    >
-                      Fill
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFix(activePanelIndex);
-                      }}
-                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                        activeFrameState.fitMode === 'contain'
-                          ? 'bg-[#0E4A93] text-white shadow-xs'
-                          : 'text-stone-700 hover:text-[#0E4A93] hover:bg-stone-200'
-                      }`}
-                      title="Fix (Fit): fit full uncropped original image inside the product frame"
-                    >
-                      Fix
-                    </button>
-                  </div>
+
 
                   <button
                     type="button"
@@ -4981,7 +5280,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     <span className="text-[#0E4A93] font-extrabold">Slot {activePanelIndex + 1}</span>
                   </>
                 )}
-                {activeFrameState.imageUrl && (
+                {activeFrameState.imageUrl && !isBusRoll && !isWordArt && (
                   <button
                     type="button"
                     onClick={(e) => {
@@ -4998,11 +5297,13 @@ export const AcrylicCustomizerPage: React.FC = () => {
               </div>
             }
           >
-            {/* Top Adjustment Banner */}
-            <div className="w-full max-w-xl mx-auto mb-2 bg-[#FEF9C3] border border-[#FDE047] text-[#854D0E] text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs select-none">
-              <Move className="w-3.5 h-3.5 text-[#A16207]" />
-              <span>Click and drag within the print lines to Adjust your Photo.</span>
-            </div>
+            {/* Top Adjustment Banner — doesn't apply to generated designs like Bus Roll/Word Art */}
+            {!isBusRoll && !isWordArt && (
+              <div className="w-full max-w-xl mx-auto mb-2 bg-[#FEF9C3] border border-[#FDE047] text-[#854D0E] text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs select-none">
+                <Move className="w-3.5 h-3.5 text-[#A16207]" />
+                <span>Click and drag within the print lines to Adjust your Photo.</span>
+              </div>
+            )}
 
             {/* Acrylic Product Frame Wrapper with Dimension Rulers */}
             <div className="relative flex flex-col items-center select-none w-full max-w-2xl my-auto">
@@ -5076,6 +5377,39 @@ export const AcrylicCustomizerPage: React.FC = () => {
         currentLayoutId={selectedLayoutId}
         onSelectLayout={handleApplyLayoutFromModal}
       />
+
+      {isWordArtPreferenceModalOpen && (
+        <SelectPreferenceModal
+          onClose={() => setIsWordArtPreferenceModalOpen(false)}
+          onSelectCreateOwn={() => {
+            setIsWordArtPreferenceModalOpen(false);
+            setActiveTab('UPLOAD');
+            setIsWordArtModalOpen(true);
+          }}
+          comingSoonText="Our curated Word Art collection is on its way — check back shortly, or build your own design now."
+        />
+      )}
+
+      {isQuotesPreferenceModalOpen && (
+        <SelectPreferenceModal
+          onClose={() => setIsQuotesPreferenceModalOpen(false)}
+          onSelectCreateOwn={() => {
+            setIsQuotesPreferenceModalOpen(false);
+            setActiveTab('UPLOAD');
+          }}
+          onSelectCollection={() => {
+            setIsQuotesPreferenceModalOpen(false);
+            setActiveTab('TEMPLATE');
+          }}
+        />
+      )}
+
+      {isWordArtModalOpen && (
+        <WordArtStudioModal
+          onClose={() => setIsWordArtModalOpen(false)}
+          onComplete={handleWordArtComplete}
+        />
+      )}
 
       {/* Change Material Modal */}
       {materialModalOpen && (

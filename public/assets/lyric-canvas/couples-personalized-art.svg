@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <!-- Canvas Drop Shadow -->
+    <filter id="canvasShadow" x="-15%" y="-15%" width="135%" height="135%">
+      <feDropShadow dx="8" dy="16" stdDeviation="12" flood-color="#0F172A" flood-opacity="0.22" />
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.12" />
+    </filter>
+
+    <!-- Subtle canvas weave pattern -->
+    <pattern id="canvasTexture" width="6" height="6" patternUnits="userSpaceOnUse">
+      <path d="M 0 3 L 6 3 M 3 0 L 3 6" stroke="#000000" stroke-width="0.35" opacity="0.04" />
+    </pattern>
+
+    <!-- Gradients -->
+    <linearGradient id="edgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#334155" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#1E293B" stop-opacity="0.95" />
+    </linearGradient>
+
+    <linearGradient id="topEdgeGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#475569" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#334155" stop-opacity="0.9" />
+    </linearGradient>
+
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="50%" stop-color="#EAB308" />
+      <stop offset="100%" stop-color="#CA8A04" />
+    </linearGradient>
+
+    <linearGradient id="sunsetGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FB7185" />
+      <stop offset="60%" stop-color="#F43F5E" />
+      <stop offset="100%" stop-color="#881337" />
+    </linearGradient>
+
+    <linearGradient id="parchmentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEFCE8" />
+      <stop offset="50%" stop-color="#FEF9C3" />
+      <stop offset="100%" stop-color="#FEF08A" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Canvas Staging Environment -->
+  <rect width="100%" height="100%" fill="#F8FAFC" />
+
+  <!-- 3D Canvas Assembly with realistic Perspective wrap -->
+  <g transform="translate(45, 30)">
+    <!-- Main 3D Canvas Group with shadow -->
+    <g filter="url(#canvasShadow)">
+      <!-- Right 3D Fold Edge (Thickness flap) -->
+      <polygon points="280,25 305,42 305,225 280,210" fill="url(#edgeGrad)" />
+
+      <!-- Top 3D Fold Edge -->
+      <polygon points="10,25 280,25 305,42 35,42" fill="url(#topEdgeGrad)" opacity="0.4" />
+
+      <!-- Front Canvas Face (270 x 185) -->
+      <g transform="translate(10, 25)">
+        <clipPath id="frontFaceClip_PersonalizedCanvasArtCouplesGifts">
+          <rect width="270" height="185" rx="3" />
+        </clipPath>
+
+        <rect width="270" height="185" rx="3" fill="#FFFFFF" />
+
+        <g clip-path="url(#frontFaceClip_PersonalizedCanvasArtCouplesGifts)">
+          
+      <!-- 50/50 split canvas -->
+      <rect width="135" height="185" fill="#334155" />
+      <circle cx="67" cy="80" r="34" fill="#64748B" />
+      <path d="M 25 185 C 25 120 110 120 110 185 Z" fill="#94A3B8" />
+      <!-- Right side warm ivory card -->
+      <rect x="135" width="135" height="185" fill="#FEF9C3" />
+      <text x="202" y="42" text-anchor="middle" font-family="'Dancing Script', cursive, serif" font-size="16" font-weight="bold" fill="#854D0E">Better Together</text>
+      <line x1="160" y1="48" x2="245" y2="48" stroke="#CA8A04" stroke-width="0.8" />
+      <text x="202" y="70" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="8.5" font-style="italic" fill="#713F12">It's always better</text>
+      <text x="202" y="83" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="8.5" font-style="italic" fill="#713F12">when we're together.</text>
+      <text x="202" y="98" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="8.5" font-style="italic" fill="#713F12">We'll look at the stars</text>
+      <text x="202" y="111" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="8.5" font-style="italic" fill="#713F12">when we're together.</text>
+      <path d="M 202 128 C 197 122 190 125 190 130 C 190 136 202 144 202 144 C 202 144 214 136 214 130 C 214 125 207 122 202 128 Z" fill="#E11D48" />
+      <text x="202" y="162" text-anchor="middle" font-family="'Montserrat', sans-serif" font-size="7.5" font-weight="bold" fill="#854D0E" letter-spacing="1">JACK &amp; CHLOE</text>
+    
+        </g>
+
+        <!-- Canvas Weave Texture Overlay -->
+        <rect width="270" height="185" rx="3" fill="url(#canvasTexture)" pointer-events="none" />
+        <!-- Subtle border highlight -->
+        <rect width="270" height="185" rx="3" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.4" />
+      </g>
+    </g>
+  </g>
+</svg>

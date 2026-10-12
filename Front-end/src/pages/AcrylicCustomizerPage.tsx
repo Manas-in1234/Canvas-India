@@ -3114,7 +3114,7 @@ export const AcrylicCustomizerPage: React.FC = () => {
     return (
       <div className={`w-full max-w-xl mx-auto my-auto ${isRoomView ? 'h-full p-2' : 'p-4'} flex flex-col items-center select-none`}>
         <div
-          className="grid gap-2 w-full p-3 bg-white/70 backdrop-blur-xs rounded-2xl border border-stone-200/90 shadow-xl"
+          className="grid gap-2 w-full select-none"
           style={{
             aspectRatio: String(layout.aspectRatio),
             gridTemplateColumns: `repeat(${totalCols}, 1fr)`,
@@ -4880,39 +4880,6 @@ export const AcrylicCustomizerPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Containment / Fill Controls: [ Fill ] [ Fix ] */}
-                  <div className="inline-flex rounded-lg border border-stone-200 bg-stone-100 p-0.5 gap-0.5">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFill(activePanelIndex);
-                      }}
-                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                        activeFrameState.fitMode === 'cover'
-                          ? 'bg-[#0E4A93] text-white shadow-xs'
-                          : 'text-stone-700 hover:text-[#0E4A93] hover:bg-stone-200'
-                      }`}
-                      title="Fill: make image completely cover the frame area (visual crop)"
-                    >
-                      Fill
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFix(activePanelIndex);
-                      }}
-                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                        activeFrameState.fitMode === 'contain'
-                          ? 'bg-[#0E4A93] text-white shadow-xs'
-                          : 'text-stone-700 hover:text-[#0E4A93] hover:bg-stone-200'
-                      }`}
-                      title="Fix (Fit): fit full uncropped original image inside the product frame"
-                    >
-                      Fix
-                    </button>
-                  </div>
 
                   <button
                     type="button"

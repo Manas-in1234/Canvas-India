@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="240" height="180">
+      <defs>
+        <clipPath id="q1"><rect x="0" y="0" width="120" height="90" /></clipPath>
+        <clipPath id="q2"><rect x="120" y="0" width="120" height="90" /></clipPath>
+        <clipPath id="q3"><rect x="0" y="90" width="120" height="90" /></clipPath>
+        <clipPath id="q4"><rect x="120" y="90" width="120" height="90" /></clipPath>
+      </defs>
+      <!-- Top Left: Yellow bg, Cyan subject -->
+      <g clip-path="url(#q1)">
+        <rect x="0" y="0" width="120" height="90" fill="#FACC15" />
+        
+    <!-- Head / Hair -->
+    <path d="M 38.4 34.199999999999996 Q 34.8 10.799999999999997 60 8.999999999999993 Q 85.2 10.799999999999997 81.6 34.199999999999996 Q 88.8 54 76.2 64.8 L 79.8 81 L 40.2 81 L 43.8 64.8 Z" fill="#0F172A" />
+    <!-- Face Contour -->
+    <path d="M 47.4 30.599999999999994 Q 43.8 52.199999999999996 60 64.8 Q 76.2 52.199999999999996 72.6 30.599999999999994 Q 60 23.399999999999995 47.4 30.599999999999994 Z" fill="#06B6D4" />
+    <!-- Glasses / Features -->
+    <circle cx="53.7" cy="39.599999999999994" r="4.5" fill="#0F172A" />
+    <circle cx="66.3" cy="39.599999999999994" r="4.5" fill="#0F172A" />
+    <path d="M 58.2 39.599999999999994 L 61.8 39.599999999999994" stroke="#0F172A" stroke-width="1.8" />
+    <!-- Smile / Lips -->
+    <path d="M 52.8 54 Q 60 59.39999999999999 67.2 54" stroke="#0F172A" stroke-width="1.8" fill="none" stroke-linecap="round" />
+  
+      </g>
+      <!-- Top Right: Hot Pink bg, Light Cream subject -->
+      <g clip-path="url(#q2)">
+        <rect x="120" y="0" width="120" height="90" fill="#EC4899" />
+        
+    <!-- Head / Hair -->
+    <path d="M 158.4 34.199999999999996 Q 154.8 10.799999999999997 180 8.999999999999993 Q 205.2 10.799999999999997 201.6 34.199999999999996 Q 208.8 54 196.2 64.8 L 199.8 81 L 160.2 81 L 163.8 64.8 Z" fill="#4C1D95" />
+    <!-- Face Contour -->
+    <path d="M 167.4 30.599999999999994 Q 163.8 52.199999999999996 180 64.8 Q 196.2 52.199999999999996 192.6 30.599999999999994 Q 180 23.399999999999995 167.4 30.599999999999994 Z" fill="#FDF2F8" />
+    <!-- Glasses / Features -->
+    <circle cx="173.7" cy="39.599999999999994" r="4.5" fill="#4C1D95" />
+    <circle cx="186.3" cy="39.599999999999994" r="4.5" fill="#4C1D95" />
+    <path d="M 178.2 39.599999999999994 L 181.8 39.599999999999994" stroke="#4C1D95" stroke-width="1.8" />
+    <!-- Smile / Lips -->
+    <path d="M 172.8 54 Q 180 59.39999999999999 187.2 54" stroke="#4C1D95" stroke-width="1.8" fill="none" stroke-linecap="round" />
+  
+      </g>
+      <!-- Bottom Left: Orange bg, Peach subject -->
+      <g clip-path="url(#q3)">
+        <rect x="0" y="90" width="120" height="90" fill="#F97316" />
+        
+    <!-- Head / Hair -->
+    <path d="M 38.4 124.19999999999999 Q 34.8 100.79999999999998 60 98.99999999999999 Q 85.2 100.79999999999998 81.6 124.19999999999999 Q 88.8 144 76.2 154.79999999999998 L 79.8 171 L 40.2 171 L 43.8 154.79999999999998 Z" fill="#431407" />
+    <!-- Face Contour -->
+    <path d="M 47.4 120.6 Q 43.8 142.2 60 154.79999999999998 Q 76.2 142.2 72.6 120.6 Q 60 113.39999999999999 47.4 120.6 Z" fill="#FED7AA" />
+    <!-- Glasses / Features -->
+    <circle cx="53.7" cy="129.6" r="4.5" fill="#431407" />
+    <circle cx="66.3" cy="129.6" r="4.5" fill="#431407" />
+    <path d="M 58.2 129.6 L 61.8 129.6" stroke="#431407" stroke-width="1.8" />
+    <!-- Smile / Lips -->
+    <path d="M 52.8 144 Q 60 149.39999999999998 67.2 144" stroke="#431407" stroke-width="1.8" fill="none" stroke-linecap="round" />
+  
+      </g>
+      <!-- Bottom Right: Cyan bg, Electric Lime subject -->
+      <g clip-path="url(#q4)">
+        <rect x="120" y="90" width="120" height="90" fill="#06B6D4" />
+        
+    <!-- Head / Hair -->
+    <path d="M 158.4 124.19999999999999 Q 154.8 100.79999999999998 180 98.99999999999999 Q 205.2 100.79999999999998 201.6 124.19999999999999 Q 208.8 144 196.2 154.79999999999998 L 199.8 171 L 160.2 171 L 163.8 154.79999999999998 Z" fill="#1E1B4B" />
+    <!-- Face Contour -->
+    <path d="M 167.4 120.6 Q 163.8 142.2 180 154.79999999999998 Q 196.2 142.2 192.6 120.6 Q 180 113.39999999999999 167.4 120.6 Z" fill="#84CC16" />
+    <!-- Glasses / Features -->
+    <circle cx="173.7" cy="129.6" r="4.5" fill="#1E1B4B" />
+    <circle cx="186.3" cy="129.6" r="4.5" fill="#1E1B4B" />
+    <path d="M 178.2 129.6 L 181.8 129.6" stroke="#1E1B4B" stroke-width="1.8" />
+    <!-- Smile / Lips -->
+    <path d="M 172.8 144 Q 180 149.39999999999998 187.2 144" stroke="#1E1B4B" stroke-width="1.8" fill="none" stroke-linecap="round" />
+  
+      </g>
+      <!-- Grid Divider -->
+      <line x1="120" y1="0" x2="120" y2="180" stroke="#000000" stroke-width="2" />
+      <line x1="0" y1="90" x2="240" y2="90" stroke="#000000" stroke-width="2" />
+    </svg>

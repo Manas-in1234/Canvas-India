@@ -327,12 +327,16 @@ export const Header: React.FC<HeaderProps> = ({
     }, 120);
   };
 
-  const handleItemClick = (slug: string, actionType?: 'category' | 'quote' | 'customize') => {
+  const handleItemClick = (slug: string, actionType?: 'category' | 'quote' | 'customize', href?: string) => {
     if (actionType === 'quote') {
       onOpenQuote();
     } else if (actionType === 'customize') {
       onOpenCustomize();
       onSelectCategory(slug);
+    } else if (href) {
+      // Dedicated landing page for this specific dropdown item, rather than
+      // the generic category listing every item used to fall back to.
+      navigate(href);
     } else {
       handleNavClick(slug);
     }
@@ -873,7 +877,7 @@ export const Header: React.FC<HeaderProps> = ({
                                     <li key={item.name}>
                                       <button
                                         type="button"
-                                        onClick={() => handleItemClick(item.slug, item.actionType)}
+                                        onClick={() => handleItemClick(item.slug, item.actionType, item.href)}
                                         className="w-full text-left px-2.5 py-1.5 text-xs text-stone-700 hover:text-[#0E4A93] hover:bg-blue-50/50 rounded-md transition-colors font-medium flex items-center justify-between group cursor-pointer"
                                       >
                                         <div>
@@ -902,7 +906,7 @@ export const Header: React.FC<HeaderProps> = ({
                                     <li key={item.name}>
                                       <button
                                         type="button"
-                                        onClick={() => handleItemClick(item.slug, item.actionType)}
+                                        onClick={() => handleItemClick(item.slug, item.actionType, item.href)}
                                         className="w-full text-left px-2.5 py-1.5 text-xs text-stone-700 hover:text-[#0E4A93] hover:bg-blue-50/50 rounded-md transition-colors font-medium flex items-center justify-between group cursor-pointer"
                                       >
                                         <div>
@@ -1126,7 +1130,7 @@ export const Header: React.FC<HeaderProps> = ({
                                 <button
                                   key={item.name}
                                   type="button"
-                                  onClick={() => handleItemClick(item.slug, item.actionType)}
+                                  onClick={() => handleItemClick(item.slug, item.actionType, item.href)}
                                   className="text-left py-1 text-xs text-stone-600 hover:text-[#0E4A93] font-medium flex items-center justify-between"
                                 >
                                   <span>{item.name}</span>
