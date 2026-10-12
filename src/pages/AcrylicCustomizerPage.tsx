@@ -3653,8 +3653,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
           </div>
 
 
-          {/* Lyric Typography Overlay */}
-          {selectedProductTypeId === 'acrylic-lyric' && renderLyricOverlay()}
+          {/* Lyric Typography Overlay — only once a photo exists to overlay text onto, otherwise it floats over the empty "Upload an Image" prompt */}
+          {selectedProductTypeId === 'acrylic-lyric' && panelImages[0]?.imageUrl && renderLyricOverlay()}
 
           {/* Design Overlay Layer */}
           {activeDesignOverlay && (
