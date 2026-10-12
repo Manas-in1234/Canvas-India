@@ -331,6 +331,14 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       { label: 'Memorial Tribute', visual: 'mosaic-grid' },
       { label: 'Team Photo', visual: 'mosaic-grid' }
     ],
+    tipsTitle: 'Tips for a Stunning Photo Mosaic',
+    tipsSubtitle: 'A few things to know before you upload your photos.',
+    tipsItems: [
+      { title: 'Choose a strong main image', desc: 'Pick a clear, close-up photo with bold shapes and good contrast — busy, cluttered scenes lose the mosaic effect once broken into tiles.' },
+      { title: 'Use plenty of photos', desc: 'Most photo mosaics use anywhere from 100 to several hundred smaller photos — the more you upload, the richer and more recognizable the final piece.' },
+      { title: 'Keep your cell photos varied', desc: 'Aim for a mix of colors and subjects among your smaller photos — more variety gives the design more to work with when matching tones.' },
+      { title: 'Design at full resolution', desc: "Upload your highest-resolution files from the start — scaling a low-resolution image up to canvas size afterward is where detail gets lost." }
+    ],
     historyTitle: 'The History of Mosaic',
     historyParagraphs: [
       'Mosaic is one of the oldest art forms in the world. The earliest known mosaics, made from colored stones, shells, and ivory, were found at a temple in Mesopotamia dating back to the second half of the 3rd millennium BC.',
