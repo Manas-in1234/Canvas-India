@@ -146,14 +146,13 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     subcategories: [
       'All',
       'Yoga Mats',
-      'Customized Yoga Mats',
-      'Branded Yoga Mats',
-      'Gym Products',
-      'Wellness Products',
-      'Corporate Wellness',
-      'Event Fitness Products',
-      'Promotional Fitness Products',
-      'Personalized Fitness Gifts'
+      'Yoga Bricks',
+      'Yoga Wedges',
+      'Yoga Rollers',
+      'Yoga Balls',
+      'Massage Sets',
+      'Knee Pads',
+      'Yoga Bags'
     ],
     features: [
       'Eco-friendly non-slip natural rubber & suede top',
