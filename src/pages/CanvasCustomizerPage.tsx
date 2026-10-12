@@ -2149,6 +2149,17 @@ export const CanvasCustomizerPage: React.FC = () => {
         }
       }
 
+      // The main photo (slot 0) drives the whole grid on multi-layout products —
+      // auto-switch to whichever layout's proportions best fit this photo.
+      if (targetSlot === 0 && LAYOUT_PRODUCT_TYPE_IDS.includes(selectedProductTypeId)) {
+        const bestLayout = pickBestMatchingLayout(selectedProductTypeId, aspectRatio);
+        if (bestLayout && bestLayout.id !== selectedLayoutId) {
+          setSelectedLayoutId(bestLayout.id);
+          setExpandedLayoutId(bestLayout.id);
+          setSelectedSizeId(bestLayout.id);
+        }
+      }
+
       setPanelImages((prev) => ({
         ...prev,
         [targetSlot]: {
@@ -3222,6 +3233,24 @@ export const CanvasCustomizerPage: React.FC = () => {
     });
   };
 
+  // Multi-layout canvas products where one uploaded photo spans the whole grid,
+  // so the grid's own proportions should follow the photo instead of staying fixed.
+  const LAYOUT_PRODUCT_TYPE_IDS = ['canvas-wall-art', 'canvas-collage', 'canvas-hexagon', 'canvas-split', 'canvas-mosaic'];
+
+  // Among this product's available layouts, pick the one whose overall aspect ratio
+  // is closest to the uploaded photo's own aspect ratio (log-scale so a 2:1 landscape
+  // photo and a 1:2 portrait photo are equally "off" from a 1:1 square layout).
+  const pickBestMatchingLayout = (productTypeId: string, photoAspectRatio: number) => {
+    const layouts = getProductLayouts(productTypeId);
+    if (!layouts.length) return null;
+    return layouts.reduce((best, l) =>
+      Math.abs(Math.log(l.aspectRatio) - Math.log(photoAspectRatio)) <
+      Math.abs(Math.log(best.aspectRatio) - Math.log(photoAspectRatio))
+        ? l
+        : best
+    , layouts[0]);
+  };
+
   // File Upload Handler
   // Files go to the frame that asked for them; extra files fill the following frames, the rest just join the uploads tray.
   const handleFilesUpload = (files: FileList | File[] | null, startIdx: number = uploadTargetRef.current) => {
@@ -3260,6 +3289,16 @@ export const CanvasCustomizerPage: React.FC = () => {
             setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
             if (i === 0 || target < panels.length) {
               const idx = target < panels.length ? target : startIdx;
+              // The main photo (slot 0) drives the whole grid on multi-layout products —
+              // auto-switch to whichever layout's proportions best fit this photo.
+              if (idx === 0 && LAYOUT_PRODUCT_TYPE_IDS.includes(selectedProductTypeId)) {
+                const bestLayout = pickBestMatchingLayout(selectedProductTypeId, meta.aspectRatio);
+                if (bestLayout && bestLayout.id !== selectedLayoutId) {
+                  setSelectedLayoutId(bestLayout.id);
+                  setExpandedLayoutId(bestLayout.id);
+                  setSelectedSizeId(bestLayout.id);
+                }
+              }
               setPanelImages((prev) => ({
                 ...prev,
                 [idx]: {
