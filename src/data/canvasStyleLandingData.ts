@@ -29,7 +29,11 @@ const PHOTO = {
   officeHallway: u('1497366216548-37526070297c'), // office interior hallway
   weddingGalleryWall: '/assets/canvas-styles/wall-display-wedding-gallery.png', // user-supplied: 6-panel asymmetric wedding photo gallery over a sofa
   photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.png', // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
-  collageCluster: u('1541359927273-d76820fc43f9') // verified: cluster of photos/cards collaged on a wall
+  collageCluster: u('1541359927273-d76820fc43f9'), // verified: cluster of photos/cards collaged on a wall
+  photoCollage2Panel: '/assets/canvas-styles/photo-collage-2panel-couple.png', // user-supplied: 2 photos side-by-side, framed, "Sarah & Marc"
+  photoCollage3Panel: '/assets/canvas-styles/photo-collage-3panel-family.png', // user-supplied: 2 stacked (dog, baby) left + 1 tall (family) right, framed
+  photoCollage5Panel: '/assets/canvas-styles/photo-collage-5panel-wedding.png', // user-supplied: 5-photo wedding pinwheel collage
+  photoCollage9Panel: '/assets/canvas-styles/photo-collage-9panel-landscape.png' // user-supplied: 3x3 grid of 9 landscape photos
 };
 
 const STANDARD_FEATURES = [
@@ -175,7 +179,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: '2 Landscape Photo Collage',
         description: '2 Equal Side-by-Side Vertical Photo Panels — a simple, clean pairing that works well in smaller spaces.',
         price: 148.5,
-        visual: 'collage-2',
+        image: PHOTO.photoCollage2Panel,
         customizeHref: '/customize/canvas/canvas-collage?layout=collage-land-2p-split'
       },
       {
@@ -184,7 +188,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: '3 Landscape Photo Collage',
         description: '2 Stacked Photos on Left + 1 Tall Photo on Right — a great way to pair everyday moments with one standout shot.',
         price: 148.5,
-        visual: 'collage-3',
+        image: PHOTO.photoCollage3Panel,
         customizeHref: '/customize/canvas/canvas-collage?layout=collage-land-3p-left2-right1'
       },
       {
@@ -193,7 +197,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: '5 Landscape Photo Collage',
         description: '5-Photo Pinwheel Collage with Center Focus — one photo anchors the middle while four more surround it.',
         price: 148.5,
-        visual: 'collage-5-pinwheel',
+        image: PHOTO.photoCollage5Panel,
         customizeHref: '/customize/canvas/canvas-collage?layout=collage-land-5p-pinwheel'
       },
       {
@@ -202,7 +206,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: '9 Landscape Photo Collage',
         description: 'Center Feature Photo surrounded by 8 Border Photos — perfect for a big family collection or a year in review.',
         price: 148.5,
-        visual: 'collage-9-feature',
+        image: PHOTO.photoCollage9Panel,
         customizeHref: '/customize/canvas/canvas-collage?layout=collage-land-9p-feature'
       }
     ],
