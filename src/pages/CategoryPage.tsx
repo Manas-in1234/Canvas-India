@@ -90,7 +90,13 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
       if (activeSlug === 'cork') {
         return p.categorySlug === 'cork' || p.categorySlug === 'cork-art-patterns';
       }
-      if (activeSlug === 'yoga-fitness' && p.categorySlug !== 'yoga-fitness') return false;
+      if (activeSlug === 'yoga-fitness') {
+        // The real Cork Yoga Wellness catalogue (mats, bricks, rollers,
+        // bags, etc. — SKUs 9C-YA*/9C-YB*) is filed under categorySlug
+        // 'cork' since they're cork-material products, but they also
+        // belong on this dedicated Yoga & Fitness listing.
+        return p.categorySlug === 'yoga-fitness' || p.id.startsWith('cork-9c-y');
+      }
       if (activeSlug === 'home-decor' && p.categorySlug !== 'home-decor') return false;
       if (activeSlug === 'custom-prints' && p.categorySlug !== 'custom-prints') return false;
       if (activeSlug === 'corporate-orders' && p.categorySlug !== 'corporate-orders') return false;
