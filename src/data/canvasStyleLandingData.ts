@@ -33,7 +33,11 @@ const PHOTO = {
   photoCollage2Panel: '/assets/canvas-styles/photo-collage-2panel-couple.png', // user-supplied: 2 photos side-by-side, framed, "Sarah & Marc"
   photoCollage3Panel: '/assets/canvas-styles/photo-collage-3panel-family.png', // user-supplied: 2 stacked (dog, baby) left + 1 tall (family) right, framed
   photoCollage5Panel: '/assets/canvas-styles/photo-collage-5panel-wedding.png', // user-supplied: 5-photo wedding pinwheel collage
-  photoCollage9Panel: '/assets/canvas-styles/photo-collage-9panel-landscape.png' // user-supplied: 3x3 grid of 9 landscape photos
+  photoCollage9Panel: '/assets/canvas-styles/photo-collage-9panel-landscape.png', // user-supplied: 3x3 grid of 9 landscape photos
+  shapedCanvasRound: '/assets/canvas-styles/shaped-canvas-round.png', // user-supplied: round painted sunset lake landscape
+  shapedCanvasTriangle: '/assets/canvas-styles/shaped-canvas-triangle.png', // user-supplied: triangle painted figure-in-doorway scene
+  shapedCanvasHeart: '/assets/canvas-styles/shaped-canvas-heart.png', // user-supplied: heart-shaped painted island sunset
+  shapedCanvasOval: '/assets/canvas-styles/shaped-canvas-oval.png' // user-supplied: oval painted tulips
 };
 
 const STANDARD_FEATURES = [
@@ -58,7 +62,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Round Canvas',
         description: 'Curved circular canvas stretched on a precision round wood stretcher — a soft, modern alternative to the classic rectangle.',
         price: 721.27,
-        visual: 'shape-circle',
+        image: PHOTO.shapedCanvasRound,
         customizeHref: '/customize/canvas/canvas-round'
       },
       {
@@ -67,7 +71,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Triangle Canvas',
         description: 'Geometric 3-sided triangle canvas for modern geometric wall galleries and asymmetric arrangements.',
         price: 1250.79,
-        visual: 'shape-triangle',
+        image: PHOTO.shapedCanvasTriangle,
         customizeHref: '/customize/canvas/canvas-triangle'
       },
       {
@@ -76,7 +80,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Heart Canvas',
         description: 'Romantic heart-shaped canvas for wedding, couple, and family portraits — a thoughtful gift silhouette.',
         price: 1854.68,
-        visual: 'shape-heart',
+        image: PHOTO.shapedCanvasHeart,
         customizeHref: '/customize/canvas/canvas-heart'
       },
       {
@@ -85,16 +89,16 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Oval Canvas',
         description: 'Graceful elliptical canvas silhouette for timeless wall art and heirloom-style portraits.',
         price: 1380.67,
-        visual: 'shape-oval',
+        image: PHOTO.shapedCanvasOval,
         customizeHref: '/customize/canvas/canvas-oval'
       }
     ],
     galleryTitle: 'Shapes for every wall',
     galleryItems: [
-      { label: 'Round', visual: 'shape-circle' },
-      { label: 'Triangle', visual: 'shape-triangle' },
-      { label: 'Heart', visual: 'shape-heart' },
-      { label: 'Oval', visual: 'shape-oval' }
+      { label: 'Round', image: PHOTO.shapedCanvasRound },
+      { label: 'Triangle', image: PHOTO.shapedCanvasTriangle },
+      { label: 'Heart', image: PHOTO.shapedCanvasHeart },
+      { label: 'Oval', image: PHOTO.shapedCanvasOval }
     ],
     historyTitle: 'The History of Shaped Canvas',
     historyParagraphs: [
