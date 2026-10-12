@@ -360,13 +360,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         customizeHref: '/customize/canvas/canvas-mosaic?layout=mosaic6-6x6'
       }
     ],
-    galleryTitle: 'Occasions people love',
-    galleryItems: [
-      { label: 'Anniversary', visual: 'mosaic-grid' },
-      { label: 'Family Reunion', visual: 'mosaic-grid' },
-      { label: 'Memorial Tribute', visual: 'mosaic-grid' },
-      { label: 'Team Photo', visual: 'mosaic-grid' }
-    ],
     tipsTitle: 'Tips for a Stunning Photo Mosaic',
     tipsSubtitle: 'A few things to know before you upload your photos.',
     tipsItems: [

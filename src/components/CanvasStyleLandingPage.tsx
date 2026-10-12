@@ -281,14 +281,14 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
       </div>
 
       {/* Hero */}
-      <section className="w-full max-w-3xl mx-auto px-4 sm:px-8 pt-12 pb-8 text-center">
+      <section className="w-full max-w-3xl mx-auto px-4 sm:px-8 pt-8 pb-5 text-center">
         <h1 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">{data.heroTitle}</h1>
         <p className="mt-3 text-sm text-stone-600 leading-relaxed">{data.heroSubtitle}</p>
       </section>
 
       {/* Optional warm intro/story section */}
       {data.storyParagraphs && data.storyParagraphs.length > 0 && (
-        <section className="w-full max-w-5xl mx-auto px-4 sm:px-8 pb-12">
+        <section className="w-full max-w-5xl mx-auto px-4 sm:px-8 pb-7">
           <div className="flex flex-col sm:flex-row items-center gap-8">
             <div className="flex-1 min-w-0">
               {data.storyTitle && <h2 className="text-lg sm:text-xl font-black text-stone-900 mb-3">{data.storyTitle}</h2>}
@@ -308,16 +308,16 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
       )}
 
       {/* Styles */}
-      <section className="w-full max-w-5xl mx-auto px-4 sm:px-8 pb-12">
-        <h2 className="text-lg sm:text-xl font-black text-stone-900 mb-8">{data.stylesSectionTitle}</h2>
+      <section className="w-full max-w-5xl mx-auto px-4 sm:px-8 pb-7">
+        <h2 className="text-lg sm:text-xl font-black text-stone-900 mb-5">{data.stylesSectionTitle}</h2>
 
-        <div className="space-y-10">
+        <div className="space-y-6">
           {data.styles.map((style, idx) => {
             const imageOnRight = idx % 2 === 1;
             return (
               <div
                 key={style.id}
-                className={`flex flex-col ${imageOnRight ? 'sm:flex-row-reverse' : 'sm:flex-row'} items-center gap-6 sm:gap-8`}
+                className={`flex flex-col ${imageOnRight ? 'sm:flex-row-reverse' : 'sm:flex-row'} items-center gap-5 sm:gap-6`}
               >
                 <div className="w-full sm:w-64 shrink-0 rounded-2xl overflow-hidden aspect-[4/3]">
                   {style.visual ? (
@@ -356,10 +356,10 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
 
       {/* Optional "How to Customize" step-by-step walkthrough */}
       {data.steps && data.steps.length > 0 && (
-        <section className="w-full bg-stone-50 border-y border-stone-200/80 py-10">
+        <section className="w-full bg-stone-50 border-y border-stone-200/80 py-7">
           <div className="w-full max-w-5xl mx-auto px-4 sm:px-8">
             <h2 className="text-lg sm:text-xl font-black text-stone-900 mb-1">{data.stepsTitle}</h2>
-            {data.stepsSubtitle && <p className="text-xs sm:text-sm text-stone-600 mb-6 max-w-2xl">{data.stepsSubtitle}</p>}
+            {data.stepsSubtitle && <p className="text-xs sm:text-sm text-stone-600 mb-4 max-w-2xl">{data.stepsSubtitle}</p>}
             <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
               {data.steps.map((step, idx) => (
                 <div key={step.title} className="relative bg-white rounded-xl border border-stone-200 p-4">
@@ -380,9 +380,9 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
 
       {/* Optional extra info section */}
       {data.infoItems && data.infoItems.length > 0 && (
-        <section className="w-full max-w-5xl mx-auto px-4 sm:px-8 pb-12">
+        <section className="w-full max-w-5xl mx-auto px-4 sm:px-8 pb-7">
           <h2 className="text-lg sm:text-xl font-black text-stone-900 mb-1">{data.infoTitle}</h2>
-          {data.infoSubtitle && <p className="text-xs sm:text-sm text-stone-600 mb-6 max-w-2xl">{data.infoSubtitle}</p>}
+          {data.infoSubtitle && <p className="text-xs sm:text-sm text-stone-600 mb-4 max-w-2xl">{data.infoSubtitle}</p>}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {data.infoItems.map((item) => (
               <div key={item.title} className="p-4 rounded-xl border border-stone-200 bg-white">
@@ -396,10 +396,10 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
 
       {/* Optional educational tips section */}
       {data.tipsItems && data.tipsItems.length > 0 && (
-        <section className="w-full bg-white border-y border-stone-200/80 py-10">
+        <section className="w-full bg-white border-y border-stone-200/80 py-7">
           <div className="w-full max-w-5xl mx-auto px-4 sm:px-8">
             <h2 className="text-lg sm:text-xl font-black text-stone-900 mb-1">{data.tipsTitle}</h2>
-            {data.tipsSubtitle && <p className="text-xs sm:text-sm text-stone-600 mb-6 max-w-2xl">{data.tipsSubtitle}</p>}
+            {data.tipsSubtitle && <p className="text-xs sm:text-sm text-stone-600 mb-4 max-w-2xl">{data.tipsSubtitle}</p>}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {data.tipsItems.map((item, idx) => (
                 <div key={item.title} className="flex gap-3">
@@ -419,7 +419,7 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
 
       {/* Optional encyclopedic history section */}
       {data.historyParagraphs && data.historyParagraphs.length > 0 && (
-        <section className="w-full bg-stone-50 border-y border-stone-200/80 py-10">
+        <section className="w-full bg-stone-50 border-y border-stone-200/80 py-7">
           <div className="w-full max-w-3xl mx-auto px-4 sm:px-8">
             <h2 className="text-lg sm:text-xl font-black text-stone-900 mb-4">{data.historyTitle}</h2>
             <div className="space-y-3">
@@ -433,9 +433,9 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
 
       {/* Gallery strip */}
       {data.galleryItems && data.galleryItems.length > 0 && (
-      <section className="w-full bg-stone-50 border-y border-stone-200/80 py-10">
+      <section className="w-full bg-stone-50 border-y border-stone-200/80 py-7">
         <div className="w-full max-w-5xl mx-auto px-4 sm:px-8">
-          <h2 className="text-base sm:text-lg font-extrabold text-stone-900 mb-6">{data.galleryTitle}</h2>
+          <h2 className="text-base sm:text-lg font-extrabold text-stone-900 mb-4">{data.galleryTitle}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {data.galleryItems.map((item) => (
               <div key={item.label} className="space-y-2">
@@ -459,9 +459,9 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
       )}
 
       {/* Features footer */}
-      <section className="w-full py-10">
+      <section className="w-full py-7">
         <div className="w-full max-w-5xl mx-auto px-4 sm:px-8">
-          <h2 className="text-base sm:text-lg font-extrabold text-stone-900 mb-6">{data.featuresTitle}</h2>
+          <h2 className="text-base sm:text-lg font-extrabold text-stone-900 mb-4">{data.featuresTitle}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
             {data.features.map((feature) => (
               <div key={feature.title} className="flex flex-col gap-2">
