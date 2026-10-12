@@ -2341,6 +2341,16 @@ export const CanvasCustomizerPage: React.FC = () => {
   const [isSizeShapeModalOpen, setIsSizeShapeModalOpen] = useState<boolean>(false);
   const [isLayoutModalOpen, setIsLayoutModalOpen] = useState<boolean>(() => resolveCanvasProductTypeId(productId, catalogProduct) === 'canvas-collage');
 
+  // The Select Layout modal only makes sense for products with real, distinct multi-panel
+  // arrangements. Everything else falls back to a single generic layout internally, which
+  // would just show up as a pointless 4-option "Single Full Image" picker — close it if open.
+  useEffect(() => {
+    const hasRealLayouts = ['canvas-wall-art', 'canvas-collage', 'canvas-hexagon', 'canvas-split', 'canvas-mosaic'].includes(selectedProductTypeId);
+    if (!hasRealLayouts) {
+      setIsLayoutModalOpen(false);
+    }
+  }, [selectedProductTypeId]);
+
   // Word Art Flow State (Size + Ratio -> Details / Personalization -> Product Workspace)
   const [isWordArtSizeModalOpen, setIsWordArtSizeModalOpen] = useState<boolean>(false);
   const [isWordArtPersonalizeModalOpen, setIsWordArtPersonalizeModalOpen] = useState<boolean>(false);
