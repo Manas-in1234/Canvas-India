@@ -4029,7 +4029,7 @@ export const CanvasCustomizerPage: React.FC = () => {
               </div>
             )}
             {panelSpec?.dimension && (
-              <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
+              <div className="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none truncate text-center">
                 {panelSpec.dimension}
               </div>
             )}
@@ -5021,7 +5021,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                   )}
 
                   {pSpec.dimension && (
-                    <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
+                    <div className="absolute bottom-1.5 left-1.5 right-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none truncate text-center">
                       {pSpec.dimension}
                     </div>
                   )}
@@ -5131,7 +5131,7 @@ export const CanvasCustomizerPage: React.FC = () => {
               </div>
             )}
             {pSpec.dimension && (
-              <div className="absolute bottom-1 left-1 bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold px-1 py-0.5 rounded z-20 pointer-events-none">
+              <div className="absolute bottom-1 left-1 right-1 bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold px-1 py-0.5 rounded z-20 pointer-events-none truncate text-center">
                 {pSpec.dimension}
               </div>
             )}
