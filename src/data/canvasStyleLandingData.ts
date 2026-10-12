@@ -167,7 +167,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         description: '6-Photo Grid (3 Columns × 2 Rows) — six of your favorite moments arranged edge-to-edge on a single gallery-wrapped canvas.',
         price: 148.5,
         image: PHOTO.photoCollageGrid,
-        customizeHref: '/customize/canvas/canvas-collage'
+        customizeHref: '/customize/canvas/canvas-collage?layout=collage-land-6p-grid'
       },
       {
         id: 'collage-land-2p-split',
@@ -176,7 +176,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         description: '2 Equal Side-by-Side Vertical Photo Panels — a simple, clean pairing that works well in smaller spaces.',
         price: 148.5,
         visual: 'collage-2',
-        customizeHref: '/customize/canvas/canvas-collage'
+        customizeHref: '/customize/canvas/canvas-collage?layout=collage-land-2p-split'
       },
       {
         id: 'collage-land-3p-left2-right1',
@@ -185,7 +185,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         description: '2 Stacked Photos on Left + 1 Tall Photo on Right — a great way to pair everyday moments with one standout shot.',
         price: 148.5,
         visual: 'collage-3',
-        customizeHref: '/customize/canvas/canvas-collage'
+        customizeHref: '/customize/canvas/canvas-collage?layout=collage-land-3p-left2-right1'
       },
       {
         id: 'collage-land-5p-pinwheel',
@@ -194,7 +194,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         description: '5-Photo Pinwheel Collage with Center Focus — one photo anchors the middle while four more surround it.',
         price: 148.5,
         visual: 'collage-5-pinwheel',
-        customizeHref: '/customize/canvas/canvas-collage'
+        customizeHref: '/customize/canvas/canvas-collage?layout=collage-land-5p-pinwheel'
       },
       {
         id: 'collage-land-9p-feature',
@@ -203,7 +203,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         description: 'Center Feature Photo surrounded by 8 Border Photos — perfect for a big family collection or a year in review.',
         price: 148.5,
         visual: 'collage-9-feature',
-        customizeHref: '/customize/canvas/canvas-collage'
+        customizeHref: '/customize/canvas/canvas-collage?layout=collage-land-9p-feature'
       }
     ],
     infoTitle: 'More Orientations, Same Layouts',

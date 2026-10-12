@@ -2223,6 +2223,13 @@ export const CanvasCustomizerPage: React.FC = () => {
   const [selectedLayoutId, setSelectedLayoutId] = useState<string>(() => {
     const initialPt = resolveCanvasProductTypeId(productId, catalogProduct);
     const layouts = getProductLayouts(initialPt);
+    // A deep link like /customize/canvas/canvas-collage?layout=collage-land-9p-feature
+    // (used by the Canvas style landing pages' "Customize This Style" buttons)
+    // preselects that specific layout instead of always falling back to the first one.
+    const requestedLayoutId = searchParams.get('layout');
+    if (requestedLayoutId && layouts.some((l) => l.id === requestedLayoutId)) {
+      return requestedLayoutId;
+    }
     return layouts[0]?.id || 'layout-1-single';
   });
 
