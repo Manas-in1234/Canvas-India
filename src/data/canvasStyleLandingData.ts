@@ -38,7 +38,11 @@ const PHOTO = {
   shapedCanvasTriangle: '/assets/canvas-styles/shaped-canvas-triangle.png', // user-supplied: triangle painted figure-in-doorway scene
   shapedCanvasHeart: '/assets/canvas-styles/shaped-canvas-heart.png', // user-supplied: heart-shaped painted island sunset
   shapedCanvasOval: '/assets/canvas-styles/shaped-canvas-oval.png', // user-supplied: oval painted tulips
-  photoMosaicEye: '/assets/canvas-styles/photo-mosaic-eye.png' // user-supplied: tile-mosaic close-up of an eye
+  photoMosaicEye: '/assets/canvas-styles/photo-mosaic-eye.png', // user-supplied: tile-mosaic close-up of an eye
+  photoMosaicPhoenix: '/assets/canvas-styles/photo-mosaic-phoenix.png', // user-supplied: tile-mosaic phoenix/sunrise bird design
+  photoMosaicFace: '/assets/canvas-styles/photo-mosaic-face.png', // user-supplied: tile-mosaic sleeping face with spiral hair
+  photoMosaicBirdhouse: '/assets/canvas-styles/photo-mosaic-birdhouse.png', // user-supplied: tile-mosaic birdhouse with two birds
+  photoMosaicParrots: '/assets/canvas-styles/photo-mosaic-parrots.png' // user-supplied: round tile-mosaic of two parrots
 };
 
 // The customizer's real tab order is Upload -> Size/Layout -> Wrap & Border
@@ -329,7 +333,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: '12-Tile Landscape Mosaic (4×3 Grid)',
         description: '12 mosaic tiles in a wide 4×3 landscape grid — 16" × 12" overall, suited to horizontal wall spaces.',
         price: 405.0,
-        image: PHOTO.photoMosaicEye,
+        image: PHOTO.photoMosaicPhoenix,
         customizeHref: '/customize/canvas/canvas-mosaic?layout=mosaic3-3x4'
       },
       {
@@ -338,7 +342,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: '25-Tile Mosaic (5×5 Grid)',
         description: '25 mosaic tiles in a 5×5 grid — 20" × 20" overall, with enough detail to hold a close-up portrait.',
         price: 148.5,
-        image: PHOTO.photoMosaicEye,
+        image: PHOTO.photoMosaicFace,
         customizeHref: '/customize/canvas/canvas-mosaic?layout=mosaic4-5x5'
       },
       {
@@ -347,7 +351,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: '20-Tile Portrait Mosaic (4×5 Grid)',
         description: '20 mosaic tiles in a tall 4×5 portrait grid — 16" × 20" overall, suited to narrower wall spaces.',
         price: 645.0,
-        image: PHOTO.photoMosaicEye,
+        image: PHOTO.photoMosaicBirdhouse,
         customizeHref: '/customize/canvas/canvas-mosaic?layout=mosaic5-4x5'
       },
       {
@@ -356,7 +360,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: '36-Tile Mosaic (6×6 Grid)',
         description: '36 mosaic tiles in a large 6×6 grid — 24" × 24" overall, our most detailed square mosaic.',
         price: 148.5,
-        image: PHOTO.photoMosaicEye,
+        image: PHOTO.photoMosaicParrots,
         customizeHref: '/customize/canvas/canvas-mosaic?layout=mosaic6-6x6'
       }
     ],
