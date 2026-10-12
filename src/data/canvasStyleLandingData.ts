@@ -437,13 +437,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         customizeHref: '/customize/canvas/canvas-pop-art'
       }
     ],
-    galleryTitle: 'Vibrant styles for everyone',
-    galleryItems: [
-      { label: 'Glo-Portrait', image: '/assets/pop-art/glo-portrait.svg' },
-      { label: 'Coca Cola', image: '/assets/pop-art/coca-cola1.svg' },
-      { label: 'Marilyn', image: '/assets/pop-art/marilyn1.svg' },
-      { label: 'Che', image: '/assets/pop-art/che1.svg' }
-    ],
     historyTitle: 'The History of Pop Art',
     historyParagraphs: [
       'Pop Art began in the mid-1950s in Britain, with the Independent Group in London discussing mass media, advertising, and consumer culture. Eduardo Paolozzi\'s 1947 collage "I was a Rich Man\'s Plaything," built from American magazine clippings, is often cited as the first artwork to use the word "pop."',
