@@ -114,8 +114,8 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
     description: 'Cherish your wedding moments with flowing romantic song lyrics softly layered over your couple portrait.',
     defaultLayout: 'photo-lyrics-overlay',
     defaultBackground: {
-      color: '#0F172A',
-      overlayDarkness: 45
+      color: '#FFFFFF',
+      overlayDarkness: 35
     },
     defaultTypography: {
       fontFamily: 'Playfair Display',
@@ -143,7 +143,7 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
     description: 'Capture the magic of your first dance with romantic song lyrics framed in a modern frosted plaque.',
     defaultLayout: 'first-dance-card',
     defaultBackground: {
-      color: '#0B132B',
+      color: '#FFFFFF',
       overlayDarkness: 35
     },
     defaultTypography: {
@@ -202,8 +202,8 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
     description: 'Celebrate 365 days of love with your anniversary song and couple portrait in sleek editorial typography.',
     defaultLayout: 'split-side-by-side',
     defaultBackground: {
-      color: '#18181B',
-      overlayDarkness: 50
+      color: '#FFFFFF',
+      overlayDarkness: 35
     },
     defaultTypography: {
       fontFamily: 'Cinzel',
@@ -231,8 +231,8 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
     description: 'An unforgettable gift featuring the newlyweds photo with an elegant lower-third lyric banner.',
     defaultLayout: 'bottom-third-lyrics',
     defaultBackground: {
-      color: '#0F172A',
-      overlayDarkness: 60
+      color: '#FFFFFF',
+      overlayDarkness: 35
     },
     defaultTypography: {
       fontFamily: 'Playfair Display',
@@ -260,8 +260,8 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
     description: 'Inspirational Bob Dylan folk classic lyrics with golden hour glow over cherished family and couple photos.',
     defaultLayout: 'photo-lyrics-overlay',
     defaultBackground: {
-      color: '#4C0519',
-      overlayDarkness: 40
+      color: '#FFFFFF',
+      overlayDarkness: 35
     },
     defaultTypography: {
       fontFamily: 'Cinzel',
@@ -436,8 +436,8 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
     description: 'Golden hour sunset couple photo with anniversary vow renewal typography along the lower third.',
     defaultLayout: 'bottom-third-lyrics',
     defaultBackground: {
-      color: '#090D16',
-      overlayDarkness: 55
+      color: '#FFFFFF',
+      overlayDarkness: 35
     },
     defaultTypography: {
       fontFamily: 'Dancing Script',
@@ -468,7 +468,7 @@ export const DEFAULT_LYRIC_CONFIG: LyricCanvasConfig = {
   fontFamily: 'Playfair Display',
   textColor: '#FFFFFF',
   alignment: 'center',
-  overlayDarkness: 45,
+  overlayDarkness: 35,
   compositeImageUrl: null
 };
 

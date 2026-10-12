@@ -7013,135 +7013,115 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
   // 6. Single Print & Classic Canvas (canvas-single, canvas-classic)
   'canvas-single': [
     {
-      id: 'layout-1-single',
+      id: 'single-layout-full',
       productTypeId: 'canvas-single',
-      name: 'Single Full Canvas',
-      description: 'Classic single edge-to-edge photo layout',
+      name: 'Single Full Image',
+      description: 'Edge-to-edge photo with clean full-bleed gallery wrap',
       geometryType: 'rectangle',
       panelsCount: 1,
       photoCount: 1,
       arrangement: 'single',
-      dimensionsSummary: '10" × 10"',
+      dimensionsSummary: 'Full Print Area',
       aspectRatio: 1,
       overallWidthInches: 10,
       overallHeightInches: 10,
-      price: 199.0,
+      price: 250.0,
       acrylicPrice: 799.00,
       panels: [
         {
           id: 'p0',
           label: 'Canvas',
-          dimension: '10" × 10"',
+          dimension: 'Full Bleed',
           x: 0.05,
           y: 0.05,
           w: 0.90,
           h: 0.90,
-          borderRadius: '3px'
+          borderRadius: '2px'
         }
       ]
     },
     {
-      id: 'layout-2-split',
+      id: 'single-layout-landscape',
       productTypeId: 'canvas-single',
-      name: '2 Photos Split',
-      description: '2 photos side-by-side with crisp divider',
-      geometryType: 'collage',
-      panelsCount: 2,
-      photoCount: 2,
-      arrangement: 'twoSplit',
-      dimensionsSummary: '12" × 18"',
-      aspectRatio: 18 / 12,
+      name: 'Landscape Composition',
+      description: '3:2 wide panorama for landscapes, horizons & group portraits',
+      geometryType: 'rectangle',
+      panelsCount: 1,
+      photoCount: 1,
+      arrangement: 'landscape',
+      dimensionsSummary: '18" × 12"',
+      aspectRatio: 1.5,
       overallWidthInches: 18,
       overallHeightInches: 12,
       price: 449.0,
       acrylicPrice: 899.00,
       panels: [
-        { id: 'p0', label: 'Photo 1', dimension: '9" × 12"', x: 0.04, y: 0.06, w: 0.44, h: 0.88 },
-        { id: 'p1', label: 'Photo 2', dimension: '9" × 12"', x: 0.52, y: 0.06, w: 0.44, h: 0.88 }
+        {
+          id: 'p0',
+          label: 'Canvas',
+          dimension: '18" × 12"',
+          x: 0.05,
+          y: 0.18,
+          w: 0.90,
+          h: 0.64,
+          borderRadius: '2px'
+        }
       ]
     },
     {
-      id: 'layout-top-bottom',
+      id: 'single-layout-portrait',
       productTypeId: 'canvas-single',
-      name: 'Top & Bottom (2 Photos)',
-      description: '2 horizontal photo sections stacked vertically',
-      geometryType: 'collage',
-      panelsCount: 2,
-      photoCount: 2,
-      arrangement: 'topBottom',
+      name: 'Portrait Composition',
+      description: '2:3 tall vertical composition for individual portraits & upright photos',
+      geometryType: 'rectangle',
+      panelsCount: 1,
+      photoCount: 1,
+      arrangement: 'portrait',
       dimensionsSummary: '12" × 18"',
-      aspectRatio: 12 / 18,
+      aspectRatio: 2 / 3,
       overallWidthInches: 12,
       overallHeightInches: 18,
       price: 449.0,
       acrylicPrice: 899.00,
       panels: [
-        { id: 'p0', label: 'Top', dimension: '12" × 9"', x: 0.06, y: 0.04, w: 0.88, h: 0.44 },
-        { id: 'p1', label: 'Bottom', dimension: '12" × 9"', x: 0.06, y: 0.52, w: 0.88, h: 0.44 }
+        {
+          id: 'p0',
+          label: 'Canvas',
+          dimension: '12" × 18"',
+          x: 0.18,
+          y: 0.05,
+          w: 0.64,
+          h: 0.90,
+          borderRadius: '2px'
+        }
       ]
     },
     {
-      id: 'layout-3-collage',
+      id: 'single-layout-square',
       productTypeId: 'canvas-single',
-      name: '3 Photos Collage',
-      description: '1 large focal photo with 2 smaller accents',
-      geometryType: 'collage',
-      panelsCount: 3,
-      photoCount: 3,
-      arrangement: 'threeCollage',
-      dimensionsSummary: '16" × 20"',
-      aspectRatio: 16 / 20,
-      overallWidthInches: 16,
-      overallHeightInches: 20,
-      price: 649.0,
-      acrylicPrice: 1199.00,
-      panels: [
-        { id: 'p0', label: 'Main', dimension: '16" × 12"', x: 0.05, y: 0.05, w: 0.90, h: 0.50 },
-        { id: 'p1', label: 'Accent 1', dimension: '8" × 8"', x: 0.05, y: 0.58, w: 0.43, h: 0.37 },
-        { id: 'p2', label: 'Accent 2', dimension: '8" × 8"', x: 0.52, y: 0.58, w: 0.43, h: 0.37 }
-      ]
-    },
-    {
-      id: 'layout-main-two-small',
-      productTypeId: 'canvas-single',
-      name: '1 Large + 2 Accents',
-      description: 'Left vertical hero with 2 stacked side photos',
-      geometryType: 'collage',
-      panelsCount: 3,
-      photoCount: 3,
-      arrangement: 'mainTwoSmall',
-      dimensionsSummary: '20" × 16"',
-      aspectRatio: 20 / 16,
-      overallWidthInches: 20,
-      overallHeightInches: 16,
-      price: 649.0,
-      acrylicPrice: 1199.00,
-      panels: [
-        { id: 'p0', label: 'Left Hero', dimension: '12" × 16"', x: 0.04, y: 0.04, w: 0.52, h: 0.92 },
-        { id: 'p1', label: 'Top Accent', dimension: '8" × 8"', x: 0.60, y: 0.04, w: 0.36, h: 0.44 },
-        { id: 'p2', label: 'Bottom Accent', dimension: '8" × 8"', x: 0.60, y: 0.52, w: 0.36, h: 0.44 }
-      ]
-    },
-    {
-      id: 'layout-4-grid',
-      productTypeId: 'canvas-single',
-      name: '4 Photos Grid (2×2)',
-      description: '4 balanced photos in 2×2 square matrix',
-      geometryType: 'collage',
-      panelsCount: 4,
-      photoCount: 4,
-      arrangement: 'fourGrid',
+      name: 'Square Composition',
+      description: '1:1 balanced square composition for modern gallery walls',
+      geometryType: 'rectangle',
+      panelsCount: 1,
+      photoCount: 1,
+      arrangement: 'square',
       dimensionsSummary: '16" × 16"',
       aspectRatio: 1,
       overallWidthInches: 16,
       overallHeightInches: 16,
-      price: 699.0,
-      acrylicPrice: 1299.00,
+      price: 577.0,
+      acrylicPrice: 999.00,
       panels: [
-        { id: 'p0', label: 'Photo 1', dimension: '8" × 8"', x: 0.05, y: 0.05, w: 0.43, h: 0.43 },
-        { id: 'p1', label: 'Photo 2', dimension: '8" × 8"', x: 0.52, y: 0.05, w: 0.43, h: 0.43 },
-        { id: 'p2', label: 'Photo 3', dimension: '8" × 8"', x: 0.05, y: 0.52, w: 0.43, h: 0.43 },
-        { id: 'p3', label: 'Photo 4', dimension: '8" × 8"', x: 0.52, y: 0.52, w: 0.43, h: 0.43 }
+        {
+          id: 'p0',
+          label: 'Canvas',
+          dimension: '16" × 16"',
+          x: 0.10,
+          y: 0.10,
+          w: 0.80,
+          h: 0.80,
+          borderRadius: '2px'
+        }
       ]
     }
   ]
@@ -7963,7 +7943,7 @@ export function getCanvasProductGeometry(
   return {
     productTypeId,
     geometryType: 'rectangle',
-    shapeId: 'shape-rectangle',
+    shapeId: width === height ? 'shape-square' : 'shape-rectangle',
     aspectRatio: rawAspect || 1,
     widthInches: width,
     heightInches: height,

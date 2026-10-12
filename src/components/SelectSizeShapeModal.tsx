@@ -31,7 +31,7 @@ export interface SelectSizeShapeModalProps {
   }) => void;
 }
 
-export type SinglePrintCategory = 'SQUARE' | 'PANORAMIC' | 'RECOMMENDED';
+export type SinglePrintCategory = 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL';
 
 export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   isOpen,
@@ -68,8 +68,8 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
     );
   }, [productId]);
 
-  // Active Category Tab for Single Print: SQUARE (default), PANORAMIC, RECOMMENDED
-  const [activeCategory, setActiveCategory] = useState<SinglePrintCategory>('SQUARE');
+  // Active Category Tab for Single Print: RECOMMENDED (default), SQUARE, PANORAMIC, LARGE, SMALL
+  const [activeCategory, setActiveCategory] = useState<SinglePrintCategory>('RECOMMENDED');
 
   // Single Print predefined sizes per category
   const singlePrintSizes = useMemo(() => {
@@ -230,10 +230,25 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
         panoramicSizes[2]
       ];
 
+      const largeSizes: SizeShapeOption[] = [
+        squareSizes[3],
+        squareSizes[4],
+        panoramicSizes[3],
+        panoramicSizes[4]
+      ];
+
+      const smallSizes: SizeShapeOption[] = [
+        squareSizes[0],
+        squareSizes[1],
+        panoramicSizes[0]
+      ];
+
       return {
+        RECOMMENDED: recommendedSizes,
         SQUARE: squareSizes,
         PANORAMIC: panoramicSizes,
-        RECOMMENDED: recommendedSizes
+        LARGE: largeSizes,
+        SMALL: smallSizes
       };
     }
 
@@ -364,10 +379,24 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
         panoramicSizes[1]
       ];
 
+      const largeSizes: SizeShapeOption[] = [
+        squareSizes[3],
+        panoramicSizes[2],
+        panoramicSizes[3]
+      ];
+
+      const smallSizes: SizeShapeOption[] = [
+        squareSizes[0],
+        squareSizes[1],
+        panoramicSizes[0]
+      ];
+
       return {
+        RECOMMENDED: recommendedSizes,
         SQUARE: squareSizes,
         PANORAMIC: panoramicSizes,
-        RECOMMENDED: recommendedSizes
+        LARGE: largeSizes,
+        SMALL: smallSizes
       };
     }
 
@@ -527,10 +556,25 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
         panoramicSizes[4]
       ];
 
+      const largeSizes: SizeShapeOption[] = [
+        squareSizes[3],
+        panoramicSizes[3],
+        panoramicSizes[4],
+        panoramicSizes[5]
+      ];
+
+      const smallSizes: SizeShapeOption[] = [
+        squareSizes[0],
+        squareSizes[1],
+        panoramicSizes[0]
+      ];
+
       return {
+        RECOMMENDED: recommendedSizes,
         SQUARE: squareSizes,
         PANORAMIC: panoramicSizes,
-        RECOMMENDED: recommendedSizes
+        LARGE: largeSizes,
+        SMALL: smallSizes
       };
     }
 
@@ -689,10 +733,26 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
       panoramicSizes[4]  // 20x30
     ];
 
+    const largeSizes: SizeShapeOption[] = [
+      squareSizes[2],    // 18x18
+      squareSizes[3],    // 20x20
+      panoramicSizes[3], // 16x32
+      panoramicSizes[4], // 20x30
+      panoramicSizes[5]  // 24x36
+    ];
+
+    const smallSizes: SizeShapeOption[] = [
+      squareSizes[0],    // 10x10
+      panoramicSizes[0], // 12x18
+      squareSizes[1]     // 16x16
+    ];
+
     return {
+      RECOMMENDED: recommendedSizes,
       SQUARE: squareSizes,
       PANORAMIC: panoramicSizes,
-      RECOMMENDED: recommendedSizes
+      LARGE: largeSizes,
+      SMALL: smallSizes
     };
   }, [material]);
 
@@ -938,12 +998,12 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
           </button>
         </div>
 
-        {/* Single Print Category Tabs: SQUARE | PANORAMIC | RECOMMENDED */}
+        {/* Single Print Category Tabs: RECOMMENDED | SQUARE | PANORAMIC | LARGE | SMALL */}
         {isSinglePrint && (
           <div className="px-6 pt-3 pb-2 bg-stone-50/70 border-b border-stone-200">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-bold text-stone-500 mr-2 hidden sm:inline">Category:</span>
-              {(['SQUARE', 'PANORAMIC', 'RECOMMENDED'] as SinglePrintCategory[]).map((cat) => {
+              {(['RECOMMENDED', 'SQUARE', 'PANORAMIC', 'LARGE', 'SMALL'] as SinglePrintCategory[]).map((cat) => {
                 const isActive = activeCategory === cat;
                 return (
                   <button
@@ -953,17 +1013,19 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
                       setActiveCategory(cat);
                       setShowCustomSize(false);
                     }}
-                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                       isActive
                         ? 'bg-[#0E4A93] text-white shadow-xs'
                         : 'bg-white text-stone-600 border border-stone-200 hover:border-stone-400'
                     }`}
                   >
+                    {cat === 'RECOMMENDED' && 'Recommended'}
                     {cat === 'SQUARE' && 'Square'}
                     {cat === 'PANORAMIC' && 'Panoramic'}
-                    {cat === 'RECOMMENDED' && 'Recommended'}
+                    {cat === 'LARGE' && 'Large'}
+                    {cat === 'SMALL' && 'Small'}
                     <span className="ml-1.5 text-[10px] opacity-80">
-                      ({singlePrintSizes[cat].length})
+                      ({singlePrintSizes[cat]?.length || 0})
                     </span>
                   </button>
                 );
