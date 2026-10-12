@@ -7,42 +7,119 @@ import {
   ShieldCheck,
   Layers,
   Clock,
-  Circle,
-  Triangle,
   Heart,
   Hexagon,
-  Grid3x3,
-  Columns3,
   ScrollText,
   Users,
   Package,
+  Mountain,
+  Columns3,
   Frame,
   Images,
-  Mountain
+  PawPrint
 } from 'lucide-react';
 
 export type CanvasStyleIcon =
-  | 'circle' | 'triangle' | 'heart' | 'hexagon' | 'grid' | 'columns'
-  | 'scroll' | 'users' | 'package' | 'frame' | 'images' | 'mountain';
+  | 'hexagon' | 'scroll' | 'users' | 'package' | 'mountain'
+  | 'columns' | 'frame' | 'images' | 'heart' | 'paw';
 
-// Most of these categories have no real photographed product image in the
-// repo yet (confirmed via repo-wide search) — rather than invent fake photo
-// URLs that would 404 or mislead, a style with no real `image` renders as a
-// clean branded icon card instead via `icon`.
+// A handful of categories (Hexagon, Banner, Wholesale, Caricature, Panoramic
+// and Split gallery slots) still don't have a real photographed or
+// deterministically-drawable image — those keep a plain icon card, chosen
+// so the icon's own meaning is still accurate (a mountain for "Landscapes",
+// a hexagon for hexagon prints). Shapes and layout-style categories (Shaped
+// Canvas, Photo Collage, Photo Mosaic) instead get a `visual` mockup drawn
+// in CSS/SVG below, which is guaranteed to actually look like what it's
+// labeled as, unlike a reused stock photo whose real subject was never
+// verified before — several of those turned out to show something
+// completely unrelated (confetti, a tote bag, a ship painting).
 const STYLE_ICONS: Record<CanvasStyleIcon, React.ReactNode> = {
-  circle: <Circle className="w-10 h-10" />,
-  triangle: <Triangle className="w-10 h-10" />,
-  heart: <Heart className="w-10 h-10" />,
   hexagon: <Hexagon className="w-10 h-10" />,
-  grid: <Grid3x3 className="w-10 h-10" />,
-  columns: <Columns3 className="w-10 h-10" />,
   scroll: <ScrollText className="w-10 h-10" />,
   users: <Users className="w-10 h-10" />,
   package: <Package className="w-10 h-10" />,
+  mountain: <Mountain className="w-10 h-10" />,
+  columns: <Columns3 className="w-10 h-10" />,
   frame: <Frame className="w-10 h-10" />,
   images: <Images className="w-10 h-10" />,
-  mountain: <Mountain className="w-10 h-10" />
+  heart: <Heart className="w-10 h-10" />,
+  paw: <PawPrint className="w-10 h-10" />
 };
+
+export type CanvasStyleVisual =
+  | 'shape-circle' | 'shape-triangle' | 'shape-heart' | 'shape-oval'
+  | 'gallery-wall' | 'collage-grid' | 'mosaic-grid';
+
+const VISUAL_GRADIENTS = ['from-[#0E4A93] to-[#2f6fc9]', 'from-[#E8752A] to-[#f4a05f]', 'from-emerald-600 to-emerald-400', 'from-violet-600 to-violet-400'];
+
+function renderVisual(visual: CanvasStyleVisual) {
+  switch (visual) {
+    case 'shape-circle':
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-stone-50 to-blue-50/60">
+          <div className="w-2/3 aspect-square rounded-full bg-gradient-to-br from-[#0E4A93] to-[#2f6fc9] shadow-inner" />
+        </div>
+      );
+    case 'shape-triangle':
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-stone-50 to-blue-50/60">
+          <div
+            className="w-2/3 aspect-square bg-gradient-to-br from-[#0E4A93] to-[#2f6fc9]"
+            style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}
+          />
+        </div>
+      );
+    case 'shape-heart':
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-stone-50 to-blue-50/60">
+          <Heart className="w-2/3 h-2/3 fill-[#0E4A93] text-[#0E4A93]" />
+        </div>
+      );
+    case 'shape-oval':
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-stone-50 to-blue-50/60">
+          <div className="w-2/3 aspect-[4/3] rounded-full bg-gradient-to-br from-[#0E4A93] to-[#2f6fc9] shadow-inner" />
+        </div>
+      );
+    case 'gallery-wall':
+      // An asymmetric 3-panel arrangement — mirrors an actual hung gallery wall.
+      return (
+        <div className="w-full h-full flex items-center justify-center gap-2 p-4 bg-stone-100">
+          <div className={`w-1/2 aspect-[3/4] rounded-sm bg-gradient-to-br ${VISUAL_GRADIENTS[0]} shadow-md border-2 border-white`} />
+          <div className="flex flex-col gap-2 w-1/3">
+            <div className={`aspect-square rounded-sm bg-gradient-to-br ${VISUAL_GRADIENTS[1]} shadow-md border-2 border-white`} />
+            <div className={`aspect-square rounded-sm bg-gradient-to-br ${VISUAL_GRADIENTS[2]} shadow-md border-2 border-white`} />
+          </div>
+        </div>
+      );
+    case 'collage-grid':
+      // A tight edge-to-edge 2x2 grid — a literal photo collage layout.
+      return (
+        <div className="w-full h-full grid grid-cols-2 grid-rows-2 gap-0.5 p-0.5 bg-stone-100">
+          {VISUAL_GRADIENTS.map((g) => (
+            <div key={g} className={`bg-gradient-to-br ${g}`} />
+          ))}
+        </div>
+      );
+    case 'mosaic-grid': {
+      // A dense grid of many small tiles — "built from hundreds of micro photos".
+      const cells = Array.from({ length: 36 });
+      return (
+        <div className="w-full h-full grid grid-cols-6 grid-rows-6 gap-px p-1 bg-stone-100">
+          {cells.map((_, i) => (
+            <div
+              key={i}
+              className={`bg-gradient-to-br ${VISUAL_GRADIENTS[i % VISUAL_GRADIENTS.length]}`}
+              style={{ opacity: [0.6, 0.8, 1][i % 3] }}
+            />
+          ))}
+        </div>
+      );
+    }
+    default:
+      return null;
+  }
+}
 
 export interface CanvasStyleHighlight {
   id: string;
@@ -50,8 +127,10 @@ export interface CanvasStyleHighlight {
   name: string;
   description: string;
   price: number;
-  /** Real photo path/URL. Leave unset and use `icon` when no real image exists. */
+  /** Real photo path/URL — only used when the actual photo content has been verified. */
   image?: string;
+  /** Deterministic CSS/SVG mockup guaranteed to match its label (shape outlines, layout grids). */
+  visual?: CanvasStyleVisual;
   icon?: CanvasStyleIcon;
   customizeHref: string;
 }
@@ -59,6 +138,7 @@ export interface CanvasStyleHighlight {
 export interface CanvasStyleGalleryItem {
   label: string;
   image?: string;
+  visual?: CanvasStyleVisual;
   icon?: CanvasStyleIcon;
 }
 
@@ -125,7 +205,9 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
                 className={`flex flex-col ${imageOnRight ? 'sm:flex-row-reverse' : 'sm:flex-row'} items-center gap-6 sm:gap-8`}
               >
                 <div className="w-full sm:w-64 shrink-0 rounded-2xl overflow-hidden bg-stone-100 border border-stone-200 aspect-[4/3]">
-                  {style.image ? (
+                  {style.visual ? (
+                    renderVisual(style.visual)
+                  ) : style.image ? (
                     <img src={style.image} alt={style.name} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-blue-50 to-orange-50 flex items-center justify-center text-[#0E4A93]">
@@ -165,7 +247,9 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
             {data.galleryItems.map((item) => (
               <div key={item.label} className="space-y-2">
                 <div className="aspect-square rounded-2xl overflow-hidden bg-stone-200 border border-stone-200">
-                  {item.image ? (
+                  {item.visual ? (
+                    renderVisual(item.visual)
+                  ) : item.image ? (
                     <img src={item.image} alt={item.label} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-blue-50 to-orange-50 flex items-center justify-center text-[#0E4A93]">
