@@ -198,13 +198,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       { title: '9-Piece Ennead Matrix', desc: '(9) 12"×12" Equal Squares in a 3×3 Grid' },
       { title: '10-Piece Pantheon Gallery Wall', desc: '(1) 24"×32" + (2) 16"×20" + (2) 12"×16" + (2) 10"×12" + (3) 8"×10"' }
     ],
-    galleryTitle: 'Arrangements for every room',
-    galleryItems: [
-      { label: '3-Panel Set', visual: 'gallery-wall' },
-      { label: 'Asymmetric Wedding Wall', image: PHOTO.weddingGalleryWall },
-      { label: 'Gallery Cluster', image: PHOTO.galleryWallFrames },
-      { label: 'Living Room', image: PHOTO.livingRoomWallArt }
-    ],
     historyTitle: 'The History of the Gallery Wall',
     historyParagraphs: [
       'The densely packed "gallery wall" look has a specific birthplace: the Paris Salon. Starting in 1667, the French Royal Academy\'s annual exhibition accepted far more paintings than its walls could reasonably hold, so organizers covered every inch, floor to ceiling, with almost no regard for matching styles or subjects.',
