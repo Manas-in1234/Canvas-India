@@ -168,8 +168,11 @@ export interface CanvasStyleLandingData {
   tipsTitle?: string;
   tipsSubtitle?: string;
   tipsItems?: CanvasStyleInfoItem[];
-  galleryTitle: string;
-  galleryItems: CanvasStyleGalleryItem[];
+  /** Optional encyclopedic background (history, origin, who pioneered the form). */
+  historyTitle?: string;
+  historyParagraphs?: string[];
+  galleryTitle?: string;
+  galleryItems?: CanvasStyleGalleryItem[];
   featuresTitle: string;
   features: CanvasStyleFeature[];
 }
@@ -291,7 +294,22 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
         </section>
       )}
 
+      {/* Optional encyclopedic history section */}
+      {data.historyParagraphs && data.historyParagraphs.length > 0 && (
+        <section className="w-full bg-stone-50 border-y border-stone-200/80 py-10">
+          <div className="w-full max-w-3xl mx-auto px-4 sm:px-8">
+            <h2 className="text-lg sm:text-xl font-black text-stone-900 mb-4">{data.historyTitle}</h2>
+            <div className="space-y-3">
+              {data.historyParagraphs.map((p, idx) => (
+                <p key={idx} className="text-xs sm:text-sm text-stone-600 leading-relaxed">{p}</p>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Gallery strip */}
+      {data.galleryItems && data.galleryItems.length > 0 && (
       <section className="w-full bg-stone-50 border-y border-stone-200/80 py-10">
         <div className="w-full max-w-5xl mx-auto px-4 sm:px-8">
           <h2 className="text-base sm:text-lg font-extrabold text-stone-900 mb-6">{data.galleryTitle}</h2>
@@ -315,6 +333,7 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
           </div>
         </div>
       </section>
+      )}
 
       {/* Features footer */}
       <section className="w-full py-10">

@@ -28,10 +28,7 @@ const PHOTO = {
   officeWorkspace: u('1497215728101-856f4ea42174'), // office desk with plants, city view
   officeHallway: u('1497366216548-37526070297c'), // office interior hallway
   weddingGalleryWall: '/assets/canvas-styles/wall-display-wedding-gallery.png', // user-supplied: 6-panel asymmetric wedding photo gallery over a sofa
-  photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.png', // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
-  collageCluster: u('1541359927273-d76820fc43f9'), // cluster of photos/cards collaged on a wall
-  collageFramedGrid: u('1670726113933-4bb3940deaf3'), // wall densely covered in framed photos
-  collagePolaroids: u('1661009540506-e708c3288ec8') // polaroid photos strung up side by side
+  photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.png' // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
 };
 
 const STANDARD_FEATURES = [
@@ -183,12 +180,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       { title: 'Vary the orientation and size', desc: 'Mixing landscape, portrait, and close-up shots keeps a grid from feeling repetitive — pick the layout first, then slot photos in.' },
       { title: 'Coordinate color and mood', desc: 'Photos that share a similar color palette or tone (or deliberately contrast) tie the whole piece together visually.' }
     ],
-    galleryTitle: 'Layouts for every memory',
-    galleryItems: [
-      { label: '6-Photo Grid', image: PHOTO.photoCollageGrid },
-      { label: 'Cluster Collage', image: PHOTO.collageCluster },
-      { label: 'Framed Grid Wall', image: PHOTO.collageFramedGrid },
-      { label: 'Polaroid Strip', image: PHOTO.collagePolaroids }
+    historyTitle: 'The History of Collage',
+    historyParagraphs: [
+      'The word "collage" comes from the French coller, meaning "to glue" or "to stick together." The technique of gluing paper to a surface is far older than the word itself — the earliest known paper collage dates to 10th-century Japan, where calligraphers glued paper onto surfaces when writing poems.',
+      'In the 18th century, British artist Mary Delany began an extraordinary body of collage work at age 72, eventually creating 985 intricately cut botanical paper collages she called "flower Mosaicks." By the Victorian era, collage was a popular pastime for photo albums and memorabilia, with Victorian photocollage dating to the early 1860s.',
+      'Collage became a recognized fine-art technique in the 20th century. In 1912, Georges Braque began attaching cut pieces of simulated wood-grain wallpaper to his charcoal drawings, and Pablo Picasso quickly followed — his Still Life with Chair Caning (1912) incorporated a patch of oilcloth. The two artists are credited with coining the French term papier collé ("pasted paper").',
+      'Photomontage — collage built from cut photographs — grew out of the Dada movement in Berlin around 1918–1919, with artists like Hannah Höch using it as a tool for political and social commentary. The form resurfaced decades later in Pop Art: Richard Hamilton\'s 1956 collage for the exhibition "This Is Tomorrow" is considered an early landmark, and collage artists including Andy Warhol and Roy Lichtenstein were featured in the influential 1962 New Realist Exhibition in New York.'
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
