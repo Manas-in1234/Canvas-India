@@ -41,6 +41,35 @@ const PHOTO = {
   photoMosaicEye: '/assets/canvas-styles/photo-mosaic-eye.png' // user-supplied: tile-mosaic close-up of an eye
 };
 
+// The customizer's real tab order is Upload -> Size/Layout -> Wrap & Border
+// -> Hardware & Finish -> Room View preview & checkout (see ToolbarTab /
+// toolbarItems in CanvasCustomizerPage.tsx). Step 2 is the only one that
+// genuinely differs per product category; steps 1, 3-5 are identical for
+// every upload-capable product, so they're built once here.
+const buildCustomizeSteps = (step2: { title: string; desc: string }) => [
+  {
+    icon: 'upload' as const,
+    title: 'Upload Your Photo(s)',
+    desc: 'Upload high-resolution photos straight from your device, or scan the QR code to send them from your phone — no app needed.'
+  },
+  { icon: 'grid' as const, ...step2 },
+  {
+    icon: 'crop' as const,
+    title: 'Choose Your Wrap & Border',
+    desc: 'Pick a full-bleed wrap, mirrored edge, or a solid color border to finish the sides of your canvas exactly how you like.'
+  },
+  {
+    icon: 'sliders' as const,
+    title: 'Select Hardware & Finish',
+    desc: 'Choose your canvas thickness and hanging hardware — every piece ships ready to hang, no extra tools needed.'
+  },
+  {
+    icon: 'eye' as const,
+    title: 'Preview & Order',
+    desc: "See exactly how it'll look on your wall with our live Room View preview, then add it to your cart and check out."
+  }
+];
+
 const STANDARD_FEATURES = [
   { icon: 'layers' as const, title: 'Premium Materials', desc: '380 GSM cotton canvas stretched on kiln-dried pine wood frames.' },
   { icon: 'sparkles' as const, title: 'Archival Inks', desc: '12-color fade-resistant pigment inks for vivid, long-lasting color.' },
@@ -56,6 +85,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     heroSubtitle:
       'Custom cut round, oval, heart & geometric shapes. Each shape is stretched by hand over its own precision-milled wood frame for a clean, gallery-ready silhouette — no rectangle required.',
     stylesSectionTitle: 'Explore Our Shaped Canvas Styles',
+    stepsTitle: 'How to Customize Your Shaped Canvas',
+    stepsSubtitle: 'From upload to finish in 5 simple steps.',
+    steps: buildCustomizeSteps({
+      title: 'Pick Your Shape & Size',
+      desc: 'Choose round, triangle, heart, or oval, then select the exact size for your wall.'
+    }),
     styles: [
       {
         id: 'canvas-round',
@@ -118,6 +153,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     heroSubtitle:
       'Multi-frame canvas clusters & gallery wall arrangements. Several canvases are sized and spaced to work together as one striking focal point for your living room, hallway, or office.',
     stylesSectionTitle: 'Explore Our Wall Display Styles',
+    stepsTitle: 'How to Customize Your Wall Display',
+    stepsSubtitle: 'From upload to finish in 5 simple steps.',
+    steps: buildCustomizeSteps({
+      title: 'Pick Your Panel Layout',
+      desc: 'Choose from 3 to 10-piece gallery arrangements, then fine-tune individual panel sizes.'
+    }),
     styles: [
       {
         id: 'canvas-wall-art',
@@ -173,6 +214,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     heroSubtitle:
       'Multi-photo grid layout canvas displays. Arrange several of your favorite memories into one cohesive canvas, printed as a single gallery-wrapped piece.',
     stylesSectionTitle: 'Explore Our Photo Collage Styles',
+    stepsTitle: 'How to Customize Your Photo Collage',
+    stepsSubtitle: 'From upload to finish in 5 simple steps.',
+    steps: buildCustomizeSteps({
+      title: 'Pick Your Collage Grid',
+      desc: 'Choose from 2 to 9-photo layouts — grid, pinwheel, or feature style — then slot in your photos.'
+    }),
     storyTitle: 'A Collection of Memories on One Canvas',
     storyParagraphs: [
       "The beauty of a photo collage canvas is simple — it keeps your most treasured pictures together, in one place, on one wall. At Canvas India, turning a handful of favorite moments into a single piece of art takes just a few minutes.",
@@ -260,6 +307,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     heroSubtitle:
       'A mosaic grid created from hundreds of micro photos. Dozens of your smaller photographs are blended together into one intricate large-scale artwork.',
     stylesSectionTitle: 'Explore Our Photo Mosaic Styles',
+    stepsTitle: 'How to Customize Your Photo Mosaic',
+    stepsSubtitle: 'From upload to finish in 5 simple steps.',
+    steps: buildCustomizeSteps({
+      title: 'Set Your Mosaic Size',
+      desc: 'Choose your canvas size — more photos uploaded means a richer, more detailed mosaic.'
+    }),
     styles: [
       {
         id: 'canvas-mosaic',
@@ -295,6 +348,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     heroSubtitle:
       'A celebration of everyday life and popular culture, using bold outlines, vibrant colors, and iconic patterns. Our digital artists transform your ordinary photos into stunning custom artworks inspired by this famous movement.',
     stylesSectionTitle: 'Explore Our Pop Art Styles',
+    stepsTitle: 'How to Customize Your Pop Art',
+    stepsSubtitle: 'From upload to finish in 5 simple steps.',
+    steps: buildCustomizeSteps({
+      title: 'Pick Your Pop Art Style',
+      desc: 'Choose from Andy-Warhol, Caricatures, Lichtenstein, Pixel Painting and more, then select your size.'
+    }),
     styles: [
       {
         id: 'andy-warhol',
@@ -357,6 +416,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     heroSubtitle:
       'Song lyrics, wedding vows & custom typography art. Pair your favorite photo with the lyrics, vows, or quote that means the most — rendered in elegant custom typography.',
     stylesSectionTitle: 'Explore Our Lyric Canvas Styles',
+    stepsTitle: 'How to Customize Your Lyric Canvas',
+    stepsSubtitle: 'From upload to finish in 5 simple steps.',
+    steps: buildCustomizeSteps({
+      title: 'Add Your Lyrics & Template',
+      desc: 'Type your song lyrics, vows, or quote, choose a template, then pick your size.'
+    }),
     styles: [
       {
         id: 'wedding-song-lyrics',
@@ -418,6 +483,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     heroSubtitle:
       'Wide aspect landscape & horizon photo prints. Your widest, most sweeping shots — weddings, skylines, landscapes — printed across an extra-long canvas built for impact.',
     stylesSectionTitle: 'Explore Our Panoramic Canvas Styles',
+    stepsTitle: 'How to Customize Your Panoramic Canvas',
+    stepsSubtitle: 'From upload to finish in 5 simple steps.',
+    steps: buildCustomizeSteps({
+      title: 'Pick Your Panoramic Size',
+      desc: 'Choose an extra-wide size that fits your wall, from 12"×36" up to 20"×60" and beyond.'
+    }),
     styles: [
       {
         id: 'canvas-wedding-panoramic',
@@ -453,6 +524,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     heroSubtitle:
       'Multi-panel triptych & 3-to-5 piece canvas sets. One photo, seamlessly split across separate canvas panels for a dramatic, gallery-style centerpiece.',
     stylesSectionTitle: 'Explore Our Split Canvas Styles',
+    stepsTitle: 'How to Customize Your Split Canvas',
+    stepsSubtitle: 'From upload to finish in 5 simple steps.',
+    steps: buildCustomizeSteps({
+      title: 'Pick Your Panel Count',
+      desc: "Choose a 3 to 5-piece split layout, and we'll divide your photo seamlessly across each panel."
+    }),
     styles: [
       {
         id: 'canvas-split',
@@ -497,6 +574,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     heroSubtitle:
       'Honeycomb geometric multi-canvas clusters. Six-sided canvas prints that interlock into a modern honeycomb arrangement on your wall.',
     stylesSectionTitle: 'Explore Our Hexagon Canvas Styles',
+    stepsTitle: 'How to Customize Your Hexagon Canvas',
+    stepsSubtitle: 'From upload to finish in 5 simple steps.',
+    steps: buildCustomizeSteps({
+      title: 'Pick Your Hexagon Cluster',
+      desc: 'Choose a single hexagon or a multi-piece honeycomb cluster arrangement.'
+    }),
     styles: [
       {
         id: 'canvas-hexagon',
@@ -532,6 +615,14 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     heroSubtitle:
       'Bulk printing for artists, studios & interior designers. Tiered pricing for 20+ units with official GST invoicing — built for galleries, decorators, and resellers who order in volume.',
     stylesSectionTitle: 'How Wholesale Pricing Works',
+    stepsTitle: 'How Wholesale Ordering Works',
+    stepsSubtitle: 'Bulk orders go through our quote desk instead of the standard customizer.',
+    steps: [
+      { icon: 'upload', title: 'Request a Quote', desc: 'Tell us your order volume (20+ units) and the canvas sizes or formats you need.' },
+      { icon: 'grid', title: 'Share Your Order Details', desc: 'Send over your artwork or photos, along with your preferred sizes, finishes, and delivery timeline.' },
+      { icon: 'sliders', title: 'Approve Your Quote', desc: "We'll send tiered pricing with GST invoicing — confirm your order once you're happy with it." },
+      { icon: 'eye', title: 'Production & Delivery', desc: 'Every piece is printed to the same archival standard and shipped together, pan-India.' }
+    ],
     styles: [
       {
         id: 'bulk-order',
@@ -566,6 +657,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     heroSubtitle:
       'Digital caricature portraits printed on canvas. Our digital artists turn your photo into a playful, exaggerated hand-drawn-style portrait, then print it on gallery-wrapped canvas.',
     stylesSectionTitle: 'Explore Our Caricature Style',
+    stepsTitle: 'How to Customize Your Caricature',
+    stepsSubtitle: 'From upload to finish in 5 simple steps.',
+    steps: buildCustomizeSteps({
+      title: 'Pick Your Caricature Style',
+      desc: 'Upload a clear photo and let our digital artists turn it into a playful caricature portrait.'
+    }),
     styles: [
       {
         id: 'caricatures',
@@ -601,6 +698,12 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     heroSubtitle:
       'Heavyweight cotton canvas hanging scroll banners. A rustic, fabric alternative to a framed print — finished with solid wood rails and a twine cord, ready to hang.',
     stylesSectionTitle: 'Explore Our Canvas Banner Styles',
+    stepsTitle: 'How to Customize Your Canvas Banner',
+    stepsSubtitle: 'From upload to finish in 5 simple steps.',
+    steps: buildCustomizeSteps({
+      title: 'Pick Your Size & Finish',
+      desc: 'Choose your size, then select grommets, pole pockets, or wood rails for hanging.'
+    }),
     styles: [
       {
         id: 'canvas-banner',

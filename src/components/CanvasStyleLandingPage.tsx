@@ -16,7 +16,12 @@ import {
   Columns3,
   Frame,
   Images,
-  PawPrint
+  PawPrint,
+  UploadCloud,
+  Grid3x3 as GridIcon,
+  Crop,
+  SlidersHorizontal,
+  Eye
 } from 'lucide-react';
 
 export type CanvasStyleIcon =
@@ -202,6 +207,22 @@ export interface CanvasStyleInfoItem {
   desc: string;
 }
 
+export type CanvasStyleStepIcon = 'upload' | 'grid' | 'crop' | 'sliders' | 'eye';
+
+export interface CanvasStyleStep {
+  icon: CanvasStyleStepIcon;
+  title: string;
+  desc: string;
+}
+
+const STEP_ICONS: Record<CanvasStyleStepIcon, React.ReactNode> = {
+  upload: <UploadCloud className="w-5 h-5" />,
+  grid: <GridIcon className="w-5 h-5" />,
+  crop: <Crop className="w-5 h-5" />,
+  sliders: <SlidersHorizontal className="w-5 h-5" />,
+  eye: <Eye className="w-5 h-5" />
+};
+
 export interface CanvasStyleLandingData {
   slug: string;
   pageTitle: string;
@@ -209,6 +230,10 @@ export interface CanvasStyleLandingData {
   heroSubtitle: string;
   stylesSectionTitle: string;
   styles: CanvasStyleHighlight[];
+  /** Optional step-by-step "How to Customize" walkthrough, from upload to finish. */
+  stepsTitle?: string;
+  stepsSubtitle?: string;
+  steps?: CanvasStyleStep[];
   /** Optional warm intro/story section — paragraphs with a photo alongside, right after the hero. */
   storyTitle?: string;
   storyParagraphs?: string[];
@@ -328,6 +353,30 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
           })}
         </div>
       </section>
+
+      {/* Optional "How to Customize" step-by-step walkthrough */}
+      {data.steps && data.steps.length > 0 && (
+        <section className="w-full bg-stone-50 border-y border-stone-200/80 py-10">
+          <div className="w-full max-w-5xl mx-auto px-4 sm:px-8">
+            <h2 className="text-lg sm:text-xl font-black text-stone-900 mb-1">{data.stepsTitle}</h2>
+            {data.stepsSubtitle && <p className="text-xs sm:text-sm text-stone-600 mb-6 max-w-2xl">{data.stepsSubtitle}</p>}
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
+              {data.steps.map((step, idx) => (
+                <div key={step.title} className="relative bg-white rounded-xl border border-stone-200 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-7 h-7 rounded-full bg-[#0E4A93] text-white text-xs font-extrabold flex items-center justify-center shrink-0">
+                      {idx + 1}
+                    </div>
+                    <div className="text-[#0E4A93]">{STEP_ICONS[step.icon]}</div>
+                  </div>
+                  <div className="text-xs font-extrabold text-stone-900 mb-1">{step.title}</div>
+                  <div className="text-[11px] text-stone-500 leading-relaxed">{step.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Optional extra info section */}
       {data.infoItems && data.infoItems.length > 0 && (
