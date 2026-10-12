@@ -1,15 +1,20 @@
 // ============================================================================
 // CANVAS STYLE LANDING PAGES
 // One entry per "Canvas" header dropdown item (excluding "Canvas Prints",
-// which keeps its existing /canvas listing page). Every price, description
-// and real image path here is pulled from data already used elsewhere in
-// the app (canvasCustomizerData.ts, popArtData.ts, lyricCanvasData.ts,
-// canvasBannerData.ts, storeData.ts) — nothing here is invented. Where no
-// real photographed image exists for a style anywhere in the repo, the
-// style uses an `icon` instead of a fabricated photo URL.
+// which keeps its existing /canvas listing page). Every price and
+// description here is pulled from real data already used elsewhere in the
+// app (canvasCustomizerData.ts, popArtData.ts, lyricCanvasData.ts,
+// storeData.ts). Every image is either real local artwork (Pop Art, Lyrics
+// on Canvas) or one of the Unsplash photo IDs already live on this site
+// today (storeData.ts product cards and mega-menu promos) — reused here
+// rather than fabricating new, unverified photo URLs.
 // ============================================================================
 
 import { CanvasStyleLandingData } from '../components/CanvasStyleLandingPage';
+
+// Unsplash photo IDs already confirmed live elsewhere in this codebase
+// (src/data/storeData.ts product cards and MEGA_MENUS_DATA promo images).
+const u = (id: string, w: number = 600) => `https://images.unsplash.com/photo-${id}?w=${w}&auto=format&fit=crop&q=80`;
 
 const STANDARD_FEATURES = [
   { icon: 'layers' as const, title: 'Premium Materials', desc: '380 GSM cotton canvas stretched on kiln-dried pine wood frames.' },
@@ -33,7 +38,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Round Canvas',
         description: 'Curved circular canvas stretched on a precision round wood stretcher — a soft, modern alternative to the classic rectangle.',
         price: 721.27,
-        icon: 'circle',
+        image: u('1513519245088-0e12902e5a38'),
         customizeHref: '/customize/canvas/canvas-round'
       },
       {
@@ -42,7 +47,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Triangle Canvas',
         description: 'Geometric 3-sided triangle canvas for modern geometric wall galleries and asymmetric arrangements.',
         price: 1250.79,
-        icon: 'triangle',
+        image: u('1526738549149-8e07eca6c147'),
         customizeHref: '/customize/canvas/canvas-triangle'
       },
       {
@@ -51,7 +56,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Heart Canvas',
         description: 'Romantic heart-shaped canvas for wedding, couple, and family portraits — a thoughtful gift silhouette.',
         price: 1854.68,
-        icon: 'heart',
+        image: u('1582561424760-0321d75e81fa'),
         customizeHref: '/customize/canvas/canvas-heart'
       },
       {
@@ -60,16 +65,16 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Oval Canvas',
         description: 'Graceful elliptical canvas silhouette for timeless wall art and heirloom-style portraits.',
         price: 1380.67,
-        icon: 'circle',
+        image: u('1515934751635-c81c6bc9a2d8'),
         customizeHref: '/customize/canvas/canvas-oval'
       }
     ],
     galleryTitle: 'Shapes for every wall',
     galleryItems: [
-      { label: 'Round', icon: 'circle' },
-      { label: 'Triangle', icon: 'triangle' },
-      { label: 'Heart', icon: 'heart' },
-      { label: 'Oval', icon: 'circle' }
+      { label: 'Round', image: u('1513519245088-0e12902e5a38', 400) },
+      { label: 'Triangle', image: u('1526738549149-8e07eca6c147', 400) },
+      { label: 'Heart', image: u('1582561424760-0321d75e81fa', 400) },
+      { label: 'Oval', image: u('1515934751635-c81c6bc9a2d8', 400) }
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
@@ -89,7 +94,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Gallery Wall Display',
         description: 'Multi-panel gallery wall display for striking home and office focal points — fully customizable panel count and layout.',
         price: 856.9,
-        icon: 'frame',
+        image: u('1549465220-1a8b9238cd48'),
         customizeHref: '/customize/canvas/canvas-wall-art'
       },
       {
@@ -98,16 +103,16 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Living Room Gallery Canvas Set (3 Panels)',
         description: 'Triptych 3-panel split wall art set for modern living rooms and master bedrooms.',
         price: 2299,
-        image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=600&auto=format&fit=crop&q=80',
+        image: u('1544816155-12df9643f363'),
         customizeHref: '/customize/canvas/canvas-wall-art'
       }
     ],
     galleryTitle: 'Arrangements for every room',
     galleryItems: [
-      { label: '3-Panel Set', icon: 'frame' },
-      { label: '4-Panel Grid', icon: 'grid' },
-      { label: 'Gallery Cluster', icon: 'images' },
-      { label: 'Living Room', image: 'https://images.unsplash.com/photo-1549187774-b4e9b0445b41?w=400&auto=format&fit=crop&q=80' }
+      { label: '3-Panel Set', image: u('1544816155-12df9643f363', 400) },
+      { label: '4-Panel Grid', image: u('1549465220-1a8b9238cd48', 400) },
+      { label: 'Gallery Cluster', image: u('1577083552431-6e5fd01aa342', 400) },
+      { label: 'Living Room', image: u('1524758631624-e2822e304c36', 400) }
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
@@ -124,19 +129,19 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       {
         id: 'canvas-collage',
         number: '01',
-        name: 'Photo Collage',
-        description: 'Multiple cherished photographs arranged creatively on a single canvas — pick from grid, mosaic, or freeform layouts.',
-        price: 148.5,
-        icon: 'grid',
+        name: 'Wall Collage Set (3 Panels)',
+        description: 'Three coordinated canvas panels designed to transform living rooms and hallways — pick from grid, mosaic, or freeform layouts.',
+        price: 2199,
+        image: u('1544816155-12df9643f363'),
         customizeHref: '/customize/canvas/canvas-collage'
       }
     ],
     galleryTitle: 'Layouts for every memory',
     galleryItems: [
-      { label: '4-Photo Grid', icon: 'grid' },
-      { label: 'Family Collage', icon: 'images' },
-      { label: 'Travel Memories', icon: 'images' },
-      { label: 'Milestones', icon: 'frame' }
+      { label: '4-Photo Grid', image: u('1586075010923-2dd4570fb338', 400) },
+      { label: 'Family Collage', image: u('1582561424760-0321d75e81fa', 400) },
+      { label: 'Travel Memories', image: u('1519741497674-611481863552', 400) },
+      { label: 'Milestones', image: u('1549465220-1a8b9238cd48', 400) }
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
@@ -156,16 +161,16 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Photo Mosaic',
         description: 'Intricate mosaic grid pattern blending dozens of micro photos into one artwork — ideal for anniversaries, reunions, and tributes.',
         price: 148.5,
-        icon: 'grid',
+        image: u('1524758631624-e2822e304c36'),
         customizeHref: '/customize/canvas/canvas-mosaic'
       }
     ],
     galleryTitle: 'Occasions people love',
     galleryItems: [
-      { label: 'Anniversary', icon: 'heart' },
-      { label: 'Family Reunion', icon: 'images' },
-      { label: 'Memorial Tribute', icon: 'frame' },
-      { label: 'Team Photo', icon: 'grid' }
+      { label: 'Anniversary', image: u('1582561424760-0321d75e81fa', 400) },
+      { label: 'Family Reunion', image: u('1586075010923-2dd4570fb338', 400) },
+      { label: 'Memorial Tribute', image: u('1549465220-1a8b9238cd48', 400) },
+      { label: 'Team Photo', image: u('1441986300917-64674bd600d8', 400) }
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
@@ -297,16 +302,16 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Grand Panoramic Wedding Canvas',
         description: 'Wide panoramic wedding ceremony memories printed on fine archival cotton weave.',
         price: 2799,
-        image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=600&auto=format&fit=crop&q=80',
+        image: u('1519741497674-611481863552'),
         customizeHref: '/customize/canvas/canvas-split'
       }
     ],
     galleryTitle: 'Moments wide enough to fill a wall',
     galleryItems: [
-      { label: 'Weddings', icon: 'heart' },
-      { label: 'Skylines', icon: 'mountain' },
-      { label: 'Landscapes', icon: 'mountain' },
-      { label: 'Group Shots', icon: 'images' }
+      { label: 'Weddings', image: u('1519741497674-611481863552', 400) },
+      { label: 'Skylines', image: u('1513151233558-d860c5398176', 400) },
+      { label: 'Landscapes', image: u('1577083552431-6e5fd01aa342', 400) },
+      { label: 'Group Shots', image: u('1497215728101-856f4ea42174', 400) }
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
@@ -326,7 +331,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Split Canvas (Triptych)',
         description: 'Panoramic photo split seamlessly across 3 triptych canvas panels.',
         price: 188.1,
-        icon: 'columns',
+        image: u('1497215728101-856f4ea42174'),
         customizeHref: '/customize/canvas/canvas-split'
       },
       {
@@ -335,16 +340,16 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: '5-Panel Panoramic Landscape Canvas',
         description: 'Dramatic multi-tier 5-piece split canvas centerpiece for spacious living and dining halls.',
         price: 3499,
-        image: 'https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?w=600&auto=format&fit=crop&q=80',
+        image: u('1577083552431-6e5fd01aa342'),
         customizeHref: '/customize/canvas/canvas-split'
       }
     ],
     galleryTitle: 'Panel counts for every wall',
     galleryItems: [
-      { label: '3 Panels', icon: 'columns' },
-      { label: '5 Panels', icon: 'columns' },
-      { label: 'Landscape', icon: 'mountain' },
-      { label: 'Portrait', icon: 'frame' }
+      { label: '3 Panels', image: u('1497215728101-856f4ea42174', 400) },
+      { label: '5 Panels', image: u('1577083552431-6e5fd01aa342', 400) },
+      { label: 'Landscape', image: u('1513151233558-d860c5398176', 400) },
+      { label: 'Portrait', image: u('1582561424760-0321d75e81fa', 400) }
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
@@ -364,16 +369,16 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Hexagon Prints',
         description: 'Geometric 6-sided honeycomb canvas prints for modular wall clusters.',
         price: 449,
-        icon: 'hexagon',
+        image: u('1544367567-0f2fcb009e0b'),
         customizeHref: '/customize/canvas/canvas-hexagon'
       }
     ],
     galleryTitle: 'Cluster ideas',
     galleryItems: [
-      { label: 'Single Hexagon', icon: 'hexagon' },
-      { label: 'Honeycomb Cluster', icon: 'hexagon' },
-      { label: 'Mixed Grid', icon: 'grid' },
-      { label: 'Office Wall', icon: 'frame' }
+      { label: 'Single Hexagon', image: u('1544367567-0f2fcb009e0b', 400) },
+      { label: 'Honeycomb Cluster', image: u('1513201099705-a9746e1e201f', 400) },
+      { label: 'Mixed Grid', image: u('1586075010923-2dd4570fb338', 400) },
+      { label: 'Office Wall', image: u('1497366216548-37526070297c', 400) }
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
@@ -393,16 +398,16 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Tiered Wholesale Pricing',
         description: 'Tiered wholesale pricing for 20+ units with official GST invoicing and 18% input tax credit — request a custom quote for your order volume.',
         price: 0,
-        icon: 'package',
+        image: u('1582555172866-f73bb12a2ab3'),
         customizeHref: '/bulk-order'
       }
     ],
     galleryTitle: 'Who orders wholesale with us',
     galleryItems: [
-      { label: 'Artists & Studios', icon: 'users' },
-      { label: 'Interior Designers', icon: 'frame' },
-      { label: 'Hotels & Resorts', icon: 'images' },
-      { label: 'Corporate Offices', icon: 'package' }
+      { label: 'Artists & Studios', image: u('1518199266791-5375a83190b7', 400) },
+      { label: 'Interior Designers', image: u('1549465220-1a8b9238cd48', 400) },
+      { label: 'Hotels & Resorts', image: u('1583847268964-b28dc8f51f92', 400) },
+      { label: 'Corporate Offices', image: u('1497215728101-856f4ea42174', 400) }
     ],
     featuresTitle: 'Why order wholesale with us',
     features: [
@@ -433,10 +438,10 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     ],
     galleryTitle: 'Great for any occasion',
     galleryItems: [
-      { label: 'Solo Portraits', icon: 'users' },
-      { label: 'Couples', icon: 'heart' },
-      { label: 'Family', icon: 'images' },
-      { label: 'Pets', icon: 'frame' }
+      { label: 'Solo Portraits', image: u('1534447677768-be436bb09401', 400) },
+      { label: 'Couples', image: u('1582561424760-0321d75e81fa', 400) },
+      { label: 'Family', image: u('1586075010923-2dd4570fb338', 400) },
+      { label: 'Pets', image: u('1526738549149-8e07eca6c147', 400) }
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
@@ -456,16 +461,16 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Hanging Canvas Banner',
         description: 'Hanging fabric canvas banner with solid wood rails and rustic twine cord for wall hanging.',
         price: 399,
-        icon: 'scroll',
+        image: u('1517248135467-4c7edcad34c4'),
         customizeHref: '/customize/canvas/canvas-banner'
       }
     ],
     galleryTitle: 'Finish options',
     galleryItems: [
-      { label: 'Grommets', icon: 'scroll' },
-      { label: 'Pole Pockets', icon: 'scroll' },
-      { label: 'Wood Rails', icon: 'scroll' },
-      { label: 'Twine Hanging', icon: 'scroll' }
+      { label: 'Grommets', image: u('1566073771259-6a8506099945', 400) },
+      { label: 'Pole Pockets', image: u('1605721911519-3dfeb3be25e7', 400) },
+      { label: 'Wood Rails', image: u('1507646227500-4d389b0012be', 400) },
+      { label: 'Twine Hanging', image: u('1517248135467-4c7edcad34c4', 400) }
     ],
     featuresTitle: 'Made for your walls',
     features: STANDARD_FEATURES
