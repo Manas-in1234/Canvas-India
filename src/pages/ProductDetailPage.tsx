@@ -20,7 +20,6 @@ import { WallPreview } from '../components/WallPreview';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { Product } from '../types';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
-import { CorkProductDetailPage } from './CorkProductDetailPage';
 
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
 // the "Room View" thumbnail renders a live WallPreview instead of a static image.
@@ -169,7 +168,7 @@ export const ProductDetailPage: React.FC = () => {
   const galleryImages = useMemo(() => {
     if (!product) return [];
     const base = product.images && product.images.length > 0 ? product.images : [product.image];
-    if (product.categorySlug === 'yoga-fitness') return base;
+    if (product.categorySlug === 'yoga-fitness' || product.categorySlug === 'cork') return base;
     return [ROOM_VIEW_SENTINEL, ...base];
   }, [product]);
 
@@ -286,11 +285,6 @@ export const ProductDetailPage: React.FC = () => {
   // Dedicated Acrylic Product Detail Page with Reference 1 layout & customizer drawer
   if (product.categorySlug === 'acrylic') {
     return <AcrylicProductDetailPage product={product} />;
-  }
-
-  // Dedicated Cork Product Detail Page with Reference 1 layout matching Acrylic
-  if (product.categorySlug === 'cork') {
-    return <CorkProductDetailPage product={product} />;
   }
 
   const categoryName = product.category || 'Prints';
