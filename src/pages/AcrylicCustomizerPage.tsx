@@ -3700,7 +3700,8 @@ export const AcrylicCustomizerPage: React.FC = () => {
   const isSinglePrintAcrylic = [
     'acrylic-print',
     'acrylic-photo-panel',
-    'acrylic-single'
+    'acrylic-single',
+    'acrylic-lyric'
   ].includes(selectedProductTypeId);
 
   // Primary Toolbar items: dynamically filtered by selected product capabilities.
@@ -3725,7 +3726,16 @@ export const AcrylicCustomizerPage: React.FC = () => {
       // template gallery alongside the normal upload-your-own flow.
       { id: 'TEMPLATE', label: 'TEMPLATE', icon: LayoutTemplate, enabled: selectedProductTypeId === 'acrylic-quotes' },
       { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSinglePrintAcrylic && productCapabilities.sizes !== false },
-      { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: productCapabilities.layouts === true },
+      // Lyric on Acrylic reuses this tab slot for its lyric text/typography
+      // editor (title, artist, lyrics, font, color) rather than a generic
+      // layout picker, so it gets its own accurate label instead of
+      // "Layouts & Designs".
+      {
+        id: 'LAYOUTS & DESIGNS',
+        label: selectedProductTypeId === 'acrylic-lyric' ? 'LYRICS & TYPOGRAPHY' : 'LAYOUTS & DESIGNS',
+        icon: selectedProductTypeId === 'acrylic-lyric' ? Type : Layers,
+        enabled: productCapabilities.layouts === true
+      },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
       { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal, enabled: productCapabilities.hardware !== false },
       { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false }
