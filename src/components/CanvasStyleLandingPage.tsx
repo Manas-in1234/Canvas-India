@@ -48,7 +48,8 @@ const STYLE_ICONS: Record<CanvasStyleIcon, React.ReactNode> = {
 
 export type CanvasStyleVisual =
   | 'shape-circle' | 'shape-triangle' | 'shape-heart' | 'shape-oval'
-  | 'gallery-wall' | 'collage-grid' | 'mosaic-grid';
+  | 'gallery-wall' | 'collage-grid' | 'mosaic-grid'
+  | 'collage-2' | 'collage-3' | 'collage-5-pinwheel' | 'collage-9-feature';
 
 const VISUAL_GRADIENTS = ['from-[#0E4A93] to-[#2f6fc9]', 'from-[#E8752A] to-[#f4a05f]', 'from-emerald-600 to-emerald-400', 'from-violet-600 to-violet-400'];
 
@@ -101,6 +102,54 @@ function renderVisual(visual: CanvasStyleVisual) {
           ))}
         </div>
       );
+    case 'collage-2':
+      // 2 Equal Side-by-Side Vertical Photo Panels
+      return (
+        <div className="w-full h-full grid grid-cols-2 gap-0.5 p-0.5 bg-stone-100">
+          {VISUAL_GRADIENTS.slice(0, 2).map((g) => (
+            <div key={g} className={`bg-gradient-to-br ${g}`} />
+          ))}
+        </div>
+      );
+    case 'collage-3':
+      // 2 Stacked Photos on Left + 1 Tall Photo on Right
+      return (
+        <div className="w-full h-full grid grid-cols-2 gap-0.5 p-0.5 bg-stone-100">
+          <div className="grid grid-rows-2 gap-0.5">
+            <div className={`bg-gradient-to-br ${VISUAL_GRADIENTS[0]}`} />
+            <div className={`bg-gradient-to-br ${VISUAL_GRADIENTS[1]}`} />
+          </div>
+          <div className={`bg-gradient-to-br ${VISUAL_GRADIENTS[2]}`} />
+        </div>
+      );
+    case 'collage-5-pinwheel':
+      // 5-Photo Pinwheel Collage with Center Focus — a plus/cross arrangement
+      return (
+        <div
+          className="w-full h-full grid gap-0.5 p-0.5 bg-stone-100"
+          style={{ gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(3, 1fr)' }}
+        >
+          <div className={`bg-gradient-to-br ${VISUAL_GRADIENTS[0]}`} style={{ gridColumn: '2', gridRow: '1' }} />
+          <div className={`bg-gradient-to-br ${VISUAL_GRADIENTS[1]}`} style={{ gridColumn: '1', gridRow: '2' }} />
+          <div className={`bg-gradient-to-br ${VISUAL_GRADIENTS[2]}`} style={{ gridColumn: '2', gridRow: '2' }} />
+          <div className={`bg-gradient-to-br ${VISUAL_GRADIENTS[3]}`} style={{ gridColumn: '3', gridRow: '2' }} />
+          <div className={`bg-gradient-to-br ${VISUAL_GRADIENTS[0]}`} style={{ gridColumn: '2', gridRow: '3' }} />
+        </div>
+      );
+    case 'collage-9-feature': {
+      // Center Feature Photo surrounded by 8 Border Photos
+      const cells = Array.from({ length: 9 });
+      return (
+        <div className="w-full h-full grid grid-cols-3 grid-rows-3 gap-0.5 p-0.5 bg-stone-100">
+          {cells.map((_, i) => (
+            <div
+              key={i}
+              className={`bg-gradient-to-br ${i === 4 ? VISUAL_GRADIENTS[1] : VISUAL_GRADIENTS[i % 2 === 0 ? 0 : 2]}`}
+            />
+          ))}
+        </div>
+      );
+    }
     case 'mosaic-grid': {
       // A dense grid of many small tiles — "built from hundreds of micro photos".
       const cells = Array.from({ length: 36 });
@@ -160,6 +209,10 @@ export interface CanvasStyleLandingData {
   heroSubtitle: string;
   stylesSectionTitle: string;
   styles: CanvasStyleHighlight[];
+  /** Optional warm intro/story section — paragraphs with a photo alongside, right after the hero. */
+  storyTitle?: string;
+  storyParagraphs?: string[];
+  storyImage?: string;
   /** Optional extra detail section between the styles and the gallery strip. */
   infoTitle?: string;
   infoSubtitle?: string;
@@ -207,6 +260,27 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
         <h1 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">{data.heroTitle}</h1>
         <p className="mt-3 text-sm text-stone-600 leading-relaxed">{data.heroSubtitle}</p>
       </section>
+
+      {/* Optional warm intro/story section */}
+      {data.storyParagraphs && data.storyParagraphs.length > 0 && (
+        <section className="w-full max-w-5xl mx-auto px-4 sm:px-8 pb-12">
+          <div className="flex flex-col sm:flex-row items-center gap-8">
+            <div className="flex-1 min-w-0">
+              {data.storyTitle && <h2 className="text-lg sm:text-xl font-black text-stone-900 mb-3">{data.storyTitle}</h2>}
+              <div className="space-y-3">
+                {data.storyParagraphs.map((p, idx) => (
+                  <p key={idx} className="text-xs sm:text-sm text-stone-600 leading-relaxed">{p}</p>
+                ))}
+              </div>
+            </div>
+            {data.storyImage && (
+              <div className="w-full sm:w-72 shrink-0 rounded-2xl overflow-hidden bg-stone-100 border border-stone-200 aspect-[4/3]">
+                <img src={data.storyImage} alt={data.storyTitle || data.pageTitle} className="w-full h-full object-cover" loading="lazy" />
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Styles */}
       <section className="w-full max-w-5xl mx-auto px-4 sm:px-8 pb-12">

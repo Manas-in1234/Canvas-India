@@ -28,7 +28,8 @@ const PHOTO = {
   officeWorkspace: u('1497215728101-856f4ea42174'), // office desk with plants, city view
   officeHallway: u('1497366216548-37526070297c'), // office interior hallway
   weddingGalleryWall: '/assets/canvas-styles/wall-display-wedding-gallery.png', // user-supplied: 6-panel asymmetric wedding photo gallery over a sofa
-  photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.png' // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
+  photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.png', // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
+  collageCluster: u('1541359927273-d76820fc43f9') // verified: cluster of photos/cards collaged on a wall
 };
 
 const STANDARD_FEATURES = [
@@ -151,6 +152,13 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     heroSubtitle:
       'Multi-photo grid layout canvas displays. Arrange several of your favorite memories into one cohesive canvas, printed as a single gallery-wrapped piece.',
     stylesSectionTitle: 'Explore Our Photo Collage Styles',
+    storyTitle: 'A Collection of Memories on One Canvas',
+    storyParagraphs: [
+      "The beauty of a photo collage canvas is simple — it keeps your most treasured pictures together, in one place, on one wall. At Canvas India, turning a handful of favorite moments into a single piece of art takes just a few minutes.",
+      "Upload your photos, choose the grid that fits your story — from a clean 2-photo pairing to a 9-photo feature wall — and preview exactly how it will look before you order. No design experience needed.",
+      "Pick your size and finish and we'll print it on gallery-wrapped canvas and have it at your door. Whether it's a birthday gift, a family milestone, or a wall that's been bare too long, a photo collage turns scattered memories into one lasting piece of home decor."
+    ],
+    storyImage: PHOTO.collageCluster,
     styles: [
       {
         id: 'canvas-collage',
@@ -160,17 +168,50 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         price: 148.5,
         image: PHOTO.photoCollageGrid,
         customizeHref: '/customize/canvas/canvas-collage'
+      },
+      {
+        id: 'collage-land-2p-split',
+        number: '02',
+        name: '2 Landscape Photo Collage',
+        description: '2 Equal Side-by-Side Vertical Photo Panels — a simple, clean pairing that works well in smaller spaces.',
+        price: 148.5,
+        visual: 'collage-2',
+        customizeHref: '/customize/canvas/canvas-collage'
+      },
+      {
+        id: 'collage-land-3p-left2-right1',
+        number: '03',
+        name: '3 Landscape Photo Collage',
+        description: '2 Stacked Photos on Left + 1 Tall Photo on Right — a great way to pair everyday moments with one standout shot.',
+        price: 148.5,
+        visual: 'collage-3',
+        customizeHref: '/customize/canvas/canvas-collage'
+      },
+      {
+        id: 'collage-land-5p-pinwheel',
+        number: '04',
+        name: '5 Landscape Photo Collage',
+        description: '5-Photo Pinwheel Collage with Center Focus — one photo anchors the middle while four more surround it.',
+        price: 148.5,
+        visual: 'collage-5-pinwheel',
+        customizeHref: '/customize/canvas/canvas-collage'
+      },
+      {
+        id: 'collage-land-9p-feature',
+        number: '05',
+        name: '9 Landscape Photo Collage',
+        description: 'Center Feature Photo surrounded by 8 Border Photos — perfect for a big family collection or a year in review.',
+        price: 148.5,
+        visual: 'collage-9-feature',
+        customizeHref: '/customize/canvas/canvas-collage'
       }
     ],
-    infoTitle: 'Explore Our Collage Layouts',
-    infoSubtitle: '28 real layouts across Landscape, Panoramic, Portrait and Square orientations — all available directly in the customizer.',
+    infoTitle: 'More Orientations, Same Layouts',
+    infoSubtitle: "The 5 grid styles above are just the Landscape set — 28 real layouts in total are available directly in the customizer.",
     infoItems: [
-      { title: '2 Landscape Photo Collage', desc: '2 Equal Side-by-Side Vertical Photo Panels' },
-      { title: '3 Landscape Photo Collage', desc: '2 Stacked Photos on Left + 1 Tall Photo on Right' },
-      { title: '5 Landscape Photo Collage', desc: '5-Photo Pinwheel Collage with Center Focus' },
-      { title: '6 Landscape Photo Collage', desc: '6-Photo Grid (3 Columns × 2 Rows)' },
-      { title: '9 Landscape Photo Collage', desc: 'Center Feature Photo surrounded by 8 Border Photos' },
-      { title: 'Square & Portrait Collages', desc: 'Matching grid, pinwheel and feature layouts sized for square and portrait walls too' }
+      { title: 'Panoramic Collages', desc: 'The same grid, pinwheel and feature layouts stretched for wide panoramic canvases' },
+      { title: 'Portrait Collages', desc: 'Matching layouts resized for tall portrait-orientation walls' },
+      { title: 'Square Collages', desc: 'Grid, pinwheel and feature layouts sized for a perfectly square canvas' }
     ],
     tipsTitle: 'How to Choose Photos for Your Collage',
     tipsSubtitle: 'A few tips from photo printing guides worth following before you upload.',
