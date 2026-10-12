@@ -148,6 +148,11 @@ export interface CanvasStyleFeature {
   desc: string;
 }
 
+export interface CanvasStyleInfoItem {
+  title: string;
+  desc: string;
+}
+
 export interface CanvasStyleLandingData {
   slug: string;
   pageTitle: string;
@@ -155,6 +160,10 @@ export interface CanvasStyleLandingData {
   heroSubtitle: string;
   stylesSectionTitle: string;
   styles: CanvasStyleHighlight[];
+  /** Optional extra detail section between the styles and the gallery strip. */
+  infoTitle?: string;
+  infoSubtitle?: string;
+  infoItems?: CanvasStyleInfoItem[];
   galleryTitle: string;
   galleryItems: CanvasStyleGalleryItem[];
   featuresTitle: string;
@@ -238,6 +247,22 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
           })}
         </div>
       </section>
+
+      {/* Optional extra info section */}
+      {data.infoItems && data.infoItems.length > 0 && (
+        <section className="w-full max-w-5xl mx-auto px-4 sm:px-8 pb-12">
+          <h2 className="text-lg sm:text-xl font-black text-stone-900 mb-1">{data.infoTitle}</h2>
+          {data.infoSubtitle && <p className="text-xs sm:text-sm text-stone-600 mb-6 max-w-2xl">{data.infoSubtitle}</p>}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {data.infoItems.map((item) => (
+              <div key={item.title} className="p-4 rounded-xl border border-stone-200 bg-white">
+                <div className="text-xs font-extrabold text-stone-900 mb-1">{item.title}</div>
+                <div className="text-[11px] text-stone-500 leading-relaxed">{item.desc}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Gallery strip */}
       <section className="w-full bg-stone-50 border-y border-stone-200/80 py-10">

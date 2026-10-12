@@ -26,7 +26,8 @@ const PHOTO = {
   resortPoolside: u('1566073771259-6a8506099945'), // hotel/resort pool deck
   paintTexture: u('1605721911519-3dfeb3be25e7'), // abstract painted canvas texture
   officeWorkspace: u('1497215728101-856f4ea42174'), // office desk with plants, city view
-  officeHallway: u('1497366216548-37526070297c') // office interior hallway
+  officeHallway: u('1497366216548-37526070297c'), // office interior hallway
+  weddingGalleryWall: '/assets/canvas-styles/wall-display-wedding-gallery.png' // user-supplied: 6-panel asymmetric wedding photo gallery over a sofa
 };
 
 const STANDARD_FEATURES = [
@@ -104,10 +105,10 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       {
         id: 'canvas-wall-art',
         number: '01',
-        name: 'Gallery Wall Display',
-        description: 'Multi-panel gallery wall display for striking home and office focal points — fully customizable panel count and layout.',
+        name: 'Asymmetric Gallery Wall Display',
+        description: 'Varied-size panels arranged asymmetrically — a large central photo flanked by smaller accent panels — for a striking, editorial-style focal point above a sofa or bed.',
         price: 856.9,
-        image: PHOTO.galleryWallViewer,
+        image: PHOTO.weddingGalleryWall,
         customizeHref: '/customize/canvas/canvas-wall-art'
       },
       {
@@ -120,10 +121,21 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         customizeHref: '/customize/canvas/canvas-wall-art'
       }
     ],
+    infoTitle: 'Choose Your Panel Count',
+    infoSubtitle: 'Every layout below is a real configuration available in the customizer — pick one as a starting point, then fine-tune sizes and spacing to fit your wall.',
+    infoItems: [
+      { title: '3-Piece Gallery Display', desc: '(1) 12"×18" Tall + (2) 10"×8" Mini panels' },
+      { title: '4-Piece Gallery Showcase', desc: '(1) 24"×16" + (1) 11"×17" + (2) 12"×8"' },
+      { title: '5-Piece Stepped Pyramid', desc: '(2) 10"×8" + (2) 14"×11" + (1) 20"×16"' },
+      { title: '6-Piece Panoramic Horizon', desc: '(1) 10"×10" + (1) 18"×12" + (1) 28"×18" + (2) 11"×16" + (1) 10"×12"' },
+      { title: '7-Piece Centerpiece Halo', desc: '(1) 26"×26" + (6) 8"×8" Mini Panels' },
+      { title: '9-Piece Ennead Matrix', desc: '(9) 12"×12" Equal Squares in a 3×3 Grid' },
+      { title: '10-Piece Pantheon Gallery Wall', desc: '(1) 24"×32" + (2) 16"×20" + (2) 12"×16" + (2) 10"×12" + (3) 8"×10"' }
+    ],
     galleryTitle: 'Arrangements for every room',
     galleryItems: [
       { label: '3-Panel Set', visual: 'gallery-wall' },
-      { label: '4-Panel Grid', image: PHOTO.galleryWallFrames },
+      { label: 'Asymmetric Wedding Wall', image: PHOTO.weddingGalleryWall },
       { label: 'Gallery Cluster', image: PHOTO.galleryWallFrames },
       { label: 'Living Room', image: PHOTO.livingRoomWallArt }
     ],
