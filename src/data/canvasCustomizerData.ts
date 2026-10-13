@@ -141,6 +141,19 @@ export type CanvasProductIconType =
   | 'word-art';
 
 export interface CanvasProductCapabilities {
+  productId?: string;
+  displayName?: string;
+  defaultShape?: string;
+  defaultSize?: string;
+  physicalThickness?: number;
+  showPhysicalEdges?: boolean;
+  edgeColor?: string;
+  edgeMode?: 'white' | 'image-wrap' | 'none';
+  supports3DView?: boolean;
+  supports360View?: boolean;
+  imageFitMode?: 'cover' | 'contain';
+  supportsImagePositioning?: boolean;
+
   products?: boolean;
   upload?: boolean;
   sizes?: boolean;
@@ -154,6 +167,37 @@ export interface CanvasProductCapabilities {
   view3D?: boolean;
   view360?: boolean;
   roomView?: boolean;
+}
+
+/**
+ * ONLY these seven Canvas products support physical edges (visible thickness side walls)
+ * and the fixed-angle 3D View:
+ * 1. Single Print (canvas-single, canvas-classic)
+ * 2. Lyrics on Canvas (canvas-lyric)
+ * 3. Digital Painting (canvas-digital-painting)
+ * 4. Quotes on Canvas (canvas-quotes)
+ * 5. Pop Art (canvas-pop-art)
+ * 6. Word Art (canvas-word-art)
+ * 7. Bus Roll (canvas-bus-roll)
+ *
+ * NOTE: Canvas Banner is explicitly excluded.
+ * All other products have physical edges removed (flat product surface) and supports3DView disabled.
+ */
+export const CANVAS_EDGE_3D_PRODUCT_IDS = [
+  'canvas-single',
+  'canvas-classic',
+  'canvas-lyric',
+  'canvas-digital-painting',
+  'canvas-quotes',
+  'canvas-pop-art',
+  'canvas-word-art',
+  'canvas-bus-roll'
+] as const;
+
+export function isCanvasEdge3DProduct(productId?: string): boolean {
+  if (!productId) return false;
+  const key = productId.toLowerCase();
+  return CANVAS_EDGE_3D_PRODUCT_IDS.some((id) => key === id || key.includes(id));
 }
 
 export interface CanvasProductType {
@@ -344,7 +388,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       hardware: true,
       options: true,
       view3D: false,
-      view360: false,
+      view360: true,
       roomView: true
     }
   },
@@ -400,7 +444,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       hardware: true,
       options: true,
       view3D: false,
-      view360: false,
+      view360: true,
       roomView: true
     }
   },
@@ -428,7 +472,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       hardware: true,
       options: true,
       view3D: false,
-      view360: false,
+      view360: true,
       roomView: true
     }
   },
@@ -653,7 +697,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       wrap: true,
       hardware: true,
       options: true,
-      view3D: false,
+      view3D: true,
       view360: true,
       roomView: true
     }
@@ -661,29 +705,40 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
 ];
 
 export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProductCapabilities {
-  if (pt.capabilities) {
-    return {
-      view3D: pt.id === 'canvas-single',
-      view360: true,
-      roomView: true,
-      ...pt.capabilities
-    };
-  }
+  const isEdgeProduct = isCanvasEdge3DProduct(pt.id);
   const isSplit = pt.id === 'canvas-split';
   const isCollageOrMosaic = pt.id === 'canvas-collage' || pt.id === 'canvas-mosaic' || pt.id === 'canvas-wall-art';
+  const defaultThickness = isEdgeProduct ? (pt.defaultThicknessId === 'thick-gallery' ? 38 : 26) : 0;
 
   return {
+    productId: pt.id,
+    displayName: pt.name,
+    defaultShape: pt.defaultShape,
+    defaultSize: pt.defaultSizeOptionId,
+    edgeColor: '#FFFFFF',
+
     products: true,
-    upload: true,
-    sizes: true,
-    shapes: !isSplit && !isCollageOrMosaic,
-    layouts: isCollageOrMosaic && !isSplit,
-    wrap: true,
+    upload: pt.id !== 'canvas-bus-roll',
+    sizes: !isSplit && !isCollageOrMosaic && pt.id !== 'canvas-hexagon' && pt.id !== 'canvas-bus-roll',
+    shapes: !isSplit && !isCollageOrMosaic && !['canvas-round', 'canvas-triangle', 'canvas-heart', 'canvas-oval', 'canvas-hexagon', 'canvas-bus-roll', 'canvas-lyric', 'canvas-quotes', 'canvas-word-art', 'canvas-banner'].includes(pt.id),
+    layouts: isCollageOrMosaic || isSplit || pt.id === 'canvas-single' || pt.id === 'canvas-lyric',
+    effects: pt.id === 'canvas-digital-painting' || pt.id === 'canvas-pop-art',
+    busRoll: pt.id === 'canvas-bus-roll',
+    wrap: isEdgeProduct,
     hardware: true,
     options: true,
-    view3D: pt.id === 'canvas-single',
-    view360: !['canvas-wall-art', 'canvas-split', 'canvas-hexagon'].includes(pt.id),
-    roomView: true
+    roomView: true,
+    ...(pt.capabilities || {}),
+    // Enforce strict invariants
+    showPhysicalEdges: isEdgeProduct,
+    supports3DView: isEdgeProduct,
+    supports360View: true,
+    view3D: isEdgeProduct,
+    view360: true,
+    physicalThickness: defaultThickness,
+    edgeMode: isEdgeProduct ? 'image-wrap' : 'none',
+    imageFitMode: 'cover',
+    supportsImagePositioning: true
   };
 }
 

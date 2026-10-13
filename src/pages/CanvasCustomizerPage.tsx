@@ -124,6 +124,8 @@ import {
   ACRYLIC_BORDER_COLORS,
   getCanvasProductCapabilities,
   resolveCanvasProductTypeId,
+  isCanvasEdge3DProduct,
+  CANVAS_EDGE_3D_PRODUCT_IDS,
   ClipartItem
 } from '../data/canvasCustomizerData';
 import {
@@ -1514,7 +1516,7 @@ const createDefaultPanel = (): PanelImageState => ({
   scale: 1,
   rotation: 0,
   filter: 'original',
-  fitMode: 'contain'
+  fitMode: 'cover'
 });
 
 // Helper renderers for 3D isometric wraps (CanvasChamp style) & hardware icons
@@ -3091,6 +3093,53 @@ export const CanvasCustomizerPage: React.FC = () => {
     }
   };
 
+  // Restore saved design from localStorage on initial mount
+  const hasRestoredSavedDesignRef = useRef(false);
+  useEffect(() => {
+    if (hasRestoredSavedDesignRef.current) return;
+    hasRestoredSavedDesignRef.current = true;
+    try {
+      const savedRaw = localStorage.getItem(storageKey);
+      if (!savedRaw) return;
+      const saved = JSON.parse(savedRaw);
+      if (saved?.panelImages && typeof saved.panelImages === 'object') {
+        setPanelImages(saved.panelImages);
+      }
+      if (saved?.uploadedPhotos && Array.isArray(saved.uploadedPhotos)) {
+        setUploadedPhotos(saved.uploadedPhotos);
+      }
+      if (saved?.selectedWrapId) {
+        setSelectedWrapId(saved.selectedWrapId);
+      }
+      if (saved?.selectedBorderWidthId) {
+        setSelectedBorderWidthId(saved.selectedBorderWidthId);
+      }
+      if (saved?.selectedBorderColor) {
+        setSelectedBorderColor(saved.selectedBorderColor);
+      }
+      if (saved?.mirrorImage !== undefined) {
+        setMirrorImage(saved.mirrorImage);
+      }
+      if (saved?.selectedHardwareId) {
+        setSelectedHardwareId(saved.selectedHardwareId);
+      }
+      if (saved?.selectedDisplayOptionId) {
+        setSelectedDisplayOptionId(saved.selectedDisplayOptionId);
+      }
+      if (saved?.selectedThicknessId) {
+        setSelectedThicknessId(saved.selectedThicknessId);
+      }
+      if (saved?.textElements && Array.isArray(saved.textElements)) {
+        setTextElements(saved.textElements);
+      }
+      if (saved?.clipartElements && Array.isArray(saved.clipartElements)) {
+        setClipartElements(saved.clipartElements);
+      }
+    } catch {
+      // Safe ignore
+    }
+  }, [storageKey]);
+
   // Dynamic Price Calculation
   const selectedPopStyle = getPopArtStyle(popArtConfig.selectedStyleId);
   const popStyleAdjustment = selectedProductTypeId === 'canvas-pop-art' ? (selectedPopStyle?.priceAdjustment || 0) : 0;
@@ -3319,7 +3368,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                   rotation: 0,
                   panX: 0,
                   panY: 0,
-                  fitMode: (isSinglePrintCanvas || selectedProductTypeId === 'canvas-lyric') ? 'cover' : 'contain'
+                  fitMode: productCapabilities.imageFitMode || 'cover'
                 }
               }));
               setActivePanelIndex(idx);
@@ -3331,7 +3380,7 @@ export const CanvasCustomizerPage: React.FC = () => {
             setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
             if (i === 0 || target < panels.length) {
               const idx = target < panels.length ? target : startIdx;
-              setPanelImages((prev) => ({ ...prev, [idx]: { ...createDefaultPanel(), imageUrl: result, fitMode: (isSinglePrintCanvas || selectedProductTypeId === 'canvas-lyric') ? 'cover' : 'contain' } }));
+              setPanelImages((prev) => ({ ...prev, [idx]: { ...createDefaultPanel(), imageUrl: result, fitMode: productCapabilities.imageFitMode || 'cover' } }));
               setActivePanelIndex(idx);
             }
             setValidationWarning(null);
@@ -3585,12 +3634,12 @@ export const CanvasCustomizerPage: React.FC = () => {
   };
 
   const handleZoomIn = () => updateActivePanelTransform((curr) => ({ scale: Math.min(3, curr.scale + 0.15) }));
-  const handleZoomOut = () => updateActivePanelTransform((curr) => ({ scale: Math.max(0.4, curr.scale - 0.15) }));
+  const handleZoomOut = () => updateActivePanelTransform((curr) => ({ scale: Math.max(1, curr.scale - 0.15) }));
   const handleRotateLeft = () => updateActivePanelTransform((curr) => ({ rotation: (curr.rotation - 90 + 360) % 360 }));
   const handleRotateRight = () => updateActivePanelTransform((curr) => ({ rotation: (curr.rotation + 90) % 360 }));
   const handleRotate90 = handleRotateRight;
   const handleFit = () => updateActivePanelTransform(() => ({ scale: 1, panX: 0, panY: 0, fitMode: 'contain' }));
-  const handleReset = () => updateActivePanelTransform(() => ({ scale: 1, panX: 0, panY: 0, rotation: 0, fitMode: 'contain' }));
+  const handleReset = () => updateActivePanelTransform(() => ({ scale: 1, panX: 0, panY: 0, rotation: 0, fitMode: 'cover' }));
   const handleApplyFilter = (filter: ColorFilterType) => updateActivePanelTransform(() => ({ filter }));
 
   // Fill: makes the uploaded image completely cover the canvas area (cover crop), preserving original image intact
@@ -3627,40 +3676,24 @@ export const CanvasCustomizerPage: React.FC = () => {
     });
   };
 
-  // Wheel Zoom Listener Ref Callback (non-passive, idempotent per DOM node to completely prevent browser zoom)
+  // Wheel listener ref callback: prevent page scroll over the canvas, but wheel zoom is strictly disabled
   const wheelBoundNodesRef = useRef<WeakSet<HTMLElement>>(new WeakSet());
 
-  const registerWheelRef = (panelIdx: number) => (el: HTMLElement | null) => {
+  const registerWheelRef = (_panelIdx: number) => (el: HTMLElement | null) => {
     if (!el || wheelBoundNodesRef.current.has(el)) return;
     wheelBoundNodesRef.current.add(el);
     const onNodeWheel = (e: WheelEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      const delta = e.deltaY < 0 ? 0.08 : -0.08;
-      setPanelImages((prev) => {
-        const curr = prev[panelIdx] || createDefaultPanel();
-        if (!curr.imageUrl) return prev;
-        const nextScale = Math.max(0.4, Math.min(4, (curr.scale || 1) + delta));
-        return {
-          ...prev,
-          [panelIdx]: {
-            ...curr,
-            scale: nextScale
-          }
-        };
-      });
+      // Zooming via mouse wheel is disabled per specification (zooming controlled solely by dedicated zoom buttons)
     };
     el.addEventListener('wheel', onNodeWheel, { passive: false });
   };
 
-  // Mouse wheel zoom fallback
+  // Mouse wheel zoom fallback - disabled per specification
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    if (!panelImages[activePanelIndex]?.imageUrl) return;
-    const delta = e.deltaY < 0 ? 0.08 : -0.08;
-    updateActivePanelTransform((curr) => ({
-      scale: Math.max(0.4, Math.min(4, (curr.scale || 1) + delta))
-    }));
+    e.stopPropagation();
   };
 
   // Smooth 60fps 360° auto-rotate loop using requestAnimationFrame
@@ -3733,9 +3766,26 @@ export const CanvasCustomizerPage: React.FC = () => {
     const deltaY = e.clientY - dragStartRef.current.y;
     const { initialPanX, initialPanY } = dragStartRef.current;
 
+    const curr = panelImages[activePanelIndex];
+    const scale = curr?.scale || 1;
+    const imgMeta = curr?.uploadedImage;
+    const natWidth = imgMeta?.width || 1200;
+    const natHeight = imgMeta?.height || 800;
+    const imgAspect = natWidth / Math.max(1, natHeight);
+
+    // Calculate maximum pan bounds so printable surface remains covered without white gaps
+    const overflowX = Math.max(0, Math.round(180 * (scale - 1) + (imgAspect > printAspect ? ((imgAspect / printAspect) - 1) * 160 * scale : 0)));
+    const overflowY = Math.max(0, Math.round(180 * (scale - 1) + (imgAspect < printAspect ? ((printAspect / imgAspect) - 1) * 160 * scale : 0)));
+
+    const rawPanX = initialPanX + deltaX;
+    const rawPanY = initialPanY + deltaY;
+
+    const clampedPanX = overflowX > 0 ? Math.max(-overflowX, Math.min(overflowX, rawPanX)) : 0;
+    const clampedPanY = overflowY > 0 ? Math.max(-overflowY, Math.min(overflowY, rawPanY)) : 0;
+
     updateActivePanelTransform(() => ({
-      panX: initialPanX + deltaX,
-      panY: initialPanY + deltaY
+      panX: clampedPanX,
+      panY: clampedPanY
     }));
   };
 
@@ -7245,21 +7295,22 @@ export const CanvasCustomizerPage: React.FC = () => {
                         }}
                       >
                         {(() => {
-                          const isSingleCanvasPrint = selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-bus-roll' || selectedProductTypeId === 'canvas-pop-art' || selectedProductTypeId === 'canvas-lyric';
+                          const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges);
+                          const isWhiteEdge = selectedWrapId === 'white-border';
                           const imgMeta = panelImages[0]?.uploadedImage;
                           const natWidth = imgMeta?.width || 1200;
                           const natHeight = imgMeta?.height || 800;
                           const imgAspect = imgMeta?.aspectRatio || (natWidth / Math.max(1, natHeight));
                           const isWiderThanFrame = imgAspect >= printAspect;
 
-                          const crossClipPath = isSingleCanvasPrint
+                          const crossClipPath = showPhysicalEdges
                             ? `polygon(${visibleDepthPx}px 0px, calc(100% - ${visibleDepthPx}px) 0px, calc(100% - ${visibleDepthPx}px) ${visibleDepthPx}px, 100% ${visibleDepthPx}px, 100% calc(100% - ${visibleDepthPx}px), calc(100% - ${visibleDepthPx}px) calc(100% - ${visibleDepthPx}px), calc(100% - ${visibleDepthPx}px) 100%, ${visibleDepthPx}px 100%, ${visibleDepthPx}px calc(100% - ${visibleDepthPx}px), 0px calc(100% - ${visibleDepthPx}px), 0px ${visibleDepthPx}px, ${visibleDepthPx}px ${visibleDepthPx}px)`
                             : undefined;
 
                           return (
                             <>
-                              {/* 1. PHYSICAL 4-EDGE PROJECTION GUIDES (ONLY FOR Single Print: canvas-single) */}
-                              {isSingleCanvasPrint && (
+                              {/* 1. PHYSICAL 4-EDGE PROJECTION GUIDES (ONLY FOR the 7 Edge-Supported Products) */}
+                              {showPhysicalEdges && (
                                 <>
                                   {/* Top Physical Thickness Edge Guide */}
                                   <div
@@ -7308,11 +7359,11 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 </>
                               )}
 
-                              {/* CONTINUOUS IMAGE WRAPPER FOR SINGLE PRINT:
+                              {/* CONTINUOUS IMAGE WRAPPER FOR EDGE-SUPPORTED PRODUCTS:
                                   Encompasses front face + 4 flaps via inset -visibleDepthPx.
                                   Clipped to cross shape so zoomed/panned image naturally extends into the white flaps!
                               */}
-                              {isSingleCanvasPrint && panelImages[0]?.imageUrl && (
+                              {showPhysicalEdges && panelImages[0]?.imageUrl && (
                                 <div
                                   className="absolute pointer-events-none z-0"
                                   style={{
@@ -7335,14 +7386,14 @@ export const CanvasCustomizerPage: React.FC = () => {
                                       right: `${visibleDepthPx}px`
                                     }}
                                   />
-                                  {/* The ONE continuous image layer: when 'cover' (Fill), spans full product (front + flaps); when 'contain', spans front face */}
+                                  {/* The ONE continuous image layer: when 'cover' and image-wrapped, spans full product (front + flaps); when white-border or contain, spans front face */}
                                   <div
                                     className="absolute flex items-center justify-center pointer-events-none"
                                     style={{
-                                      top: panelImages[0].fitMode === 'cover' ? 0 : `${visibleDepthPx}px`,
-                                      bottom: panelImages[0].fitMode === 'cover' ? 0 : `${visibleDepthPx}px`,
-                                      left: panelImages[0].fitMode === 'cover' ? 0 : `${visibleDepthPx}px`,
-                                      right: panelImages[0].fitMode === 'cover' ? 0 : `${visibleDepthPx}px`,
+                                      top: (panelImages[0].fitMode === 'cover' && !isWhiteEdge) ? 0 : `${visibleDepthPx}px`,
+                                      bottom: (panelImages[0].fitMode === 'cover' && !isWhiteEdge) ? 0 : `${visibleDepthPx}px`,
+                                      left: (panelImages[0].fitMode === 'cover' && !isWhiteEdge) ? 0 : `${visibleDepthPx}px`,
+                                      right: (panelImages[0].fitMode === 'cover' && !isWhiteEdge) ? 0 : `${visibleDepthPx}px`,
                                       overflow: 'visible'
                                     }}
                                   >
@@ -7400,19 +7451,19 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 {...panelHandlers(0)}
                                 ref={registerWheelRef(0)}
                                 className={`relative w-full h-full ${
-                                  (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
+                                  (showPhysicalEdges || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? 'rounded-xs'
                                     : currentShape.borderRadiusClass
                                 } ${
                                   selectedProductTypeId === 'canvas-banner'
                                     ? 'border border-stone-300 shadow-md'
-                                    : isSingleCanvasPrint
-                                    ? (panelImages[0]?.imageUrl ? 'bg-transparent' : 'bg-white')
+                                    : showPhysicalEdges
+                                    ? (panelImages[0]?.imageUrl && !isWhiteEdge ? 'bg-transparent' : 'bg-white')
                                     : 'bg-white'
                                 } transition-all cursor-pointer group ${
                                   selectedProductTypeId === 'canvas-banner'
                                     ? 'overflow-hidden'
-                                    : isSingleCanvasPrint
+                                    : showPhysicalEdges
                                     ? 'border border-stone-300'
                                     : 'shadow-lg overflow-hidden'
                                 } ${
@@ -7420,10 +7471,10 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 }`}
                                 style={{
                                   backgroundColor: selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : undefined,
-                                  clipPath: (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
+                                  clipPath: (showPhysicalEdges || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? undefined
                                     : currentShape.clipPathStyle,
-                                  WebkitClipPath: (isSingleCanvasPrint || selectedProductTypeId === 'canvas-word-art' || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
+                                  WebkitClipPath: (showPhysicalEdges || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? undefined
                                     : currentShape.clipPathStyle
                                 }}
@@ -7486,8 +7537,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   <div className="absolute inset-0 z-30 bg-[#0E4A93]/20 border-4 border-dashed border-[#0E4A93] pointer-events-none" />
                                 )}
 
-                                {/* For non-single canvas products (Round, Heart, etc.), render image directly here inside the shaped container */}
-                                {!isSingleCanvasPrint && panelImages[0]?.imageUrl && (
+                                {/* For products without physical edges (Round, Heart, etc.) OR when white edges are active on edge-supported products, render image directly here inside the front container */}
+                                {(!showPhysicalEdges || isWhiteEdge) && panelImages[0]?.imageUrl && (
                                   <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
                                     <img
                                       src={(selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl) ? popArtConfig.processedImageUrl : panelImages[0].imageUrl}
@@ -8776,10 +8827,11 @@ export const CanvasCustomizerPage: React.FC = () => {
                 const activeRotY = is360 ? viewerRotation : currentPreset.rotY;
                 const activeTiltX = is360 ? viewerTiltX : currentPreset.tiltX;
 
-                // Physical thickness based on selected Canvas thickness option & frame
+                // Physical thickness based on selected Canvas thickness option & frame (ONLY for 7 edge products)
+                const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges);
                 const thicknessOption = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId) || THICKNESS_OPTIONS[0];
-                const baseDepthPx = thicknessOption?.depthPx || 26;
-                const depthPx = hasOuterFrame ? Math.max(baseDepthPx, 34) : baseDepthPx;
+                const baseDepthPx = showPhysicalEdges ? (thicknessOption?.depthPx || 26) : 0;
+                const depthPx = showPhysicalEdges ? (hasOuterFrame ? Math.max(baseDepthPx, 34) : baseDepthPx) : 0;
 
                 // Maintain exact product aspect ratio without stretching
                 const maxBoxW = is360 ? 320 : 340;
@@ -8846,14 +8898,16 @@ export const CanvasCustomizerPage: React.FC = () => {
                   : 'rounded-[2px]';
 
                 // Volumetric extrusion slices between -depthPx/2 and +depthPx/2 so curved/non-rectangular
-                // shapes (Circle, Oval, Heart, Hexagon, Rounded Rect, Arch, Cloud, etc.) have continuous solid 3D thickness
-                const SLICE_COUNT = 32;
-                const depthSlices = Array.from({ length: SLICE_COUNT }, (_, idx) => {
-                  const t = (idx + 0.5) / SLICE_COUNT; // 0..1 from back to front
-                  const z = -depthPx / 2 + t * depthPx;
-                  const isRearHalf = t < 0.22;
-                  return { z, t, isRearHalf };
-                });
+                // shapes have continuous solid 3D thickness (ONLY for the 7 edge products)
+                const SLICE_COUNT = showPhysicalEdges ? 32 : 0;
+                const depthSlices = showPhysicalEdges
+                  ? Array.from({ length: SLICE_COUNT }, (_, idx) => {
+                      const t = (idx + 0.5) / SLICE_COUNT; // 0..1 from back to front
+                      const z = -depthPx / 2 + t * depthPx;
+                      const isRearHalf = t < 0.22;
+                      return { z, t, isRearHalf };
+                    })
+                  : [];
 
                 // Safe interior span for internal perpendicular spine plates on non-rectangular shapes
                 // (prevents any see-through gap at exact 90° / 270° edge-on angles)
@@ -8983,61 +9037,66 @@ export const CanvasCustomizerPage: React.FC = () => {
                                         WebkitTransformStyle: 'preserve-3d'
                                       }}
                                     >
-                                      {/* Slices for this hexagon panel */}
-                                      {depthSlices.map((slice, sIdx) => {
-                                        const edgeShade = 0.66 + 0.14 * Math.sin(slice.t * Math.PI);
-                                        return (
-                                          <div
-                                            key={`hex-${pIdx}-slice-${sIdx}`}
-                                            className="absolute inset-0 pointer-events-none"
-                                            style={{
-                                              transform: `translateZ(${slice.z.toFixed(2)}px)`
-                                            }}
-                                          >
+                                      {/* Slices for this hexagon panel (ONLY when showPhysicalEdges is true) */}
+                                      {showPhysicalEdges &&
+                                        depthSlices.map((slice, sIdx) => {
+                                          const edgeShade = 0.66 + 0.14 * Math.sin(slice.t * Math.PI);
+                                          return (
                                             <div
-                                              className="w-full h-full overflow-hidden"
+                                              key={`hex-${pIdx}-slice-${sIdx}`}
+                                              className="absolute inset-0 pointer-events-none"
                                               style={{
-                                                clipPath: HEXAGON_CLIP_PATH,
-                                                WebkitClipPath: HEXAGON_CLIP_PATH,
-                                                backgroundColor: slice.isRearHalf && !hasOuterFrame ? '#b89365' : sideBaseColor,
-                                                filter: `brightness(${edgeShade.toFixed(2)})`
+                                                transform: `translateZ(${slice.z.toFixed(2)}px)`
                                               }}
-                                            />
-                                          </div>
-                                        );
-                                      })}
+                                            >
+                                              <div
+                                                className="w-full h-full overflow-hidden"
+                                                style={{
+                                                  clipPath: HEXAGON_CLIP_PATH,
+                                                  WebkitClipPath: HEXAGON_CLIP_PATH,
+                                                  backgroundColor: slice.isRearHalf && !hasOuterFrame ? '#b89365' : sideBaseColor,
+                                                  filter: `brightness(${edgeShade.toFixed(2)})`
+                                                }}
+                                              />
+                                            </div>
+                                          );
+                                        })}
 
                                       {/* Internal spine plates */}
-                                      <div
-                                        className="absolute pointer-events-none"
-                                        style={{
-                                          left: 'calc(50% - 13px)',
-                                          top: '12%',
-                                          width: `${depthPx}px`,
-                                          height: '76%',
-                                          transform: 'rotateY(90deg)',
-                                          backgroundColor: sideBaseColor,
-                                          filter: 'brightness(0.72)'
-                                        }}
-                                      />
-                                      <div
-                                        className="absolute pointer-events-none"
-                                        style={{
-                                          left: '12%',
-                                          top: 'calc(50% - 13px)',
-                                          width: '76%',
-                                          height: `${depthPx}px`,
-                                          transform: 'rotateX(90deg)',
-                                          backgroundColor: sideBaseColor,
-                                          filter: 'brightness(0.76)'
-                                        }}
-                                      />
+                                      {showPhysicalEdges && (
+                                        <>
+                                          <div
+                                            className="absolute pointer-events-none"
+                                            style={{
+                                              left: 'calc(50% - 13px)',
+                                              top: '12%',
+                                              width: `${depthPx}px`,
+                                              height: '76%',
+                                              transform: 'rotateY(90deg)',
+                                              backgroundColor: sideBaseColor,
+                                              filter: 'brightness(0.72)'
+                                            }}
+                                          />
+                                          <div
+                                            className="absolute pointer-events-none"
+                                            style={{
+                                              left: '12%',
+                                              top: 'calc(50% - 13px)',
+                                              width: '76%',
+                                              height: `${depthPx}px`,
+                                              transform: 'rotateX(90deg)',
+                                              backgroundColor: sideBaseColor,
+                                              filter: 'brightness(0.76)'
+                                            }}
+                                          />
+                                        </>
+                                      )}
 
                                       {/* Front Face with Hexagon Panel Photo */}
                                       <div
                                         className="absolute inset-0 pointer-events-none"
                                         style={{
-                                          transform: `translateZ(${(depthPx / 2 + 0.6).toFixed(2)}px)`,
+                                          transform: `translateZ(${(showPhysicalEdges ? depthPx / 2 + 0.6 : 0.6).toFixed(2)}px)`,
                                           backfaceVisibility: 'hidden',
                                           WebkitBackfaceVisibility: 'hidden'
                                         }}
@@ -9082,36 +9141,29 @@ export const CanvasCustomizerPage: React.FC = () => {
                                         </div>
                                       </div>
 
-                                      {/* Back Face with Pinewood Frame clipped to Hexagon */}
+                                      {/* Back Face clipped to Hexagon */}
                                       <div
                                         className="absolute inset-0 pointer-events-none"
                                         style={{
-                                          transform: `rotateY(180deg) translateZ(${(depthPx / 2 + 0.6).toFixed(2)}px)`,
+                                          transform: `rotateY(180deg) translateZ(${(showPhysicalEdges ? depthPx / 2 + 0.6 : 0.6).toFixed(2)}px)`,
                                           backfaceVisibility: 'hidden',
                                           WebkitBackfaceVisibility: 'hidden'
                                         }}
                                       >
                                         <div
-                                          className="w-full h-full overflow-hidden relative flex items-center justify-center"
+                                          className="w-full h-full overflow-hidden relative flex flex-col items-center justify-center"
                                           style={{
                                             clipPath: HEXAGON_CLIP_PATH,
                                             WebkitClipPath: HEXAGON_CLIP_PATH,
-                                            background: 'linear-gradient(135deg, #d4a373 0%, #b5835a 50%, #9c6644 100%)',
+                                            backgroundColor: '#e6dec8',
+                                            backgroundImage:
+                                              'repeating-linear-gradient(0deg, rgba(120,113,108,0.08) 0px, rgba(120,113,108,0.08) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(120,113,108,0.08) 0px, rgba(120,113,108,0.08) 1px, transparent 1px, transparent 3px)',
+                                            boxShadow: 'inset 0 0 10px rgba(28, 25, 23, 0.25)',
                                             filter: `brightness(${backBrightness.toFixed(3)})`
                                           }}
                                         >
-                                          <div
-                                            className="w-[72%] h-[72%] relative flex flex-col items-center justify-center overflow-hidden"
-                                            style={{
-                                              clipPath: HEXAGON_CLIP_PATH,
-                                              WebkitClipPath: HEXAGON_CLIP_PATH,
-                                              backgroundColor: '#e6dec8',
-                                              boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.35)'
-                                            }}
-                                          >
-                                            <div className="px-1.5 py-0.5 rounded bg-stone-800/10 text-[7px] font-extrabold text-stone-600 tracking-wider uppercase">
-                                              Hexagon {pIdx + 1}
-                                            </div>
+                                          <div className="px-1.5 py-0.5 rounded bg-stone-800/10 text-[7px] font-extrabold text-stone-600 tracking-wider uppercase mb-1">
+                                            Hexagon {pIdx + 1}
                                           </div>
                                           {renderHardwareGraphic(selectedHardwareId, false)}
                                         </div>
@@ -9124,214 +9176,218 @@ export const CanvasCustomizerPage: React.FC = () => {
                           })()
                         ) : (
                           <>
-                            {/* 1. VOLUMETRIC SHAPE-FOLLOWING EXTRUSION SLICES (Side Thickness) */}
-                            {depthSlices.map((slice, sIdx) => {
-                              const edgeShade = 0.66 + 0.14 * Math.sin(slice.t * Math.PI);
-                              return (
-                                <div
-                                  key={`slice-${sIdx}`}
-                                  className="absolute inset-0 pointer-events-none"
-                                  style={{
-                                    transform: `translateZ(${slice.z.toFixed(2)}px)`
-                                  }}
-                                >
-                                  <div
-                                    className={`w-full h-full overflow-hidden ${shapeRadiusClass}`}
-                                    style={{
-                                      ...shapeClipStyle,
-                                      backgroundColor: slice.isRearHalf && !hasOuterFrame ? '#b89365' : sideBaseColor,
-                                      filter: `brightness(${edgeShade.toFixed(2)})`,
-                                      boxShadow: 'inset 0 0 0 1.5px rgba(15, 23, 42, 0.16)'
-                                    }}
-                                  >
-                                    {/* Gallery-wrap side edge continuity when full-bleed or clear-edge is active */}
-                                    {!hasOuterFrame &&
-                                      selectedBorderWidthId === 'none' &&
-                                      !slice.isRearHalf &&
-                                      primaryPhotoUrl &&
-                                      (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
+                            {showPhysicalEdges && (
+                              <>
+                                {/* 1. VOLUMETRIC SHAPE-FOLLOWING EXTRUSION SLICES (Side Thickness) */}
+                                {depthSlices.map((slice, sIdx) => {
+                                  const edgeShade = 0.66 + 0.14 * Math.sin(slice.t * Math.PI);
+                                  return (
+                                    <div
+                                      key={`slice-${sIdx}`}
+                                      className="absolute inset-0 pointer-events-none"
+                                      style={{
+                                        transform: `translateZ(${slice.z.toFixed(2)}px)`
+                                      }}
+                                    >
+                                      <div
+                                        className={`w-full h-full overflow-hidden ${shapeRadiusClass}`}
+                                        style={{
+                                          ...shapeClipStyle,
+                                          backgroundColor: slice.isRearHalf && !hasOuterFrame ? '#b89365' : sideBaseColor,
+                                          filter: `brightness(${edgeShade.toFixed(2)})`,
+                                          boxShadow: 'inset 0 0 0 1.5px rgba(15, 23, 42, 0.16)'
+                                        }}
+                                      >
+                                        {/* Gallery-wrap side edge continuity when full-bleed or clear-edge is active */}
+                                        {!hasOuterFrame &&
+                                          selectedBorderWidthId === 'none' &&
+                                          !slice.isRearHalf &&
+                                          primaryPhotoUrl &&
+                                          (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
+                                            <img
+                                              src={primaryPhotoUrl}
+                                              alt=""
+                                              draggable={false}
+                                              className={`w-full h-full object-cover ${
+                                                selectedWrapId === 'clear-edge' ? 'scale-125 blur-[1.5px]' : 'scale-110'
+                                              } opacity-80`}
+                                            />
+                                          )}
+                                        {/* Subtle canvas fabric weave on the side thickness */}
+                                        <div
+                                          className="absolute inset-0 opacity-30"
+                                          style={{
+                                            backgroundImage:
+                                              'repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 3px)'
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+
+                                {/* 2. PERPENDICULAR 3D SIDE WALLS (Exact 90° Edge-On Solidity) */}
+                                {isRectangularShape ? (
+                                  <>
+                                    {/* Right Side Wall (+X) */}
+                                    <div
+                                      className="absolute top-0 pointer-events-none overflow-hidden"
+                                      style={{
+                                        left: `${(cardW - depthPx) / 2}px`,
+                                        width: `${depthPx}px`,
+                                        height: `${cardH}px`,
+                                        transform: `rotateY(90deg) translateZ(${cardW / 2}px)`,
+                                        backgroundColor: sideBaseColor,
+                                        filter: `brightness(${rightWallBrightness.toFixed(2)})`,
+                                        boxShadow: 'inset 0 0 0 1px rgba(15,23,42,0.18)'
+                                      }}
+                                    >
+                                      {!hasOuterFrame &&
+                                        selectedBorderWidthId === 'none' &&
+                                        primaryPhotoUrl &&
+                                        (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
                                         <img
                                           src={primaryPhotoUrl}
                                           alt=""
                                           draggable={false}
-                                          className={`w-full h-full object-cover ${
-                                            selectedWrapId === 'clear-edge' ? 'scale-125 blur-[1.5px]' : 'scale-110'
-                                          } opacity-80`}
+                                          style={{ objectPosition: 'right center' }}
+                                          className={`w-full h-full object-cover opacity-75 filter brightness-80 ${
+                                            selectedWrapId === 'clear-edge' ? 'scale-x-[-1]' : ''
+                                          }`}
                                         />
                                       )}
-                                    {/* Subtle canvas fabric weave on the side thickness */}
+                                      <div
+                                        className="absolute inset-0"
+                                        style={{
+                                          background:
+                                            'linear-gradient(to right, rgba(0,0,0,0.22), rgba(255,255,255,0.06) 50%, rgba(0,0,0,0.28))'
+                                        }}
+                                      />
+                                    </div>
+
+                                    {/* Left Side Wall (-X) */}
                                     <div
-                                      className="absolute inset-0 opacity-30"
+                                      className="absolute top-0 pointer-events-none overflow-hidden"
                                       style={{
-                                        backgroundImage:
-                                          'repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 3px)'
+                                        left: `${(cardW - depthPx) / 2}px`,
+                                        width: `${depthPx}px`,
+                                        height: `${cardH}px`,
+                                        transform: `rotateY(-90deg) translateZ(${cardW / 2}px)`,
+                                        backgroundColor: sideBaseColor,
+                                        filter: `brightness(${leftWallBrightness.toFixed(2)})`,
+                                        boxShadow: 'inset 0 0 0 1px rgba(15,23,42,0.18)'
+                                      }}
+                                    >
+                                      {!hasOuterFrame &&
+                                        selectedBorderWidthId === 'none' &&
+                                        primaryPhotoUrl &&
+                                        (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
+                                        <img
+                                          src={primaryPhotoUrl}
+                                          alt=""
+                                          draggable={false}
+                                          style={{ objectPosition: 'left center' }}
+                                          className={`w-full h-full object-cover opacity-75 filter brightness-80 ${
+                                            selectedWrapId === 'clear-edge' ? 'scale-x-[-1]' : ''
+                                          }`}
+                                        />
+                                      )}
+                                      <div
+                                        className="absolute inset-0"
+                                        style={{
+                                          background:
+                                            'linear-gradient(to left, rgba(0,0,0,0.22), rgba(255,255,255,0.06) 50%, rgba(0,0,0,0.28))'
+                                        }}
+                                      />
+                                    </div>
+
+                                    {/* Top Side Wall (-Y) */}
+                                    <div
+                                      className="absolute left-0 pointer-events-none overflow-hidden"
+                                      style={{
+                                        top: `${(cardH - depthPx) / 2}px`,
+                                        width: `${cardW}px`,
+                                        height: `${depthPx}px`,
+                                        transform: `translateY(-${cardH / 2}px) rotateX(90deg)`,
+                                        backgroundColor: sideBaseColor,
+                                        filter: 'brightness(0.95)',
+                                        boxShadow: 'inset 0 0 0 1px rgba(15,23,42,0.15)'
+                                      }}
+                                    >
+                                      {!hasOuterFrame &&
+                                        selectedBorderWidthId === 'none' &&
+                                        primaryPhotoUrl &&
+                                        (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
+                                        <img
+                                          src={primaryPhotoUrl}
+                                          alt=""
+                                          draggable={false}
+                                          style={{ objectPosition: 'center top' }}
+                                          className={`w-full h-full object-cover opacity-75 filter brightness-90 ${
+                                            selectedWrapId === 'clear-edge' ? 'scale-y-[-1]' : ''
+                                          }`}
+                                        />
+                                      )}
+                                    </div>
+
+                                    {/* Bottom Side Wall (+Y) */}
+                                    <div
+                                      className="absolute left-0 pointer-events-none overflow-hidden"
+                                      style={{
+                                        top: `${(cardH - depthPx) / 2}px`,
+                                        width: `${cardW}px`,
+                                        height: `${depthPx}px`,
+                                        transform: `translateY(${cardH / 2}px) rotateX(-90deg)`,
+                                        backgroundColor: sideBaseColor,
+                                        filter: 'brightness(0.62)',
+                                        boxShadow: 'inset 0 0 0 1px rgba(15,23,42,0.22)'
+                                      }}
+                                    >
+                                      {!hasOuterFrame &&
+                                        selectedBorderWidthId === 'none' &&
+                                        primaryPhotoUrl &&
+                                        (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
+                                        <img
+                                          src={primaryPhotoUrl}
+                                          alt=""
+                                          draggable={false}
+                                          style={{ objectPosition: 'center bottom' }}
+                                          className={`w-full h-full object-cover opacity-70 filter brightness-70 ${
+                                            selectedWrapId === 'clear-edge' ? 'scale-y-[-1]' : ''
+                                          }`}
+                                        />
+                                      )}
+                                    </div>
+                                  </>
+                                ) : (
+                                  /* Non-rectangular shapes: internal perpendicular 3D spine plates so 90°/270° profile is 100% opaque */
+                                  <>
+                                    <div
+                                      className="absolute pointer-events-none"
+                                      style={{
+                                        left: `${(cardW - depthPx) / 2}px`,
+                                        top: `${cardH * ((1 - spineCoverage) / 2)}px`,
+                                        width: `${depthPx}px`,
+                                        height: `${cardH * spineCoverage}px`,
+                                        transform: 'rotateY(90deg)',
+                                        backgroundColor: sideBaseColor,
+                                        filter: 'brightness(0.72)'
                                       }}
                                     />
-                                  </div>
-                                </div>
-                              );
-                            })}
-
-                            {/* 2. PERPENDICULAR 3D SIDE WALLS (Exact 90° Edge-On Solidity) */}
-                            {isRectangularShape ? (
-                              <>
-                                {/* Right Side Wall (+X) */}
-                                <div
-                                  className="absolute top-0 pointer-events-none overflow-hidden"
-                                  style={{
-                                    left: `${(cardW - depthPx) / 2}px`,
-                                    width: `${depthPx}px`,
-                                    height: `${cardH}px`,
-                                    transform: `rotateY(90deg) translateZ(${cardW / 2}px)`,
-                                    backgroundColor: sideBaseColor,
-                                    filter: `brightness(${rightWallBrightness.toFixed(2)})`,
-                                    boxShadow: 'inset 0 0 0 1px rgba(15,23,42,0.18)'
-                                  }}
-                                >
-                                  {!hasOuterFrame &&
-                                    selectedBorderWidthId === 'none' &&
-                                    primaryPhotoUrl &&
-                                    (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
-                                    <img
-                                      src={primaryPhotoUrl}
-                                      alt=""
-                                      draggable={false}
-                                      style={{ objectPosition: 'right center' }}
-                                      className={`w-full h-full object-cover opacity-75 filter brightness-80 ${
-                                        selectedWrapId === 'clear-edge' ? 'scale-x-[-1]' : ''
-                                      }`}
+                                    <div
+                                      className="absolute pointer-events-none"
+                                      style={{
+                                        left: `${cardW * ((1 - spineCoverage) / 2)}px`,
+                                        top: `${(cardH - depthPx) / 2}px`,
+                                        width: `${cardW * spineCoverage}px`,
+                                        height: `${depthPx}px`,
+                                        transform: 'rotateX(90deg)',
+                                        backgroundColor: sideBaseColor,
+                                        filter: 'brightness(0.76)'
+                                      }}
                                     />
-                                  )}
-                                  <div
-                                    className="absolute inset-0"
-                                    style={{
-                                      background:
-                                        'linear-gradient(to right, rgba(0,0,0,0.22), rgba(255,255,255,0.06) 50%, rgba(0,0,0,0.28))'
-                                    }}
-                                  />
-                                </div>
-
-                                {/* Left Side Wall (-X) */}
-                                <div
-                                  className="absolute top-0 pointer-events-none overflow-hidden"
-                                  style={{
-                                    left: `${(cardW - depthPx) / 2}px`,
-                                    width: `${depthPx}px`,
-                                    height: `${cardH}px`,
-                                    transform: `rotateY(-90deg) translateZ(${cardW / 2}px)`,
-                                    backgroundColor: sideBaseColor,
-                                    filter: `brightness(${leftWallBrightness.toFixed(2)})`,
-                                    boxShadow: 'inset 0 0 0 1px rgba(15,23,42,0.18)'
-                                  }}
-                                >
-                                  {!hasOuterFrame &&
-                                    selectedBorderWidthId === 'none' &&
-                                    primaryPhotoUrl &&
-                                    (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
-                                    <img
-                                      src={primaryPhotoUrl}
-                                      alt=""
-                                      draggable={false}
-                                      style={{ objectPosition: 'left center' }}
-                                      className={`w-full h-full object-cover opacity-75 filter brightness-80 ${
-                                        selectedWrapId === 'clear-edge' ? 'scale-x-[-1]' : ''
-                                      }`}
-                                    />
-                                  )}
-                                  <div
-                                    className="absolute inset-0"
-                                    style={{
-                                      background:
-                                        'linear-gradient(to left, rgba(0,0,0,0.22), rgba(255,255,255,0.06) 50%, rgba(0,0,0,0.28))'
-                                    }}
-                                  />
-                                </div>
-
-                                {/* Top Side Wall (-Y) */}
-                                <div
-                                  className="absolute left-0 pointer-events-none overflow-hidden"
-                                  style={{
-                                    top: `${(cardH - depthPx) / 2}px`,
-                                    width: `${cardW}px`,
-                                    height: `${depthPx}px`,
-                                    transform: `translateY(-${cardH / 2}px) rotateX(90deg)`,
-                                    backgroundColor: sideBaseColor,
-                                    filter: 'brightness(0.95)',
-                                    boxShadow: 'inset 0 0 0 1px rgba(15,23,42,0.15)'
-                                  }}
-                                >
-                                  {!hasOuterFrame &&
-                                    selectedBorderWidthId === 'none' &&
-                                    primaryPhotoUrl &&
-                                    (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
-                                    <img
-                                      src={primaryPhotoUrl}
-                                      alt=""
-                                      draggable={false}
-                                      style={{ objectPosition: 'center top' }}
-                                      className={`w-full h-full object-cover opacity-75 filter brightness-90 ${
-                                        selectedWrapId === 'clear-edge' ? 'scale-y-[-1]' : ''
-                                      }`}
-                                    />
-                                  )}
-                                </div>
-
-                                {/* Bottom Side Wall (+Y) */}
-                                <div
-                                  className="absolute left-0 pointer-events-none overflow-hidden"
-                                  style={{
-                                    top: `${(cardH - depthPx) / 2}px`,
-                                    width: `${cardW}px`,
-                                    height: `${depthPx}px`,
-                                    transform: `translateY(${cardH / 2}px) rotateX(-90deg)`,
-                                    backgroundColor: sideBaseColor,
-                                    filter: 'brightness(0.62)',
-                                    boxShadow: 'inset 0 0 0 1px rgba(15,23,42,0.22)'
-                                  }}
-                                >
-                                  {!hasOuterFrame &&
-                                    selectedBorderWidthId === 'none' &&
-                                    primaryPhotoUrl &&
-                                    (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
-                                    <img
-                                      src={primaryPhotoUrl}
-                                      alt=""
-                                      draggable={false}
-                                      style={{ objectPosition: 'center bottom' }}
-                                      className={`w-full h-full object-cover opacity-70 filter brightness-70 ${
-                                        selectedWrapId === 'clear-edge' ? 'scale-y-[-1]' : ''
-                                      }`}
-                                    />
-                                  )}
-                                </div>
-                              </>
-                            ) : (
-                              /* Non-rectangular shapes: internal perpendicular 3D spine plates so 90°/270° profile is 100% opaque */
-                              <>
-                                <div
-                                  className="absolute pointer-events-none"
-                                  style={{
-                                    left: `${(cardW - depthPx) / 2}px`,
-                                    top: `${cardH * ((1 - spineCoverage) / 2)}px`,
-                                    width: `${depthPx}px`,
-                                    height: `${cardH * spineCoverage}px`,
-                                    transform: 'rotateY(90deg)',
-                                    backgroundColor: sideBaseColor,
-                                    filter: 'brightness(0.72)'
-                                  }}
-                                />
-                                <div
-                                  className="absolute pointer-events-none"
-                                  style={{
-                                    left: `${cardW * ((1 - spineCoverage) / 2)}px`,
-                                    top: `${(cardH - depthPx) / 2}px`,
-                                    width: `${cardW * spineCoverage}px`,
-                                    height: `${depthPx}px`,
-                                    transform: 'rotateX(90deg)',
-                                    backgroundColor: sideBaseColor,
-                                    filter: 'brightness(0.76)'
-                                  }}
-                                />
+                                  </>
+                                )}
                               </>
                             )}
 
@@ -9363,7 +9419,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                             <div
                               className="absolute inset-0 pointer-events-none"
                               style={{
-                                transform: `translateZ(${(depthPx / 2 + 0.6).toFixed(2)}px)`,
+                                transform: `translateZ(${(showPhysicalEdges ? depthPx / 2 + 0.6 : 0.6).toFixed(2)}px)`,
                                 backfaceVisibility: 'hidden',
                                 WebkitBackfaceVisibility: 'hidden'
                               }}
@@ -9400,7 +9456,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                             <div
                               className="absolute inset-0 pointer-events-none"
                               style={{
-                                transform: `rotateY(180deg) translateZ(${(depthPx / 2 + 0.6).toFixed(2)}px)`,
+                                transform: `rotateY(180deg) translateZ(${(showPhysicalEdges ? depthPx / 2 + 0.6 : 0.6).toFixed(2)}px)`,
                                 backfaceVisibility: 'hidden',
                                 WebkitBackfaceVisibility: 'hidden'
                               }}
@@ -9412,7 +9468,54 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   filter: `brightness(${backBrightness.toFixed(3)})`
                                 }}
                               >
-                                {selectedDisplayOptionId === 'dust-cover' ? (
+                                {selectedProductTypeId === 'canvas-banner' ? (
+                                  /* Clean Flat Fabric / Canvas Banner Back */
+                                  <div
+                                    className="w-full h-full relative flex flex-col items-center justify-center overflow-hidden"
+                                    style={{
+                                      backgroundColor: '#f5f0e6',
+                                      backgroundImage:
+                                        'repeating-linear-gradient(0deg, rgba(120,113,108,0.06) 0px, rgba(120,113,108,0.06) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(120,113,108,0.06) 0px, rgba(120,113,108,0.06) 1px, transparent 1px, transparent 3px)',
+                                      boxShadow: 'inset 0 0 10px rgba(0,0,0,0.1)'
+                                    }}
+                                  >
+                                    {selectedHardwareId === 'banner-hanging-rails' && (
+                                      <>
+                                        <div className="absolute top-0 inset-x-0 h-4 bg-gradient-to-b from-[#854D0E] to-[#713F12] border-b border-[#5A320E] shadow-sm z-10" />
+                                        <div className="absolute bottom-0 inset-x-0 h-4 bg-gradient-to-b from-[#854D0E] to-[#713F12] border-t border-[#5A320E] shadow-sm z-10" />
+                                      </>
+                                    )}
+                                    {selectedHardwareId === 'banner-pole-pocket' && (
+                                      <>
+                                        <div className="absolute top-0 inset-x-0 h-5 bg-black/10 border-b border-dashed border-stone-400 pointer-events-none z-10 flex items-center justify-center">
+                                          <span className="text-[8px] font-mono uppercase tracking-widest text-stone-500">Pole Pocket (Back)</span>
+                                        </div>
+                                        <div className="absolute bottom-0 inset-x-0 h-5 bg-black/10 border-t border-dashed border-stone-400 pointer-events-none z-10 flex items-center justify-center">
+                                          <span className="text-[8px] font-mono uppercase tracking-widest text-stone-500">Pole Pocket (Back)</span>
+                                        </div>
+                                      </>
+                                    )}
+                                    {selectedHardwareId === 'banner-grommets' && (
+                                      <>
+                                        <div className="absolute top-2 left-2 w-3.5 h-3.5 rounded-full bg-stone-300 border-2 border-stone-500 shadow-inner flex items-center justify-center z-10">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-800" />
+                                        </div>
+                                        <div className="absolute top-2 right-2 w-3.5 h-3.5 rounded-full bg-stone-300 border-2 border-stone-500 shadow-inner flex items-center justify-center z-10">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-800" />
+                                        </div>
+                                        <div className="absolute bottom-2 left-2 w-3.5 h-3.5 rounded-full bg-stone-300 border-2 border-stone-500 shadow-inner flex items-center justify-center z-10">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-800" />
+                                        </div>
+                                        <div className="absolute bottom-2 right-2 w-3.5 h-3.5 rounded-full bg-stone-300 border-2 border-stone-500 shadow-inner flex items-center justify-center z-10">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-800" />
+                                        </div>
+                                      </>
+                                    )}
+                                    <div className="relative z-10 px-3 py-1 rounded bg-stone-800/10 border border-stone-700/15 text-[8px] font-extrabold text-stone-600 tracking-widest uppercase">
+                                      Canvas India • Banner Reverse
+                                    </div>
+                                  </div>
+                                ) : selectedDisplayOptionId === 'dust-cover' ? (
                                   /* Dust Cover Back: Sealed black craft paper backing over wood stretcher frame */
                                   <div
                                     className="w-full h-full relative flex flex-col items-center justify-center"
@@ -9424,6 +9527,22 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   >
                                     <div className="px-3 py-1 rounded border border-stone-700 bg-stone-900/90 text-[9px] font-bold text-stone-400 tracking-widest uppercase">
                                       Canvas India • Sealed Dust Cover
+                                    </div>
+                                    {renderHardwareGraphic(selectedHardwareId, false)}
+                                  </div>
+                                ) : !showPhysicalEdges ? (
+                                  /* Clean Flat Back for non-edge products (Round, Oval, Triangle, Heart, Mosaic, Split, etc.) */
+                                  <div
+                                    className="w-full h-full relative flex flex-col items-center justify-center overflow-hidden"
+                                    style={{
+                                      backgroundColor: '#e6dec8',
+                                      backgroundImage:
+                                        'repeating-linear-gradient(0deg, rgba(120,113,108,0.08) 0px, rgba(120,113,108,0.08) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(120,113,108,0.08) 0px, rgba(120,113,108,0.08) 1px, transparent 1px, transparent 3px)',
+                                      boxShadow: 'inset 0 0 16px rgba(28, 25, 23, 0.25)'
+                                    }}
+                                  >
+                                    <div className="relative z-10 px-2.5 py-0.5 rounded bg-stone-800/10 border border-stone-700/15 text-[8px] font-extrabold text-stone-600 tracking-widest uppercase mb-2">
+                                      Canvas India • Art Backing
                                     </div>
                                     {renderHardwareGraphic(selectedHardwareId, false)}
                                   </div>
