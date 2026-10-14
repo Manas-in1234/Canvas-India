@@ -6,17 +6,20 @@
 
 import { STANDARD_SHAPE_SIZES } from './productSizeShapeConfig';
 
-export type ToolbarTab = 
-  | 'PRODUCTS' 
-  | 'UPLOAD' 
-  | 'SELECT SIZE' 
+export type ToolbarTab =
+  | 'PRODUCTS'
+  | 'UPLOAD'
+  | 'SELECT SIZE'
   | 'SHAPES'
   | 'SHAPE'
-  | 'LAYOUTS & DESIGNS' 
+  | 'LAYOUTS & DESIGNS'
   | 'WRAP & BORDER'
-  | 'HARDWARE & FINISH' 
+  | 'HARDWARE & FINISH'
   | 'OPTIONS'
-  | 'TEMPLATES';
+  | 'TEMPLATES'
+  | 'CREATE BUS ROLL'
+  | 'BACKGROUND'
+  | 'TEMPLATE';
 
 export interface ProductCapabilities {
   products?: boolean;
@@ -102,19 +105,15 @@ export const AcrylicProductShapeConfig: Record<string, string[]> = {
   'acrylic-triangle': ['shape-triangle'],
   'acrylic-heart': ['shape-heart'],
   'acrylic-oval': ['shape-oval'],
-  'acrylic-hexagon': ['shape-hexagon'],
-  'acrylic-photo-block': ['shape-square', 'shape-rectangle', 'shape-rounded-rect'],
   'acrylic-wall-art': ['shape-rectangle', 'shape-square', 'shape-landscape'],
   'acrylic-collage': ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'],
   'acrylic-split': ['shape-landscape', 'shape-rectangle'],
   'acrylic-mosaic': ['shape-square', 'shape-rectangle'],
   'acrylic-lyric': ['shape-portrait', 'shape-rectangle', 'shape-square', 'shape-heart'],
-  'acrylic-digital': ['shape-landscape', 'shape-rectangle', 'shape-portrait', 'shape-square'],
-  'acrylic-quotes': ['shape-square', 'shape-portrait', 'shape-rectangle', 'shape-heart'],
-  'acrylic-bus-roll': ['shape-portrait'],
-  'acrylic-word-art': ['shape-square', 'shape-rectangle', 'shape-circle', 'shape-heart'],
   // Legacy alias fallbacks
+  'acrylic-single': ALL_CANVAS_AND_ACRYLIC_SHAPE_IDS,
   'acrylic-photo-panel': ALL_CANVAS_AND_ACRYLIC_SHAPE_IDS,
+  'acrylic-photo-block': ['shape-square', 'shape-rectangle', 'shape-rounded-rect'],
   'acrylic-signage': ALL_CANVAS_AND_ACRYLIC_SHAPE_IDS
 };
 
@@ -137,19 +136,15 @@ export const AcrylicHardwareConfig: Record<string, string[]> = {
   'acrylic-triangle': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-heart': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-oval': ALL_ACRYLIC_HARDWARE_IDS,
-  'acrylic-hexagon': ALL_ACRYLIC_HARDWARE_IDS,
-  'acrylic-photo-block': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-wall-art': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-collage': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-split': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-mosaic': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-lyric': ALL_ACRYLIC_HARDWARE_IDS,
-  'acrylic-digital': ALL_ACRYLIC_HARDWARE_IDS,
-  'acrylic-quotes': ALL_ACRYLIC_HARDWARE_IDS,
-  'acrylic-bus-roll': ALL_ACRYLIC_HARDWARE_IDS,
-  'acrylic-word-art': ALL_ACRYLIC_HARDWARE_IDS,
   // Legacy aliases
+  'acrylic-single': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-photo-panel': ALL_ACRYLIC_HARDWARE_IDS,
+  'acrylic-photo-block': ALL_ACRYLIC_HARDWARE_IDS,
   'acrylic-signage': ALL_ACRYLIC_HARDWARE_IDS
 };
 
@@ -168,7 +163,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     imageSlots: 1,
     panelsCount: 1,
     description: 'Vibrant direct UV sub-surface print on optical crystal acrylic.',
-    defaultSizeOptionId: 'shape-square-10x10',
+    defaultSizeOptionId: 'rec-10x10',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-print'],
@@ -189,10 +184,146 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     supportedLayoutIds: ['layout-1-single']
   },
   {
+    id: 'acrylic-round',
+    name: 'Round Acrylic',
+    price: 650.00,
+    startingPrice: 650.00,
+    image: '/images/acrylic/shapes/circle.svg',
+    iconType: 'round',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-circle',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-round'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Curved circular optical acrylic panel for modern circular focal points.',
+    defaultSizeOptionId: 'shape-circle-10x10',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-round'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-round'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: false,
+      roomView: true
+    },
+    supportedLayoutIds: ['layout-1-single']
+  },
+  {
+    id: 'acrylic-triangle',
+    name: 'Triangle Acrylic',
+    price: 650.00,
+    startingPrice: 650.00,
+    image: '/images/acrylic/shapes/triangle.svg',
+    iconType: 'triangle',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-triangle',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-triangle'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Geometric 3-sided optical acrylic for striking geometric gallery walls.',
+    defaultSizeOptionId: 'shape-triangle-10x10',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-triangle'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-triangle'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: false,
+      roomView: true
+    },
+    supportedLayoutIds: ['layout-1-single']
+  },
+  {
+    id: 'acrylic-heart',
+    name: 'Heart Acrylic',
+    price: 699.00,
+    startingPrice: 699.00,
+    image: '/images/acrylic/shapes/heart.svg',
+    iconType: 'heart',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-heart',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-heart'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Romantic heart-shaped optical acrylic for wedding, couple, and family portraits.',
+    defaultSizeOptionId: 'shape-heart-10x10',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-heart'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-heart'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: false,
+      roomView: true
+    },
+    supportedLayoutIds: ['layout-1-single']
+  },
+  {
+    id: 'acrylic-oval',
+    name: 'Oval Acrylic',
+    price: 750.00,
+    startingPrice: 750.00,
+    image: '/images/acrylic/shapes/oval.svg',
+    iconType: 'oval',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-oval',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-oval'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Graceful elliptical optical acrylic silhouette for timeless wall art.',
+    defaultSizeOptionId: 'shape-oval-10x8',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-oval'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-oval'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: false,
+      layouts: false,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: false,
+      roomView: true
+    },
+    supportedLayoutIds: ['layout-1-single']
+  },
+  {
     id: 'acrylic-wall-art',
     name: 'Wall Display',
-    startingPrice: 2338.90,
-    price: 2338.90,
+    startingPrice: 856.90,
+    price: 856.90,
     image: '/images/acrylic/shapes/rectangle.svg',
     iconType: 'wall',
     defaultLayout: 'threeCollage',
@@ -202,7 +333,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     imageSlots: 3,
     panelsCount: 3,
     description: 'Gallery wall display for striking home and office focal points.',
-    defaultSizeOptionId: 'shape-rectangle-12x8',
+    defaultSizeOptionId: 'wall-display-3p-12x18',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: '5mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-wall-art'],
@@ -225,8 +356,8 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
   {
     id: 'acrylic-collage',
     name: 'Photo Collage',
-    price: 426.00,
-    startingPrice: 426.00,
+    price: 148.50,
+    startingPrice: 148.50,
     image: '/assets/customizer/acrylic/layouts/layout-4-grid.svg',
     iconType: 'collage',
     defaultLayout: 'fourGrid',
@@ -235,7 +366,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     supportedShapes: AcrylicProductShapeConfig['acrylic-collage'],
     imageSlots: 4,
     panelsCount: 4,
-    description: 'Multiple cherished photographs printed together on acrylic.',
+    description: 'Multiple cherished photographs printed together on optical acrylic.',
     defaultSizeOptionId: 'shape-square-10x10',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: '3mm',
@@ -259,8 +390,8 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
   {
     id: 'acrylic-split',
     name: 'Split Acrylic',
-    price: 674.50,
-    startingPrice: 674.50,
+    price: 188.10,
+    startingPrice: 188.10,
     image: '/assets/customizer/acrylic/layouts/layout-2-split.svg',
     iconType: 'split',
     defaultLayout: 'twoSplit',
@@ -269,8 +400,8 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     supportedShapes: AcrylicProductShapeConfig['acrylic-split'],
     imageSlots: 2,
     panelsCount: 2,
-    description: 'Photograph split seamlessly across a dual-panel acrylic display.',
-    defaultSizeOptionId: 'shape-landscape-12x8',
+    description: 'Photograph split seamlessly across multi-panel crystal acrylic display.',
+    defaultSizeOptionId: 'split-2p-20x20',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: '5mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-split'],
@@ -293,8 +424,8 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
   {
     id: 'acrylic-mosaic',
     name: 'Photo Mosaic',
-    price: 426.00,
-    startingPrice: 426.00,
+    price: 148.50,
+    startingPrice: 148.50,
     image: '/assets/customizer/acrylic/layouts/layout-4-grid.svg',
     iconType: 'mosaic',
     defaultLayout: 'fourGrid',
@@ -323,6 +454,40 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       roomView: true
     },
     supportedLayoutIds: ['layout-4-grid', 'layout-mosaic-9']
+  },
+  {
+    id: 'acrylic-lyric',
+    name: 'Lyric on Acrylic',
+    price: 426.00,
+    startingPrice: 426.00,
+    image: '/assets/customizer/acrylic/templates/lyrics-on-acrylic.svg',
+    iconType: 'lyric',
+    defaultLayout: 'single',
+    defaultLayoutId: 'layout-1-single',
+    defaultShape: 'shape-portrait',
+    supportedShapes: AcrylicProductShapeConfig['acrylic-lyric'],
+    imageSlots: 1,
+    panelsCount: 1,
+    description: 'Your favorite song lyrics beautifully typeset over a photo on crystal-clear acrylic.',
+    defaultSizeOptionId: 'shape-portrait-8x10',
+    defaultHardwareId: 'no-hooks',
+    defaultThicknessId: '3mm',
+    supportedShapeIds: AcrylicProductShapeConfig['acrylic-lyric'],
+    supportedHardwareIds: AcrylicHardwareConfig['acrylic-lyric'],
+    capabilities: {
+      products: true,
+      upload: true,
+      sizes: true,
+      shapes: true,
+      layouts: true,
+      wrap: true,
+      hardware: true,
+      options: true,
+      view3D: false,
+      view360: false,
+      roomView: true
+    },
+    supportedLayoutIds: ['layout-1-single']
   }
 ];
 
@@ -547,7 +712,7 @@ export const SIZE_OPTIONS: SizeOption[] = [
   // Large
   {
     id: 'lg-20x30',
-    productTypeId: 'acrylic-photo-panel',
+    productTypeId: 'acrylic-print',
     category: 'LARGE',
     label: '20" × 30"',
     dimensionsSummary: '20" × 30"',
@@ -559,7 +724,7 @@ export const SIZE_OPTIONS: SizeOption[] = [
   },
   {
     id: 'lg-24x36',
-    productTypeId: 'acrylic-photo-panel',
+    productTypeId: 'acrylic-print',
     category: 'LARGE',
     label: '24" × 36"',
     dimensionsSummary: '24" × 36"',
@@ -571,7 +736,7 @@ export const SIZE_OPTIONS: SizeOption[] = [
   },
   {
     id: 'lg-30x40',
-    productTypeId: 'acrylic-photo-panel',
+    productTypeId: 'acrylic-print',
     category: 'LARGE',
     label: '30" × 40"',
     dimensionsSummary: '30" × 40"',
@@ -585,7 +750,7 @@ export const SIZE_OPTIONS: SizeOption[] = [
   // Small
   {
     id: 'sm-4x6',
-    productTypeId: 'acrylic-photo-panel',
+    productTypeId: 'acrylic-print',
     category: 'SMALL',
     label: '4" × 6"',
     dimensionsSummary: '4" × 6"',
@@ -597,7 +762,7 @@ export const SIZE_OPTIONS: SizeOption[] = [
   },
   {
     id: 'sm-5x7',
-    productTypeId: 'acrylic-photo-panel',
+    productTypeId: 'acrylic-print',
     category: 'SMALL',
     label: '5" × 7"',
     dimensionsSummary: '5" × 7"',
@@ -609,7 +774,7 @@ export const SIZE_OPTIONS: SizeOption[] = [
   },
   {
     id: 'sm-6x8',
-    productTypeId: 'acrylic-photo-panel',
+    productTypeId: 'acrylic-print',
     category: 'SMALL',
     label: '6" × 8"',
     dimensionsSummary: '6" × 8"',
@@ -2094,7 +2259,7 @@ export function getCompatibleShapesForProduct(productId: string): AcrylicShapeOp
 // SHAPE-SPECIFIC SIZES & COMPATIBILITY HELPERS (Sections 8 & 9)
 // ============================================================================
 
-export function getSizesForShape(shapeId: string, productTypeId: string = 'acrylic-photo-panel'): SizeOption[] {
+export function getSizesForShape(shapeId: string, productTypeId: string = 'acrylic-print'): SizeOption[] {
   const rawSizes = STANDARD_SHAPE_SIZES[shapeId] || STANDARD_SHAPE_SIZES['shape-rectangle'] || STANDARD_SHAPE_SIZES['shape-square'];
   return rawSizes.map((sz) => ({
     id: `${shapeId}-${sz.width}x${sz.height}`,

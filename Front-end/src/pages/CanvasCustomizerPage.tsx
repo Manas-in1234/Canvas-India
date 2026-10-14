@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import QRCode from 'qrcode';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import {
@@ -131,7 +131,8 @@ import {
 import {
   getLayoutSlots,
   LayoutSlotDefinition,
-  LAYOUT_PRESETS as STANDARD_LAYOUT_PRESETS
+  LAYOUT_PRESETS as STANDARD_LAYOUT_PRESETS,
+  ACRYLIC_PRODUCT_TYPES
 } from '../data/acrylicCustomizerData';
 import { CustomizerProductSelector } from '../components/CustomizerProductSelector';
 import { CustomizerPreloader, PRELOADER_MIN_MS } from '../components/CustomizerPreloader';
@@ -400,6 +401,294 @@ const SIZE_OPTIONS: SizeOption[] = [
     panelsCount: 1,
     diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Canvas', dimension: '36" × 24"', widthRatio: 36, heightRatio: 24 }]
+  },
+
+  // Acrylic Single Print (acrylic-print)
+  {
+    id: 'rec-10x10',
+    productTypeId: 'acrylic-print',
+    label: '10" × 10"',
+    dimensionsSummary: '10" × 10"',
+    price: 799.00,
+    categories: ['SQUARE', 'RECOMMENDED', 'SMALL'],
+    widthInches: 10,
+    heightInches: 10,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }]
+  },
+  {
+    id: 'rec-16x16',
+    productTypeId: 'acrylic-print',
+    label: '16" × 16"',
+    dimensionsSummary: '16" × 16"',
+    price: 1799.00,
+    categories: ['SQUARE', 'RECOMMENDED', 'SMALL'],
+    widthInches: 16,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
+  },
+  {
+    id: 'rec-18x18',
+    productTypeId: 'acrylic-print',
+    label: '18" × 18"',
+    dimensionsSummary: '18" × 18"',
+    price: 2299.00,
+    categories: ['SQUARE', 'RECOMMENDED', 'LARGE'],
+    widthInches: 18,
+    heightInches: 18,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '18" × 18"', widthRatio: 18, heightRatio: 18 }]
+  },
+  {
+    id: 'rec-12x18',
+    productTypeId: 'acrylic-print',
+    label: '12" × 18"',
+    dimensionsSummary: '12" × 18"',
+    price: 1250.00,
+    categories: ['PANORAMIC', 'RECOMMENDED', 'SMALL'],
+    widthInches: 18,
+    heightInches: 12,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '12" × 18"', widthRatio: 18, heightRatio: 12 }]
+  },
+  {
+    id: 'rec-16x24',
+    productTypeId: 'acrylic-print',
+    label: '16" × 24"',
+    dimensionsSummary: '16" × 24"',
+    price: 2190.00,
+    categories: ['PANORAMIC', 'RECOMMENDED'],
+    widthInches: 24,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '16" × 24"', widthRatio: 24, heightRatio: 16 }]
+  },
+  {
+    id: 'rec-20x30',
+    productTypeId: 'acrylic-print',
+    label: '20" × 30"',
+    dimensionsSummary: '20" × 30"',
+    price: 3490.00,
+    categories: ['PANORAMIC', 'RECOMMENDED', 'LARGE'],
+    widthInches: 30,
+    heightInches: 20,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '20" × 30"', widthRatio: 30, heightRatio: 20 }]
+  },
+  {
+    id: 'sq-10x10',
+    productTypeId: 'acrylic-print',
+    label: '10" × 10"',
+    dimensionsSummary: '10" × 10"',
+    price: 799.00,
+    categories: ['SQUARE', 'SMALL'],
+    widthInches: 10,
+    heightInches: 10,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }]
+  },
+  {
+    id: 'sq-16x16',
+    productTypeId: 'acrylic-print',
+    label: '16" × 16"',
+    dimensionsSummary: '16" × 16"',
+    price: 1799.00,
+    categories: ['SQUARE', 'SMALL'],
+    widthInches: 16,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
+  },
+  {
+    id: 'sq-18x18',
+    productTypeId: 'acrylic-print',
+    label: '18" × 18"',
+    dimensionsSummary: '18" × 18"',
+    price: 2299.00,
+    categories: ['SQUARE', 'LARGE'],
+    widthInches: 18,
+    heightInches: 18,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '18" × 18"', widthRatio: 18, heightRatio: 18 }]
+  },
+  {
+    id: 'sq-20x20',
+    productTypeId: 'acrylic-print',
+    label: '20" × 20"',
+    dimensionsSummary: '20" × 20"',
+    price: 2799.00,
+    categories: ['SQUARE', 'LARGE'],
+    widthInches: 20,
+    heightInches: 20,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '20" × 20"', widthRatio: 20, heightRatio: 20 }]
+  },
+  {
+    id: 'pan-12x18',
+    productTypeId: 'acrylic-print',
+    label: '12" × 18"',
+    dimensionsSummary: '12" × 18"',
+    price: 1250.00,
+    categories: ['PANORAMIC', 'SMALL'],
+    widthInches: 18,
+    heightInches: 12,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '12" × 18"', widthRatio: 18, heightRatio: 12 }]
+  },
+  {
+    id: 'pan-12x24',
+    productTypeId: 'acrylic-print',
+    label: '12" × 24"',
+    dimensionsSummary: '12" × 24"',
+    price: 1699.00,
+    categories: ['PANORAMIC'],
+    widthInches: 24,
+    heightInches: 12,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '12" × 24"', widthRatio: 24, heightRatio: 12 }]
+  },
+  {
+    id: 'pan-16x24',
+    productTypeId: 'acrylic-print',
+    label: '16" × 24"',
+    dimensionsSummary: '16" × 24"',
+    price: 2190.00,
+    categories: ['PANORAMIC'],
+    widthInches: 24,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '16" × 24"', widthRatio: 24, heightRatio: 16 }]
+  },
+  {
+    id: 'pan-16x32',
+    productTypeId: 'acrylic-print',
+    label: '16" × 32"',
+    dimensionsSummary: '16" × 32"',
+    price: 2890.00,
+    categories: ['PANORAMIC', 'LARGE'],
+    widthInches: 32,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '16" × 32"', widthRatio: 32, heightRatio: 16 }]
+  },
+  {
+    id: 'pan-20x30',
+    productTypeId: 'acrylic-print',
+    label: '20" × 30"',
+    dimensionsSummary: '20" × 30"',
+    price: 3490.00,
+    categories: ['PANORAMIC', 'LARGE'],
+    widthInches: 30,
+    heightInches: 20,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '20" × 30"', widthRatio: 30, heightRatio: 20 }]
+  },
+  {
+    id: 'pan-24x36',
+    productTypeId: 'acrylic-print',
+    label: '24" × 36"',
+    dimensionsSummary: '24" × 36"',
+    price: 4990.00,
+    categories: ['PANORAMIC', 'LARGE'],
+    widthInches: 36,
+    heightInches: 24,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '24" × 36"', widthRatio: 36, heightRatio: 24 }]
+  },
+  {
+    id: 'lg-20x30',
+    productTypeId: 'acrylic-print',
+    label: '20" × 30"',
+    dimensionsSummary: '20" × 30"',
+    price: 2490.00,
+    categories: ['LARGE'],
+    widthInches: 30,
+    heightInches: 20,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '20" × 30"', widthRatio: 30, heightRatio: 20 }]
+  },
+  {
+    id: 'lg-24x36',
+    productTypeId: 'acrylic-print',
+    label: '24" × 36"',
+    dimensionsSummary: '24" × 36"',
+    price: 3150.00,
+    categories: ['LARGE'],
+    widthInches: 36,
+    heightInches: 24,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '24" × 36"', widthRatio: 36, heightRatio: 24 }]
+  },
+  {
+    id: 'lg-30x40',
+    productTypeId: 'acrylic-print',
+    label: '30" × 40"',
+    dimensionsSummary: '30" × 40"',
+    price: 4200.00,
+    categories: ['LARGE'],
+    widthInches: 40,
+    heightInches: 30,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '30" × 40"', widthRatio: 40, heightRatio: 30 }]
+  },
+  {
+    id: 'sm-4x6',
+    productTypeId: 'acrylic-print',
+    label: '4" × 6"',
+    dimensionsSummary: '4" × 6"',
+    price: 355.00,
+    categories: ['SMALL'],
+    widthInches: 6,
+    heightInches: 4,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '4" × 6"', widthRatio: 6, heightRatio: 4 }]
+  },
+  {
+    id: 'sm-5x7',
+    productTypeId: 'acrylic-print',
+    label: '5" × 7"',
+    dimensionsSummary: '5" × 7"',
+    price: 420.00,
+    categories: ['SMALL'],
+    widthInches: 7,
+    heightInches: 5,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '5" × 7"', widthRatio: 7, heightRatio: 5 }]
+  },
+  {
+    id: 'sm-6x8',
+    productTypeId: 'acrylic-print',
+    label: '6" × 8"',
+    dimensionsSummary: '6" × 8"',
+    price: 490.00,
+    categories: ['SMALL'],
+    widthInches: 8,
+    heightInches: 6,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Acrylic', dimension: '6" × 8"', widthRatio: 8, heightRatio: 6 }]
   },
 
   // 2. Round Canvas (canvas-round) - Starts at ₹721.27
@@ -1675,28 +1964,69 @@ export const PRESET_3D_ANGLES: Preset3DAngleOption[] = [
 ];
 
 // ============================================================================
-// 2. MAIN CANVAS CUSTOMIZER COMPONENT
+// 2. MAIN UNIFIED CUSTOMIZER COMPONENT (CANVAS & ACRYLIC)
 // ============================================================================
 
-export const CanvasCustomizerPage: React.FC = () => {
+export function resolveAcrylicProductTypeId(
+  rawId?: string,
+  catProd?: { slug?: string; id?: string; name?: string } | null
+): string {
+  const directMatch = ACRYLIC_PRODUCT_TYPES.find((p) => p.id === rawId);
+  if (directMatch) return directMatch.id;
+  const key = (rawId || catProd?.slug || catProd?.id || catProd?.name || '').toLowerCase();
+  if (key.includes('round') || key.includes('circle')) return 'acrylic-round';
+  if (key.includes('triangle')) return 'acrylic-triangle';
+  if (key.includes('heart')) return 'acrylic-heart';
+  if (key.includes('oval')) return 'acrylic-oval';
+  if (key.includes('wall') || key.includes('display')) return 'acrylic-wall-art';
+  if (key.includes('collage')) return 'acrylic-collage';
+  if (key.includes('split') || key.includes('triptych')) return 'acrylic-split';
+  if (key.includes('mosaic')) return 'acrylic-mosaic';
+  if (key.includes('lyric')) return 'acrylic-lyric';
+  if (key.includes('single') || key.includes('print') || key.includes('panel')) return 'acrylic-print';
+  return 'acrylic-print';
+}
+
+export interface CanvasCustomizerPageProps {
+  materialProp?: 'canvas' | 'acrylic';
+}
+
+export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ materialProp }) => {
   const { productId } = useParams<{ productId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { allProducts, onAddToCartCustomized } = useShop();
+
+  const routeMaterial: 'canvas' | 'acrylic' = useMemo(() => {
+    if (materialProp) return materialProp;
+    const path = location.pathname.toLowerCase();
+    if (path.includes('/customize/acrylic') || path.includes('/acrylic')) return 'acrylic';
+    return 'canvas';
+  }, [materialProp, location.pathname]);
+
+  const [activeMaterial, setActiveMaterial] = useState<'canvas' | 'acrylic'>(routeMaterial);
+
+  useEffect(() => {
+    if (routeMaterial !== activeMaterial) {
+      setActiveMaterial(routeMaterial);
+    }
+  }, [routeMaterial]);
 
   // Matched product from catalog with safe fallback so route never renders blank even if catalog is empty
   const catalogProduct = useMemo(() => {
     const safeList = Array.isArray(allProducts) ? allProducts : [];
+    const targetCat = activeMaterial === 'acrylic' ? 'acrylic' : 'canvas';
     return (
-      safeList.find((p) => (p.id === productId || p.slug === productId) && p.categorySlug === 'canvas') ||
-      safeList.find((p) => p.categorySlug === 'canvas') ||
+      safeList.find((p) => (p.id === productId || p.slug === productId) && p.categorySlug === targetCat) ||
+      safeList.find((p) => p.categorySlug === targetCat) ||
       safeList[0] || {
-        id: productId || 'canvas-classic',
-        slug: productId || 'canvas-classic',
-        name: 'Classic Canvas Print',
-        categorySlug: 'canvas' as const,
-        price: 499,
-        originalPrice: 999,
+        id: productId || (activeMaterial === 'acrylic' ? 'acrylic-print' : 'canvas-classic'),
+        slug: productId || (activeMaterial === 'acrylic' ? 'acrylic-print' : 'canvas-classic'),
+        name: activeMaterial === 'acrylic' ? 'Single Print Acrylic' : 'Classic Canvas Print',
+        categorySlug: targetCat as any,
+        price: activeMaterial === 'acrylic' ? 355 : 499,
+        originalPrice: activeMaterial === 'acrylic' ? 799 : 999,
         rating: 4.9,
         reviewsCount: 128,
         image: '/assets/acrylic/acrylic-family-print.jpg',
@@ -1704,18 +2034,25 @@ export const CanvasCustomizerPage: React.FC = () => {
         sizes: [],
         thicknesses: [],
         orientations: ['Landscape', 'Portrait', 'Square'],
-        description: 'Stretched 380 GSM cotton canvas on a solid pine frame.',
+        description: activeMaterial === 'acrylic' ? 'Premium 3mm optical crystal-clear acrylic print.' : 'Stretched 380 GSM cotton canvas on a solid pine frame.',
         highlights: [],
         inStock: true
       }
     );
-  }, [allProducts, productId]);
+  }, [allProducts, productId, activeMaterial]);
+
+  const resolveCurrentProductId = (mat: 'canvas' | 'acrylic', id?: string) => {
+    if (mat === 'acrylic') {
+      return resolveAcrylicProductTypeId(id, catalogProduct);
+    }
+    return resolveCanvasProductTypeId(id, catalogProduct);
+  };
 
   // Active step in the left toolbar
   const [activeTab, setActiveTab] = useState<ToolbarTab>(() => {
-    const initialPt = resolveCanvasProductTypeId(productId, catalogProduct);
-    if (initialPt === 'canvas-bus-roll') return 'CREATE BUS ROLL';
-    if (initialPt === 'canvas-banner') return 'UPLOAD';
+    const initialPt = resolveCurrentProductId(routeMaterial, productId);
+    if (initialPt.includes('bus')) return 'CREATE BUS ROLL';
+    if (initialPt.includes('banner')) return 'UPLOAD';
     return 'PRODUCTS';
   });
 
@@ -1765,7 +2102,7 @@ export const CanvasCustomizerPage: React.FC = () => {
         setIsSizeShapeModalOpen(true);
       }
     } else if (tabId === 'LAYOUTS & DESIGNS') {
-      if (selectedProductTypeId !== 'canvas-lyric') {
+      if (!selectedProductTypeId.includes('lyric')) {
         setIsLayoutModalOpen(true);
       }
     }
@@ -1774,26 +2111,69 @@ export const CanvasCustomizerPage: React.FC = () => {
   };
 
   const [selectedProductTypeId, setSelectedProductTypeId] = useState<string>(() =>
-    resolveCanvasProductTypeId(productId, catalogProduct)
+    resolveCurrentProductId(routeMaterial, productId)
   );
 
   useEffect(() => {
     if (productId) {
-      setSelectedProductTypeId(resolveCanvasProductTypeId(productId, catalogProduct));
+      setSelectedProductTypeId(resolveCurrentProductId(activeMaterial, productId));
     }
-  }, [productId, catalogProduct]);
+  }, [productId, activeMaterial]);
+
+  const isHexagonProduct = activeMaterial === 'canvas' && selectedProductTypeId.includes('hexagon');
+  const isWallArtProduct = selectedProductTypeId.includes('wall') || selectedProductTypeId.includes('display');
+  const isCollageProduct = selectedProductTypeId.includes('collage');
+  const isSplitProduct = selectedProductTypeId.includes('split');
+  const isMosaicProduct = selectedProductTypeId.includes('mosaic');
+  const isLyricProduct = selectedProductTypeId.includes('lyric');
+  const isDigitalPaintingProduct = selectedProductTypeId.includes('digital') || selectedProductTypeId.includes('painting');
+  const isQuotesProduct = selectedProductTypeId.includes('quote');
+  const isBusRollProduct = selectedProductTypeId.includes('bus');
+  const isWordArtProduct = selectedProductTypeId.includes('word');
+  const isPopArtProduct = selectedProductTypeId.includes('pop');
+  const isBannerProduct = selectedProductTypeId.includes('banner');
+  const isSinglePrintCanvas = (activeMaterial === 'canvas' && (selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-classic')) ||
+    (activeMaterial === 'acrylic' && (selectedProductTypeId === 'acrylic-print' || selectedProductTypeId === 'acrylic-single' || selectedProductTypeId === 'acrylic-photo-panel'));
 
   const selectedProductType = useMemo(() => {
-    return CANVAS_PRODUCT_TYPES.find((pt) => pt.id === selectedProductTypeId) || CANVAS_PRODUCT_TYPES[0];
-  }, [selectedProductTypeId]);
+    const list = activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES;
+    return list.find((pt) => pt.id === selectedProductTypeId) || list[0];
+  }, [activeMaterial, selectedProductTypeId]);
 
   // Product capabilities for dynamic sidebar tabs
   const productCapabilities = useMemo(() => {
-    return getCanvasProductCapabilities(selectedProductType);
-  }, [selectedProductType]);
-
-  // Check if current product is single print
-  const isSinglePrintCanvas = selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-classic';
+    if (activeMaterial === 'acrylic') {
+      return {
+        productId: selectedProductType.id,
+        displayName: selectedProductType.name,
+        defaultShape: selectedProductType.defaultShape,
+        defaultSize: selectedProductType.defaultSizeOptionId,
+        edgeColor: '#FFFFFF',
+        products: true,
+        upload: !isBusRollProduct,
+        sizes: !isSplitProduct && !isCollageProduct && !isMosaicProduct && !isWallArtProduct && !isHexagonProduct && !isBusRollProduct,
+        shapes: !isSplitProduct && !isCollageProduct && !isMosaicProduct && !isWallArtProduct && !isHexagonProduct && !isBusRollProduct && !isLyricProduct && !isQuotesProduct && !isWordArtProduct,
+        layouts: isCollageProduct || isMosaicProduct || isSplitProduct || isWallArtProduct || isHexagonProduct,
+        effects: isDigitalPaintingProduct,
+        busRoll: isBusRollProduct,
+        wrap: false,
+        hardware: true,
+        options: true,
+        roomView: true,
+        showPhysicalEdges: false,
+        supports3DView: false,
+        supports360View: false,
+        view3D: false,
+        view360: false,
+        physicalThickness: 3,
+        edgeMode: 'none',
+        imageFitMode: 'cover',
+        supportsImagePositioning: true,
+        ...(selectedProductType.capabilities || {})
+      };
+    }
+    return getCanvasProductCapabilities(selectedProductType as CanvasProductType);
+  }, [activeMaterial, selectedProductType, isBusRollProduct, isSplitProduct, isCollageProduct, isMosaicProduct, isWallArtProduct, isHexagonProduct, isLyricProduct, isQuotesProduct, isWordArtProduct, isDigitalPaintingProduct]);
 
   // Check if current product is single print, shaped canvas, or standard format canvas
   const isSingleOrShapedCanvas = [
@@ -1803,48 +2183,54 @@ export const CanvasCustomizerPage: React.FC = () => {
     'canvas-triangle',
     'canvas-heart',
     'canvas-oval',
-    'canvas-lyric',
-    'canvas-digital-painting',
-    'canvas-quotes',
-    'canvas-bus-roll',
-    'canvas-banner',
-    'canvas-pop-art',
-    'canvas-word-art'
-  ].includes(selectedProductTypeId);
+    'acrylic-print',
+    'acrylic-single',
+    'acrylic-round',
+    'acrylic-triangle',
+    'acrylic-heart',
+    'acrylic-oval'
+  ].includes(selectedProductTypeId) ||
+  isLyricProduct ||
+  isDigitalPaintingProduct ||
+  isQuotesProduct ||
+  isBusRollProduct ||
+  isBannerProduct ||
+  isPopArtProduct ||
+  isWordArtProduct;
 
   // Primary Toolbar items: dynamically filtered by selected product capabilities
   // EXACT ORDER: 1. PRODUCTS, 2. UPLOAD, 3. SELECT SIZE, 4. LAYOUTS & DESIGNS, 5. WRAP & BORDER, 6. HARDWARE & FINISH, 7. OPTIONS
   const toolbarItems = useMemo<{ id: ToolbarTab; label: string; icon: React.ElementType }[]>(() => {
-    if (selectedProductTypeId === 'canvas-bus-roll') {
+    if (isBusRollProduct) {
       return [
         { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
         { id: 'CREATE BUS ROLL', label: 'CREATE BUS ROLL', icon: Type },
         { id: 'BACKGROUND', label: 'BACKGROUND', icon: Palette },
         { id: 'TEMPLATE', label: 'TEMPLATE', icon: LayoutTemplate },
-        { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
+        ...(activeMaterial === 'canvas' ? [{ id: 'WRAP & BORDER' as ToolbarTab, label: 'WRAP & BORDER', icon: Crop }] : []),
         { id: 'HARDWARE & FINISH', label: 'HARDWARE OPTION & STYLE', icon: SlidersHorizontal },
         { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
       ];
     }
-    if (selectedProductTypeId === 'canvas-pop-art') {
+    if (isPopArtProduct) {
       return [
         { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
         { id: 'POP ART STYLE', label: 'POP ART STYLE', icon: Sparkles },
         { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud },
         { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
-        { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
+        ...(activeMaterial === 'canvas' ? [{ id: 'WRAP & BORDER' as ToolbarTab, label: 'WRAP & BORDER', icon: Crop }] : []),
         { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
         { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
       ];
     }
-    if (selectedProductTypeId === 'canvas-lyric') {
+    if (isLyricProduct) {
       return [
         { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
         { id: 'LYRIC TEMPLATE', label: 'SELECT TEMPLATE', icon: Music },
         { id: 'UPLOAD', label: 'UPLOAD PHOTO', icon: UploadCloud },
         { id: 'LAYOUTS & DESIGNS', label: 'LYRIC STUDIO', icon: Type },
         { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
-        { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
+        ...(activeMaterial === 'canvas' ? [{ id: 'WRAP & BORDER' as ToolbarTab, label: 'WRAP & BORDER', icon: Crop }] : []),
         { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
         { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
       ];
@@ -1853,14 +2239,14 @@ export const CanvasCustomizerPage: React.FC = () => {
       { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid, enabled: productCapabilities.products !== false },
       {
         id: 'UPLOAD',
-        label: selectedProductTypeId === 'canvas-word-art'
+        label: isWordArtProduct
           ? 'WORD ART'
-          : selectedProductTypeId === 'canvas-quotes'
+          : isQuotesProduct
           ? 'SELECT TEMPLATE'
           : 'UPLOAD',
-        icon: selectedProductTypeId === 'canvas-word-art'
+        icon: isWordArtProduct
           ? Type
-          : selectedProductTypeId === 'canvas-quotes'
+          : isQuotesProduct
           ? Quote
           : UploadCloud,
         enabled: productCapabilities.upload !== false
@@ -1868,12 +2254,12 @@ export const CanvasCustomizerPage: React.FC = () => {
       { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSingleOrShapedCanvas && productCapabilities.sizes !== false },
       { id: 'EFFECTS & OPTIONS', label: 'EFFECTS & OPTIONS', icon: Palette, enabled: productCapabilities.effects === true },
       { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: productCapabilities.layouts === true },
-      { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
+      { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: activeMaterial === 'canvas' && productCapabilities.wrap !== false },
       { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal, enabled: productCapabilities.hardware !== false },
       { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false }
     ];
     return items.filter((item) => item.enabled);
-  }, [productCapabilities, isSingleOrShapedCanvas, selectedProductTypeId]);
+  }, [activeMaterial, productCapabilities, isSingleOrShapedCanvas, isBusRollProduct, isPopArtProduct, isLyricProduct, isWordArtProduct, isQuotesProduct]);
 
   // If the active tab is not supported by the currently selected product, safely revert to PRODUCTS
   useEffect(() => {
@@ -1889,61 +2275,60 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // SHAPE tab state
   const [selectedShapeId, setSelectedShapeId] = useState<string>(() => {
-    const initialPt = resolveCanvasProductTypeId(productId, catalogProduct);
+    const initialPt = resolveCurrentProductId(routeMaterial, productId);
     if (initialPt === 'canvas-single' || initialPt === 'canvas-classic') {
       return 'shape-square';
     }
-    const pt = CANVAS_PRODUCT_TYPES.find((p) => p.id === initialPt);
+    const list = routeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES;
+    const pt = list.find((p) => p.id === initialPt);
     return pt?.defaultShape || 'shape-square';
   });
   const [shapeFilterCategory, setShapeFilterCategory] = useState<'ALL' | 'BASIC' | 'SPECIAL' | 'DECORATIVE'>('ALL');
 
   const currentShape = useMemo<CanvasShapeOption>(() => {
-    const pt = CANVAS_PRODUCT_TYPES.find((p) => p.id === selectedProductTypeId);
+    const list = activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES;
+    const pt = list.find((p) => p.id === selectedProductTypeId);
     const targetShapeId =
       pt?.supportedShapeIds && pt.supportedShapeIds.length === 1
         ? pt.supportedShapeIds[0]
         : selectedShapeId;
     return CANVAS_SHAPES.find((s) => s.id === targetShapeId) || CANVAS_SHAPES[0];
-  }, [selectedProductTypeId, selectedShapeId]);
+  }, [activeMaterial, selectedProductTypeId, selectedShapeId]);
 
   // Available size options for the current product type and active shape (from centralized productSizeShapeConfig)
   const availableSizeOptions = useMemo<SizeOption[]>(() => {
     if (isSinglePrintCanvas) {
+      if (activeMaterial === 'acrylic') {
+        return SIZE_OPTIONS.filter((s) => s.productTypeId === 'acrylic-print' || s.productTypeId === 'acrylic-photo-panel');
+      }
       return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-single' || s.productTypeId === 'canvas-classic');
     }
 
-    if (selectedProductTypeId === 'canvas-quotes') {
+    if (isQuotesProduct) {
       return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-quotes');
     }
 
-    if (selectedProductTypeId === 'canvas-digital-painting') {
+    if (isDigitalPaintingProduct) {
       return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-digital-painting');
     }
 
-    if (selectedProductTypeId === 'canvas-bus-roll') {
+    if (isBusRollProduct) {
       return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-bus-roll');
     }
 
-    if (selectedProductTypeId === 'canvas-banner') {
+    if (isBannerProduct) {
       return CANVAS_BANNER_SIZE_OPTIONS as unknown as SizeOption[];
     }
 
-    if (selectedProductTypeId === 'canvas-pop-art') {
+    if (isPopArtProduct) {
       return POP_ART_SIZE_OPTIONS as unknown as SizeOption[];
     }
 
-    if (selectedProductTypeId === 'canvas-lyric') {
+    if (isLyricProduct) {
       return LYRIC_CANVAS_SIZE_OPTIONS as unknown as SizeOption[];
     }
 
-    const isLayoutProduct = [
-      'canvas-wall-art',
-      'canvas-collage',
-      'canvas-hexagon',
-      'canvas-split',
-      'canvas-mosaic'
-    ].includes(selectedProductTypeId);
+    const isLayoutProduct = isWallArtProduct || isCollageProduct || isHexagonProduct || isSplitProduct || isMosaicProduct;
 
     if (isLayoutProduct) {
       const layouts = getProductLayouts(selectedProductTypeId);
@@ -1952,7 +2337,7 @@ export const CanvasCustomizerPage: React.FC = () => {
         productTypeId: layout.productTypeId,
         label: layout.name,
         dimensionsSummary: layout.dimensionsSummary,
-        price: layout.price,
+        price: activeMaterial === 'acrylic' ? (layout.acrylicPrice || layout.price) : layout.price,
         categories: ['RECOMMENDED' as SizeCategory],
         widthInches: layout.overallWidthInches,
         heightInches: layout.overallHeightInches,
@@ -1969,7 +2354,7 @@ export const CanvasCustomizerPage: React.FC = () => {
       }));
     }
 
-    const configOptions = getSizesForProductAndShape(selectedProductTypeId, selectedShapeId, 'canvas').map((opt) => ({
+    const configOptions = getSizesForProductAndShape(selectedProductTypeId, selectedShapeId, activeMaterial).map((opt) => ({
       id: opt.id,
       productTypeId: selectedProductTypeId,
       label: opt.label,
@@ -1981,55 +2366,70 @@ export const CanvasCustomizerPage: React.FC = () => {
       panelsCount: opt.panelsCount,
       arrangement: opt.arrangement,
       diagramType: opt.diagramType,
-      panels: opt.panels || [{ id: 'p0', label: 'Canvas', dimension: opt.dimensionsSummary, widthRatio: opt.widthInches, heightRatio: opt.heightInches }]
+      panels: opt.panels || [{ id: 'p0', label: activeMaterial === 'acrylic' ? 'Acrylic' : 'Canvas', dimension: opt.dimensionsSummary, widthRatio: opt.widthInches, heightRatio: opt.heightInches }]
     }));
-    const filteredOptions = selectedProductTypeId === 'canvas-mosaic'
+    const filteredOptions = isMosaicProduct
       ? configOptions.filter((opt) => !(opt.widthInches === 9 && opt.heightInches === 9) && !(opt.widthInches === 16 && opt.heightInches === 16))
       : configOptions;
     return filteredOptions.length > 0 ? filteredOptions : SIZE_OPTIONS.filter((s) => s.productTypeId === selectedProductTypeId);
-  }, [selectedProductTypeId, selectedShapeId, isSinglePrintCanvas]);
+  }, [activeMaterial, selectedProductTypeId, selectedShapeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isLyricProduct, isWallArtProduct, isCollageProduct, isHexagonProduct, isSplitProduct, isMosaicProduct]);
 
   // Category filter state for single prints: 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL' (Default: 'RECOMMENDED')
   const [sizeCategoryFilter, setSizeCategoryFilter] = useState<'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL'>('RECOMMENDED');
 
-  // Selected Size Option - by default single-10x10, painting-10x10, or quotes-8x8
+  // Selected Size Option - by default single-10x10, rec-10x10, painting-10x10, or quotes-8x8
   const [selectedSizeId, setSelectedSizeId] = useState<string>(() => {
-    const initialPt = resolveCanvasProductTypeId(productId, catalogProduct);
-    if (initialPt === 'canvas-quotes') {
+    const initialPt = resolveCurrentProductId(routeMaterial, productId);
+    if (initialPt === 'acrylic-print' || initialPt === 'acrylic-single') {
+      return 'rec-10x10';
+    }
+    if (initialPt.includes('quote')) {
       return 'quotes-8x8';
     }
-    if (initialPt === 'canvas-digital-painting') {
+    if (initialPt.includes('digital') || initialPt.includes('painting')) {
       return 'painting-10x10';
     }
-    if (initialPt === 'canvas-bus-roll') {
+    if (initialPt.includes('bus')) {
       return 'bus-21x32';
     }
-    if (initialPt === 'canvas-banner') {
+    if (initialPt.includes('banner')) {
       return 'banner-10x8';
     }
-    if (initialPt === 'canvas-pop-art') {
+    if (initialPt.includes('pop')) {
       return 'pop-12x12';
     }
-    if (initialPt === 'canvas-lyric') {
+    if (initialPt.includes('lyric')) {
       return 'lyric-8x8';
     }
     if (initialPt === 'canvas-single' || initialPt === 'canvas-classic') {
       return 'single-10x10';
     }
-    return availableSizeOptions[0]?.id || 'single-10x10';
+    return availableSizeOptions[0]?.id || (routeMaterial === 'acrylic' ? 'rec-10x10' : 'single-10x10');
   });
 
   useEffect(() => {
     if (!availableSizeOptions.some((s) => s.id === selectedSizeId)) {
-      if (isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-bus-roll' || selectedProductTypeId === 'canvas-banner' || selectedProductTypeId === 'canvas-pop-art' || selectedProductTypeId === 'canvas-lyric') {
+      if (isSinglePrintCanvas || isQuotesProduct || isDigitalPaintingProduct || isBusRollProduct || isBannerProduct || isPopArtProduct || isLyricProduct) {
         const matchingInCat = availableSizeOptions.filter((opt) => opt.categories.includes(sizeCategoryFilter));
-        const defaultId = selectedProductTypeId === 'canvas-quotes' ? 'quotes-8x8' : selectedProductTypeId === 'canvas-digital-painting' ? 'painting-10x10' : selectedProductTypeId === 'canvas-bus-roll' ? 'bus-21x32' : selectedProductTypeId === 'canvas-banner' ? 'banner-10x8' : selectedProductTypeId === 'canvas-pop-art' ? 'pop-12x12' : selectedProductTypeId === 'canvas-lyric' ? 'lyric-8x8' : 'single-10x10';
+        const defaultId = isQuotesProduct
+          ? 'quotes-8x8'
+          : isDigitalPaintingProduct
+          ? 'painting-10x10'
+          : isBusRollProduct
+          ? 'bus-21x32'
+          : isBannerProduct
+          ? 'banner-10x8'
+          : isPopArtProduct
+          ? 'pop-12x12'
+          : isLyricProduct
+          ? 'lyric-8x8'
+          : (activeMaterial === 'acrylic' ? 'rec-10x10' : 'single-10x10');
         setSelectedSizeId(matchingInCat[0]?.id || defaultId);
       } else {
-        setSelectedSizeId(availableSizeOptions[0]?.id || 'single-10x10');
+        setSelectedSizeId(availableSizeOptions[0]?.id || (activeMaterial === 'acrylic' ? 'rec-10x10' : 'single-10x10'));
       }
     }
-  }, [availableSizeOptions, selectedSizeId, isSinglePrintCanvas, selectedProductTypeId, sizeCategoryFilter]);
+  }, [availableSizeOptions, selectedSizeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isLyricProduct, sizeCategoryFilter, activeMaterial]);
 
   const currentSizeOption = useMemo(() => {
     return availableSizeOptions.find((s) => s.id === selectedSizeId) || availableSizeOptions[0] || SIZE_OPTIONS[0];
@@ -2149,17 +2549,6 @@ export const CanvasCustomizerPage: React.FC = () => {
         if (emptyIdx !== undefined) {
           targetSlot = emptyIdx;
           setActivePanelIndex(emptyIdx);
-        }
-      }
-
-      // The main photo (slot 0) drives the whole grid on multi-layout products —
-      // auto-switch to whichever layout's proportions best fit this photo.
-      if (targetSlot === 0 && LAYOUT_PRODUCT_TYPE_IDS.includes(selectedProductTypeId)) {
-        const bestLayout = pickBestMatchingLayout(selectedProductTypeId, aspectRatio);
-        if (bestLayout && bestLayout.id !== selectedLayoutId) {
-          setSelectedLayoutId(bestLayout.id);
-          setExpandedLayoutId(bestLayout.id);
-          setSelectedSizeId(bestLayout.id);
         }
       }
 
@@ -2595,7 +2984,8 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // Automatically sync default shape, hardware, thickness, and layout when product selection changes
   useEffect(() => {
-    const pt = CANVAS_PRODUCT_TYPES.find((p) => p.id === selectedProductTypeId);
+    const list = activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES;
+    const pt = list.find((p) => p.id === selectedProductTypeId);
     if (pt) {
       if (pt.defaultShape) setSelectedShapeId(pt.defaultShape);
       if (pt.defaultHardwareId) setSelectedHardwareId(pt.defaultHardwareId);
@@ -2611,15 +3001,16 @@ export const CanvasCustomizerPage: React.FC = () => {
         setExpandedLayoutId(layouts[0].id);
       }
     }
-  }, [selectedProductTypeId, selectedShapeId, selectedLayoutId]);
+  }, [activeMaterial, selectedProductTypeId, selectedShapeId, selectedLayoutId]);
 
-  // Master selection handler for all 21 Canvas products
-  const selectCanvasProduct = (productId: string) => {
-    const pt = CANVAS_PRODUCT_TYPES.find((p) => p.id === productId);
+  // Master selection handler for all products across Canvas & Acrylic
+  const selectProduct = (productId: string) => {
+    const list = activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES;
+    const pt = list.find((p) => p.id === productId);
     if (!pt) return;
 
-    if (productId === 'canvas-word-art') {
-      setSelectedProductTypeId('canvas-word-art');
+    if (productId.includes('word')) {
+      setSelectedProductTypeId(productId);
       setIsCustomSize(true);
       setCustomWidth(wordArtSizeOption.widthInches);
       setCustomHeight(wordArtSizeOption.heightInches);
@@ -2630,11 +3021,12 @@ export const CanvasCustomizerPage: React.FC = () => {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setIsWordArtSizeModalOpen(true);
+      navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
 
-    if (productId === 'canvas-quotes') {
-      setSelectedProductTypeId('canvas-quotes');
+    if (productId.includes('quote')) {
+      setSelectedProductTypeId(productId);
       setIsCustomSize(false);
       setActivePanelIndex(0);
       setSelectedShapeId('shape-square');
@@ -2667,11 +3059,12 @@ export const CanvasCustomizerPage: React.FC = () => {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setActiveTab('UPLOAD');
+      navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
 
-    if (productId === 'canvas-digital-painting') {
-      setSelectedProductTypeId('canvas-digital-painting');
+    if (productId.includes('digital') || productId.includes('painting')) {
+      setSelectedProductTypeId(productId);
       setIsCustomSize(false);
       setActivePanelIndex(0);
       setSelectedShapeId('shape-square');
@@ -2682,11 +3075,12 @@ export const CanvasCustomizerPage: React.FC = () => {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setActiveTab('UPLOAD');
+      navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
 
-    if (productId === 'canvas-bus-roll') {
-      setSelectedProductTypeId('canvas-bus-roll');
+    if (productId.includes('bus')) {
+      setSelectedProductTypeId(productId);
       setIsCustomSize(false);
       setActivePanelIndex(0);
       setSelectedShapeId('shape-square');
@@ -2696,11 +3090,12 @@ export const CanvasCustomizerPage: React.FC = () => {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setActiveTab('CREATE BUS ROLL');
+      navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
 
-    if (productId === 'canvas-banner') {
-      setSelectedProductTypeId('canvas-banner');
+    if (productId.includes('banner')) {
+      setSelectedProductTypeId(productId);
       setIsCustomSize(false);
       setActivePanelIndex(0);
       setSelectedShapeId('shape-rectangle');
@@ -2710,11 +3105,12 @@ export const CanvasCustomizerPage: React.FC = () => {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setActiveTab('UPLOAD');
+      navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
 
-    if (productId === 'canvas-pop-art') {
-      setSelectedProductTypeId('canvas-pop-art');
+    if (productId.includes('pop')) {
+      setSelectedProductTypeId(productId);
       setIsCustomSize(false);
       setActivePanelIndex(0);
       setSelectedShapeId('shape-square');
@@ -2725,11 +3121,12 @@ export const CanvasCustomizerPage: React.FC = () => {
       setIsLayoutModalOpen(false);
       setIsPopArtStyleModalOpen(true);
       setActiveTab('UPLOAD');
+      navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
 
-    if (productId === 'canvas-lyric') {
-      setSelectedProductTypeId('canvas-lyric');
+    if (productId.includes('lyric')) {
+      setSelectedProductTypeId(productId);
       setIsCustomSize(false);
       setActivePanelIndex(0);
       setSelectedShapeId('shape-square');
@@ -2747,6 +3144,7 @@ export const CanvasCustomizerPage: React.FC = () => {
           fitMode: 'cover'
         }
       }));
+      navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
 
@@ -2754,28 +3152,34 @@ export const CanvasCustomizerPage: React.FC = () => {
     setIsCustomSize(false);
     setActivePanelIndex(0);
 
-    const isSingle = productId === 'canvas-single' || productId === 'canvas-classic';
+    const isSingle = productId === 'canvas-single' || productId === 'canvas-classic' || productId === 'acrylic-print' || productId === 'acrylic-single' || productId === 'acrylic-photo-panel';
     const isSingleOrShaped = [
       'canvas-single',
       'canvas-classic',
       'canvas-round',
       'canvas-triangle',
       'canvas-heart',
-      'canvas-oval'
+      'canvas-oval',
+      'acrylic-print',
+      'acrylic-single',
+      'acrylic-photo-panel',
+      'acrylic-round',
+      'acrylic-triangle',
+      'acrylic-heart',
+      'acrylic-oval'
     ].includes(productId);
 
-    const isLayoutProduct = [
-      'canvas-wall-art',
-      'canvas-collage',
-      'canvas-hexagon',
-      'canvas-split',
-      'canvas-mosaic'
-    ].includes(productId);
+    const isLayoutProduct =
+      productId.includes('wall') ||
+      productId.includes('collage') ||
+      (activeMaterial === 'canvas' && productId.includes('hexagon')) ||
+      productId.includes('split') ||
+      productId.includes('mosaic');
 
     if (isSingle) {
       setSelectedShapeId('shape-square');
-      setSizeCategoryFilter('SQUARE');
-      setSelectedSizeId('single-10x10');
+      setSizeCategoryFilter('RECOMMENDED');
+      setSelectedSizeId(activeMaterial === 'acrylic' ? 'rec-10x10' : 'single-10x10');
     } else if (isLayoutProduct) {
       const layouts = getProductLayouts(productId);
       const defaultLayout = layouts[0];
@@ -2801,18 +3205,15 @@ export const CanvasCustomizerPage: React.FC = () => {
       }
     }
 
-    // 3. Apply default hardware & thickness (strictly no-hooks default)
     setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
     if (pt.defaultThicknessId) {
       setSelectedThicknessId(pt.defaultThicknessId);
     }
 
-    // 4. Apply default layout preset
     if (pt.defaultLayoutId && !isLayoutProduct) {
       setExpandedLayoutId(pt.defaultLayoutId);
     }
 
-    // 5. Open the modal immediately based on product category
     if (isSingleOrShaped) {
       setIsSizeShapeModalOpen(true);
       setIsLayoutModalOpen(false);
@@ -2823,6 +3224,41 @@ export const CanvasCustomizerPage: React.FC = () => {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setActiveTab('UPLOAD');
+    }
+
+    navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
+  };
+
+  const handleSwitchMaterial = () => {
+    const nextMaterial = activeMaterial === 'canvas' ? 'acrylic' : 'canvas';
+    setActiveMaterial(nextMaterial);
+    let counterpartId = 'acrylic-print';
+    if (nextMaterial === 'acrylic') {
+      if (selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-classic') counterpartId = 'acrylic-print';
+      else if (selectedProductTypeId.includes('round')) counterpartId = 'acrylic-round';
+      else if (selectedProductTypeId.includes('triangle')) counterpartId = 'acrylic-triangle';
+      else if (selectedProductTypeId.includes('heart')) counterpartId = 'acrylic-heart';
+      else if (selectedProductTypeId.includes('oval')) counterpartId = 'acrylic-oval';
+      else if (selectedProductTypeId.includes('wall') || selectedProductTypeId.includes('display')) counterpartId = 'acrylic-wall-art';
+      else if (selectedProductTypeId.includes('collage')) counterpartId = 'acrylic-collage';
+      else if (selectedProductTypeId.includes('split')) counterpartId = 'acrylic-split';
+      else if (selectedProductTypeId.includes('mosaic')) counterpartId = 'acrylic-mosaic';
+      else if (selectedProductTypeId.includes('lyric')) counterpartId = 'acrylic-lyric';
+      else counterpartId = 'acrylic-print';
+      navigate(`/customize/acrylic/${counterpartId}`);
+    } else {
+      if (selectedProductTypeId === 'acrylic-print' || selectedProductTypeId === 'acrylic-single' || selectedProductTypeId === 'acrylic-photo-panel') counterpartId = 'canvas-single';
+      else if (selectedProductTypeId.includes('round')) counterpartId = 'canvas-round';
+      else if (selectedProductTypeId.includes('triangle')) counterpartId = 'canvas-triangle';
+      else if (selectedProductTypeId.includes('heart')) counterpartId = 'canvas-heart';
+      else if (selectedProductTypeId.includes('oval')) counterpartId = 'canvas-oval';
+      else if (selectedProductTypeId.includes('wall') || selectedProductTypeId.includes('display')) counterpartId = 'canvas-wall-art';
+      else if (selectedProductTypeId.includes('collage')) counterpartId = 'canvas-collage';
+      else if (selectedProductTypeId.includes('split')) counterpartId = 'canvas-split';
+      else if (selectedProductTypeId.includes('mosaic')) counterpartId = 'canvas-mosaic';
+      else if (selectedProductTypeId.includes('lyric')) counterpartId = 'canvas-lyric';
+      else counterpartId = 'canvas-single';
+      navigate(`/customize/canvas/${counterpartId}`);
     }
   };
 
@@ -2939,9 +3375,9 @@ export const CanvasCustomizerPage: React.FC = () => {
   const [selectedMaterialId, setSelectedMaterialId] = useState<string>('standard-cotton');
   const [materialModalOpen, setMaterialModalOpen] = useState<boolean>(false);
 
-  // Dedicated Lyric Canvas State (for canvas-lyric product customization)
+  // Dedicated Lyric Canvas State (for canvas-lyric & acrylic-lyric product customization)
   const [isLyricTemplateModalOpen, setIsLyricTemplateModalOpen] = useState<boolean>(() => {
-    return resolveCanvasProductTypeId(productId, catalogProduct) === 'canvas-lyric';
+    return resolveCurrentProductId(routeMaterial, productId).includes('lyric');
   });
   const [lyricConfig, setLyricConfig] = useState<LyricCanvasConfig>(() => {
     try {
@@ -3025,15 +3461,18 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Room / 3D / 360 viewer
   const [viewerMode, setViewerMode] = useState<'room' | '3d' | '360' | null>(null);
 
-  // Automatically close 3D / 360 view if the selected product does not support it
+  // Automatically close 3D / 360 view if the selected product does not support it (or if Acrylic)
   useEffect(() => {
+    if (activeMaterial === 'acrylic' && (viewerMode === '3d' || viewerMode === '360')) {
+      setViewerMode(null);
+    }
     if (viewerMode === '3d' && !productCapabilities.view3D) {
       setViewerMode(null);
     }
     if (viewerMode === '360' && productCapabilities.view360 === false) {
       setViewerMode(null);
     }
-  }, [viewerMode, productCapabilities.view3D, productCapabilities.view360]);
+  }, [activeMaterial, viewerMode, productCapabilities.view3D, productCapabilities.view360]);
 
   const [roomViewState, setRoomViewState] = useState<RoomPlacementState>({
     roomPreset: 'office',
@@ -3095,8 +3534,8 @@ export const CanvasCustomizerPage: React.FC = () => {
         digitalPaintingConfig,
         busRollConfig,
         bannerConfig,
-        popArtConfig: selectedProductTypeId === 'canvas-pop-art' ? popArtConfig : undefined,
-        lyricConfig: selectedProductTypeId === 'canvas-lyric' ? lyricConfig : undefined,
+        popArtConfig: isPopArtProduct ? popArtConfig : undefined,
+        lyricConfig: isLyricProduct ? lyricConfig : undefined,
         updatedAt: new Date().toISOString()
       };
       localStorage.setItem(storageKey, JSON.stringify(stateToSave));
@@ -3157,17 +3596,17 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // Dynamic Price Calculation
   const selectedPopStyle = getPopArtStyle(popArtConfig.selectedStyleId);
-  const popStyleAdjustment = selectedProductTypeId === 'canvas-pop-art' ? (selectedPopStyle?.priceAdjustment || 0) : 0;
-  const lyricPriceAdjustment = selectedProductTypeId === 'canvas-lyric' ? (selectedLyricTemplate?.priceAdjustment || 0) : 0;
-  const sizePrice = selectedProductTypeId === 'canvas-word-art'
+  const popStyleAdjustment = isPopArtProduct ? (selectedPopStyle?.priceAdjustment || 0) : 0;
+  const lyricPriceAdjustment = isLyricProduct ? (selectedLyricTemplate?.priceAdjustment || 0) : 0;
+  const sizePrice = isWordArtProduct
     ? wordArtSizeOption.price
-    : selectedProductTypeId === 'canvas-banner'
+    : isBannerProduct
     ? (bannerConfig.isCustom
         ? calculateBannerPrice(bannerConfig.widthInches, bannerConfig.heightInches)
         : (CANVAS_BANNER_SIZE_OPTIONS.find((s) => s.id === bannerConfig.selectedSizeId)?.price || calculateBannerPrice(bannerConfig.widthInches, bannerConfig.heightInches)))
-    : selectedProductTypeId === 'canvas-pop-art'
+    : isPopArtProduct
     ? ((isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price) + popStyleAdjustment)
-    : selectedProductTypeId === 'canvas-lyric'
+    : isLyricProduct
     ? ((isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price) + lyricPriceAdjustment)
     : (isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price);
 
@@ -3221,11 +3660,11 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // Single source of truth for whether at least ONE valid customer image is currently uploaded
   const hasUploadedImage = useMemo(() => {
-    if (selectedProductTypeId === 'canvas-bus-roll') {
+    if (isBusRollProduct) {
       return true;
     }
     if (
-      selectedProductTypeId === 'canvas-lyric' &&
+      isLyricProduct &&
       (!selectedLyricTemplate.supportsPhoto || ((lyricConfig.lyrics || lyricConfig.lyricsText || '').trim().length > 0))
     ) {
       return true;
@@ -3363,16 +3802,6 @@ export const CanvasCustomizerPage: React.FC = () => {
             setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
             if (i === 0 || target < panels.length) {
               const idx = target < panels.length ? target : startIdx;
-              // The main photo (slot 0) drives the whole grid on multi-layout products —
-              // auto-switch to whichever layout's proportions best fit this photo.
-              if (idx === 0 && LAYOUT_PRODUCT_TYPE_IDS.includes(selectedProductTypeId)) {
-                const bestLayout = pickBestMatchingLayout(selectedProductTypeId, meta.aspectRatio);
-                if (bestLayout && bestLayout.id !== selectedLayoutId) {
-                  setSelectedLayoutId(bestLayout.id);
-                  setExpandedLayoutId(bestLayout.id);
-                  setSelectedSizeId(bestLayout.id);
-                }
-              }
               setPanelImages((prev) => ({
                 ...prev,
                 [idx]: {
@@ -3383,7 +3812,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                   rotation: 0,
                   panX: 0,
                   panY: 0,
-                  fitMode: productCapabilities.imageFitMode || 'cover'
+                  fitMode: (productCapabilities.imageFitMode === 'contain' ? 'contain' : 'cover')
                 }
               }));
               setActivePanelIndex(idx);
@@ -3395,7 +3824,7 @@ export const CanvasCustomizerPage: React.FC = () => {
             setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
             if (i === 0 || target < panels.length) {
               const idx = target < panels.length ? target : startIdx;
-              setPanelImages((prev) => ({ ...prev, [idx]: { ...createDefaultPanel(), imageUrl: result, fitMode: productCapabilities.imageFitMode || 'cover' } }));
+              setPanelImages((prev) => ({ ...prev, [idx]: { ...createDefaultPanel(), imageUrl: result, fitMode: (productCapabilities.imageFitMode === 'contain' ? 'contain' : 'cover') } }));
               setActivePanelIndex(idx);
             }
             setValidationWarning(null);
@@ -4105,99 +4534,101 @@ export const CanvasCustomizerPage: React.FC = () => {
       product: {
         ...catalogProduct,
         price: unitPrice,
-        name: selectedProductTypeId === 'canvas-word-art'
+        categorySlug: activeMaterial as any,
+        name: isWordArtProduct
           ? `${selectedProductType.name} - ${wordArtSizeOption.label}`
-          : selectedProductTypeId === 'canvas-quotes'
+          : isQuotesProduct
           ? `${selectedProductType.name} - ${getQuoteTemplate(selectedQuoteTemplateId)?.title || 'Custom Quote'} (${currentSizeOption.label})`
-          : selectedProductTypeId === 'canvas-digital-painting'
+          : isDigitalPaintingProduct
           ? `${selectedProductType.name} (${getDigitalPaintingEffect(digitalPaintingConfig.selectedEffectId).name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
-          : selectedProductTypeId === 'canvas-bus-roll'
+          : isBusRollProduct
           ? `${selectedProductType.name} - ${busRollConfig.widthInches}" × ${busRollConfig.heightInches}" (${busRollConfig.lines[0]?.text || 'Custom'})`
-          : selectedProductTypeId === 'canvas-banner'
+          : isBannerProduct
           ? `${selectedProductType.name} - ${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}${bannerConfig.isCustom ? ' (Custom)' : ''}`
-          : selectedProductTypeId === 'canvas-pop-art'
+          : isPopArtProduct
           ? `${selectedProductType.name} (${getPopArtStyle(popArtConfig.selectedStyleId).name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
-          : selectedProductTypeId === 'canvas-lyric'
+          : isLyricProduct
           ? `${selectedProductType.name} (${selectedLyricTemplate.name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
           : `${selectedProductType.name} - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
       },
-      size: selectedProductTypeId === 'canvas-word-art'
+      size: isWordArtProduct
         ? `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`
-        : selectedProductTypeId === 'canvas-bus-roll'
+        : isBusRollProduct
         ? `${busRollConfig.widthInches}" × ${busRollConfig.heightInches}"`
-        : selectedProductTypeId === 'canvas-banner'
+        : isBannerProduct
         ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
         : isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary,
-      finish: WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label || 'Canvas Lite',
+      finish: activeMaterial === 'acrylic' ? 'Diamond Polished Edge' : (WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label || 'Canvas Lite'),
       quantity,
       customText: customText || undefined,
-      photoUrl: (selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl)
+      photoUrl: (isPopArtProduct && popArtConfig.processedImageUrl)
         ? popArtConfig.processedImageUrl
-        : (selectedProductTypeId === 'canvas-lyric' && !panelImages[0]?.imageUrl)
+        : (isLyricProduct && !panelImages[0]?.imageUrl)
         ? selectedLyricTemplate.previewImage
         : firstImage,
       calculatedPrice: totalPrice,
-      material: MATERIAL_VARIANTS.find((m) => m.id === selectedMaterialId)?.name || 'Standard 280 GSM Cotton Canvas',
-      style: selectedProductTypeId === 'canvas-pop-art'
+      material: activeMaterial === 'acrylic' ? 'Premium 3mm/5mm Optical Acrylic' : (MATERIAL_VARIANTS.find((m) => m.id === selectedMaterialId)?.name || 'Standard 280 GSM Cotton Canvas'),
+      style: isPopArtProduct
         ? `Pop Art (${getPopArtStyle(popArtConfig.selectedStyleId).name})`
-        : selectedProductTypeId === 'canvas-lyric'
-        ? `Lyric on Canvas (${selectedLyricTemplate.name})`
+        : isLyricProduct
+        ? (activeMaterial === 'acrylic' ? `Lyric on Acrylic (${selectedLyricTemplate.name})` : `Lyric on Canvas (${selectedLyricTemplate.name})`)
         : selectedProductType.name,
-      base: selectedProductTypeId === 'canvas-banner'
+      base: isBannerProduct
         ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware')
         : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label || 'No Hooks'),
       customizationDetails: {
+        material: activeMaterial,
         productTypeId: selectedProductTypeId,
         sizeId: selectedSizeId,
         shape: shapeApplies ? currentShape.name : undefined,
-        wrap: WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label,
+        wrap: activeMaterial === 'canvas' ? WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label : undefined,
         borderWidth: shapeApplies ? ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.label : undefined,
         borderColor: shapeApplies && selectedBorderWidthId !== 'none' ? selectedBorderColor : undefined,
-        frame: shapeApplies ? FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name : undefined,
+        frame: shapeApplies && activeMaterial === 'canvas' ? FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name : undefined,
         mirrorImage,
-        display: DISPLAY_OPTIONS.find((d) => d.id === selectedDisplayOptionId)?.label,
-        lamination: LAMINATION_OPTIONS.find((l) => l.id === selectedLaminationId)?.label,
+        display: activeMaterial === 'canvas' ? DISPLAY_OPTIONS.find((d) => d.id === selectedDisplayOptionId)?.label : undefined,
+        lamination: activeMaterial === 'canvas' ? LAMINATION_OPTIONS.find((l) => l.id === selectedLaminationId)?.label : undefined,
         retouching: retouchLabels,
         majorRetouchText: majorRetouchText || undefined,
         proofRequested,
         template: selectedTemplateId ? DESIGN_TEMPLATES.find((t) => t.id === selectedTemplateId)?.name : undefined,
-        quoteTemplate: selectedProductTypeId === 'canvas-quotes' ? getQuoteTemplate(selectedQuoteTemplateId)?.title : undefined,
-        digitalPaintingEffect: selectedProductTypeId === 'canvas-digital-painting' ? getDigitalPaintingEffect(digitalPaintingConfig.selectedEffectId).name : undefined,
-        digitalPaintingSubject: selectedProductTypeId === 'canvas-digital-painting' ? digitalPaintingConfig.subjectType : undefined,
-        digitalPaintingBackground: selectedProductTypeId === 'canvas-digital-painting' ? (
+        quoteTemplate: isQuotesProduct ? getQuoteTemplate(selectedQuoteTemplateId)?.title : undefined,
+        digitalPaintingEffect: isDigitalPaintingProduct ? getDigitalPaintingEffect(digitalPaintingConfig.selectedEffectId).name : undefined,
+        digitalPaintingSubject: isDigitalPaintingProduct ? digitalPaintingConfig.subjectType : undefined,
+        digitalPaintingBackground: isDigitalPaintingProduct ? (
           digitalPaintingConfig.backgroundOption === 'solid'
             ? `Solid Background (${digitalPaintingConfig.backgroundColor})`
             : digitalPaintingConfig.backgroundOption === 'artist_choice'
             ? 'Let the Artist Choose'
             : 'Original Background'
         ) : undefined,
-        peopleCount: selectedProductTypeId === 'canvas-digital-painting' && digitalPaintingConfig.subjectType === 'people_pets' ? digitalPaintingConfig.peopleCount : undefined,
-        petsCount: selectedProductTypeId === 'canvas-digital-painting' && digitalPaintingConfig.subjectType === 'people_pets' ? digitalPaintingConfig.petsCount : undefined,
-        busRollLines: selectedProductTypeId === 'canvas-bus-roll' ? busRollConfig.lines.map((l) => l.text).join(' / ') : undefined,
-        busRollBackgroundColor: selectedProductTypeId === 'canvas-bus-roll' ? busRollConfig.backgroundColor : undefined,
-        busRollPattern: selectedProductTypeId === 'canvas-bus-roll' ? busRollConfig.patternId : undefined,
-        busRollFont: selectedProductTypeId === 'canvas-bus-roll' ? busRollConfig.fontFamily : undefined,
-        bannerUnit: selectedProductTypeId === 'canvas-banner' ? bannerConfig.unit : undefined,
-        bannerWidth: selectedProductTypeId === 'canvas-banner' ? bannerConfig.width : undefined,
-        bannerHeight: selectedProductTypeId === 'canvas-banner' ? bannerConfig.height : undefined,
-        bannerWidthInches: selectedProductTypeId === 'canvas-banner' ? bannerConfig.widthInches : undefined,
-        bannerHeightInches: selectedProductTypeId === 'canvas-banner' ? bannerConfig.heightInches : undefined,
-        bannerBackgroundColor: selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : undefined,
-        bannerHardware: selectedProductTypeId === 'canvas-banner' ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware') : undefined,
-        popArtStyleId: selectedProductTypeId === 'canvas-pop-art' ? popArtConfig.selectedStyleId : undefined,
-        popArtStyleName: selectedProductTypeId === 'canvas-pop-art' ? getPopArtStyle(popArtConfig.selectedStyleId).name : undefined,
-        popArtPriceAdjustment: selectedProductTypeId === 'canvas-pop-art' ? getPopArtStyle(popArtConfig.selectedStyleId).priceAdjustment : undefined,
-        popArtProcessedArtwork: selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl ? popArtConfig.processedImageUrl : undefined,
-        lyricTemplateId: selectedProductTypeId === 'canvas-lyric' ? lyricConfig.selectedTemplateId : undefined,
-        lyricTemplateName: selectedProductTypeId === 'canvas-lyric' ? selectedLyricTemplate.name : undefined,
-        lyricTitle: selectedProductTypeId === 'canvas-lyric' ? (lyricConfig.title || lyricConfig.songTitle) : undefined,
-        lyricArtist: selectedProductTypeId === 'canvas-lyric' ? (lyricConfig.artistOrSubtitle || lyricConfig.artistOrNames) : undefined,
-        lyricDateOrNames: selectedProductTypeId === 'canvas-lyric' ? (lyricConfig.dateOrNames || lyricConfig.dateOrInscription) : undefined,
-        lyricText: selectedProductTypeId === 'canvas-lyric' ? (lyricConfig.lyrics || lyricConfig.lyricsText) : undefined,
-        lyricFontFamily: selectedProductTypeId === 'canvas-lyric' ? lyricConfig.fontFamily : undefined,
-        lyricTextColor: selectedProductTypeId === 'canvas-lyric' ? lyricConfig.textColor : undefined,
-        lyricLayout: selectedProductTypeId === 'canvas-lyric' ? (lyricConfig.layout || selectedLyricTemplate.defaultLayout) : undefined,
-        lyricOverlayDarkness: selectedProductTypeId === 'canvas-lyric' ? lyricConfig.overlayDarkness : undefined,
+        peopleCount: isDigitalPaintingProduct && digitalPaintingConfig.subjectType === 'people_pets' ? digitalPaintingConfig.peopleCount : undefined,
+        petsCount: isDigitalPaintingProduct && digitalPaintingConfig.subjectType === 'people_pets' ? digitalPaintingConfig.petsCount : undefined,
+        busRollLines: isBusRollProduct ? busRollConfig.lines.map((l) => l.text).join(' / ') : undefined,
+        busRollBackgroundColor: isBusRollProduct ? busRollConfig.backgroundColor : undefined,
+        busRollPattern: isBusRollProduct ? busRollConfig.patternId : undefined,
+        busRollFont: isBusRollProduct ? busRollConfig.fontFamily : undefined,
+        bannerUnit: isBannerProduct ? bannerConfig.unit : undefined,
+        bannerWidth: isBannerProduct ? bannerConfig.width : undefined,
+        bannerHeight: isBannerProduct ? bannerConfig.height : undefined,
+        bannerWidthInches: isBannerProduct ? bannerConfig.widthInches : undefined,
+        bannerHeightInches: isBannerProduct ? bannerConfig.heightInches : undefined,
+        bannerBackgroundColor: isBannerProduct ? bannerConfig.backgroundColor : undefined,
+        bannerHardware: isBannerProduct ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware') : undefined,
+        popArtStyleId: isPopArtProduct ? popArtConfig.selectedStyleId : undefined,
+        popArtStyleName: isPopArtProduct ? getPopArtStyle(popArtConfig.selectedStyleId).name : undefined,
+        popArtPriceAdjustment: isPopArtProduct ? getPopArtStyle(popArtConfig.selectedStyleId).priceAdjustment : undefined,
+        popArtProcessedArtwork: isPopArtProduct && popArtConfig.processedImageUrl ? popArtConfig.processedImageUrl : undefined,
+        lyricTemplateId: isLyricProduct ? lyricConfig.selectedTemplateId : undefined,
+        lyricTemplateName: isLyricProduct ? selectedLyricTemplate.name : undefined,
+        lyricTitle: isLyricProduct ? (lyricConfig.title || lyricConfig.songTitle) : undefined,
+        lyricArtist: isLyricProduct ? (lyricConfig.artistOrSubtitle || lyricConfig.artistOrNames) : undefined,
+        lyricDateOrNames: isLyricProduct ? (lyricConfig.dateOrNames || lyricConfig.dateOrInscription) : undefined,
+        lyricText: isLyricProduct ? (lyricConfig.lyrics || lyricConfig.lyricsText) : undefined,
+        lyricFontFamily: isLyricProduct ? lyricConfig.fontFamily : undefined,
+        lyricTextColor: isLyricProduct ? lyricConfig.textColor : undefined,
+        lyricLayout: isLyricProduct ? (lyricConfig.layout || selectedLyricTemplate.defaultLayout) : undefined,
+        lyricOverlayDarkness: isLyricProduct ? lyricConfig.overlayDarkness : undefined,
         panels: panels.map((p, idx) => ({
           dimension: p.dimension,
           imageUrl: panelImages[idx]?.imageUrl || null,
@@ -5454,8 +5885,8 @@ export const CanvasCustomizerPage: React.FC = () => {
       {/* ===================================================================== */}
       <div className="relative z-30">
         <CustomizerHeader
-          backLink="/canvas"
-          backLabel="Back to Canvas"
+          backLink={activeMaterial === 'acrylic' ? '/acrylic' : '/canvas'}
+          backLabel={activeMaterial === 'acrylic' ? 'Back to Acrylic' : 'Back to Canvas'}
           totalPrice={totalPrice}
           onAddToCart={handleAddToCart}
           onMenuClick={() => setMenuOpen(!menuOpen)}
@@ -5557,21 +5988,21 @@ export const CanvasCustomizerPage: React.FC = () => {
               ? `${CANVAS_PRODUCT_TYPES.length} Styles`
               : activeTab === 'UPLOAD'
               ? `${uploadedPhotos.length} Photos`
-              : activeTab === 'SELECT SIZE' && selectedProductTypeId === 'canvas-banner'
+              : activeTab === 'SELECT SIZE' && isBannerProduct
               ? `${CANVAS_BANNER_SIZE_OPTIONS.length} Sizes + Custom`
               : activeTab === 'SELECT SIZE'
               ? `${availableSizeOptions.length + (canUseCustomSize ? 1 : 0)} Options`
               : activeTab === 'EFFECTS & OPTIONS'
               ? `${getDigitalPaintingEffect(digitalPaintingConfig.selectedEffectId).name}`
               : activeTab === 'LAYOUTS & DESIGNS'
-              ? selectedProductTypeId === 'canvas-lyric'
+              ? isLyricProduct
                 ? 'Lyrics & Typography'
                 : layoutSubTab === 'LAYOUTS'
                 ? `${filteredLayoutPresets.length} Layouts`
                 : `${DESIGN_TEMPLATE_CATEGORIES.length} Categories`
               : activeTab === 'WRAP & BORDER'
               ? `${WRAP_OPTIONS.length} Options`
-              : activeTab === 'HARDWARE & FINISH' && selectedProductTypeId === 'canvas-banner'
+              : activeTab === 'HARDWARE & FINISH' && isBannerProduct
               ? `${CANVAS_BANNER_HARDWARE_OPTIONS.length} Options`
               : activeTab === 'HARDWARE & FINISH'
               ? `${HARDWARE_OPTIONS.length} Hardware`
@@ -5581,11 +6012,11 @@ export const CanvasCustomizerPage: React.FC = () => {
           {/* ---------------------------- PRODUCTS ---------------------------- */}
           {activeTab === 'PRODUCTS' && (
             <CustomizerProductSelector
-              activeMaterial="canvas"
-              products={CANVAS_PRODUCT_TYPES}
+              activeMaterial={activeMaterial}
+              products={activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES}
               selectedProductId={selectedProductTypeId}
-              onSelectProduct={selectCanvasProduct}
-              onSwitchMaterial={() => navigate('/customize/acrylic/acrylic-photo-panel')}
+              onSelectProduct={selectProduct}
+              onSwitchMaterial={handleSwitchMaterial}
             />
           )}
 
@@ -5777,8 +6208,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Lyric on Canvas Template Card in Sidebar */}
-              {selectedProductTypeId === 'canvas-lyric' && (
+              {/* Lyric on Canvas & Acrylic Template Card in Sidebar */}
+              {isLyricProduct && (
                 <div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200/90 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-wider text-[#0E4A93] flex items-center gap-1.5">
@@ -5831,8 +6262,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Create Word Art Option for Shape Canvas Products (Excludes Single Print, Quotes, Digital Painting, Bus Roll, Canvas Banner, Pop Art, Lyric) */}
-              {!activeWordArtDataUrl && isSingleOrShapedCanvas && selectedProductTypeId !== 'canvas-single' && selectedProductTypeId !== 'canvas-quotes' && selectedProductTypeId !== 'canvas-digital-painting' && selectedProductTypeId !== 'canvas-bus-roll' && selectedProductTypeId !== 'canvas-banner' && selectedProductTypeId !== 'canvas-pop-art' && selectedProductTypeId !== 'canvas-lyric' && (
+              {/* Create Word Art Option for Shape Products */}
+              {!activeWordArtDataUrl && isSingleOrShapedCanvas && !isSinglePrintCanvas && !isQuotesProduct && !isDigitalPaintingProduct && !isBusRollProduct && !isBannerProduct && !isPopArtProduct && !isLyricProduct && (
                 <button
                   type="button"
                   onClick={() => setIsWordArtPersonalizeModalOpen(true)}
@@ -6172,7 +6603,7 @@ export const CanvasCustomizerPage: React.FC = () => {
               />
             ) : (
             <div className="p-4 space-y-4">
-              {isSinglePrintCanvas || selectedProductTypeId === 'canvas-quotes' || selectedProductTypeId === 'canvas-digital-painting' || selectedProductTypeId === 'canvas-pop-art' || selectedProductTypeId === 'canvas-lyric' ? (
+              {isSinglePrintCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct ? (
                 <>
                   {/* Selected Size Summary Card */}
                   <div className="flex items-center justify-between p-3.5 bg-blue-50/70 rounded-2xl border border-blue-100 mb-3">
@@ -6455,7 +6886,7 @@ export const CanvasCustomizerPage: React.FC = () => {
 
           {/* ------------------------ LAYOUTS & DESIGNS ------------------------- */}
           {activeTab === 'LAYOUTS & DESIGNS' && (
-            selectedProductTypeId === 'canvas-lyric' ? (
+            isLyricProduct ? (
               <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
                 <LyricStudioPanel
                   config={lyricConfig}
@@ -6863,7 +7294,9 @@ export const CanvasCustomizerPage: React.FC = () => {
               {selectedProductTypeId !== 'canvas-banner' && (
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">1. Canvas Stretcher Thickness</label>
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
+                      {activeMaterial === 'acrylic' ? '1. Acrylic Thickness' : '1. Canvas Stretcher Thickness'}
+                    </label>
                     <span className="text-[11px] font-bold text-[#0E4A93]">{THICKNESS_OPTIONS.length} options</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -7157,7 +7590,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                 setViewerMode('room');
               }}
               is3DViewActive={viewerMode === '3d'}
-              onOpen3DView={productCapabilities.view3D ? () => {
+              onOpen3DView={activeMaterial !== 'acrylic' && productCapabilities.view3D ? () => {
                 if (!hasUploadedImage) return;
                 setPreset3DAngle('top-left');
                 setViewerRotation(35);
@@ -7166,7 +7599,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                 setViewerMode('3d');
               } : undefined}
               is360ViewActive={viewerMode === '360'}
-              onOpen360View={productCapabilities.view360 !== false ? () => {
+              onOpen360View={activeMaterial !== 'acrylic' && productCapabilities.view360 !== false ? () => {
                 if (!hasUploadedImage) return;
                 setViewerRotation(36);
                 setViewerTiltX(-18);
@@ -7844,7 +8277,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                         Browse Files
                                       </span>
                                     </div>
-                                  ) : selectedProductTypeId === 'canvas-lyric' ? (
+                                  ) : isLyricProduct ? (
                                     <div
                                       onClick={() => fileInputRef.current?.click()}
                                       className="w-full h-full relative cursor-pointer group select-none"
@@ -7954,8 +8387,34 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   </>
                                 )}
 
-                                {/* Lyric on Canvas typography overlay */}
-                                {selectedProductTypeId === 'canvas-lyric' && renderLyricOverlay()}
+                                {/* Lyric typography overlay for Canvas & Acrylic */}
+                                {isLyricProduct && renderLyricOverlay()}
+
+                                {/* Acrylic crystal optical surface gloss reflection & standoffs */}
+                                {activeMaterial === 'acrylic' && (
+                                  <>
+                                    <div
+                                      className="absolute inset-0 pointer-events-none z-24 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
+                                      style={{ mixBlendMode: 'screen' }}
+                                    />
+                                    {(selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && isRectangularShape && (
+                                      <>
+                                        <div className="absolute top-2.5 left-2.5 w-4 h-4 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-700/60" />
+                                        </div>
+                                        <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-700/60" />
+                                        </div>
+                                        <div className="absolute bottom-2.5 left-2.5 w-4 h-4 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-700/60" />
+                                        </div>
+                                        <div className="absolute bottom-2.5 right-2.5 w-4 h-4 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-stone-700/60" />
+                                        </div>
+                                      </>
+                                    )}
+                                  </>
+                                )}
                               </div>
                             </>
                           );
@@ -8276,14 +8735,21 @@ export const CanvasCustomizerPage: React.FC = () => {
                 }}
                 className="max-w-none pointer-events-none select-none"
               />
-              {/* Subtle physical cotton canvas weave micro-texture */}
-              <div
-                className="absolute inset-0 pointer-events-none opacity-20 mix-blend-multiply"
-                style={{
-                  backgroundImage:
-                    'repeating-linear-gradient(0deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px)'
-                }}
-              />
+              {/* Material micro-texture: cotton canvas weave for Canvas, crystal gloss for Acrylic */}
+              {activeMaterial === 'canvas' ? (
+                <div
+                  className="absolute inset-0 pointer-events-none opacity-20 mix-blend-multiply"
+                  style={{
+                    backgroundImage:
+                      'repeating-linear-gradient(0deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px)'
+                  }}
+                />
+              ) : (
+                <div
+                  className="absolute inset-0 pointer-events-none opacity-30 bg-gradient-to-tr from-transparent via-white/10 to-white/20"
+                  style={{ mixBlendMode: 'screen' }}
+                />
+              )}
             </div>
           ) : (
             <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-[10px] font-bold pointer-events-none select-none">
@@ -8292,7 +8758,7 @@ export const CanvasCustomizerPage: React.FC = () => {
           );
         };
 
-        // Shared renderer for the complete Canvas front design (artwork, layout, border, template, text, clipart)
+        // Shared renderer for the complete Canvas & Acrylic front design (artwork, layout, border, template, text, clipart)
         const renderCanvasFrontDesign = (targetWidthPx: number) => {
           const scaleFactor = targetWidthPx / 420;
           const scaledBorderPx = Math.max(0, Math.round(borderWidthPx * scaleFactor));
@@ -8302,12 +8768,12 @@ export const CanvasCustomizerPage: React.FC = () => {
               className="relative w-full h-full overflow-hidden pointer-events-none select-none"
               style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
             >
-              {panels.length === 1 && selectedProductTypeId !== 'canvas-hexagon' && selectedProductTypeId !== 'canvas-collage' ? (
+              {panels.length === 1 && !isHexagonProduct && !isCollageProduct ? (
                 <div className="relative w-full h-full">
                   {renderSlotPhoto(0, scaleFactor)}
-                  {selectedProductTypeId === 'canvas-lyric' && renderLyricOverlay(scaleFactor)}
+                  {isLyricProduct && renderLyricOverlay(scaleFactor)}
                 </div>
-              ) : selectedProductTypeId === 'canvas-hexagon' ? (
+              ) : isHexagonProduct ? (
                 (() => {
                   const layoutDef = getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   const hexLayout = layoutDef.panels;
@@ -8356,7 +8822,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                     </div>
                   );
                 })()
-              ) : selectedProductTypeId === 'canvas-split' ? (
+              ) : isSplitProduct ? (
                 (() => {
                   const layoutDef = getProductLayout('canvas-split', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   const splitPanels = layoutDef.panels;
@@ -8409,7 +8875,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                     </div>
                   );
                 })()
-              ) : selectedProductTypeId === 'canvas-mosaic' ? (
+              ) : isMosaicProduct ? (
                 (() => {
                   const layoutDef = getProductLayout('canvas-mosaic', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   const count = layoutDef.panelsCount || layoutDef.panels.length;
@@ -8481,7 +8947,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                     </div>
                   );
                 })()
-              ) : selectedProductTypeId === 'canvas-wall-art' ? (
+              ) : isWallArtProduct ? (
                 (() => {
                   const layoutDef = getProductLayout('canvas-wall-art', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   const wallPanels = layoutDef.panels;
@@ -8505,7 +8971,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                     </div>
                   );
                 })()
-              ) : selectedProductTypeId === 'canvas-collage' ? (
+              ) : isCollageProduct ? (
                 (() => {
                   const layout = getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   return (
@@ -8609,11 +9075,11 @@ export const CanvasCustomizerPage: React.FC = () => {
         // MODE 1: ROOM VIEW (Shared AcrylicRoomViewModal Component)
         // ===================================================================
         if (viewerMode === 'room') {
-          const collageLayout = selectedProductTypeId === 'canvas-collage' ? getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
-          const wallLayout = selectedProductTypeId === 'canvas-wall-art' ? getProductLayout('canvas-wall-art', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
-          const splitLayout = selectedProductTypeId === 'canvas-split' ? getProductLayout('canvas-split', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
-          const mosaicLayout = selectedProductTypeId === 'canvas-mosaic' ? getProductLayout('canvas-mosaic', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
-          const hexagonLayout = selectedProductTypeId === 'canvas-hexagon' ? getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
+          const collageLayout = isCollageProduct ? getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
+          const wallLayout = isWallArtProduct ? getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
+          const splitLayout = isSplitProduct ? getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
+          const mosaicLayout = isMosaicProduct ? getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
+          const hexagonLayout = isHexagonProduct ? getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
 
           const activeMultiLayout = collageLayout || wallLayout || splitLayout || mosaicLayout || hexagonLayout;
           const canvasRoomWidthInches = activeMultiLayout ? activeMultiLayout.overallWidthInches : geom.widthInches;
@@ -8627,9 +9093,9 @@ export const CanvasCustomizerPage: React.FC = () => {
               isOpen={true}
               onClose={() => setViewerMode(null)}
               productDimensionLabel={
-                selectedProductTypeId === 'canvas-word-art'
+                isWordArtProduct
                   ? `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`
-                  : selectedProductTypeId === 'canvas-banner'
+                  : isBannerProduct
                   ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
                   : activeMultiLayout
                   ? (activeMultiLayout.dimensionsSummary || `${activeMultiLayout.overallWidthInches}" × ${activeMultiLayout.overallHeightInches}"`)
@@ -8638,7 +9104,13 @@ export const CanvasCustomizerPage: React.FC = () => {
                   : currentSizeOption.dimensionsSummary
               }
               productId={selectedProductTypeId}
-              productName={selectedProductTypeId === 'canvas-pop-art' ? `Pop Art (${selectedPopStyle?.name || 'Pop Art'})` : selectedProductTypeId === 'canvas-lyric' ? `Lyric on Canvas (${selectedLyricTemplate.name})` : selectedProductType.name}
+              productName={
+                isPopArtProduct
+                  ? `Pop Art (${selectedPopStyle?.name || 'Pop Art'})`
+                  : isLyricProduct
+                  ? `${activeMaterial === 'acrylic' ? 'Lyric on Acrylic' : 'Lyric on Canvas'} (${selectedLyricTemplate.name})`
+                  : selectedProductType.name
+              }
               shapeId={
                 isHexagonProduct
                   ? (isHexagonCluster ? 'shape-rectangle' : 'shape-hexagon')
@@ -8649,17 +9121,17 @@ export const CanvasCustomizerPage: React.FC = () => {
                       : (canvasRoomWidthInches === canvasRoomHeightInches ? 'shape-square' : (canvasRoomWidthInches > canvasRoomHeightInches ? 'shape-landscape' : 'shape-portrait')))
               }
               shapeName={
-                selectedProductTypeId === 'canvas-word-art'
+                isWordArtProduct
                   ? (wordArtSizeOption.ratioTab || (wordArtSizeOption.widthInches === wordArtSizeOption.heightInches ? 'Square' : 'Rectangle'))
-                  : selectedProductTypeId === 'canvas-collage'
+                  : isCollageProduct
                   ? (collageLayout?.name || 'Photo Collage')
-                  : selectedProductTypeId === 'canvas-wall-art'
+                  : isWallArtProduct
                   ? (wallLayout?.name || 'Wall Display')
-                  : selectedProductTypeId === 'canvas-split'
+                  : isSplitProduct
                   ? (splitLayout?.name || `${splitLayout?.panels.length || 3} Panel Split`)
-                  : selectedProductTypeId === 'canvas-mosaic'
+                  : isMosaicProduct
                   ? (mosaicLayout?.name || 'Photo Mosaic')
-                  : selectedProductTypeId === 'canvas-hexagon'
+                  : isHexagonProduct
                   ? (hexagonLayout?.name || 'Hexagon Prints')
                   : (shapeApplies
                       ? (['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(selectedShapeId)
@@ -8667,13 +9139,15 @@ export const CanvasCustomizerPage: React.FC = () => {
                           : currentShape.name)
                       : `${panels.length} Panels`)
               }
-              widthInches={selectedProductTypeId === 'canvas-word-art' ? wordArtSizeOption.widthInches : selectedProductTypeId === 'canvas-banner' ? bannerConfig.widthInches : canvasRoomWidthInches}
-              heightInches={selectedProductTypeId === 'canvas-word-art' ? wordArtSizeOption.heightInches : selectedProductTypeId === 'canvas-banner' ? bannerConfig.heightInches : canvasRoomHeightInches}
+              widthInches={isWordArtProduct ? wordArtSizeOption.widthInches : isBannerProduct ? bannerConfig.widthInches : canvasRoomWidthInches}
+              heightInches={isWordArtProduct ? wordArtSizeOption.heightInches : isBannerProduct ? bannerConfig.heightInches : canvasRoomHeightInches}
               initialRoomState={roomViewState}
               onRoomStateChange={setRoomViewState}
-              renderProduct={() => {
+              renderProduct={(_isRoomView, productPixelSize) => {
+                const roomProductWidth = productPixelSize?.width || 240;
+
                 // 1. Hexagon Prints on Room Wall
-                if (selectedProductTypeId === 'canvas-hexagon') {
+                if (isHexagonProduct) {
                   const hexLayout = hexagonLayout || getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   return (
                     <div className="relative w-full h-full pointer-events-none select-none">
@@ -8720,6 +9194,12 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   {pSpec.label || `Hexagon ${idx + 1}`}
                                 </div>
                               )}
+                              {activeMaterial === 'acrylic' && (
+                                <div
+                                  className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
+                                  style={{ mixBlendMode: 'screen' }}
+                                />
+                              )}
                             </div>
                           </div>
                         );
@@ -8729,8 +9209,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                 }
 
                 // 1b. Wall Display on Room Wall
-                if (selectedProductTypeId === 'canvas-wall-art') {
-                  const layoutDef = getProductLayout('canvas-wall-art', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                if (isWallArtProduct) {
+                  const layoutDef = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   const wallPanels = layoutDef.panels;
                   return (
                     <div className="relative w-full h-full pointer-events-none select-none">
@@ -8769,6 +9249,12 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   {pos.label || `Panel ${idx + 1}`}
                                 </div>
                               )}
+                              {activeMaterial === 'acrylic' && (
+                                <div
+                                  className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
+                                  style={{ mixBlendMode: 'screen' }}
+                                />
+                              )}
                             </div>
                           </div>
                         );
@@ -8778,8 +9264,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                 }
 
                 // 2. Photo Mosaic on Room Wall
-                if (selectedProductTypeId === 'canvas-mosaic') {
-                  const layoutDef = getProductLayout('canvas-mosaic', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                if (isMosaicProduct) {
+                  const layoutDef = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   const count = layoutDef.panelsCount || layoutDef.panels.length;
                   const totalCols = layoutDef.cols || (count === 16 ? 4 : count === 25 ? 5 : count === 36 ? 6 : count === 20 ? 4 : count === 15 ? 3 : count === 12 && layoutDef.aspectRatio > 1 ? 4 : 3);
                   const totalRows = layoutDef.rows || Math.ceil(count / totalCols);
@@ -8842,6 +9328,12 @@ export const CanvasCustomizerPage: React.FC = () => {
                                 );
                               })}
                             </svg>
+                            {activeMaterial === 'acrylic' && (
+                              <div
+                                className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
+                                style={{ mixBlendMode: 'screen' }}
+                              />
+                            )}
                           </div>
                         ) : (
                           <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-xs font-bold">
@@ -8853,9 +9345,9 @@ export const CanvasCustomizerPage: React.FC = () => {
                   );
                 }
 
-                // 3. Split Canvas on Room Wall
-                if (selectedProductTypeId === 'canvas-split') {
-                  const layoutDef = getProductLayout('canvas-split', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                // 3. Split Canvas & Acrylic on Room Wall
+                if (isSplitProduct) {
+                  const layoutDef = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   const splitPanels = layoutDef.panels;
                   const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
                   const master = panelImages[0] || createDefaultPanel();
@@ -8899,6 +9391,12 @@ export const CanvasCustomizerPage: React.FC = () => {
                                     filter: getFilterCss(master.filter)
                                   }}
                                 />
+                                {activeMaterial === 'acrylic' && (
+                                  <div
+                                    className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
+                                    style={{ mixBlendMode: 'screen' }}
+                                  />
+                                )}
                               </div>
                             ) : (
                               <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-xs font-bold">
@@ -8913,8 +9411,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                 }
 
                 // 3b. Photo Collage on Room Wall
-                if (selectedProductTypeId === 'canvas-collage') {
-                  const collageDef = getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                if (isCollageProduct) {
+                  const collageDef = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   return (
                     <div
                       className="relative w-full h-full pointer-events-none select-none flex items-center justify-center"
@@ -8943,12 +9441,18 @@ export const CanvasCustomizerPage: React.FC = () => {
                             </div>
                           ))}
                         </div>
+                        {activeMaterial === 'acrylic' && (
+                          <div
+                            className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
+                            style={{ mixBlendMode: 'screen' }}
+                          />
+                        )}
                       </div>
                     </div>
                   );
                 }
 
-                // 4. Single Non-Rectangular or Rectangular Canvas on Room Wall
+                // 4. Single Non-Rectangular or Rectangular Canvas & Acrylic on Room Wall
                 const clipStyle = isHexagonProduct ? HEXAGON_CLIP_PATH : (isRectangularShape ? undefined : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined)));
                 const hasClip = Boolean(clipStyle);
                 const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges);
@@ -8971,13 +9475,43 @@ export const CanvasCustomizerPage: React.FC = () => {
                         WebkitClipPath: clipStyle,
                         border: hasOuterFrame && frameColor ? `4px solid ${frameColor}` : undefined,
                         boxShadow: !hasClip
-                          ? (showPhysicalEdges
+                          ? (activeMaterial === 'acrylic'
+                              ? '0 16px 32px rgba(0,0,0,0.28), 0 3px 8px rgba(0,0,0,0.18)'
+                              : showPhysicalEdges
                               ? '4px 14px 28px -2px rgba(15, 23, 42, 0.44), 1px 4px 8px -1px rgba(15, 23, 42, 0.30)'
                               : '0 12px 24px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2)')
                           : undefined
                       }}
                     >
-                      {renderCanvasFrontDesign(240)}
+                      {renderCanvasFrontDesign(roomProductWidth)}
+
+                      {/* Acrylic-specific realistic styling in Room View: glossy reflection + standoffs */}
+                      {activeMaterial === 'acrylic' && (
+                        <>
+                          {/* 4 corner metallic standoff mounts when standoff mounting is selected */}
+                          {(selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && !hasClip && (
+                            <>
+                              <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
+                                <div className="w-1 h-1 rounded-full bg-stone-700/60" />
+                              </div>
+                              <div className="absolute top-2 right-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
+                                <div className="w-1 h-1 rounded-full bg-stone-700/60" />
+                              </div>
+                              <div className="absolute bottom-2 left-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
+                                <div className="w-1 h-1 rounded-full bg-stone-700/60" />
+                              </div>
+                              <div className="absolute bottom-2 right-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
+                                <div className="w-1 h-1 rounded-full bg-stone-700/60" />
+                              </div>
+                            </>
+                          )}
+                          {/* Crystal optical acrylic glass gloss sheen */}
+                          <div
+                            className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
+                            style={{ mixBlendMode: 'screen' }}
+                          />
+                        </>
+                      )}
                     </div>
                   </div>
                 );
@@ -9021,24 +9555,24 @@ export const CanvasCustomizerPage: React.FC = () => {
                     )}
                   </h3>
                   <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-stone-500 bg-stone-100 px-2.5 py-0.5 rounded-full">
-                    <span>{selectedProductTypeId === 'canvas-pop-art' ? `Pop Art (${selectedPopStyle?.name || 'Pop Art'})` : selectedProductTypeId === 'canvas-lyric' ? `Lyric on Canvas (${selectedLyricTemplate.name})` : selectedProductType.name}</span>
+                    <span>{isPopArtProduct ? `Pop Art (${selectedPopStyle?.name || 'Pop Art'})` : isLyricProduct ? `${activeMaterial === 'acrylic' ? 'Lyric on Acrylic' : 'Lyric on Canvas'} (${selectedLyricTemplate.name})` : selectedProductType.name}</span>
                     <span>•</span>
                     <span>
-                      {selectedProductTypeId === 'canvas-word-art'
+                      {isWordArtProduct
                         ? (wordArtSizeOption.ratioTab || (wordArtSizeOption.widthInches === wordArtSizeOption.heightInches ? 'Square' : 'Rectangle'))
-                        : selectedProductTypeId === 'canvas-banner'
+                        : isBannerProduct
                         ? 'Flat Banner'
-                        : selectedProductTypeId === 'canvas-collage'
+                        : isCollageProduct
                         ? `${getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).name}`
                         : shapeApplies ? currentShape.name : `${panels.length} Panels`}
                     </span>
                     <span>•</span>
                     <span>
-                      {selectedProductTypeId === 'canvas-word-art'
+                      {isWordArtProduct
                         ? `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`
-                        : selectedProductTypeId === 'canvas-banner'
+                        : isBannerProduct
                         ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
-                        : selectedProductTypeId === 'canvas-collage'
+                        : isCollageProduct
                         ? (getProductLayout('canvas-collage', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).dimensionsSummary)
                         : isCustomSize && canUseCustomSize
                         ? `${customWidth}" × ${customHeight}"`
@@ -10328,8 +10862,8 @@ export const CanvasCustomizerPage: React.FC = () => {
                 <Link to={`/products/${catalogProduct.slug || catalogProduct.id}`} className="block px-3 py-2 text-xs font-bold text-stone-800 hover:bg-stone-100 rounded-lg">
                   ← Return to Product Page
                 </Link>
-                <Link to="/canvas" className="block px-3 py-2 text-xs font-bold text-stone-800 hover:bg-stone-100 rounded-lg">
-                  View All Canvas Products
+                <Link to={activeMaterial === 'acrylic' ? '/acrylic' : '/canvas'} className="block px-3 py-2 text-xs font-bold text-stone-800 hover:bg-stone-100 rounded-lg">
+                  {activeMaterial === 'acrylic' ? 'View All Acrylic Products' : 'View All Canvas Products'}
                 </Link>
                 <Link to="/" className="block px-3 py-2 text-xs font-bold text-stone-800 hover:bg-stone-100 rounded-lg">
                   Homepage
@@ -10354,7 +10888,7 @@ export const CanvasCustomizerPage: React.FC = () => {
       <SelectSizeShapeModal
         isOpen={isSizeShapeModalOpen}
         onClose={() => setIsSizeShapeModalOpen(false)}
-        material="canvas"
+        material={activeMaterial}
         productId={selectedProductTypeId}
         productName={selectedProductType.name}
         currentShapeId={selectedShapeId}
@@ -10369,7 +10903,7 @@ export const CanvasCustomizerPage: React.FC = () => {
       <SelectLayoutModal
         isOpen={isLayoutModalOpen}
         onClose={() => setIsLayoutModalOpen(false)}
-        material="canvas"
+        material={activeMaterial}
         productId={selectedProductTypeId}
         productName={selectedProductType.name}
         currentLayoutId={selectedLayoutId}

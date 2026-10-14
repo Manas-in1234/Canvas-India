@@ -45,7 +45,7 @@ interface AcrylicRoomViewModalProps {
   heightInches?: number;
   initialRoomState?: RoomPlacementState;
   onRoomStateChange?: (state: RoomPlacementState) => void;
-  renderProduct: (isRoomView: boolean) => React.ReactNode;
+  renderProduct: (isRoomView: boolean, productPixelSize?: { width: number; height: number }) => React.ReactNode;
 }
 
 export const PRESET_ROOMS: RoomPreset[] = [
@@ -601,7 +601,7 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
             }`}
           >
             <div className="absolute inset-0 w-full h-full pointer-events-none select-none flex items-center justify-center">
-              {renderProduct(true)}
+              {renderProduct(true, productPixelSize)}
             </div>
           </div>
         </div>
