@@ -2058,20 +2058,21 @@ export const CanvasCustomizerPage: React.FC = () => {
     3: createDefaultPanel()
   });
 
-  // When selected size changes: for Single Print, maintain 'cover' placement so the image covers edge-to-edge
-  const prevSelectedSizeIdRef = useRef(selectedSizeId);
+  // When selected size or dimensions change: maintain 'cover' placement so the image covers edge-to-edge
+  const prevSelectedSizeRef = useRef(`${selectedSizeId}-${customWidth}-${customHeight}`);
   useEffect(() => {
-    if (prevSelectedSizeIdRef.current === selectedSizeId) return;
-    prevSelectedSizeIdRef.current = selectedSizeId;
+    const key = `${selectedSizeId}-${customWidth}-${customHeight}`;
+    if (prevSelectedSizeRef.current === key) return;
+    prevSelectedSizeRef.current = key;
     setPanelImages((prev) => {
       const next: Record<number, PanelImageState> = {};
-      Object.keys(prev).forEach((key) => {
-        const idx = Number(key);
-        next[idx] = { ...prev[idx], fitMode: (isSinglePrintCanvas || selectedProductTypeId === 'canvas-lyric') ? 'cover' : 'contain', scale: 1, panX: 0, panY: 0 };
+      Object.keys(prev).forEach((k) => {
+        const idx = Number(k);
+        next[idx] = { ...prev[idx], fitMode: 'cover', scale: 1, panX: 0, panY: 0 };
       });
       return next;
     });
-  }, [selectedSizeId, isSinglePrintCanvas, selectedProductTypeId]);
+  }, [selectedSizeId, customWidth, customHeight, isSinglePrintCanvas, selectedProductTypeId]);
 
   // Currently Active Panel Slot for drag/transform/upload targeting
   const [activePanelIndex, setActivePanelIndex] = useState<number>(0);
@@ -2151,6 +2152,17 @@ export const CanvasCustomizerPage: React.FC = () => {
         }
       }
 
+      // The main photo (slot 0) drives the whole grid on multi-layout products —
+      // auto-switch to whichever layout's proportions best fit this photo.
+      if (targetSlot === 0 && LAYOUT_PRODUCT_TYPE_IDS.includes(selectedProductTypeId)) {
+        const bestLayout = pickBestMatchingLayout(selectedProductTypeId, aspectRatio);
+        if (bestLayout && bestLayout.id !== selectedLayoutId) {
+          setSelectedLayoutId(bestLayout.id);
+          setExpandedLayoutId(bestLayout.id);
+          setSelectedSizeId(bestLayout.id);
+        }
+      }
+
       setPanelImages((prev) => ({
         ...prev,
         [targetSlot]: {
@@ -2166,7 +2178,7 @@ export const CanvasCustomizerPage: React.FC = () => {
           panY: 0,
           scale: 1,
           rotation: 0,
-          fitMode: 'contain'
+          fitMode: 'cover'
         }
       }));
 
@@ -2331,6 +2343,16 @@ export const CanvasCustomizerPage: React.FC = () => {
   // Select Size & Shape Modal State
   const [isSizeShapeModalOpen, setIsSizeShapeModalOpen] = useState<boolean>(false);
   const [isLayoutModalOpen, setIsLayoutModalOpen] = useState<boolean>(() => resolveCanvasProductTypeId(productId, catalogProduct) === 'canvas-collage');
+
+  // The Select Layout modal only makes sense for products with real, distinct multi-panel
+  // arrangements. Everything else falls back to a single generic layout internally, which
+  // would just show up as a pointless 4-option "Single Full Image" picker — close it if open.
+  useEffect(() => {
+    const hasRealLayouts = ['canvas-wall-art', 'canvas-collage', 'canvas-hexagon', 'canvas-split', 'canvas-mosaic'].includes(selectedProductTypeId);
+    if (!hasRealLayouts) {
+      setIsLayoutModalOpen(false);
+    }
+  }, [selectedProductTypeId]);
 
   // Word Art Flow State (Size + Ratio -> Details / Personalization -> Product Workspace)
   const [isWordArtSizeModalOpen, setIsWordArtSizeModalOpen] = useState<boolean>(false);
@@ -2863,7 +2885,7 @@ export const CanvasCustomizerPage: React.FC = () => {
             scale: 1,
             panX: 0,
             panY: 0,
-            fitMode: (isSinglePrintCanvas || selectedProductTypeId === 'canvas-lyric') ? 'cover' : 'contain'
+            fitMode: 'cover'
           };
         }
       });
@@ -2964,6 +2986,11 @@ export const CanvasCustomizerPage: React.FC = () => {
   const [showTextModal, setShowTextModal] = useState<boolean>(false);
   const [showClipartModal, setShowClipartModal] = useState<boolean>(false);
   const stageRef = useRef<HTMLDivElement>(null);
+  const workspaceCanvasBoxRef = useRef<HTMLDivElement>(null);
+  const [workspaceBoxSize, setWorkspaceBoxSize] = useState<{ width: number; height: number }>({
+    width: 420,
+    height: 420
+  });
   const itemDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number; w: number; h: number } | null>(null);
 
   const activeTextElement = useMemo(() => {
@@ -3024,11 +3051,20 @@ export const CanvasCustomizerPage: React.FC = () => {
 
   // Dragging state for the active panel image
   const [isDragging, setIsDragging] = useState<boolean>(false);
-  const dragStartRef = useRef<{ x: number; y: number; initialPanX: number; initialPanY: number }>({
+  const dragStartRef = useRef<{
+    x: number;
+    y: number;
+    initialPanX: number;
+    initialPanY: number;
+    containerWidth: number;
+    containerHeight: number;
+  }>({
     x: 0,
     y: 0,
     initialPanX: 0,
-    initialPanY: 0
+    initialPanY: 0,
+    containerWidth: 400,
+    containerHeight: 300
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -3271,6 +3307,24 @@ export const CanvasCustomizerPage: React.FC = () => {
     });
   };
 
+  // Multi-layout canvas products where one uploaded photo spans the whole grid,
+  // so the grid's own proportions should follow the photo instead of staying fixed.
+  const LAYOUT_PRODUCT_TYPE_IDS = ['canvas-wall-art', 'canvas-collage', 'canvas-hexagon', 'canvas-split', 'canvas-mosaic'];
+
+  // Among this product's available layouts, pick the one whose overall aspect ratio
+  // is closest to the uploaded photo's own aspect ratio (log-scale so a 2:1 landscape
+  // photo and a 1:2 portrait photo are equally "off" from a 1:1 square layout).
+  const pickBestMatchingLayout = (productTypeId: string, photoAspectRatio: number) => {
+    const layouts = getProductLayouts(productTypeId);
+    if (!layouts.length) return null;
+    return layouts.reduce((best, l) =>
+      Math.abs(Math.log(l.aspectRatio) - Math.log(photoAspectRatio)) <
+      Math.abs(Math.log(best.aspectRatio) - Math.log(photoAspectRatio))
+        ? l
+        : best
+    , layouts[0]);
+  };
+
   // File Upload Handler
   // Files go to the frame that asked for them; extra files fill the following frames, the rest just join the uploads tray.
   const handleFilesUpload = (files: FileList | File[] | null, startIdx: number = uploadTargetRef.current) => {
@@ -3309,6 +3363,16 @@ export const CanvasCustomizerPage: React.FC = () => {
             setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
             if (i === 0 || target < panels.length) {
               const idx = target < panels.length ? target : startIdx;
+              // The main photo (slot 0) drives the whole grid on multi-layout products —
+              // auto-switch to whichever layout's proportions best fit this photo.
+              if (idx === 0 && LAYOUT_PRODUCT_TYPE_IDS.includes(selectedProductTypeId)) {
+                const bestLayout = pickBestMatchingLayout(selectedProductTypeId, meta.aspectRatio);
+                if (bestLayout && bestLayout.id !== selectedLayoutId) {
+                  setSelectedLayoutId(bestLayout.id);
+                  setExpandedLayoutId(bestLayout.id);
+                  setSelectedSizeId(bestLayout.id);
+                }
+              }
               setPanelImages((prev) => ({
                 ...prev,
                 [idx]: {
@@ -3367,7 +3431,7 @@ export const CanvasCustomizerPage: React.FC = () => {
           rotation: 0,
           panX: 0,
           panY: 0,
-          fitMode: (isSinglePrintCanvas || selectedProductTypeId === 'canvas-lyric') ? 'cover' : 'contain'
+          fitMode: 'cover'
         }
       }));
     };
@@ -3584,8 +3648,101 @@ export const CanvasCustomizerPage: React.FC = () => {
     });
   };
 
-  const handleZoomIn = () => updateActivePanelTransform((curr) => ({ scale: Math.min(3, curr.scale + 0.15) }));
-  const handleZoomOut = () => updateActivePanelTransform((curr) => ({ scale: Math.max(1, curr.scale - 0.15) }));
+  // Helper to compute exact rendered dimensions and pan bounds for cover scaling
+  const computePanBounds = (
+    scale: number,
+    panelIdx: number = activePanelIndex,
+    explicitWidth?: number,
+    explicitHeight?: number
+  ) => {
+    const curr = panelImages[panelIdx];
+    const imgMeta = curr?.uploadedImage;
+    const natWidth = imgMeta?.width || 1200;
+    const natHeight = imgMeta?.height || 800;
+    const imgAspect = natWidth / Math.max(1, natHeight);
+
+    let containerWidth = explicitWidth;
+    let containerHeight = explicitHeight;
+
+    if (!containerWidth || !containerHeight) {
+      if (workspaceCanvasBoxRef.current) {
+        const rect = workspaceCanvasBoxRef.current.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          containerWidth = rect.width;
+          containerHeight = rect.height;
+        }
+      }
+    }
+
+    if (!containerWidth || !containerHeight) {
+      if (stageRef.current) {
+        const rect = stageRef.current.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          const baseW = Math.min(480, rect.width * 0.75);
+          containerWidth = printAspect >= 1 ? baseW : baseW * printAspect;
+          containerHeight = printAspect >= 1 ? baseW / printAspect : baseW;
+        }
+      }
+    }
+
+    const cWidth = containerWidth && containerWidth > 0 ? containerWidth : (printAspect >= 1 ? 400 * printAspect : 400);
+    const cHeight = containerHeight && containerHeight > 0 ? containerHeight : (printAspect >= 1 ? 400 : 400 / printAspect);
+    const frameAspect = cWidth / cHeight;
+
+    let baseWidth = cWidth;
+    let baseHeight = cHeight;
+
+    if (imgAspect > frameAspect) {
+      baseHeight = cHeight;
+      baseWidth = cHeight * imgAspect;
+    } else {
+      baseWidth = cWidth;
+      baseHeight = cWidth / imgAspect;
+    }
+
+    const renderedWidth = baseWidth * scale;
+    const renderedHeight = baseHeight * scale;
+
+    const maxPanX = Math.max(0, (renderedWidth - cWidth) / 2);
+    const maxPanY = Math.max(0, (renderedHeight - cHeight) / 2);
+
+    return {
+      maxPanX,
+      maxPanY,
+      renderedWidth,
+      renderedHeight,
+      containerWidth: cWidth,
+      containerHeight: cHeight,
+      isWiderThanFrame: imgAspect > frameAspect,
+      isTallerThanFrame: imgAspect < frameAspect,
+      isEqualAspect: Math.abs(imgAspect - frameAspect) < 0.01
+    };
+  };
+
+  const handleZoomIn = () => {
+    updateActivePanelTransform((curr) => {
+      const newScale = Math.min(3, +(curr.scale + 0.15).toFixed(2));
+      const { maxPanX, maxPanY } = computePanBounds(newScale, activePanelIndex);
+      return {
+        scale: newScale,
+        panX: maxPanX > 0.5 ? Math.max(-maxPanX, Math.min(maxPanX, curr.panX)) : 0,
+        panY: maxPanY > 0.5 ? Math.max(-maxPanY, Math.min(maxPanY, curr.panY)) : 0
+      };
+    });
+  };
+
+  const handleZoomOut = () => {
+    updateActivePanelTransform((curr) => {
+      const newScale = Math.max(1, +(curr.scale - 0.15).toFixed(2));
+      const { maxPanX, maxPanY } = computePanBounds(newScale, activePanelIndex);
+      return {
+        scale: newScale,
+        panX: maxPanX > 0.5 ? Math.max(-maxPanX, Math.min(maxPanX, curr.panX)) : 0,
+        panY: maxPanY > 0.5 ? Math.max(-maxPanY, Math.min(maxPanY, curr.panY)) : 0
+      };
+    });
+  };
+
   const handleRotateLeft = () => updateActivePanelTransform((curr) => ({ rotation: (curr.rotation - 90 + 360) % 360 }));
   const handleRotateRight = () => updateActivePanelTransform((curr) => ({ rotation: (curr.rotation + 90) % 360 }));
   const handleRotate90 = handleRotateRight;
@@ -3706,33 +3863,44 @@ export const CanvasCustomizerPage: React.FC = () => {
     const curr = panelImages[panelIdx];
     if (!curr?.imageUrl) return;
 
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const cWidth = rect.width > 0 ? rect.width : 400;
+    const cHeight = rect.height > 0 ? rect.height : 300;
+
     setIsDragging(true);
-    dragStartRef.current = { x: e.clientX, y: e.clientY, initialPanX: curr.panX, initialPanY: curr.panY };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    dragStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      initialPanX: curr.panX,
+      initialPanY: curr.panY,
+      containerWidth: cWidth,
+      containerHeight: cHeight
+    };
+
+    try {
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // safe ignore
+    }
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging) return;
     const deltaX = e.clientX - dragStartRef.current.x;
     const deltaY = e.clientY - dragStartRef.current.y;
-    const { initialPanX, initialPanY } = dragStartRef.current;
+    const { initialPanX, initialPanY, containerWidth, containerHeight } = dragStartRef.current;
 
     const curr = panelImages[activePanelIndex];
     const scale = curr?.scale || 1;
-    const imgMeta = curr?.uploadedImage;
-    const natWidth = imgMeta?.width || 1200;
-    const natHeight = imgMeta?.height || 800;
-    const imgAspect = natWidth / Math.max(1, natHeight);
 
-    // Calculate maximum pan bounds so printable surface remains covered without white gaps
-    const overflowX = Math.max(0, Math.round(180 * (scale - 1) + (imgAspect > printAspect ? ((imgAspect / printAspect) - 1) * 160 * scale : 0)));
-    const overflowY = Math.max(0, Math.round(180 * (scale - 1) + (imgAspect < printAspect ? ((printAspect / imgAspect) - 1) * 160 * scale : 0)));
+    const { maxPanX, maxPanY } = computePanBounds(scale, activePanelIndex, containerWidth, containerHeight);
 
     const rawPanX = initialPanX + deltaX;
     const rawPanY = initialPanY + deltaY;
 
-    const clampedPanX = overflowX > 0 ? Math.max(-overflowX, Math.min(overflowX, rawPanX)) : 0;
-    const clampedPanY = overflowY > 0 ? Math.max(-overflowY, Math.min(overflowY, rawPanY)) : 0;
+    // Constrain sliding strictly along the overflow direction(s)
+    const clampedPanX = maxPanX > 0.5 ? Math.max(-maxPanX, Math.min(maxPanX, rawPanX)) : 0;
+    const clampedPanY = maxPanY > 0.5 ? Math.max(-maxPanY, Math.min(maxPanY, rawPanY)) : 0;
 
     updateActivePanelTransform(() => ({
       panX: clampedPanX,
@@ -3827,6 +3995,26 @@ export const CanvasCustomizerPage: React.FC = () => {
     customHeight,
     panels
   ]);
+
+  // Continuously track physical workspace canvas dimensions for pixel-perfect edge wrap synchronization
+  useEffect(() => {
+    const el = workspaceCanvasBoxRef.current;
+    if (!el) return;
+    const updateSize = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setWorkspaceBoxSize({ width: Math.round(rect.width), height: Math.round(rect.height) });
+      }
+    };
+    updateSize();
+    const ro = new ResizeObserver(updateSize);
+    ro.observe(el);
+    window.addEventListener('resize', updateSize);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', updateSize);
+    };
+  }, [printAspect, selectedProductTypeId, selectedShapeId, selectedSizeId]);
 
   const currentLayout = useMemo(() => {
     return STANDARD_LAYOUT_PRESETS.find((l) => l.id === selectedLayoutId) || STANDARD_LAYOUT_PRESETS[0];
@@ -4079,7 +4267,7 @@ export const CanvasCustomizerPage: React.FC = () => {
               </div>
             )}
             {panelSpec?.dimension && (
-              <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
+              <div className="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none truncate text-center">
                 {panelSpec.dimension}
               </div>
             )}
@@ -5071,7 +5259,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                   )}
 
                   {pSpec.dimension && (
-                    <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
+                    <div className="absolute bottom-1.5 left-1.5 right-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none truncate text-center">
                       {pSpec.dimension}
                     </div>
                   )}
@@ -5181,7 +5369,7 @@ export const CanvasCustomizerPage: React.FC = () => {
               </div>
             )}
             {pSpec.dimension && (
-              <div className="absolute bottom-1 left-1 bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold px-1 py-0.5 rounded z-20 pointer-events-none">
+              <div className="absolute bottom-1 left-1 right-1 bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold px-1 py-0.5 rounded z-20 pointer-events-none truncate text-center">
                 {pSpec.dimension}
               </div>
             )}
@@ -6065,7 +6253,17 @@ export const CanvasCustomizerPage: React.FC = () => {
                             onClick={() => {
                               setIsCustomSize(false);
                               setSelectedSizeId(opt.id);
-                              setSelectedShapeId(width === height ? 'shape-square' : 'shape-rectangle');
+                              if (isSinglePrintCanvas) {
+                                if (width === height) {
+                                  setSelectedShapeId('shape-square');
+                                } else if (width > height) {
+                                  setSelectedShapeId('shape-landscape');
+                                } else {
+                                  setSelectedShapeId('shape-portrait');
+                                }
+                              } else {
+                                setSelectedShapeId(width === height ? 'shape-square' : 'shape-rectangle');
+                              }
                             }}
                             className={`group relative bg-white p-2.5 rounded-xl flex flex-col items-center justify-between transition-all cursor-pointer min-h-[110px] ${
                               isSelected
@@ -7238,6 +7436,7 @@ export const CanvasCustomizerPage: React.FC = () => {
 
                       {/* PHYSICAL CANVAS CONTAINER with clear visible edge & thickness */}
                       <div
+                        ref={workspaceCanvasBoxRef}
                         className="relative"
                         style={{
                           aspectRatio: String(printAspect),
@@ -7248,6 +7447,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                         {(() => {
                           const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges);
                           const isWhiteEdge = selectedWrapId === 'white-border';
+                          const isImageWrapped = selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge';
                           const imgMeta = panelImages[0]?.uploadedImage;
                           const natWidth = imgMeta?.width || 1200;
                           const natHeight = imgMeta?.height || 800;
@@ -7270,9 +7470,45 @@ export const CanvasCustomizerPage: React.FC = () => {
                                       bottom: '100%',
                                       height: `${visibleDepthPx}px`,
                                       borderBottom: 'none',
-                                      backgroundColor: '#FFFFFF'
+                                      backgroundColor: isBlackBorderWrap ? '#0F172A' : '#FFFFFF'
                                     }}
-                                  />
+                                  >
+                                    {panelImages[0]?.imageUrl && isImageWrapped && (
+                                      <div
+                                        className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center"
+                                        style={{
+                                          top: '100%',
+                                          left: 0,
+                                          width: '100%',
+                                          height: `${workspaceBoxSize.height}px`,
+                                          transformOrigin: 'top center',
+                                          transform: 'scaleY(-1)'
+                                        }}
+                                      >
+                                        <img
+                                          src={(selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl) ? popArtConfig.processedImageUrl : panelImages[0].imageUrl}
+                                          alt=""
+                                          style={{
+                                            width: isWiderThanFrame ? 'auto' : '100%',
+                                            height: isWiderThanFrame ? '100%' : 'auto',
+                                            minWidth: '100%',
+                                            minHeight: '100%',
+                                            maxWidth: 'none',
+                                            maxHeight: 'none',
+                                            flexShrink: 0,
+                                            aspectRatio: `${natWidth} / ${natHeight}`,
+                                            objectFit: 'cover',
+                                            objectPosition: 'center center',
+                                            transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                            transformOrigin: 'center center',
+                                            filter: `${getFilterCss(panelImages[0].filter)} brightness(0.95)`,
+                                            transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                                          }}
+                                          className="pointer-events-none select-none max-w-none"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
 
                                   {/* Left Physical Thickness Edge Guide */}
                                   <div
@@ -7281,9 +7517,45 @@ export const CanvasCustomizerPage: React.FC = () => {
                                       right: '100%',
                                       width: `${visibleDepthPx}px`,
                                       borderRight: 'none',
-                                      backgroundColor: '#FFFFFF'
+                                      backgroundColor: isBlackBorderWrap ? '#0F172A' : '#FFFFFF'
                                     }}
-                                  />
+                                  >
+                                    {panelImages[0]?.imageUrl && isImageWrapped && (
+                                      <div
+                                        className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center"
+                                        style={{
+                                          left: '100%',
+                                          top: 0,
+                                          width: `${workspaceBoxSize.width}px`,
+                                          height: '100%',
+                                          transformOrigin: 'left center',
+                                          transform: 'scaleX(-1)'
+                                        }}
+                                      >
+                                        <img
+                                          src={(selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl) ? popArtConfig.processedImageUrl : panelImages[0].imageUrl}
+                                          alt=""
+                                          style={{
+                                            width: isWiderThanFrame ? 'auto' : '100%',
+                                            height: isWiderThanFrame ? '100%' : 'auto',
+                                            minWidth: '100%',
+                                            minHeight: '100%',
+                                            maxWidth: 'none',
+                                            maxHeight: 'none',
+                                            flexShrink: 0,
+                                            aspectRatio: `${natWidth} / ${natHeight}`,
+                                            objectFit: 'cover',
+                                            objectPosition: 'center center',
+                                            transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                            transformOrigin: 'center center',
+                                            filter: `${getFilterCss(panelImages[0].filter)} brightness(0.9)`,
+                                            transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                                          }}
+                                          className="pointer-events-none select-none max-w-none"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
 
                                   {/* Bottom Physical Thickness Edge Guide */}
                                   <div
@@ -7292,10 +7564,46 @@ export const CanvasCustomizerPage: React.FC = () => {
                                       top: '100%',
                                       height: `${visibleDepthPx}px`,
                                       borderTop: 'none',
-                                      backgroundColor: '#FFFFFF',
+                                      backgroundColor: isBlackBorderWrap ? '#0F172A' : '#FFFFFF',
                                       boxShadow: '0 12px 20px -4px rgba(15, 23, 42, 0.12)'
                                     }}
-                                  />
+                                  >
+                                    {panelImages[0]?.imageUrl && isImageWrapped && (
+                                      <div
+                                        className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center"
+                                        style={{
+                                          bottom: '100%',
+                                          left: 0,
+                                          width: '100%',
+                                          height: `${workspaceBoxSize.height}px`,
+                                          transformOrigin: 'bottom center',
+                                          transform: 'scaleY(-1)'
+                                        }}
+                                      >
+                                        <img
+                                          src={(selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl) ? popArtConfig.processedImageUrl : panelImages[0].imageUrl}
+                                          alt=""
+                                          style={{
+                                            width: isWiderThanFrame ? 'auto' : '100%',
+                                            height: isWiderThanFrame ? '100%' : 'auto',
+                                            minWidth: '100%',
+                                            minHeight: '100%',
+                                            maxWidth: 'none',
+                                            maxHeight: 'none',
+                                            flexShrink: 0,
+                                            aspectRatio: `${natWidth} / ${natHeight}`,
+                                            objectFit: 'cover',
+                                            objectPosition: 'center center',
+                                            transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                            transformOrigin: 'center center',
+                                            filter: `${getFilterCss(panelImages[0].filter)} brightness(0.85)`,
+                                            transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                                          }}
+                                          className="pointer-events-none select-none max-w-none"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
 
                                   {/* Right Physical Thickness Edge Guide */}
                                   <div
@@ -7304,97 +7612,46 @@ export const CanvasCustomizerPage: React.FC = () => {
                                       left: '100%',
                                       width: `${visibleDepthPx}px`,
                                       borderLeft: 'none',
-                                      backgroundColor: '#FFFFFF'
-                                    }}
-                                  />
-                                </>
-                              )}
-
-                              {/* CONTINUOUS IMAGE WRAPPER FOR EDGE-SUPPORTED PRODUCTS:
-                                  Encompasses front face + 4 flaps via inset -visibleDepthPx.
-                                  Clipped to cross shape so zoomed/panned image naturally extends into the white flaps!
-                              */}
-                              {showPhysicalEdges && panelImages[0]?.imageUrl && (
-                                <div
-                                  className="absolute pointer-events-none z-0"
-                                  style={{
-                                    top: `-${visibleDepthPx}px`,
-                                    bottom: `-${visibleDepthPx}px`,
-                                    left: `-${visibleDepthPx}px`,
-                                    right: `-${visibleDepthPx}px`,
-                                    clipPath: crossClipPath,
-                                    WebkitClipPath: crossClipPath,
-                                    backgroundColor: '#FFFFFF'
-                                  }}
-                                >
-                                  {/* Front Face white backing */}
-                                  <div
-                                    className="absolute bg-white"
-                                    style={{
-                                      top: `${visibleDepthPx}px`,
-                                      bottom: `${visibleDepthPx}px`,
-                                      left: `${visibleDepthPx}px`,
-                                      right: `${visibleDepthPx}px`
-                                    }}
-                                  />
-                                  {/* The ONE continuous image layer: when 'cover' and image-wrapped, spans full product (front + flaps); when white-border or contain, spans front face */}
-                                  <div
-                                    className="absolute flex items-center justify-center pointer-events-none"
-                                    style={{
-                                      top: (panelImages[0].fitMode === 'cover' && !isWhiteEdge) ? 0 : `${visibleDepthPx}px`,
-                                      bottom: (panelImages[0].fitMode === 'cover' && !isWhiteEdge) ? 0 : `${visibleDepthPx}px`,
-                                      left: (panelImages[0].fitMode === 'cover' && !isWhiteEdge) ? 0 : `${visibleDepthPx}px`,
-                                      right: (panelImages[0].fitMode === 'cover' && !isWhiteEdge) ? 0 : `${visibleDepthPx}px`,
-                                      overflow: 'visible'
+                                      backgroundColor: isBlackBorderWrap ? '#0F172A' : '#FFFFFF'
                                     }}
                                   >
-                                    <img
-                                      src={(selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl) ? popArtConfig.processedImageUrl : panelImages[0].imageUrl}
-                                      alt="Canvas Print"
-                                      draggable={false}
-                                      onLoad={(e) => {
-                                        const imgEl = e.currentTarget;
-                                        if (imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0 && !imgMeta?.width) {
-                                          setPanelImages((prev) => {
-                                            const cur = prev[0];
-                                            if (!cur) return prev;
-                                            return {
-                                              ...prev,
-                                              [0]: {
-                                                ...cur,
-                                                uploadedImage: {
-                                                  originalSrc: cur.imageUrl || '',
-                                                  width: imgEl.naturalWidth,
-                                                  height: imgEl.naturalHeight,
-                                                  aspectRatio: imgEl.naturalWidth / imgEl.naturalHeight
-                                                }
-                                              }
-                                            };
-                                          });
-                                        }
-                                      }}
-                                      style={{
-                                        width: panelImages[0].fitMode === 'cover'
-                                          ? '100%'
-                                          : (isWiderThanFrame ? '100%' : 'auto'),
-                                        height: panelImages[0].fitMode === 'cover'
-                                          ? '100%'
-                                          : (isWiderThanFrame ? 'auto' : '100%'),
-                                        minWidth: panelImages[0].fitMode === 'cover' ? '100%' : undefined,
-                                        minHeight: panelImages[0].fitMode === 'cover' ? '100%' : undefined,
-                                        maxWidth: panelImages[0].fitMode === 'cover' ? 'none' : '100%',
-                                        maxHeight: panelImages[0].fitMode === 'cover' ? 'none' : '100%',
-                                        aspectRatio: `${natWidth} / ${natHeight}`,
-                                        objectFit: panelImages[0].fitMode === 'cover' ? 'cover' : 'contain',
-                                        transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                                        transformOrigin: 'center center',
-                                        filter: getFilterCss(panelImages[0].filter),
-                                        transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                                      }}
-                                      className="pointer-events-none select-none max-w-none"
-                                    />
+                                    {panelImages[0]?.imageUrl && isImageWrapped && (
+                                      <div
+                                        className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center"
+                                        style={{
+                                          right: '100%',
+                                          top: 0,
+                                          width: `${workspaceBoxSize.width}px`,
+                                          height: '100%',
+                                          transformOrigin: 'right center',
+                                          transform: 'scaleX(-1)'
+                                        }}
+                                      >
+                                        <img
+                                          src={(selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl) ? popArtConfig.processedImageUrl : panelImages[0].imageUrl}
+                                          alt=""
+                                          style={{
+                                            width: isWiderThanFrame ? 'auto' : '100%',
+                                            height: isWiderThanFrame ? '100%' : 'auto',
+                                            minWidth: '100%',
+                                            minHeight: '100%',
+                                            maxWidth: 'none',
+                                            maxHeight: 'none',
+                                            flexShrink: 0,
+                                            aspectRatio: `${natWidth} / ${natHeight}`,
+                                            objectFit: 'cover',
+                                            objectPosition: 'center center',
+                                            transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                            transformOrigin: 'center center',
+                                            filter: `${getFilterCss(panelImages[0].filter)} brightness(0.88)`,
+                                            transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                                          }}
+                                          className="pointer-events-none select-none max-w-none"
+                                        />
+                                      </div>
+                                    )}
                                   </div>
-                                </div>
+                                </>
                               )}
 
                               {/* 2. FRONT CANVAS SURFACE */}
@@ -7409,25 +7666,20 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   selectedProductTypeId === 'canvas-banner'
                                     ? 'border border-stone-300 shadow-md'
                                     : showPhysicalEdges
-                                    ? (panelImages[0]?.imageUrl && !isWhiteEdge ? 'bg-transparent' : 'bg-white')
-                                    : 'bg-white'
-                                } transition-all cursor-pointer group ${
-                                  selectedProductTypeId === 'canvas-banner'
-                                    ? 'overflow-hidden'
-                                    : showPhysicalEdges
-                                    ? 'border border-stone-300'
-                                    : 'shadow-lg overflow-hidden'
-                                } ${
+                                    ? 'border border-stone-300 shadow-xs'
+                                    : 'shadow-lg'
+                                } bg-white transition-all cursor-pointer group ${
                                   activePanelIndex === 0 ? 'ring-2 ring-[#0E4A93]/50' : ''
-                                }`}
+                                } overflow-hidden`}
                                 style={{
-                                  backgroundColor: selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : undefined,
+                                  backgroundColor: selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : '#FFFFFF',
                                   clipPath: (showPhysicalEdges || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? undefined
                                     : currentShape.clipPathStyle,
                                   WebkitClipPath: (showPhysicalEdges || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? undefined
-                                    : currentShape.clipPathStyle
+                                    : currentShape.clipPathStyle,
+                                  touchAction: 'none'
                                 }}
                               >
                                 {/* Pop Art Live Processing Spinner Overlay */}
@@ -7488,9 +7740,9 @@ export const CanvasCustomizerPage: React.FC = () => {
                                   <div className="absolute inset-0 z-30 bg-[#0E4A93]/20 border-4 border-dashed border-[#0E4A93] pointer-events-none" />
                                 )}
 
-                                {/* For products without physical edges (Round, Heart, etc.) OR when white edges are active on edge-supported products, render image directly here inside the front container */}
-                                {(!showPhysicalEdges || isWhiteEdge) && panelImages[0]?.imageUrl && (
-                                  <div className="w-full h-full overflow-hidden relative flex items-center justify-center">
+                                {/* Front Canvas Print Image */}
+                                {panelImages[0]?.imageUrl && (
+                                  <div className="w-full h-full overflow-hidden relative flex items-center justify-center pointer-events-none select-none">
                                     <img
                                       src={(selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl) ? popArtConfig.processedImageUrl : panelImages[0].imageUrl}
                                       alt="Canvas Print"
@@ -7517,18 +7769,16 @@ export const CanvasCustomizerPage: React.FC = () => {
                                         }
                                       }}
                                       style={{
-                                        width: panelImages[0].fitMode === 'cover'
-                                          ? (isWiderThanFrame ? 'auto' : '100%')
-                                          : (isWiderThanFrame ? '100%' : 'auto'),
-                                        height: panelImages[0].fitMode === 'cover'
-                                          ? (isWiderThanFrame ? '100%' : 'auto')
-                                          : (isWiderThanFrame ? 'auto' : '100%'),
-                                        minWidth: panelImages[0].fitMode === 'cover' ? '100%' : undefined,
-                                        minHeight: panelImages[0].fitMode === 'cover' ? '100%' : undefined,
-                                        maxWidth: panelImages[0].fitMode === 'cover' ? 'none' : '100%',
-                                        maxHeight: panelImages[0].fitMode === 'cover' ? 'none' : '100%',
+                                        width: isWiderThanFrame ? 'auto' : '100%',
+                                        height: isWiderThanFrame ? '100%' : 'auto',
+                                        minWidth: '100%',
+                                        minHeight: '100%',
+                                        maxWidth: 'none',
+                                        maxHeight: 'none',
+                                        flexShrink: 0,
                                         aspectRatio: `${natWidth} / ${natHeight}`,
-                                        objectFit: panelImages[0].fitMode === 'cover' ? 'cover' : 'contain',
+                                        objectFit: 'cover',
+                                        objectPosition: 'center center',
                                         transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                         transformOrigin: 'center center',
                                         filter: getFilterCss(panelImages[0].filter),
@@ -7992,6 +8242,12 @@ export const CanvasCustomizerPage: React.FC = () => {
           const flt = p?.filter || 'original';
           const isContain = p?.fitMode === 'contain';
 
+          const slotMeta = p?.uploadedImage || panelImages[0]?.uploadedImage;
+          const slotNatWidth = slotMeta?.width || 1200;
+          const slotNatHeight = slotMeta?.height || 800;
+          const slotImgAspect = slotMeta?.aspectRatio || (slotNatWidth / Math.max(1, slotNatHeight));
+          const slotIsWider = slotImgAspect >= previewAspect;
+
           return url ? (
             <div
               className="w-full h-full overflow-hidden relative flex items-center justify-center bg-stone-100 pointer-events-none select-none"
@@ -8002,13 +8258,23 @@ export const CanvasCustomizerPage: React.FC = () => {
                 alt={`Canvas Panel ${idx + 1}`}
                 draggable={false}
                 style={{
-                  filter: getFilterCss(flt),
+                  width: slotIsWider ? 'auto' : '100%',
+                  height: slotIsWider ? '100%' : 'auto',
+                  minWidth: '100%',
+                  minHeight: '100%',
+                  maxWidth: 'none',
+                  maxHeight: 'none',
+                  flexShrink: 0,
+                  aspectRatio: `${slotNatWidth} / ${slotNatHeight}`,
                   objectFit: isContain ? 'contain' : 'cover',
+                  objectPosition: 'center center',
+                  filter: getFilterCss(flt),
                   transform: `translate(${panX}px, ${panY}px) scale(${sc}) rotate(${rot}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                  transformOrigin: 'center center',
                   backfaceVisibility: 'hidden',
                   WebkitBackfaceVisibility: 'hidden'
                 }}
-                className={`max-w-none w-full h-full ${isContain ? 'object-contain' : 'object-cover'} pointer-events-none select-none`}
+                className="max-w-none pointer-events-none select-none"
               />
               {/* Subtle physical cotton canvas weave micro-texture */}
               <div
@@ -8373,7 +8639,15 @@ export const CanvasCustomizerPage: React.FC = () => {
               }
               productId={selectedProductTypeId}
               productName={selectedProductTypeId === 'canvas-pop-art' ? `Pop Art (${selectedPopStyle?.name || 'Pop Art'})` : selectedProductTypeId === 'canvas-lyric' ? `Lyric on Canvas (${selectedLyricTemplate.name})` : selectedProductType.name}
-              shapeId={isHexagonProduct ? (isHexagonCluster ? 'shape-rectangle' : 'shape-hexagon') : (shapeApplies ? selectedShapeId : 'shape-rectangle')}
+              shapeId={
+                isHexagonProduct
+                  ? (isHexagonCluster ? 'shape-rectangle' : 'shape-hexagon')
+                  : (shapeApplies
+                      ? (['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(selectedShapeId)
+                          ? (canvasRoomWidthInches === canvasRoomHeightInches ? 'shape-square' : (canvasRoomWidthInches > canvasRoomHeightInches ? 'shape-landscape' : 'shape-portrait'))
+                          : selectedShapeId)
+                      : (canvasRoomWidthInches === canvasRoomHeightInches ? 'shape-square' : (canvasRoomWidthInches > canvasRoomHeightInches ? 'shape-landscape' : 'shape-portrait')))
+              }
               shapeName={
                 selectedProductTypeId === 'canvas-word-art'
                   ? (wordArtSizeOption.ratioTab || (wordArtSizeOption.widthInches === wordArtSizeOption.heightInches ? 'Square' : 'Rectangle'))
@@ -8387,7 +8661,11 @@ export const CanvasCustomizerPage: React.FC = () => {
                   ? (mosaicLayout?.name || 'Photo Mosaic')
                   : selectedProductTypeId === 'canvas-hexagon'
                   ? (hexagonLayout?.name || 'Hexagon Prints')
-                  : (shapeApplies ? currentShape.name : `${panels.length} Panels`)
+                  : (shapeApplies
+                      ? (['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(selectedShapeId)
+                          ? (canvasRoomWidthInches === canvasRoomHeightInches ? 'Square' : (canvasRoomWidthInches > canvasRoomHeightInches ? 'Landscape' : 'Portrait'))
+                          : currentShape.name)
+                      : `${panels.length} Panels`)
               }
               widthInches={selectedProductTypeId === 'canvas-word-art' ? wordArtSizeOption.widthInches : selectedProductTypeId === 'canvas-banner' ? bannerConfig.widthInches : canvasRoomWidthInches}
               heightInches={selectedProductTypeId === 'canvas-word-art' ? wordArtSizeOption.heightInches : selectedProductTypeId === 'canvas-banner' ? bannerConfig.heightInches : canvasRoomHeightInches}
@@ -8673,13 +8951,14 @@ export const CanvasCustomizerPage: React.FC = () => {
                 // 4. Single Non-Rectangular or Rectangular Canvas on Room Wall
                 const clipStyle = isHexagonProduct ? HEXAGON_CLIP_PATH : (isRectangularShape ? undefined : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined)));
                 const hasClip = Boolean(clipStyle);
+                const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges);
 
                 return (
                   <div
                     className="relative w-full h-full pointer-events-none select-none flex items-center justify-center"
                     style={{
                       filter: hasClip
-                        ? 'drop-shadow(0 12px 20px rgba(0,0,0,0.32)) drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
+                        ? 'drop-shadow(0 14px 22px rgba(0,0,0,0.36)) drop-shadow(0 3px 6px rgba(0,0,0,0.22))'
                         : undefined
                     }}
                   >
@@ -8691,10 +8970,14 @@ export const CanvasCustomizerPage: React.FC = () => {
                         clipPath: clipStyle,
                         WebkitClipPath: clipStyle,
                         border: hasOuterFrame && frameColor ? `4px solid ${frameColor}` : undefined,
-                        boxShadow: !hasClip ? '0 12px 24px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2)' : undefined
+                        boxShadow: !hasClip
+                          ? (showPhysicalEdges
+                              ? '4px 14px 28px -2px rgba(15, 23, 42, 0.44), 1px 4px 8px -1px rgba(15, 23, 42, 0.30)'
+                              : '0 12px 24px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2)')
+                          : undefined
                       }}
                     >
-                      {renderCanvasFrontDesign(180)}
+                      {renderCanvasFrontDesign(240)}
                     </div>
                   </div>
                 );
@@ -8808,6 +9091,25 @@ export const CanvasCustomizerPage: React.FC = () => {
                 thumbW = Math.round(Math.max(36, thumbW));
                 thumbH = Math.round(Math.max(36, thumbH));
                 const thumbDepthPx = Math.max(7, Math.round(depthPx * (thumbW / cardW)));
+
+                // Scaled image placement parameters for synchronized 3D and 360 edge wraps
+                const viewerImgMeta = panelImages[0]?.uploadedImage;
+                const viewerNatWidth = viewerImgMeta?.width || 1200;
+                const viewerNatHeight = viewerImgMeta?.height || 800;
+                const viewerImgAspect = viewerImgMeta?.aspectRatio || (viewerNatWidth / Math.max(1, viewerNatHeight));
+                const viewerIsWiderThanFrame = viewerImgAspect >= previewAspect;
+
+                const activePanel = panelImages[0] || createDefaultPanel();
+                const scaleFactor = cardW / Math.max(1, workspaceBoxSize.width || 420);
+                const viewerPanX = (activePanel.panX || 0) * scaleFactor;
+                const viewerPanY = (activePanel.panY || 0) * scaleFactor;
+                const viewerScale = activePanel.scale || 1;
+                const viewerRot = activePanel.rotation || 0;
+                const viewerFilter = activePanel.filter || 'original';
+
+                const thumbScaleFactor = thumbW / Math.max(1, workspaceBoxSize.width || 420);
+                const thumbPanX = (activePanel.panX || 0) * thumbScaleFactor;
+                const thumbPanY = (activePanel.panY || 0) * thumbScaleFactor;
 
                 // Normalized angle [0..360) and radians for dynamic lighting & shadow
                 const normalizedAngle = ((activeRotY % 360) + 360) % 360;
@@ -9197,21 +9499,45 @@ export const CanvasCustomizerPage: React.FC = () => {
                                         selectedBorderWidthId === 'none' &&
                                         primaryPhotoUrl &&
                                         (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
-                                        <img
-                                          src={primaryPhotoUrl}
-                                          alt=""
-                                          draggable={false}
-                                          style={{ objectPosition: 'right center' }}
-                                          className={`w-full h-full object-cover opacity-75 filter brightness-80 ${
-                                            selectedWrapId === 'clear-edge' ? 'scale-x-[-1]' : ''
-                                          }`}
-                                        />
+                                        <div
+                                          className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center opacity-90"
+                                          style={{
+                                            right: '100%',
+                                            top: 0,
+                                            width: `${cardW}px`,
+                                            height: `${cardH}px`,
+                                            transformOrigin: 'right center',
+                                            transform: 'scaleX(-1)'
+                                          }}
+                                        >
+                                          <img
+                                            src={primaryPhotoUrl}
+                                            alt=""
+                                            draggable={false}
+                                            style={{
+                                              width: viewerIsWiderThanFrame ? 'auto' : '100%',
+                                              height: viewerIsWiderThanFrame ? '100%' : 'auto',
+                                              minWidth: '100%',
+                                              minHeight: '100%',
+                                              maxWidth: 'none',
+                                              maxHeight: 'none',
+                                              flexShrink: 0,
+                                              aspectRatio: `${viewerNatWidth} / ${viewerNatHeight}`,
+                                              objectFit: 'cover',
+                                              objectPosition: 'center center',
+                                              transform: `translate(${viewerPanX}px, ${viewerPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                              transformOrigin: 'center center',
+                                              filter: getFilterCss(viewerFilter)
+                                            }}
+                                            className="pointer-events-none select-none max-w-none"
+                                          />
+                                        </div>
                                       )}
                                       <div
-                                        className="absolute inset-0"
+                                        className="absolute inset-0 pointer-events-none"
                                         style={{
                                           background:
-                                            'linear-gradient(to right, rgba(0,0,0,0.22), rgba(255,255,255,0.06) 50%, rgba(0,0,0,0.28))'
+                                            'linear-gradient(to right, rgba(0,0,0,0.18), rgba(255,255,255,0.05) 50%, rgba(0,0,0,0.24))'
                                         }}
                                       />
                                     </div>
@@ -9233,21 +9559,45 @@ export const CanvasCustomizerPage: React.FC = () => {
                                         selectedBorderWidthId === 'none' &&
                                         primaryPhotoUrl &&
                                         (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
-                                        <img
-                                          src={primaryPhotoUrl}
-                                          alt=""
-                                          draggable={false}
-                                          style={{ objectPosition: 'left center' }}
-                                          className={`w-full h-full object-cover opacity-75 filter brightness-80 ${
-                                            selectedWrapId === 'clear-edge' ? 'scale-x-[-1]' : ''
-                                          }`}
-                                        />
+                                        <div
+                                          className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center opacity-90"
+                                          style={{
+                                            left: '100%',
+                                            top: 0,
+                                            width: `${cardW}px`,
+                                            height: `${cardH}px`,
+                                            transformOrigin: 'left center',
+                                            transform: 'scaleX(-1)'
+                                          }}
+                                        >
+                                          <img
+                                            src={primaryPhotoUrl}
+                                            alt=""
+                                            draggable={false}
+                                            style={{
+                                              width: viewerIsWiderThanFrame ? 'auto' : '100%',
+                                              height: viewerIsWiderThanFrame ? '100%' : 'auto',
+                                              minWidth: '100%',
+                                              minHeight: '100%',
+                                              maxWidth: 'none',
+                                              maxHeight: 'none',
+                                              flexShrink: 0,
+                                              aspectRatio: `${viewerNatWidth} / ${viewerNatHeight}`,
+                                              objectFit: 'cover',
+                                              objectPosition: 'center center',
+                                              transform: `translate(${viewerPanX}px, ${viewerPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                              transformOrigin: 'center center',
+                                              filter: getFilterCss(viewerFilter)
+                                            }}
+                                            className="pointer-events-none select-none max-w-none"
+                                          />
+                                        </div>
                                       )}
                                       <div
-                                        className="absolute inset-0"
+                                        className="absolute inset-0 pointer-events-none"
                                         style={{
                                           background:
-                                            'linear-gradient(to left, rgba(0,0,0,0.22), rgba(255,255,255,0.06) 50%, rgba(0,0,0,0.28))'
+                                            'linear-gradient(to left, rgba(0,0,0,0.18), rgba(255,255,255,0.05) 50%, rgba(0,0,0,0.24))'
                                         }}
                                       />
                                     </div>
@@ -9269,15 +9619,39 @@ export const CanvasCustomizerPage: React.FC = () => {
                                         selectedBorderWidthId === 'none' &&
                                         primaryPhotoUrl &&
                                         (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
-                                        <img
-                                          src={primaryPhotoUrl}
-                                          alt=""
-                                          draggable={false}
-                                          style={{ objectPosition: 'center top' }}
-                                          className={`w-full h-full object-cover opacity-75 filter brightness-90 ${
-                                            selectedWrapId === 'clear-edge' ? 'scale-y-[-1]' : ''
-                                          }`}
-                                        />
+                                        <div
+                                          className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center opacity-90"
+                                          style={{
+                                            top: '100%',
+                                            left: 0,
+                                            width: `${cardW}px`,
+                                            height: `${cardH}px`,
+                                            transformOrigin: 'top center',
+                                            transform: 'scaleY(-1)'
+                                          }}
+                                        >
+                                          <img
+                                            src={primaryPhotoUrl}
+                                            alt=""
+                                            draggable={false}
+                                            style={{
+                                              width: viewerIsWiderThanFrame ? 'auto' : '100%',
+                                              height: viewerIsWiderThanFrame ? '100%' : 'auto',
+                                              minWidth: '100%',
+                                              minHeight: '100%',
+                                              maxWidth: 'none',
+                                              maxHeight: 'none',
+                                              flexShrink: 0,
+                                              aspectRatio: `${viewerNatWidth} / ${viewerNatHeight}`,
+                                              objectFit: 'cover',
+                                              objectPosition: 'center center',
+                                              transform: `translate(${viewerPanX}px, ${viewerPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                              transformOrigin: 'center center',
+                                              filter: getFilterCss(viewerFilter)
+                                            }}
+                                            className="pointer-events-none select-none max-w-none"
+                                          />
+                                        </div>
                                       )}
                                     </div>
 
@@ -9290,7 +9664,7 @@ export const CanvasCustomizerPage: React.FC = () => {
                                         height: `${depthPx}px`,
                                         transform: `translateY(${cardH / 2}px) rotateX(-90deg)`,
                                         backgroundColor: sideBaseColor,
-                                        filter: 'brightness(0.62)',
+                                        filter: 'brightness(0.65)',
                                         boxShadow: 'inset 0 0 0 1px rgba(15,23,42,0.22)'
                                       }}
                                     >
@@ -9298,15 +9672,39 @@ export const CanvasCustomizerPage: React.FC = () => {
                                         selectedBorderWidthId === 'none' &&
                                         primaryPhotoUrl &&
                                         (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
-                                        <img
-                                          src={primaryPhotoUrl}
-                                          alt=""
-                                          draggable={false}
-                                          style={{ objectPosition: 'center bottom' }}
-                                          className={`w-full h-full object-cover opacity-70 filter brightness-70 ${
-                                            selectedWrapId === 'clear-edge' ? 'scale-y-[-1]' : ''
-                                          }`}
-                                        />
+                                        <div
+                                          className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center opacity-90"
+                                          style={{
+                                            bottom: '100%',
+                                            left: 0,
+                                            width: `${cardW}px`,
+                                            height: `${cardH}px`,
+                                            transformOrigin: 'bottom center',
+                                            transform: 'scaleY(-1)'
+                                          }}
+                                        >
+                                          <img
+                                            src={primaryPhotoUrl}
+                                            alt=""
+                                            draggable={false}
+                                            style={{
+                                              width: viewerIsWiderThanFrame ? 'auto' : '100%',
+                                              height: viewerIsWiderThanFrame ? '100%' : 'auto',
+                                              minWidth: '100%',
+                                              minHeight: '100%',
+                                              maxWidth: 'none',
+                                              maxHeight: 'none',
+                                              flexShrink: 0,
+                                              aspectRatio: `${viewerNatWidth} / ${viewerNatHeight}`,
+                                              objectFit: 'cover',
+                                              objectPosition: 'center center',
+                                              transform: `translate(${viewerPanX}px, ${viewerPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                              transformOrigin: 'center center',
+                                              filter: getFilterCss(viewerFilter)
+                                            }}
+                                            className="pointer-events-none select-none max-w-none"
+                                          />
+                                        </div>
                                       )}
                                     </div>
                                   </>
@@ -9647,7 +10045,7 @@ export const CanvasCustomizerPage: React.FC = () => {
 
                                         {/* Top Edge */}
                                         <div
-                                          className="absolute left-0 right-0"
+                                          className="absolute left-0 right-0 overflow-hidden"
                                           style={{
                                             top: 0,
                                             height: `${thumbDepthPx}px`,
@@ -9656,11 +10054,50 @@ export const CanvasCustomizerPage: React.FC = () => {
                                             transformOrigin: 'top center',
                                             filter: 'brightness(0.95)'
                                           }}
-                                        />
+                                        >
+                                          {!hasOuterFrame &&
+                                            selectedBorderWidthId === 'none' &&
+                                            primaryPhotoUrl &&
+                                            (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
+                                            <div
+                                              className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center opacity-90"
+                                              style={{
+                                                top: '100%',
+                                                left: 0,
+                                                width: `${thumbW}px`,
+                                                height: `${thumbH}px`,
+                                                transformOrigin: 'top center',
+                                                transform: 'scaleY(-1)'
+                                              }}
+                                            >
+                                              <img
+                                                src={primaryPhotoUrl}
+                                                alt=""
+                                                draggable={false}
+                                                style={{
+                                                  width: viewerIsWiderThanFrame ? 'auto' : '100%',
+                                                  height: viewerIsWiderThanFrame ? '100%' : 'auto',
+                                                  minWidth: '100%',
+                                                  minHeight: '100%',
+                                                  maxWidth: 'none',
+                                                  maxHeight: 'none',
+                                                  flexShrink: 0,
+                                                  aspectRatio: `${viewerNatWidth} / ${viewerNatHeight}`,
+                                                  objectFit: 'cover',
+                                                  objectPosition: 'center center',
+                                                  transform: `translate(${thumbPanX}px, ${thumbPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                                  transformOrigin: 'center center',
+                                                  filter: getFilterCss(viewerFilter)
+                                                }}
+                                                className="pointer-events-none select-none max-w-none"
+                                              />
+                                            </div>
+                                          )}
+                                        </div>
 
                                         {/* Bottom Edge */}
                                         <div
-                                          className="absolute left-0 right-0"
+                                          className="absolute left-0 right-0 overflow-hidden"
                                           style={{
                                             bottom: 0,
                                             height: `${thumbDepthPx}px`,
@@ -9669,11 +10106,50 @@ export const CanvasCustomizerPage: React.FC = () => {
                                             transformOrigin: 'bottom center',
                                             filter: 'brightness(0.7)'
                                           }}
-                                        />
+                                        >
+                                          {!hasOuterFrame &&
+                                            selectedBorderWidthId === 'none' &&
+                                            primaryPhotoUrl &&
+                                            (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
+                                            <div
+                                              className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center opacity-90"
+                                              style={{
+                                                bottom: '100%',
+                                                left: 0,
+                                                width: `${thumbW}px`,
+                                                height: `${thumbH}px`,
+                                                transformOrigin: 'bottom center',
+                                                transform: 'scaleY(-1)'
+                                              }}
+                                            >
+                                              <img
+                                                src={primaryPhotoUrl}
+                                                alt=""
+                                                draggable={false}
+                                                style={{
+                                                  width: viewerIsWiderThanFrame ? 'auto' : '100%',
+                                                  height: viewerIsWiderThanFrame ? '100%' : 'auto',
+                                                  minWidth: '100%',
+                                                  minHeight: '100%',
+                                                  maxWidth: 'none',
+                                                  maxHeight: 'none',
+                                                  flexShrink: 0,
+                                                  aspectRatio: `${viewerNatWidth} / ${viewerNatHeight}`,
+                                                  objectFit: 'cover',
+                                                  objectPosition: 'center center',
+                                                  transform: `translate(${thumbPanX}px, ${thumbPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                                  transformOrigin: 'center center',
+                                                  filter: getFilterCss(viewerFilter)
+                                                }}
+                                                className="pointer-events-none select-none max-w-none"
+                                              />
+                                            </div>
+                                          )}
+                                        </div>
 
                                         {/* Left Edge */}
                                         <div
-                                          className="absolute top-0 bottom-0"
+                                          className="absolute top-0 bottom-0 overflow-hidden"
                                           style={{
                                             left: 0,
                                             width: `${thumbDepthPx}px`,
@@ -9682,11 +10158,50 @@ export const CanvasCustomizerPage: React.FC = () => {
                                             transformOrigin: 'left center',
                                             filter: 'brightness(0.85)'
                                           }}
-                                        />
+                                        >
+                                          {!hasOuterFrame &&
+                                            selectedBorderWidthId === 'none' &&
+                                            primaryPhotoUrl &&
+                                            (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
+                                            <div
+                                              className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center opacity-90"
+                                              style={{
+                                                left: '100%',
+                                                top: 0,
+                                                width: `${thumbW}px`,
+                                                height: `${thumbH}px`,
+                                                transformOrigin: 'left center',
+                                                transform: 'scaleX(-1)'
+                                              }}
+                                            >
+                                              <img
+                                                src={primaryPhotoUrl}
+                                                alt=""
+                                                draggable={false}
+                                                style={{
+                                                  width: viewerIsWiderThanFrame ? 'auto' : '100%',
+                                                  height: viewerIsWiderThanFrame ? '100%' : 'auto',
+                                                  minWidth: '100%',
+                                                  minHeight: '100%',
+                                                  maxWidth: 'none',
+                                                  maxHeight: 'none',
+                                                  flexShrink: 0,
+                                                  aspectRatio: `${viewerNatWidth} / ${viewerNatHeight}`,
+                                                  objectFit: 'cover',
+                                                  objectPosition: 'center center',
+                                                  transform: `translate(${thumbPanX}px, ${thumbPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                                  transformOrigin: 'center center',
+                                                  filter: getFilterCss(viewerFilter)
+                                                }}
+                                                className="pointer-events-none select-none max-w-none"
+                                              />
+                                            </div>
+                                          )}
+                                        </div>
 
                                         {/* Right Edge */}
                                         <div
-                                          className="absolute top-0 bottom-0"
+                                          className="absolute top-0 bottom-0 overflow-hidden"
                                           style={{
                                             right: 0,
                                             width: `${thumbDepthPx}px`,
@@ -9695,7 +10210,46 @@ export const CanvasCustomizerPage: React.FC = () => {
                                             transformOrigin: 'right center',
                                             filter: 'brightness(0.8)'
                                           }}
-                                        />
+                                        >
+                                          {!hasOuterFrame &&
+                                            selectedBorderWidthId === 'none' &&
+                                            primaryPhotoUrl &&
+                                            (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (
+                                            <div
+                                              className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center opacity-90"
+                                              style={{
+                                                right: '100%',
+                                                top: 0,
+                                                width: `${thumbW}px`,
+                                                height: `${thumbH}px`,
+                                                transformOrigin: 'right center',
+                                                transform: 'scaleX(-1)'
+                                              }}
+                                            >
+                                              <img
+                                                src={primaryPhotoUrl}
+                                                alt=""
+                                                draggable={false}
+                                                style={{
+                                                  width: viewerIsWiderThanFrame ? 'auto' : '100%',
+                                                  height: viewerIsWiderThanFrame ? '100%' : 'auto',
+                                                  minWidth: '100%',
+                                                  minHeight: '100%',
+                                                  maxWidth: 'none',
+                                                  maxHeight: 'none',
+                                                  flexShrink: 0,
+                                                  aspectRatio: `${viewerNatWidth} / ${viewerNatHeight}`,
+                                                  objectFit: 'cover',
+                                                  objectPosition: 'center center',
+                                                  transform: `translate(${thumbPanX}px, ${thumbPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                                  transformOrigin: 'center center',
+                                                  filter: getFilterCss(viewerFilter)
+                                                }}
+                                                className="pointer-events-none select-none max-w-none"
+                                              />
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
                                   </div>

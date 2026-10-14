@@ -210,42 +210,24 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
 
   // Compute locked product width & height in pixels based on selectedProduct + selectedShape + selectedSize
   const productPixelSize = useMemo(() => {
-    const isOneToOneShape =
-      shapeId === 'shape-square' ||
+    const isIntrinsicallySymmetricShape =
       shapeId === 'shape-circle' ||
       shapeId === 'shape-heart' ||
       shapeId === 'shape-hexagon' ||
-      ['square', 'circle', 'heart', 'hexagon'].includes(shapeName.toLowerCase());
+      ['circle', 'heart', 'hexagon'].includes(shapeName.toLowerCase());
 
     let effW = Math.max(4, Number(widthInches) || 12);
     let effH = Math.max(4, Number(heightInches) || 12);
 
-    if (isOneToOneShape) {
+    if (isIntrinsicallySymmetricShape) {
       const side = Math.max(effW, effH);
       effW = side;
       effH = side;
-    } else if (
-      shapeId === 'shape-landscape' ||
-      shapeId === 'shape-oval' ||
-      ['landscape', 'oval'].includes(shapeName.toLowerCase())
-    ) {
-      if (effW < effH) {
-        const tmp = effW;
-        effW = effH;
-        effH = tmp;
-      } else if (effW === effH) {
-        effW = Math.round(effH * 1.4);
-      }
-    } else if (
-      shapeId === 'shape-portrait' ||
-      shapeName.toLowerCase() === 'portrait'
-    ) {
-      if (effH < effW) {
-        const tmp = effW;
-        effW = effH;
-        effH = tmp;
-      } else if (effH === effW) {
-        effH = Math.round(effW * 1.35);
+    } else if (shapeId === 'shape-square' || shapeName.toLowerCase() === 'square') {
+      if (Math.abs(effW - effH) < 0.1) {
+        const side = Math.max(effW, effH);
+        effW = side;
+        effH = side;
       }
     }
 
