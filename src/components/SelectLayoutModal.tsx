@@ -73,7 +73,7 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
     return getProductLayouts(productId);
   }, [productId]);
 
-  const isCollageProduct = productId === 'canvas-collage' || productLayouts.some((l) => Boolean(l.collageCategory));
+  const isCollageProduct = productId.includes('collage') || productLayouts.some((l) => Boolean(l.collageCategory));
   const isWallDisplay = productId.includes('wall') || productId.includes('display');
   const isSplitCanvas = productId.includes('split');
   const isHexagon = productId.includes('hexagon');
