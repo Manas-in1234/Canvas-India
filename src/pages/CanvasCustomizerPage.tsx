@@ -3969,9 +3969,20 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   };
 
   // --- Text & Clipart Items (Shared with Acrylic Customizer) ---
-  const handleAddText = (initialText = '') => {
-    // If there is already an empty text element, focus that instead of adding a second empty one
-    const existingEmpty = textElements.find((t) => !t.text.trim());
+  const getSlotIndex = (t: TextElement): number => {
+    if (typeof t.panelIndex === 'number') return t.panelIndex;
+    if (typeof t.slotId === 'number') return t.slotId;
+    if (typeof t.slotId === 'string') {
+      const parsed = parseInt(t.slotId, 10);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    return 0;
+  };
+
+  const handleAddText = (initialText = '', targetSlot?: number) => {
+    const slot = targetSlot !== undefined ? targetSlot : (activePanelIndex || 0);
+    // If there is already an empty text element in this slot, focus that instead of adding a second empty one
+    const existingEmpty = textElements.find((t) => getSlotIndex(t) === slot && !t.text.trim());
     if (existingEmpty) {
       setSelectedElement({ type: 'text', id: existingEmpty.id });
       setShowTextModal(true);
@@ -3981,6 +3992,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const id = `txt-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const newText: TextElement = {
       id,
+      productId: selectedProductTypeId,
+      slotId: slot,
+      panelIndex: slot,
       text: initialText,
       fontFamily: 'Playfair Display',
       fontSize: 32,
@@ -4000,6 +4014,60 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     setShowClipartModal(false);
   };
 
+  const renderPanelTextItems = (slotIdx: number) => {
+    const slotTexts = textElements.filter(
+      (txt) => getSlotIndex(txt) === slotIdx && Boolean(txt.text && txt.text.trim().length > 0)
+    );
+    if (slotTexts.length === 0) return null;
+
+    return (
+      <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden">
+        {slotTexts.map((txt) => {
+          const isSel = selectedElement?.type === 'text' && selectedElement.id === txt.id;
+          return (
+            <div
+              key={txt.id}
+              onPointerDown={(e) => startItemDrag(e, 'text', txt.id, txt.x, txt.y)}
+              onPointerMove={(e) => moveItemDrag(e, 'text', txt.id)}
+              onPointerUp={endItemDrag}
+              onPointerCancel={endItemDrag}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedElement({ type: 'text', id: txt.id });
+                setActivePanelIndex(slotIdx);
+                setShowTextModal(true);
+              }}
+              style={{
+                position: 'absolute',
+                left: `${txt.x}%`,
+                top: `${txt.y}%`,
+                transform: 'translate(-50%, -50%)',
+                fontFamily: txt.fontFamily,
+                fontSize: `${txt.fontSize}px`,
+                fontWeight: txt.fontWeight === 'bold' ? 700 : 400,
+                fontStyle: txt.fontStyle || 'normal',
+                color: txt.color,
+                textAlign: txt.alignment || 'center',
+                whiteSpace: 'pre',
+                lineHeight: 1.2,
+                textShadow: txt.color.toUpperCase() === '#FFFFFF' ? '0 1px 4px rgba(0,0,0,0.55)' : 'none',
+                pointerEvents: 'auto',
+                touchAction: 'none'
+              }}
+              className={`cursor-move select-none px-2 py-0.5 rounded-lg transition-all ${
+                isSel
+                  ? 'ring-2 ring-[#0E4A93] bg-black/35 backdrop-blur-xs'
+                  : 'hover:ring-1 hover:ring-white/80'
+              }`}
+            >
+              {txt.text}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const handleUpdateActiveText = (updates: Partial<TextElement>) => {
     if (selectedElement?.type !== 'text' || !selectedElement.id) return;
     setTextElements((prev) => prev.map((t) => (t.id === selectedElement.id ? { ...t, ...updates } : t)));
@@ -4010,9 +4078,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const src = textElements.find((t) => t.id === selectedElement.id);
     if (!src) return;
     const newId = `txt-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const currentSlot = getSlotIndex(src);
     const copy: TextElement = {
       ...src,
       id: newId,
+      productId: src.productId || selectedProductTypeId,
+      slotId: currentSlot,
+      panelIndex: currentSlot,
       x: Math.min(85, src.x + 4),
       y: Math.min(85, src.y + 4)
     };
@@ -4084,10 +4156,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setShowTextModal(true);
       setShowClipartModal(false);
     }
-    const rect = stageRef.current?.getBoundingClientRect();
+    const targetEl = e.currentTarget as HTMLElement;
+    const parentContainer = targetEl.closest('.ci-slot-container') || stageRef.current;
+    const rect = parentContainer?.getBoundingClientRect() || stageRef.current?.getBoundingClientRect();
     if (!rect) return;
     itemDragRef.current = { startX: e.clientX, startY: e.clientY, origX: x, origY: y, w: rect.width, h: rect.height };
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    targetEl.setPointerCapture(e.pointerId);
   };
 
   const moveItemDrag = (e: React.PointerEvent, type: 'text' | 'clipart', id: string) => {
@@ -4682,8 +4756,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           filter: panelImages[idx]?.filter || 'original'
         })),
         clipart: clipartElements.map((c) => c.name),
-        customText,
-        textItems: textElements.map((t) => ({ text: t.text, font: t.fontFamily, color: t.color, size: t.fontSize, x: t.x, y: t.y })),
+        textItems: textElements.map((t) => ({
+          id: t.id,
+          slotId: getSlotIndex(t),
+          panelIndex: getSlotIndex(t),
+          text: t.text,
+          font: t.fontFamily,
+          color: t.color,
+          size: t.fontSize,
+          x: t.x,
+          y: t.y
+        })),
         unitPrice,
         totalPrice
       }
@@ -4804,9 +4887,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               maxWidth: '100%'
             }}
           >
-            {splitPanels.map((p, idx) => (
+            {splitPanels.map((p, idx) => {
+              const isSelectedSlot = activePanelIndex === idx;
+              return (
               <div
                 key={p.id || idx}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActivePanelIndex(idx);
+                }}
                 style={{
                   position: 'absolute',
                   left: `${p.x * 100}%`,
@@ -4817,7 +4906,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     ? '0 12px 24px -4px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.4) inset'
                     : '0 12px 24px -4px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0,0,0,0.08)'
                 }}
-                className={`relative bg-white rounded-[2px] overflow-hidden transition-all select-none group ${activeMaterial === 'acrylic' ? 'border border-slate-200' : 'border border-stone-300/80'}`}
+                className={`ci-slot-container relative bg-white rounded-[2px] overflow-hidden transition-all select-none group cursor-pointer ${
+                  isSelectedSlot
+                    ? 'ring-2 ring-[#0E4A93] z-20 shadow-lg'
+                    : activeMaterial === 'acrylic' ? 'border border-slate-200' : 'border border-stone-300/80'
+                }`}
               >
                 {/* 3D Canvas Edge highlight / Acrylic Polished Edge */}
                 <div
@@ -4918,8 +5011,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     {p.dimension && <span className="text-[9px] text-stone-500">{p.dimension}</span>}
                   </div>
                 )}
+                {renderPanelTextItems(idx)}
               </div>
-            ))}
+            );})}
 
             {/* If empty, central single upload action overlay */}
             {!masterImage && (
@@ -5556,6 +5650,34 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </div>
               </div>
             )}
+
+            {/* Interactive mosaic tile slots for text and slot selection */}
+            <div className="absolute inset-0 z-20 pointer-events-none">
+              {layout.panels.map((p, idx) => {
+                const isSelectedSlot = activePanelIndex === idx;
+                return (
+                  <div
+                    key={p.id || idx}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActivePanelIndex(idx);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      left: `${p.x * 100}%`,
+                      top: `${p.y * 100}%`,
+                      width: `${p.w * 100}%`,
+                      height: `${p.h * 100}%`
+                    }}
+                    className={`ci-slot-container pointer-events-auto overflow-hidden cursor-pointer transition-all ${
+                      isSelectedSlot ? 'ring-2 ring-inset ring-[#0E4A93] z-30' : ''
+                    }`}
+                  >
+                    {renderPanelTextItems(idx)}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -5619,7 +5741,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     WebkitClipPath: hexClip,
                     filter: 'drop-shadow(0 12px 20px rgba(0,0,0,0.3)) drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
                   }}
-                  className={`relative bg-white cursor-pointer group transition-all ${
+                  className={`ci-slot-container relative bg-white cursor-pointer group transition-all ${
                     isTarget ? 'z-20' : 'hover:brightness-95'
                   }`}
                   {...panelHandlers(idx)}
@@ -5738,6 +5860,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       {pSpec.dimension}
                     </div>
                   )}
+                  {renderPanelTextItems(idx)}
                 </div>
               );
             })}
@@ -5797,7 +5920,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     height: `${pSpec.h * 100}%`,
                     boxShadow: '0 10px 20px -4px rgba(15, 23, 42, 0.18)'
                   }}
-                  className={`relative bg-white rounded-lg overflow-hidden transition-all cursor-pointer group border ${
+                  className={`ci-slot-container relative bg-white rounded-lg overflow-hidden transition-all cursor-pointer group border ${
                     isTarget
                       ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/40 z-20 shadow-md'
                       : 'border-stone-200 hover:border-stone-400 shadow-xs'
@@ -5908,6 +6031,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       {pSpec.dimension}
                     </div>
                   )}
+                  {renderPanelTextItems(idx)}
                 </div>
               );
             })}
@@ -5949,7 +6073,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 fileInputRef.current?.click();
               }
             }}
-            className={`relative w-full h-full min-h-[50px] bg-stone-100 rounded-lg overflow-hidden transition-all cursor-pointer group ${
+            className={`ci-slot-container relative w-full h-full min-h-[50px] bg-stone-100 rounded-lg overflow-hidden transition-all cursor-pointer group ${
               isTarget
                 ? 'ring-2 ring-inset ring-[#0E4A93] z-20 shadow-md'
                 : 'border border-stone-200 hover:border-stone-400'
@@ -6061,6 +6185,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 {pSpec.dimension}
               </div>
             )}
+            {renderPanelTextItems(panelIdx)}
           </div>
         </div>
       );
@@ -7822,17 +7947,20 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               onSave={handleSaveDesign}
               showTextPopover={showTextModal}
               onToggleText={() => {
+                const currentSlot = activePanelIndex || 0;
                 if (showTextModal) {
-                  setShowTextModal(false);
-                  setTextElements((prev) => prev.filter((t) => Boolean(t.text && t.text.trim())));
-                } else if (textElements.length === 0) {
-                  handleAddText();
+                  handleAddText('', currentSlot);
                 } else {
-                  if (!selectedElement || selectedElement.type !== 'text') {
-                    setSelectedElement({ type: 'text', id: textElements[0].id });
+                  const slotTexts = textElements.filter((t) => getSlotIndex(t) === currentSlot);
+                  if (slotTexts.length === 0) {
+                    handleAddText('', currentSlot);
+                  } else {
+                    const existingEmpty = slotTexts.find((t) => !t.text.trim());
+                    const targetText = existingEmpty || slotTexts[slotTexts.length - 1];
+                    setSelectedElement({ type: 'text', id: targetText.id });
+                    setShowTextModal(true);
+                    setShowClipartModal(false);
                   }
-                  setShowTextModal(true);
-                  setShowClipartModal(false);
                 }
               }}
               showClipartPopover={showClipartModal}
@@ -7875,6 +8003,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           {showTextModal && activeTextElement && (
             <AcrylicLiveTextEditor
               activeText={activeTextElement}
+              slotLabel={
+                isLayoutProduct
+                  ? `Panel ${getSlotIndex(activeTextElement) + 1}`
+                  : undefined
+              }
               onUpdateText={handleUpdateActiveText}
               onDuplicateText={handleDuplicateActiveText}
               onDeleteText={handleDeleteActiveText}
@@ -8754,48 +8887,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
               {/* Movable text + clipart: drag anywhere on the print */}
               <div className="absolute inset-0 z-30 pointer-events-none">
-                {textElements.map((txt) => {
-                  if (!txt.text || txt.text.trim().length === 0) return null;
-                  const isSel = selectedElement?.type === 'text' && selectedElement.id === txt.id;
-                  return (
-                    <div
-                      key={txt.id}
-                      onPointerDown={(e) => startItemDrag(e, 'text', txt.id, txt.x, txt.y)}
-                      onPointerMove={(e) => moveItemDrag(e, 'text', txt.id)}
-                      onPointerUp={endItemDrag}
-                      onPointerCancel={endItemDrag}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedElement({ type: 'text', id: txt.id });
-                        setShowTextModal(true);
-                      }}
-                      style={{
-                        position: 'absolute',
-                        left: `${txt.x}%`,
-                        top: `${txt.y}%`,
-                        transform: 'translate(-50%, -50%)',
-                        fontFamily: txt.fontFamily,
-                        fontSize: `${txt.fontSize}px`,
-                        fontWeight: txt.fontWeight === 'bold' ? 700 : 400,
-                        fontStyle: txt.fontStyle || 'normal',
-                        color: txt.color,
-                        textAlign: txt.alignment || 'center',
-                        whiteSpace: 'pre',
-                        lineHeight: 1.2,
-                        textShadow: txt.color.toUpperCase() === '#FFFFFF' ? '0 1px 4px rgba(0,0,0,0.55)' : 'none',
-                        pointerEvents: 'auto',
-                        touchAction: 'none'
-                      }}
-                      className={`cursor-move select-none px-2 py-0.5 rounded-lg transition-all ${
-                        isSel
-                          ? 'ring-2 ring-[#0E4A93] bg-black/35 backdrop-blur-xs'
-                          : 'hover:ring-1 hover:ring-white/80'
-                      }`}
-                    >
-                      {txt.text}
-                    </div>
-                  );
-                })}
+                {!isLayoutProduct && renderPanelTextItems(0)}
                 {clipartElements.map((clip) => {
                   const isSel = selectedElement?.type === 'clipart' && selectedElement.id === clip.id;
                   return (
@@ -9477,6 +9569,32 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                   {pSpec.label || `Hexagon ${idx + 1}`}
                                 </div>
                               )}
+                              {textElements
+                                .filter((t) => getSlotIndex(t) === idx && Boolean(t.text && t.text.trim()))
+                                .map((t) => (
+                                  <div
+                                    key={t.id}
+                                    style={{
+                                      position: 'absolute',
+                                      left: `${t.x}%`,
+                                      top: `${t.y}%`,
+                                      transform: 'translate(-50%, -50%)',
+                                      fontFamily: t.fontFamily,
+                                      fontSize: `${Math.max(6, Math.round(t.fontSize * (pSpec.w || 0.3) * 0.4))}px`,
+                                      fontWeight: t.fontWeight === 'bold' ? 700 : 400,
+                                      fontStyle: t.fontStyle || 'normal',
+                                      color: t.color,
+                                      textAlign: t.alignment || 'center',
+                                      whiteSpace: 'pre',
+                                      lineHeight: 1.2,
+                                      textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+                                      pointerEvents: 'none',
+                                      zIndex: 25
+                                    }}
+                                  >
+                                    {t.text}
+                                  </div>
+                                ))}
                             </div>
                           </div>
                         );
@@ -9526,6 +9644,32 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                   {pos.label || `Panel ${idx + 1}`}
                                 </div>
                               )}
+                              {textElements
+                                .filter((t) => getSlotIndex(t) === idx && Boolean(t.text && t.text.trim()))
+                                .map((t) => (
+                                  <div
+                                    key={t.id}
+                                    style={{
+                                      position: 'absolute',
+                                      left: `${t.x}%`,
+                                      top: `${t.y}%`,
+                                      transform: 'translate(-50%, -50%)',
+                                      fontFamily: t.fontFamily,
+                                      fontSize: `${Math.max(6, Math.round(t.fontSize * (pos.w || 0.3) * 0.4))}px`,
+                                      fontWeight: t.fontWeight === 'bold' ? 700 : 400,
+                                      fontStyle: t.fontStyle || 'normal',
+                                      color: t.color,
+                                      textAlign: t.alignment || 'center',
+                                      whiteSpace: 'pre',
+                                      lineHeight: 1.2,
+                                      textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+                                      pointerEvents: 'none',
+                                      zIndex: 25
+                                    }}
+                                  >
+                                    {t.text}
+                                  </div>
+                                ))}
                               {activeMaterial === 'acrylic' && (
                                 <div
                                   className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
@@ -9605,6 +9749,50 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                 );
                               })}
                             </svg>
+                            {layoutDef.panels.map((p, idx) => {
+                              const cellTexts = textElements.filter(
+                                (t) => getSlotIndex(t) === idx && Boolean(t.text && t.text.trim())
+                              );
+                              if (cellTexts.length === 0) return null;
+                              return (
+                                <div
+                                  key={`rm-t-${idx}`}
+                                  style={{
+                                    position: 'absolute',
+                                    left: `${p.x * 100}%`,
+                                    top: `${p.y * 100}%`,
+                                    width: `${p.w * 100}%`,
+                                    height: `${p.h * 100}%`,
+                                    overflow: 'hidden',
+                                    pointerEvents: 'none',
+                                    zIndex: 25
+                                  }}
+                                >
+                                  {cellTexts.map((t) => (
+                                    <div
+                                      key={t.id}
+                                      style={{
+                                        position: 'absolute',
+                                        left: `${t.x}%`,
+                                        top: `${t.y}%`,
+                                        transform: 'translate(-50%, -50%)',
+                                        fontFamily: t.fontFamily,
+                                        fontSize: `${Math.max(5, Math.round(t.fontSize * (p.w || 0.25) * 0.35))}px`,
+                                        fontWeight: t.fontWeight === 'bold' ? 700 : 400,
+                                        fontStyle: t.fontStyle || 'normal',
+                                        color: t.color,
+                                        textAlign: t.alignment || 'center',
+                                        whiteSpace: 'pre',
+                                        lineHeight: 1.2,
+                                        textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+                                      }}
+                                    >
+                                      {t.text}
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })}
                             {activeMaterial === 'acrylic' && (
                               <div
                                 className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
@@ -9680,6 +9868,32 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                 {p.label || `Panel ${idx + 1}`}
                               </div>
                             )}
+                            {textElements
+                              .filter((t) => getSlotIndex(t) === idx && Boolean(t.text && t.text.trim()))
+                              .map((t) => (
+                                <div
+                                  key={t.id}
+                                  style={{
+                                    position: 'absolute',
+                                    left: `${t.x}%`,
+                                    top: `${t.y}%`,
+                                    transform: 'translate(-50%, -50%)',
+                                    fontFamily: t.fontFamily,
+                                    fontSize: `${Math.max(6, Math.round(t.fontSize * (p.w || 0.3) * 0.4))}px`,
+                                    fontWeight: t.fontWeight === 'bold' ? 700 : 400,
+                                    fontStyle: t.fontStyle || 'normal',
+                                    color: t.color,
+                                    textAlign: t.alignment || 'center',
+                                    whiteSpace: 'pre',
+                                    lineHeight: 1.2,
+                                    textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+                                    pointerEvents: 'none',
+                                    zIndex: 25
+                                  }}
+                                >
+                                  {t.text}
+                                </div>
+                              ))}
                           </div>
                         </div>
                       ))}
@@ -9712,8 +9926,34 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                 boxSizing: 'border-box'
                               }}
                             >
-                              <div className="w-full h-full rounded-xs overflow-hidden bg-stone-200 flex items-center justify-center">
+                              <div className="w-full h-full rounded-xs overflow-hidden bg-stone-200 flex items-center justify-center relative">
                                 {renderSlotPhoto(idx)}
+                                {textElements
+                                  .filter((t) => getSlotIndex(t) === idx && Boolean(t.text && t.text.trim()))
+                                  .map((t) => (
+                                    <div
+                                      key={t.id}
+                                      style={{
+                                        position: 'absolute',
+                                        left: `${t.x}%`,
+                                        top: `${t.y}%`,
+                                        transform: 'translate(-50%, -50%)',
+                                        fontFamily: t.fontFamily,
+                                        fontSize: `${Math.max(6, Math.round(t.fontSize * (pSpec.w || 0.3) * 0.4))}px`,
+                                        fontWeight: t.fontWeight === 'bold' ? 700 : 400,
+                                        fontStyle: t.fontStyle || 'normal',
+                                        color: t.color,
+                                        textAlign: t.alignment || 'center',
+                                        whiteSpace: 'pre',
+                                        lineHeight: 1.2,
+                                        textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+                                        pointerEvents: 'none',
+                                        zIndex: 25
+                                      }}
+                                    >
+                                      {t.text}
+                                    </div>
+                                  ))}
                               </div>
                             </div>
                           ))}
