@@ -5,6 +5,7 @@
 // ============================================================================
 
 import { STANDARD_SHAPE_SIZES } from './productSizeShapeConfig';
+import { PRODUCT_LAYOUT_DEFINITIONS } from './productGeometry';
 
 export type ToolbarTab =
   | 'PRODUCTS'
@@ -193,13 +194,13 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     image: '/images/acrylic/shapes/rectangle.svg',
     iconType: 'wall',
     defaultLayout: 'threeCollage',
-    defaultLayoutId: 'layout-wall-display-3',
+    defaultLayoutId: 'wall-display-3a',
     defaultShape: 'shape-rectangle',
     supportedShapes: AcrylicProductShapeConfig['acrylic-wall-art'],
     imageSlots: 3,
     panelsCount: 3,
     description: 'Gallery wall display for striking home and office focal points on crystal acrylic.',
-    defaultSizeOptionId: 'wall-display-3p-12x18',
+    defaultSizeOptionId: 'wall-display-3a',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: '5mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-wall-art'],
@@ -217,7 +218,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       view360: false,
       roomView: true
     },
-    supportedLayoutIds: ['layout-wall-display-3', 'layout-4-grid', 'layout-3-collage']
+    supportedLayoutIds: PRODUCT_LAYOUT_DEFINITIONS['canvas-wall-art'].map((l) => l.id)
   },
   {
     id: 'acrylic-collage',
@@ -227,13 +228,13 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     image: '/assets/customizer/acrylic/layouts/layout-4-grid.svg',
     iconType: 'collage',
     defaultLayout: 'fourGrid',
-    defaultLayoutId: 'layout-4-grid',
+    defaultLayoutId: 'collage-land-5p-pinwheel',
     defaultShape: 'shape-square',
     supportedShapes: AcrylicProductShapeConfig['acrylic-collage'],
     imageSlots: 4,
     panelsCount: 4,
     description: 'Multiple cherished photographs printed together on crystal acrylic.',
-    defaultSizeOptionId: 'shape-square-10x10',
+    defaultSizeOptionId: 'collage-land-5p-pinwheel',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-collage'],
@@ -251,7 +252,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       view360: false,
       roomView: true
     },
-    supportedLayoutIds: ['layout-4-grid', 'layout-3-collage', 'layout-main-2small', 'layout-top-bottom', 'layout-left-right']
+    supportedLayoutIds: PRODUCT_LAYOUT_DEFINITIONS['canvas-collage'].map((l) => l.id)
   },
   {
     id: 'acrylic-split',
@@ -261,7 +262,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     image: '/assets/customizer/acrylic/layouts/layout-2-split.svg',
     iconType: 'split',
     defaultLayout: 'twoSplit',
-    defaultLayoutId: 'layout-2-split',
+    defaultLayoutId: 'split-2p-20x20',
     defaultShape: 'shape-landscape',
     supportedShapes: AcrylicProductShapeConfig['acrylic-split'],
     imageSlots: 2,
@@ -285,7 +286,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       view360: false,
       roomView: true
     },
-    supportedLayoutIds: ['layout-2-split', 'layout-3-split']
+    supportedLayoutIds: PRODUCT_LAYOUT_DEFINITIONS['canvas-split'].map((l) => l.id)
   },
   {
     id: 'acrylic-mosaic',
@@ -295,13 +296,13 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     image: '/assets/customizer/acrylic/layouts/layout-4-grid.svg',
     iconType: 'mosaic',
     defaultLayout: 'fourGrid',
-    defaultLayoutId: 'layout-4-grid',
+    defaultLayoutId: 'mosaic2-4x4',
     defaultShape: 'shape-square',
     supportedShapes: AcrylicProductShapeConfig['acrylic-mosaic'],
     imageSlots: 4,
     panelsCount: 4,
     description: 'Intricate mosaic photo grid arranged artistically on optical acrylic.',
-    defaultSizeOptionId: 'shape-square-10x10',
+    defaultSizeOptionId: 'mosaic2-4x4',
     defaultHardwareId: 'no-hooks',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-mosaic'],
@@ -319,7 +320,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       view360: false,
       roomView: true
     },
-    supportedLayoutIds: ['layout-4-grid', 'layout-mosaic-9']
+    supportedLayoutIds: PRODUCT_LAYOUT_DEFINITIONS['canvas-mosaic'].map((l) => l.id)
   },
   {
     id: 'acrylic-lyric',

@@ -49,7 +49,8 @@ export const CustomizerPreloader: React.FC<CustomizerPreloaderProps> = ({ active
         muted
         playsInline
         preload="auto"
-        className="w-64 h-64 sm:w-80 sm:h-80 object-contain"
+        className="w-64 h-64 sm:w-80 sm:h-80 object-contain bg-transparent mix-blend-multiply"
+        style={{ mixBlendMode: 'multiply', background: 'transparent' }}
       />
     </div>,
     document.body

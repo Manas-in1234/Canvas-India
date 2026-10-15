@@ -55,10 +55,10 @@ export const BusRollLineEditorPanel: React.FC<BusRollLineEditorPanelProps> = ({
     onChangeConfig({ lines: updated });
   };
 
-  // Update line opacity / width
-  const handleUpdateLineWidth = (lineId: string, opacity: number) => {
+  // Update line width (horizontal text scale: 1 = 100%, 0.75 = 75%, 0.5 = 50%, 0.25 = 25%)
+  const handleUpdateLineWidth = (lineId: string, lineWidth: number) => {
     const updated = config.lines.map((l) =>
-      l.id === lineId ? { ...l, opacity } : l
+      l.id === lineId ? { ...l, lineWidth } : l
     );
     onChangeConfig({ lines: updated });
   };
@@ -97,7 +97,8 @@ export const BusRollLineEditorPanel: React.FC<BusRollLineEditorPanelProps> = ({
       id: newId,
       text: 'NEW DESTINATION',
       color: '#FFFFFF',
-      opacity: 1
+      opacity: 1,
+      lineWidth: 1
     };
     onChangeConfig({ lines: [...config.lines, newLine] });
   };
@@ -244,16 +245,17 @@ export const BusRollLineEditorPanel: React.FC<BusRollLineEditorPanelProps> = ({
                 )}
               </div>
 
-              {/* 4. Line Width / Opacity Dropdown */}
+              {/* 4. Line Width Dropdown */}
               <div className="col-span-2 w-full flex justify-center">
                 <select
-                  value={String(line.opacity)}
+                  value={String(line.lineWidth ?? 1)}
                   onChange={(e) => handleUpdateLineWidth(line.id, Number(e.target.value))}
                   className="w-full px-2 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-700 cursor-pointer text-center focus:outline-none focus:ring-1 focus:ring-[#0E4A93]"
                 >
                   <option value="1">100%</option>
                   <option value="0.75">75%</option>
                   <option value="0.5">50%</option>
+                  <option value="0.25">25%</option>
                 </select>
               </div>
 
