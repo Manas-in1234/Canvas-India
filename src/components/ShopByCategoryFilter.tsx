@@ -1,0 +1,71 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Check } from 'lucide-react';
+import { SHOP_CATEGORIES } from '../data/shopCategories';
+
+export interface ShopByCategoryFilterProps {
+  /** Currently checked category slugs. Omit on pages that start with nothing selected. */
+  selectedSlugs?: string[];
+  /**
+   * Called with the updated slug list whenever a box is toggled. If omitted,
+   * the component manages navigation itself (used on pages that aren't the
+   * combined results page): each toggle immediately navigates to /shop with
+   * the updated selection, so results appear as soon as 2+ are checked.
+   */
+  onChange?: (slugs: string[]) => void;
+  onItemClick?: () => void;
+}
+
+export const ShopByCategoryFilter: React.FC<ShopByCategoryFilterProps> = ({
+  selectedSlugs = [],
+  onChange,
+  onItemClick,
+}) => {
+  const navigate = useNavigate();
+
+  const toggle = (slug: string) => {
+    const next = selectedSlugs.includes(slug)
+      ? selectedSlugs.filter((s) => s !== slug)
+      : [...selectedSlugs, slug];
+
+    if (onChange) {
+      onChange(next);
+    } else if (next.length > 0) {
+      navigate(`/shop?categories=${next.join(',')}`);
+    } else {
+      navigate('/shop');
+    }
+    onItemClick?.();
+  };
+
+  return (
+    <div className="space-y-1">
+      {SHOP_CATEGORIES.map((cat) => {
+        const isChecked = selectedSlugs.includes(cat.categorySlug);
+        return (
+          <label
+            key={cat.categorySlug}
+            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all hover:bg-stone-50 text-stone-700"
+          >
+            <span
+              className={`w-4 h-4 rounded border shrink-0 flex items-center justify-center transition-colors ${
+                isChecked ? 'bg-[#0E4A93] border-[#0E4A93]' : 'bg-white border-stone-300'
+              }`}
+            >
+              {isChecked && <Check className="w-3 h-3 text-white stroke-[3]" />}
+            </span>
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={() => toggle(cat.categorySlug)}
+              className="sr-only"
+            />
+            <span className="flex-1">{cat.name}</span>
+          </label>
+        );
+      })}
+    </div>
+  );
+};
+
+export default ShopByCategoryFilter;

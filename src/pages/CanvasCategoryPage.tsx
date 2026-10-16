@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
-import { SHOP_CATEGORIES } from '../data/shopCategories';
+import { ShopByCategoryFilter } from '../components/ShopByCategoryFilter';
 import { Product } from '../types';
 
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'discount';
@@ -438,19 +438,8 @@ export const CanvasCategoryPage: React.FC = () => {
                 <span className="font-bold text-xs uppercase tracking-wide text-stone-900 block">
                   Shop by Category
                 </span>
-
-                <div className="space-y-1">
-                  {SHOP_CATEGORIES.map((cat) => (
-                    <Link
-                      key={cat.path}
-                      to={cat.path}
-                      className="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all hover:bg-stone-50 text-stone-700"
-                    >
-                      <span>{cat.name}</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
-                    </Link>
-                  ))}
-                </div>
+                <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
+                <ShopByCategoryFilter />
               </div>
 
               {/* Quality & Delivery Assurance Strip in Sidebar */}
@@ -664,19 +653,8 @@ export const CanvasCategoryPage: React.FC = () => {
                 <span className="font-bold text-xs uppercase tracking-wide text-stone-900 block">
                   Shop by Category
                 </span>
-                <div className="space-y-1">
-                  {SHOP_CATEGORIES.map((cat) => (
-                    <Link
-                      key={cat.path}
-                      to={cat.path}
-                      onClick={() => setMobileFiltersOpen(false)}
-                      className="flex items-center justify-between p-2 rounded-lg text-xs font-semibold cursor-pointer bg-stone-50 text-stone-700"
-                    >
-                      <span>{cat.name}</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
-                    </Link>
-                  ))}
-                </div>
+                <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
+                <ShopByCategoryFilter onItemClick={() => setMobileFiltersOpen(false)} />
               </div>
 
             </div>

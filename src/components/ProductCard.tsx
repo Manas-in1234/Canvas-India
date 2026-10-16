@@ -95,19 +95,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
-        {/* Short category / subcategory */}
-        <div className="text-[10px] text-stone-500 font-medium uppercase tracking-wider line-clamp-1 mt-2">
-          {(product as any).subcategory || product.category}
-        </div>
-
         {/* Title linked to /products/:id */}
         <Link
           to={`/products/${product.id}`}
-          className="block font-semibold text-xs sm:text-[13px] text-stone-900 line-clamp-1 group-hover:text-[#0E4A93] transition-colors mt-0.5 cursor-pointer"
+          className="block font-semibold text-xs sm:text-[13px] text-stone-900 line-clamp-1 group-hover:text-[#0E4A93] transition-colors mt-2 cursor-pointer"
           title={product.name}
         >
           {product.name}
         </Link>
+
+        {/* Short category / subcategory */}
+        <div className="text-[10px] text-stone-500 font-medium uppercase tracking-wider line-clamp-1 mt-0.5">
+          {(product as any).subcategory || product.category}
+        </div>
 
         {/* Pricing Row */}
         <div className="flex items-baseline gap-1.5 mt-1">
