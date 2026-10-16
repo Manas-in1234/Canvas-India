@@ -1,6 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight, Truck, BadgeCheck, Headphones, ShieldCheck, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Tag, Copy, Check, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote } from 'lucide-react';
 import { Product } from '../types';
 import { OCCASIONS } from '../data/occasionsData';
 
@@ -80,6 +80,13 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   const testiRef = useRef<HTMLDivElement>(null);
   const categoryRowRef = useRef<HTMLDivElement>(null);
   const occasionRowRef = useRef<HTMLDivElement>(null);
+  const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
+
+  const handleCopyCoupon = (code: string) => {
+    navigator.clipboard.writeText(code).catch(() => {});
+    setCopiedCoupon(code);
+    setTimeout(() => setCopiedCoupon((c) => (c === code ? null : c)), 2000);
+  };
 
   const handleStartCreatingCanvas = () => {
     const first = allProducts.find((p) => p.categorySlug === 'canvas');
@@ -221,19 +228,31 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               </div>
             </button>
 
-            {/* In-hero feature highlights */}
-            <div className="mt-8 lg:mt-10 pt-6 border-t border-stone-300/60 grid grid-cols-2 sm:grid-cols-4 gap-3 text-[#0E4A93]">
+            {/* In-hero coupon codes */}
+            <div className="mt-8 lg:mt-10 pt-6 border-t border-stone-300/60 flex flex-wrap items-center gap-2.5">
               {[
-                { icon: Truck, t: 'Free Delivery' },
-                { icon: BadgeCheck, t: 'Quality Products' },
-                { icon: Headphones, t: 'Satisfaction & Support' },
-                { icon: ShieldCheck, t: 'Secure Payments' },
-              ].map(({ icon: Icon, t }) => (
-                <div key={t} className="flex items-center gap-2">
-                  <Icon className="w-4 h-4 shrink-0 text-[#0E4A93]" strokeWidth={2} />
-                  <span className="text-xs font-semibold text-stone-800 leading-tight">{t}</span>
-                </div>
-              ))}
+                { code: 'CANVAS10', desc: '10% OFF' },
+                { code: 'FIRSTPRINT', desc: 'Up to ₹250 OFF' },
+              ].map(({ code, desc }) => {
+                const isCopied = copiedCoupon === code;
+                return (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => handleCopyCoupon(code)}
+                    className="group flex items-center gap-2 pl-3 pr-2.5 py-2 rounded-xl bg-white border border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Tag className="w-3.5 h-3.5 shrink-0 text-[#E8752A]" strokeWidth={2} />
+                    <span className="text-xs font-black text-[#0E4A93] tracking-wide">{code}</span>
+                    <span className="text-[11px] text-stone-500 font-medium hidden sm:inline">{desc}</span>
+                    {isCopied ? (
+                      <Check className="w-3.5 h-3.5 shrink-0 text-emerald-600" strokeWidth={2.5} />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5 shrink-0 text-stone-400 group-hover:text-[#0E4A93]" strokeWidth={2} />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </Container>
