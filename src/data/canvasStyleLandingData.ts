@@ -38,6 +38,9 @@ const PHOTO = {
   split2PanelStormOcean: '/assets/canvas-styles/split-2panel-storm-ocean.webp', // user-supplied: 2-panel split canvas, stormy ocean with lightning
   split3PanelWeddingOrchard: '/assets/canvas-styles/split-3panel-wedding-orchard.webp', // user-supplied: 3-panel split canvas, wedding couple in orchard
   split5PanelBeachSunset: '/assets/canvas-styles/split-5panel-beach-sunset.webp', // user-supplied: 5-panel stepped split canvas, beach sunset
+  panoramicGanesh: '/assets/canvas-styles/panoramic-ganesh-painting.webp', // user-supplied: wide panoramic colorful Ganesh devotional painting
+  panoramicDancers: '/assets/canvas-styles/panoramic-dancers-painting.webp', // user-supplied: wide panoramic painted dancers in motion
+  panoramicBeachSunset: '/assets/canvas-styles/panoramic-rocky-beach-sunset.webp', // user-supplied: wide panoramic rocky beach sunset photo
   photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.webp', // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
   collageCluster: u('1541359927273-d76820fc43f9'), // verified: cluster of photos/cards collaged on a wall
   photoCollage2Panel: '/assets/canvas-styles/photo-collage-2panel-couple.webp', // user-supplied: 2 photos side-by-side, framed, "Sarah & Marc"
@@ -556,6 +559,33 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         description: 'Wide panoramic wedding ceremony memories printed on fine archival cotton weave.',
         price: 2799,
         image: PHOTO.weddingCouple,
+        customizeHref: '/customize/canvas/canvas-single?category=PANORAMIC'
+      },
+      {
+        id: 'canvas-panoramic-ganesh',
+        number: '02',
+        name: 'Ganesh Devotional Panoramic Canvas',
+        description: 'Vibrant modern devotional artwork of Lord Ganesh in a splash of color, printed across a wide panoramic canvas.',
+        price: 2799,
+        image: PHOTO.panoramicGanesh,
+        customizeHref: '/customize/canvas/canvas-single?category=PANORAMIC'
+      },
+      {
+        id: 'canvas-panoramic-dancers',
+        number: '03',
+        name: 'Dancers in Motion Panoramic Canvas',
+        description: 'Expressive painted dancers captured mid-motion in flowing color — a striking abstract panoramic centerpiece.',
+        price: 2799,
+        image: PHOTO.panoramicDancers,
+        customizeHref: '/customize/canvas/canvas-single?category=PANORAMIC'
+      },
+      {
+        id: 'canvas-panoramic-beach',
+        number: '04',
+        name: 'Rocky Beach Sunset Panoramic Canvas',
+        description: 'A calm, wide horizon of sunset light over rocky shallows — a serene panoramic print for any room.',
+        price: 2799,
+        image: PHOTO.panoramicBeachSunset,
         customizeHref: '/customize/canvas/canvas-single?category=PANORAMIC'
       }
     ],
