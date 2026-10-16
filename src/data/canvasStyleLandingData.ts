@@ -35,6 +35,9 @@ const PHOTO = {
   hexagon4PanelAutumnWedding: '/assets/canvas-styles/hexagon-4panel-autumn-wedding.webp', // user-supplied: 4 real hexagon panels in diamond arrangement, autumn/wedding photos
   hexagon7PanelFamily: '/assets/canvas-styles/hexagon-7panel-family.webp', // user-supplied: 6 real hexagon panels honeycomb cluster, family photos on dark green (user-confirmed count)
   hexagonSingleFamily: '/assets/canvas-styles/hexagon-single-family.webp', // user-supplied: single hexagon canvas, family of 4 photo
+  split2PanelStormOcean: '/assets/canvas-styles/split-2panel-storm-ocean.webp', // user-supplied: 2-panel split canvas, stormy ocean with lightning
+  split3PanelWeddingOrchard: '/assets/canvas-styles/split-3panel-wedding-orchard.webp', // user-supplied: 3-panel split canvas, wedding couple in orchard
+  split5PanelBeachSunset: '/assets/canvas-styles/split-5panel-beach-sunset.webp', // user-supplied: 5-panel stepped split canvas, beach sunset
   photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.webp', // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
   collageCluster: u('1541359927273-d76820fc43f9'), // verified: cluster of photos/cards collaged on a wall
   photoCollage2Panel: '/assets/canvas-styles/photo-collage-2panel-couple.webp', // user-supplied: 2 photos side-by-side, framed, "Sarah & Marc"
@@ -588,22 +591,31 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     }),
     styles: [
       {
-        id: 'canvas-split',
+        id: 'split-2p-40x50',
         number: '01',
-        name: 'Split Canvas (Triptych)',
-        description: 'Panoramic photo split seamlessly across 3 triptych canvas panels.',
-        price: 188.1,
-        visual: 'split-panels',
-        customizeHref: '/customize/canvas/canvas-split'
+        name: '2-Panel Split Canvas',
+        description: 'A single scene split cleanly across 2 equal vertical panels — a simple, dramatic way to fill a narrow wall.',
+        price: 1357,
+        image: PHOTO.split2PanelStormOcean,
+        customizeHref: '/customize/canvas/canvas-split?layout=split-2p-40x50'
       },
       {
-        id: 'canvas-split-panel',
+        id: 'split-3p-75x50-triptych',
         number: '02',
+        name: 'Split Canvas (Triptych)',
+        description: 'Panoramic photo split seamlessly across 3 equal triptych canvas panels.',
+        price: 4412.31,
+        image: PHOTO.split3PanelWeddingOrchard,
+        customizeHref: '/customize/canvas/canvas-split?layout=split-3p-75x50-triptych'
+      },
+      {
+        id: 'split-5p-57-75-97-stepped',
+        number: '03',
         name: '5-Panel Panoramic Landscape Canvas',
-        description: 'Dramatic multi-tier 5-piece split canvas centerpiece for spacious living and dining halls.',
-        price: 3499,
-        visual: 'split-panels',
-        customizeHref: '/customize/canvas/canvas-split'
+        description: 'Dramatic multi-tier 5-piece split canvas centerpiece, stepping up to a tall center panel, for spacious living and dining halls.',
+        price: 4650,
+        image: PHOTO.split5PanelBeachSunset,
+        customizeHref: '/customize/canvas/canvas-split?layout=split-5p-57-75-97-stepped'
       }
     ],
     galleryTitle: 'Panel counts for every wall',
