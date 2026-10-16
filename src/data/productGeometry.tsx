@@ -7167,12 +7167,26 @@ export function getProductLayout(productTypeId: string, layoutId?: string): Prod
   const layouts = getProductLayouts(productTypeId);
   if (!layoutId) return layouts[0];
   const normKey = layoutId.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const found = layouts.find((l) => {
+  const isMosaicType = productTypeId.toLowerCase().includes('mosaic');
+
+  // Tier 1: exact matches always win, regardless of array order — an exact
+  // id match later in the list must never lose to a fuzzy match earlier in
+  // it (e.g. 'split-3p-75x50-triptych' vs the unrelated earlier
+  // 'split-4p-85x50-stacked-right', whose normalized id also happens to
+  // contain "5x5" from "85x50").
+  const exact = layouts.find((l) => {
     if (l.id === layoutId) return true;
     if (l.name.toLowerCase() === layoutId.toLowerCase()) return true;
     const lNorm = l.id.toLowerCase().replace(/[^a-z0-9]/g, '');
     if (lNorm === normKey) return true;
     if ((l as any).diagramType === layoutId) return true;
+    return false;
+  });
+  if (exact) return exact;
+
+  // Tier 2: fuzzy / legacy-ID fallbacks, only consulted when no exact match exists.
+  const fuzzy = layouts.find((l) => {
+    const lNorm = l.id.toLowerCase().replace(/[^a-z0-9]/g, '');
     if (layoutId.startsWith(l.id) || l.id.startsWith(layoutId)) return true;
     // Map legacy hexagon IDs
     if (layoutId === 'hexagon-1' && l.id === 'hex-horizontal-single') return true;
@@ -7185,17 +7199,21 @@ export function getProductLayout(productTypeId: string, layoutId?: string): Prod
     if (layoutId === 'hexagon-3p-27x13.75' && l.id === 'hex-horizontal-bundle-3') return true;
     if (layoutId === 'hexagon-4p-27x19' && l.id === 'hex-horizontal-bundle-4') return true;
 
-    // Map legacy / alternative IDs for Mosaic
-    if (normKey.includes('4x4') && lNorm.includes('4x4')) return true;
-    if (normKey.includes('5x5') && lNorm.includes('5x5')) return true;
-    if ((normKey.includes('6x6') || normKey.includes('86x6')) && lNorm.includes('6x6')) return true;
-    if (normKey.includes('3x4') && !normKey.includes('13x4') && lNorm.includes('3x4') && l.aspectRatio > 1) return true;
-    if (normKey.includes('4x5') && lNorm.includes('4x5')) return true;
-    if ((normKey.includes('13x4') || (normKey.includes('3x4') && l.aspectRatio < 1)) && (lNorm.includes('13x4') || lNorm.includes('1-3x4'))) return true;
-    if (normKey.includes('5x3') && lNorm.includes('5x3')) return true;
+    // Map legacy / alternative IDs for Mosaic — scoped to mosaic products only,
+    // since these short numeric substrings (e.g. "5x5") can coincidentally
+    // appear inside unrelated split/collage/wall-art layout ids too.
+    if (isMosaicType) {
+      if (normKey.includes('4x4') && lNorm.includes('4x4')) return true;
+      if (normKey.includes('5x5') && lNorm.includes('5x5')) return true;
+      if ((normKey.includes('6x6') || normKey.includes('86x6')) && lNorm.includes('6x6')) return true;
+      if (normKey.includes('3x4') && !normKey.includes('13x4') && lNorm.includes('3x4') && l.aspectRatio > 1) return true;
+      if (normKey.includes('4x5') && lNorm.includes('4x5')) return true;
+      if ((normKey.includes('13x4') || (normKey.includes('3x4') && l.aspectRatio < 1)) && (lNorm.includes('13x4') || lNorm.includes('1-3x4'))) return true;
+      if (normKey.includes('5x3') && lNorm.includes('5x3')) return true;
+    }
     return false;
   });
-  return found || layouts[0];
+  return fuzzy || layouts[0];
 }
 
 /**
