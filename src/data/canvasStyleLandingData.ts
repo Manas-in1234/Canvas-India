@@ -31,6 +31,9 @@ const PHOTO = {
   wallDisplayRainyStreet: '/assets/canvas-styles/wall-display-rainy-street-couple.webp', // user-supplied: painted couple under umbrella on rainy city street
   wallDisplayOceanSunset: '/assets/canvas-styles/wall-display-ocean-sunset.webp', // user-supplied: painted ocean sunset with gold clouds
   wallDisplay3PanelLivingRoom: '/assets/canvas-styles/wall-display-3panel-living-room-boho.webp', // user-supplied: real 3-equal-panel boho arch/sun canvas set over a green sofa
+  hexagon3PanelMomDaughter: '/assets/canvas-styles/hexagon-3panel-mom-daughter.webp', // user-supplied: 3 real hexagon panels, mother/daughter photos
+  hexagon4PanelAutumnWedding: '/assets/canvas-styles/hexagon-4panel-autumn-wedding.webp', // user-supplied: 4 real hexagon panels in diamond arrangement, autumn/wedding photos
+  hexagon7PanelFamily: '/assets/canvas-styles/hexagon-7panel-family.webp', // user-supplied: 7 real hexagon panels honeycomb cluster, family photos on dark green
   photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.webp', // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
   collageCluster: u('1541359927273-d76820fc43f9'), // verified: cluster of photos/cards collaged on a wall
   photoCollage2Panel: '/assets/canvas-styles/photo-collage-2panel-couple.webp', // user-supplied: 2 photos side-by-side, framed, "Sarah & Marc"
@@ -636,11 +639,38 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
       {
         id: 'canvas-hexagon',
         number: '01',
-        name: 'Hexagon Prints',
-        description: 'Geometric 6-sided honeycomb canvas prints for modular wall clusters.',
+        name: 'Single Hexagon Print',
+        description: 'Geometric 6-sided honeycomb canvas print — a single statement piece or the starting point for a larger cluster.',
         price: 449,
         visual: 'hexagon-cluster',
         customizeHref: '/customize/canvas/canvas-hexagon'
+      },
+      {
+        id: 'hex-horizontal-bundle-3',
+        number: '02',
+        name: '3-Panel Hexagon Cluster',
+        description: 'Three hexagon panels grouped together — a compact honeycomb arrangement perfect for a family trio.',
+        price: 1782,
+        image: PHOTO.hexagon3PanelMomDaughter,
+        customizeHref: '/customize/canvas/canvas-hexagon?layout=hex-horizontal-bundle-3'
+      },
+      {
+        id: 'hex-horizontal-bundle-4',
+        number: '03',
+        name: '4-Panel Hexagon Cluster',
+        description: 'Four hexagon panels in a diamond arrangement — room for a wider story across your wall.',
+        price: 2377,
+        image: PHOTO.hexagon4PanelAutumnWedding,
+        customizeHref: '/customize/canvas/canvas-hexagon?layout=hex-horizontal-bundle-4'
+      },
+      {
+        id: 'hex-horizontal-bundle-7',
+        number: '04',
+        name: '7-Panel Hexagon Honeycomb',
+        description: 'Seven hexagon panels interlocked into a full honeycomb — our most dramatic cluster, built for a whole family collection.',
+        price: 4161,
+        image: PHOTO.hexagon7PanelFamily,
+        customizeHref: '/customize/canvas/canvas-hexagon?layout=hex-horizontal-bundle-7'
       }
     ],
     galleryTitle: 'Cluster ideas',
