@@ -2446,6 +2446,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       }
       return 'single-10x10';
     }
+    // A deep link like /customize/canvas/canvas-split?layout=split-3p-75x50-triptych
+    // (used by the Canvas style landing pages' "Customize This Style" buttons) — for
+    // layout products (collage/mosaic/hexagon/split/wall-art) the size option id is
+    // the same as the layout id, so honor it here too instead of always defaulting
+    // to the first option.
+    const requestedLayoutId = searchParams.get('layout');
+    if (requestedLayoutId && availableSizeOptions.some((s) => s.id === requestedLayoutId)) {
+      return requestedLayoutId;
+    }
     return availableSizeOptions[0]?.id || (routeMaterial === 'acrylic' ? 'rec-10x10' : 'single-10x10');
   });
 
