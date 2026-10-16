@@ -400,7 +400,9 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
               {currentSelected?.name}
             </strong>
             <span className="ml-1.5 text-stone-400">
-              ({currentSelected?.panelsCount} {currentSelected?.panelsCount === 1 ? 'Photo Slot' : 'Photo Slots'})
+              ({currentSelected?.geometryType === 'mosaic'
+                ? `${currentSelected?.panelsCount} Mosaic Tiles`
+                : `${currentSelected?.panelsCount} ${currentSelected?.panelsCount === 1 ? 'Photo Slot' : 'Photo Slots'}`})
             </span>
           </div>
           <div className="flex items-center gap-2.5 shrink-0">

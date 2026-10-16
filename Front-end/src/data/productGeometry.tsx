@@ -6759,6 +6759,7 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
     {
       id: 'mosaic2-4x4',
       productTypeId: 'canvas-mosaic',
+      shapeId: 'shape-square',
       name: 'Mosaic2-4x4',
       description: '16 mosaic tiles in a 4×4 grid',
       geometryType: 'mosaic',
@@ -6795,6 +6796,7 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
     {
       id: 'mosaic4-5x5',
       productTypeId: 'canvas-mosaic',
+      shapeId: 'shape-square',
       name: 'Mosaic4-5x5',
       description: '25 mosaic tiles in a 5×5 grid',
       geometryType: 'mosaic',
@@ -6831,6 +6833,7 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
     {
       id: 'mosaic6-6x6',
       productTypeId: 'canvas-mosaic',
+      shapeId: 'shape-square',
       name: 'Mosaic6-6x6',
       description: '36 mosaic tiles in a 6×6 grid',
       geometryType: 'mosaic',
@@ -6867,6 +6870,7 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
     {
       id: 'mosaic3-3x4',
       productTypeId: 'canvas-mosaic',
+      shapeId: 'shape-rectangle',
       name: 'Mosaic3-3x4',
       description: '12 mosaic tiles in a 4×3 landscape grid',
       geometryType: 'mosaic',
@@ -6903,6 +6907,7 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
     {
       id: 'mosaic5-4x5',
       productTypeId: 'canvas-mosaic',
+      shapeId: 'shape-rectangle',
       name: 'Mosaic5-4x5',
       description: '20 mosaic tiles in a 4×5 portrait grid',
       geometryType: 'mosaic',
@@ -6939,6 +6944,7 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
     {
       id: 'mosaic1-3x4',
       productTypeId: 'canvas-mosaic',
+      shapeId: 'shape-rectangle',
       name: 'Mosaic1-3x4',
       description: '12 mosaic tiles in a 3×4 portrait grid',
       geometryType: 'mosaic',
@@ -6975,6 +6981,7 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
     {
       id: 'mosaic7-5x3',
       productTypeId: 'canvas-mosaic',
+      shapeId: 'shape-rectangle',
       name: 'Mosaic7-5x3',
       description: '15 mosaic tiles in a 3×5 portrait grid',
       geometryType: 'mosaic',
