@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { OCCASIONS, getOccasionBySlug } from '../data/occasionsData';
-import { SHOP_CATEGORIES } from '../data/shopCategories';
+import { GIFT_TILE_CATEGORIES } from '../data/shopCategories';
 
 const OCCASION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   birthday: Cake,
@@ -123,7 +123,7 @@ export const OccasionPage: React.FC = () => {
   const giftTiles = useMemo(() => {
     if (!occasion) return [];
     return occasion.categorySlugs
-      .map((slugKey) => SHOP_CATEGORIES.find((c) => c.categorySlug === slugKey))
+      .map((slugKey) => GIFT_TILE_CATEGORIES.find((c) => c.categorySlug === slugKey))
       .filter((c): c is NonNullable<typeof c> => Boolean(c))
       .map((cat) => {
         const firstProduct = allProducts.find((p) => p.categorySlug === cat.categorySlug);
