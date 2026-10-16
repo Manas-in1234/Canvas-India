@@ -1,13 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Phone, 
-  Mail, 
-  MapPin, 
-  ShieldCheck, 
-  Truck, 
-  MessageCircle, 
-  Receipt,
+import {
+  Phone,
+  Mail,
+  MapPin,
+  MessageCircle,
   ArrowRight
 } from 'lucide-react';
 
@@ -23,58 +20,6 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
     <footer className="bg-[#0B1727] text-stone-300 pt-12 pb-8 text-xs font-manrope">
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
         
-        {/* Top Trust & Value Proposition Strip (Unboxed) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pb-8 mb-8 border-b border-stone-800/80">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[#E8752A]/20 text-[#E8752A] flex items-center justify-center shrink-0">
-              <Truck className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="font-bold text-white text-xs sm:text-sm">Free Delivery on ₹999+</div>
-              <div className="text-[11px] text-stone-400">Insured shipping across 19,000+ pin codes</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-              <Receipt className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="font-bold text-white text-xs sm:text-sm">GST Invoicing Available</div>
-              <div className="text-[11px] text-stone-400">Claim 18% input tax credit on business orders</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[#0E4A93]/40 text-blue-400 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="font-bold text-white text-xs sm:text-sm">100% Safe Payments</div>
-              <div className="text-[11px] text-stone-400">Encrypted UPI, Cards, NetBanking & EMI</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-              <MessageCircle className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="font-bold text-white text-xs sm:text-sm">Instant WhatsApp Support</div>
-              <div className="text-[11px] text-stone-400">
-                <a
-                  href="https://wa.me/917893051555"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-emerald-400 transition-colors"
-                >
-                  +91 78930 51555 (Mon-Sat 9am - 8pm)
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Main Footer Columns */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 pb-10 border-b border-stone-800/80">
           
