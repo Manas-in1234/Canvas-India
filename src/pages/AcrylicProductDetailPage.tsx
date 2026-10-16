@@ -1038,7 +1038,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                         src={rel.image} 
                         alt={rel.name}
                         onError={(e) => {
-                          e.currentTarget.src = '/assets/acrylic/acrylic-fallback.jpg';
+                          e.currentTarget.src = '/assets/acrylic/acrylic-fallback.webp';
                         }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />

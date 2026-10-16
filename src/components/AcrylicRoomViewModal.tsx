@@ -52,7 +52,7 @@ export const PRESET_ROOMS: RoomPreset[] = [
   {
     id: 'office',
     name: 'OFFICE',
-    image: '/assets/acrylic/acrylic-corporate-office.jpg',
+    image: '/assets/acrylic/acrylic-corporate-office.webp',
     naturalAspect: 800 / 560,
     // Left dark-blue office wall above the wooden credenza and below the recessed ceiling
     wallBounds: {
@@ -69,7 +69,7 @@ export const PRESET_ROOMS: RoomPreset[] = [
   {
     id: 'living',
     name: 'HOME / LIVING ROOM',
-    image: '/assets/acrylic/acrylic-panel-living.jpg',
+    image: '/assets/acrylic/acrylic-panel-living.webp',
     naturalAspect: 800 / 600,
     // Main open living room wall above the sofa and left of the indoor plants/windows
     wallBounds: {

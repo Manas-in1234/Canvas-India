@@ -113,7 +113,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     shortTitle: 'Cork Products',
     seoTitle: 'Cork Yoga & Wellness Products | Canvas India',
     description: 'Eco-friendly cork yoga and wellness products. Cork is renewable, harvested from the bark of cork oak trees every 9–12 years. Lightweight, water-resistant, and durable. Naturally antimicrobial and biodegradable.',
-    heroImage: '/assets/products/cork/9C-YA1/9c-ya1(1).png',
+    heroImage: '/assets/products/cork/9C-YA1/9c-ya1(1).webp',
     subcategories: [
       'All',
       'Yoga Mats',
@@ -357,7 +357,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     shortTitle: 'Devotional Art',
     seoTitle: 'Devotional Art Prints | Canvas India',
     description: 'God, spiritual and religious print art for home shrines, pooja rooms and devotional corners.',
-    heroImage: '/assets/catalogue/devotional-art/G-A_002.jpg',
+    heroImage: '/assets/catalogue/devotional-art/G-A_002.webp',
     subcategories: ['All'],
     features: [
       'Premium archival print quality',
@@ -374,7 +374,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     shortTitle: 'Scenery & Landscape',
     seoTitle: 'Scenery & Landscape Art Prints | Canvas India',
     description: 'Nature, seascape and landscape print art to bring the outdoors onto your walls.',
-    heroImage: '/assets/catalogue/scenery-landscape-art/S-A_011.jpg',
+    heroImage: '/assets/catalogue/scenery-landscape-art/S-A_011.webp',
     subcategories: ['All'],
     features: [
       'Premium archival print quality',
@@ -391,7 +391,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     shortTitle: 'Tribal & Ethnic Art',
     seoTitle: 'Tribal & Ethnic Art Prints | Canvas India',
     description: 'Aboriginal, tribal and ethnic-pattern print art with bold, earthy character.',
-    heroImage: '/assets/catalogue/tribal-ethnic-art/A-A_007.jpg',
+    heroImage: '/assets/catalogue/tribal-ethnic-art/A-A_007.webp',
     subcategories: ['All'],
     features: [
       'Premium archival print quality',
@@ -408,7 +408,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     shortTitle: 'Line Art',
     seoTitle: 'Line Art Prints | Canvas India',
     description: 'Minimal monochrome line-art prints for a clean, modern wall.',
-    heroImage: '/assets/catalogue/line-art/L-A_011.jpg',
+    heroImage: '/assets/catalogue/line-art/L-A_011.webp',
     subcategories: ['All'],
     features: [
       'Premium archival print quality',
@@ -425,7 +425,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     shortTitle: 'Motivational Posters',
     seoTitle: 'Motivational Posters | Canvas India',
     description: 'Motivational quote and typography posters for home, office and study spaces.',
-    heroImage: '/assets/catalogue/motivational-posters/M-A_031.jpg',
+    heroImage: '/assets/catalogue/motivational-posters/M-A_031.webp',
     subcategories: ['All'],
     features: [
       'Premium archival print quality',
@@ -442,7 +442,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     shortTitle: 'Cork Art Patterns',
     seoTitle: 'Cork Art Pattern Prints | Canvas India',
     description: 'Textured cork-finish pattern prints, from geometric motifs to natural wood-grain designs.',
-    heroImage: '/assets/catalogue/cork-art-patterns/C-A_004.jpg',
+    heroImage: '/assets/catalogue/cork-art-patterns/C-A_004.webp',
     subcategories: ['All'],
     features: [
       'Premium archival print quality',

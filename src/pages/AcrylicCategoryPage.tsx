@@ -219,12 +219,12 @@ export const AcrylicCategoryPage: React.FC = () => {
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-3xl overflow-hidden border border-stone-200 shadow-xl bg-stone-100 group aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3]">
                 <img
-                  src="/assets/acrylic/acrylic-panel-living.jpg"
+                  src="/assets/acrylic/acrylic-panel-living.webp"
                   alt="Acrylic Prints and Wall Art in Living Room"
                   onError={(e) => {
                     const target = e.currentTarget;
-                    if (target.src !== '/assets/acrylic/acrylic-custom-wall-art.jpg') {
-                      target.src = '/assets/acrylic/acrylic-custom-wall-art.jpg';
+                    if (target.src !== '/assets/acrylic/acrylic-custom-wall-art.webp') {
+                      target.src = '/assets/acrylic/acrylic-custom-wall-art.webp';
                     }
                   }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"

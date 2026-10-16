@@ -381,7 +381,7 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Canvas India - Personalized Canvas, Acrylic & Cork Prints"
               >
                 <img
-                  src="/canvas-india-official-logo.png"
+                  src="/canvas-india-official-logo.webp"
                   alt="Canvas India"
                   className="w-[130px] lg:w-[140px] xl:w-[148px] h-auto object-contain block select-none"
                 />
@@ -644,7 +644,7 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Canvas India"
               >
                 <img
-                  src="/canvas-india-official-logo.png"
+                  src="/canvas-india-official-logo.webp"
                   alt="Canvass India"
                   className="h-7 sm:h-8 md:h-9 w-auto object-contain block select-none"
                 />
@@ -1009,7 +1009,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="w-80 bg-white h-full shadow-2xl flex flex-col">
             <div className="p-4 bg-[#0E4A93] text-white flex items-center justify-between">
               <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center">
-                <img src="/canvas-india-official-logo.png" alt="Canvas India" className="w-[125px] h-auto object-contain" />
+                <img src="/canvas-india-official-logo.webp" alt="Canvas India" className="w-[125px] h-auto object-contain" />
               </Link>
               <button type="button" onClick={() => setMobileMenuOpen(false)} className="p-1 text-white hover:text-stone-300">
                 <X className="w-6 h-6" />

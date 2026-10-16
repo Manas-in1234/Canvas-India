@@ -27,29 +27,29 @@ const PHOTO = {
   paintTexture: u('1605721911519-3dfeb3be25e7'), // abstract painted canvas texture
   officeWorkspace: u('1497215728101-856f4ea42174'), // office desk with plants, city view
   officeHallway: u('1497366216548-37526070297c'), // office interior hallway
-  weddingGalleryWall: '/assets/canvas-styles/wall-display-wedding-gallery.png', // user-supplied: 6-panel asymmetric wedding photo gallery over a sofa
-  wallDisplayRainyStreet: '/assets/canvas-styles/wall-display-rainy-street-couple.png', // user-supplied: painted couple under umbrella on rainy city street
-  wallDisplayOceanSunset: '/assets/canvas-styles/wall-display-ocean-sunset.png', // user-supplied: painted ocean sunset with gold clouds
-  wallDisplay3PanelLivingRoom: '/assets/canvas-styles/wall-display-3panel-living-room-boho.png', // user-supplied: real 3-equal-panel boho arch/sun canvas set over a green sofa
-  photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.png', // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
+  weddingGalleryWall: '/assets/canvas-styles/wall-display-wedding-gallery.webp', // user-supplied: 6-panel asymmetric wedding photo gallery over a sofa
+  wallDisplayRainyStreet: '/assets/canvas-styles/wall-display-rainy-street-couple.webp', // user-supplied: painted couple under umbrella on rainy city street
+  wallDisplayOceanSunset: '/assets/canvas-styles/wall-display-ocean-sunset.webp', // user-supplied: painted ocean sunset with gold clouds
+  wallDisplay3PanelLivingRoom: '/assets/canvas-styles/wall-display-3panel-living-room-boho.webp', // user-supplied: real 3-equal-panel boho arch/sun canvas set over a green sofa
+  photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.webp', // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
   collageCluster: u('1541359927273-d76820fc43f9'), // verified: cluster of photos/cards collaged on a wall
-  photoCollage2Panel: '/assets/canvas-styles/photo-collage-2panel-couple.png', // user-supplied: 2 photos side-by-side, framed, "Sarah & Marc"
-  photoCollage3Panel: '/assets/canvas-styles/photo-collage-3panel-family.png', // user-supplied: 2 stacked (dog, baby) left + 1 tall (family) right, framed
-  photoCollage5Panel: '/assets/canvas-styles/photo-collage-5panel-wedding.png', // user-supplied: 5-photo wedding pinwheel collage
-  photoCollage9Panel: '/assets/canvas-styles/photo-collage-9panel-landscape.png', // user-supplied: 3x3 grid of 9 landscape photos
-  shapedCanvasRound: '/assets/canvas-styles/shaped-canvas-round.png', // user-supplied: round painted sunset lake landscape
-  shapedCanvasTriangle: '/assets/canvas-styles/shaped-canvas-triangle.png', // user-supplied: triangle painted figure-in-doorway scene
-  shapedCanvasHeart: '/assets/canvas-styles/shaped-canvas-heart.png', // user-supplied: heart-shaped painted island sunset
-  shapedCanvasOval: '/assets/canvas-styles/shaped-canvas-oval.png', // user-supplied: oval painted tulips
-  photoMosaicEye: '/assets/canvas-styles/photo-mosaic-eye.png', // user-supplied: tile-mosaic close-up of an eye
-  photoMosaicPhoenix: '/assets/canvas-styles/photo-mosaic-phoenix.png', // user-supplied: tile-mosaic phoenix/sunrise bird design
-  photoMosaicFace: '/assets/canvas-styles/photo-mosaic-face.png', // user-supplied: tile-mosaic sleeping face with spiral hair
-  photoMosaicBirdhouse: '/assets/canvas-styles/photo-mosaic-birdhouse.png', // user-supplied: tile-mosaic birdhouse with two birds
-  photoMosaicParrots: '/assets/canvas-styles/photo-mosaic-parrots.png', // user-supplied: round tile-mosaic of two parrots
-  popArtWarholZebra: '/assets/canvas-styles/pop-art-warhol-zebra.png', // user-supplied: Warhol-style zebra painting
-  popArtCaricature: '/assets/canvas-styles/pop-art-caricature-takeabreak.png', // user-supplied: illustrated "Take a Break" portrait
-  popArtLichtenstein: '/assets/canvas-styles/pop-art-lichtenstein-crying.png', // user-supplied: Lichtenstein-style crying girl
-  popArtPixel: '/assets/canvas-styles/pop-art-pixel-mario.png' // user-supplied: pixel-art Mario painting
+  photoCollage2Panel: '/assets/canvas-styles/photo-collage-2panel-couple.webp', // user-supplied: 2 photos side-by-side, framed, "Sarah & Marc"
+  photoCollage3Panel: '/assets/canvas-styles/photo-collage-3panel-family.webp', // user-supplied: 2 stacked (dog, baby) left + 1 tall (family) right, framed
+  photoCollage5Panel: '/assets/canvas-styles/photo-collage-5panel-wedding.webp', // user-supplied: 5-photo wedding pinwheel collage
+  photoCollage9Panel: '/assets/canvas-styles/photo-collage-9panel-landscape.webp', // user-supplied: 3x3 grid of 9 landscape photos
+  shapedCanvasRound: '/assets/canvas-styles/shaped-canvas-round.webp', // user-supplied: round painted sunset lake landscape
+  shapedCanvasTriangle: '/assets/canvas-styles/shaped-canvas-triangle.webp', // user-supplied: triangle painted figure-in-doorway scene
+  shapedCanvasHeart: '/assets/canvas-styles/shaped-canvas-heart.webp', // user-supplied: heart-shaped painted island sunset
+  shapedCanvasOval: '/assets/canvas-styles/shaped-canvas-oval.webp', // user-supplied: oval painted tulips
+  photoMosaicEye: '/assets/canvas-styles/photo-mosaic-eye.webp', // user-supplied: tile-mosaic close-up of an eye
+  photoMosaicPhoenix: '/assets/canvas-styles/photo-mosaic-phoenix.webp', // user-supplied: tile-mosaic phoenix/sunrise bird design
+  photoMosaicFace: '/assets/canvas-styles/photo-mosaic-face.webp', // user-supplied: tile-mosaic sleeping face with spiral hair
+  photoMosaicBirdhouse: '/assets/canvas-styles/photo-mosaic-birdhouse.webp', // user-supplied: tile-mosaic birdhouse with two birds
+  photoMosaicParrots: '/assets/canvas-styles/photo-mosaic-parrots.webp', // user-supplied: round tile-mosaic of two parrots
+  popArtWarholZebra: '/assets/canvas-styles/pop-art-warhol-zebra.webp', // user-supplied: Warhol-style zebra painting
+  popArtCaricature: '/assets/canvas-styles/pop-art-caricature-takeabreak.webp', // user-supplied: illustrated "Take a Break" portrait
+  popArtLichtenstein: '/assets/canvas-styles/pop-art-lichtenstein-crying.webp', // user-supplied: Lichtenstein-style crying girl
+  popArtPixel: '/assets/canvas-styles/pop-art-pixel-mario.webp' // user-supplied: pixel-art Mario painting
 };
 
 // The customizer's real tab order is Upload -> Size/Layout -> Wrap & Border

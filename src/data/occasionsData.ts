@@ -154,13 +154,13 @@ export const OCCASIONS: OccasionDef[] = [
     tagline: 'Custom photo canvases and acrylic prints to celebrate another trip around the sun',
     pitchHeadline: 'Another Year, Another Memory Worth Keeping',
     pitchText: 'Turn their favourite birthday moment into a personalized print that celebrates them perfectly.',
-    bannerImage: '/assets/occasions/birthday-banner.png',
+    bannerImage: '/assets/occasions/birthday-banner.webp',
     tint: 'from-[#EC4899]/90',
     accent: '#EC4899',
     categorySlugs: ['canvas', 'acrylic'],
     tileImages: {
-      canvas: '/assets/occasions/birthday-cakesmash.png',
-      acrylic: '/assets/occasions/birthday-dino.png',
+      canvas: '/assets/occasions/birthday-cakesmash.webp',
+      acrylic: '/assets/occasions/birthday-dino.webp',
     },
   },
   {
@@ -175,8 +175,8 @@ export const OCCASIONS: OccasionDef[] = [
     accent: '#E11D48',
     categorySlugs: ['canvas', 'acrylic'],
     tileImages: {
-      canvas: '/assets/occasions/anniversary-beach.png',
-      acrylic: '/assets/occasions/anniversary-dinner.png',
+      canvas: '/assets/occasions/anniversary-beach.webp',
+      acrylic: '/assets/occasions/anniversary-dinner.webp',
     },
   },
   {

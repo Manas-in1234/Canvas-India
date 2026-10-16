@@ -27,7 +27,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
           <div className="space-y-3.5">
             <div className="py-1">
               <img
-                src="/canvas-india-official-logo.png"
+                src="/canvas-india-official-logo.webp"
                 alt="Canvas India"
                 className="w-[125px] sm:w-[135px] h-auto object-contain block select-none"
               />

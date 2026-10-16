@@ -1723,14 +1723,14 @@ type SelectedItem = { type: 'text' | 'clipart'; id: string } | null;
 
 // Gallery: sample photographs bundled with the site
 const GALLERY_PHOTOS = [
-  { url: '/assets/acrylic/acrylic-family-print.jpg', label: 'Family' },
-  { url: '/assets/acrylic/acrylic-abstract-art.jpg', label: 'Abstract' },
-  { url: '/assets/acrylic/acrylic-custom-wall-art.jpg', label: 'Wall art' },
-  { url: '/assets/acrylic/acrylic-inspirational-print.jpg', label: 'Quote' },
-  { url: '/assets/acrylic/acrylic-poster.jpg', label: 'Poster' },
-  { url: '/assets/acrylic/acrylic-gift.jpg', label: 'Gift' },
-  { url: '/assets/acrylic/acrylic-decorative-panel.jpg', label: 'Decor' },
-  { url: '/assets/acrylic/acrylic-photo-panel.jpg', label: 'Portrait' }
+  { url: '/assets/acrylic/acrylic-family-print.webp', label: 'Family' },
+  { url: '/assets/acrylic/acrylic-abstract-art.webp', label: 'Abstract' },
+  { url: '/assets/acrylic/acrylic-custom-wall-art.webp', label: 'Wall art' },
+  { url: '/assets/acrylic/acrylic-inspirational-print.webp', label: 'Quote' },
+  { url: '/assets/acrylic/acrylic-poster.webp', label: 'Poster' },
+  { url: '/assets/acrylic/acrylic-gift.webp', label: 'Gift' },
+  { url: '/assets/acrylic/acrylic-decorative-panel.webp', label: 'Decor' },
+  { url: '/assets/acrylic/acrylic-photo-panel.webp', label: 'Portrait' }
 ];
 
 // Procedural artwork from a text prompt (deterministic: same words -> same art). Not an AI model.
@@ -2031,8 +2031,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         originalPrice: activeMaterial === 'acrylic' ? 799 : 999,
         rating: 4.9,
         reviewsCount: 128,
-        image: '/assets/acrylic/acrylic-family-print.jpg',
-        images: ['/assets/acrylic/acrylic-family-print.jpg'],
+        image: '/assets/acrylic/acrylic-family-print.webp',
+        images: ['/assets/acrylic/acrylic-family-print.webp'],
         sizes: [],
         thicknesses: [],
         orientations: ['Landscape', 'Portrait', 'Square'],
@@ -11482,7 +11482,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           <div className="bg-white w-72 h-full shadow-2xl p-6 flex flex-col justify-between animate-in slide-in-from-left duration-200">
             <div className="space-y-5">
               <div className="flex items-center justify-between pb-4 border-b border-stone-100">
-                <img src="/canvas-india-official-logo.png" alt="Canvas India" className="h-8 w-auto object-contain" />
+                <img src="/canvas-india-official-logo.webp" alt="Canvas India" className="h-8 w-auto object-contain" />
                 <button onClick={() => setMenuOpen(false)} className="text-stone-400 hover:text-stone-700 cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>

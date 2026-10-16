@@ -257,7 +257,7 @@ export const MobileUploadPage: React.FC = () => {
       <header className="h-16 bg-[#0E4A93] px-4 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-2">
           <img
-            src="/canvas-india-official-logo.png"
+            src="/canvas-india-official-logo.webp"
             alt="Canvas India"
             className="h-8 w-auto object-contain block select-none"
           />

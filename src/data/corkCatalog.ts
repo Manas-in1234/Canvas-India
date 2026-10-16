@@ -12,52 +12,52 @@ const CORK_PRICE_FALLBACK = 999;
 
 export const CORK_PRODUCT_IMAGES: Record<string, string[]> = {
   '9C-YA1': [
-    '/assets/products/cork/9C-YA1/9c-ya1(1).png',
-    '/assets/products/cork/9C-YA1/9c-ya1(2).png',
+    '/assets/products/cork/9C-YA1/9c-ya1(1).webp',
+    '/assets/products/cork/9C-YA1/9c-ya1(2).webp',
   ],
   '9C-YA2': [
-    '/assets/products/cork/9C-YA2/9C-YA2(1).png',
-    '/assets/products/cork/9C-YA2/9C-YA2(2).png',
+    '/assets/products/cork/9C-YA2/9C-YA2(1).webp',
+    '/assets/products/cork/9C-YA2/9C-YA2(2).webp',
   ],
   '9C-YA3': [
-    '/assets/products/cork/9C-YA3/9C-YA3(1).png',
-    '/assets/products/cork/9C-YA3/9C-YA3(2).png',
+    '/assets/products/cork/9C-YA3/9C-YA3(1).webp',
+    '/assets/products/cork/9C-YA3/9C-YA3(2).webp',
   ],
   '9C-YA4': [
-    '/assets/products/cork/9C-YA4/9C-YA4(1).png',
-    '/assets/products/cork/9C-YA4/9C-YA4(2).png',
+    '/assets/products/cork/9C-YA4/9C-YA4(1).webp',
+    '/assets/products/cork/9C-YA4/9C-YA4(2).webp',
   ],
   '9C-YA5': [
-    '/assets/products/cork/9C-YA5/9C-YA5(1).png',
-    '/assets/products/cork/9C-YA5/9C-YA5(2).png',
+    '/assets/products/cork/9C-YA5/9C-YA5(1).webp',
+    '/assets/products/cork/9C-YA5/9C-YA5(2).webp',
   ],
   '9C-YA6': [
-    '/assets/products/cork/9C-YA6/9C-YA6(1).png',
-    '/assets/products/cork/9C-YA6/9C-YA6(2).png',
+    '/assets/products/cork/9C-YA6/9C-YA6(1).webp',
+    '/assets/products/cork/9C-YA6/9C-YA6(2).webp',
   ],
   '9C-YA7': [
-    '/assets/products/cork/9C-YA7/9C-YA7(1).png',
-    '/assets/products/cork/9C-YA7/9C-YA7(2).png',
+    '/assets/products/cork/9C-YA7/9C-YA7(1).webp',
+    '/assets/products/cork/9C-YA7/9C-YA7(2).webp',
   ],
-  '9C-YA8': ['/assets/products/cork/9C-YA8/9C-YA8.png'],
-  '9C-YA9': ['/assets/products/cork/9C-YA9/9C-YA9.png'],
+  '9C-YA8': ['/assets/products/cork/9C-YA8/9C-YA8.webp'],
+  '9C-YA9': ['/assets/products/cork/9C-YA9/9C-YA9.webp'],
   '9C-YA10': [
-    '/assets/products/cork/9C-YA10/9C-YA10(1).png',
-    '/assets/products/cork/9C-YA10/9C-YA10(2).png',
+    '/assets/products/cork/9C-YA10/9C-YA10(1).webp',
+    '/assets/products/cork/9C-YA10/9C-YA10(2).webp',
   ],
   '9C-YA11': [
-    '/assets/products/cork/9C-YA11/9C-YA11(1).png',
-    '/assets/products/cork/9C-YA11/9C-YA11(2).png',
+    '/assets/products/cork/9C-YA11/9C-YA11(1).webp',
+    '/assets/products/cork/9C-YA11/9C-YA11(2).webp',
   ],
   '9C-YA12': [
-    '/assets/products/cork/9C-YA12/9C-YA12(1).png',
-    '/assets/products/cork/9C-YA12/9C-YA12(2).png',
+    '/assets/products/cork/9C-YA12/9C-YA12(1).webp',
+    '/assets/products/cork/9C-YA12/9C-YA12(2).webp',
   ],
-  '9C-YB1': ['/assets/products/cork/9C-YB1/9C-YB1.png'],
-  '9C-YB2': ['/assets/products/cork/9C-YB2/9C-YB2.png'],
+  '9C-YB1': ['/assets/products/cork/9C-YB1/9C-YB1.webp'],
+  '9C-YB2': ['/assets/products/cork/9C-YB2/9C-YB2.webp'],
   '9C-YB3': [
-    '/assets/products/cork/9C-YB3/9C-YB3(1).png',
-    '/assets/products/cork/9C-YB3/9C-YB3(2).png',
+    '/assets/products/cork/9C-YB3/9C-YB3(1).webp',
+    '/assets/products/cork/9C-YB3/9C-YB3(2).webp',
   ],
 };
 
