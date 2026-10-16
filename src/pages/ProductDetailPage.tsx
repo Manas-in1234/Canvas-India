@@ -129,6 +129,25 @@ export const ProductDetailPage: React.FC = () => {
 
   const showCustomSize = product ? !SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug) : true;
 
+  // Same catalogue design also offered as Canvas / Acrylic / Poster prints —
+  // siblings share a base catalogue id, prefixed with 'canvas-' or
+  // 'acrylic-' for those materials (see catalogueCanvasAcrylicProducts.ts).
+  const formatSiblings = useMemo(() => {
+    if (!product) return [];
+    const baseId = product.id.startsWith('canvas-')
+      ? product.id.slice('canvas-'.length)
+      : product.id.startsWith('acrylic-')
+      ? product.id.slice('acrylic-'.length)
+      : product.id;
+    return [
+      { label: 'Poster', id: baseId },
+      { label: 'Canvas', id: `canvas-${baseId}` },
+      { label: 'Acrylic', id: `acrylic-${baseId}` }
+    ]
+      .map(({ label, id }) => ({ label, match: allProducts.find((p) => p.id === id) }))
+      .filter((c): c is { label: string; match: Product } => Boolean(c.match));
+  }, [product, allProducts]);
+
   // Sync variants when product changes
   useEffect(() => {
     if (product) {
@@ -425,6 +444,31 @@ export const ProductDetailPage: React.FC = () => {
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
                 <span>Lowest Price Guaranteed</span>
               </div>
+
+              {/* Format: Poster / Canvas / Acrylic — same design, different materials */}
+              {formatSiblings.length > 1 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">Format:</span>
+                  <div className="flex items-center gap-1.5">
+                    {formatSiblings.map(({ label, match }) => (
+                      <button
+                        key={match.id}
+                        type="button"
+                        onClick={() => {
+                          if (match.id !== product.id) navigate(`/products/${match.slug || match.id}`);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
+                          match.id === product.id
+                            ? 'bg-[#0E4A93] border-[#0E4A93] text-white'
+                            : 'bg-white border-stone-300 text-stone-700 hover:border-[#0E4A93]'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Size / Shape Tabs */}
               {((product.sizes && product.sizes.length > 0) || availableShapes.length > 0) && (

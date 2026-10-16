@@ -81,6 +81,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   const categoryRowRef = useRef<HTMLDivElement>(null);
   const occasionRowRef = useRef<HTMLDivElement>(null);
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
+  const [bestsellerFormat, setBestsellerFormat] = useState<Record<string, 'canvas' | 'acrylic'>>({});
 
   const handleCopyCoupon = (code: string) => {
     navigator.clipboard.writeText(code).catch(() => {});
@@ -397,40 +398,74 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div ref={carouselRef} className="flex gap-5 overflow-x-auto scroll-smooth py-3 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
-              {bestsellers.map((p) => (
-                <div key={p.id} className="snap-start shrink-0 w-[62%] sm:w-[36%] lg:w-[23.5%] bg-white rounded-2xl border border-orange-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all p-3">
-                  <Link to={`/products/${p.id}`} className="relative block aspect-[4/3] rounded-xl overflow-hidden bg-stone-100">
-                    <img
-                      src={p.image}
-                      alt={p.name}
-                      loading="lazy"
-                      className="w-full h-full object-contain hover:scale-105 transition-transform duration-500"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
-                    />
-                    <span className="absolute top-2 left-2 bg-gradient-to-r from-[#E8752A] to-[#EC4899] text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow">Bestseller</span>
-                  </Link>
-                  <Link to={`/products/${p.id}`} className="block mt-3 text-sm font-semibold text-stone-800 line-clamp-1 hover:text-[#0E4A93]">
-                    {p.name}
-                  </Link>
-                  <div className="flex items-end justify-between mt-1.5">
-                    <div>
-                      <div className="text-lg font-extrabold" style={{ color: BLUE }}>₹{p.price.toLocaleString('en-IN')}</div>
-                      <div className="flex items-center gap-1 text-[10px] text-stone-500">
-                        <Stars />
-                        {p.reviewsCount ? <span>({p.reviewsCount})</span> : null}
+              {bestsellers.map((p) => {
+                // Same catalogue design is often also sold as both Canvas and
+                // Acrylic (see catalogueCanvasAcrylicProducts.ts) — let the
+                // card switch between the two without leaving the carousel.
+                const baseId = p.id.startsWith('canvas-')
+                  ? p.id.slice('canvas-'.length)
+                  : p.id.startsWith('acrylic-')
+                  ? p.id.slice('acrylic-'.length)
+                  : p.id;
+                const canvasVariant = allProducts.find((x) => x.id === `canvas-${baseId}`);
+                const acrylicVariant = allProducts.find((x) => x.id === `acrylic-${baseId}`);
+                const hasBothFormats = Boolean(canvasVariant && acrylicVariant);
+                const activeFormat = bestsellerFormat[baseId] || (p.id.startsWith('acrylic-') ? 'acrylic' : 'canvas');
+                const d = hasBothFormats ? (activeFormat === 'acrylic' ? acrylicVariant! : canvasVariant!) : p;
+
+                return (
+                  <div key={p.id} className="snap-start shrink-0 w-[62%] sm:w-[36%] lg:w-[23.5%] bg-white rounded-2xl border border-orange-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all p-3">
+                    <Link to={`/products/${d.id}`} className="relative block aspect-[4/3] rounded-xl overflow-hidden bg-stone-100">
+                      <img
+                        src={d.image}
+                        alt={d.name}
+                        loading="lazy"
+                        className="w-full h-full object-contain hover:scale-105 transition-transform duration-500"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
+                      />
+                      <span className="absolute top-2 left-2 bg-gradient-to-r from-[#E8752A] to-[#EC4899] text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow">Bestseller</span>
+                    </Link>
+                    {hasBothFormats && (
+                      <div className="flex items-center gap-1.5 mt-2">
+                        {(['canvas', 'acrylic'] as const).map((fmt) => (
+                          <button
+                            key={fmt}
+                            type="button"
+                            onClick={() => setBestsellerFormat((prev) => ({ ...prev, [baseId]: fmt }))}
+                            className={`flex-1 py-1 rounded-md text-[10px] font-bold capitalize transition-colors cursor-pointer ${
+                              activeFormat === fmt
+                                ? 'bg-[#0E4A93] text-white'
+                                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                            }`}
+                          >
+                            {fmt}
+                          </button>
+                        ))}
                       </div>
+                    )}
+                    <Link to={`/products/${d.id}`} className="block mt-3 text-sm font-semibold text-stone-800 line-clamp-1 hover:text-[#0E4A93]">
+                      {d.name}
+                    </Link>
+                    <div className="flex items-end justify-between mt-1.5">
+                      <div>
+                        <div className="text-lg font-extrabold" style={{ color: BLUE }}>₹{d.price.toLocaleString('en-IN')}</div>
+                        <div className="flex items-center gap-1 text-[10px] text-stone-500">
+                          <Stars />
+                          {d.reviewsCount ? <span>({d.reviewsCount})</span> : null}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        aria-label="Add to cart"
+                        onClick={() => onAddToCart(d)}
+                        className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0E4A93] to-[#5B2BB8] hover:from-[#E8752A] hover:to-[#EC4899] text-white flex items-center justify-center shadow-md transition cursor-pointer"
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      aria-label="Add to cart"
-                      onClick={() => onAddToCart(p)}
-                      className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0E4A93] to-[#5B2BB8] hover:from-[#E8752A] hover:to-[#EC4899] text-white flex items-center justify-center shadow-md transition cursor-pointer"
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                    </button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <button type="button" aria-label="Next" onClick={() => scrollRow(carouselRef, 1)} className={arrowBtn}>
               <ChevronRight className="w-5 h-5" />
