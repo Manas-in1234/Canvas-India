@@ -24,7 +24,6 @@ import { useShop } from '../context/ShopContext';
 import { ProductImage } from '../components/ProductImage';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { WallPreview } from '../components/WallPreview';
-import { WallMultiSizePreview } from '../components/WallMultiSizePreview';
 import {
   AcrylicProductReview,
   getProductReviews,
@@ -53,7 +52,6 @@ function sizeForShape(shape: string, sizes?: string[]): string | undefined {
   if (shape.toLowerCase() === 'popular') return '25x30 inch';
   return pickDefaultSize(sizes);
 }
-const MULTI_SIZE_SENTINEL = '__MULTI_SIZE__';
 
 // Simple outline swatch standing in for each shape in the icon-based Shape
 // tab, matching the Canvas product page's ShapeIcon — styled as a small
@@ -85,6 +83,24 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
 
   const isWishlisted = wishlistIds.includes(product.id);
 
+  // Same catalogue design also offered as Canvas — siblings share a base
+  // catalogue id, prefixed with 'canvas-' or 'acrylic-' for those materials
+  // (see catalogueCanvasAcrylicProducts.ts). Only Canvas/Acrylic are offered
+  // as switchable formats — the plain poster print is not a selectable option.
+  const formatSiblings = useMemo(() => {
+    const baseId = product.id.startsWith('acrylic-')
+      ? product.id.slice('acrylic-'.length)
+      : product.id.startsWith('canvas-')
+      ? product.id.slice('canvas-'.length)
+      : product.id;
+    return [
+      { label: 'Canvas', id: `canvas-${baseId}` },
+      { label: 'Acrylic', id: `acrylic-${baseId}` }
+    ]
+      .map(({ label, id }) => ({ label, match: allProducts.find((p) => p.id === id) }))
+      .filter((c): c is { label: string; match: Product } => Boolean(c.match));
+  }, [product, allProducts]);
+
   // Gallery State — a live "Room View" slot is inserted as the second image
   // (after the real primary photo) so the frame hanging on a wall reacts to
   // the selected shape/size instead of a static pre-baked photo.
@@ -97,15 +113,11 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
       });
     }
     if (list.length === 0) return list;
-    const sizesForProduct = product.availableSizes || product.sizes || [];
-    const sentinels = sizesForProduct.length > 1
-      ? [ROOM_VIEW_SENTINEL, MULTI_SIZE_SENTINEL]
-      : [ROOM_VIEW_SENTINEL];
-    return [...sentinels, ...list];
+    return [ROOM_VIEW_SENTINEL, ...list];
   }, [product]);
 
   const roomViewSourceImage = useMemo(() => {
-    return galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL && img !== MULTI_SIZE_SENTINEL) || product.image;
+    return galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL) || product.image;
   }, [galleryImages, product]);
 
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
@@ -373,8 +385,6 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                 >
                   {imgUrl === ROOM_VIEW_SENTINEL ? (
                     <WallPreview imageSrc={roomViewSourceImage} shape={selectedShape} sizeLabel={selectedSize} className="w-full h-full" />
-                  ) : imgUrl === MULTI_SIZE_SENTINEL ? (
-                    <WallMultiSizePreview imageSrc={roomViewSourceImage} sizes={product.availableSizes || product.sizes || []} className="w-full h-full" />
                   ) : (
                     <ProductImage
                       src={imgUrl}
@@ -392,7 +402,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
           <div className="order-1 lg:order-2 lg:col-span-5 min-w-0">
             <div
               className={`relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group mx-auto w-auto max-w-full ${
-                galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL || galleryImages[activeImageIndex] === MULTI_SIZE_SENTINEL
+                galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL
                   ? 'aspect-[16/9] h-[42vh] sm:h-[46vh] min-h-[260px] max-h-[420px]'
                   : 'aspect-[4/5] h-[48vh] sm:h-[52vh] min-h-[300px] max-h-[500px]'
               }`}
@@ -402,12 +412,6 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                   imageSrc={roomViewSourceImage}
                   shape={selectedShape}
                   sizeLabel={selectedSize}
-                  className="w-full h-full"
-                />
-              ) : galleryImages[activeImageIndex] === MULTI_SIZE_SENTINEL ? (
-                <WallMultiSizePreview
-                  imageSrc={roomViewSourceImage}
-                  sizes={product.availableSizes || product.sizes || []}
                   className="w-full h-full"
                 />
               ) : (
@@ -476,6 +480,31 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
               <span>Lowest Price Guaranteed</span>
             </div>
+
+            {/* Format: Canvas / Acrylic — same design, different materials */}
+            {formatSiblings.length > 1 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">Format:</span>
+                <div className="flex items-center gap-1.5">
+                  {formatSiblings.map(({ label, match }) => (
+                    <button
+                      key={match.id}
+                      type="button"
+                      onClick={() => {
+                        if (match.id !== product.id) navigate(`/products/${match.slug || match.id}`);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
+                        match.id === product.id
+                          ? 'bg-[#0E4A93] border-[#0E4A93] text-white'
+                          : 'bg-white border-stone-300 text-stone-700 hover:border-[#0E4A93]'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* =================================================================== */}
             {/* PRODUCT CONFIGURATION SELECTORS                                     */}

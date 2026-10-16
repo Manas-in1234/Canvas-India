@@ -129,9 +129,11 @@ export const ProductDetailPage: React.FC = () => {
 
   const showCustomSize = product ? !SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug) : true;
 
-  // Same catalogue design also offered as Canvas / Acrylic / Poster prints —
-  // siblings share a base catalogue id, prefixed with 'canvas-' or
-  // 'acrylic-' for those materials (see catalogueCanvasAcrylicProducts.ts).
+  // Same catalogue design also offered as Canvas / Acrylic — siblings share a
+  // base catalogue id, prefixed with 'canvas-' or 'acrylic-' for those
+  // materials (see catalogueCanvasAcrylicProducts.ts). The plain poster print
+  // is not a selectable format — every catalogue design should only be
+  // offered as Canvas or Acrylic.
   const formatSiblings = useMemo(() => {
     if (!product) return [];
     const baseId = product.id.startsWith('canvas-')
@@ -140,7 +142,6 @@ export const ProductDetailPage: React.FC = () => {
       ? product.id.slice('acrylic-'.length)
       : product.id;
     return [
-      { label: 'Poster', id: baseId },
       { label: 'Canvas', id: `canvas-${baseId}` },
       { label: 'Acrylic', id: `acrylic-${baseId}` }
     ]
