@@ -119,20 +119,32 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
     };
   }, [imageSrc]);
 
+  // Standard/Popular always shows the full picture — never crops, even when
+  // the selected size's ratio doesn't exactly match the image.
+  const neverCrop = shapeKey === 'standard' || shapeKey === 'popular';
+
   // The frame's SHAPE should be true to what you're actually ordering — a
   // selected 27x27 size should visibly render as a square, a Rectangle shape
   // should be horizontal — not whatever aspect ratio the source photo
   // happens to be. The image itself never crops to match (see object-contain
   // below), so there's no downside to prioritizing the real shape/size here.
+  //
+  // Standard/Popular is the exception: there the image is never cropped, so
+  // forcing the frame to the size label's numeric ratio instead of the
+  // photo's own would leave a letterboxed gap around it on one axis — read
+  // as an unwanted mat/border, even color-matched. Sizing the frame to the
+  // photo's own aspect ratio instead means the whole image always fills it
+  // exactly, and simply grows larger as the selected size increases.
   const ratio = useMemo(() => {
     if (isCircle || shapeKey === 'square') return 1;
     if (isTriangle) return 1;
     if (shapeKey === 'rectangle') return 1.5; // horizontal/landscape
     if (shapeKey === 'panoramic') return 2.2;
+    if (neverCrop && naturalAspect) return naturalAspect;
     if (dims) return dims.w / dims.h;
     if (naturalAspect) return naturalAspect;
     return 2 / 3;
-  }, [shapeKey, isCircle, isTriangle, dims, naturalAspect]);
+  }, [shapeKey, isCircle, isTriangle, dims, naturalAspect, neverCrop]);
 
   const finishStyle = useMemo(() => getFinishStyle(finish || ''), [finish]);
 
@@ -174,10 +186,6 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
   }, [ratio, wallBounds, dims, isCircle, isTriangle]);
 
   const clipPath = isTriangle ? 'polygon(50% 0%, 0% 100%, 100% 100%)' : undefined;
-
-  // Standard/Popular always shows the full picture — never crops, even when
-  // the selected size's ratio doesn't exactly match the image.
-  const neverCrop = shapeKey === 'standard' || shapeKey === 'popular';
 
   // Circle/Triangle clip a square bounding box to that outline — an image
   // sized to fill the square has its corners fall outside the circle/
