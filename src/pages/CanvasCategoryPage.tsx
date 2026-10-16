@@ -190,24 +190,20 @@ export const CanvasCategoryPage: React.FC = () => {
       <section id="canvas-catalog-section" className="w-full py-8 sm:py-12 border-b border-stone-200/80">
         <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
 
-          {/* Section Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-6 mb-6 border-b border-stone-200">
-            {/* Results Count & Controls */}
-            <div className="flex items-center gap-3 shrink-0 self-start md:self-end">
-              {/* Mobile Filter Trigger */}
-              <button
-                type="button"
-                onClick={() => setMobileFiltersOpen(true)}
-                className="lg:hidden flex items-center gap-2 px-3.5 py-2 rounded-lg border border-stone-300 bg-white text-xs font-bold text-stone-800 hover:border-[#0E4A93] shadow-2xs cursor-pointer"
-                aria-label="Open filter sidebar"
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5 text-[#0E4A93]" />
-                <span>Filters</span>
-                {isFiltered && (
-                  <span className="w-2 h-2 rounded-full bg-[#E8752A]"></span>
-                )}
-              </button>
-            </div>
+          {/* Mobile Filter Trigger — only control left here, so the whole bar is mobile-only */}
+          <div className="lg:hidden flex items-center justify-end pb-6 mb-6 border-b border-stone-200">
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen(true)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-stone-300 bg-white text-xs font-bold text-stone-800 hover:border-[#0E4A93] shadow-2xs cursor-pointer"
+              aria-label="Open filter sidebar"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 text-[#0E4A93]" />
+              <span>Filters</span>
+              {isFiltered && (
+                <span className="w-2 h-2 rounded-full bg-[#E8752A]"></span>
+              )}
+            </button>
           </div>
 
           {/* Active Filter Badges Bar */}
