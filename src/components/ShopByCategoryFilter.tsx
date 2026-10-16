@@ -1,40 +1,26 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { SHOP_CATEGORIES } from '../data/shopCategories';
 
 export interface ShopByCategoryFilterProps {
-  /** Currently checked category slugs. Omit on pages that start with nothing selected. */
-  selectedSlugs?: string[];
-  /**
-   * Called with the updated slug list whenever a box is toggled. If omitted,
-   * the component manages navigation itself (used on pages that aren't the
-   * combined results page): each toggle immediately navigates to /shop with
-   * the updated selection, so results appear as soon as 2+ are checked.
-   */
-  onChange?: (slugs: string[]) => void;
+  /** Currently checked category slugs. */
+  selectedSlugs: string[];
+  /** Called with the updated slug list whenever a box is toggled — the host
+   * page merges those categories' products into its own listing in place. */
+  onChange: (slugs: string[]) => void;
   onItemClick?: () => void;
 }
 
 export const ShopByCategoryFilter: React.FC<ShopByCategoryFilterProps> = ({
-  selectedSlugs = [],
+  selectedSlugs,
   onChange,
   onItemClick,
 }) => {
-  const navigate = useNavigate();
-
   const toggle = (slug: string) => {
     const next = selectedSlugs.includes(slug)
       ? selectedSlugs.filter((s) => s !== slug)
       : [...selectedSlugs, slug];
-
-    if (onChange) {
-      onChange(next);
-    } else if (next.length > 0) {
-      navigate(`/shop?categories=${next.join(',')}`);
-    } else {
-      navigate('/shop');
-    }
+    onChange(next);
     onItemClick?.();
   };
 

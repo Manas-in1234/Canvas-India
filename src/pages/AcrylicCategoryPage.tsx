@@ -6,7 +6,6 @@ import {
   RotateCcw,
   ChevronRight,
   FilterX,
-  ArrowUpDown,
   Sparkles,
   CheckCircle2,
   ShoppingCart
@@ -65,8 +64,6 @@ export const isProductInAcrylicCategory = (product: Product, slug: string): bool
   }
 };
 
-type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'discount';
-
 const PRICE_MIN_DEFAULT = 400;
 const PRICE_MAX_DEFAULT = 4000;
 
@@ -87,20 +84,21 @@ export const AcrylicCategoryPage: React.FC = () => {
   // Filter States
   const [minPrice, setMinPrice] = useState<number>(PRICE_MIN_DEFAULT);
   const [maxPrice, setMaxPrice] = useState<number>(PRICE_MAX_DEFAULT);
-  const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
+  // Extra "Shop by Category" picks — their products are shown alongside
+  // Acrylic's own, on this same page, instead of navigating elsewhere.
+  const [extraCategorySlugs, setExtraCategorySlugs] = useState<string[]>([]);
 
   // Source of truth for Acrylic category products — pulled from the shared catalog
   const products: Product[] = useMemo(
-    () => allProducts.filter((p) => p.categorySlug === 'acrylic'),
-    [allProducts]
+    () => allProducts.filter((p) => p.categorySlug === 'acrylic' || extraCategorySlugs.includes(p.categorySlug)),
+    [allProducts, extraCategorySlugs]
   );
 
   // Reset all filters
   const handleResetFilters = () => {
     setMinPrice(PRICE_MIN_DEFAULT);
     setMaxPrice(PRICE_MAX_DEFAULT);
-    setSortBy('featured');
   };
 
   // Check if any filter is active
@@ -108,34 +106,12 @@ export const AcrylicCategoryPage: React.FC = () => {
     minPrice > PRICE_MIN_DEFAULT ||
     maxPrice < PRICE_MAX_DEFAULT;
 
-  // Filtered and sorted products
+  // Filtered products
   const filteredProducts = useMemo(() => {
-    let result = products.filter((product) => {
+    return products.filter((product) => {
       return product.price >= minPrice && product.price <= maxPrice;
     });
-
-    // Sorting
-    switch (sortBy) {
-      case 'price-low':
-        result = [...result].sort((a, b) => a.price - b.price);
-        break;
-      case 'price-high':
-        result = [...result].sort((a, b) => b.price - a.price);
-        break;
-      case 'rating':
-        result = [...result].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-        break;
-      case 'discount':
-        result = [...result].sort((a, b) => b.discountPercent - a.discountPercent);
-        break;
-      case 'featured':
-      default:
-        // Default ordering
-        break;
-    }
-
-    return result;
-  }, [products, minPrice, maxPrice, sortBy]);
+  }, [products, minPrice, maxPrice]);
 
   // Price presets
   const applyPricePreset = (min: number, max: number) => {
@@ -288,28 +264,6 @@ export const AcrylicCategoryPage: React.FC = () => {
                   <span className="w-2 h-2 rounded-full bg-[#E8752A]"></span>
                 )}
               </button>
-
-              {/* Sort By Dropdown */}
-              <div className="flex items-center gap-2 text-xs">
-                <label htmlFor="sort-dropdown" className="font-semibold text-stone-500 hidden sm:inline">
-                  Sort:
-                </label>
-                <div className="relative">
-                  <select
-                    id="sort-dropdown"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as SortOption)}
-                    className="appearance-none bg-white border border-stone-300 hover:border-[#0E4A93] text-stone-800 font-semibold text-xs rounded-lg px-3 py-2 pr-7 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0E4A93]/20 shadow-2xs"
-                  >
-                    <option value="featured">Featured</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="rating">Customer Rating</option>
-                    <option value="discount">Biggest Discount</option>
-                  </select>
-                  <ArrowUpDown className="w-3 h-3 text-stone-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
             </div>
           </div>
 
@@ -496,7 +450,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                   Shop by Category
                 </span>
                 <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
-                <ShopByCategoryFilter />
+                <ShopByCategoryFilter selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
               </div>
 
               {/* Quality & Delivery Assurance Strip in Sidebar */}
@@ -711,7 +665,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                   Shop by Category
                 </span>
                 <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
-                <ShopByCategoryFilter onItemClick={() => setMobileFiltersOpen(false)} />
+                <ShopByCategoryFilter selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
               </div>
 
             </div>

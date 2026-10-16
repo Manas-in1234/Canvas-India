@@ -6,7 +6,6 @@ import {
   RotateCcw,
   ChevronRight,
   FilterX,
-  ArrowUpDown,
   Sparkles,
   CheckCircle2,
   ShoppingCart
@@ -15,8 +14,6 @@ import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
 import { ShopByCategoryFilter } from '../components/ShopByCategoryFilter';
 import { Product } from '../types';
-
-type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'discount';
 
 const PRICE_MIN_DEFAULT = 200;
 const PRICE_MAX_DEFAULT = 2000;
@@ -35,18 +32,19 @@ export const CorkCategoryPage: React.FC = () => {
 
   const [minPrice, setMinPrice] = useState<number>(PRICE_MIN_DEFAULT);
   const [maxPrice, setMaxPrice] = useState<number>(PRICE_MAX_DEFAULT);
-  const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
+  // Extra "Shop by Category" picks — their products are shown alongside
+  // Cork's own, on this same page, instead of navigating elsewhere.
+  const [extraCategorySlugs, setExtraCategorySlugs] = useState<string[]>([]);
 
   const products: Product[] = useMemo(
-    () => allProducts.filter((p) => p.categorySlug === 'cork' || p.categorySlug === 'cork-art-patterns'),
-    [allProducts]
+    () => allProducts.filter((p) => p.categorySlug === 'cork' || p.categorySlug === 'cork-art-patterns' || extraCategorySlugs.includes(p.categorySlug)),
+    [allProducts, extraCategorySlugs]
   );
 
   const handleResetFilters = () => {
     setMinPrice(PRICE_MIN_DEFAULT);
     setMaxPrice(PRICE_MAX_DEFAULT);
-    setSortBy('featured');
   };
 
   const isFiltered =
@@ -54,30 +52,10 @@ export const CorkCategoryPage: React.FC = () => {
     maxPrice < PRICE_MAX_DEFAULT;
 
   const filteredProducts = useMemo(() => {
-    let result = products.filter((product) => {
+    return products.filter((product) => {
       return product.price >= minPrice && product.price <= maxPrice;
     });
-
-    switch (sortBy) {
-      case 'price-low':
-        result = [...result].sort((a, b) => a.price - b.price);
-        break;
-      case 'price-high':
-        result = [...result].sort((a, b) => b.price - a.price);
-        break;
-      case 'rating':
-        result = [...result].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-        break;
-      case 'discount':
-        result = [...result].sort((a, b) => b.discountPercent - a.discountPercent);
-        break;
-      case 'featured':
-      default:
-        break;
-    }
-
-    return result;
-  }, [products, minPrice, maxPrice, sortBy]);
+  }, [products, minPrice, maxPrice]);
 
   const applyPricePreset = (min: number, max: number) => {
     setMinPrice(min);
@@ -203,27 +181,6 @@ export const CorkCategoryPage: React.FC = () => {
                   <span className="w-2 h-2 rounded-full bg-[#E8752A]"></span>
                 )}
               </button>
-
-              <div className="flex items-center gap-2 text-xs">
-                <label htmlFor="sort-dropdown" className="font-semibold text-stone-500 hidden sm:inline">
-                  Sort:
-                </label>
-                <div className="relative">
-                  <select
-                    id="sort-dropdown"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as SortOption)}
-                    className="appearance-none bg-white border border-stone-300 hover:border-[#0E4A93] text-stone-800 font-semibold text-xs rounded-lg px-3 py-2 pr-7 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0E4A93]/20 shadow-2xs"
-                  >
-                    <option value="featured">Featured</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="rating">Customer Rating</option>
-                    <option value="discount">Biggest Discount</option>
-                  </select>
-                  <ArrowUpDown className="w-3 h-3 text-stone-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
             </div>
           </div>
 
@@ -395,7 +352,7 @@ export const CorkCategoryPage: React.FC = () => {
                   Shop by Category
                 </span>
                 <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
-                <ShopByCategoryFilter />
+                <ShopByCategoryFilter selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
               </div>
 
               <div className="pt-2 border-t border-stone-100 space-y-2 text-[11px] text-stone-500">
@@ -596,7 +553,7 @@ export const CorkCategoryPage: React.FC = () => {
                   Shop by Category
                 </span>
                 <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
-                <ShopByCategoryFilter onItemClick={() => setMobileFiltersOpen(false)} />
+                <ShopByCategoryFilter selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
               </div>
 
             </div>
