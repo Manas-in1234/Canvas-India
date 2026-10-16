@@ -41,6 +41,8 @@ const PHOTO = {
   panoramicGanesh: '/assets/canvas-styles/panoramic-ganesh-painting.webp', // user-supplied: wide panoramic colorful Ganesh devotional painting
   panoramicDancers: '/assets/canvas-styles/panoramic-dancers-painting.webp', // user-supplied: wide panoramic painted dancers in motion
   panoramicBeachSunset: '/assets/canvas-styles/panoramic-rocky-beach-sunset.webp', // user-supplied: wide panoramic rocky beach sunset photo
+  bannerFashionGold: '/assets/canvas-styles/banner-fashion-gold-fabric.webp', // user-supplied: hanging canvas banner, fashion portrait with gold fabric
+  bannerBlueGoldAbstract: '/assets/canvas-styles/banner-blue-gold-abstract.webp', // user-supplied: hanging canvas banner, blue/gold abstract paint swirl
   photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.webp', // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
   collageCluster: u('1541359927273-d76820fc43f9'), // verified: cluster of photos/cards collaged on a wall
   photoCollage2Panel: '/assets/canvas-styles/photo-collage-2panel-couple.webp', // user-supplied: 2 photos side-by-side, framed, "Sarah & Marc"
@@ -831,12 +833,21 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     }),
     styles: [
       {
-        id: 'canvas-banner',
+        id: 'canvas-banner-fashion',
         number: '01',
-        name: 'Hanging Canvas Banner',
-        description: 'Hanging fabric canvas banner with solid wood rails and rustic twine cord for wall hanging.',
+        name: 'Fashion Portrait Hanging Banner',
+        description: 'Hanging fabric canvas banner with solid wood rails and rustic twine cord — striking for a portrait or fashion shot.',
         price: 399,
-        visual: 'banner-scroll',
+        image: PHOTO.bannerFashionGold,
+        customizeHref: '/customize/canvas/canvas-banner'
+      },
+      {
+        id: 'canvas-banner-abstract',
+        number: '02',
+        name: 'Abstract Art Hanging Banner',
+        description: 'The same hanging fabric banner format, suited to bold abstract art and color-wash designs.',
+        price: 399,
+        image: PHOTO.bannerBlueGoldAbstract,
         customizeHref: '/customize/canvas/canvas-banner'
       }
     ],
