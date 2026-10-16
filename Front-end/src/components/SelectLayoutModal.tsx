@@ -59,7 +59,7 @@ const HEXAGON_PANEL_FILTERS: Array<{ id: string; label: string; min?: number; ma
 export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
   isOpen,
   onClose,
-  material: _material,
+  material,
   productId,
   productName,
   currentLayoutId = '',
@@ -73,7 +73,7 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
     return getProductLayouts(productId);
   }, [productId]);
 
-  const isCollageProduct = productId === 'canvas-collage' || productLayouts.some((l) => Boolean(l.collageCategory));
+  const isCollageProduct = productId.includes('collage') || productLayouts.some((l) => Boolean(l.collageCategory));
   const isWallDisplay = productId.includes('wall') || productId.includes('display');
   const isSplitCanvas = productId.includes('split');
   const isHexagon = productId.includes('hexagon');
@@ -376,9 +376,11 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
                             {layout.dimensionsSummary}
                           </span>
                         )}
-                        {(layout.priceRange || layout.price) && (
+                        {(layout.priceRange || (material === 'acrylic' && layout.acrylicPrice ? layout.acrylicPrice : layout.price)) && (
                           <span className="font-extrabold text-[#0E4A93] ml-auto">
-                            {layout.priceRange || `₹${layout.price.toFixed(2)}`}
+                            {material === 'acrylic' && layout.acrylicPrice
+                              ? `₹${layout.acrylicPrice.toFixed(2)}`
+                              : (layout.priceRange || `₹${layout.price.toFixed(2)}`)}
                           </span>
                         )}
                       </div>

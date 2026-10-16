@@ -7,7 +7,8 @@ export interface BusRollLine {
   id: string;
   text: string;
   color: string;
-  opacity: number; // 1 = 100%, 0.75 = 75%, 0.5 = 50%
+  opacity: number; // For backward compatibility
+  lineWidth?: number; // 1 = 100%, 0.75 = 75%, 0.5 = 50%, 0.25 = 25% (default 1)
 }
 
 export type BusRollFontStyle = 'Normal' | 'Bold' | 'Italic' | 'Bold Italic';
@@ -335,13 +336,13 @@ export const getBusRollPattern = (patternId: string): BusRollPattern => {
 // 4. DEFAULT TEXT LINES (From Screenshot 1)
 // ----------------------------------------------------------------------------
 export const DEFAULT_BUS_ROLL_LINES: BusRollLine[] = [
-  { id: 'line-1', text: 'THIS HOME', color: '#FFFFFF', opacity: 1 },
-  { id: 'line-2', text: 'RUNS ON', color: '#FFF7D6', opacity: 1 },
-  { id: 'line-3', text: 'LOVE', color: '#FFA64D', opacity: 1 },
-  { id: 'line-4', text: 'LAUGHTER', color: '#FFFFFF', opacity: 1 },
-  { id: 'line-5', text: 'AND LOTS OF', color: '#FFD6C2', opacity: 1 },
-  { id: 'line-6', text: 'STRONG', color: '#FFF7D6', opacity: 1 },
-  { id: 'line-7', text: 'COFFEE', color: '#FFFF99', opacity: 1 }
+  { id: 'line-1', text: 'THIS HOME', color: '#FFFFFF', opacity: 1, lineWidth: 1 },
+  { id: 'line-2', text: 'RUNS ON', color: '#FFF7D6', opacity: 1, lineWidth: 1 },
+  { id: 'line-3', text: 'LOVE', color: '#FFA64D', opacity: 1, lineWidth: 1 },
+  { id: 'line-4', text: 'LAUGHTER', color: '#FFFFFF', opacity: 1, lineWidth: 1 },
+  { id: 'line-5', text: 'AND LOTS OF', color: '#FFD6C2', opacity: 1, lineWidth: 1 },
+  { id: 'line-6', text: 'STRONG', color: '#FFF7D6', opacity: 1, lineWidth: 1 },
+  { id: 'line-7', text: 'COFFEE', color: '#FFFF99', opacity: 1, lineWidth: 1 }
 ];
 
 export const DEFAULT_BUS_ROLL_CONFIG: BusRollConfig = {
@@ -762,20 +763,23 @@ export const generateBusRollSvgString = (config: BusRollConfig): string => {
     const approxFontSize = Math.min(slotHeight * 0.68, (innerWidth * 0.9 / charLen) * 1.3);
     const clampedFontSize = Math.max(14, Math.round(approxFontSize));
 
+    const lineWidthRatio = line.lineWidth ?? 1;
+
     return `
-      <text
-        x="${widthPx / 2}"
-        y="${yCenter}"
-        text-anchor="middle"
-        dominant-baseline="central"
-        fill="${line.color}"
-        opacity="${line.opacity}"
-        font-family="${config.fontFamily.replace(/"/g, '&quot;')}"
-        font-weight="${fontWeight}"
-        font-style="${fontStyle}"
-        font-size="${clampedFontSize}px"
-        letter-spacing="0.06em"
-      >${escapeXml(line.text.toUpperCase())}</text>
+      <g transform="translate(${widthPx / 2}, ${yCenter}) scale(${lineWidthRatio}, 1)">
+        <text
+          x="0"
+          y="0"
+          text-anchor="middle"
+          dominant-baseline="central"
+          fill="${line.color}"
+          font-family="${config.fontFamily.replace(/"/g, '&quot;')}"
+          font-weight="${fontWeight}"
+          font-style="${fontStyle}"
+          font-size="${clampedFontSize}px"
+          letter-spacing="0.06em"
+        >${escapeXml(line.text.toUpperCase())}</text>
+      </g>
     `;
   }).join('');
 

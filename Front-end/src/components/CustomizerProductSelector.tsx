@@ -214,7 +214,7 @@ export const CustomizerProductCard: React.FC<CustomizerProductCardProps> = ({
             isSelected ? 'text-[#0E4A93]' : 'text-stone-800'
           }`}
         >
-          ₹{safePrice.toFixed(2)}
+          ₹{safePrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
       </div>
     </div>

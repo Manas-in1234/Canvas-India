@@ -15,6 +15,9 @@ import { FONT_OPTIONS, TEXT_COLOR_PRESETS } from '../data/acrylicCustomizerData'
 
 export interface TextElement {
   id: string;
+  productId?: string;
+  slotId?: number | string;
+  panelIndex?: number;
   text: string;
   fontFamily: string;
   fontSize: number;
@@ -31,6 +34,7 @@ export interface TextElement {
 
 interface AcrylicLiveTextEditorProps {
   activeText: TextElement | null;
+  slotLabel?: string;
   onUpdateText: (updates: Partial<TextElement>) => void;
   onDuplicateText: () => void;
   onDeleteText: () => void;
@@ -39,6 +43,7 @@ interface AcrylicLiveTextEditorProps {
 
 export const AcrylicLiveTextEditor: React.FC<AcrylicLiveTextEditorProps> = ({
   activeText,
+  slotLabel,
   onUpdateText,
   onDuplicateText,
   onDeleteText,
@@ -66,7 +71,14 @@ export const AcrylicLiveTextEditor: React.FC<AcrylicLiveTextEditorProps> = ({
             <Type className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-xs font-extrabold text-stone-900 tracking-tight">Live Typography Editor</h3>
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-xs font-extrabold text-stone-900 tracking-tight">Live Typography Editor</h3>
+              {slotLabel && (
+                <span className="px-1.5 py-0.5 rounded-full bg-[#0E4A93]/10 text-[#0E4A93] font-black text-[9px]">
+                  {slotLabel}
+                </span>
+              )}
+            </div>
             <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Canvas Sync
             </span>
