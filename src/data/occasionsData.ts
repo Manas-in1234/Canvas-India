@@ -205,7 +205,7 @@ export const OCCASIONS: OccasionDef[] = [
   },
   {
     slug: 'festive-offers',
-    name: 'Festive Offers',
+    name: 'Festivals',
     emoji: '✨',
     tagline: 'Up to 20% off + free shipping on ₹999+ — festive devotional art, posters and more',
     pitchHeadline: 'Celebrate the Season, Beautifully',
