@@ -54,7 +54,8 @@ const STYLE_ICONS: Record<CanvasStyleIcon, React.ReactNode> = {
 export type CanvasStyleVisual =
   | 'shape-circle' | 'shape-triangle' | 'shape-heart' | 'shape-oval'
   | 'gallery-wall' | 'collage-grid' | 'mosaic-grid'
-  | 'collage-2' | 'collage-3' | 'collage-5-pinwheel' | 'collage-9-feature';
+  | 'collage-2' | 'collage-3' | 'collage-5-pinwheel' | 'collage-9-feature'
+  | 'hexagon-cluster' | 'split-panels' | 'banner-scroll';
 
 const VISUAL_GRADIENTS = ['from-[#0E4A93] to-[#2f6fc9]', 'from-[#E8752A] to-[#f4a05f]', 'from-emerald-600 to-emerald-400', 'from-violet-600 to-violet-400'];
 
@@ -155,6 +156,65 @@ function renderVisual(visual: CanvasStyleVisual) {
         </div>
       );
     }
+    case 'hexagon-cluster': {
+      // Honeycomb of interlocking hexagons, offset rows — a literal
+      // hexagon canvas cluster rather than a flat icon chip.
+      const hexClip = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';
+      const hex = (gradient: string, key: string) => (
+        <div key={key} className={`w-9 h-10 shadow-sm bg-gradient-to-br ${gradient}`} style={{ clipPath: hexClip }} />
+      );
+      return (
+        <div className="w-full h-full flex items-center justify-center gap-1 bg-stone-100">
+          <div className="flex flex-col gap-1 -mt-5">
+            {hex(VISUAL_GRADIENTS[0], 'a1')}
+            {hex(VISUAL_GRADIENTS[0], 'a2')}
+          </div>
+          <div className="flex flex-col gap-1">
+            {hex(VISUAL_GRADIENTS[1], 'b1')}
+            {hex(VISUAL_GRADIENTS[1], 'b2')}
+            {hex(VISUAL_GRADIENTS[1], 'b3')}
+          </div>
+          <div className="flex flex-col gap-1 -mt-5">
+            {hex(VISUAL_GRADIENTS[0], 'c1')}
+            {hex(VISUAL_GRADIENTS[0], 'c2')}
+          </div>
+        </div>
+      );
+    }
+    case 'split-panels':
+      // One continuous image (simulated via a wide gradient sampled at
+      // offset positions) cut across separate panels with real gaps —
+      // what a split/triptych canvas actually looks like.
+      return (
+        <div className="w-full h-full flex gap-1 p-3 bg-stone-100">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="flex-1 rounded-xs shadow-md border-2 border-white"
+              style={{
+                backgroundImage: 'linear-gradient(135deg, #0E4A93, #E8752A, #5B2BB8)',
+                backgroundSize: '300% 100%',
+                backgroundPosition: `${i * 50}% 50%`
+              }}
+            />
+          ))}
+        </div>
+      );
+    case 'banner-scroll':
+      // A hanging fabric banner with wood rails and a twine loop — not a
+      // generic scroll icon.
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-stone-100 py-4">
+          <div className="relative h-full aspect-[3/4] flex flex-col items-center">
+            <svg className="w-9 h-4 shrink-0" viewBox="0 0 32 16" fill="none">
+              <path d="M4 16 Q16 0 28 16" stroke="#92400e" strokeWidth="1.5" fill="none" />
+            </svg>
+            <div className="w-full h-1.5 rounded-full bg-amber-800 shadow-xs -mt-0.5 shrink-0" />
+            <div className="flex-1 w-[88%] bg-gradient-to-br from-[#0E4A93] to-[#2f6fc9] shadow-md" />
+            <div className="w-full h-1.5 rounded-full bg-amber-800 shadow-xs shrink-0" />
+          </div>
+        </div>
+      );
     case 'mosaic-grid': {
       // A dense grid of many small tiles — "built from hundreds of micro photos".
       const cells = Array.from({ length: 36 });

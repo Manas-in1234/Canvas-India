@@ -547,7 +547,7 @@ export const MEGA_MENUS_DATA: Record<string, MegaMenuConfig> = {
         items: [
           { name: 'Wall Display', slug: 'canvas', href: '/canvas/wall-display', description: 'Multi-frame canvas clusters & gallery wall arrangements' },
           { name: 'Pop Art', slug: 'canvas', href: '/canvas/pop-art', description: 'Vibrant comic & Andy Warhol style portrait art' },
-          { name: 'Canvas Prints', slug: 'canvas', description: 'Museum-grade 380 GSM cotton canvas prints' },
+          { name: 'Canvas Prints', slug: 'canvas', href: '/canvas', description: 'Museum-grade 380 GSM cotton canvas prints' },
           { name: 'Photo Collage', slug: 'canvas', href: '/canvas/photo-collage', description: 'Multi-photo grid layout canvas displays' },
           { name: 'Photo Mosaic', slug: 'canvas', href: '/canvas/photo-mosaic', description: 'Mosaic grid created from hundreds of micro photos' },
           { name: 'Shaped Canvas Prints', slug: 'canvas', href: '/canvas/shaped-canvas-prints', description: 'Custom cut round, oval, arch & geometric shapes' },

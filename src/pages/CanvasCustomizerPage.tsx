@@ -2405,7 +2405,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [activeMaterial, selectedProductTypeId, selectedShapeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isLyricProduct, isWallArtProduct, isCollageProduct, isHexagonProduct, isSplitProduct, isMosaicProduct]);
 
   // Category filter state for single prints: 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL' (Default: 'RECOMMENDED')
-  const [sizeCategoryFilter, setSizeCategoryFilter] = useState<'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL'>('RECOMMENDED');
+  // A '?category=PANORAMIC' URL param (used by the Panoramic Canvas Prints
+  // landing page's "Customize" link) pre-selects that filter on load.
+  const [sizeCategoryFilter, setSizeCategoryFilter] = useState<'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL'>(() => {
+    const requestedCategory = (searchParams.get('category') || '').toUpperCase();
+    if (['RECOMMENDED', 'SQUARE', 'PANORAMIC', 'LARGE', 'SMALL'].includes(requestedCategory)) {
+      return requestedCategory as 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL';
+    }
+    return 'RECOMMENDED';
+  });
 
   // Selected Size Option - by default single-10x10, rec-10x10, painting-10x10, or quotes-8x8
   const [selectedSizeId, setSelectedSizeId] = useState<string>(() => {
@@ -2432,6 +2440,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       return 'lyric-8x8';
     }
     if (initialPt === 'canvas-single' || initialPt === 'canvas-classic') {
+      if ((searchParams.get('category') || '').toUpperCase() === 'PANORAMIC') {
+        const panoramicOpt = availableSizeOptions.find((s) => s.categories.includes('PANORAMIC'));
+        if (panoramicOpt) return panoramicOpt.id;
+      }
       return 'single-10x10';
     }
     return availableSizeOptions[0]?.id || (routeMaterial === 'acrylic' ? 'rec-10x10' : 'single-10x10');

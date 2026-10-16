@@ -183,7 +183,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Living Room Gallery Canvas Set (3 Panels)',
         description: 'Triptych 3-panel split wall art set for modern living rooms and master bedrooms.',
         price: 2299,
-        image: PHOTO.livingRoomWallArt,
+        visual: 'gallery-wall',
         customizeHref: '/customize/canvas/canvas-wall-art'
       }
     ],
@@ -528,7 +528,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         description: 'Wide panoramic wedding ceremony memories printed on fine archival cotton weave.',
         price: 2799,
         image: PHOTO.weddingCouple,
-        customizeHref: '/customize/canvas/canvas-split'
+        customizeHref: '/customize/canvas/canvas-single?category=PANORAMIC'
       }
     ],
     galleryTitle: 'Moments wide enough to fill a wall',
@@ -568,7 +568,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Split Canvas (Triptych)',
         description: 'Panoramic photo split seamlessly across 3 triptych canvas panels.',
         price: 188.1,
-        icon: 'columns',
+        visual: 'split-panels',
         customizeHref: '/customize/canvas/canvas-split'
       },
       {
@@ -577,7 +577,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: '5-Panel Panoramic Landscape Canvas',
         description: 'Dramatic multi-tier 5-piece split canvas centerpiece for spacious living and dining halls.',
         price: 3499,
-        icon: 'mountain',
+        visual: 'split-panels',
         customizeHref: '/customize/canvas/canvas-split'
       }
     ],
@@ -618,7 +618,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Hexagon Prints',
         description: 'Geometric 6-sided honeycomb canvas prints for modular wall clusters.',
         price: 449,
-        icon: 'hexagon',
+        visual: 'hexagon-cluster',
         customizeHref: '/customize/canvas/canvas-hexagon'
       }
     ],
@@ -742,7 +742,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Hanging Canvas Banner',
         description: 'Hanging fabric canvas banner with solid wood rails and rustic twine cord for wall hanging.',
         price: 399,
-        icon: 'scroll',
+        visual: 'banner-scroll',
         customizeHref: '/customize/canvas/canvas-banner'
       }
     ],
