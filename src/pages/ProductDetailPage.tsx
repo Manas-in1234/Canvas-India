@@ -598,8 +598,8 @@ export const ProductDetailPage: React.FC = () => {
               </div>
 
               {productCode && (
-                <div className="text-[11px] text-stone-400 font-medium">
-                  Code: <span className="text-stone-600 font-semibold">{productCode}</span>
+                <div className="text-sm text-stone-500 font-medium">
+                  Code: <span className="text-stone-700 font-bold">{productCode}</span>
                 </div>
               )}
 
