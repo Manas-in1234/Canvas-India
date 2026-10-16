@@ -30,6 +30,7 @@ const PHOTO = {
   weddingGalleryWall: '/assets/canvas-styles/wall-display-wedding-gallery.png', // user-supplied: 6-panel asymmetric wedding photo gallery over a sofa
   wallDisplayRainyStreet: '/assets/canvas-styles/wall-display-rainy-street-couple.png', // user-supplied: painted couple under umbrella on rainy city street
   wallDisplayOceanSunset: '/assets/canvas-styles/wall-display-ocean-sunset.png', // user-supplied: painted ocean sunset with gold clouds
+  wallDisplay3PanelLivingRoom: '/assets/canvas-styles/wall-display-3panel-living-room-boho.png', // user-supplied: real 3-equal-panel boho arch/sun canvas set over a green sofa
   photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.png', // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
   collageCluster: u('1541359927273-d76820fc43f9'), // verified: cluster of photos/cards collaged on a wall
   photoCollage2Panel: '/assets/canvas-styles/photo-collage-2panel-couple.png', // user-supplied: 2 photos side-by-side, framed, "Sarah & Marc"
@@ -185,7 +186,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         name: 'Living Room Gallery Canvas Set (3 Panels)',
         description: 'Triptych 3-panel split wall art set for modern living rooms and master bedrooms.',
         price: 2299,
-        visual: 'gallery-wall',
+        image: PHOTO.wallDisplay3PanelLivingRoom,
         customizeHref: '/customize/canvas/canvas-wall-art'
       },
       {
