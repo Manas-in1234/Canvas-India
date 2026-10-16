@@ -33,12 +33,17 @@ export const CorkCategoryPage: React.FC = () => {
   const [minPrice, setMinPrice] = useState<number>(PRICE_MIN_DEFAULT);
   const [maxPrice, setMaxPrice] = useState<number>(PRICE_MAX_DEFAULT);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
-  // Extra "Shop by Category" picks — their products are shown alongside
-  // Cork's own, on this same page, instead of navigating elsewhere.
+  // Shop by Category picks — when any are checked, they REPLACE Cork's own
+  // listing with just the checked categories' products, shown on this same
+  // page instead of navigating elsewhere. With none checked, Cork's own
+  // products show as usual.
   const [extraCategorySlugs, setExtraCategorySlugs] = useState<string[]>([]);
 
   const products: Product[] = useMemo(
-    () => allProducts.filter((p) => p.categorySlug === 'cork' || p.categorySlug === 'cork-art-patterns' || extraCategorySlugs.includes(p.categorySlug)),
+    () =>
+      extraCategorySlugs.length > 0
+        ? allProducts.filter((p) => extraCategorySlugs.includes(p.categorySlug))
+        : allProducts.filter((p) => p.categorySlug === 'cork' || p.categorySlug === 'cork-art-patterns'),
     [allProducts, extraCategorySlugs]
   );
 

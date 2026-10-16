@@ -33,14 +33,19 @@ export const CanvasCategoryPage: React.FC = () => {
   const [minPrice, setMinPrice] = useState<number>(PRICE_MIN_DEFAULT);
   const [maxPrice, setMaxPrice] = useState<number>(PRICE_MAX_DEFAULT);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
-  // Extra "Shop by Category" picks — their products are shown alongside
-  // Canvas's own, on this same page, instead of navigating elsewhere.
+  // Shop by Category picks — when any are checked, they REPLACE Canvas's own
+  // listing with just the checked categories' products, shown on this same
+  // page instead of navigating elsewhere. With none checked, Canvas's own
+  // products show as usual.
   const [extraCategorySlugs, setExtraCategorySlugs] = useState<string[]>([]);
 
   // Source of truth for Canvas category products — pulled from the shared
   // catalog (same as Acrylic) so product cards link to real, working detail pages
   const products: Product[] = useMemo(
-    () => allProducts.filter((p) => p.categorySlug === 'canvas' || extraCategorySlugs.includes(p.categorySlug)),
+    () =>
+      extraCategorySlugs.length > 0
+        ? allProducts.filter((p) => extraCategorySlugs.includes(p.categorySlug))
+        : allProducts.filter((p) => p.categorySlug === 'canvas'),
     [allProducts, extraCategorySlugs]
   );
 
