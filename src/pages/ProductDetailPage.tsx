@@ -70,6 +70,18 @@ export const ProductDetailPage: React.FC = () => {
 
   const isWishlisted = product ? wishlistIds.includes(product.id) : false;
 
+  // Catalogue designs are named "<Name> <code>" or "<Name> <code> - <Material>"
+  // (e.g. "Tribal Art Print 001 - Canvas") — pull the numeric code out so it
+  // can be shown on its own below Quantity instead of cluttering the title.
+  const { displayName, productCode } = useMemo(() => {
+    if (!product) return { displayName: '', productCode: null as string | null };
+    const match = product.name.match(/^(.*?)\s+(\d{3,4})(\s*-\s*.+)?$/);
+    if (match) {
+      return { displayName: `${match[1]}${match[3] || ''}`.trim(), productCode: match[2] };
+    }
+    return { displayName: product.name, productCode: null as string | null };
+  }, [product]);
+
   // Variant state
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedFinish, setSelectedFinish] = useState<string>('');
@@ -330,7 +342,7 @@ export const ProductDetailPage: React.FC = () => {
             </>
           )}
           <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
-          <span className="text-stone-900 font-medium truncate max-w-[180px] sm:max-w-md">{product.name}</span>
+          <span className="text-stone-900 font-medium truncate max-w-[180px] sm:max-w-md">{displayName}</span>
         </nav>
 
         {/* ========================================================================= */}
@@ -417,7 +429,7 @@ export const ProductDetailPage: React.FC = () => {
             {/* Info + Purchase Card */}
             <div className="order-3 lg:col-span-6 min-w-0 flex flex-col gap-3.5 text-left">
               <div>
-                <h1 className="text-lg sm:text-xl font-extrabold text-stone-900 tracking-tight">{product.name}</h1>
+                <h1 className="text-lg sm:text-xl font-extrabold text-stone-900 tracking-tight">{displayName}</h1>
                 {product.rating !== null && product.rating > 0 && (
                   <div className="flex items-center gap-2 text-xs text-stone-600 mt-1">
                     <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded text-amber-800 font-bold">
@@ -584,6 +596,12 @@ export const ProductDetailPage: React.FC = () => {
                   <button type="button" onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-100 font-bold transition-colors cursor-pointer" aria-label="Increase quantity">+</button>
                 </div>
               </div>
+
+              {productCode && (
+                <div className="text-[11px] text-stone-400 font-medium">
+                  Code: <span className="text-stone-600 font-semibold">{productCode}</span>
+                </div>
+              )}
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
