@@ -50,6 +50,7 @@ export const CorkCategoryPage: React.FC = () => {
   const handleResetFilters = () => {
     setMinPrice(PRICE_MIN_DEFAULT);
     setMaxPrice(PRICE_MAX_DEFAULT);
+    setExtraCategorySlugs([]);
   };
 
   const isFiltered =
@@ -380,7 +381,7 @@ export const CorkCategoryPage: React.FC = () => {
 
               <div className="flex items-center justify-between pb-4 mb-4 text-xs font-semibold text-stone-600 border-b border-stone-100">
                 <div>
-                  Showing <span className="text-stone-900 font-bold">{filteredProducts.length}</span> of {products.length} Cork Prints
+                  Showing <span className="text-stone-900 font-bold">{filteredProducts.length}</span> of {products.length} {extraCategorySlugs.length > 0 ? 'Products' : 'Cork Prints'}
                 </div>
                 {isFiltered && (
                   <div className="text-[11px] text-[#0E4A93] font-bold">
@@ -410,7 +411,7 @@ export const CorkCategoryPage: React.FC = () => {
                   </div>
                   <div className="space-y-1">
                     <h3 className="text-lg font-bold text-stone-900">
-                      No Cork Prints Match Filters
+                      No {extraCategorySlugs.length > 0 ? 'Products' : 'Cork Prints'} Match Filters
                     </h3>
                     <p className="text-xs text-stone-500 leading-relaxed">
                       We couldn't find any products in your selected price range or occasion criteria.

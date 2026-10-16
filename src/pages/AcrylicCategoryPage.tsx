@@ -64,7 +64,9 @@ export const isProductInAcrylicCategory = (product: Product, slug: string): bool
   }
 };
 
-const PRICE_MIN_DEFAULT = 400;
+// Low enough to include the ₹249 catalogue designs shown here when a Shop by
+// Category pick is active, not just Acrylic's own ~₹549+ products.
+const PRICE_MIN_DEFAULT = 200;
 const PRICE_MAX_DEFAULT = 4000;
 
 export const AcrylicCategoryPage: React.FC = () => {
@@ -104,6 +106,7 @@ export const AcrylicCategoryPage: React.FC = () => {
   const handleResetFilters = () => {
     setMinPrice(PRICE_MIN_DEFAULT);
     setMaxPrice(PRICE_MAX_DEFAULT);
+    setExtraCategorySlugs([]);
   };
 
   // Check if any filter is active
@@ -480,7 +483,7 @@ export const AcrylicCategoryPage: React.FC = () => {
               {/* Results status indicator */}
               <div className="flex items-center justify-between pb-4 mb-4 text-xs font-semibold text-stone-600 border-b border-stone-100">
                 <div>
-                  Showing <span className="text-stone-900 font-bold">{filteredProducts.length}</span> of {products.length} Acrylic Prints
+                  Showing <span className="text-stone-900 font-bold">{filteredProducts.length}</span> of {products.length} {extraCategorySlugs.length > 0 ? 'Products' : 'Acrylic Prints'}
                 </div>
                 {isFiltered && (
                   <div className="text-[11px] text-[#0E4A93] font-bold">
@@ -512,7 +515,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                   </div>
                   <div className="space-y-1">
                     <h3 className="text-lg font-bold text-stone-900">
-                      No Acrylic Prints Match Filters
+                      No {extraCategorySlugs.length > 0 ? 'Products' : 'Acrylic Prints'} Match Filters
                     </h3>
                     <p className="text-xs text-stone-500 leading-relaxed">
                       We couldn&apos;t find any products in your selected price range or occasion criteria.
