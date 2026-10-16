@@ -28,6 +28,8 @@ const PHOTO = {
   officeWorkspace: u('1497215728101-856f4ea42174'), // office desk with plants, city view
   officeHallway: u('1497366216548-37526070297c'), // office interior hallway
   weddingGalleryWall: '/assets/canvas-styles/wall-display-wedding-gallery.png', // user-supplied: 6-panel asymmetric wedding photo gallery over a sofa
+  wallDisplayRainyStreet: '/assets/canvas-styles/wall-display-rainy-street-couple.png', // user-supplied: painted couple under umbrella on rainy city street
+  wallDisplayOceanSunset: '/assets/canvas-styles/wall-display-ocean-sunset.png', // user-supplied: painted ocean sunset with gold clouds
   photoCollageGrid: '/assets/canvas-styles/photo-collage-6panel-baby.png', // user-supplied: 6-panel (3x2) baby photo collage canvas, angled room shot
   collageCluster: u('1541359927273-d76820fc43f9'), // verified: cluster of photos/cards collaged on a wall
   photoCollage2Panel: '/assets/canvas-styles/photo-collage-2panel-couple.png', // user-supplied: 2 photos side-by-side, framed, "Sarah & Marc"
@@ -184,6 +186,24 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         description: 'Triptych 3-panel split wall art set for modern living rooms and master bedrooms.',
         price: 2299,
         visual: 'gallery-wall',
+        customizeHref: '/customize/canvas/canvas-wall-art'
+      },
+      {
+        id: 'canvas-rainy-street-romance',
+        number: '03',
+        name: 'Rainy Street Romance Canvas',
+        description: 'A couple sharing an umbrella on a glowing, rain-slicked street — rich impasto color perfect as a statement piece above a sofa or bed.',
+        price: 899,
+        image: PHOTO.wallDisplayRainyStreet,
+        customizeHref: '/customize/canvas/canvas-wall-art'
+      },
+      {
+        id: 'canvas-ocean-sunset',
+        number: '04',
+        name: 'Ocean Sunset Canvas',
+        description: 'A sweeping painted sunset over the ocean, clouds lit gold against deep blue — a calm, large-format centerpiece for any wall display.',
+        price: 999,
+        image: PHOTO.wallDisplayOceanSunset,
         customizeHref: '/customize/canvas/canvas-wall-art'
       }
     ],
