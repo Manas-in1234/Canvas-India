@@ -2631,12 +2631,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       const aspectRatio = naturalWidth / naturalHeight;
 
       let targetSlot = activePanelIndex;
-      if (selectedProductTypeId === 'canvas-split' || selectedProductTypeId === 'canvas-mosaic') {
+      if (isSplitProduct || isMosaicProduct) {
         targetSlot = 0;
         setActivePanelIndex(0);
       } else if (panels.length > 1) {
-        const emptyIdx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-          .slice(0, panels.length)
+        const emptyIdx = panels
+          .map((_, idx) => idx)
           .find((idx) => !panelImages[idx]?.imageUrl);
         if (emptyIdx !== undefined) {
           targetSlot = emptyIdx;
@@ -3869,21 +3869,40 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // File Upload Handler
   // Files go to the frame that asked for them; extra files fill the following frames, the rest just join the uploads tray.
-  const handleFilesUpload = (files: FileList | File[] | null, startIdx: number = uploadTargetRef.current) => {
+  const handleFilesUpload = (files: FileList | File[] | null, explicitPanelIdx: number = uploadTargetRef.current) => {
     if (!files || files.length === 0) return;
     const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/bmp'];
-
-    Array.from(files).forEach((file, i) => {
+    const validFiles = Array.from(files).filter((file) => {
       if (file.size > 40 * 1024 * 1024) {
         alert(`File ${file.name} exceeds the 40MB limit.`);
-        return;
+        return false;
       }
       if (!validTypes.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png|webp|bmp)$/i)) {
         alert(`File ${file.name} is not a supported format (JPG, PNG, WEBP, BMP).`);
-        return;
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    const isContinuous = isSplitProduct || isMosaicProduct;
+    const emptySlots = panels
+      .map((_, idx) => idx)
+      .filter((idx) => !panelImages[idx]?.imageUrl);
+
+    validFiles.forEach((file, i) => {
+      let target: number;
+      if (isContinuous) {
+        target = 0;
+      } else if (explicitPanelIdx !== undefined && explicitPanelIdx >= 0 && explicitPanelIdx < panels.length) {
+        target = (explicitPanelIdx + i) % panels.length;
+      } else if (emptySlots.length > 0) {
+        target = i < emptySlots.length ? emptySlots[i] : (emptySlots[0] + i) % panels.length;
+      } else {
+        target = (activePanelIndex + i) % panels.length;
       }
 
-      const target = startIdx + i;
       const reader = new FileReader();
       // Preloader stays visible for exactly as long as this real read takes
       beginPreloader();
@@ -3903,33 +3922,34 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             };
 
             setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
-            if (i === 0 || target < panels.length) {
-              const idx = target < panels.length ? target : startIdx;
-              setPanelImages((prev) => ({
-                ...prev,
-                [idx]: {
-                  ...createDefaultPanel(),
-                  imageUrl: result,
-                  uploadedImage: meta,
-                  scale: 1,
-                  rotation: 0,
-                  panX: 0,
-                  panY: 0,
-                  fitMode: (productCapabilities.imageFitMode === 'contain' ? 'contain' : 'cover')
-                }
-              }));
-              setActivePanelIndex(idx);
-            }
+            setPanelImages((prev) => ({
+              ...prev,
+              [target]: {
+                ...createDefaultPanel(),
+                imageUrl: result,
+                uploadedImage: meta,
+                scale: 1,
+                rotation: 0,
+                panX: 0,
+                panY: 0,
+                fitMode: (productCapabilities.imageFitMode === 'contain' ? 'contain' : 'cover')
+              }
+            }));
+            setActivePanelIndex(target);
             setValidationWarning(null);
             endPreloader(PRELOADER_MIN_MS);
           };
           img.onerror = () => {
             setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
-            if (i === 0 || target < panels.length) {
-              const idx = target < panels.length ? target : startIdx;
-              setPanelImages((prev) => ({ ...prev, [idx]: { ...createDefaultPanel(), imageUrl: result, fitMode: (productCapabilities.imageFitMode === 'contain' ? 'contain' : 'cover') } }));
-              setActivePanelIndex(idx);
-            }
+            setPanelImages((prev) => ({
+              ...prev,
+              [target]: {
+                ...createDefaultPanel(),
+                imageUrl: result,
+                fitMode: (productCapabilities.imageFitMode === 'contain' ? 'contain' : 'cover')
+              }
+            }));
+            setActivePanelIndex(target);
             setValidationWarning(null);
             endPreloader(PRELOADER_MIN_MS);
           };
@@ -4886,13 +4906,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <Upload className="w-4 h-4 stroke-[2.2]" />
                 </div>
                 <span className="text-[10px] font-bold text-stone-500 group-hover:text-[#0E4A93]">
-                  Slot {panelIdx + 1} {panelSpec?.dimension ? `(${panelSpec.dimension})` : ''}
+                  Slot {panelIdx + 1}
                 </span>
-              </div>
-            )}
-            {panelSpec?.dimension && (
-              <div className="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none truncate text-center">
-                {panelSpec.dimension}
               </div>
             )}
           </div>
@@ -5064,18 +5079,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         />
                       )}
                     </div>
-                    {/* Dimension badge for each panel */}
-                    {p.dimension && (
-                      <div className="absolute bottom-1 left-1 bg-black/55 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
-                        {p.dimension}
-                      </div>
-                    )}
                   </div>
                 ) : (
                   /* Empty state panel */
                   <div className="w-full h-full flex flex-col items-center justify-center bg-[#dcdfe4] text-center p-2 relative">
                     <span className="text-[10px] font-bold text-stone-600">{p.label || `Panel ${idx + 1}`}</span>
-                    {p.dimension && <span className="text-[9px] text-stone-500">{p.dimension}</span>}
                   </div>
                 )}
                 {renderPanelTextItems(idx)}
@@ -6001,16 +6009,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
                       </div>
                       <span className="text-[10px] font-bold text-stone-600">{pSpec.label || `Hexagon ${idx + 1}`}</span>
-                      {pSpec.dimension && <span className="text-[9px] text-stone-400">{pSpec.dimension}</span>}
                     </div>
                   );
                 })()}
 
-                  {pSpec.dimension && (
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
-                      {pSpec.dimension}
-                    </div>
-                  )}
                   {renderPanelTextItems(idx)}
                 </div>
               );
@@ -6172,16 +6174,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
                         </div>
                         <span className="text-[10px] font-bold text-stone-600">{pSpec.label || `Panel ${idx + 1}`}</span>
-                        {pSpec.dimension && <span className="text-[9px] text-stone-400">{pSpec.dimension}</span>}
                       </div>
                     );
                   })()}
 
-                  {pSpec.dimension && (
-                    <div className="absolute bottom-1.5 left-1.5 right-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none truncate text-center">
-                      {pSpec.dimension}
-                    </div>
-                  )}
                   {renderPanelTextItems(idx)}
                 </div>
               );
@@ -6327,15 +6323,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <span className="text-[10px] font-black text-stone-700 group-hover:text-[#0E4A93]">
                     {pSpec.label || `Slot ${panelIdx + 1}`}
                   </span>
-                  <span className="text-[9px] text-stone-400 font-semibold">{pSpec.dimension || 'Upload Photo'}</span>
+                  <span className="text-[9px] text-stone-400 font-semibold">Upload Photo</span>
                 </div>
               );
             })()}
-            {pSpec.dimension && (
-              <div className="absolute bottom-1 left-1 right-1 bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold px-1 py-0.5 rounded z-20 pointer-events-none truncate text-center">
-                {pSpec.dimension}
-              </div>
-            )}
             {renderPanelTextItems(panelIdx)}
           </div>
         </div>
@@ -6844,45 +6835,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </div>
               )}
 
-              {/* Multi-slot assignment selector */}
-              {panels.length > 1 && !isSplitProduct && !isMosaicProduct && !isCollageProduct && (
-                <div className="p-2.5 bg-stone-100 rounded-xl space-y-1.5">
-                  <div className="text-[11px] font-bold text-stone-700">Assign to Slot:</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {panels.map((p, fIdx) => {
-                      const isTarget = activePanelIndex === fIdx;
-                      const hasPhoto = !!panelImages[fIdx]?.imageUrl;
-                      return (
-                        <button
-                          key={p.id || fIdx}
-                          type="button"
-                          onClick={() => setActivePanelIndex(fIdx)}
-                          className={`flex-1 min-w-[70px] py-1.5 px-2 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                            isTarget
-                              ? 'bg-white border-[#0E4A93] text-[#0E4A93] shadow-xs'
-                              : 'bg-stone-50 border-stone-200 text-stone-600'
-                          }`}
-                        >
-                          <span>Slot {fIdx + 1}</span>
-                          {hasPhoto && <Check className="w-3 h-3 text-emerald-600" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
               {uploadMode === 'computer' ? (
                 /* COMPUTER UPLOAD ZONE */
                 <div
                   onClick={() => {
-                    uploadTargetRef.current = (isSplitProduct || isMosaicProduct) ? 0 : activePanelIndex;
+                    uploadTargetRef.current = (isSplitProduct || isMosaicProduct) ? 0 : -1;
                     fileInputRef.current?.click();
                   }}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => {
                     e.preventDefault();
-                    handleFilesUpload(e.dataTransfer.files, (isSplitProduct || isMosaicProduct) ? 0 : activePanelIndex);
+                    handleFilesUpload(e.dataTransfer.files, (isSplitProduct || isMosaicProduct) ? 0 : -1);
                   }}
                   className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-6 text-center cursor-pointer transition-all group"
                 >
@@ -7001,7 +6964,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           onDragEnd={() => {
                             setDraggingPhotoIndex(null);
                           }}
-                          onClick={() => handleAssignPhotoToPanel(photo, (isSplitProduct || isMosaicProduct) ? 0 : activePanelIndex)}
+                          onClick={() => {
+                            if (isSplitProduct || isMosaicProduct) {
+                              handleAssignPhotoToPanel(photo, 0);
+                            } else if (panels.length > 1) {
+                              const emptyIdx = panels.map((_, idx) => idx).find((idx) => !panelImages[idx]?.imageUrl);
+                              const targetIdx = (!panelImages[activePanelIndex]?.imageUrl || emptyIdx === undefined)
+                                ? activePanelIndex
+                                : emptyIdx;
+                              handleAssignPhotoToPanel(photo, targetIdx);
+                            } else {
+                              handleAssignPhotoToPanel(photo, 0);
+                            }
+                          }}
                           className={`aspect-square rounded-lg overflow-hidden border transition-all relative group bg-white shadow-2xs select-none ${
                             isDraggingThis
                               ? 'opacity-40 scale-95 ring-2 ring-[#0E4A93] cursor-grabbing'
@@ -8251,6 +8226,23 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
                 : isCustomSize && canUseCustomSize
                 ? `${customWidth}" × ${customHeight}"`
+                : isWordArtProduct
+                ? (isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`)
+                : isSplitProduct
+                ? (() => {
+                    const activeLayout = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                    const w = activeLayout.overallWidthInches;
+                    const h = activeLayout.overallHeightInches;
+                    const dims = (w && h) ? `${w}" × ${h}"` : (activeLayout.dimensionsSummary || currentSizeOption.dimensionsSummary);
+                    const pCount = activeLayout.panelsCount || activeLayout.panels?.length || panels?.length || 3;
+                    return `${dims} (${pCount} Panels)`;
+                  })()
+                : isLayoutProduct
+                ? (() => {
+                    const targetId = isHexagonProduct ? 'canvas-hexagon' : selectedProductTypeId;
+                    const activeLayout = getProductLayout(targetId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                    return activeLayout.dimensionsSummary || `${activeLayout.overallWidthInches}" × ${activeLayout.overallHeightInches}"`;
+                  })()
                 : currentSizeOption.dimensionsSummary
             }
             onZoomOut={handleZoomOut}
