@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight, ChevronDown, Tag, Copy, Check, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Tag, Copy, Check, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote } from 'lucide-react';
 import { Product } from '../types';
 import { OCCASIONS } from '../data/occasionsData';
-import { MEGA_MENUS_DATA } from '../data/storeData';
+import { ProductCard } from './ProductCard';
 
 export interface HomepageProps {
   onSelectCategory: (slug: string, sub?: string) => void;
@@ -39,12 +39,12 @@ const CATEGORY_CARDS = [
   { name: 'Cork Art Patterns', sub: 'Textured Natural Finishes', price: 249, slug: 'cork-art-patterns', image: '/assets/catalogue/cork-art-patterns/C-A_003.webp', grad: 'from-[#92400E]/90', chip: 'bg-[#B45309]' },
 ];
 
-// The 3 primary material categories, each expandable to show the exact same
-// groups/items as that material's header mega-menu dropdown.
+// The 3 primary material categories, each its own section showing real
+// products from that category (not the header mega-menu's style names).
 const FORMAT_CARDS = [
-  { name: 'Canvas & Boards', sub: 'For Every Art Idea', slug: 'canvas', menuKey: 'canvas', image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&auto=format&fit=crop&q=80' },
-  { name: 'Acrylic Prints', sub: 'Vibrant Colors | Endless Possibilities', slug: 'acrylic', menuKey: 'acrylic', image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&auto=format&fit=crop&q=80' },
-  { name: 'Cork Products', sub: 'Natural | Durable | Stylish', slug: 'cork', menuKey: 'cork', image: '/assets/products/cork/9C-YA1/9c-ya1(1).webp' },
+  { name: 'Canvas & Boards', sub: 'For Every Art Idea', slug: 'canvas' },
+  { name: 'Acrylic Prints', sub: 'Vibrant Colors | Endless Possibilities', slug: 'acrylic' },
+  { name: 'Cork Products', sub: 'Natural | Durable | Stylish', slug: 'cork' },
 ];
 
 const TESTIMONIALS = [
@@ -80,7 +80,7 @@ const Stars: React.FC = () => (
 const arrowBtn =
   'w-10 h-10 rounded-full bg-white border border-stone-200 shadow-md flex items-center justify-center text-[#0E4A93] hover:bg-[#E8752A] hover:text-white hover:border-[#E8752A] transition-colors cursor-pointer shrink-0';
 
-export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCart, allProducts }) => {
+export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCart, allProducts, onCustomize, wishlistIds, onToggleWishlist }) => {
   const navigate = useNavigate();
   const carouselRef = useRef<HTMLDivElement>(null);
   const testiRef = useRef<HTMLDivElement>(null);
@@ -88,17 +88,6 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   const occasionRowRef = useRef<HTMLDivElement>(null);
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
   const [bestsellerFormat, setBestsellerFormat] = useState<Record<string, 'canvas' | 'acrylic'>>({});
-  const [expandedFormat, setExpandedFormat] = useState<string | null>(null);
-
-  // Same navigation behavior as the header mega-menu: a real href wins,
-  // otherwise fall back to the generic category listing for that slug.
-  const handleFormatItemClick = (item: { slug: string; href?: string }) => {
-    if (item.href) {
-      navigate(item.href);
-    } else {
-      onSelectCategory(item.slug);
-    }
-  };
 
   const handleCopyCoupon = (code: string) => {
     navigator.clipboard.writeText(code).catch(() => {});
@@ -283,76 +272,53 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         </Container>
       </section>
 
-      {/* SHOP BY FORMAT — Canvas, Acrylic, Cork as their own section, each
-          expandable to the exact same groups/items as its header mega-menu. */}
-      <section id="shop-formats" className="py-12 sm:py-16">
-        <Container>
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-4">
-              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Shop by Format</h2>
-              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
-            </div>
-            <p className="text-sm mt-2 text-[#567477]">Pick a material, then a style — just like the menu above</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
-            {FORMAT_CARDS.map((f) => {
-              const menu = MEGA_MENUS_DATA[f.menuKey];
-              const isOpen = expandedFormat === f.slug;
-              return (
-                <div key={f.slug} className={`rounded-2xl border bg-white overflow-hidden shadow-sm transition-colors ${isOpen ? 'border-[#1A4F53]' : 'border-stone-200'}`}>
-                  <button
-                    type="button"
-                    onClick={() => setExpandedFormat(isOpen ? null : f.slug)}
-                    className="group w-full text-left cursor-pointer"
-                  >
-                    <div className="w-full aspect-[16/9] overflow-hidden bg-stone-100">
-                      <img src={f.image} alt={f.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    </div>
-                    <div className="flex items-center justify-between gap-2 p-4">
-                      <div className="min-w-0">
-                        <h3 className="text-[#1A4F53] font-bold text-base sm:text-lg leading-tight">{f.name}</h3>
-                        <p className="text-xs text-[#567477] mt-0.5">{f.sub}</p>
-                      </div>
-                      <ChevronDown className={`w-5 h-5 text-[#1A4F53] shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                    </div>
-                  </button>
-
-                  {isOpen && menu && (
-                    <div className="px-4 pb-5 pt-1 border-t border-stone-100 space-y-4">
-                      {menu.groups.map((group) => (
-                        <div key={group.title}>
-                          <div className="text-[10px] font-black uppercase tracking-wider text-[#1A4F53]/70 mb-1.5">{group.title}</div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {group.items.map((item) => (
-                              <button
-                                key={item.name}
-                                type="button"
-                                onClick={() => handleFormatItemClick(item)}
-                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-stone-700 bg-stone-50 hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
-                              >
-                                {item.name}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => onSelectCategory(f.slug)}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#E8752A] hover:underline cursor-pointer"
-                      >
-                        View All {f.name} <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
+      {/* SHOP BY FORMAT — Canvas, Acrylic, Cork as their own individual
+          category blocks, each showing real products from that category. */}
+      {FORMAT_CARDS.map((f, idx) => {
+        const categoryProducts = allProducts.filter((p) => p.categorySlug === f.slug).slice(0, 8);
+        if (categoryProducts.length === 0) return null;
+        return (
+          <section key={f.slug} id={`shop-format-${f.slug}`} className={`py-12 sm:py-16 ${idx % 2 === 1 ? 'bg-[#FDFCF8]' : ''}`}>
+            <Container>
+              <div className="flex items-end justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>{f.name}</h2>
+                  <p className="text-sm mt-1 text-[#567477]">{f.sub}</p>
                 </div>
-              );
-            })}
-          </div>
-        </Container>
-      </section>
+                <button
+                  type="button"
+                  onClick={() => onSelectCategory(f.slug)}
+                  className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer shrink-0"
+                >
+                  View All <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
+                {categoryProducts.slice(0, 6).map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    isWishlisted={wishlistIds.includes(product.id)}
+                    onToggleWishlist={onToggleWishlist}
+                    onAddToCart={onAddToCart}
+                    onCustomize={onCustomize}
+                    variant="listing"
+                  />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => onSelectCategory(f.slug)}
+                className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+              >
+                View All {f.name} <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </Container>
+          </section>
+        );
+      })}
 
       {/* SHOP BY CATEGORY */}
       <section id="shop-categories" className="py-12 sm:py-16 bg-[#FDFCF8]">
