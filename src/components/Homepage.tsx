@@ -203,13 +203,18 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               Premium canvas prints, acrylic paints, cork products and more — turn your ideas into art, your way.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={handleStartCreatingCanvas}
-                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#0E4A93] hover:bg-[#0B3B77] text-white text-sm font-bold shadow-lg shadow-blue-900/20 transition cursor-pointer"
-              >
-                Create your Canvas <ArrowRight className="w-4 h-4" />
-              </button>
+              <div className="relative inline-block">
+                {/* Soft ambient glow behind the button */}
+                <span className="absolute -inset-3 rounded-full bg-gradient-to-r from-[#0E4A93] to-[#E8752A] opacity-50 blur-xl animate-pulse pointer-events-none" aria-hidden="true" />
+                <button
+                  type="button"
+                  onClick={handleStartCreatingCanvas}
+                  className="relative inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-gradient-to-r from-[#0E4A93] to-[#145DB8] hover:from-[#0B3B77] hover:to-[#0E4A93] text-white text-sm font-bold uppercase tracking-wide shadow-lg shadow-blue-900/30 transition-all hover:scale-105 cursor-pointer"
+                >
+                  <Palette className="w-4 h-4" />
+                  Create Your Canvas <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Mobile/tablet only: single festive offers banner below the text */}
