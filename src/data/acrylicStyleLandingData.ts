@@ -61,6 +61,9 @@ const STYLE_META: Record<string, {
   layoutId?: string;
   historyTitle: string;
   historyParagraphs: string[];
+  tipsTitle?: string;
+  tipsSubtitle?: string;
+  tipsItems?: { title: string; desc: string }[];
   /** Additional real-photo style cards shown after the main one, for
    * formats with more than one verified real example — each deep-linking
    * to its own matching layout the same way. */
@@ -187,11 +190,41 @@ const STYLE_META: Record<string, {
     intro: 'Dozens of your smaller photographs blended together into one intricate acrylic mosaic.',
     step2: { title: 'Set Your Mosaic Size', desc: 'Choose your panel size — more photos uploaded means a richer, more detailed mosaic.' },
     icon: 'mosaic',
+    image: '/assets/canvas-styles/acrylic-mosaic-couple.webp',
+    layoutId: 'mosaic2-4x4',
     historyTitle: 'The History of Mosaic',
     historyParagraphs: [
       'Mosaic is one of the oldest art forms in the world — the earliest known examples, made from colored stones, shells, and ivory, were found at a temple in Mesopotamia dating to the 3rd millennium BC.',
       'The Greeks developed figural mosaics by the 4th century BC, and the Romans took the technique across their empire, decorating villa floors from Britain to Syria with intricate tesserae work.',
       "Today's photo mosaic reinvents that ancient technique with hundreds of individual photographs instead of stone or glass tiles — many small pieces combining into one larger picture, now printed on acrylic."
+    ],
+    tipsTitle: 'Tips for a Stunning Photo Mosaic',
+    tipsSubtitle: 'A few things to know before you upload your photos.',
+    tipsItems: [
+      { title: 'Choose a strong main image', desc: 'Pick a clear, close-up photo with bold shapes and good contrast — busy, cluttered scenes lose the mosaic effect once broken into tiles.' },
+      { title: 'Use plenty of photos', desc: 'Most photo mosaics use anywhere from 100 to several hundred smaller photos — the more you upload, the richer and more recognizable the final piece.' },
+      { title: 'Keep your cell photos varied', desc: 'Aim for a mix of colors and subjects among your smaller photos — more variety gives the design more to work with when matching tones.' },
+      { title: 'Design at full resolution', desc: "Upload your highest-resolution files from the start — scaling a low-resolution image up to canvas size afterward is where detail gets lost." }
+    ],
+    extraStyles: [
+      {
+        name: 'Star Portrait Acrylic Mosaic',
+        description: 'A bold, high-contrast hero portrait formed from hundreds of micro-moments, encased in optical acrylic.',
+        image: '/assets/canvas-styles/acrylic-mosaic-star-portrait.webp',
+        layoutId: 'mosaic5-4x5'
+      },
+      {
+        name: 'Baby Milestone Acrylic Mosaic',
+        description: 'Celebrate your child’s precious memories in a luminous, diamond-polished acrylic mosaic display.',
+        image: '/assets/canvas-styles/acrylic-mosaic-baby-room.webp',
+        layoutId: 'mosaic1-3x4'
+      },
+      {
+        name: 'Classic Tonal Acrylic Mosaic',
+        description: 'An elegant black-and-white tonal portrait crafted from dozens of micro memories, sealed with a glossy depth.',
+        image: '/assets/canvas-styles/acrylic-mosaic-gentleman-portrait.webp',
+        layoutId: 'mosaic4-5x5'
+      }
     ]
   },
   'acrylic-lyric': {
@@ -288,6 +321,13 @@ export const ACRYLIC_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> 
           customizeHref: `/customize/acrylic/${pt.id}${extra.layoutId ? `?layout=${extra.layoutId}` : ''}`
         }))
       ],
+      ...(meta.tipsTitle && meta.tipsItems
+        ? {
+            tipsTitle: meta.tipsTitle,
+            tipsSubtitle: meta.tipsSubtitle,
+            tipsItems: meta.tipsItems
+          }
+        : {}),
       historyTitle: meta.historyTitle,
       historyParagraphs: meta.historyParagraphs,
       featuresTitle: 'Made to display',
