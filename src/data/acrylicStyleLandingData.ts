@@ -77,6 +77,7 @@ const STYLE_META: Record<string, {
     intro: 'A cluster of acrylic panels arranged together as one striking gallery-wall display.',
     step2: { title: 'Pick Your Panel Layout', desc: 'Choose a multi-panel gallery arrangement, then fine-tune individual panel sizes.' },
     icon: 'wall',
+    image: '/assets/canvas-styles/acrylic-wall-forest-selfie.webp',
     historyTitle: 'The History of the Gallery Wall',
     historyParagraphs: [
       'The densely packed "gallery wall" look traces back to the Paris Salon, which from 1667 accepted far more paintings than its walls could comfortably hold, so organizers covered every inch floor to ceiling with little regard for matching styles.',
