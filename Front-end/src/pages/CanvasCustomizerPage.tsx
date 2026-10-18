@@ -1723,14 +1723,14 @@ type SelectedItem = { type: 'text' | 'clipart'; id: string } | null;
 
 // Gallery: sample photographs bundled with the site
 const GALLERY_PHOTOS = [
-  { url: '/assets/acrylic/acrylic-family-print.jpg', label: 'Family' },
-  { url: '/assets/acrylic/acrylic-abstract-art.jpg', label: 'Abstract' },
-  { url: '/assets/acrylic/acrylic-custom-wall-art.jpg', label: 'Wall art' },
-  { url: '/assets/acrylic/acrylic-inspirational-print.jpg', label: 'Quote' },
-  { url: '/assets/acrylic/acrylic-poster.jpg', label: 'Poster' },
-  { url: '/assets/acrylic/acrylic-gift.jpg', label: 'Gift' },
-  { url: '/assets/acrylic/acrylic-decorative-panel.jpg', label: 'Decor' },
-  { url: '/assets/acrylic/acrylic-photo-panel.jpg', label: 'Portrait' }
+  { url: '/assets/acrylic/acrylic-family-print.webp', label: 'Family' },
+  { url: '/assets/acrylic/acrylic-abstract-art.webp', label: 'Abstract' },
+  { url: '/assets/acrylic/acrylic-custom-wall-art.webp', label: 'Wall art' },
+  { url: '/assets/acrylic/acrylic-inspirational-print.webp', label: 'Quote' },
+  { url: '/assets/acrylic/acrylic-poster.webp', label: 'Poster' },
+  { url: '/assets/acrylic/acrylic-gift.webp', label: 'Gift' },
+  { url: '/assets/acrylic/acrylic-decorative-panel.webp', label: 'Decor' },
+  { url: '/assets/acrylic/acrylic-photo-panel.webp', label: 'Portrait' }
 ];
 
 // Procedural artwork from a text prompt (deterministic: same words -> same art). Not an AI model.
@@ -2031,8 +2031,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         originalPrice: activeMaterial === 'acrylic' ? 799 : 999,
         rating: 4.9,
         reviewsCount: 128,
-        image: '/assets/acrylic/acrylic-family-print.jpg',
-        images: ['/assets/acrylic/acrylic-family-print.jpg'],
+        image: '/assets/acrylic/acrylic-family-print.webp',
+        images: ['/assets/acrylic/acrylic-family-print.webp'],
         sizes: [],
         thicknesses: [],
         orientations: ['Landscape', 'Portrait', 'Square'],
@@ -2095,17 +2095,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setIsLyricTemplateModalOpen(true);
       return;
     }
-    if (tabId === 'SELECT SIZE') {
-      if (selectedProductTypeId === 'canvas-word-art') {
-        setIsWordArtSizeModalOpen(true);
-      } else if (selectedProductTypeId === 'canvas-banner') {
-        // Banner size selector renders directly in the left customization panel
-      } else {
-        setIsSizeShapeModalOpen(true);
-      }
-    } else if (tabId === 'LAYOUTS & DESIGNS') {
-      if (!selectedProductTypeId.includes('lyric')) {
-        setIsLayoutModalOpen(true);
+    if (tabId === 'LAYOUTS & DESIGNS') {
+      if (isLayoutProduct) {
+        setLayoutSubTab('LAYOUTS');
       }
     }
     beginPreloader();
@@ -2261,6 +2253,28 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return items.filter((item) => item.enabled);
   }, [activeMaterial, productCapabilities, isSingleOrShapedCanvas, isBusRollProduct, isPopArtProduct, isLyricProduct, isWordArtProduct, isQuotesProduct]);
 
+  // Contextual workflow instruction derived dynamically from selected product's actual capabilities
+  const productSupportsSizes = useMemo(() => {
+    return toolbarItems.some((item) => item.id === 'SELECT SIZE');
+  }, [toolbarItems]);
+
+  const productSupportsLayouts = useMemo(() => {
+    return toolbarItems.some((item) => item.id === 'LAYOUTS & DESIGNS');
+  }, [toolbarItems]);
+
+  const contextualInstruction = useMemo(() => {
+    if (productSupportsSizes && productSupportsLayouts) {
+      return 'Change the size or layout, or continue to the next section.';
+    }
+    if (productSupportsSizes) {
+      return 'Change the size or continue to the next section.';
+    }
+    if (productSupportsLayouts) {
+      return 'Change the layout or continue to the next section.';
+    }
+    return 'Continue to the next section.';
+  }, [productSupportsSizes, productSupportsLayouts]);
+
   // If the active tab is not supported by the currently selected product, safely revert to PRODUCTS
   useEffect(() => {
     const isCurrentTabSupported = toolbarItems.some((item) => item.id === activeTab);
@@ -2348,6 +2362,33 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       return POP_ART_SIZE_OPTIONS as unknown as SizeOption[];
     }
 
+    if (isWordArtProduct) {
+      const allWordArtSizes = [
+        ...WORD_ART_SIZE_CATALOG.Square.map((s) => ({ ...s, cat: 'SQUARE' as SizeCategory })),
+        ...WORD_ART_SIZE_CATALOG['3:2 Ratio'].map((s) => ({ ...s, cat: 'RECOMMENDED' as SizeCategory })),
+        ...WORD_ART_SIZE_CATALOG['4:3 Ratio'].map((s) => ({ ...s, cat: 'RECOMMENDED' as SizeCategory })),
+        ...WORD_ART_SIZE_CATALOG['16:9 Ratio'].map((s) => ({ ...s, cat: 'PANORAMIC' as SizeCategory }))
+      ];
+      return allWordArtSizes.map((opt) => ({
+        id: opt.id,
+        productTypeId: selectedProductTypeId,
+        label: opt.label,
+        dimensionsSummary: `${opt.widthInches}" × ${opt.heightInches}"`,
+        price: opt.price,
+        categories: [
+          'RECOMMENDED' as SizeCategory,
+          opt.cat,
+          opt.widthInches >= 20 || opt.heightInches >= 20 ? ('LARGE' as SizeCategory) : ('SMALL' as SizeCategory)
+        ],
+        widthInches: opt.widthInches,
+        heightInches: opt.heightInches,
+        panelsCount: 1,
+        arrangement: 'single',
+        diagramType: 'single',
+        panels: [{ id: 'p0', label: 'Canvas', dimension: `${opt.widthInches}" × ${opt.heightInches}"`, widthRatio: opt.widthInches, heightRatio: opt.heightInches }]
+      }));
+    }
+
     if (isLyricProduct) {
       const base = LYRIC_CANVAS_SIZE_OPTIONS as unknown as SizeOption[];
       if (activeMaterial === 'acrylic') {
@@ -2402,10 +2443,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       ? configOptions.filter((opt) => !(opt.widthInches === 9 && opt.heightInches === 9) && !(opt.widthInches === 16 && opt.heightInches === 16))
       : configOptions;
     return filteredOptions.length > 0 ? filteredOptions : SIZE_OPTIONS.filter((s) => s.productTypeId === selectedProductTypeId);
-  }, [activeMaterial, selectedProductTypeId, selectedShapeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isLyricProduct, isWallArtProduct, isCollageProduct, isHexagonProduct, isSplitProduct, isMosaicProduct]);
+  }, [activeMaterial, selectedProductTypeId, selectedShapeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isWordArtProduct, isLyricProduct, isWallArtProduct, isCollageProduct, isHexagonProduct, isSplitProduct, isMosaicProduct]);
 
   // Category filter state for single prints: 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL' (Default: 'RECOMMENDED')
-  const [sizeCategoryFilter, setSizeCategoryFilter] = useState<'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL'>('RECOMMENDED');
+  // A '?category=PANORAMIC' URL param (used by the Panoramic Canvas Prints
+  // landing page's "Customize" link) pre-selects that filter on load.
+  const [sizeCategoryFilter, setSizeCategoryFilter] = useState<'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL'>(() => {
+    const requestedCategory = (searchParams.get('category') || '').toUpperCase();
+    if (['RECOMMENDED', 'SQUARE', 'PANORAMIC', 'LARGE', 'SMALL'].includes(requestedCategory)) {
+      return requestedCategory as 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL';
+    }
+    return 'RECOMMENDED';
+  });
 
   // Selected Size Option - by default single-10x10, rec-10x10, painting-10x10, or quotes-8x8
   const [selectedSizeId, setSelectedSizeId] = useState<string>(() => {
@@ -2432,7 +2481,20 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       return 'lyric-8x8';
     }
     if (initialPt === 'canvas-single' || initialPt === 'canvas-classic') {
+      if ((searchParams.get('category') || '').toUpperCase() === 'PANORAMIC') {
+        const panoramicOpt = availableSizeOptions.find((s) => s.categories.includes('PANORAMIC'));
+        if (panoramicOpt) return panoramicOpt.id;
+      }
       return 'single-10x10';
+    }
+    // A deep link like /customize/canvas/canvas-split?layout=split-3p-75x50-triptych
+    // (used by the Canvas style landing pages' "Customize This Style" buttons) — for
+    // layout products (collage/mosaic/hexagon/split/wall-art) the size option id is
+    // the same as the layout id, so honor it here too instead of always defaulting
+    // to the first option.
+    const requestedLayoutId = searchParams.get('layout');
+    if (requestedLayoutId && availableSizeOptions.some((s) => s.id === requestedLayoutId)) {
+      return requestedLayoutId;
     }
     return availableSizeOptions[0]?.id || (routeMaterial === 'acrylic' ? 'rec-10x10' : 'single-10x10');
   });
@@ -2569,12 +2631,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       const aspectRatio = naturalWidth / naturalHeight;
 
       let targetSlot = activePanelIndex;
-      if (selectedProductTypeId === 'canvas-split' || selectedProductTypeId === 'canvas-mosaic') {
+      if (isSplitProduct || isMosaicProduct) {
         targetSlot = 0;
         setActivePanelIndex(0);
       } else if (panels.length > 1) {
-        const emptyIdx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-          .slice(0, panels.length)
+        const emptyIdx = panels
+          .map((_, idx) => idx)
           .find((idx) => !panelImages[idx]?.imageUrl);
         if (emptyIdx !== undefined) {
           targetSlot = emptyIdx;
@@ -3636,7 +3698,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const popStyleAdjustment = isPopArtProduct ? (selectedPopStyle?.priceAdjustment || 0) : 0;
   const lyricPriceAdjustment = isLyricProduct ? (selectedLyricTemplate?.priceAdjustment || 0) : 0;
   const sizePrice = isWordArtProduct
-    ? wordArtSizeOption.price
+    ? (isCustomSize && canUseCustomSize ? customSizePrice : (wordArtSizeOption.price || currentSizeOption?.price || 198))
     : isBannerProduct
     ? (bannerConfig.isCustom
         ? calculateBannerPrice(bannerConfig.widthInches, bannerConfig.heightInches)
@@ -3807,21 +3869,40 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // File Upload Handler
   // Files go to the frame that asked for them; extra files fill the following frames, the rest just join the uploads tray.
-  const handleFilesUpload = (files: FileList | File[] | null, startIdx: number = uploadTargetRef.current) => {
+  const handleFilesUpload = (files: FileList | File[] | null, explicitPanelIdx: number = uploadTargetRef.current) => {
     if (!files || files.length === 0) return;
     const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/bmp'];
-
-    Array.from(files).forEach((file, i) => {
+    const validFiles = Array.from(files).filter((file) => {
       if (file.size > 40 * 1024 * 1024) {
         alert(`File ${file.name} exceeds the 40MB limit.`);
-        return;
+        return false;
       }
       if (!validTypes.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png|webp|bmp)$/i)) {
         alert(`File ${file.name} is not a supported format (JPG, PNG, WEBP, BMP).`);
-        return;
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    const isContinuous = isSplitProduct || isMosaicProduct;
+    const emptySlots = panels
+      .map((_, idx) => idx)
+      .filter((idx) => !panelImages[idx]?.imageUrl);
+
+    validFiles.forEach((file, i) => {
+      let target: number;
+      if (isContinuous) {
+        target = 0;
+      } else if (explicitPanelIdx !== undefined && explicitPanelIdx >= 0 && explicitPanelIdx < panels.length) {
+        target = (explicitPanelIdx + i) % panels.length;
+      } else if (emptySlots.length > 0) {
+        target = i < emptySlots.length ? emptySlots[i] : (emptySlots[0] + i) % panels.length;
+      } else {
+        target = (activePanelIndex + i) % panels.length;
       }
 
-      const target = startIdx + i;
       const reader = new FileReader();
       // Preloader stays visible for exactly as long as this real read takes
       beginPreloader();
@@ -3841,33 +3922,34 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             };
 
             setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
-            if (i === 0 || target < panels.length) {
-              const idx = target < panels.length ? target : startIdx;
-              setPanelImages((prev) => ({
-                ...prev,
-                [idx]: {
-                  ...createDefaultPanel(),
-                  imageUrl: result,
-                  uploadedImage: meta,
-                  scale: 1,
-                  rotation: 0,
-                  panX: 0,
-                  panY: 0,
-                  fitMode: (productCapabilities.imageFitMode === 'contain' ? 'contain' : 'cover')
-                }
-              }));
-              setActivePanelIndex(idx);
-            }
+            setPanelImages((prev) => ({
+              ...prev,
+              [target]: {
+                ...createDefaultPanel(),
+                imageUrl: result,
+                uploadedImage: meta,
+                scale: 1,
+                rotation: 0,
+                panX: 0,
+                panY: 0,
+                fitMode: (productCapabilities.imageFitMode === 'contain' ? 'contain' : 'cover')
+              }
+            }));
+            setActivePanelIndex(target);
             setValidationWarning(null);
             endPreloader(PRELOADER_MIN_MS);
           };
           img.onerror = () => {
             setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
-            if (i === 0 || target < panels.length) {
-              const idx = target < panels.length ? target : startIdx;
-              setPanelImages((prev) => ({ ...prev, [idx]: { ...createDefaultPanel(), imageUrl: result, fitMode: (productCapabilities.imageFitMode === 'contain' ? 'contain' : 'cover') } }));
-              setActivePanelIndex(idx);
-            }
+            setPanelImages((prev) => ({
+              ...prev,
+              [target]: {
+                ...createDefaultPanel(),
+                imageUrl: result,
+                fitMode: (productCapabilities.imageFitMode === 'contain' ? 'contain' : 'cover')
+              }
+            }));
+            setActivePanelIndex(target);
             setValidationWarning(null);
             endPreloader(PRELOADER_MIN_MS);
           };
@@ -4824,13 +4906,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <Upload className="w-4 h-4 stroke-[2.2]" />
                 </div>
                 <span className="text-[10px] font-bold text-stone-500 group-hover:text-[#0E4A93]">
-                  Slot {panelIdx + 1} {panelSpec?.dimension ? `(${panelSpec.dimension})` : ''}
+                  Slot {panelIdx + 1}
                 </span>
-              </div>
-            )}
-            {panelSpec?.dimension && (
-              <div className="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none truncate text-center">
-                {panelSpec.dimension}
               </div>
             )}
           </div>
@@ -5002,18 +5079,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         />
                       )}
                     </div>
-                    {/* Dimension badge for each panel */}
-                    {p.dimension && (
-                      <div className="absolute bottom-1 left-1 bg-black/55 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
-                        {p.dimension}
-                      </div>
-                    )}
                   </div>
                 ) : (
                   /* Empty state panel */
                   <div className="w-full h-full flex flex-col items-center justify-center bg-[#dcdfe4] text-center p-2 relative">
                     <span className="text-[10px] font-bold text-stone-600">{p.label || `Panel ${idx + 1}`}</span>
-                    {p.dimension && <span className="text-[9px] text-stone-500">{p.dimension}</span>}
                   </div>
                 )}
                 {renderPanelTextItems(idx)}
@@ -5939,16 +6009,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
                       </div>
                       <span className="text-[10px] font-bold text-stone-600">{pSpec.label || `Hexagon ${idx + 1}`}</span>
-                      {pSpec.dimension && <span className="text-[9px] text-stone-400">{pSpec.dimension}</span>}
                     </div>
                   );
                 })()}
 
-                  {pSpec.dimension && (
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none">
-                      {pSpec.dimension}
-                    </div>
-                  )}
                   {renderPanelTextItems(idx)}
                 </div>
               );
@@ -6110,16 +6174,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
                         </div>
                         <span className="text-[10px] font-bold text-stone-600">{pSpec.label || `Panel ${idx + 1}`}</span>
-                        {pSpec.dimension && <span className="text-[9px] text-stone-400">{pSpec.dimension}</span>}
                       </div>
                     );
                   })()}
 
-                  {pSpec.dimension && (
-                    <div className="absolute bottom-1.5 left-1.5 right-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded z-20 pointer-events-none truncate text-center">
-                      {pSpec.dimension}
-                    </div>
-                  )}
                   {renderPanelTextItems(idx)}
                 </div>
               );
@@ -6265,15 +6323,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <span className="text-[10px] font-black text-stone-700 group-hover:text-[#0E4A93]">
                     {pSpec.label || `Slot ${panelIdx + 1}`}
                   </span>
-                  <span className="text-[9px] text-stone-400 font-semibold">{pSpec.dimension || 'Upload Photo'}</span>
+                  <span className="text-[9px] text-stone-400 font-semibold">Upload Photo</span>
                 </div>
               );
             })()}
-            {pSpec.dimension && (
-              <div className="absolute bottom-1 left-1 right-1 bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold px-1 py-0.5 rounded z-20 pointer-events-none truncate text-center">
-                {pSpec.dimension}
-              </div>
-            )}
             {renderPanelTextItems(panelIdx)}
           </div>
         </div>
@@ -6782,45 +6835,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </div>
               )}
 
-              {/* Multi-slot assignment selector */}
-              {panels.length > 1 && !isSplitProduct && !isMosaicProduct && !isCollageProduct && (
-                <div className="p-2.5 bg-stone-100 rounded-xl space-y-1.5">
-                  <div className="text-[11px] font-bold text-stone-700">Assign to Slot:</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {panels.map((p, fIdx) => {
-                      const isTarget = activePanelIndex === fIdx;
-                      const hasPhoto = !!panelImages[fIdx]?.imageUrl;
-                      return (
-                        <button
-                          key={p.id || fIdx}
-                          type="button"
-                          onClick={() => setActivePanelIndex(fIdx)}
-                          className={`flex-1 min-w-[70px] py-1.5 px-2 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                            isTarget
-                              ? 'bg-white border-[#0E4A93] text-[#0E4A93] shadow-xs'
-                              : 'bg-stone-50 border-stone-200 text-stone-600'
-                          }`}
-                        >
-                          <span>Slot {fIdx + 1}</span>
-                          {hasPhoto && <Check className="w-3 h-3 text-emerald-600" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
               {uploadMode === 'computer' ? (
                 /* COMPUTER UPLOAD ZONE */
                 <div
                   onClick={() => {
-                    uploadTargetRef.current = (isSplitProduct || isMosaicProduct) ? 0 : activePanelIndex;
+                    uploadTargetRef.current = (isSplitProduct || isMosaicProduct) ? 0 : -1;
                     fileInputRef.current?.click();
                   }}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => {
                     e.preventDefault();
-                    handleFilesUpload(e.dataTransfer.files, (isSplitProduct || isMosaicProduct) ? 0 : activePanelIndex);
+                    handleFilesUpload(e.dataTransfer.files, (isSplitProduct || isMosaicProduct) ? 0 : -1);
                   }}
                   className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-6 text-center cursor-pointer transition-all group"
                 >
@@ -6939,7 +6964,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           onDragEnd={() => {
                             setDraggingPhotoIndex(null);
                           }}
-                          onClick={() => handleAssignPhotoToPanel(photo, (isSplitProduct || isMosaicProduct) ? 0 : activePanelIndex)}
+                          onClick={() => {
+                            if (isSplitProduct || isMosaicProduct) {
+                              handleAssignPhotoToPanel(photo, 0);
+                            } else if (panels.length > 1) {
+                              const emptyIdx = panels.map((_, idx) => idx).find((idx) => !panelImages[idx]?.imageUrl);
+                              const targetIdx = (!panelImages[activePanelIndex]?.imageUrl || emptyIdx === undefined)
+                                ? activePanelIndex
+                                : emptyIdx;
+                              handleAssignPhotoToPanel(photo, targetIdx);
+                            } else {
+                              handleAssignPhotoToPanel(photo, 0);
+                            }
+                          }}
                           className={`aspect-square rounded-lg overflow-hidden border transition-all relative group bg-white shadow-2xs select-none ${
                             isDraggingThis
                               ? 'opacity-40 scale-95 ring-2 ring-[#0E4A93] cursor-grabbing'
@@ -7074,7 +7111,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               />
             ) : (
             <div className="p-4 space-y-4">
-              {isSinglePrintCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct ? (
+              {isSinglePrintCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct || isWordArtProduct ? (
                 <>
                   {/* Selected Size Summary Card */}
                   <div className="flex items-center justify-between p-3.5 bg-blue-50/70 rounded-2xl border border-blue-100 mb-3">
@@ -7089,7 +7126,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     </div>
                     <button
                       type="button"
-                      onClick={() => setIsSizeShapeModalOpen(true)}
+                      onClick={() => {
+                        if (isWordArtProduct) {
+                          setIsWordArtSizeModalOpen(true);
+                        } else {
+                          setIsSizeShapeModalOpen(true);
+                        }
+                      }}
                       className="px-3.5 py-1.5 bg-[#0E4A93] hover:bg-[#0A366C] text-white text-xs font-bold rounded-xl shadow-xs transition-transform hover:scale-102 cursor-pointer"
                     >
                       Change Size
@@ -7155,6 +7198,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             onClick={() => {
                               setIsCustomSize(false);
                               setSelectedSizeId(opt.id);
+                              if (isWordArtProduct) {
+                                const matchingWordSize = Object.values(WORD_ART_SIZE_CATALOG).flat().find((w) => w.id === opt.id);
+                                if (matchingWordSize) {
+                                  setWordArtSizeOption(matchingWordSize);
+                                  setCustomWidth(matchingWordSize.widthInches);
+                                  setCustomHeight(matchingWordSize.heightInches);
+                                }
+                              }
                               if (isSinglePrintCanvas) {
                                 if (width === height) {
                                   setSelectedShapeId('shape-square');
@@ -7220,7 +7271,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           value={customHeight}
                           onChange={(e) => {
                             setIsCustomSize(true);
-                            setCustomHeight(Number(e.target.value));
+                            const val = Number(e.target.value);
+                            setCustomHeight(val);
+                            if (isWordArtProduct) {
+                              setWordArtSizeOption((prev) => ({
+                                ...prev,
+                                heightInches: val,
+                                label: `${prev.widthInches}" × ${val}"`,
+                                aspectRatio: prev.widthInches / val
+                              }));
+                            }
                           }}
                           className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] appearance-none pr-6 cursor-pointer"
                         >
@@ -7238,7 +7298,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           value={customWidth}
                           onChange={(e) => {
                             setIsCustomSize(true);
-                            setCustomWidth(Number(e.target.value));
+                            const val = Number(e.target.value);
+                            setCustomWidth(val);
+                            if (isWordArtProduct) {
+                              setWordArtSizeOption((prev) => ({
+                                ...prev,
+                                widthInches: val,
+                                label: `${val}" × ${prev.heightInches}"`,
+                                aspectRatio: val / prev.heightInches
+                              }));
+                            }
                           }}
                           className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] appearance-none pr-6 cursor-pointer"
                         >
@@ -7258,7 +7327,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <div className="pt-2 text-center">
                     <button
                       type="button"
-                      onClick={() => setIsSizeShapeModalOpen(true)}
+                      onClick={() => {
+                        if (isWordArtProduct) {
+                          setIsWordArtSizeModalOpen(true);
+                        } else {
+                          setIsSizeShapeModalOpen(true);
+                        }
+                      }}
                       className="text-xs font-bold text-[#0E4A93] hover:underline cursor-pointer"
                     >
                       Open Full Size & Shape Guide →
@@ -8151,6 +8226,23 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
                 : isCustomSize && canUseCustomSize
                 ? `${customWidth}" × ${customHeight}"`
+                : isWordArtProduct
+                ? (isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : `${wordArtSizeOption.widthInches}" × ${wordArtSizeOption.heightInches}"`)
+                : isSplitProduct
+                ? (() => {
+                    const activeLayout = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                    const w = activeLayout.overallWidthInches;
+                    const h = activeLayout.overallHeightInches;
+                    const dims = (w && h) ? `${w}" × ${h}"` : (activeLayout.dimensionsSummary || currentSizeOption.dimensionsSummary);
+                    const pCount = activeLayout.panelsCount || activeLayout.panels?.length || panels?.length || 3;
+                    return `${dims} (${pCount} Panels)`;
+                  })()
+                : isLayoutProduct
+                ? (() => {
+                    const targetId = isHexagonProduct ? 'canvas-hexagon' : selectedProductTypeId;
+                    const activeLayout = getProductLayout(targetId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                    return activeLayout.dimensionsSummary || `${activeLayout.overallWidthInches}" × ${activeLayout.overallHeightInches}"`;
+                  })()
                 : currentSizeOption.dimensionsSummary
             }
             onZoomOut={handleZoomOut}
@@ -8268,10 +8360,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           >
             {/* Stage: everything the customer designs on (frames + movable text/clipart) */}
             <div ref={stageRef} className="relative w-full flex flex-col items-center" onPointerDown={() => setSelectedElement(null)}>
-              {/* Reference Screenshot Top Adjustment Banner */}
-              <div className="w-full max-w-xl mx-auto mb-2 bg-[#FEF9C3] border border-[#FDE047] text-[#854D0E] text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 shadow-2xs select-none">
-                <Move className="w-3.5 h-3.5 text-[#A16207]" />
-                <span>Click and drag within the print lines to Adjust your Photo.</span>
+              {/* Contextual Product Workflow Instruction Banner */}
+              <div className="w-full max-w-xl mx-auto mb-2.5 bg-blue-50/90 border border-blue-200/90 text-stone-800 text-xs font-semibold px-3.5 py-1.5 rounded-xl flex items-center justify-center gap-1.5 shadow-2xs select-none text-center">
+                <Info className="w-3.5 h-3.5 text-[#0E4A93] shrink-0" />
+                <span>{contextualInstruction}</span>
               </div>
 
               {/* WALL DISPLAY (Physical Multi-Panel Gallery Wall Layout) */}
@@ -8948,12 +9040,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               {/* PHOTO COLLAGE (Single Canvas Frame containing internal Photo Layout Grid) */}
               {isCollageProduct && (
                 <div className="relative flex flex-col items-center select-none w-full">
-                  {/* Yellow tip banner from reference */}
-                  <div className="mb-2 px-3 py-1 bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1.5 shadow-2xs">
-                    <Move className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Click and drag within the print lines to Adjust your Photo.</span>
-                  </div>
-
                   {/* Ruler Top */}
                   <div className="w-full flex items-center justify-center py-1 mb-1 max-w-[30rem] relative">
                     <div className="absolute inset-x-0 h-px border-b border-dashed border-stone-300" />
@@ -11470,7 +11556,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           <div className="bg-white w-72 h-full shadow-2xl p-6 flex flex-col justify-between animate-in slide-in-from-left duration-200">
             <div className="space-y-5">
               <div className="flex items-center justify-between pb-4 border-b border-stone-100">
-                <img src="/canvas-india-official-logo.png" alt="Canvas India" className="h-8 w-auto object-contain" />
+                <img src="/canvas-india-official-logo.webp" alt="Canvas India" className="h-8 w-auto object-contain" />
                 <button onClick={() => setMenuOpen(false)} className="text-stone-400 hover:text-stone-700 cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
