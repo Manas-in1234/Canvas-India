@@ -67,12 +67,13 @@ const ACRYLIC_STYLE_ICONS: Record<string, React.ElementType> = {
   quotes: Quote,
 };
 const ACRYLIC_STYLE_CARDS = ACRYLIC_PRODUCT_TYPES.map((pt) => {
-  const landingSlug = Object.values(ACRYLIC_STYLE_LANDING_DATA).find((d) => d.styles[0]?.id === pt.id)?.slug;
+  const landingData = Object.values(ACRYLIC_STYLE_LANDING_DATA).find((d) => d.styles[0]?.id === pt.id);
   return {
     name: pt.name,
     price: pt.startingPrice,
+    image: landingData?.styles[0]?.image,
     icon: ACRYLIC_STYLE_ICONS[pt.iconType || ''] || (pt.id === 'acrylic-bus-roll' ? Rows3 : pt.id === 'acrylic-word-art' ? Type : ImageIcon),
-    href: landingSlug ? `/acrylic/${landingSlug}` : `/customize/acrylic/${pt.id}`,
+    href: landingData ? `/acrylic/${landingData.slug}` : `/customize/acrylic/${pt.id}`,
   };
 });
 
@@ -475,9 +476,15 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                   to={c.href}
                   className="group flex flex-col items-center text-center p-4 rounded-xl border border-stone-200 bg-white hover:border-[#1A4F53] hover:shadow-md transition-all"
                 >
-                  <div className="w-14 h-14 rounded-full bg-stone-100 group-hover:bg-[#1A4F53]/10 flex items-center justify-center mb-3 transition-colors">
-                    <Icon className="w-6 h-6 text-[#1A4F53]" />
-                  </div>
+                  {c.image ? (
+                    <div className="w-14 h-14 rounded-full overflow-hidden mb-3 bg-stone-100 shrink-0">
+                      <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-stone-100 group-hover:bg-[#1A4F53]/10 flex items-center justify-center mb-3 transition-colors">
+                      <Icon className="w-6 h-6 text-[#1A4F53]" />
+                    </div>
+                  )}
                   <h3 className="text-[#1A4F53] font-bold text-xs leading-tight">{c.name}</h3>
                   <p className="text-[11px] text-[#567477] mt-1">Starts at ₹{c.price.toLocaleString('en-IN')}</p>
                 </Link>

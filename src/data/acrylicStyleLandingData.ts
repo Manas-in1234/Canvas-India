@@ -42,70 +42,140 @@ const STANDARD_ACRYLIC_FEATURES = [
 ];
 
 // Maps each acrylic product type's id to a distinct landing-page slug, a
-// friendly intro, a step-2 title/desc, and an icon (no distinct real photos
-// exist for these product types anywhere in the app — the customizer itself
-// only uses generic shape placeholders — so each uses a plain, accurate icon
-// instead of a mismatched stock photo).
-const STYLE_META: Record<string, { slug: string; intro: string; step2: { title: string; desc: string }; icon: import('../components/CanvasStyleLandingPage').CanvasStyleIcon }> = {
+// friendly intro, a step-2 title/desc, an icon, and real encyclopedic
+// history. Only Single Print has a verified real photo (user-supplied); the
+// rest have no distinct real photos anywhere in the app — the customizer
+// itself only ever used generic shape placeholders — so they use a plain,
+// accurate icon instead of a mismatched stock photo.
+const STYLE_META: Record<string, {
+  slug: string;
+  intro: string;
+  step2: { title: string; desc: string };
+  icon: import('../components/CanvasStyleLandingPage').CanvasStyleIcon;
+  image?: string;
+  historyTitle: string;
+  historyParagraphs: string[];
+}> = {
   'acrylic-print': {
     slug: 'single-print',
     intro: 'One photo, printed edge-to-edge on crystal-clear optical acrylic for a vivid, glass-like glow.',
     step2: { title: 'Pick Your Size', desc: 'Choose a size from our standard range, or set a custom width and height.' },
-    icon: 'print'
+    icon: 'print',
+    image: '/assets/canvas-styles/acrylic-single-print-peacock.webp',
+    historyTitle: 'The History of Acrylic Glass',
+    historyParagraphs: [
+      'Acrylic glass (polymethyl methacrylate) was patented in 1933 by German chemists at Rohm and Haas, who marketed it under the name Plexiglas — a shatter-resistant, lightweight alternative to glass that was soon used everywhere from aircraft canopies in World War II to dental prosthetics.',
+      "Photographers and galleries began mounting prints directly behind acrylic sheets from the 1980s onward, prized for how the material's optical clarity makes colors appear to glow with extra depth and saturation compared to printing on paper alone.",
+      "Today's acrylic photo print carries that same idea forward — a direct UV print sealed beneath (or printed sub-surface onto) crystal-clear cast acrylic, giving photographs a luminous, almost three-dimensional quality that a standard paper print can't match."
+    ]
   },
   'acrylic-wall-art': {
     slug: 'wall-display',
     intro: 'A cluster of acrylic panels arranged together as one striking gallery-wall display.',
     step2: { title: 'Pick Your Panel Layout', desc: 'Choose a multi-panel gallery arrangement, then fine-tune individual panel sizes.' },
-    icon: 'wall'
+    icon: 'wall',
+    historyTitle: 'The History of the Gallery Wall',
+    historyParagraphs: [
+      'The densely packed "gallery wall" look traces back to the Paris Salon, which from 1667 accepted far more paintings than its walls could comfortably hold, so organizers covered every inch floor to ceiling with little regard for matching styles.',
+      'That "salon-style hang" had its own hierarchy — prized works hung "on the line" at eye level, lesser ones pushed toward the ceiling or floor — a practice London\'s Royal Academy soon adopted too.',
+      'The look eventually left the gallery altogether, becoming a deliberate home-decorating style in its own right — and a cluster of acrylic panels is simply that same arrangement, made modern with a glossy, glass-like finish.'
+    ]
   },
   'acrylic-collage': {
     slug: 'photo-collage',
     intro: 'Several of your favorite photos arranged into one cohesive acrylic grid.',
     step2: { title: 'Pick Your Collage Grid', desc: 'Choose from multiple photo layouts, then slot in your photos.' },
-    icon: 'grid'
+    icon: 'grid',
+    historyTitle: 'The History of Collage',
+    historyParagraphs: [
+      'The word "collage" comes from the French coller, "to glue." The earliest known paper collage dates to 10th-century Japan, where calligraphers glued paper onto surfaces when writing poems.',
+      'Collage became a recognized fine-art technique in 1912, when Georges Braque began attaching cut wallpaper to his drawings and Pablo Picasso quickly followed — the two are credited with coining the term papier collé, "pasted paper."',
+      "A photo collage on acrylic carries that same idea forward — several photographs arranged into one piece — just printed edge-to-edge on crystal-clear acrylic instead of glued paper."
+    ]
   },
   'acrylic-split': {
     slug: 'split-acrylic',
     intro: 'One photo, seamlessly split across separate acrylic panels for a dramatic centerpiece.',
     step2: { title: 'Pick Your Panel Count', desc: "Choose a multi-piece split layout, and we'll divide your photo seamlessly across each panel." },
-    icon: 'columns'
+    icon: 'columns',
+    historyTitle: 'The History of the Multi-Panel Format',
+    historyParagraphs: [
+      'Splitting an image across multiple hinged panels dates back to early Christian art, where the three-panel "triptych" became the standard format for altarpieces from the Middle Ages onward.',
+      "During World War II, a U.S. citizens' committee commissioned nearly 460 portable triptych altarpieces for troops of different faiths — proof the multi-panel format has always been practical, not just decorative.",
+      "Split acrylic reframes that same structure — one image divided across separate panels — as a deliberate, modern design choice, finished with a glossy acrylic surface instead of painted wood."
+    ]
   },
   'acrylic-mosaic': {
     slug: 'photo-mosaic',
     intro: 'Dozens of your smaller photographs blended together into one intricate acrylic mosaic.',
     step2: { title: 'Set Your Mosaic Size', desc: 'Choose your panel size — more photos uploaded means a richer, more detailed mosaic.' },
-    icon: 'mosaic'
+    icon: 'mosaic',
+    historyTitle: 'The History of Mosaic',
+    historyParagraphs: [
+      'Mosaic is one of the oldest art forms in the world — the earliest known examples, made from colored stones, shells, and ivory, were found at a temple in Mesopotamia dating to the 3rd millennium BC.',
+      'The Greeks developed figural mosaics by the 4th century BC, and the Romans took the technique across their empire, decorating villa floors from Britain to Syria with intricate tesserae work.',
+      "Today's photo mosaic reinvents that ancient technique with hundreds of individual photographs instead of stone or glass tiles — many small pieces combining into one larger picture, now printed on acrylic."
+    ]
   },
   'acrylic-lyric': {
     slug: 'lyric-on-acrylic',
     intro: 'Pair your favorite photo with the song lyrics, vows, or quote that means the most, rendered in elegant typography on acrylic.',
     step2: { title: 'Add Your Lyrics & Template', desc: 'Type your song lyrics, vows, or quote, choose a template, then pick your size.' },
-    icon: 'music'
+    icon: 'music',
+    historyTitle: 'The History of Lyric Art',
+    historyParagraphs: [
+      'Pairing handwritten text with an image has roots in illuminated manuscripts, where medieval scribes wove decorated lettering directly into the artwork surrounding sacred texts.',
+      'The specific idea of pairing a couple\'s own wedding song lyrics with their portrait grew out of the custom wedding-gift market that expanded alongside affordable digital printing in the 2000s and 2010s.',
+      'Lyric on acrylic continues that tradition on crystal-clear acrylic, letting the typography and photo sit together with the same glossy depth as a gallery print.'
+    ]
   },
   'acrylic-digital': {
     slug: 'digital-painting',
     intro: 'Turn your favorite photo into an artistic digital oil, charcoal, or palette-knife painting, printed on acrylic.',
     step2: { title: 'Pick Your Painting Effect', desc: 'Choose a digital painting style and subject, and we\'ll transform your photo into artwork.' },
-    icon: 'painting'
+    icon: 'painting',
+    historyTitle: 'The History of Photo-to-Painting Art',
+    historyParagraphs: [
+      'Simulating painterly brushwork from a photograph dates back to early image-editing software in the 1990s, when programs like Adobe Photoshop first shipped built-in "oil paint" and "watercolor" filters.',
+      'The style went mainstream with mobile apps like Prisma in 2016, which used neural-network style transfer to turn ordinary phone photos into convincing paintings in seconds — introducing the effect to a mass audience.',
+      "A digital painting print carries that same transformation onto physical wall art, turning a favorite photo into an oil, charcoal, or palette-knife-style portrait on acrylic."
+    ]
   },
   'acrylic-quotes': {
     slug: 'quotes-on-acrylic',
     intro: 'Your favorite quote, rendered in bold custom typography on crystal-clear acrylic.',
     step2: { title: 'Pick Your Template', desc: 'Choose a quote template and typography style, then personalize the text.' },
-    icon: 'quote'
+    icon: 'quote',
+    historyTitle: 'The History of Typographic Wall Art',
+    historyParagraphs: [
+      'Using bold lettering alone as the subject of a poster traces back to the WPA-era public information posters of the 1930s-40s, which relied on strong typography to deliver a message at a glance.',
+      'The modern "motivational quote" wall art trend took off in the 2000s and 2010s alongside the rise of home-decor retailers and platforms like Pinterest, which popularized short, shareable phrases as standalone decor.',
+      'Quotes on acrylic brings that same typographic tradition to a glossy, gallery-like surface — the words alone, printed crisp and bold.'
+    ]
   },
   'acrylic-bus-roll': {
     slug: 'bus-roll',
     intro: 'A tall vertical acrylic strip styled after classic destination bus rolls — a fun, retro statement piece.',
     step2: { title: 'Create Your Bus Roll', desc: 'Type your destination lines and pick a background style for your roll.' },
-    icon: 'bus'
+    icon: 'bus',
+    historyTitle: 'The History of the Destination Roll Blind',
+    historyParagraphs: [
+      'Mechanical roller-blind destination signs were fitted to buses and trams from the early 20th century onward, each roll printed with a long list of routes that the driver wound into place by hand.',
+      "London's classic Routemaster buses made the format especially iconic through the mid-20th century, and original canvas destination rolls are now sought after by transport collectors and decorators alike.",
+      'A bus roll print borrows that same tall, hand-wound format purely for its nostalgic look — a personalized destination list printed on acrylic instead of canvas.'
+    ]
   },
   'acrylic-word-art': {
     slug: 'word-art',
     intro: 'Your name, a favorite word, or a short phrase, shaped into bold typographic wall art on acrylic.',
     step2: { title: 'Design Your Word Art', desc: 'Type your word or phrase and choose a layout, then pick your size.' },
-    icon: 'type'
+    icon: 'type',
+    historyTitle: 'The History of Word Art',
+    historyParagraphs: [
+      'Decorative lettering as a standalone art object has roots in illuminated manuscripts and hand-lettered signage, where a single word or initial could carry as much visual weight as a full illustration.',
+      'The modern "word art" home-decor trend — a name, family word, or short phrase displayed as the entire artwork — became especially popular through home-decor retailers in the early 2000s.',
+      'Word art on acrylic brings that same single-word focus to a glossy, gallery-style finish, letting the lettering itself be the centerpiece.'
+    ]
   },
 };
 
@@ -128,10 +198,12 @@ export const ACRYLIC_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> 
           name: pt.name,
           description: pt.description,
           price: pt.startingPrice,
-          icon: meta.icon,
+          ...(meta.image ? { image: meta.image } : { icon: meta.icon }),
           customizeHref: `/customize/acrylic/${pt.id}`
         }
       ],
+      historyTitle: meta.historyTitle,
+      historyParagraphs: meta.historyParagraphs,
       featuresTitle: 'Made to display',
       features: STANDARD_ACRYLIC_FEATURES
     };
