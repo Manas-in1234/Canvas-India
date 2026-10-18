@@ -21,12 +21,21 @@ import {
   Grid3x3 as GridIcon,
   Crop,
   SlidersHorizontal,
-  Eye
+  Eye,
+  Image as ImageIcon,
+  LayoutGrid,
+  Grid2x2,
+  Music,
+  Palette,
+  Quote as QuoteIcon,
+  Rows3,
+  Type as TypeIcon
 } from 'lucide-react';
 
 export type CanvasStyleIcon =
   | 'hexagon' | 'scroll' | 'users' | 'package' | 'mountain'
-  | 'columns' | 'frame' | 'images' | 'heart' | 'paw';
+  | 'columns' | 'frame' | 'images' | 'heart' | 'paw'
+  | 'print' | 'wall' | 'grid' | 'mosaic' | 'music' | 'painting' | 'quote' | 'bus' | 'type';
 
 // A handful of categories (Hexagon, Banner, Wholesale, Caricature, Panoramic
 // and Split gallery slots) still don't have a real photographed or
@@ -48,7 +57,16 @@ const STYLE_ICONS: Record<CanvasStyleIcon, React.ReactNode> = {
   frame: <Frame className="w-10 h-10" />,
   images: <Images className="w-10 h-10" />,
   heart: <Heart className="w-10 h-10" />,
-  paw: <PawPrint className="w-10 h-10" />
+  paw: <PawPrint className="w-10 h-10" />,
+  print: <ImageIcon className="w-10 h-10" />,
+  wall: <LayoutGrid className="w-10 h-10" />,
+  grid: <Grid2x2 className="w-10 h-10" />,
+  mosaic: <GridIcon className="w-10 h-10" />,
+  music: <Music className="w-10 h-10" />,
+  painting: <Palette className="w-10 h-10" />,
+  quote: <QuoteIcon className="w-10 h-10" />,
+  bus: <Rows3 className="w-10 h-10" />,
+  type: <TypeIcon className="w-10 h-10" />
 };
 
 export type CanvasStyleVisual =
@@ -322,7 +340,7 @@ const FEATURE_ICONS: Record<CanvasStyleFeature['icon'], React.ReactNode> = {
   clock: <Clock className="w-5 h-5" />
 };
 
-export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> = ({ data }) => {
+export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData; material?: 'canvas' | 'acrylic' }> = ({ data, material = 'canvas' }) => {
   const navigate = useNavigate();
 
   return (
@@ -333,7 +351,7 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData }> 
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-stone-500">
             <Link to="/" className="hover:text-[#0E4A93] transition-colors">Home</Link>
             <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
-            <Link to="/canvas" className="hover:text-[#0E4A93] transition-colors">Canvas</Link>
+            <Link to={`/${material}`} className="hover:text-[#0E4A93] transition-colors">{material === 'acrylic' ? 'Acrylic' : 'Canvas'}</Link>
             <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
             <span className="font-bold text-stone-900">{data.pageTitle}</span>
           </nav>

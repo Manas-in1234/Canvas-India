@@ -23,6 +23,7 @@ import { RefundReturnPage } from './pages/RefundReturnPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { CanvasCategoryPage } from './pages/CanvasCategoryPage';
 import { CanvasStylePage } from './pages/CanvasStylePage';
+import { AcrylicStylePage } from './pages/AcrylicStylePage';
 import { CorkCategoryPage } from './pages/CorkCategoryPage';
 import { AcrylicCustomizerPage } from './pages/AcrylicCustomizerPage';
 import { AllCategoriesPage } from './pages/AllCategoriesPage';
@@ -98,6 +99,8 @@ export function App() {
             {/* Acrylic — dedicated category page */}
             <Route path="/acrylic" element={<AcrylicCategoryPage />} />
             <Route path="/acrylic-prints" element={<AcrylicCategoryPage />} />
+            {/* Dedicated landing page per Acrylic product type (Wall Display, Split Acrylic, etc.) */}
+            <Route path="/acrylic/:styleSlug" element={<AcrylicStylePage />} />
             <Route path="/posters" element={<CategoryPage categorySlug="posters" />} />
 
             <Route path="/cork" element={<CorkCategoryPage />} />

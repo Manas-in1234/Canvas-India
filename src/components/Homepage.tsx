@@ -6,6 +6,7 @@ import { OCCASIONS } from '../data/occasionsData';
 import { ProductCard } from './ProductCard';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 import { ACRYLIC_PRODUCT_TYPES } from '../data/acrylicCustomizerData';
+import { ACRYLIC_STYLE_LANDING_DATA } from '../data/acrylicStyleLandingData';
 
 export interface HomepageProps {
   onSelectCategory: (slug: string, sub?: string) => void;
@@ -65,12 +66,15 @@ const ACRYLIC_STYLE_ICONS: Record<string, React.ElementType> = {
   painting: Palette,
   quotes: Quote,
 };
-const ACRYLIC_STYLE_CARDS = ACRYLIC_PRODUCT_TYPES.map((pt) => ({
-  name: pt.name,
-  price: pt.startingPrice,
-  icon: ACRYLIC_STYLE_ICONS[pt.iconType || ''] || (pt.id === 'acrylic-bus-roll' ? Rows3 : pt.id === 'acrylic-word-art' ? Type : ImageIcon),
-  href: `/customize/acrylic/${pt.id}`,
-}));
+const ACRYLIC_STYLE_CARDS = ACRYLIC_PRODUCT_TYPES.map((pt) => {
+  const landingSlug = Object.values(ACRYLIC_STYLE_LANDING_DATA).find((d) => d.styles[0]?.id === pt.id)?.slug;
+  return {
+    name: pt.name,
+    price: pt.startingPrice,
+    icon: ACRYLIC_STYLE_ICONS[pt.iconType || ''] || (pt.id === 'acrylic-bus-roll' ? Rows3 : pt.id === 'acrylic-word-art' ? Type : ImageIcon),
+    href: landingSlug ? `/acrylic/${landingSlug}` : `/customize/acrylic/${pt.id}`,
+  };
+});
 
 // One card per real Canvas style landing page (same slugs/images/pricing as
 // /canvas/<slug>), so "Canvas & Boards" on the homepage shows the actual
