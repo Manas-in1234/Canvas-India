@@ -262,11 +262,37 @@ const STYLE_META: Record<string, {
     intro: 'Turn your favorite photo into an artistic digital oil, charcoal, or palette-knife painting, printed on acrylic.',
     step2: { title: 'Pick Your Painting Effect', desc: 'Choose a digital painting style and subject, and we\'ll transform your photo into artwork.' },
     icon: 'painting',
+    image: '/assets/canvas-styles/acrylic-digital-wildlife-oil.webp',
     historyTitle: 'The History of Photo-to-Painting Art',
     historyParagraphs: [
       'Simulating painterly brushwork from a photograph dates back to early image-editing software in the 1990s, when programs like Adobe Photoshop first shipped built-in "oil paint" and "watercolor" filters.',
       'The style went mainstream with mobile apps like Prisma in 2016, which used neural-network style transfer to turn ordinary phone photos into convincing paintings in seconds — introducing the effect to a mass audience.',
       "A digital painting print carries that same transformation onto physical wall art, turning a favorite photo into an oil, charcoal, or palette-knife-style portrait on acrylic."
+    ],
+    tipsTitle: 'Tips for a Stunning Digital Painting',
+    tipsSubtitle: 'How to get the most dramatic brushstrokes from your photos.',
+    tipsItems: [
+      { title: 'Focus on clear facial features', desc: 'Portraits with clear eyes and expressive expressions translate into the most striking oil and charcoal paintings.' },
+      { title: 'Good lighting and contrast', desc: 'Dynamic highlights and deep shadows give our digital artists and filters the tonal range needed for dramatic texture.' },
+      { title: 'Rich, vivid colors', desc: 'Photos with warm tones or bold contrasts produce rich, layered impasto brushwork that glows behind optical acrylic.' },
+      { title: 'Start with high resolution', desc: 'Upload the original uncompressed photo so every stroke and canvas texture can be rendered with maximum crispness.' }
+    ],
+    extraStyles: [
+      {
+        name: 'Radiant Botanical Acrylic Painting',
+        description: 'Luminous layered brushstrokes capturing the vibrant warmth and delicate petals of a botanical blossom.',
+        image: '/assets/canvas-styles/acrylic-digital-dahlia-bloom.webp'
+      },
+      {
+        name: 'Classic Pet Portrait Oil Painting',
+        description: 'Turn your beloved pet into a distinguished gallery-grade oil portrait with authentic canvas easel depth.',
+        image: '/assets/canvas-styles/acrylic-digital-cat-portrait.webp'
+      },
+      {
+        name: 'Divine Lotus Buddha Acrylic Painting',
+        description: 'Serene spiritual portraiture in rich jade and emerald tones, accented by glowing red lotus blossoms.',
+        image: '/assets/canvas-styles/acrylic-digital-buddha-lotus.webp'
+      }
     ]
   },
   'acrylic-quotes': {
