@@ -232,11 +232,29 @@ const STYLE_META: Record<string, {
     intro: 'Pair your favorite photo with the song lyrics, vows, or quote that means the most, rendered in elegant typography on acrylic.',
     step2: { title: 'Add Your Lyrics & Template', desc: 'Type your song lyrics, vows, or quote, choose a template, then pick your size.' },
     icon: 'music',
+    image: '/assets/canvas-styles/acrylic-lyric-vinyl-record.webp',
     historyTitle: 'The History of Lyric Art',
     historyParagraphs: [
       'Pairing handwritten text with an image has roots in illuminated manuscripts, where medieval scribes wove decorated lettering directly into the artwork surrounding sacred texts.',
       'The specific idea of pairing a couple\'s own wedding song lyrics with their portrait grew out of the custom wedding-gift market that expanded alongside affordable digital printing in the 2000s and 2010s.',
       'Lyric on acrylic continues that tradition on crystal-clear acrylic, letting the typography and photo sit together with the same glossy depth as a gallery print.'
+    ],
+    extraStyles: [
+      {
+        name: 'Gold Script Acrylic Lyric Block',
+        description: 'Shimmering gold script names and milestone date layered over custom song lyrics on a freestanding obsidian black acrylic block.',
+        image: '/assets/canvas-styles/acrylic-lyric-gold-black-block.webp'
+      },
+      {
+        name: 'Sheet Music Acrylic Lyric Block',
+        description: 'Classical stave and musical notation backdrop paired with couple names, anniversary date, and song lyrics on crystal-clear acrylic.',
+        image: '/assets/canvas-styles/acrylic-lyric-sheet-music-block.webp'
+      },
+      {
+        name: 'Heart Line Art Acrylic Lyric Block',
+        description: 'Romantic minimalist line art hands with a vibrant red heart, wreathed in the words of your special melody.',
+        image: '/assets/canvas-styles/acrylic-lyric-heart-line-art.webp'
+      }
     ]
   },
   'acrylic-digital': {
