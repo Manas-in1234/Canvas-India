@@ -142,11 +142,29 @@ const STYLE_META: Record<string, {
     intro: 'One photo, seamlessly split across separate acrylic panels for a dramatic centerpiece.',
     step2: { title: 'Pick Your Panel Count', desc: "Choose a multi-piece split layout, and we'll divide your photo seamlessly across each panel." },
     icon: 'columns',
+    image: '/assets/canvas-styles/acrylic-split-couple-sunset.webp',
     historyTitle: 'The History of the Multi-Panel Format',
     historyParagraphs: [
       'Splitting an image across multiple hinged panels dates back to early Christian art, where the three-panel "triptych" became the standard format for altarpieces from the Middle Ages onward.',
       "During World War II, a U.S. citizens' committee commissioned nearly 460 portable triptych altarpieces for troops of different faiths — proof the multi-panel format has always been practical, not just decorative.",
       "Split acrylic reframes that same structure — one image divided across separate panels — as a deliberate, modern design choice, finished with a glossy acrylic surface instead of painted wood."
+    ],
+    extraStyles: [
+      {
+        name: '5-Panel Beach Pier Split Acrylic',
+        description: 'A wide panoramic jetty view stretched across 5 stepped acrylic panels.',
+        image: '/assets/canvas-styles/acrylic-split-beach-pier.webp'
+      },
+      {
+        name: 'Sailboat Painting Split Acrylic',
+        description: 'A warm painted seascape split across 4 panels — one large feature panel plus 3 accent panels.',
+        image: '/assets/canvas-styles/acrylic-split-sailboat-painting.webp'
+      },
+      {
+        name: 'Marble Abstract Split Acrylic',
+        description: 'Flowing blue and gold abstract marbling split evenly across 4 equal panels.',
+        image: '/assets/canvas-styles/acrylic-split-marble-abstract.webp'
+      }
     ]
   },
   'acrylic-mosaic': {
