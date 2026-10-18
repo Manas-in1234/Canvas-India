@@ -1,10 +1,11 @@
 import React, { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight, Tag, Copy, Check, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Tag, Copy, Check, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote, Image as ImageIcon, LayoutGrid, Grid2x2, Columns3, Grid3x3, Music, Type, Rows3 } from 'lucide-react';
 import { Product } from '../types';
 import { OCCASIONS } from '../data/occasionsData';
 import { ProductCard } from './ProductCard';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
+import { ACRYLIC_PRODUCT_TYPES } from '../data/acrylicCustomizerData';
 
 export interface HomepageProps {
   onSelectCategory: (slug: string, sub?: string) => void;
@@ -40,15 +41,36 @@ const CATEGORY_CARDS = [
   { name: 'Cork Art Patterns', sub: 'Textured Natural Finishes', price: 249, slug: 'cork-art-patterns', image: '/assets/catalogue/cork-art-patterns/C-A_003.webp', grad: 'from-[#92400E]/90', chip: 'bg-[#B45309]' },
 ];
 
-// Acrylic and Cork get their own section showing real products from that
-// category. Canvas is handled separately below (CANVAS_STYLE_CARDS) since
-// its header dropdown is a set of distinct formats — Wall Display, Split
-// Canvas, Hexagon, etc. — each with its own landing page, not a flat
-// product list.
+// Cork gets its own section showing real products from that category.
+// Canvas and Acrylic are handled separately below (CANVAS_STYLE_CARDS /
+// ACRYLIC_STYLE_CARDS) since both have a set of distinct formats — Wall
+// Display, Split, Hexagon, etc. — not a flat product list.
 const FORMAT_CARDS = [
-  { name: 'Acrylic Prints', sub: 'Vibrant Colors | Endless Possibilities', slug: 'acrylic' },
   { name: 'Cork Products', sub: 'Natural | Durable | Stylish', slug: 'cork' },
 ];
+
+// One card per real acrylic product type (same ids/prices the customizer's
+// own "Select Product" screen uses), linking straight into that product
+// type's customizer instead of a flat catalogue product grid. These product
+// types have no distinct real photos anywhere in the app (the customizer
+// itself just uses generic shape placeholders), so each card uses a plain
+// icon instead of a stock/mismatched photo.
+const ACRYLIC_STYLE_ICONS: Record<string, React.ElementType> = {
+  print: ImageIcon,
+  wall: LayoutGrid,
+  collage: Grid2x2,
+  split: Columns3,
+  mosaic: Grid3x3,
+  lyric: Music,
+  painting: Palette,
+  quotes: Quote,
+};
+const ACRYLIC_STYLE_CARDS = ACRYLIC_PRODUCT_TYPES.map((pt) => ({
+  name: pt.name,
+  price: pt.startingPrice,
+  icon: ACRYLIC_STYLE_ICONS[pt.iconType || ''] || (pt.id === 'acrylic-bus-roll' ? Rows3 : pt.id === 'acrylic-word-art' ? Type : ImageIcon),
+  href: `/customize/acrylic/${pt.id}`,
+}));
 
 // One card per real Canvas style landing page (same slugs/images/pricing as
 // /canvas/<slug>), so "Canvas & Boards" on the homepage shows the actual
@@ -421,13 +443,61 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         </Container>
       </section>
 
-      {/* SHOP BY FORMAT — Acrylic, Cork as their own individual
-          category blocks, each showing real products from that category. */}
+      {/* ACRYLIC PRINTS — one card per real acrylic product type, matching
+          the customizer's own "Select Product" screen, linking straight
+          into that product type's customizer. */}
+      <section id="shop-format-acrylic" className="py-12 sm:py-16 bg-[#FDFCF8]">
+        <Container>
+          <div className="flex items-end justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Acrylic Prints</h2>
+              <p className="text-sm mt-1 text-[#567477]">Vibrant Colors | Endless Possibilities</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onSelectCategory('acrylic')}
+              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer shrink-0"
+            >
+              View All <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
+            {ACRYLIC_STYLE_CARDS.map((c) => {
+              const Icon = c.icon;
+              return (
+                <Link
+                  key={c.href}
+                  to={c.href}
+                  className="group flex flex-col items-center text-center p-4 rounded-xl border border-stone-200 bg-white hover:border-[#1A4F53] hover:shadow-md transition-all"
+                >
+                  <div className="w-14 h-14 rounded-full bg-stone-100 group-hover:bg-[#1A4F53]/10 flex items-center justify-center mb-3 transition-colors">
+                    <Icon className="w-6 h-6 text-[#1A4F53]" />
+                  </div>
+                  <h3 className="text-[#1A4F53] font-bold text-xs leading-tight">{c.name}</h3>
+                  <p className="text-[11px] text-[#567477] mt-1">Starts at ₹{c.price.toLocaleString('en-IN')}</p>
+                </Link>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onSelectCategory('acrylic')}
+            className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+          >
+            View All Acrylic Prints <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </Container>
+      </section>
+
+      {/* SHOP BY FORMAT — Cork as its own
+          category block, showing real products from that category. */}
       {FORMAT_CARDS.map((f, idx) => {
         const categoryProducts = allProducts.filter((p) => p.categorySlug === f.slug).slice(0, 8);
         if (categoryProducts.length === 0) return null;
         return (
-          <section key={f.slug} id={`shop-format-${f.slug}`} className={`py-12 sm:py-16 ${idx % 2 === 0 ? 'bg-[#FDFCF8]' : ''}`}>
+          <section key={f.slug} id={`shop-format-${f.slug}`} className={`py-12 sm:py-16 ${idx % 2 === 1 ? 'bg-[#FDFCF8]' : ''}`}>
             <Container>
               <div className="flex items-end justify-between gap-4 mb-6">
                 <div>
