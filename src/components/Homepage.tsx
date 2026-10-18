@@ -113,6 +113,8 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       <style>{`
         @keyframes ci-float { 0%,100% { transform: translateY(0) rotate(var(--r,0deg)); } 50% { transform: translateY(-10px) rotate(var(--r,0deg)); } }
         .ci-float { animation: ci-float 5s ease-in-out infinite; }
+        @keyframes ci-glow { 0%,100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
+        .ci-glow { animation: ci-glow 2s ease-in-out infinite; }
       `}</style>
 
       {/* HERO */}
@@ -204,8 +206,8 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <div className="relative inline-block">
-                {/* Soft ambient glow behind the button */}
-                <span className="absolute -inset-3 rounded-full bg-gradient-to-r from-[#0E4A93] to-[#E8752A] opacity-50 blur-xl animate-pulse pointer-events-none" aria-hidden="true" />
+                {/* Live pulsing glow behind the button */}
+                <span className="ci-glow absolute -inset-4 rounded-full bg-gradient-to-r from-[#0E4A93] to-[#E8752A] blur-xl pointer-events-none" aria-hidden="true" />
                 <button
                   type="button"
                   onClick={handleStartCreatingCanvas}
