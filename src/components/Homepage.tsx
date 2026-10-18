@@ -1,8 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight, Tag, Copy, Check, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, ChevronDown, Tag, Copy, Check, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote } from 'lucide-react';
 import { Product } from '../types';
 import { OCCASIONS } from '../data/occasionsData';
+import { MEGA_MENUS_DATA } from '../data/storeData';
 
 export interface HomepageProps {
   onSelectCategory: (slug: string, sub?: string) => void;
@@ -30,15 +31,20 @@ const ORANGE = '#E8752A';
 const u = (id: string, w = 1200) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=90`;
 
 const CATEGORY_CARDS = [
-  { name: 'Acrylic Prints', sub: 'Vibrant Colors | Endless Possibilities', price: 499, slug: 'acrylic', image: u('photo-1513364776144-60967b0f800f'), grad: 'from-[#0E4A93]/90', chip: 'bg-[#E8752A]' },
-  { name: 'Canvas & Boards', sub: 'For Every Art Idea', price: 399, slug: 'canvas', image: u('photo-1536924940846-227afb31e2a5'), grad: 'from-[#7C3AED]/90', chip: 'bg-[#EC4899]' },
-  { name: 'Cork Products', sub: 'Natural | Durable | Stylish', price: 449, slug: 'cork', image: u('photo-1586075010923-2dd4570fb338'), grad: 'from-[#B45309]/90', chip: 'bg-[#F59E0B]' },
   { name: 'Devotional Art', sub: 'Spiritual Prints for Every Home', price: 249, slug: 'devotional-art', image: '/assets/catalogue/devotional-art/G-A_001.webp', grad: 'from-[#9A3412]/90', chip: 'bg-[#EA580C]' },
   { name: 'Scenery & Landscape Art', sub: 'Bring the Outdoors In', price: 249, slug: 'scenery-landscape-art', image: '/assets/catalogue/scenery-landscape-art/S-A_010.webp', grad: 'from-[#0F766E]/90', chip: 'bg-[#059669]' },
   { name: 'Tribal & Ethnic Art', sub: 'Bold, Earthy Statement Pieces', price: 249, slug: 'tribal-ethnic-art', image: '/assets/catalogue/tribal-ethnic-art/A-A_006.webp', grad: 'from-[#7C2D12]/90', chip: 'bg-[#B45309]' },
   { name: 'Line Art', sub: 'Minimal Monochrome Prints', price: 249, slug: 'line-art', image: '/assets/catalogue/line-art/L-A_010.webp', grad: 'from-[#1F2937]/90', chip: 'bg-[#374151]' },
   { name: 'Motivational Posters', sub: 'Quotes That Keep You Going', price: 249, slug: 'motivational-posters', image: '/assets/catalogue/motivational-posters/M-A_030.webp', grad: 'from-[#B91C1C]/90', chip: 'bg-[#DC2626]' },
   { name: 'Cork Art Patterns', sub: 'Textured Natural Finishes', price: 249, slug: 'cork-art-patterns', image: '/assets/catalogue/cork-art-patterns/C-A_003.webp', grad: 'from-[#92400E]/90', chip: 'bg-[#B45309]' },
+];
+
+// The 3 primary material categories, each expandable to show the exact same
+// groups/items as that material's header mega-menu dropdown.
+const FORMAT_CARDS = [
+  { name: 'Canvas & Boards', sub: 'For Every Art Idea', slug: 'canvas', menuKey: 'canvas', image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&auto=format&fit=crop&q=80' },
+  { name: 'Acrylic Prints', sub: 'Vibrant Colors | Endless Possibilities', slug: 'acrylic', menuKey: 'acrylic', image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&auto=format&fit=crop&q=80' },
+  { name: 'Cork Products', sub: 'Natural | Durable | Stylish', slug: 'cork', menuKey: 'cork', image: '/assets/products/cork/9C-YA1/9c-ya1(1).webp' },
 ];
 
 const TESTIMONIALS = [
@@ -82,6 +88,17 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   const occasionRowRef = useRef<HTMLDivElement>(null);
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
   const [bestsellerFormat, setBestsellerFormat] = useState<Record<string, 'canvas' | 'acrylic'>>({});
+  const [expandedFormat, setExpandedFormat] = useState<string | null>(null);
+
+  // Same navigation behavior as the header mega-menu: a real href wins,
+  // otherwise fall back to the generic category listing for that slug.
+  const handleFormatItemClick = (item: { slug: string; href?: string }) => {
+    if (item.href) {
+      navigate(item.href);
+    } else {
+      onSelectCategory(item.slug);
+    }
+  };
 
   const handleCopyCoupon = (code: string) => {
     navigator.clipboard.writeText(code).catch(() => {});
@@ -262,6 +279,77 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 );
               })}
             </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* SHOP BY FORMAT — Canvas, Acrylic, Cork as their own section, each
+          expandable to the exact same groups/items as its header mega-menu. */}
+      <section id="shop-formats" className="py-12 sm:py-16">
+        <Container>
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-4">
+              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Shop by Format</h2>
+              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+            </div>
+            <p className="text-sm mt-2 text-[#567477]">Pick a material, then a style — just like the menu above</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
+            {FORMAT_CARDS.map((f) => {
+              const menu = MEGA_MENUS_DATA[f.menuKey];
+              const isOpen = expandedFormat === f.slug;
+              return (
+                <div key={f.slug} className={`rounded-2xl border bg-white overflow-hidden shadow-sm transition-colors ${isOpen ? 'border-[#1A4F53]' : 'border-stone-200'}`}>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedFormat(isOpen ? null : f.slug)}
+                    className="group w-full text-left cursor-pointer"
+                  >
+                    <div className="w-full aspect-[16/9] overflow-hidden bg-stone-100">
+                      <img src={f.image} alt={f.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    </div>
+                    <div className="flex items-center justify-between gap-2 p-4">
+                      <div className="min-w-0">
+                        <h3 className="text-[#1A4F53] font-bold text-base sm:text-lg leading-tight">{f.name}</h3>
+                        <p className="text-xs text-[#567477] mt-0.5">{f.sub}</p>
+                      </div>
+                      <ChevronDown className={`w-5 h-5 text-[#1A4F53] shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </div>
+                  </button>
+
+                  {isOpen && menu && (
+                    <div className="px-4 pb-5 pt-1 border-t border-stone-100 space-y-4">
+                      {menu.groups.map((group) => (
+                        <div key={group.title}>
+                          <div className="text-[10px] font-black uppercase tracking-wider text-[#1A4F53]/70 mb-1.5">{group.title}</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {group.items.map((item) => (
+                              <button
+                                key={item.name}
+                                type="button"
+                                onClick={() => handleFormatItemClick(item)}
+                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-stone-700 bg-stone-50 hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
+                              >
+                                {item.name}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => onSelectCategory(f.slug)}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#E8752A] hover:underline cursor-pointer"
+                      >
+                        View All {f.name} <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </Container>
       </section>
