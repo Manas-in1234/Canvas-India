@@ -53,11 +53,18 @@ const STYLE_META: Record<string, {
   step2: { title: string; desc: string };
   icon: import('../components/CanvasStyleLandingPage').CanvasStyleIcon;
   image?: string;
+  /** For multi-panel formats (collage/split/wall-art/mosaic), the real
+   * layout id (from productGeometry.tsx) that matches what the main style
+   * card's own image actually shows, deep-linked via ?layout= so
+   * "Customize This Style" opens the matching panel configuration instead
+   * of the customizer's unrelated default. */
+  layoutId?: string;
   historyTitle: string;
   historyParagraphs: string[];
   /** Additional real-photo style cards shown after the main one, for
-   * formats with more than one verified real example. */
-  extraStyles?: { name: string; description: string; image: string }[];
+   * formats with more than one verified real example — each deep-linking
+   * to its own matching layout the same way. */
+  extraStyles?: { name: string; description: string; image: string; layoutId?: string }[];
 }> = {
   'acrylic-print': {
     slug: 'single-print',
@@ -113,6 +120,7 @@ const STYLE_META: Record<string, {
     step2: { title: 'Pick Your Collage Grid', desc: 'Choose from multiple photo layouts, then slot in your photos.' },
     icon: 'grid',
     image: '/assets/canvas-styles/acrylic-collage-wedding-3panel.webp',
+    layoutId: 'collage-land-3p-left2-right1',
     historyTitle: 'The History of Collage',
     historyParagraphs: [
       'The word "collage" comes from the French coller, "to glue." The earliest known paper collage dates to 10th-century Japan, where calligraphers glued paper onto surfaces when writing poems.',
@@ -123,17 +131,20 @@ const STYLE_META: Record<string, {
       {
         name: '4-Photo Grid Acrylic Collage',
         description: 'A clean 2×2 grid pairing everyday moments with your favorite close-ups.',
-        image: '/assets/canvas-styles/acrylic-collage-couple-4panel.webp'
+        image: '/assets/canvas-styles/acrylic-collage-couple-4panel.webp',
+        layoutId: 'collage-sq-4p-grid'
       },
       {
         name: '9-Photo Family Acrylic Collage',
         description: 'A full 3×3 grid for a big family collection spanning every generation.',
-        image: '/assets/canvas-styles/acrylic-collage-family-9panel.webp'
+        image: '/assets/canvas-styles/acrylic-collage-family-9panel.webp',
+        layoutId: 'collage-land-9p-feature'
       },
       {
         name: 'Feature Photo Acrylic Collage',
         description: 'One large feature photo paired with smaller accent shots for an editorial-style layout.',
-        image: '/assets/canvas-styles/acrylic-collage-bride-feature.webp'
+        image: '/assets/canvas-styles/acrylic-collage-bride-feature.webp',
+        layoutId: 'collage-land-5p-left-tall-right-grid'
       }
     ]
   },
@@ -143,6 +154,7 @@ const STYLE_META: Record<string, {
     step2: { title: 'Pick Your Panel Count', desc: "Choose a multi-piece split layout, and we'll divide your photo seamlessly across each panel." },
     icon: 'columns',
     image: '/assets/canvas-styles/acrylic-split-couple-sunset.webp',
+    layoutId: 'split-3p-75x50-triptych',
     historyTitle: 'The History of the Multi-Panel Format',
     historyParagraphs: [
       'Splitting an image across multiple hinged panels dates back to early Christian art, where the three-panel "triptych" became the standard format for altarpieces from the Middle Ages onward.',
@@ -153,17 +165,20 @@ const STYLE_META: Record<string, {
       {
         name: '5-Panel Beach Pier Split Acrylic',
         description: 'A wide panoramic jetty view stretched across 5 stepped acrylic panels.',
-        image: '/assets/canvas-styles/acrylic-split-beach-pier.webp'
+        image: '/assets/canvas-styles/acrylic-split-beach-pier.webp',
+        layoutId: 'split-5p-57-75-97-stepped'
       },
       {
         name: 'Sailboat Painting Split Acrylic',
         description: 'A warm painted seascape split across 4 panels — one large feature panel plus 3 accent panels.',
-        image: '/assets/canvas-styles/acrylic-split-sailboat-painting.webp'
+        image: '/assets/canvas-styles/acrylic-split-sailboat-painting.webp',
+        layoutId: 'split-4p-85x50-stacked-right'
       },
       {
         name: 'Marble Abstract Split Acrylic',
         description: 'Flowing blue and gold abstract marbling split evenly across 4 equal panels.',
-        image: '/assets/canvas-styles/acrylic-split-marble-abstract.webp'
+        image: '/assets/canvas-styles/acrylic-split-marble-abstract.webp',
+        layoutId: 'split-4p-50x50-grid'
       }
     ]
   },
@@ -261,7 +276,7 @@ export const ACRYLIC_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> 
           description: pt.description,
           price: pt.startingPrice,
           ...(meta.image ? { image: meta.image } : { icon: meta.icon }),
-          customizeHref: `/customize/acrylic/${pt.id}`
+          customizeHref: `/customize/acrylic/${pt.id}${meta.layoutId ? `?layout=${meta.layoutId}` : ''}`
         },
         ...(meta.extraStyles || []).map((extra, i) => ({
           id: `${pt.id}-${i + 2}`,
@@ -270,7 +285,7 @@ export const ACRYLIC_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> 
           description: extra.description,
           price: pt.startingPrice,
           image: extra.image,
-          customizeHref: `/customize/acrylic/${pt.id}`
+          customizeHref: `/customize/acrylic/${pt.id}${extra.layoutId ? `?layout=${extra.layoutId}` : ''}`
         }))
       ],
       historyTitle: meta.historyTitle,
