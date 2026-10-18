@@ -112,11 +112,29 @@ const STYLE_META: Record<string, {
     intro: 'Several of your favorite photos arranged into one cohesive acrylic grid.',
     step2: { title: 'Pick Your Collage Grid', desc: 'Choose from multiple photo layouts, then slot in your photos.' },
     icon: 'grid',
+    image: '/assets/canvas-styles/acrylic-collage-wedding-3panel.webp',
     historyTitle: 'The History of Collage',
     historyParagraphs: [
       'The word "collage" comes from the French coller, "to glue." The earliest known paper collage dates to 10th-century Japan, where calligraphers glued paper onto surfaces when writing poems.',
       'Collage became a recognized fine-art technique in 1912, when Georges Braque began attaching cut wallpaper to his drawings and Pablo Picasso quickly followed — the two are credited with coining the term papier collé, "pasted paper."',
       "A photo collage on acrylic carries that same idea forward — several photographs arranged into one piece — just printed edge-to-edge on crystal-clear acrylic instead of glued paper."
+    ],
+    extraStyles: [
+      {
+        name: '4-Photo Grid Acrylic Collage',
+        description: 'A clean 2×2 grid pairing everyday moments with your favorite close-ups.',
+        image: '/assets/canvas-styles/acrylic-collage-couple-4panel.webp'
+      },
+      {
+        name: '9-Photo Family Acrylic Collage',
+        description: 'A full 3×3 grid for a big family collection spanning every generation.',
+        image: '/assets/canvas-styles/acrylic-collage-family-9panel.webp'
+      },
+      {
+        name: 'Feature Photo Acrylic Collage',
+        description: 'One large feature photo paired with smaller accent shots for an editorial-style layout.',
+        image: '/assets/canvas-styles/acrylic-collage-bride-feature.webp'
+      }
     ]
   },
   'acrylic-split': {
