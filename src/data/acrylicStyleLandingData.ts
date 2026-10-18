@@ -55,6 +55,9 @@ const STYLE_META: Record<string, {
   image?: string;
   historyTitle: string;
   historyParagraphs: string[];
+  /** Additional real-photo style cards shown after the main one, for
+   * formats with more than one verified real example. */
+  extraStyles?: { name: string; description: string; image: string }[];
 }> = {
   'acrylic-print': {
     slug: 'single-print',
@@ -79,6 +82,28 @@ const STYLE_META: Record<string, {
       'The densely packed "gallery wall" look traces back to the Paris Salon, which from 1667 accepted far more paintings than its walls could comfortably hold, so organizers covered every inch floor to ceiling with little regard for matching styles.',
       'That "salon-style hang" had its own hierarchy — prized works hung "on the line" at eye level, lesser ones pushed toward the ceiling or floor — a practice London\'s Royal Academy soon adopted too.',
       'The look eventually left the gallery altogether, becoming a deliberate home-decorating style in its own right — and a cluster of acrylic panels is simply that same arrangement, made modern with a glossy, glass-like finish.'
+    ],
+    extraStyles: [
+      {
+        name: 'Pier Sunset Acrylic Display',
+        description: 'A sweeping boardwalk sunset, floating on standoff mounts for a gallery-style hang on any wall.',
+        image: '/assets/canvas-styles/acrylic-wall-pier-sunset.webp'
+      },
+      {
+        name: 'Rocky Beach Sunset Acrylic Display',
+        description: 'A calm rocky shoreline at sunset, printed edge-to-edge for a vivid, glass-like glow.',
+        image: '/assets/canvas-styles/acrylic-wall-rocky-beach-sunset.webp'
+      },
+      {
+        name: 'Portrait Acrylic Display',
+        description: 'A warm couple portrait on a compact standoff-mounted panel — perfect for a desk, shelf, or entryway wall.',
+        image: '/assets/canvas-styles/acrylic-wall-couple-portrait.webp'
+      },
+      {
+        name: 'Abstract Art Acrylic Display',
+        description: 'Bold modern abstract artwork, framed by crystal-clear acrylic for a contemporary gallery look.',
+        image: '/assets/canvas-styles/acrylic-wall-abstract-face.webp'
+      }
     ]
   },
   'acrylic-collage': {
@@ -200,7 +225,16 @@ export const ACRYLIC_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> 
           price: pt.startingPrice,
           ...(meta.image ? { image: meta.image } : { icon: meta.icon }),
           customizeHref: `/customize/acrylic/${pt.id}`
-        }
+        },
+        ...(meta.extraStyles || []).map((extra, i) => ({
+          id: `${pt.id}-${i + 2}`,
+          number: String(i + 2).padStart(2, '0'),
+          name: extra.name,
+          description: extra.description,
+          price: pt.startingPrice,
+          image: extra.image,
+          customizeHref: `/customize/acrylic/${pt.id}`
+        }))
       ],
       historyTitle: meta.historyTitle,
       historyParagraphs: meta.historyParagraphs,
