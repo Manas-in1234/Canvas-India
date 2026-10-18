@@ -4,6 +4,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, Tag, Copy, Check, Palette, Leaf,
 import { Product } from '../types';
 import { OCCASIONS } from '../data/occasionsData';
 import { ProductCard } from './ProductCard';
+import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 
 export interface HomepageProps {
   onSelectCategory: (slug: string, sub?: string) => void;
@@ -39,13 +40,27 @@ const CATEGORY_CARDS = [
   { name: 'Cork Art Patterns', sub: 'Textured Natural Finishes', price: 249, slug: 'cork-art-patterns', image: '/assets/catalogue/cork-art-patterns/C-A_003.webp', grad: 'from-[#92400E]/90', chip: 'bg-[#B45309]' },
 ];
 
-// The 3 primary material categories, each its own section showing real
-// products from that category (not the header mega-menu's style names).
+// Acrylic and Cork get their own section showing real products from that
+// category. Canvas is handled separately below (CANVAS_STYLE_CARDS) since
+// its header dropdown is a set of distinct formats — Wall Display, Split
+// Canvas, Hexagon, etc. — each with its own landing page, not a flat
+// product list.
 const FORMAT_CARDS = [
-  { name: 'Canvas & Boards', sub: 'For Every Art Idea', slug: 'canvas' },
   { name: 'Acrylic Prints', sub: 'Vibrant Colors | Endless Possibilities', slug: 'acrylic' },
   { name: 'Cork Products', sub: 'Natural | Durable | Stylish', slug: 'cork' },
 ];
+
+// One card per real Canvas style landing page (same slugs/images/pricing as
+// /canvas/<slug>), so "Canvas & Boards" on the homepage shows the actual
+// formats from the header's Canvas dropdown instead of a flat product grid.
+const CANVAS_STYLE_CARDS = Object.values(CANVAS_STYLE_LANDING_DATA)
+  .filter((data) => Boolean(data.styles[0]?.image))
+  .map((data) => ({
+    name: data.pageTitle,
+    image: data.styles[0]!.image as string,
+    price: data.styles[0]!.price,
+    href: `/canvas/${data.slug}`,
+  }));
 
 const TESTIMONIALS = [
   { name: 'Asha S.', city: 'Bengaluru', text: 'Amazing quality and vibrant colours! My canvas turned out even better than I imagined!', img: 'https://randomuser.me/api/portraits/women/44.jpg' },
@@ -86,6 +101,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   const testiRef = useRef<HTMLDivElement>(null);
   const categoryRowRef = useRef<HTMLDivElement>(null);
   const occasionRowRef = useRef<HTMLDivElement>(null);
+  const canvasStyleRowRef = useRef<HTMLDivElement>(null);
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
   const [bestsellerFormat, setBestsellerFormat] = useState<Record<string, 'canvas' | 'acrylic'>>({});
 
@@ -269,6 +285,65 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               })}
             </div>
           </div>
+        </Container>
+      </section>
+
+      {/* CANVAS & BOARDS — one card per real Canvas style landing page
+          (Wall Display, Split Canvas, Hexagon, etc.), linking straight to
+          that style's own page instead of a flat product grid. */}
+      <section id="shop-format-canvas" className="py-12 sm:py-16">
+        <Container>
+          <div className="flex items-end justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Canvas & Boards</h2>
+              <p className="text-sm mt-1 text-[#567477]">For Every Art Idea</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onSelectCategory('canvas')}
+              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer shrink-0"
+            >
+              View All <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Previous canvas styles" onClick={() => scrollRow(canvasStyleRowRef, -1)} className={arrowBtn}>
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+            </div>
+            <div ref={canvasStyleRowRef} className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+              {CANVAS_STYLE_CARDS.map((c) => (
+                <Link
+                  key={c.href}
+                  to={c.href}
+                  className="group snap-start shrink-0 w-[62%] sm:w-[30%] lg:w-[18%] flex flex-col text-left cursor-pointer"
+                >
+                  <div className="w-full aspect-[4/5] rounded-xl overflow-hidden mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
+                    <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                  <h3 className="text-[#1A4F53] font-bold text-sm leading-tight truncate group-hover:text-[#E8752A] transition-colors">{c.name}</h3>
+                  {c.price && (
+                    <p className="text-xs text-[#567477] mt-0.5">From ₹{c.price.toLocaleString('en-IN')}</p>
+                  )}
+                </Link>
+              ))}
+            </div>
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Next canvas styles" onClick={() => scrollRow(canvasStyleRowRef, 1)} className={arrowBtn}>
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onSelectCategory('canvas')}
+            className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+          >
+            View All Canvas &amp; Boards <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </Container>
       </section>
 
