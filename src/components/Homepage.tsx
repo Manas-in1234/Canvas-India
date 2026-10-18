@@ -288,113 +288,6 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         </Container>
       </section>
 
-      {/* CANVAS & BOARDS — one card per real Canvas style landing page
-          (Wall Display, Split Canvas, Hexagon, etc.), linking straight to
-          that style's own page instead of a flat product grid. */}
-      <section id="shop-format-canvas" className="py-12 sm:py-16">
-        <Container>
-          <div className="flex items-end justify-between gap-4 mb-6">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Canvas & Boards</h2>
-              <p className="text-sm mt-1 text-[#567477]">For Every Art Idea</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => onSelectCategory('canvas')}
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer shrink-0"
-            >
-              View All <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
-            <div className="hidden sm:block">
-              <button type="button" aria-label="Previous canvas styles" onClick={() => scrollRow(canvasStyleRowRef, -1)} className={arrowBtn}>
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-            </div>
-            <div ref={canvasStyleRowRef} className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
-              {CANVAS_STYLE_CARDS.map((c) => (
-                <Link
-                  key={c.href}
-                  to={c.href}
-                  className="group snap-start shrink-0 w-[62%] sm:w-[30%] lg:w-[18%] flex flex-col text-left cursor-pointer"
-                >
-                  <div className="w-full aspect-[4/5] rounded-xl overflow-hidden mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
-                    <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  </div>
-                  <h3 className="text-[#1A4F53] font-bold text-sm leading-tight truncate group-hover:text-[#E8752A] transition-colors">{c.name}</h3>
-                  {c.price && (
-                    <p className="text-xs text-[#567477] mt-0.5">From ₹{c.price.toLocaleString('en-IN')}</p>
-                  )}
-                </Link>
-              ))}
-            </div>
-            <div className="hidden sm:block">
-              <button type="button" aria-label="Next canvas styles" onClick={() => scrollRow(canvasStyleRowRef, 1)} className={arrowBtn}>
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => onSelectCategory('canvas')}
-            className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
-          >
-            View All Canvas &amp; Boards <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </Container>
-      </section>
-
-      {/* SHOP BY FORMAT — Canvas, Acrylic, Cork as their own individual
-          category blocks, each showing real products from that category. */}
-      {FORMAT_CARDS.map((f, idx) => {
-        const categoryProducts = allProducts.filter((p) => p.categorySlug === f.slug).slice(0, 8);
-        if (categoryProducts.length === 0) return null;
-        return (
-          <section key={f.slug} id={`shop-format-${f.slug}`} className={`py-12 sm:py-16 ${idx % 2 === 1 ? 'bg-[#FDFCF8]' : ''}`}>
-            <Container>
-              <div className="flex items-end justify-between gap-4 mb-6">
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>{f.name}</h2>
-                  <p className="text-sm mt-1 text-[#567477]">{f.sub}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onSelectCategory(f.slug)}
-                  className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer shrink-0"
-                >
-                  View All <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
-                {categoryProducts.slice(0, 6).map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    isWishlisted={wishlistIds.includes(product.id)}
-                    onToggleWishlist={onToggleWishlist}
-                    onAddToCart={onAddToCart}
-                    onCustomize={onCustomize}
-                    variant="listing"
-                  />
-                ))}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => onSelectCategory(f.slug)}
-                className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
-              >
-                View All {f.name} <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </Container>
-          </section>
-        );
-      })}
-
       {/* SHOP BY CATEGORY */}
       <section id="shop-categories" className="py-12 sm:py-16 bg-[#FDFCF8]">
         <Container>
@@ -468,6 +361,113 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           </button>
         </Container>
       </section>
+
+      {/* CANVAS & BOARDS — one card per real Canvas style landing page
+          (Wall Display, Split Canvas, Hexagon, etc.), linking straight to
+          that style's own page instead of a flat product grid. */}
+      <section id="shop-format-canvas" className="py-12 sm:py-16">
+        <Container>
+          <div className="flex items-end justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Canvas & Boards</h2>
+              <p className="text-sm mt-1 text-[#567477]">For Every Art Idea</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onSelectCategory('canvas')}
+              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer shrink-0"
+            >
+              View All <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Previous canvas styles" onClick={() => scrollRow(canvasStyleRowRef, -1)} className={arrowBtn}>
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+            </div>
+            <div ref={canvasStyleRowRef} className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+              {CANVAS_STYLE_CARDS.map((c) => (
+                <Link
+                  key={c.href}
+                  to={c.href}
+                  className="group snap-start shrink-0 w-[62%] sm:w-[30%] lg:w-[18%] flex flex-col text-left cursor-pointer"
+                >
+                  <div className="w-full aspect-[4/5] rounded-xl overflow-hidden mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
+                    <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                  <h3 className="text-[#1A4F53] font-bold text-sm leading-tight truncate group-hover:text-[#E8752A] transition-colors">{c.name}</h3>
+                  {c.price && (
+                    <p className="text-xs text-[#567477] mt-0.5">From ₹{c.price.toLocaleString('en-IN')}</p>
+                  )}
+                </Link>
+              ))}
+            </div>
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Next canvas styles" onClick={() => scrollRow(canvasStyleRowRef, 1)} className={arrowBtn}>
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onSelectCategory('canvas')}
+            className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+          >
+            View All Canvas &amp; Boards <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </Container>
+      </section>
+
+      {/* SHOP BY FORMAT — Acrylic, Cork as their own individual
+          category blocks, each showing real products from that category. */}
+      {FORMAT_CARDS.map((f, idx) => {
+        const categoryProducts = allProducts.filter((p) => p.categorySlug === f.slug).slice(0, 8);
+        if (categoryProducts.length === 0) return null;
+        return (
+          <section key={f.slug} id={`shop-format-${f.slug}`} className={`py-12 sm:py-16 ${idx % 2 === 0 ? 'bg-[#FDFCF8]' : ''}`}>
+            <Container>
+              <div className="flex items-end justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>{f.name}</h2>
+                  <p className="text-sm mt-1 text-[#567477]">{f.sub}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onSelectCategory(f.slug)}
+                  className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer shrink-0"
+                >
+                  View All <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
+                {categoryProducts.slice(0, 6).map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    isWishlisted={wishlistIds.includes(product.id)}
+                    onToggleWishlist={onToggleWishlist}
+                    onAddToCart={onAddToCart}
+                    onCustomize={onCustomize}
+                    variant="listing"
+                  />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => onSelectCategory(f.slug)}
+                className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+              >
+                View All {f.name} <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </Container>
+          </section>
+        );
+      })}
 
       {/* SHOP BY OCCASION */}
       <section id="shop-occasions" className="py-12 sm:py-16">
