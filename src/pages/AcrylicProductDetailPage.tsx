@@ -492,6 +492,12 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
               <span>Lowest Price Guaranteed</span>
             </div>
 
+            {productCode && (
+              <div className="text-sm text-stone-500 font-medium">
+                Code: <span className="text-stone-700 font-bold">{productCode}</span>
+              </div>
+            )}
+
             {/* Format: Canvas / Acrylic — same design, different materials */}
             {formatSiblings.length > 1 && (
               <div className="flex items-center gap-2 flex-wrap">
@@ -640,12 +646,6 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                 <button type="button" onClick={() => setQuantity((prev) => prev + 1)} className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-100 font-bold transition-colors cursor-pointer" aria-label="Increase quantity">+</button>
               </div>
             </div>
-
-            {productCode && (
-              <div className="text-sm text-stone-500 font-medium">
-                Code: <span className="text-stone-700 font-bold">{productCode}</span>
-              </div>
-            )}
 
             <div className="flex flex-col sm:flex-row gap-3">
               <button
