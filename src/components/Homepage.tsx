@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight, Tag, Copy, Check, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote, Image as ImageIcon, LayoutGrid, Grid2x2, Columns3, Grid3x3, Music, Type, Rows3 } from 'lucide-react';
 import { Product } from '../types';
 import { OCCASIONS } from '../data/occasionsData';
-import { ProductCard } from './ProductCard';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 import { ACRYLIC_PRODUCT_TYPES } from '../data/acrylicCustomizerData';
 import { ACRYLIC_STYLE_LANDING_DATA } from '../data/acrylicStyleLandingData';
@@ -42,13 +41,6 @@ const CATEGORY_CARDS = [
   { name: 'Cork Art Patterns', sub: 'Textured Natural Finishes', price: 249, slug: 'cork-art-patterns', image: '/assets/catalogue/cork-art-patterns/C-A_003.webp', grad: 'from-[#92400E]/90', chip: 'bg-[#B45309]' },
 ];
 
-// Cork gets its own section showing real products from that category.
-// Canvas and Acrylic are handled separately below (CANVAS_STYLE_CARDS /
-// ACRYLIC_STYLE_CARDS) since both have a set of distinct formats — Wall
-// Display, Split, Hexagon, etc. — not a flat product list.
-const FORMAT_CARDS = [
-  { name: 'Cork Products', sub: 'Natural | Durable | Stylish', slug: 'cork' },
-];
 
 // One card per real acrylic product type (same ids/prices the customizer's
 // own "Select Product" screen uses), linking straight into that product
@@ -129,6 +121,8 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   const categoryRowRef = useRef<HTMLDivElement>(null);
   const occasionRowRef = useRef<HTMLDivElement>(null);
   const canvasStyleRowRef = useRef<HTMLDivElement>(null);
+  const acrylicRowRef = useRef<HTMLDivElement>(null);
+  const corkRowRef = useRef<HTMLDivElement>(null);
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
   const [bestsellerFormat, setBestsellerFormat] = useState<Record<string, 'canvas' | 'acrylic'>>({});
 
@@ -156,6 +150,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   };
 
   const bestsellers = allProducts.slice(0, 10);
+  const corkProducts = allProducts.filter((p) => p.categorySlug === 'cork' || p.categorySlug === 'cork-art-patterns');
 
   return (
     <div className="w-full bg-[#FFF9F1] text-[#1f2937] font-manrope">
@@ -389,53 +384,65 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         </Container>
       </section>
 
-      {/* CANVAS & BOARDS — one card per real Canvas style landing page
-          (Wall Display, Split Canvas, Hexagon, etc.), linking straight to
-          that style's own page instead of a flat product grid. */}
+      {/* CANVAS & BOARDS */}
       <section id="shop-format-canvas" className="py-12 sm:py-16">
         <Container>
-          <div className="flex items-end justify-between gap-4 mb-6">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Canvas & Boards</h2>
-              <p className="text-sm mt-1 text-[#567477]">For Every Art Idea</p>
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-4">
+              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Canvas &amp; Boards</h2>
+              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
             </div>
+            <p className="text-sm mt-2 text-[#567477]">For Every Art Idea</p>
+          </div>
+        </Container>
+
+        <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
+          <div className="hidden sm:block">
+            <button type="button" aria-label="Previous canvas styles" onClick={() => scrollRow(canvasStyleRowRef, -1)} className={arrowBtn}>
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          </div>
+          <div ref={canvasStyleRowRef} className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+            {CANVAS_STYLE_CARDS.map((c) => (
+              <Link
+                key={c.href}
+                to={c.href}
+                className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
+              >
+                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-4 bg-stone-100 shadow-sm border border-stone-200/60">
+                  <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                </div>
+                <div className="flex items-start justify-between gap-2 px-1">
+                  <div className="min-w-0">
+                    <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1 truncate">{c.name}</h3>
+                    <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">
+                      {c.price ? `Starts at ₹${c.price.toLocaleString('en-IN')}` : 'Custom Sizes Available'}
+                    </p>
+                  </div>
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
+                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="hidden sm:block">
+            <button type="button" aria-label="Next canvas styles" onClick={() => scrollRow(canvasStyleRowRef, 1)} className={arrowBtn}>
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <Container>
+          <div className="hidden sm:flex justify-end mt-6">
             <button
               type="button"
               onClick={() => onSelectCategory('canvas')}
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
             >
               View All <ArrowRight className="w-3.5 h-3.5" />
             </button>
-          </div>
-
-          <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
-            <div className="hidden sm:block">
-              <button type="button" aria-label="Previous canvas styles" onClick={() => scrollRow(canvasStyleRowRef, -1)} className={arrowBtn}>
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-            </div>
-            <div ref={canvasStyleRowRef} className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
-              {CANVAS_STYLE_CARDS.map((c) => (
-                <Link
-                  key={c.href}
-                  to={c.href}
-                  className="group snap-start shrink-0 w-[62%] sm:w-[30%] lg:w-[18%] flex flex-col text-left cursor-pointer"
-                >
-                  <div className="w-full aspect-[4/5] rounded-xl overflow-hidden mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
-                    <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  </div>
-                  <h3 className="text-[#1A4F53] font-bold text-sm leading-tight truncate group-hover:text-[#E8752A] transition-colors">{c.name}</h3>
-                  {c.price && (
-                    <p className="text-xs text-[#567477] mt-0.5">From ₹{c.price.toLocaleString('en-IN')}</p>
-                  )}
-                </Link>
-              ))}
-            </div>
-            <div className="hidden sm:block">
-              <button type="button" aria-label="Next canvas styles" onClick={() => scrollRow(canvasStyleRowRef, 1)} className={arrowBtn}>
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
           </div>
 
           <button
@@ -448,48 +455,71 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         </Container>
       </section>
 
-      {/* ACRYLIC PRINTS — one card per real acrylic product type, matching
-          the customizer's own "Select Product" screen, linking straight
-          into that product type's customizer. */}
+      {/* ACRYLIC PRINTS */}
       <section id="shop-format-acrylic" className="py-12 sm:py-16 bg-[#FDFCF8]">
         <Container>
-          <div className="flex items-end justify-between gap-4 mb-6">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Acrylic Prints</h2>
-              <p className="text-sm mt-1 text-[#567477]">Vibrant Colors | Endless Possibilities</p>
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-4">
+              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Acrylic Prints</h2>
+              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
             </div>
+            <p className="text-sm mt-2 text-[#567477]">Vibrant Colors | Endless Possibilities</p>
+          </div>
+        </Container>
+
+        <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
+          <div className="hidden sm:block">
+            <button type="button" aria-label="Previous acrylic styles" onClick={() => scrollRow(acrylicRowRef, -1)} className={arrowBtn}>
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          </div>
+          <div ref={acrylicRowRef} className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+            {ACRYLIC_STYLE_CARDS.map((c) => (
+              <Link
+                key={c.href}
+                to={c.href}
+                className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
+              >
+                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-4 bg-stone-100 shadow-sm border border-stone-200/60">
+                  {c.image ? (
+                    <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-stone-100">
+                      <ImageIcon className="w-12 h-12 text-[#1A4F53]/40" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-start justify-between gap-2 px-1">
+                  <div className="min-w-0">
+                    <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1 truncate">{c.name}</h3>
+                    <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">
+                      {c.price ? `Starts at ₹${c.price.toLocaleString('en-IN')}` : 'Custom Sizes Available'}
+                    </p>
+                  </div>
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
+                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="hidden sm:block">
+            <button type="button" aria-label="Next acrylic styles" onClick={() => scrollRow(acrylicRowRef, 1)} className={arrowBtn}>
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <Container>
+          <div className="hidden sm:flex justify-end mt-6">
             <button
               type="button"
               onClick={() => onSelectCategory('acrylic')}
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
             >
               View All <ArrowRight className="w-3.5 h-3.5" />
             </button>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
-            {ACRYLIC_STYLE_CARDS.map((c) => {
-              const Icon = c.icon;
-              return (
-                <Link
-                  key={c.href}
-                  to={c.href}
-                  className="group flex flex-col items-center text-center p-4 rounded-xl border border-stone-200 bg-white hover:border-[#1A4F53] hover:shadow-md transition-all"
-                >
-                  {c.image ? (
-                    <div className="w-14 h-14 rounded-full overflow-hidden mb-3 bg-stone-100 shrink-0">
-                      <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    </div>
-                  ) : (
-                    <div className="w-14 h-14 rounded-full bg-stone-100 group-hover:bg-[#1A4F53]/10 flex items-center justify-center mb-3 transition-colors">
-                      <Icon className="w-6 h-6 text-[#1A4F53]" />
-                    </div>
-                  )}
-                  <h3 className="text-[#1A4F53] font-bold text-xs leading-tight">{c.name}</h3>
-                  <p className="text-[11px] text-[#567477] mt-1">Starts at ₹{c.price.toLocaleString('en-IN')}</p>
-                </Link>
-              );
-            })}
           </div>
 
           <button
@@ -502,53 +532,78 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         </Container>
       </section>
 
-      {/* SHOP BY FORMAT — Cork as its own
-          category block, showing real products from that category. */}
-      {FORMAT_CARDS.map((f, idx) => {
-        const categoryProducts = allProducts.filter((p) => p.categorySlug === f.slug).slice(0, 8);
-        if (categoryProducts.length === 0) return null;
-        return (
-          <section key={f.slug} id={`shop-format-${f.slug}`} className={`py-12 sm:py-16 ${idx % 2 === 1 ? 'bg-[#FDFCF8]' : ''}`}>
-            <Container>
-              <div className="flex items-end justify-between gap-4 mb-6">
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>{f.name}</h2>
-                  <p className="text-sm mt-1 text-[#567477]">{f.sub}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onSelectCategory(f.slug)}
-                  className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer shrink-0"
+      {/* CORK PRODUCTS */}
+      {corkProducts.length > 0 && (
+        <section id="shop-format-cork" className="py-12 sm:py-16">
+          <Container>
+            <div className="text-center mb-8">
+              <div className="flex items-center justify-center gap-4">
+                <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+                <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Cork Products</h2>
+                <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+              </div>
+              <p className="text-sm mt-2 text-[#567477]">Natural | Durable | Stylish</p>
+            </div>
+          </Container>
+
+          <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Previous cork products" onClick={() => scrollRow(corkRowRef, -1)} className={arrowBtn}>
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+            </div>
+            <div ref={corkRowRef} className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+              {corkProducts.map((p) => (
+                <Link
+                  key={p.id}
+                  to={`/product/${p.slug || p.id}`}
+                  className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
                 >
-                  View All <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
+                  <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-4 bg-stone-100 shadow-sm border border-stone-200/60">
+                    <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                  <div className="flex items-start justify-between gap-2 px-1">
+                    <div className="min-w-0">
+                      <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1 truncate">{p.name}</h3>
+                      <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">
+                        {p.subcategory ? `${p.subcategory} • ₹${p.price.toLocaleString('en-IN')}` : `From ₹${p.price.toLocaleString('en-IN')}`}
+                      </p>
+                    </div>
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
+                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Next cork products" onClick={() => scrollRow(corkRowRef, 1)} className={arrowBtn}>
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
-                {categoryProducts.slice(0, 6).map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    isWishlisted={wishlistIds.includes(product.id)}
-                    onToggleWishlist={onToggleWishlist}
-                    onAddToCart={onAddToCart}
-                    onCustomize={onCustomize}
-                    variant="listing"
-                  />
-                ))}
-              </div>
-
+          <Container>
+            <div className="hidden sm:flex justify-end mt-6">
               <button
                 type="button"
-                onClick={() => onSelectCategory(f.slug)}
-                className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+                onClick={() => onSelectCategory('cork')}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
               >
-                View All {f.name} <ArrowRight className="w-3.5 h-3.5" />
+                View All <ArrowRight className="w-3.5 h-3.5" />
               </button>
-            </Container>
-          </section>
-        );
-      })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onSelectCategory('cork')}
+              className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+            >
+              View All Cork Products <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </Container>
+        </section>
+      )}
 
       {/* SHOP BY OCCASION */}
       <section id="shop-occasions" className="py-12 sm:py-16">
