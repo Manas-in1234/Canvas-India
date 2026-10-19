@@ -19,6 +19,7 @@ import { ProductImage } from '../components/ProductImage';
 import { WallPreview } from '../components/WallPreview';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { Product } from '../types';
+import { getFinishStyle } from '../utils/finishStyle';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
 
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
@@ -92,10 +93,11 @@ export const ProductDetailPage: React.FC = () => {
   const [isCustomSize, setIsCustomSize] = useState<boolean>(false);
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
-  const [sizeShapeTab, setSizeShapeTab] = useState<'size' | 'shape'>('size');
+  const [sizeShapeTab, setSizeShapeTab] = useState<'size' | 'shape' | 'frame' | 'hook'>('size');
   const [customSizeOpen, setCustomSizeOpen] = useState<boolean>(false);
   const [customSizeW, setCustomSizeW] = useState<string>('');
   const [customSizeH, setCustomSizeH] = useState<string>('');
+  const [selectedHook, setSelectedHook] = useState<string>('With Hanging Hook');
 
   // In-page customization state
   const [customText, setCustomText] = useState<string>('');
@@ -141,6 +143,29 @@ export const ProductDetailPage: React.FC = () => {
 
   const showCustomSize = product ? !SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug) : true;
 
+  // Simplified Frame picker — groups this product's real `finishes` values
+  // (which vary a lot in wording across the catalogue) into the three frame
+  // colors customers actually choose between, using the same keyword
+  // matching as the live preview's frame border (see finishStyle.ts), so a
+  // pick here always has a matching real finish value to send to cart.
+  const FRAME_CATEGORY_ORDER: { label: string; test: (f: string) => boolean }[] = [
+    { label: 'Wooden Frame', test: (f) => /wood|teak|oak/.test(f) },
+    { label: 'White Frame', test: (f) => /white/.test(f) },
+    { label: 'Gold Frame', test: (f) => /gold/.test(f) },
+  ];
+  const frameOptions = useMemo(() => {
+    if (!product?.finishes) return [];
+    const lower = product.finishes.map((f) => ({ raw: f, l: f.toLowerCase() }));
+    return FRAME_CATEGORY_ORDER
+      .map((cat) => {
+        const match = lower.find(({ l }) => cat.test(l));
+        return match ? { label: cat.label, value: match.raw } : null;
+      })
+      .filter((o): o is { label: string; value: string } => Boolean(o));
+  }, [product]);
+
+  const HOOK_OPTIONS = ['With Hanging Hook', 'No Hook (Self Mount)'];
+
   // Same catalogue design also offered as Canvas / Acrylic — siblings share a
   // base catalogue id, prefixed with 'canvas-' or 'acrylic-' for those
   // materials (see catalogueCanvasAcrylicProducts.ts). The plain poster print
@@ -169,6 +194,7 @@ export const ProductDetailPage: React.FC = () => {
       setSelectedFinish(product.finishes?.[0] || 'Standard Finish');
       setSelectedMaterial(availableMaterials[0] || 'Standard');
       setSelectedShape(defaultShape);
+      setSelectedHook('With Hanging Hook');
       setIsCustomSize(false);
       setCustomWidth(8);
       setCustomHeight(8);
@@ -281,7 +307,20 @@ export const ProductDetailPage: React.FC = () => {
 
   const handleAddToCartWithVariants = () => {
     if (!product) return;
-    onAddToCart(product, selectedSize, selectedFinish, quantity, customText, uploadedFile || undefined, selectedMaterial);
+    onAddToCart(
+      product,
+      selectedSize,
+      selectedFinish,
+      quantity,
+      customText,
+      uploadedFile || undefined,
+      selectedMaterial,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { hook: selectedHook }
+    );
   };
 
   if (!product) {
@@ -489,31 +528,45 @@ export const ProductDetailPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Size / Shape Tabs */}
+              {/* Size / Shape / Frame / Hook Tabs */}
               {((product.sizes && product.sizes.length > 0) || availableShapes.length > 0) && (
                 <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
-                  {availableShapes.length > 0 ? (
-                    <div className="flex items-center gap-6 border-b border-stone-200 mb-4">
-                      <button
-                        type="button"
-                        onClick={() => setSizeShapeTab('size')}
-                        className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'size' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
-                      >
-                        Size
-                      </button>
+                  <div className="flex items-center gap-6 border-b border-stone-200 mb-4 overflow-x-auto">
+                    <button
+                      type="button"
+                      onClick={() => setSizeShapeTab('size')}
+                      className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'size' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                    >
+                      Size
+                    </button>
+                    {availableShapes.length > 0 && (
                       <button
                         type="button"
                         onClick={() => setSizeShapeTab('shape')}
-                        className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'shape' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                        className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'shape' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
                       >
                         Shape
                       </button>
-                    </div>
-                  ) : (
-                    <div className="text-sm font-bold text-stone-900 mb-4">Size</div>
-                  )}
+                    )}
+                    {frameOptions.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setSizeShapeTab('frame')}
+                        className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'frame' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                      >
+                        Frame
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setSizeShapeTab('hook')}
+                      className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'hook' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                    >
+                      Hook
+                    </button>
+                  </div>
 
-                  {(sizeShapeTab === 'size' || availableShapes.length === 0) && product.sizes && product.sizes.length > 0 && (
+                  {sizeShapeTab === 'size' && product.sizes && product.sizes.length > 0 && (
                     <div className="grid grid-cols-4 gap-2">
                       {product.sizes.map((size) => (
                         <button
@@ -532,7 +585,7 @@ export const ProductDetailPage: React.FC = () => {
                     </div>
                   )}
 
-                  {(sizeShapeTab === 'size' || availableShapes.length === 0) && showCustomSize && (
+                  {sizeShapeTab === 'size' && showCustomSize && (
                     <div className="mt-3">
                       <button
                         type="button"
@@ -587,6 +640,48 @@ export const ProductDetailPage: React.FC = () => {
                         >
                           <ShapeIcon shape={shapeOpt} active={selectedShape === shapeOpt} />
                           <span className={`text-[10px] font-semibold ${selectedShape === shapeOpt ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{shapeOpt}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {frameOptions.length > 0 && sizeShapeTab === 'frame' && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {frameOptions.map((opt) => (
+                        <button
+                          key={opt.label}
+                          type="button"
+                          onClick={() => setSelectedFinish(opt.value)}
+                          className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
+                            selectedFinish === opt.value
+                              ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
+                              : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
+                          }`}
+                        >
+                          <span
+                            className="w-6 h-6 rounded-sm border-4"
+                            style={{ borderColor: getFinishStyle(opt.value).color }}
+                          />
+                          <span className="text-[10px] font-semibold">{opt.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {sizeShapeTab === 'hook' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {HOOK_OPTIONS.map((hookOpt) => (
+                        <button
+                          key={hookOpt}
+                          type="button"
+                          onClick={() => setSelectedHook(hookOpt)}
+                          className={`px-2 py-2.5 text-[11px] leading-tight font-semibold rounded-lg border-2 text-center transition-all cursor-pointer ${
+                            selectedHook === hookOpt
+                              ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
+                              : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
+                          }`}
+                        >
+                          {hookOpt}
                         </button>
                       ))}
                     </div>

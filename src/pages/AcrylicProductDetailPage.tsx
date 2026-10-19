@@ -159,10 +159,12 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
 
   // Size/Shape selector card state — matches the Canvas product page's
   // tabbed Size|Shape card instead of two separately-labeled pill sections.
-  const [sizeShapeTab, setSizeShapeTab] = useState<'size' | 'shape'>('size');
+  const [sizeShapeTab, setSizeShapeTab] = useState<'size' | 'shape' | 'hook'>('size');
   const [customSizeOpen, setCustomSizeOpen] = useState<boolean>(false);
   const [customSizeW, setCustomSizeW] = useState<string>('');
   const [customSizeH, setCustomSizeH] = useState<string>('');
+  const [selectedHook, setSelectedHook] = useState<string>('With Hanging Hook');
+  const HOOK_OPTIONS = ['With Hanging Hook', 'No Hook (Self Mount)'];
 
   // Bottom Tabs State ('description' | 'specifications' | 'shipping' | 'reviews')
   const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'shipping' | 'reviews'>('description');
@@ -182,6 +184,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
     setQuantity(1);
     setActiveImageIndex(0);
     setSizeShapeTab('size');
+    setSelectedHook('With Hanging Hook');
     setCustomSizeOpen(false);
     setCustomSizeW('');
     setCustomSizeH('');
@@ -335,7 +338,8 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
       selectedThickness,
       selectedStyle,
       selectedBase,
-      selectedPaper
+      selectedPaper,
+      { hook: selectedHook }
     );
   };
 
@@ -531,28 +535,33 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
               {/* SIZE / SHAPE — matches the Canvas product page's tabbed card */}
               {(availableSizes.length > 0 || availableShapes.length > 0) && (
                 <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
-                  {availableShapes.length > 0 ? (
-                    <div className="flex items-center gap-6 border-b border-stone-200 mb-4">
-                      <button
-                        type="button"
-                        onClick={() => setSizeShapeTab('size')}
-                        className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'size' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
-                      >
-                        Size
-                      </button>
+                  <div className="flex items-center gap-6 border-b border-stone-200 mb-4 overflow-x-auto">
+                    <button
+                      type="button"
+                      onClick={() => setSizeShapeTab('size')}
+                      className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'size' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                    >
+                      Size
+                    </button>
+                    {availableShapes.length > 0 && (
                       <button
                         type="button"
                         onClick={() => setSizeShapeTab('shape')}
-                        className={`pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'shape' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                        className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'shape' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
                       >
                         Shape
                       </button>
-                    </div>
-                  ) : (
-                    <div className="text-sm font-bold text-stone-900 mb-4">Size</div>
-                  )}
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setSizeShapeTab('hook')}
+                      className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'hook' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                    >
+                      Hook
+                    </button>
+                  </div>
 
-                  {(sizeShapeTab === 'size' || availableShapes.length === 0) && availableSizes.length > 0 && (
+                  {sizeShapeTab === 'size' && availableSizes.length > 0 && (
                     <div className="grid grid-cols-4 gap-2">
                       {availableSizes.map((size) => (
                         <button
@@ -571,7 +580,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                     </div>
                   )}
 
-                  {(sizeShapeTab === 'size' || availableShapes.length === 0) && (
+                  {sizeShapeTab === 'size' && (
                     <div className="mt-3">
                       <button
                         type="button"
@@ -629,6 +638,25 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                         >
                           <ShapeIcon shape={shapeOpt} active={selectedShape === shapeOpt} />
                           <span className={`text-[10px] font-semibold ${selectedShape === shapeOpt ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{shapeOpt}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {sizeShapeTab === 'hook' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {HOOK_OPTIONS.map((hookOpt) => (
+                        <button
+                          key={hookOpt}
+                          type="button"
+                          onClick={() => setSelectedHook(hookOpt)}
+                          className={`px-2 py-2.5 text-[11px] leading-tight font-semibold rounded-lg border-2 text-center transition-all cursor-pointer ${
+                            selectedHook === hookOpt
+                              ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
+                              : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
+                          }`}
+                        >
+                          {hookOpt}
                         </button>
                       ))}
                     </div>
