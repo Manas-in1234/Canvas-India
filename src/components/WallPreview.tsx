@@ -213,7 +213,11 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
   // visible in the room preview. "No Frame" / wrap-style finishes keep
   // border 0, so the sampled-corner-color sliver fallback still applies.
   const hasFrame = finishStyle.border > 0;
-  const framePadding = hasFrame ? finishStyle.border * 3 : 0;
+  // Percentage (not px) so the border stays a thin, proportional edge no
+  // matter how small the rendered frame box is (a tiny thumbnail vs. the
+  // large main preview) — a fixed px value swallowed most of the artwork
+  // on the thumbnail-sized room preview.
+  const framePadding = hasFrame ? `${Math.min(finishStyle.border * 0.6, 4)}%` : 0;
   const frameBg = hasFrame ? finishStyle.color : (sampledBg || 'transparent');
 
   return (
