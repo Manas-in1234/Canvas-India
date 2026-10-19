@@ -6,7 +6,6 @@ import { OCCASIONS } from '../data/occasionsData';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 import { ACRYLIC_PRODUCT_TYPES } from '../data/acrylicCustomizerData';
 import { ACRYLIC_STYLE_LANDING_DATA } from '../data/acrylicStyleLandingData';
-import { PointingHand } from './PointingHand';
 
 export interface HomepageProps {
   onSelectCategory: (slug: string, sub?: string) => void;
@@ -214,10 +213,8 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       <style>{`
         @keyframes ci-float { 0%,100% { transform: translateY(0) rotate(var(--r,0deg)); } 50% { transform: translateY(-10px) rotate(var(--r,0deg)); } }
         .ci-float { animation: ci-float 5s ease-in-out infinite; }
-        @keyframes ci-point-left { 0%,100% { transform: translateX(0) rotate(-6deg); } 50% { transform: translateX(8px) rotate(-6deg); } }
-        @keyframes ci-point-right { 0%,100% { transform: translateX(0) rotate(6deg); } 50% { transform: translateX(-8px) rotate(6deg); } }
-        .ci-point-left { animation: ci-point-left 1.4s ease-in-out infinite; }
-        .ci-point-right { animation: ci-point-right 1.4s ease-in-out infinite; }
+        @keyframes ci-glow { 0%,100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
+        .ci-glow { animation: ci-glow 2s ease-in-out infinite; }
       `}</style>
 
       {/* HERO */}
@@ -309,9 +306,8 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <div className="relative inline-block">
-                {/* Two hands pointing in at the button from either side */}
-                <PointingHand side="left" className="ci-point-left hidden sm:block absolute top-1/2 -translate-y-1/2 -left-11 w-10 h-10 pointer-events-none" />
-                <PointingHand side="right" className="ci-point-right hidden sm:block absolute top-1/2 -translate-y-1/2 -right-11 w-10 h-10 pointer-events-none" />
+                {/* Live pulsing orange glow behind the button */}
+                <span className="ci-glow absolute -inset-4 rounded-full bg-[#E8752A] blur-xl pointer-events-none" aria-hidden="true" />
                 <button
                   type="button"
                   onClick={handleStartCreatingCanvas}
