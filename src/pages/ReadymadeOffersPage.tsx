@@ -33,6 +33,19 @@ interface ReadymadeCategory {
   match: (p: Product) => boolean;
 }
 
+// Catalogue designs offered in both Canvas and Acrylic share an id like
+// "canvas-<design-key>" / "acrylic-<design-key>". Grouping on that key lets
+// the grid show one card per design with a material picker, instead of two
+// near-identical "X - Canvas" / "X - Acrylic" cards back to back.
+const MATERIAL_VARIANT_RE = /^(canvas|acrylic)-(.+)$/;
+
+interface DisplayGroup {
+  key: string;
+  canvas?: Product;
+  acrylic?: Product;
+  single?: Product;
+}
+
 const READYMADE_CATEGORIES: ReadymadeCategory[] = [
   { label: 'Tribal & Ethnic Art', match: (p) => p.categorySlug === 'tribal-ethnic-art' },
   { label: 'Devotional Art', match: (p) => p.categorySlug === 'devotional-art' },
@@ -61,6 +74,7 @@ export const ReadymadeOffersPage: React.FC = () => {
   const [maxPrice, setMaxPrice] = useState<number>(PRICE_MAX_DEFAULT);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
+  const [materialChoice, setMaterialChoice] = useState<Record<string, 'canvas' | 'acrylic'>>({});
 
   const toggleCategory = (label: string) => {
     setSelectedCategories((prev) =>
@@ -84,6 +98,32 @@ export const ReadymadeOffersPage: React.FC = () => {
       return true;
     });
   }, [minPrice, maxPrice, selectedCategories]);
+
+  // Collapse Canvas/Acrylic pairs of the same design into one card with a
+  // material picker, so the grid doesn't show visually-duplicate entries.
+  const displayGroups = useMemo(() => {
+    const groups: DisplayGroup[] = [];
+    const byDesignKey = new Map<string, DisplayGroup>();
+
+    filteredProducts.forEach((p) => {
+      const match = p.id.match(MATERIAL_VARIANT_RE);
+      if (match) {
+        const material = match[1] as 'canvas' | 'acrylic';
+        const designKey = match[2];
+        let group = byDesignKey.get(designKey);
+        if (!group) {
+          group = { key: designKey };
+          byDesignKey.set(designKey, group);
+          groups.push(group);
+        }
+        group[material] = p;
+      } else {
+        groups.push({ key: p.id, single: p });
+      }
+    });
+
+    return groups;
+  }, [filteredProducts]);
 
   const FilterSidebarContent: React.FC = () => (
     <>
@@ -215,26 +255,59 @@ export const ReadymadeOffersPage: React.FC = () => {
             <main className="lg:col-span-9">
               <div className="flex items-center justify-between pb-4 mb-4 text-xs font-semibold text-stone-600 border-b border-stone-100">
                 <div>
-                  Showing <span className="text-stone-900 font-bold">{filteredProducts.length}</span> of {READYMADE_PRODUCTS.length} Products
+                  Showing <span className="text-stone-900 font-bold">{displayGroups.length}</span> Products
                 </div>
                 {isFiltered && (
                   <div className="text-[11px] text-[#0E4A93] font-bold">Filtered view active</div>
                 )}
               </div>
 
-              {filteredProducts.length > 0 ? (
+              {displayGroups.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-5">
-                  {filteredProducts.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      isWishlisted={wishlistIds.includes(product.id)}
-                      onToggleWishlist={onToggleWishlist}
-                      onAddToCart={onAddToCart}
-                      onCustomize={onOpenCustomize}
-                      variant="listing"
-                    />
-                  ))}
+                  {displayGroups.map((group) => {
+                    if (group.single) {
+                      return (
+                        <ProductCard
+                          key={group.key}
+                          product={group.single}
+                          isWishlisted={wishlistIds.includes(group.single.id)}
+                          onToggleWishlist={onToggleWishlist}
+                          onAddToCart={onAddToCart}
+                          onCustomize={onOpenCustomize}
+                          variant="listing"
+                        />
+                      );
+                    }
+
+                    const choice = materialChoice[group.key] || (group.canvas ? 'canvas' : 'acrylic');
+                    const activeProduct = (choice === 'canvas' ? group.canvas : group.acrylic) || group.canvas || group.acrylic!;
+
+                    const materialOptions = [
+                      group.canvas && {
+                        label: 'Canvas',
+                        active: choice === 'canvas',
+                        onSelect: () => setMaterialChoice((prev) => ({ ...prev, [group.key]: 'canvas' })),
+                      },
+                      group.acrylic && {
+                        label: 'Acrylic',
+                        active: choice === 'acrylic',
+                        onSelect: () => setMaterialChoice((prev) => ({ ...prev, [group.key]: 'acrylic' })),
+                      },
+                    ].filter(Boolean) as { label: string; active: boolean; onSelect: () => void }[];
+
+                    return (
+                      <ProductCard
+                        key={group.key}
+                        product={activeProduct}
+                        isWishlisted={wishlistIds.includes(activeProduct.id)}
+                        onToggleWishlist={onToggleWishlist}
+                        onAddToCart={onAddToCart}
+                        onCustomize={onOpenCustomize}
+                        variant="listing"
+                        materialOptions={materialOptions}
+                      />
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="py-16 sm:py-20 px-6 rounded-2xl bg-white border border-stone-200/80 text-center space-y-4 max-w-md mx-auto my-6 shadow-xs">
@@ -302,7 +375,7 @@ export const ReadymadeOffersPage: React.FC = () => {
                 onClick={() => setMobileFiltersOpen(false)}
                 className="w-1/2 py-2.5 bg-[#0E4A93] rounded-lg text-xs font-bold text-white shadow-sm hover:bg-[#0A3770] cursor-pointer"
               >
-                View ({filteredProducts.length})
+                View ({displayGroups.length})
               </button>
             </div>
           </div>
