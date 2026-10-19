@@ -338,11 +338,32 @@ const STYLE_META: Record<string, {
     intro: 'A tall vertical acrylic strip styled after classic destination bus rolls — a fun, retro statement piece.',
     step2: { title: 'Create Your Bus Roll', desc: 'Type your destination lines and pick a background style for your roll.' },
     icon: 'bus',
+    image: '/assets/canvas-styles/acrylic-bus-roll-destination.webp',
     historyTitle: 'The History of the Destination Roll Blind',
     historyParagraphs: [
       'Mechanical roller-blind destination signs were fitted to buses and trams from the early 20th century onward, each roll printed with a long list of routes that the driver wound into place by hand.',
       "London's classic Routemaster buses made the format especially iconic through the mid-20th century, and original canvas destination rolls are now sought after by transport collectors and decorators alike.",
       'A bus roll print borrows that same tall, hand-wound format purely for its nostalgic look — a personalized destination list printed on acrylic instead of canvas.'
+    ],
+    tipsTitle: 'Tips for Custom Bus Roll Art',
+    tipsSubtitle: 'How to curate your favorite places and memories.',
+    tipsItems: [
+      { title: 'Choose meaningful places', desc: 'List your favorite travel destinations, hometown stops, memorable date spots, or family vacation memories.' },
+      { title: 'Vary line lengths', desc: 'Mix short and long town or stop names to give the classic staggered transit roll typography cadence.' },
+      { title: 'Keep the order intentional', desc: 'Arrange chronologically from top to bottom (like your travel journey) or rank by significance.' },
+      { title: 'Pick the right contrast', desc: 'Crisp white typography on dark backgrounds provides the highest readability and authentic vintage charm.' }
+    ],
+    extraStyles: [
+      {
+        name: 'Classroom & Family Rules Bus Roll',
+        description: 'Warm golden fish-scale background pattern featuring multi-color family and classroom rules typography.',
+        image: '/assets/canvas-styles/acrylic-bus-roll-classroom-rules.webp'
+      },
+      {
+        name: 'Argyle Typography Acrylic Roll',
+        description: 'Timeless charcoal diamond argyle motif with elegant serif lettering for an inspiring life statement.',
+        image: '/assets/canvas-styles/acrylic-bus-roll-argyle-quote.webp'
+      }
     ]
   },
   'acrylic-word-art': {
