@@ -81,6 +81,63 @@ const CANVAS_STYLE_CARDS = Object.values(CANVAS_STYLE_LANDING_DATA)
     href: `/canvas/${data.slug}`,
   }));
 
+const CORK_PRODUCT_CARDS = [
+  {
+    name: 'Cork Pattern Print',
+    price: 249,
+    image: '/assets/catalogue/cork-art-patterns/C-A_003.webp',
+    href: '/cork-art-patterns',
+  },
+  {
+    name: 'Yoga Mats',
+    price: 999,
+    image: '/assets/products/cork/9C-YA1/9c-ya1(1).webp',
+    href: '/yoga-fitness?sub=Yoga%20Mats',
+  },
+  {
+    name: 'Yoga Bricks',
+    price: 999,
+    image: '/assets/products/cork/9C-YA5/9C-YA5(1).webp',
+    href: '/yoga-fitness?sub=Yoga%20Bricks',
+  },
+  {
+    name: 'Yoga Wedges',
+    price: 999,
+    image: '/assets/products/cork/9C-YA8/9C-YA8.webp',
+    href: '/yoga-fitness?sub=Yoga%20Wedges',
+  },
+  {
+    name: 'Yoga Rollers',
+    price: 999,
+    image: '/assets/products/cork/9C-YA6/9C-YA6(1).webp',
+    href: '/yoga-fitness?sub=Yoga%20Rollers',
+  },
+  {
+    name: 'Yoga Balls',
+    price: 999,
+    image: '/assets/products/cork/9C-YA7/9C-YA7(1).webp',
+    href: '/yoga-fitness?sub=Yoga%20Balls',
+  },
+  {
+    name: 'Massage Sets',
+    price: 999,
+    image: '/assets/products/cork/9C-YA9/9C-YA9.webp',
+    href: '/yoga-fitness?sub=Massage%20Sets',
+  },
+  {
+    name: 'Knee Pads',
+    price: 999,
+    image: '/assets/products/cork/9C-YA11/9C-YA11(1).webp',
+    href: '/yoga-fitness?sub=Knee%20Pads',
+  },
+  {
+    name: 'Yoga Bags',
+    price: 999,
+    image: '/assets/products/cork/9C-YB1/9C-YB1.webp',
+    href: '/yoga-fitness?sub=Yoga%20Bags',
+  },
+];
+
 const TESTIMONIALS = [
   { name: 'Asha S.', city: 'Bengaluru', text: 'Amazing quality and vibrant colours! My canvas turned out even better than I imagined!', img: 'https://randomuser.me/api/portraits/women/44.jpg' },
   { name: 'Rohit P.', city: 'Mumbai', text: 'Loved the personal touch and quick delivery. Will definitely order again!', img: 'https://randomuser.me/api/portraits/men/32.jpg' },
@@ -150,7 +207,6 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   };
 
   const bestsellers = allProducts.slice(0, 10);
-  const corkProducts = allProducts.filter((p) => p.categorySlug === 'cork' || p.categorySlug === 'cork-art-patterns');
 
   return (
     <div className="w-full bg-[#FFF9F1] text-[#1f2937] font-manrope">
@@ -533,7 +589,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       </section>
 
       {/* CORK PRODUCTS */}
-      {corkProducts.length > 0 && (
+      {CORK_PRODUCT_CARDS.length > 0 && (
         <section id="shop-format-cork" className="py-8 sm:py-10">
           <Container>
             <div className="text-center mb-5 sm:mb-6">
@@ -553,20 +609,20 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               </button>
             </div>
             <div ref={corkRowRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
-              {corkProducts.map((p) => (
+              {CORK_PRODUCT_CARDS.map((c) => (
                 <Link
-                  key={p.id}
-                  to={`/product/${p.slug || p.id}`}
+                  key={c.name}
+                  to={c.href}
                   className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
                 >
                   <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
-                    <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <div className="flex items-start justify-between gap-2 px-1">
                     <div className="min-w-0">
-                      <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1 truncate">{p.name}</h3>
+                      <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1 truncate">{c.name}</h3>
                       <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">
-                        {p.subcategory ? `${p.subcategory} • ₹${p.price.toLocaleString('en-IN')}` : `From ₹${p.price.toLocaleString('en-IN')}`}
+                        {c.price ? `Starts at ₹${c.price.toLocaleString('en-IN')}` : 'Eco-Friendly'}
                       </p>
                     </div>
                     <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
