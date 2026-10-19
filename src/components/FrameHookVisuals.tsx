@@ -66,3 +66,27 @@ export const HookIcon: React.FC<{ type: string; active?: boolean }> = ({ type, a
     </svg>
   );
 };
+
+// Illustrated "back of the print" view — wood stretcher-bar cross typical of
+// a framed/stretched canvas, with the selected hook hardware mounted near
+// the top, so customers can see exactly what hangs on their wall.
+export const BackOfFrameView: React.FC<{ hook: string; className?: string }> = ({ hook, className = '' }) => {
+  return (
+    <div className={`relative w-full h-full overflow-hidden rounded-sm ${className}`} style={{ background: 'linear-gradient(135deg, #D8B98A, #B6935F)' }}>
+      <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 0 7px rgba(107,63,29,0.75)' }} />
+      <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[12%]" style={{ background: 'rgba(107,63,29,0.8)' }} />
+      <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[9%]" style={{ background: 'rgba(107,63,29,0.8)' }} />
+
+      <div className="absolute left-1/2 -translate-x-1/2 top-[10%] flex flex-col items-center">
+        <HookIcon type={hook} active />
+      </div>
+      {hook === 'Wire Hanger' && (
+        <div className="absolute left-[22%] right-[22%] top-[15%] h-px" style={{ background: '#57534e' }} />
+      )}
+
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] sm:text-[10px] font-bold uppercase tracking-wide text-[#4A2E14]/70 whitespace-nowrap">
+        Back View — {hook}
+      </div>
+    </div>
+  );
+};

@@ -208,11 +208,13 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
     return { widthPct: r * hFrac * 100, heightPct: hFrac * 100, align: 'end' as const };
   }, [isCircle, isTriangle, naturalAspect, dims]);
 
-  // No colored frame border in this preview regardless of the selected
-  // finish — it read as an ugly, unwanted box around the artwork. Finish
-  // still affects the overlay sheen (gloss/matte/etc.), just not a border.
-  const framePadding = 0;
-  const frameBg = sampledBg || 'transparent';
+  // A selected Frame (Black/Wooden/White/Gold) now shows as a real colored
+  // border around the artwork here, so picking one in the Frame tab is
+  // visible in the room preview. "No Frame" / wrap-style finishes keep
+  // border 0, so the sampled-corner-color sliver fallback still applies.
+  const hasFrame = finishStyle.border > 0;
+  const framePadding = hasFrame ? finishStyle.border * 3 : 0;
+  const frameBg = hasFrame ? finishStyle.color : (sampledBg || 'transparent');
 
   return (
     <div className={`relative w-full h-full flex items-center justify-center bg-stone-50 ${className}`}>

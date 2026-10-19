@@ -19,12 +19,15 @@ import { ProductImage } from '../components/ProductImage';
 import { WallPreview } from '../components/WallPreview';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { Product } from '../types';
-import { FrameSwatch, HookIcon, HOOK_OPTIONS } from '../components/FrameHookVisuals';
+import { FrameSwatch, HookIcon, HOOK_OPTIONS, BackOfFrameView } from '../components/FrameHookVisuals';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
 
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
 // the "Room View" thumbnail renders a live WallPreview instead of a static image.
 const ROOM_VIEW_SENTINEL = '__ROOM_VIEW__';
+// Second gallery slot for wall-hangable categories — a static illustration
+// of the print's back, showing the currently selected Hook hardware.
+const BACK_VIEW_SENTINEL = '__BACK_VIEW__';
 
 // Default to the largest available size so the product — and its Room View
 // — looks substantial right away, instead of starting on the tiniest
@@ -228,12 +231,12 @@ export const ProductDetailPage: React.FC = () => {
     if (!product) return [];
     const base = product.images && product.images.length > 0 ? product.images : [product.image];
     if (product.categorySlug === 'yoga-fitness' || product.categorySlug === 'cork') return base;
-    return [ROOM_VIEW_SENTINEL, ...base];
+    return [ROOM_VIEW_SENTINEL, BACK_VIEW_SENTINEL, ...base];
   }, [product]);
 
   // The real product photo used inside the live Room View preview (first non-sentinel image)
   const roomViewSourceImage = useMemo(() => {
-    const real = galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL);
+    const real = galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL && img !== BACK_VIEW_SENTINEL);
     return real || product?.image || '';
   }, [galleryImages, product]);
 
@@ -405,6 +408,8 @@ export const ProductDetailPage: React.FC = () => {
                 >
                   {img === ROOM_VIEW_SENTINEL ? (
                     <WallPreview imageSrc={roomViewSourceImage} shape={selectedShape} sizeLabel={selectedSize} finish={selectedFinish} className="w-full h-full" />
+                  ) : img === BACK_VIEW_SENTINEL ? (
+                    <BackOfFrameView hook={selectedHook} className="w-full h-full" />
                   ) : (
                     <ProductImage src={img} alt={`View ${idx + 1}`} categorySlug={product.categorySlug} className="w-full h-full object-cover" />
                   )}
@@ -429,6 +434,8 @@ export const ProductDetailPage: React.FC = () => {
                     finish={selectedFinish}
                     className="w-full h-full"
                   />
+                ) : galleryImages[activeImageIndex] === BACK_VIEW_SENTINEL ? (
+                  <BackOfFrameView hook={selectedHook} className="w-full h-full" />
                 ) : (
                   <SmartCropImage
                     src={uploadedFile || galleryImages[activeImageIndex] || product.image}
