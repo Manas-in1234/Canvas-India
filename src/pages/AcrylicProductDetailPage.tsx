@@ -24,6 +24,7 @@ import { useShop } from '../context/ShopContext';
 import { ProductImage } from '../components/ProductImage';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { WallPreview } from '../components/WallPreview';
+import { HookIcon, HOOK_OPTIONS } from '../components/FrameHookVisuals';
 import {
   AcrylicProductReview,
   getProductReviews,
@@ -163,8 +164,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   const [customSizeOpen, setCustomSizeOpen] = useState<boolean>(false);
   const [customSizeW, setCustomSizeW] = useState<string>('');
   const [customSizeH, setCustomSizeH] = useState<string>('');
-  const [selectedHook, setSelectedHook] = useState<string>('With Hanging Hook');
-  const HOOK_OPTIONS = ['With Hanging Hook', 'No Hook (Self Mount)'];
+  const [selectedHook, setSelectedHook] = useState<string>('Sawtooth Hanger');
 
   // Bottom Tabs State ('description' | 'specifications' | 'shipping' | 'reviews')
   const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'shipping' | 'reviews'>('description');
@@ -184,7 +184,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
     setQuantity(1);
     setActiveImageIndex(0);
     setSizeShapeTab('size');
-    setSelectedHook('With Hanging Hook');
+    setSelectedHook('Sawtooth Hanger');
     setCustomSizeOpen(false);
     setCustomSizeW('');
     setCustomSizeH('');
@@ -644,19 +644,20 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                   )}
 
                   {sizeShapeTab === 'hook' && (
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                       {HOOK_OPTIONS.map((hookOpt) => (
                         <button
                           key={hookOpt}
                           type="button"
                           onClick={() => setSelectedHook(hookOpt)}
-                          className={`px-2 py-2.5 text-[11px] leading-tight font-semibold rounded-lg border-2 text-center transition-all cursor-pointer ${
+                          className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
                             selectedHook === hookOpt
-                              ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
-                              : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
+                              ? 'border-[#0E4A93] bg-blue-50/60'
+                              : 'border-stone-200 bg-white hover:border-stone-400'
                           }`}
                         >
-                          {hookOpt}
+                          <HookIcon type={hookOpt} active={selectedHook === hookOpt} />
+                          <span className={`text-[10px] font-semibold leading-tight text-center ${selectedHook === hookOpt ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{hookOpt}</span>
                         </button>
                       ))}
                     </div>

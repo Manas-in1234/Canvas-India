@@ -19,7 +19,7 @@ import { ProductImage } from '../components/ProductImage';
 import { WallPreview } from '../components/WallPreview';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { Product } from '../types';
-import { getFinishStyle } from '../utils/finishStyle';
+import { FrameSwatch, HookIcon, HOOK_OPTIONS } from '../components/FrameHookVisuals';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
 
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
@@ -97,7 +97,7 @@ export const ProductDetailPage: React.FC = () => {
   const [customSizeOpen, setCustomSizeOpen] = useState<boolean>(false);
   const [customSizeW, setCustomSizeW] = useState<string>('');
   const [customSizeH, setCustomSizeH] = useState<string>('');
-  const [selectedHook, setSelectedHook] = useState<string>('With Hanging Hook');
+  const [selectedHook, setSelectedHook] = useState<string>('Sawtooth Hanger');
 
   // In-page customization state
   const [customText, setCustomText] = useState<string>('');
@@ -143,12 +143,15 @@ export const ProductDetailPage: React.FC = () => {
 
   const showCustomSize = product ? !SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug) : true;
 
-  // Simplified Frame picker — groups this product's real `finishes` values
-  // (which vary a lot in wording across the catalogue) into the three frame
-  // colors customers actually choose between, using the same keyword
-  // matching as the live preview's frame border (see finishStyle.ts), so a
-  // pick here always has a matching real finish value to send to cart.
+  // Frame picker — groups this product's real `finishes` values (which vary
+  // a lot in wording across the catalogue) into the frame looks customers
+  // actually choose between, using the same keyword matching as the live
+  // preview's frame border (see finishStyle.ts), so a pick here always has
+  // a matching real finish value to send to cart. Every category present in
+  // the product's own finishes list is offered — nothing invented.
   const FRAME_CATEGORY_ORDER: { label: string; test: (f: string) => boolean }[] = [
+    { label: 'No Frame', test: (f) => /print only|rolled|gallery wrap|satin|lustre|matte canvas/.test(f) },
+    { label: 'Black Frame', test: (f) => /black/.test(f) },
     { label: 'Wooden Frame', test: (f) => /wood|teak|oak/.test(f) },
     { label: 'White Frame', test: (f) => /white/.test(f) },
     { label: 'Gold Frame', test: (f) => /gold/.test(f) },
@@ -163,8 +166,6 @@ export const ProductDetailPage: React.FC = () => {
       })
       .filter((o): o is { label: string; value: string } => Boolean(o));
   }, [product]);
-
-  const HOOK_OPTIONS = ['With Hanging Hook', 'No Hook (Self Mount)'];
 
   // Same catalogue design also offered as Canvas / Acrylic — siblings share a
   // base catalogue id, prefixed with 'canvas-' or 'acrylic-' for those
@@ -194,7 +195,7 @@ export const ProductDetailPage: React.FC = () => {
       setSelectedFinish(product.finishes?.[0] || 'Standard Finish');
       setSelectedMaterial(availableMaterials[0] || 'Standard');
       setSelectedShape(defaultShape);
-      setSelectedHook('With Hanging Hook');
+      setSelectedHook('Sawtooth Hanger');
       setIsCustomSize(false);
       setCustomWidth(8);
       setCustomHeight(8);
@@ -658,30 +659,28 @@ export const ProductDetailPage: React.FC = () => {
                               : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
                           }`}
                         >
-                          <span
-                            className="w-6 h-6 rounded-sm border-4"
-                            style={{ borderColor: getFinishStyle(opt.value).color }}
-                          />
-                          <span className="text-[10px] font-semibold">{opt.label}</span>
+                          <FrameSwatch category={opt.label} />
+                          <span className="text-[10px] font-semibold text-center leading-tight">{opt.label}</span>
                         </button>
                       ))}
                     </div>
                   )}
 
                   {sizeShapeTab === 'hook' && (
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                       {HOOK_OPTIONS.map((hookOpt) => (
                         <button
                           key={hookOpt}
                           type="button"
                           onClick={() => setSelectedHook(hookOpt)}
-                          className={`px-2 py-2.5 text-[11px] leading-tight font-semibold rounded-lg border-2 text-center transition-all cursor-pointer ${
+                          className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
                             selectedHook === hookOpt
-                              ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
-                              : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
+                              ? 'border-[#0E4A93] bg-blue-50/60'
+                              : 'border-stone-200 bg-white hover:border-stone-400'
                           }`}
                         >
-                          {hookOpt}
+                          <HookIcon type={hookOpt} active={selectedHook === hookOpt} />
+                          <span className={`text-[10px] font-semibold leading-tight text-center ${selectedHook === hookOpt ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{hookOpt}</span>
                         </button>
                       ))}
                     </div>
