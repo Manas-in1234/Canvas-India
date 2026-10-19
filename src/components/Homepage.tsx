@@ -93,7 +93,7 @@ const Container: React.FC<{ children: React.ReactNode; className?: string }> = (
 );
 
 const SectionTitle: React.FC<{ title: string; sub: string; light?: boolean }> = ({ title, sub, light }) => (
-  <div className="text-center mb-8">
+  <div className="text-center mb-5 sm:mb-6">
     <div className="flex items-center justify-center gap-4">
       <span className="hidden sm:block h-[3px] w-14 rounded-full bg-gradient-to-r from-transparent to-[#E8752A]" />
       <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: SERIF, color: light ? '#fff' : BLUE }}>{title}</h2>
@@ -311,9 +311,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       </section>
 
       {/* SHOP BY CATEGORY */}
-      <section id="shop-categories" className="py-12 sm:py-16 bg-[#FDFCF8]">
+      <section id="shop-categories" className="py-8 sm:py-10 bg-[#FDFCF8]">
         <Container>
-          <div className="text-center mb-8">
+          <div className="text-center mb-5 sm:mb-6">
             <div className="flex items-center justify-center gap-4">
               <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
               <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Shop by Category</h2>
@@ -333,7 +333,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 <ChevronLeft className="w-5 h-5" />
               </button>
             </div>
-            <div ref={categoryRowRef} className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+            <div ref={categoryRowRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
               {CATEGORY_CARDS.map((c) => (
                 <button
                   key={c.slug}
@@ -341,7 +341,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                   onClick={() => onSelectCategory(c.slug)}
                   className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
                 >
-                  <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-4 bg-stone-100 shadow-sm">
+                  <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm">
                     <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <div className="flex items-start justify-between gap-2 px-1">
@@ -364,7 +364,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         </div>
 
         <Container>
-          <div className="hidden sm:flex justify-end mt-6">
+          <div className="hidden sm:flex justify-end mt-4">
             <button
               type="button"
               onClick={() => navigate('/categories')}
@@ -377,7 +377,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           <button
             type="button"
             onClick={() => navigate('/categories')}
-            className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+            className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
           >
             View All Categories <ArrowRight className="w-3.5 h-3.5" />
           </button>
@@ -385,9 +385,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       </section>
 
       {/* CANVAS & BOARDS */}
-      <section id="shop-format-canvas" className="py-12 sm:py-16">
+      <section id="shop-format-canvas" className="py-8 sm:py-10">
         <Container>
-          <div className="text-center mb-8">
+          <div className="text-center mb-5 sm:mb-6">
             <div className="flex items-center justify-center gap-4">
               <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
               <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Canvas &amp; Boards</h2>
@@ -403,14 +403,14 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               <ChevronLeft className="w-5 h-5" />
             </button>
           </div>
-          <div ref={canvasStyleRowRef} className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+          <div ref={canvasStyleRowRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
             {CANVAS_STYLE_CARDS.map((c) => (
               <Link
                 key={c.href}
                 to={c.href}
                 className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
               >
-                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-4 bg-stone-100 shadow-sm border border-stone-200/60">
+                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
                   <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <div className="flex items-start justify-between gap-2 px-1">
@@ -435,7 +435,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         </div>
 
         <Container>
-          <div className="hidden sm:flex justify-end mt-6">
+          <div className="hidden sm:flex justify-end mt-4">
             <button
               type="button"
               onClick={() => onSelectCategory('canvas')}
@@ -448,7 +448,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           <button
             type="button"
             onClick={() => onSelectCategory('canvas')}
-            className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+            className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
           >
             View All Canvas &amp; Boards <ArrowRight className="w-3.5 h-3.5" />
           </button>
@@ -456,9 +456,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       </section>
 
       {/* ACRYLIC PRINTS */}
-      <section id="shop-format-acrylic" className="py-12 sm:py-16 bg-[#FDFCF8]">
+      <section id="shop-format-acrylic" className="py-8 sm:py-10 bg-[#FDFCF8]">
         <Container>
-          <div className="text-center mb-8">
+          <div className="text-center mb-5 sm:mb-6">
             <div className="flex items-center justify-center gap-4">
               <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
               <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Acrylic Prints</h2>
@@ -474,14 +474,14 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               <ChevronLeft className="w-5 h-5" />
             </button>
           </div>
-          <div ref={acrylicRowRef} className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+          <div ref={acrylicRowRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
             {ACRYLIC_STYLE_CARDS.map((c) => (
               <Link
                 key={c.href}
                 to={c.href}
                 className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
               >
-                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-4 bg-stone-100 shadow-sm border border-stone-200/60">
+                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
                   {c.image ? (
                     <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
@@ -512,7 +512,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         </div>
 
         <Container>
-          <div className="hidden sm:flex justify-end mt-6">
+          <div className="hidden sm:flex justify-end mt-4">
             <button
               type="button"
               onClick={() => onSelectCategory('acrylic')}
@@ -525,7 +525,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           <button
             type="button"
             onClick={() => onSelectCategory('acrylic')}
-            className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+            className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
           >
             View All Acrylic Prints <ArrowRight className="w-3.5 h-3.5" />
           </button>
@@ -534,9 +534,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
       {/* CORK PRODUCTS */}
       {corkProducts.length > 0 && (
-        <section id="shop-format-cork" className="py-12 sm:py-16">
+        <section id="shop-format-cork" className="py-8 sm:py-10">
           <Container>
-            <div className="text-center mb-8">
+            <div className="text-center mb-5 sm:mb-6">
               <div className="flex items-center justify-center gap-4">
                 <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
                 <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Cork Products</h2>
@@ -552,14 +552,14 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 <ChevronLeft className="w-5 h-5" />
               </button>
             </div>
-            <div ref={corkRowRef} className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+            <div ref={corkRowRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
               {corkProducts.map((p) => (
                 <Link
                   key={p.id}
                   to={`/product/${p.slug || p.id}`}
                   className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
                 >
-                  <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-4 bg-stone-100 shadow-sm border border-stone-200/60">
+                  <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
                     <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <div className="flex items-start justify-between gap-2 px-1">
@@ -584,7 +584,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           </div>
 
           <Container>
-            <div className="hidden sm:flex justify-end mt-6">
+            <div className="hidden sm:flex justify-end mt-4">
               <button
                 type="button"
                 onClick={() => onSelectCategory('cork')}
@@ -597,7 +597,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             <button
               type="button"
               onClick={() => onSelectCategory('cork')}
-              className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+              className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
             >
               View All Cork Products <ArrowRight className="w-3.5 h-3.5" />
             </button>
@@ -606,7 +606,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       )}
 
       {/* SHOP BY OCCASION */}
-      <section id="shop-occasions" className="py-12 sm:py-16">
+      <section id="shop-occasions" className="py-8 sm:py-10">
         <Container>
           <SectionTitle title="Shop by Occasion" sub="Thoughtful personalized gifts for life's most precious celebrations" />
         </Container>
@@ -617,7 +617,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 <ChevronLeft className="w-5 h-5" />
               </button>
             </div>
-            <div ref={occasionRowRef} className="flex gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+            <div ref={occasionRowRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
               {OCCASIONS.map((o) => (
                 <button
                   key={o.slug}
@@ -640,7 +640,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         </div>
 
         <Container>
-          <div className="hidden sm:flex justify-end mt-6">
+          <div className="hidden sm:flex justify-end mt-4">
             <button
               type="button"
               onClick={() => navigate('/occasions')}
@@ -653,7 +653,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           <button
             type="button"
             onClick={() => navigate('/occasions')}
-            className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#0E4A93]/30 text-[#0E4A93] text-xs font-bold cursor-pointer"
+            className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#0E4A93]/30 text-[#0E4A93] text-xs font-bold cursor-pointer"
           >
             View All Occasions <ArrowRight className="w-3.5 h-3.5" />
           </button>
