@@ -300,11 +300,37 @@ const STYLE_META: Record<string, {
     intro: 'Your favorite quote, rendered in bold custom typography on crystal-clear acrylic.',
     step2: { title: 'Pick Your Template', desc: 'Choose a quote template and typography style, then personalize the text.' },
     icon: 'quote',
+    image: '/assets/canvas-styles/acrylic-quote-wildflower-plaque.webp',
     historyTitle: 'The History of Typographic Wall Art',
     historyParagraphs: [
       'Using bold lettering alone as the subject of a poster traces back to the WPA-era public information posters of the 1930s-40s, which relied on strong typography to deliver a message at a glance.',
       'The modern "motivational quote" wall art trend took off in the 2000s and 2010s alongside the rise of home-decor retailers and platforms like Pinterest, which popularized short, shareable phrases as standalone decor.',
       'Quotes on acrylic brings that same typographic tradition to a glossy, gallery-like surface — the words alone, printed crisp and bold.'
+    ],
+    tipsTitle: 'Tips for Custom Quote Art',
+    tipsSubtitle: 'How to make your words make the biggest impact.',
+    tipsItems: [
+      { title: 'Keep it punchy', desc: 'Shorter quotes leave room for larger, more impactful typography that reads cleanly from across the room.' },
+      { title: 'Match font to feeling', desc: 'Choose graceful script for romantic vows, bold sans-serif for daily motivation, or classic serif for scripture.' },
+      { title: 'Consider placement', desc: 'Choose a high-contrast background that complements your room’s natural lighting and wall color.' },
+      { title: 'Check spelling and spacing', desc: 'Review your punctuation, line breaks, and names before checkout for a flawless final print.' }
+    ],
+    extraStyles: [
+      {
+        name: 'Sunset Wreath Acrylic Quote',
+        description: 'A vibrant sunset rainbow color wash framing hand-lettered inspirational wisdom within a botanical laurel.',
+        image: '/assets/canvas-styles/acrylic-quote-sunset-wreath.webp'
+      },
+      {
+        name: 'Minimalist Monograph Acrylic Plaque',
+        description: 'Clean modern editorial typography on crystal-clear optical acrylic, perfect for personalized scriptures and vows.',
+        image: '/assets/canvas-styles/acrylic-quote-minimalist-plaque.webp'
+      },
+      {
+        name: 'Starry Pine Forest Acrylic Quote',
+        description: 'Deep midnight starry skies over an evergreen forest silhouette, illuminated with bold white brush calligraphy.',
+        image: '/assets/canvas-styles/acrylic-quote-starry-forest.webp'
+      }
     ]
   },
   'acrylic-bus-roll': {
