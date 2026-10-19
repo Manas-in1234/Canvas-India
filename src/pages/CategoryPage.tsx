@@ -111,6 +111,18 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
     }
   };
 
+  // "Shop by Category" checkboxes express a different filter intent than the
+  // single ?sub= subcategory pill — without clearing it, a page reached via
+  // ?sub=Yoga%20Mats keeps that subcategory applied as a hard AND-filter on
+  // top of the checked categories, hiding every other checked category's
+  // products (e.g. checking Yoga Bricks too would still only show Mats).
+  const handleCategoryFilterChange = (slugs: string[]) => {
+    setExtraCategorySlugs(slugs);
+    if (selectedSubcategory !== 'All') {
+      handleSelectSub('All');
+    }
+  };
+
   // Base products for this category
   const categoryProducts = useMemo(() => {
     return allProducts.filter((p) => {
@@ -632,7 +644,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
                 Shop by Category
               </span>
               <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
-              <ShopByCategoryFilter categories={filterCategories} selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
+              <ShopByCategoryFilter categories={filterCategories} selectedSlugs={extraCategorySlugs} onChange={handleCategoryFilterChange} />
             </div>
 
             {/* Quality & Delivery Assurance Strip in Sidebar */}
@@ -879,7 +891,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
                   Shop by Category
                 </span>
                 <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
-                <ShopByCategoryFilter selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
+                <ShopByCategoryFilter categories={filterCategories} selectedSlugs={extraCategorySlugs} onChange={handleCategoryFilterChange} />
               </div>
             </div>
 
