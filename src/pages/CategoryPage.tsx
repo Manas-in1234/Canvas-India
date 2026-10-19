@@ -14,12 +14,14 @@ import {
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
 import { ShopByCategoryFilter } from '../components/ShopByCategoryFilter';
-import { SHOP_CATEGORIES } from '../data/shopCategories';
+import { SHOP_CATEGORIES, CORK_FILTER_CATEGORIES, isCorkCategoryMatch } from '../data/shopCategories';
 import { CATEGORY_CONFIGS } from '../data/productsData';
 import { Product } from '../types';
 
 const PRICE_MIN_DEFAULT = 200;
 const PRICE_MAX_DEFAULT = 4000;
+
+const isCorkMatch = isCorkCategoryMatch;
 
 interface CategoryPageProps {
   categorySlug?: string;
@@ -52,8 +54,13 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
 
   const config = CATEGORY_CONFIGS[activeSlug] || CATEGORY_CONFIGS['canvas'];
 
+  // Check if current activeSlug is Cork / Yoga
+  const isCorkCategory = activeSlug === 'cork' || activeSlug === 'yoga-fitness' || activeSlug === 'cork-art-patterns';
+
   // Check if current activeSlug is one of the ShopByCategory items
-  const isShopCategory = SHOP_CATEGORIES.some((c) => c.categorySlug === activeSlug);
+  const isShopCategory = !isCorkCategory && SHOP_CATEGORIES.some((c) => c.categorySlug === activeSlug);
+
+  const filterCategories = isCorkCategory ? CORK_FILTER_CATEGORIES : SHOP_CATEGORIES;
 
   // Shop by Category picks
   const [extraCategorySlugs, setExtraCategorySlugs] = useState<string[]>(() =>
@@ -139,11 +146,25 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
 
   // Merge products according to Shop by Category picks
   const baseProducts = useMemo(() => {
+    if (isCorkCategory) {
+      const allCork = allProducts.filter(
+        (p) =>
+          p.categorySlug === 'cork' ||
+          p.categorySlug === 'cork-art-patterns' ||
+          p.categorySlug === 'yoga-fitness' ||
+          p.id.startsWith('cork-')
+      );
+      if (extraCategorySlugs.length > 0) {
+        return allCork.filter((p) => extraCategorySlugs.some((slug) => isCorkMatch(p, slug)));
+      }
+      return allCork;
+    }
+
     if (extraCategorySlugs.length > 0) {
       return allProducts.filter((p) => extraCategorySlugs.includes(p.categorySlug));
     }
     return categoryProducts;
-  }, [allProducts, extraCategorySlugs, categoryProducts]);
+  }, [allProducts, extraCategorySlugs, categoryProducts, isCorkCategory]);
 
   // Check if any filter is active
   const isFiltered =
@@ -611,7 +632,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
                 Shop by Category
               </span>
               <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
-              <ShopByCategoryFilter selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
+              <ShopByCategoryFilter categories={filterCategories} selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
             </div>
 
             {/* Quality & Delivery Assurance Strip in Sidebar */}

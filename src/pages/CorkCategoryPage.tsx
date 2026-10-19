@@ -13,6 +13,7 @@ import {
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
 import { ShopByCategoryFilter } from '../components/ShopByCategoryFilter';
+import { CORK_FILTER_CATEGORIES, isCorkCategoryMatch } from '../data/shopCategories';
 import { Product } from '../types';
 
 const PRICE_MIN_DEFAULT = 200;
@@ -39,12 +40,24 @@ export const CorkCategoryPage: React.FC = () => {
   // products show as usual.
   const [extraCategorySlugs, setExtraCategorySlugs] = useState<string[]>([]);
 
+  const allCork = useMemo(
+    () =>
+      allProducts.filter(
+        (p) =>
+          p.categorySlug === 'cork' ||
+          p.categorySlug === 'cork-art-patterns' ||
+          p.categorySlug === 'yoga-fitness' ||
+          p.id.startsWith('cork-')
+      ),
+    [allProducts]
+  );
+
   const products: Product[] = useMemo(
     () =>
       extraCategorySlugs.length > 0
-        ? allProducts.filter((p) => extraCategorySlugs.includes(p.categorySlug))
-        : allProducts.filter((p) => p.categorySlug === 'cork' || p.categorySlug === 'cork-art-patterns'),
-    [allProducts, extraCategorySlugs]
+        ? allCork.filter((p) => extraCategorySlugs.some((slug) => isCorkCategoryMatch(p, slug)))
+        : allCork,
+    [allCork, extraCategorySlugs]
   );
 
   const handleResetFilters = () => {
@@ -357,7 +370,7 @@ export const CorkCategoryPage: React.FC = () => {
                   Shop by Category
                 </span>
                 <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
-                <ShopByCategoryFilter selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
+                <ShopByCategoryFilter categories={CORK_FILTER_CATEGORIES} selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
               </div>
 
               <div className="pt-2 border-t border-stone-100 space-y-2 text-[11px] text-stone-500">
@@ -558,7 +571,7 @@ export const CorkCategoryPage: React.FC = () => {
                   Shop by Category
                 </span>
                 <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
-                <ShopByCategoryFilter selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
+                <ShopByCategoryFilter categories={CORK_FILTER_CATEGORIES} selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
               </div>
 
             </div>

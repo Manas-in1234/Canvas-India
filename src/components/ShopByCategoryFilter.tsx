@@ -2,7 +2,13 @@ import React from 'react';
 import { Check } from 'lucide-react';
 import { SHOP_CATEGORIES } from '../data/shopCategories';
 
+export interface ShopCategoryOption {
+  name: string;
+  categorySlug: string;
+}
+
 export interface ShopByCategoryFilterProps {
+  categories?: ShopCategoryOption[];
   /** Currently checked category slugs. */
   selectedSlugs: string[];
   /** Called with the updated slug list whenever a box is toggled — the host
@@ -12,10 +18,13 @@ export interface ShopByCategoryFilterProps {
 }
 
 export const ShopByCategoryFilter: React.FC<ShopByCategoryFilterProps> = ({
+  categories,
   selectedSlugs,
   onChange,
   onItemClick,
 }) => {
+  const list = categories || SHOP_CATEGORIES;
+
   const toggle = (slug: string) => {
     const next = selectedSlugs.includes(slug)
       ? selectedSlugs.filter((s) => s !== slug)
@@ -26,7 +35,7 @@ export const ShopByCategoryFilter: React.FC<ShopByCategoryFilterProps> = ({
 
   return (
     <div className="space-y-1">
-      {SHOP_CATEGORIES.map((cat) => {
+      {list.map((cat) => {
         const isChecked = selectedSlugs.includes(cat.categorySlug);
         return (
           <label
