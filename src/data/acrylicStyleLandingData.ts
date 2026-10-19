@@ -371,11 +371,37 @@ const STYLE_META: Record<string, {
     intro: 'Your name, a favorite word, or a short phrase, shaped into bold typographic wall art on acrylic.',
     step2: { title: 'Design Your Word Art', desc: 'Type your word or phrase and choose a layout, then pick your size.' },
     icon: 'type',
+    image: '/assets/canvas-styles/acrylic-word-art-family-name.webp',
     historyTitle: 'The History of Word Art',
     historyParagraphs: [
       'Decorative lettering as a standalone art object has roots in illuminated manuscripts and hand-lettered signage, where a single word or initial could carry as much visual weight as a full illustration.',
       'The modern "word art" home-decor trend — a name, family word, or short phrase displayed as the entire artwork — became especially popular through home-decor retailers in the early 2000s.',
       'Word art on acrylic brings that same single-word focus to a glossy, gallery-style finish, letting the lettering itself be the centerpiece.'
+    ],
+    tipsTitle: 'Tips for Custom Word Art',
+    tipsSubtitle: 'How to create a stunning typographic masterpiece.',
+    tipsItems: [
+      { title: 'Pick a focal centerpiece', desc: 'Choose a primary surname, anniversary milestone, or main subject to stand out as the anchor word.' },
+      { title: 'Layer in meaningful memories', desc: 'Include family member names, important dates, favorite hobbies, or shared memories for the cloud.' },
+      { title: 'Choose complementary shapes', desc: 'Pick from hearts for love and anniversaries, stars for achievements, or classic rectangles for modern decor.' },
+      { title: 'Check spelling carefully', desc: 'Double-check every name and custom word before finalizing your design for a clean, error-free print.' }
+    ],
+    extraStyles: [
+      {
+        name: 'Heart Silhouette Acrylic Word Art',
+        description: 'Dozens of meaningful family names, virtues, and memories tightly nested into an affectionate heart shape.',
+        image: '/assets/canvas-styles/acrylic-word-art-heart-silhouette.webp'
+      },
+      {
+        name: 'Butterfly Silhouette Acrylic Word Art',
+        description: 'Warm golden typography flowing gracefully into the contours of an open-wing butterfly silhouette.',
+        image: '/assets/canvas-styles/acrylic-word-art-butterfly.webp'
+      },
+      {
+        name: 'Star Silhouette Acrylic Word Art',
+        description: 'An inspiring five-point star shaped from celebration words, teacher milestones, and words of gratitude.',
+        image: '/assets/canvas-styles/acrylic-word-art-star.webp'
+      }
     ]
   },
 };
