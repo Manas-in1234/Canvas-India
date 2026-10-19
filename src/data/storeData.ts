@@ -659,9 +659,10 @@ export const MEGA_MENUS_DATA: Record<string, MegaMenuConfig> = {
     name: 'Cork & Yoga Fitness',
     groups: [
       {
-        title: 'Yoga Mats & Props',
-        iconType: 'activity',
+        title: 'Cork Prints & Yoga Mats',
+        iconType: 'palette',
         items: [
+          { name: 'Cork Pattern Print', slug: 'cork-art-patterns', href: '/cork-art-patterns', description: 'Textured natural cork-finish prints & geometric art patterns' },
           { name: 'Yoga Mats', slug: 'yoga-fitness', href: '/yoga-fitness?sub=Yoga%20Mats', description: 'Cork fabric mats in EVA, latex and fully rubberized finishes' },
           { name: 'Yoga Bricks', slug: 'yoga-fitness', href: '/yoga-fitness?sub=Yoga%20Bricks', description: 'Solid cork bricks for stability in balance poses' },
           { name: 'Yoga Wedges', slug: 'yoga-fitness', href: '/yoga-fitness?sub=Yoga%20Wedges', description: 'Wrist and ankle support wedges for alignment' },

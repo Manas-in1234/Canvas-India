@@ -134,7 +134,7 @@ export const Header: React.FC<HeaderProps> = ({
     if (path.startsWith('/canvas') || path.startsWith('/customize/canvas')) return 'canvas';
     if (path.startsWith('/acrylic') || path.startsWith('/customize/acrylic')) return 'acrylic';
     if (path === '/posters') return 'posters';
-    if (path === '/cork' || path === '/cork-prints') return 'cork';
+    if (path === '/cork' || path === '/cork-prints' || path === '/cork-art-patterns') return 'cork';
     if (path === '/yoga-fitness') return 'yoga-fitness';
     if (path === '/home-decor') return 'home-decor';
     if (path === '/custom-prints') return 'custom-prints';
