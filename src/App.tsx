@@ -31,6 +31,7 @@ import { AllOccasionsPage } from './pages/AllOccasionsPage';
 import { CanvasCustomizerPage } from './pages/CanvasCustomizerPage';
 import { MobileUploadPage } from './pages/MobileUploadPage';
 import { FestiveOffersPage } from './pages/FestiveOffersPage';
+import { ReadymadeOffersPage } from './pages/ReadymadeOffersPage';
 import { OccasionPage } from './pages/OccasionPage';
 
 // Auth & Checkout Pages
@@ -113,6 +114,8 @@ export function App() {
 
             {/* Festive Offers landing page */}
             <Route path="/festive-offers" element={<FestiveOffersPage />} />
+            {/* Ready-made products on offer (pre-designed, no photo upload) */}
+            <Route path="/offers" element={<ReadymadeOffersPage />} />
             <Route path="/occasions/:slug" element={<OccasionPage />} />
 
             <Route path="/bulk-order" element={<CategoryPage categorySlug="bulk-order" />} />
