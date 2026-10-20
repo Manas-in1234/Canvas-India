@@ -73,7 +73,8 @@ import {
   WORD_ART_SIZE_CATALOG,
   DEFAULT_WORD_ART_CONFIG,
   type WordArtSizeOption,
-  type WordArtConfig
+  type WordArtConfig,
+  renderWordArtToCanvas
 } from '../data/wordArtData';
 import { CanvasBannerSizePanel } from '../components/CanvasBannerSizePanel';
 import {
@@ -2849,6 +2850,21 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     setSelectedSizeId(size.id);
     setCustomWidth(size.widthInches);
     setCustomHeight(size.heightInches);
+    if (activeWordArtDataUrl && wordArtConfig) {
+      const offscreen = document.createElement('canvas');
+      const exportWidth = 1400;
+      const exportHeight = Math.round(exportWidth / (size.aspectRatio || 1));
+      renderWordArtToCanvas(offscreen, wordArtConfig, exportWidth, exportHeight);
+      const dataUrl = offscreen.toDataURL('image/png', 0.95);
+      setActiveWordArtDataUrl(dataUrl);
+      setPanelImages((prev) => ({
+        ...prev,
+        0: {
+          ...prev[0],
+          imageUrl: dataUrl
+        }
+      }));
+    }
   };
 
   const handleCreateWordArtFromSize = (size: WordArtSizeOption) => {
@@ -3557,18 +3573,21 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Room / 3D / 360 viewer
   const [viewerMode, setViewerMode] = useState<'room' | '3d' | '360' | null>(null);
 
-  // Automatically close 3D / 360 view if the selected product does not support it (or if Acrylic)
+  // Automatically close Room / 3D / 360 view if the selected product does not support it
   useEffect(() => {
     if (activeMaterial === 'acrylic' && (viewerMode === '3d' || viewerMode === '360')) {
+      setViewerMode(null);
+    }
+    if (viewerMode === 'room' && !productCapabilities.roomView) {
       setViewerMode(null);
     }
     if (viewerMode === '3d' && !productCapabilities.view3D) {
       setViewerMode(null);
     }
-    if (viewerMode === '360' && productCapabilities.view360 === false) {
+    if (viewerMode === '360' && !productCapabilities.view360) {
       setViewerMode(null);
     }
-  }, [activeMaterial, viewerMode, productCapabilities.view3D, productCapabilities.view360]);
+  }, [activeMaterial, viewerMode, productCapabilities.roomView, productCapabilities.view3D, productCapabilities.view360]);
 
   const [roomViewState, setRoomViewState] = useState<RoomPlacementState>({
     roomPreset: 'office',
@@ -7204,6 +7223,21 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                   setWordArtSizeOption(matchingWordSize);
                                   setCustomWidth(matchingWordSize.widthInches);
                                   setCustomHeight(matchingWordSize.heightInches);
+                                  if (activeWordArtDataUrl && wordArtConfig) {
+                                    const offscreen = document.createElement('canvas');
+                                    const exportWidth = 1400;
+                                    const exportHeight = Math.round(exportWidth / (matchingWordSize.aspectRatio || 1));
+                                    renderWordArtToCanvas(offscreen, wordArtConfig, exportWidth, exportHeight);
+                                    const dataUrl = offscreen.toDataURL('image/png', 0.95);
+                                    setActiveWordArtDataUrl(dataUrl);
+                                    setPanelImages((prev) => ({
+                                      ...prev,
+                                      0: {
+                                        ...prev[0],
+                                        imageUrl: dataUrl
+                                      }
+                                    }));
+                                  }
                                 }
                               }
                               if (isSinglePrintCanvas) {
@@ -8136,16 +8170,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               }}
               isRoomViewActive={viewerMode === 'room'}
               isRoomViewDisabled={!hasUploadedImage}
-              onToggleRoomView={() => {
-                if (!hasUploadedImage) return;
+              onToggleRoomView={productCapabilities.roomView ? () => {
+                if (!hasUploadedImage || !productCapabilities.roomView) return;
                 setViewerRotation(0);
                 setViewerTiltX(0);
                 setViewerAutoRotate(false);
                 setViewerMode('room');
-              }}
+              } : undefined}
               is3DViewActive={viewerMode === '3d'}
               onOpen3DView={activeMaterial !== 'acrylic' && productCapabilities.view3D ? () => {
-                if (!hasUploadedImage) return;
+                if (!hasUploadedImage || !productCapabilities.view3D) return;
                 setPreset3DAngle('top-left');
                 setViewerRotation(35);
                 setViewerTiltX(-20);
@@ -8153,8 +8187,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 setViewerMode('3d');
               } : undefined}
               is360ViewActive={viewerMode === '360'}
-              onOpen360View={activeMaterial !== 'acrylic' && productCapabilities.view360 !== false ? () => {
-                if (!hasUploadedImage) return;
+              onOpen360View={activeMaterial !== 'acrylic' && productCapabilities.view360 ? () => {
+                if (!hasUploadedImage || !productCapabilities.view360) return;
                 setViewerRotation(36);
                 setViewerTiltX(-18);
                 setViewerAutoRotate(false);
@@ -9627,6 +9661,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         // MODE 1: ROOM VIEW (Shared AcrylicRoomViewModal Component)
         // ===================================================================
         if (viewerMode === 'room') {
+          if (!productCapabilities.roomView) return null;
           const collageLayout = isCollageProduct ? getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
           const wallLayout = isWallArtProduct ? getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
           const splitLayout = isSplitProduct ? getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
@@ -10227,6 +10262,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         // ===================================================================
         // MODE 2 & 3: PHYSICAL 3D VIEW & 360° PRODUCT VIEW
         // ===================================================================
+        if (viewerMode === '3d' && !productCapabilities.view3D) return null;
+        if (viewerMode === '360' && !productCapabilities.view360) return null;
+
         return (
           <div
             className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 animate-in fade-in"

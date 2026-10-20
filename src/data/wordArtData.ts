@@ -1,9 +1,10 @@
 // ============================================================================
-// WORD ART ON CANVAS - DATA & GENERATOR ENGINE
+// WORD ART ON CANVAS - DATA & DENSE WORD CLOUD GENERATOR ENGINE
 // Provides:
 // 1. Ratio-based size catalogs matching reference screenshots
-// 2. Shapes, color schemes, font families, text direction configurations
-// 3. Client-side deterministic Word Art rendering engine on HTML5 Canvas
+// 2. Shapes, color schemes, font families, text direction configurations (6 options)
+// 3. Client-side deterministic organic Word Cloud rendering engine on HTML5 Canvas
+//    matching the heart-shaped reference silhouette and filling all supported shapes
 // ============================================================================
 
 export type WordArtRatioTab = 'Square' | '3:2 Ratio' | '4:3 Ratio' | '16:9 Ratio';
@@ -73,6 +74,29 @@ export const WORD_ART_SIZE_CATALOG: Record<WordArtRatioTab, WordArtSizeOption[]>
   ]
 };
 
+export type WordArtTextDirection =
+  | 'horizontal'
+  | 'horizontal_vertical'
+  | 'left_angled'
+  | 'left_right_angled'
+  | 'right_angled'
+  | 'vertical'
+  | 'mixed';
+
+export interface WordArtTextDirectionOption {
+  id: WordArtTextDirection;
+  label: string;
+}
+
+export const WORD_ART_TEXT_DIRECTION_OPTIONS: WordArtTextDirectionOption[] = [
+  { id: 'horizontal', label: 'Horizontal' },
+  { id: 'horizontal_vertical', label: 'Horizontal & Vertical' },
+  { id: 'left_angled', label: 'Left Angled' },
+  { id: 'left_right_angled', label: 'Left & Right Angled' },
+  { id: 'right_angled', label: 'Right Angled' },
+  { id: 'vertical', label: 'Vertical' }
+];
+
 export interface WordArtConfig {
   primaryName: string;
   fontColor: string;
@@ -81,7 +105,7 @@ export interface WordArtConfig {
   otherText: string[];
   shape: 'none' | 'heart' | 'circle' | 'star' | 'butterfly' | 'tree' | 'apple' | 'cloud';
   colorScheme: string;
-  textDirection: 'horizontal' | 'vertical' | 'mixed';
+  textDirection: WordArtTextDirection;
   seed: number;
 }
 
@@ -108,18 +132,42 @@ export const WORD_ART_SHAPE_OPTIONS = [
 ];
 
 export const WORD_ART_COLOR_SCHEMES = [
-  { id: 'monochrome', label: 'Monochrome (White/Slate)', colors: ['#FFFFFF', '#E2E8F0', '#CBD5E1', '#94A3B8'] },
-  { id: 'neutrals', label: 'Neutrals (Cream/Stone)', colors: ['#F8FAFC', '#E2E8F0', '#F1F5F9', '#CBD5E1'] },
-  { id: 'ocean', label: 'Ocean Blues (Canvas India)', colors: ['#FFFFFF', '#38BDF8', '#0284C7', '#BAE6FD', '#60A5FA'] },
-  { id: 'sunset', label: 'Sunset Glow (Warm Amber)', colors: ['#FDE047', '#FB923C', '#F43F5E', '#FDA4AF', '#FFFFFF'] },
-  { id: 'emerald', label: 'Emerald Forest (Nature)', colors: ['#34D399', '#10B981', '#6EE7B7', '#A7F3D0', '#FFFFFF'] },
-  { id: 'vibrant', label: 'Vibrant Multi-Color', colors: ['#F43F5E', '#8B5CF6', '#3B82F6', '#10B981', '#F59E0B'] }
+  {
+    id: 'monochrome',
+    label: 'Monochrome (White/Slate)',
+    colors: ['#FFFFFF', '#F8FAFC', '#F1F5F9', '#E2E8F0', '#CBD5E1', '#94A3B8', '#64748B']
+  },
+  {
+    id: 'neutrals',
+    label: 'Neutrals (Cream/Stone)',
+    colors: ['#FFFFFF', '#FDFBF7', '#F5EBE1', '#E6D5C3', '#D4C3B3', '#A89F91', '#8C8275']
+  },
+  {
+    id: 'ocean',
+    label: 'Ocean Blues (Canvas India)',
+    colors: ['#FFFFFF', '#E0F2FE', '#BAE6FD', '#7DD3FC', '#38BDF8', '#0284C7', '#0E4A93', '#60A5FA']
+  },
+  {
+    id: 'sunset',
+    label: 'Sunset Glow (Warm Amber)',
+    colors: ['#FFFFFF', '#FEF08A', '#FDE047', '#FDBA74', '#FB923C', '#F43F5E', '#E11D48']
+  },
+  {
+    id: 'emerald',
+    label: 'Emerald Forest (Nature)',
+    colors: ['#FFFFFF', '#D1FAE5', '#A7F3D0', '#6EE7B7', '#34D399', '#10B981', '#047857']
+  },
+  {
+    id: 'vibrant',
+    label: 'Vibrant Multi-Color',
+    colors: ['#FFFFFF', '#F43F5E', '#8B5CF6', '#3B82F6', '#06B6D4', '#10B981', '#F59E0B']
+  }
 ];
 
 export const DEFAULT_WORD_ART_CONFIG: WordArtConfig = {
   primaryName: 'LOVE & FAMILY',
   fontColor: '#FFFFFF',
-  backgroundColor: '#0F172A',
+  backgroundColor: '#000000',
   fontFamily: 'Montserrat',
   otherText: [
     'Together',
@@ -132,7 +180,7 @@ export const DEFAULT_WORD_ART_CONFIG: WordArtConfig = {
     'Home',
     'Journey'
   ],
-  shape: 'none',
+  shape: 'heart',
   colorScheme: 'monochrome',
   textDirection: 'horizontal',
   seed: 42
@@ -148,12 +196,40 @@ function createPrng(seed: number) {
   };
 }
 
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  let c = (hex || '#000000').replace('#', '').trim();
+  if (c.length === 3) c = c.split('').map((x) => x + x).join('');
+  const num = parseInt(c, 16) || 0;
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+}
+
+function getLuminance(r: number, g: number, b: number): number {
+  return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+
+function ensureColorContrast(textColor: string, bgColor: string): string {
+  const bgRgb = hexToRgb(bgColor);
+  const textRgb = hexToRgb(textColor);
+  const bgLum = getLuminance(bgRgb.r, bgRgb.g, bgRgb.b);
+  const textLum = getLuminance(textRgb.r, textRgb.g, textRgb.b);
+  const diff = Math.abs(bgLum - textLum);
+
+  if (diff < 65) {
+    if (bgLum < 128) {
+      return '#FFFFFF';
+    } else {
+      return '#0F172A';
+    }
+  }
+  return textColor;
+}
+
 /**
- * Creates clipping path on canvas for chosen shape
+ * Creates path for chosen shape fitted within canvas bounds
  */
 function applyShapePath(ctx: CanvasRenderingContext2D, shape: string, w: number, h: number) {
   ctx.beginPath();
-  const pad = Math.min(w, h) * 0.04;
+  const pad = Math.min(w, h) * 0.05;
   const cw = w - pad * 2;
   const ch = h - pad * 2;
   const cx = w / 2;
@@ -166,19 +242,28 @@ function applyShapePath(ctx: CanvasRenderingContext2D, shape: string, w: number,
       break;
     }
     case 'heart': {
-      const r = Math.min(cw, ch) * 0.48;
-      const topY = cy - r * 0.6;
-      ctx.moveTo(cx, cy + r * 0.95);
-      ctx.bezierCurveTo(cx - r * 1.4, cy + r * 0.1, cx - r * 1.4, topY - r * 0.4, cx - r * 0.5, topY - r * 0.4);
-      ctx.bezierCurveTo(cx - r * 0.1, topY - r * 0.4, cx, topY + r * 0.2, cx, topY + r * 0.2);
-      ctx.bezierCurveTo(cx, topY + r * 0.2, cx + r * 0.1, topY - r * 0.4, cx + r * 0.5, topY - r * 0.4);
-      ctx.bezierCurveTo(cx + r * 1.4, topY - r * 0.4, cx + r * 1.4, cy + r * 0.1, cx, cy + r * 0.95);
+      // Broad, full-lobed heart silhouette matching the visual reference
+      const hw = cw * 0.5;
+      const hh = ch * 0.5;
+      const topY = cy - hh * 0.28;
+      const bottomY = cy + hh * 0.96;
+
+      ctx.moveTo(cx, topY);
+      // Left lobe
+      ctx.bezierCurveTo(cx - hw * 0.15, cy - hh * 1.0, cx - hw * 0.95, cy - hh * 0.8, cx - hw * 0.98, cy - hh * 0.18);
+      // Left bottom taper to bottom tip
+      ctx.bezierCurveTo(cx - hw * 0.98, cy + hh * 0.35, cx - hw * 0.55, cy + hh * 0.72, cx, bottomY);
+      // Right bottom taper from bottom tip
+      ctx.bezierCurveTo(cx + hw * 0.55, cy + hh * 0.72, cx + hw * 0.98, cy + hh * 0.35, cx + hw * 0.98, cy - hh * 0.18);
+      // Right lobe back to center top cleft
+      ctx.bezierCurveTo(cx + hw * 0.95, cy - hh * 0.8, cx + hw * 0.15, cy - hh * 1.0, cx, topY);
+      ctx.closePath();
       break;
     }
     case 'star': {
       const spikes = 5;
       const outerR = Math.min(cw, ch) / 2;
-      const innerR = outerR * 0.45;
+      const innerR = outerR * 0.44;
       let rot = (Math.PI / 2) * 3;
       let x = cx;
       let y = cy;
@@ -196,41 +281,47 @@ function applyShapePath(ctx: CanvasRenderingContext2D, shape: string, w: number,
         ctx.lineTo(x, y);
         rot += step;
       }
-      ctx.lineTo(cx, cy - outerR);
+      ctx.closePath();
       break;
     }
     case 'butterfly': {
-      const r = Math.min(cw, ch) * 0.45;
-      ctx.moveTo(cx, cy + r * 0.5);
-      ctx.bezierCurveTo(cx - r * 1.2, cy + r * 0.8, cx - r * 1.3, cy - r * 0.8, cx - r * 0.2, cy - r * 0.5);
-      ctx.bezierCurveTo(cx - r * 0.1, cy - r * 0.7, cx, cy - r * 0.8, cx, cy - r * 0.4);
-      ctx.bezierCurveTo(cx, cy - r * 0.8, cx + r * 0.1, cy - r * 0.7, cx + r * 0.2, cy - r * 0.5);
-      ctx.bezierCurveTo(cx + r * 1.3, cy - r * 0.8, cx + r * 1.2, cy + r * 0.8, cx, cy + r * 0.5);
+      const hw = cw * 0.48;
+      const hh = ch * 0.48;
+      ctx.moveTo(cx, cy + hh * 0.5);
+      ctx.bezierCurveTo(cx - hw * 1.1, cy + hh * 0.8, cx - hw * 1.2, cy - hh * 0.8, cx - hw * 0.2, cy - hh * 0.4);
+      ctx.bezierCurveTo(cx - hw * 0.1, cy - hh * 0.7, cx, cy - hh * 0.8, cx, cy - hh * 0.35);
+      ctx.bezierCurveTo(cx, cy - hh * 0.8, cx + hw * 0.1, cy - hh * 0.7, cx + hw * 0.2, cy - hh * 0.4);
+      ctx.bezierCurveTo(cx + hw * 1.2, cy - hh * 0.8, cx + hw * 1.1, cy + hh * 0.8, cx, cy + hh * 0.5);
+      ctx.closePath();
       break;
     }
     case 'tree': {
-      const r = Math.min(cw, ch) * 0.46;
-      ctx.moveTo(cx - r * 0.2, cy + r * 0.9);
-      ctx.lineTo(cx + r * 0.2, cy + r * 0.9);
-      ctx.lineTo(cx + r * 0.15, cy + r * 0.3);
-      ctx.arc(cx, cy - r * 0.2, r * 0.65, 0.2, Math.PI - 0.2, true);
-      ctx.lineTo(cx - r * 0.15, cy + r * 0.3);
+      const hw = cw * 0.46;
+      const hh = ch * 0.46;
+      ctx.moveTo(cx - hw * 0.18, cy + hh * 0.92);
+      ctx.lineTo(cx + hw * 0.18, cy + hh * 0.92);
+      ctx.lineTo(cx + hw * 0.14, cy + hh * 0.3);
+      ctx.arc(cx, cy - hh * 0.2, hw * 0.78, 0.25, Math.PI - 0.25, true);
+      ctx.lineTo(cx - hw * 0.14, cy + hh * 0.3);
       ctx.closePath();
       break;
     }
     case 'apple': {
-      const r = Math.min(cw, ch) * 0.45;
-      ctx.moveTo(cx, cy - r * 0.5);
-      ctx.bezierCurveTo(cx + r * 0.8, cy - r * 0.8, cx + r * 1.1, cy + r * 0.7, cx, cy + r * 0.9);
-      ctx.bezierCurveTo(cx - r * 1.1, cy + r * 0.7, cx - r * 0.8, cy - r * 0.8, cx, cy - r * 0.5);
+      const hw = cw * 0.45;
+      const hh = ch * 0.45;
+      ctx.moveTo(cx, cy - hh * 0.45);
+      ctx.bezierCurveTo(cx + hw * 0.85, cy - hh * 0.85, cx + hw * 1.1, cy + hh * 0.7, cx, cy + hh * 0.92);
+      ctx.bezierCurveTo(cx - hw * 1.1, cy + hh * 0.7, cx - hw * 0.85, cy - hh * 0.85, cx, cy - hh * 0.45);
+      ctx.closePath();
       break;
     }
     case 'cloud': {
-      const r = Math.min(cw, ch) * 0.35;
-      ctx.arc(cx - r * 0.6, cy, r * 0.5, Math.PI * 0.5, Math.PI * 1.5);
-      ctx.arc(cx - r * 0.2, cy - r * 0.45, r * 0.55, Math.PI, Math.PI * 1.85);
-      ctx.arc(cx + r * 0.4, cy - r * 0.35, r * 0.5, Math.PI * 1.3, Math.PI * 0.1);
-      ctx.arc(cx + r * 0.7, cy + r * 0.1, r * 0.45, Math.PI * 1.8, Math.PI * 0.5);
+      const hw = cw * 0.38;
+      const hh = ch * 0.35;
+      ctx.arc(cx - hw * 0.55, cy, hh * 0.55, Math.PI * 0.5, Math.PI * 1.5);
+      ctx.arc(cx - hw * 0.15, cy - hh * 0.45, hh * 0.65, Math.PI, Math.PI * 1.85);
+      ctx.arc(cx + hw * 0.4, cy - hh * 0.3, hh * 0.55, Math.PI * 1.3, Math.PI * 0.15);
+      ctx.arc(cx + hw * 0.65, cy + hh * 0.1, hh * 0.5, Math.PI * 1.8, Math.PI * 0.5);
       ctx.closePath();
       break;
     }
@@ -243,9 +334,197 @@ function applyShapePath(ctx: CanvasRenderingContext2D, shape: string, w: number,
 }
 
 /**
- * High-definition Canvas Word Art Generator
- * Renders an organic, dense typography cloud with prominent primary text
- * and surrounding contextual words.
+ * Creates binary occupancy mask of chosen shape for fast pixel-accurate in-shape tests
+ */
+function createShapeMask(shape: string, renderWidth: number, renderHeight: number) {
+  const maskScale = 3;
+  const maskW = Math.max(120, Math.round(renderWidth / maskScale));
+  const maskH = Math.max(120, Math.round(renderHeight / maskScale));
+
+  const offscreen = document.createElement('canvas');
+  offscreen.width = maskW;
+  offscreen.height = maskH;
+  const ctx = offscreen.getContext('2d');
+  if (!ctx) {
+    return {
+      maskW,
+      maskH,
+      isInside: () => true
+    };
+  }
+
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, maskW, maskH);
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath();
+  applyShapePath(ctx, shape, maskW, maskH);
+  ctx.fill();
+
+  const imgData = ctx.getImageData(0, 0, maskW, maskH).data;
+
+  return {
+    maskW,
+    maskH,
+    isInside: (x: number, y: number) => {
+      const mx = Math.round((x * maskW) / renderWidth);
+      const my = Math.round((y * maskH) / renderHeight);
+      if (mx < 0 || mx >= maskW || my < 0 || my >= maskH) return false;
+      return imgData[(my * maskW + mx) * 4] > 128;
+    }
+  };
+}
+
+/**
+ * 2D Spatial Occupancy Grid for collision avoidance and compact word packing
+ */
+class OccupancyGrid {
+  private grid: Uint8Array;
+  private width: number;
+  private height: number;
+  private scale: number;
+
+  constructor(canvasW: number, canvasH: number, scale = 4, isInsideShape: (x: number, y: number) => boolean) {
+    this.scale = scale;
+    this.width = Math.ceil(canvasW / scale);
+    this.height = Math.ceil(canvasH / scale);
+    this.grid = new Uint8Array(this.width * this.height);
+
+    for (let gy = 0; gy < this.height; gy++) {
+      const py = (gy + 0.5) * scale;
+      for (let gx = 0; gx < this.width; gx++) {
+        const px = (gx + 0.5) * scale;
+        if (!isInsideShape(px, py)) {
+          this.grid[gy * this.width + gx] = 1; // Wall / Outside shape
+        }
+      }
+    }
+  }
+
+  public canPlace(cx: number, cy: number, w: number, h: number, angle: number, pad = 2): boolean {
+    const hw = w / 2 + pad;
+    const hh = h / 2 + pad;
+    const cosA = Math.cos(angle);
+    const sinA = Math.sin(angle);
+
+    // Fast corner & midpoint test
+    const corners = [
+      [-hw, -hh],
+      [hw, -hh],
+      [hw, hh],
+      [-hw, hh],
+      [0, -hh],
+      [0, hh],
+      [-hw, 0],
+      [hw, 0]
+    ];
+
+    for (let i = 0; i < corners.length; i++) {
+      const u = corners[i][0];
+      const v = corners[i][1];
+      const px = cx + u * cosA - v * sinA;
+      const py = cy + u * sinA + v * cosA;
+      const gx = Math.floor(px / this.scale);
+      const gy = Math.floor(py / this.scale);
+      if (gx < 0 || gx >= this.width || gy < 0 || gy >= this.height) return false;
+      if (this.grid[gy * this.width + gx] !== 0) return false;
+    }
+
+    // Step across interior bounding box
+    const step = this.scale;
+    for (let v = -hh; v <= hh; v += step) {
+      for (let u = -hw; u <= hw; u += step) {
+        const px = cx + u * cosA - v * sinA;
+        const py = cy + u * sinA + v * cosA;
+        const gx = Math.floor(px / this.scale);
+        const gy = Math.floor(py / this.scale);
+        if (gx < 0 || gx >= this.width || gy < 0 || gy >= this.height) return false;
+        if (this.grid[gy * this.width + gx] !== 0) return false;
+      }
+    }
+
+    return true;
+  }
+
+  public markPlaced(cx: number, cy: number, w: number, h: number, angle: number, pad = 2) {
+    const hw = w / 2 + pad;
+    const hh = h / 2 + pad;
+    const cosA = Math.cos(angle);
+    const sinA = Math.sin(angle);
+    const step = this.scale * 0.75;
+
+    for (let v = -hh; v <= hh; v += step) {
+      for (let u = -hw; u <= hw; u += step) {
+        const px = cx + u * cosA - v * sinA;
+        const py = cy + u * sinA + v * cosA;
+        const gx = Math.floor(px / this.scale);
+        const gy = Math.floor(py / this.scale);
+        if (gx >= 0 && gx < this.width && gy >= 0 && gy < this.height) {
+          this.grid[gy * this.width + gx] = 2; // Word cell
+        }
+      }
+    }
+  }
+
+  public findRandomEmptyCell(rand: () => number): { x: number; y: number } | null {
+    for (let attempts = 0; attempts < 35; attempts++) {
+      const gx = Math.floor(rand() * this.width);
+      const gy = Math.floor(rand() * this.height);
+      if (this.grid[gy * this.width + gx] === 0) {
+        return { x: (gx + 0.5) * this.scale, y: (gy + 0.5) * this.scale };
+      }
+    }
+    // Fallback search
+    for (let gy = 0; gy < this.height; gy += 4) {
+      for (let gx = 0; gx < this.width; gx += 4) {
+        if (this.grid[gy * this.width + gx] === 0) {
+          return { x: (gx + 0.5) * this.scale, y: (gy + 0.5) * this.scale };
+        }
+      }
+    }
+    return null;
+  }
+}
+
+function getWordAngle(direction: WordArtTextDirection, rand: () => number): number {
+  switch (direction) {
+    case 'horizontal':
+      return 0;
+    case 'horizontal_vertical':
+    case 'mixed':
+      // 0 or vertical (-90 deg)
+      return rand() > 0.42 ? 0 : -Math.PI / 2;
+    case 'left_angled':
+      // Rotate diagonal toward the left: -45 deg
+      return -Math.PI / 4;
+    case 'left_right_angled':
+      // Diagonals in both directions: -45 deg and +45 deg
+      return rand() > 0.5 ? -Math.PI / 4 : Math.PI / 4;
+    case 'right_angled':
+      // Rotate diagonal toward the right: +45 deg
+      return Math.PI / 4;
+    case 'vertical':
+      // Vertical: -90 deg
+      return -Math.PI / 2;
+    default:
+      return 0;
+  }
+}
+
+interface PlacedWord {
+  text: string;
+  x: number;
+  y: number;
+  fontSize: number;
+  fontWeight: number | string;
+  angle: number;
+  color: string;
+}
+
+/**
+ * High-definition Organic Word Cloud Generator
+ * Places user-provided words inside the chosen shape silhouette with dense packing,
+ * strong visual hierarchy, zero overlap, and accurate text orientation.
  */
 export function renderWordArtToCanvas(
   canvas: HTMLCanvasElement,
@@ -258,115 +537,223 @@ export function renderWordArtToCanvas(
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  const rand = createPrng(config.seed || 1);
+  const rand = createPrng(config.seed || 42);
 
-  // 1. Fill Canvas Background
-  ctx.fillStyle = config.backgroundColor || '#0F172A';
+  // 1. Fill Solid Background Color
+  const bgColor = config.backgroundColor || '#000000';
+  ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, renderWidth, renderHeight);
 
-  // 2. Setup Palette Colors
+  // 2. Setup Palette & Color Helper
   const scheme = WORD_ART_COLOR_SCHEMES.find((s) => s.id === config.colorScheme);
-  const palette = scheme ? scheme.colors : [config.fontColor || '#FFFFFF'];
-  const getColor = (isPrimary = false) => {
-    if (isPrimary && config.fontColor) return config.fontColor;
+  const rawPalette = scheme ? scheme.colors : [config.fontColor || '#FFFFFF'];
+  const palette = rawPalette.map((c) => ensureColorContrast(c, bgColor));
+  const primaryColor = ensureColorContrast(config.fontColor || '#FFFFFF', bgColor);
+
+  const getWordColor = (isPrimary = false) => {
+    if (isPrimary && rand() > 0.3) return primaryColor;
     return palette[Math.floor(rand() * palette.length)];
   };
 
-  // 3. Prepare Shape Clipping Path
-  ctx.save();
-  if (config.shape && config.shape !== 'none') {
-    applyShapePath(ctx, config.shape, renderWidth, renderHeight);
-    ctx.clip();
+  // 3. User Words Gathering & Hierarchy
+  const primaryText = (config.primaryName || '').trim();
+  const rawOtherWords = config.otherText
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0);
+
+  let wordList: string[] = [];
+  if (primaryText.length > 0) {
+    wordList.push(primaryText);
+  }
+  if (rawOtherWords.length > 0) {
+    wordList.push(...rawOtherWords);
+  }
+  if (wordList.length === 0) {
+    wordList = ['Together', 'Memories', 'Forever', 'Happiness', 'Joy', 'Home', 'Blessings', 'Cherish'];
   }
 
-  // 4. Clean word list
-  const primary = (config.primaryName || 'LOVE').trim().toUpperCase();
-  const rawOthers = config.otherText.filter((t) => t.trim().length > 0);
-  const others = rawOthers.length > 0 ? rawOthers : ['Together', 'Memories', 'Forever', 'Happiness', 'Joy'];
+  const heroWord = primaryText.length > 0 ? primaryText : wordList[0];
+  const secondaryWords = wordList.length > 1 ? wordList.filter((w) => w !== heroWord) : wordList;
+
+  // 4. Shape Mask & Occupancy Grid Setup
+  const shape = config.shape || 'heart';
+  const shapeMask = createShapeMask(shape, renderWidth, renderHeight);
+  const cellScale = 3;
+  const grid = new OccupancyGrid(renderWidth, renderHeight, cellScale, shapeMask.isInside);
+
+  // Visual center of mass
+  const baseDim = Math.min(renderWidth, renderHeight);
+  const scaleRatio = baseDim / 800;
   const fontFam = config.fontFamily || 'Montserrat';
 
-  // 5. Dense Multi-Row Word Matrix Layout
-  // Divide canvas into visual rows with proportional heights
-  const numRows = 16;
-  const rowHeight = renderHeight / numRows;
+  const centerX = renderWidth / 2;
+  const centerY = shape === 'heart' ? renderHeight * 0.44 : shape === 'tree' ? renderHeight * 0.42 : renderHeight * 0.48;
 
-  // Strategic rows for the prominent primary name
-  const primaryRowIndices = new Set([5, 8, 11]);
+  // 5. Generate Target Word Items by Font Size Tiers
+  interface WordItemPlan {
+    text: string;
+    fontSize: number;
+    fontWeight: number | string;
+    isPrimary: boolean;
+  }
 
-  for (let r = 0; r < numRows; r++) {
-    const isPrimaryRow = primaryRowIndices.has(r);
-    const yCenter = (r + 0.5) * rowHeight;
+  const itemsToPlace: WordItemPlan[] = [];
 
-    if (isPrimaryRow) {
-      // Big bold primary text row
-      const fontSize = Math.round(rowHeight * (r === 8 ? 1.4 : 1.15));
-      ctx.font = `900 ${fontSize}px "${fontFam}", sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = getColor(true);
+  // Tier 1: Large Bold Hero Primary Word(s)
+  itemsToPlace.push({
+    text: heroWord,
+    fontSize: Math.round((46 + rand() * 8) * scaleRatio),
+    fontWeight: 900,
+    isPrimary: true
+  });
+  if (heroWord.length <= 8) {
+    itemsToPlace.push({
+      text: heroWord,
+      fontSize: Math.round((40 + rand() * 6) * scaleRatio),
+      fontWeight: 900,
+      isPrimary: true
+    });
+  }
 
-      if (r === 8) {
-        // Center hero title
-        ctx.fillText(primary, renderWidth / 2, yCenter);
+  // Tier 2: Large words across key shape regions
+  const tier2Count = 8;
+  for (let i = 0; i < tier2Count; i++) {
+    const word = i % 2 === 0 ? heroWord : secondaryWords[i % secondaryWords.length];
+    itemsToPlace.push({
+      text: word,
+      fontSize: Math.round((30 + rand() * 8) * scaleRatio),
+      fontWeight: 800,
+      isPrimary: word === heroWord
+    });
+  }
+
+  // Tier 3: Medium words
+  const tier3Count = 18;
+  for (let i = 0; i < tier3Count; i++) {
+    const word = wordList[i % wordList.length];
+    itemsToPlace.push({
+      text: word,
+      fontSize: Math.round((21 + rand() * 6) * scaleRatio),
+      fontWeight: 700,
+      isPrimary: word === heroWord
+    });
+  }
+
+  // Tier 4: Small words for density
+  const tier4Count = 34;
+  for (let i = 0; i < tier4Count; i++) {
+    const word = wordList[i % wordList.length];
+    itemsToPlace.push({
+      text: word,
+      fontSize: Math.round((14 + rand() * 5) * scaleRatio),
+      fontWeight: 600,
+      isPrimary: false
+    });
+  }
+
+  // Tier 5: Mini contour words to trace the exact shape outline and corners
+  const tier5Count = 48;
+  for (let i = 0; i < tier5Count; i++) {
+    const word = wordList[i % wordList.length];
+    itemsToPlace.push({
+      text: word,
+      fontSize: Math.round((9 + rand() * 4) * scaleRatio),
+      fontWeight: 600,
+      isPrimary: false
+    });
+  }
+
+  // 6. Anchor points for balanced multi-focal distribution
+  const anchorPoints: { x: number; y: number }[] = [];
+  if (shape === 'heart') {
+    anchorPoints.push(
+      { x: centerX, y: centerY },
+      { x: centerX - renderWidth * 0.22, y: centerY - renderHeight * 0.16 }, // Left lobe
+      { x: centerX + renderWidth * 0.22, y: centerY - renderHeight * 0.16 }, // Right lobe
+      { x: centerX, y: centerY + renderHeight * 0.22 }, // Lower body
+      { x: centerX, y: centerY + renderHeight * 0.38 } // Bottom tip
+    );
+  } else {
+    anchorPoints.push({ x: centerX, y: centerY });
+  }
+
+  const placedWords: PlacedWord[] = [];
+
+  // Helper to measure text bounding box
+  const measureTextBox = (text: string, fontSize: number, fontWeight: number | string) => {
+    ctx.font = `${fontWeight} ${fontSize}px "${fontFam}", sans-serif`;
+    const m = ctx.measureText(text);
+    const w = m.width;
+    const h = fontSize * 0.82;
+    return { w, h };
+  };
+
+  // 7. Place Each Word Item via Archimedean Spiral Search
+  for (let idx = 0; idx < itemsToPlace.length; idx++) {
+    const item = itemsToPlace[idx];
+    let curFontSize = item.fontSize;
+    let placed = false;
+
+    // Up to 2 size attempts if space is tight
+    for (let attemptSize = 0; attemptSize < 2 && !placed; attemptSize++) {
+      const angle = getWordAngle(config.textDirection || 'horizontal', rand);
+      const { w, h } = measureTextBox(item.text, curFontSize, item.fontWeight);
+
+      // Determine starting seed center for the spiral
+      let startPoint: { x: number; y: number };
+      if (idx < anchorPoints.length) {
+        startPoint = anchorPoints[idx];
       } else {
-        // Dual primary placement or flanked by words
-        const textWidth = ctx.measureText(primary).width;
-        if (textWidth < renderWidth * 0.45) {
-          ctx.fillText(primary, renderWidth * 0.28, yCenter);
-          ctx.fillText(primary, renderWidth * 0.72, yCenter);
-        } else {
-          ctx.fillText(primary, renderWidth / 2, yCenter);
+        startPoint = grid.findRandomEmptyCell(rand) || { x: centerX, y: centerY };
+      }
+
+      // Archimedean spiral search: r = b * theta
+      const maxRadius = Math.max(renderWidth, renderHeight) * 0.65;
+      const stepTheta = 0.22;
+      const b = 2.0;
+
+      for (let theta = 0; !placed; theta += stepTheta) {
+        const r = b * theta;
+        if (r > maxRadius) break;
+
+        const candidateX = startPoint.x + r * Math.cos(theta) * (renderWidth / renderHeight);
+        const candidateY = startPoint.y + r * Math.sin(theta);
+
+        if (grid.canPlace(candidateX, candidateY, w, h, angle, 2.5)) {
+          grid.markPlaced(candidateX, candidateY, w, h, angle, 2.5);
+          placedWords.push({
+            text: item.text,
+            x: candidateX,
+            y: candidateY,
+            fontSize: curFontSize,
+            fontWeight: item.fontWeight,
+            angle,
+            color: getWordColor(item.isPrimary)
+          });
+          placed = true;
+          break;
         }
       }
-    } else {
-      // Dense word stream across row
-      let xCursor = renderWidth * 0.04;
-      const fontSize = Math.round(rowHeight * (0.65 + rand() * 0.35));
-      ctx.font = `700 ${fontSize}px "${fontFam}", sans-serif`;
-      ctx.textBaseline = 'middle';
 
-      while (xCursor < renderWidth * 0.94) {
-        const word = others[Math.floor(rand() * others.length)];
-        const isVertical = config.textDirection === 'mixed' && rand() > 0.82;
-        const color = getColor(false);
-        ctx.fillStyle = color;
-
-        if (isVertical) {
-          ctx.save();
-          ctx.translate(xCursor + fontSize / 2, yCenter);
-          ctx.rotate(-Math.PI / 2);
-          ctx.textAlign = 'center';
-          ctx.fillText(word, 0, 0);
-          ctx.restore();
-          xCursor += fontSize + 12;
-        } else {
-          ctx.textAlign = 'left';
-          ctx.fillText(word, xCursor, yCenter);
-          const wMetrics = ctx.measureText(word);
-          xCursor += wMetrics.width + Math.round(rowHeight * 0.35);
-
-          // Add occasional separator dot or symbol
-          if (rand() > 0.65 && xCursor < renderWidth * 0.9) {
-            ctx.fillStyle = getColor(false);
-            ctx.beginPath();
-            ctx.arc(xCursor + 6, yCenter, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-            xCursor += 16;
-          }
-        }
+      if (!placed) {
+        curFontSize = Math.round(curFontSize * 0.78);
       }
     }
   }
 
-  ctx.restore();
-
-  // 6. Draw subtle shape outline if shape is specified for clarity
-  if (config.shape && config.shape !== 'none') {
+  // 8. Render All Placed Words Onto Canvas (The words themselves form the silhouette!)
+  for (let i = 0; i < placedWords.length; i++) {
+    const pw = placedWords[i];
     ctx.save();
-    applyShapePath(ctx, config.shape, renderWidth, renderHeight);
-    ctx.strokeStyle = `${config.fontColor}33`;
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    ctx.translate(pw.x, pw.y);
+    if (pw.angle !== 0) {
+      ctx.rotate(pw.angle);
+    }
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = pw.color;
+    ctx.font = `${pw.fontWeight} ${pw.fontSize}px "${fontFam}", sans-serif`;
+    ctx.fillText(pw.text, 0, 0);
     ctx.restore();
   }
 }

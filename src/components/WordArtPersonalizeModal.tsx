@@ -6,6 +6,7 @@ import {
   WORD_ART_FONT_OPTIONS,
   WORD_ART_SHAPE_OPTIONS,
   WORD_ART_COLOR_SCHEMES,
+  WORD_ART_TEXT_DIRECTION_OPTIONS,
   DEFAULT_WORD_ART_CONFIG,
   renderWordArtToCanvas
 } from '../data/wordArtData';
@@ -59,9 +60,8 @@ export const WordArtPersonalizeModal: React.FC<WordArtPersonalizeModalProps> = (
     setOtherTextRaw(val);
     const lines = val
       .split('\n')
-      .map((l) => l.trim().substring(0, 20))
-      .filter((l) => l.length > 0)
-      .slice(0, 10);
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
     setConfig((prev) => ({ ...prev, otherText: lines }));
   };
 
@@ -69,14 +69,13 @@ export const WordArtPersonalizeModal: React.FC<WordArtPersonalizeModalProps> = (
   const handleViewPersonalization = () => {
     const lines = otherTextRaw
       .split('\n')
-      .map((l) => l.trim().substring(0, 20))
-      .filter((l) => l.length > 0)
-      .slice(0, 10);
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
 
     const nextSeed = Math.floor(Math.random() * 100000) + 1;
     setConfig((prev) => ({
       ...prev,
-      otherText: lines.length >= 5 ? lines : prev.otherText,
+      otherText: lines.length > 0 ? lines : prev.otherText,
       seed: nextSeed
     }));
   };
@@ -274,8 +273,11 @@ export const WordArtPersonalizeModal: React.FC<WordArtPersonalizeModalProps> = (
                 onChange={(e) => setConfig((prev) => ({ ...prev, textDirection: e.target.value as any }))}
                 className="w-full px-3 py-2 rounded-xl border border-stone-300 text-stone-900 text-sm font-bold bg-white focus:ring-2 focus:ring-[#0E4A93] focus:border-[#0E4A93] outline-none cursor-pointer"
               >
-                <option value="horizontal">Horizontal Only</option>
-                <option value="mixed">Mixed (Horizontal &amp; Vertical)</option>
+                {WORD_ART_TEXT_DIRECTION_OPTIONS.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
             </div>
 
