@@ -2794,6 +2794,26 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return layouts[0]?.id || 'layout-1-single';
   });
 
+  // Active Photo Mosaic layout - single source of truth across workspace, 360 view, and room view
+  const activeMosaicLayout = useMemo(() => {
+    const targetId = (isLayoutProduct ? selectedSizeId : null) || selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id;
+    return getProductLayout('canvas-mosaic', targetId);
+  }, [isLayoutProduct, selectedSizeId, selectedLayoutId, currentSizeOption]);
+
+  // Synchronize selectedSizeId and selectedLayoutId for layout products (Mosaic, Split, Wall Art, Collage, Hexagon)
+  useEffect(() => {
+    if (isLayoutProduct) {
+      const layouts = getProductLayouts(selectedProductTypeId);
+      const matchingLayout = layouts.find((l) => l.id === selectedSizeId);
+      if (matchingLayout && selectedLayoutId !== matchingLayout.id) {
+        setSelectedLayoutId(matchingLayout.id);
+        setExpandedLayoutId(matchingLayout.id);
+        const targetShape = matchingLayout.shapeId || (matchingLayout.aspectRatio === 1 ? 'shape-square' : (matchingLayout.aspectRatio > 1 ? 'shape-landscape' : 'shape-portrait'));
+        setSelectedShapeId(targetShape);
+      }
+    }
+  }, [isLayoutProduct, selectedProductTypeId, selectedSizeId, selectedLayoutId]);
+
   const filteredLayoutPresets = useMemo(() => {
     if (selectedProductType?.supportedLayoutIds && selectedProductType.supportedLayoutIds.length > 0) {
       return LAYOUT_PRESETS.filter((l) => selectedProductType.supportedLayoutIds!.includes(l.id));
@@ -3398,6 +3418,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setIsCustomSize(false);
       setSelectedShapeId(config.shapeId);
       setSelectedSizeId(config.sizeId);
+
+      if (isLayoutProduct) {
+        const layouts = getProductLayouts(selectedProductTypeId);
+        const matchingLayout = layouts.find((l) => l.id === config.sizeId);
+        if (matchingLayout) {
+          setSelectedLayoutId(matchingLayout.id);
+          setExpandedLayoutId(matchingLayout.id);
+          const targetShape = matchingLayout.shapeId || (matchingLayout.aspectRatio === 1 ? 'shape-square' : (matchingLayout.aspectRatio > 1 ? 'shape-landscape' : 'shape-portrait'));
+          setSelectedShapeId(targetShape);
+        }
+      }
 
       // Keep sidebar size category filter aligned with selected size
       if (isSinglePrintCanvas) {
@@ -5608,7 +5639,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Photo Mosaic (canvas-mosaic): Single continuous physical rectangular product surface with internal mosaic grid divisions
   const renderMosaicCanvas = () => {
-    const layout = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+    const layout = activeMosaicLayout;
     const count = layout.panelsCount || layout.panels.length;
     const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
     const master = panelImages[0] || createDefaultPanel();
@@ -5616,15 +5647,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const totalCols = layout.cols || (count === 16 ? 4 : count === 25 ? 5 : count === 36 ? 6 : count === 20 ? 4 : count === 15 ? 3 : count === 12 && layout.aspectRatio > 1 ? 4 : 3);
     const totalRows = layout.rows || Math.ceil(count / totalCols);
 
-    const displayWidthInches = currentSizeOption?.widthInches || layout.overallWidthInches || 24;
-    const displayHeightInches = currentSizeOption?.heightInches || layout.overallHeightInches || 16;
+    const displayWidthInches = layout.overallWidthInches || currentSizeOption?.widthInches || 16;
+    const displayHeightInches = layout.overallHeightInches || currentSizeOption?.heightInches || 16;
 
     const imgMeta = master?.uploadedImage;
-    const natWidth = imgMeta?.width || 1200;
-    const natHeight = imgMeta?.height || 800;
-    const imgAspect = imgMeta?.aspectRatio || (natWidth / Math.max(1, natHeight));
-    const layoutAspect = layout.aspectRatio || (displayWidthInches / Math.max(1, displayHeightInches));
-    const isWiderThanLayout = imgAspect >= layoutAspect;
 
     return (
       <div className="relative flex flex-col items-center select-none w-full my-auto">
@@ -5648,7 +5674,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           {/* CONTINUOUS MOSAIC PHYSICAL CANVAS SURFACE (Zero Gaps) */}
           <div
             {...panelHandlers(0)}
-            ref={registerWheelRef(0)}
+            ref={(node) => {
+              registerWheelRef(0)(node);
+              (workspaceCanvasBoxRef as any).current = node;
+            }}
             onClick={() => {
               if (!masterImage) {
                 uploadTargetRef.current = 0;
@@ -5693,15 +5722,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     }
                   }}
                   style={{
-                    width: isWiderThanLayout ? 'auto' : '100%',
-                    height: isWiderThanLayout ? '100%' : 'auto',
-                    minWidth: '100%',
-                    minHeight: '100%',
-                    maxWidth: 'none',
-                    maxHeight: 'none',
-                    flexShrink: 0,
-                    aspectRatio: `${natWidth} / ${natHeight}`,
-                    objectFit: 'cover',
+                    width: '100%',
+                    height: '100%',
+                    objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
                     objectPosition: 'center center',
                     transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
                     transformOrigin: 'center center',
@@ -5752,9 +5775,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         y1="0"
                         x2={`${xPct}%`}
                         y2="100%"
-                        stroke="rgba(255, 255, 255, 0.45)"
-                        strokeWidth="1.5"
-                        style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
+                        stroke={activeMaterial === 'acrylic' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.55)'}
+                        strokeWidth={activeMaterial === 'acrylic' ? '1.8' : '1.5'}
+                        style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.65))' }}
                       />
                     );
                   })}
@@ -5767,9 +5790,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         y1={`${yPct}%`}
                         x2="100%"
                         y2={`${yPct}%`}
-                        stroke="rgba(255, 255, 255, 0.45)"
-                        strokeWidth="1.5"
-                        style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
+                        stroke={activeMaterial === 'acrylic' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.55)'}
+                        strokeWidth={activeMaterial === 'acrylic' ? '1.8' : '1.5'}
+                        style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.65))' }}
                       />
                     );
                   })}
@@ -5789,7 +5812,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         y1="0"
                         x2={`${xPct}%`}
                         y2="100%"
-                        stroke="rgba(0, 0, 0, 0.16)"
+                        stroke="rgba(0, 0, 0, 0.2)"
                         strokeWidth="1.5"
                       />
                     );
@@ -5803,7 +5826,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         y1={`${yPct}%`}
                         x2="100%"
                         y2={`${yPct}%`}
-                        stroke="rgba(0, 0, 0, 0.16)"
+                        stroke="rgba(0, 0, 0, 0.2)"
                         strokeWidth="1.5"
                       />
                     );
@@ -7403,6 +7426,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           onClick={() => {
                             setIsCustomSize(false);
                             setSelectedSizeId(opt.id);
+                            if (isLayoutProduct) {
+                              setSelectedLayoutId(opt.id);
+                              setExpandedLayoutId(opt.id);
+                              const layouts = getProductLayouts(selectedProductTypeId);
+                              const layout = layouts.find((l) => l.id === opt.id);
+                              if (layout) {
+                                const targetShape = layout.shapeId || (layout.aspectRatio === 1 ? 'shape-square' : (layout.aspectRatio > 1 ? 'shape-landscape' : 'shape-portrait'));
+                                setSelectedShapeId(targetShape);
+                              }
+                            }
                           }}
                           title={opt.label}
                           subtitle={opt.dimensionsSummary}
@@ -9180,7 +9213,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           : isHexagonProduct
           ? (getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).aspectRatio || 1)
           : isMosaicProduct
-          ? (getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).aspectRatio || 1)
+          ? (activeMosaicLayout.aspectRatio || 1)
           : isSplitProduct
           ? (getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).aspectRatio || 1)
           : isWallArtProduct
@@ -9277,9 +9310,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         // Render a single slot's image with scaled pan, zoom, rotation, mirror, and filter
         const renderSlotPhoto = (idx: number, photoScaleFactor: number = 1) => {
           const p = panelImages[idx];
+          const isMultiSlotProduct = isCollageProduct || isWallArtProduct || isHexagonProduct;
           const url = (selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl)
             ? popArtConfig.processedImageUrl
-            : (p?.imageUrl || (idx === 0 ? primaryPhotoUrl : null));
+            : (isMultiSlotProduct
+                ? (p?.imageUrl || null)
+                : (p?.imageUrl || (idx === 0 ? primaryPhotoUrl : null)));
           const panX = (p?.panX || 0) * photoScaleFactor;
           const panY = (p?.panY || 0) * photoScaleFactor;
           const sc = p?.scale || 1;
@@ -9339,7 +9375,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             </div>
           ) : (
             <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-[10px] font-bold pointer-events-none select-none">
-              Panel {idx + 1}
+              {isCollageProduct ? `Slot ${idx + 1}` : `Panel ${idx + 1}`}
             </div>
           );
         };
@@ -9463,7 +9499,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 })()
               ) : isMosaicProduct ? (
                 (() => {
-                  const layoutDef = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                  const layoutDef = activeMosaicLayout;
                   const count = layoutDef.panelsCount || layoutDef.panels.length;
                   const totalCols = layoutDef.cols || (count === 16 ? 4 : count === 25 ? 5 : count === 36 ? 6 : count === 20 ? 4 : count === 15 ? 3 : count === 12 && layoutDef.aspectRatio > 1 ? 4 : 3);
                   const totalRows = layoutDef.rows || Math.ceil(count / totalCols);
@@ -9484,13 +9520,46 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                               width: '100%',
                               height: '100%',
                               objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
+                              objectPosition: 'center center',
                               transform: `translate(${panX}px, ${panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                              transformOrigin: 'center center',
                               filter: getFilterCss(master.filter),
                               backfaceVisibility: 'hidden',
                               WebkitBackfaceVisibility: 'hidden'
                             }}
                             className="w-full h-full pointer-events-none"
                           />
+                          {/* Subtle physical cotton canvas weave micro-texture for Canvas only */}
+                          {activeMaterial === 'canvas' && (
+                            <div
+                              className="absolute inset-0 pointer-events-none opacity-20 mix-blend-multiply"
+                              style={{
+                                backgroundImage:
+                                  'repeating-linear-gradient(0deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px)'
+                              }}
+                            />
+                          )}
+                          {/* Acrylic optical crystal surface gloss reflection & standoffs */}
+                          {activeMaterial === 'acrylic' && (
+                            <>
+                              <div
+                                className="absolute inset-0 pointer-events-none z-15"
+                                style={{
+                                  background:
+                                    'linear-gradient(135deg, rgba(255,255,255,0.38) 0%, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.0) 60%, rgba(255,255,255,0.18) 100%)'
+                                }}
+                              />
+                              <div className="absolute inset-0 pointer-events-none z-15 rounded-xs shadow-[inset_0_1px_2px_rgba(255,255,255,0.7),inset_0_-1px_2px_rgba(0,0,0,0.25)]" />
+                              {(selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && (
+                                <>
+                                  <div className="absolute top-2 left-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-300/80 z-20 pointer-events-none" />
+                                  <div className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-300/80 z-20 pointer-events-none" />
+                                  <div className="absolute bottom-2 left-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-300/80 z-20 pointer-events-none" />
+                                  <div className="absolute bottom-2 right-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-300/80 z-20 pointer-events-none" />
+                                </>
+                              )}
+                            </>
+                          )}
                           {/* Internal mosaic division grid lines (0 gap) */}
                           <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
                             {Array.from({ length: totalCols - 1 }).map((_, c) => {
@@ -9502,9 +9571,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                   y1="0"
                                   x2={`${xPct}%`}
                                   y2="100%"
-                                  stroke="rgba(255, 255, 255, 0.45)"
-                                  strokeWidth="1.5"
-                                  style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
+                                  stroke={activeMaterial === 'acrylic' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.55)'}
+                                  strokeWidth={activeMaterial === 'acrylic' ? '1.8' : '1.5'}
+                                  style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.65))' }}
                                 />
                               );
                             })}
@@ -9517,9 +9586,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                   y1={`${yPct}%`}
                                   x2="100%"
                                   y2={`${yPct}%`}
-                                  stroke="rgba(255, 255, 255, 0.45)"
-                                  strokeWidth="1.5"
-                                  style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
+                                  stroke={activeMaterial === 'acrylic' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.55)'}
+                                  strokeWidth={activeMaterial === 'acrylic' ? '1.8' : '1.5'}
+                                  style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.65))' }}
                                 />
                               );
                             })}
@@ -9527,7 +9596,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         </div>
                       ) : (
                         <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-[10px] font-bold">
-                          Photo Mosaic ({count} Tiles)
+                          {layoutDef.name} ({count} Tiles)
                         </div>
                       )}
                     </div>
@@ -9551,7 +9620,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           }}
                           className="rounded-xs overflow-hidden shadow-xs bg-white"
                         >
-                          {panelImages[i]?.imageUrl ? renderSlotPhoto(i, scaleFactor) : renderSlotPhoto(0, scaleFactor)}
+                          {renderSlotPhoto(i, scaleFactor)}
                         </div>
                       ))}
                     </div>
@@ -9665,7 +9734,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           const collageLayout = isCollageProduct ? getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
           const wallLayout = isWallArtProduct ? getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
           const splitLayout = isSplitProduct ? getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
-          const mosaicLayout = isMosaicProduct ? getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
+          const mosaicLayout = isMosaicProduct ? activeMosaicLayout : null;
           const hexagonLayout = isHexagonProduct ? getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id) : null;
 
           const activeMultiLayout = collageLayout || wallLayout || splitLayout || mosaicLayout || hexagonLayout;
@@ -9701,6 +9770,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               shapeId={
                 isHexagonProduct
                   ? (isHexagonCluster ? 'shape-rectangle' : 'shape-hexagon')
+                  : isMosaicProduct
+                  ? (activeMosaicLayout.shapeId || (activeMosaicLayout.aspectRatio === 1 ? 'shape-square' : (activeMosaicLayout.aspectRatio > 1 ? 'shape-landscape' : 'shape-portrait')))
                   : (shapeApplies
                       ? (['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(selectedShapeId)
                           ? (canvasRoomWidthInches === canvasRoomHeightInches ? 'shape-square' : (canvasRoomWidthInches > canvasRoomHeightInches ? 'shape-landscape' : 'shape-portrait'))
@@ -9740,7 +9811,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     <div className="relative w-full h-full pointer-events-none select-none">
                       {hexLayout.panels.map((pSpec, idx) => {
                         const p = panelImages[idx];
-                        const url = p?.imageUrl || (idx === 0 ? primaryPhotoUrl : null);
+                        const url = p?.imageUrl || null;
                         const panXPct = ((p?.panX || 0) / 420) * 100;
                         const panYPct = ((p?.panY || 0) / 420) * 100;
                         const isVertical = pSpec.orientation === 'vertical' || hexLayout.orientation === 'vertical';
@@ -9823,7 +9894,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     <div className="relative w-full h-full pointer-events-none select-none">
                       {wallPanels.map((pos, idx) => {
                         const p = panelImages[idx];
-                        const url = p?.imageUrl || (idx === 0 ? primaryPhotoUrl : null);
+                        const url = p?.imageUrl || null;
                         const panXPct = ((p?.panX || 0) / 420) * 100;
                         const panYPct = ((p?.panY || 0) / 420) * 100;
                         return (
@@ -9898,36 +9969,85 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                 // 2. Photo Mosaic on Room Wall
                 if (isMosaicProduct) {
-                  const layoutDef = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                  const layoutDef = activeMosaicLayout;
                   const count = layoutDef.panelsCount || layoutDef.panels.length;
                   const totalCols = layoutDef.cols || (count === 16 ? 4 : count === 25 ? 5 : count === 36 ? 6 : count === 20 ? 4 : count === 15 ? 3 : count === 12 && layoutDef.aspectRatio > 1 ? 4 : 3);
                   const totalRows = layoutDef.rows || Math.ceil(count / totalCols);
                   const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
                   const master = panelImages[0] || createDefaultPanel();
-                  const panXPct = ((master.panX || 0) / 420) * 100;
-                  const panYPct = ((master.panY || 0) / 420) * 100;
+                  const roomScale = (productPixelSize?.width || 240) / Math.max(1, workspaceBoxSize.width || 420);
+                  const scaledPanX = (master.panX || 0) * roomScale;
+                  const scaledPanY = (master.panY || 0) * roomScale;
 
                   return (
                     <div
                       className="relative w-full h-full pointer-events-none select-none flex items-center justify-center"
                       style={{
-                        filter: 'drop-shadow(0 14px 24px rgba(0,0,0,0.36)) drop-shadow(0 3px 6px rgba(0,0,0,0.22))'
+                        filter: activeMaterial === 'acrylic'
+                          ? 'drop-shadow(0 16px 28px rgba(0,0,0,0.42)) drop-shadow(0 4px 8px rgba(0,0,0,0.25))'
+                          : 'drop-shadow(0 14px 24px rgba(0,0,0,0.36)) drop-shadow(0 3px 6px rgba(0,0,0,0.22))'
                       }}
                     >
-                      <div className="relative w-full h-full rounded-xs bg-white overflow-hidden">
+                      <div
+                        className={`relative w-full h-full overflow-hidden ${
+                          activeMaterial === 'acrylic'
+                            ? 'rounded-xs bg-[#10141a] ring-1 ring-white/20'
+                            : 'rounded-xs bg-white'
+                        }`}
+                        style={
+                          activeMaterial === 'acrylic'
+                            ? {
+                                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.4), inset 0 1px 2px rgba(255,255,255,0.6)'
+                              }
+                            : undefined
+                        }
+                      >
                         {masterImage ? (
-                          <div className="w-full h-full relative">
+                          <div className="w-full h-full relative overflow-hidden">
                             <img
                               src={masterImage}
-                              alt=""
+                              alt="Photo Mosaic"
                               style={{
                                 width: '100%',
                                 height: '100%',
                                 objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
-                                transform: `translate3d(${panXPct}%, ${panYPct}%, 0) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                objectPosition: 'center center',
+                                transform: `translate(${scaledPanX}px, ${scaledPanY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                transformOrigin: 'center center',
                                 filter: getFilterCss(master.filter)
                               }}
                             />
+                            {/* Subtle physical cotton canvas weave micro-texture for Canvas only */}
+                            {activeMaterial === 'canvas' && (
+                              <div
+                                className="absolute inset-0 pointer-events-none opacity-20 mix-blend-multiply"
+                                style={{
+                                  backgroundImage:
+                                    'repeating-linear-gradient(0deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px)'
+                                }}
+                              />
+                            )}
+                            {/* Acrylic optical crystal surface gloss reflection & standoffs */}
+                            {activeMaterial === 'acrylic' && (
+                              <>
+                                <div
+                                  className="absolute inset-0 pointer-events-none z-15"
+                                  style={{
+                                    background:
+                                      'linear-gradient(135deg, rgba(255,255,255,0.38) 0%, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.0) 60%, rgba(255,255,255,0.18) 100%)'
+                                  }}
+                                />
+                                <div className="absolute inset-0 pointer-events-none z-15 rounded-xs shadow-[inset_0_1px_2px_rgba(255,255,255,0.7),inset_0_-1px_2px_rgba(0,0,0,0.25)]" />
+                                {(selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && (
+                                  <>
+                                    <div className="absolute top-2 left-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-300/80 z-20 pointer-events-none" />
+                                    <div className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-300/80 z-20 pointer-events-none" />
+                                    <div className="absolute bottom-2 left-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-300/80 z-20 pointer-events-none" />
+                                    <div className="absolute bottom-2 right-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-300/80 z-20 pointer-events-none" />
+                                  </>
+                                )}
+                              </>
+                            )}
                             {/* Internal mosaic division grid lines (0 gap) */}
                             <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
                               {Array.from({ length: totalCols - 1 }).map((_, c) => {
@@ -9939,9 +10059,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                     y1="0"
                                     x2={`${xPct}%`}
                                     y2="100%"
-                                    stroke="rgba(255, 255, 255, 0.45)"
-                                    strokeWidth="1.5"
-                                    style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
+                                    stroke={activeMaterial === 'acrylic' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.55)'}
+                                    strokeWidth={activeMaterial === 'acrylic' ? '1.8' : '1.5'}
+                                    style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.65))' }}
                                   />
                                 );
                               })}
@@ -9954,9 +10074,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                     y1={`${yPct}%`}
                                     x2="100%"
                                     y2={`${yPct}%`}
-                                    stroke="rgba(255, 255, 255, 0.45)"
-                                    strokeWidth="1.5"
-                                    style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))' }}
+                                    stroke={activeMaterial === 'acrylic' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.55)'}
+                                    strokeWidth={activeMaterial === 'acrylic' ? '1.8' : '1.5'}
+                                    style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.65))' }}
                                   />
                                 );
                               })}
@@ -10005,26 +10125,42 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                 </div>
                               );
                             })}
-                            {activeMaterial === 'acrylic' && (
-                              <>
-                                <div
-                                  className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
-                                  style={{ mixBlendMode: 'screen' }}
-                                />
-                                {(selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && (
-                                  <>
-                                    <div className="absolute top-1.5 left-1.5 w-2 h-2 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-sm border border-stone-300/80 z-25 pointer-events-none" />
-                                    <div className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-sm border border-stone-300/80 z-25 pointer-events-none" />
-                                    <div className="absolute bottom-1.5 left-1.5 w-2 h-2 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-sm border border-stone-300/80 z-25 pointer-events-none" />
-                                    <div className="absolute bottom-1.5 right-1.5 w-2 h-2 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-sm border border-stone-300/80 z-25 pointer-events-none" />
-                                  </>
-                                )}
-                              </>
-                            )}
                           </div>
                         ) : (
-                          <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-xs font-bold">
-                            Photo Mosaic ({count} Tiles)
+                          <div className="w-full h-full relative flex items-center justify-center bg-[#dcdfe4]">
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
+                              {Array.from({ length: totalCols - 1 }).map((_, c) => {
+                                const xPct = ((c + 1) / totalCols) * 100;
+                                return (
+                                  <line
+                                    key={`emv-room-${c}`}
+                                    x1={`${xPct}%`}
+                                    y1="0"
+                                    x2={`${xPct}%`}
+                                    y2="100%"
+                                    stroke="rgba(0, 0, 0, 0.2)"
+                                    strokeWidth="1.5"
+                                  />
+                                );
+                              })}
+                              {Array.from({ length: totalRows - 1 }).map((_, r) => {
+                                const yPct = ((r + 1) / totalRows) * 100;
+                                return (
+                                  <line
+                                    key={`emh-room-${r}`}
+                                    x1="0"
+                                    y1={`${yPct}%`}
+                                    x2="100%"
+                                    y2={`${yPct}%`}
+                                    stroke="rgba(0, 0, 0, 0.2)"
+                                    strokeWidth="1.5"
+                                  />
+                                );
+                              })}
+                            </svg>
+                            <span className="text-[10px] font-bold text-stone-500">
+                              {layoutDef.name} ({count} Tiles)
+                            </span>
                           </div>
                         )}
                       </div>
@@ -10306,6 +10442,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         ? 'Flat Banner'
                         : isCollageProduct
                         ? `${getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).name}`
+                        : isMosaicProduct
+                        ? `${activeMosaicLayout.name}`
+                        : isSplitProduct
+                        ? `${getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).name}`
+                        : isWallArtProduct
+                        ? `${getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).name}`
+                        : isHexagonProduct
+                        ? `${getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).name}`
                         : shapeApplies ? currentShape.name : `${panels.length} Panels`}
                     </span>
                     <span>•</span>
@@ -10315,6 +10459,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         : isBannerProduct
                         ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
                         : isCollageProduct
+                        ? (getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).dimensionsSummary)
+                        : isMosaicProduct
+                        ? (activeMosaicLayout.dimensionsSummary)
+                        : isSplitProduct || isWallArtProduct
                         ? (getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id).dimensionsSummary)
                         : isCustomSize && canUseCustomSize
                         ? `${customWidth}" × ${customHeight}"`
