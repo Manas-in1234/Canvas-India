@@ -557,23 +557,21 @@ export function renderWordArtToCanvas(
 
   // 3. User Words Gathering & Hierarchy
   const primaryText = (config.primaryName || '').trim();
-  const rawOtherWords = config.otherText
+  const rawOtherWords = (config.otherText || [])
     .map((t) => t.trim())
     .filter((t) => t.length > 0);
 
-  let wordList: string[] = [];
-  if (primaryText.length > 0) {
-    wordList.push(primaryText);
-  }
-  if (rawOtherWords.length > 0) {
-    wordList.push(...rawOtherWords);
-  }
-  if (wordList.length === 0) {
-    wordList = ['Together', 'Memories', 'Forever', 'Happiness', 'Joy', 'Home', 'Blessings', 'Cherish'];
-  }
+  // Exclude primary name completely from secondary/filler pool to prevent duplicate appearances
+  const filteredOtherWords = rawOtherWords.filter(
+    (w) => !primaryText || w.toLowerCase() !== primaryText.toLowerCase()
+  );
 
-  const heroWord = primaryText.length > 0 ? primaryText : wordList[0];
-  const secondaryWords = wordList.length > 1 ? wordList.filter((w) => w !== heroWord) : wordList;
+  const defaultFillerWords = [
+    'Together', 'Memories', 'Forever', 'Happiness', 'Joy',
+    'Home', 'Blessings', 'Cherish', 'Family', 'Love'
+  ].filter((w) => !primaryText || w.toLowerCase() !== primaryText.toLowerCase());
+
+  const fillerPool = filteredOtherWords.length > 0 ? filteredOtherWords : defaultFillerWords;
 
   // 4. Shape Mask & Occupancy Grid Setup
   const shape = config.shape || 'heart';
@@ -599,50 +597,51 @@ export function renderWordArtToCanvas(
 
   const itemsToPlace: WordItemPlan[] = [];
 
-  // Tier 1: Large Bold Hero Primary Word(s)
-  itemsToPlace.push({
-    text: heroWord,
-    fontSize: Math.round((46 + rand() * 8) * scaleRatio),
-    fontWeight: 900,
-    isPrimary: true
-  });
-  if (heroWord.length <= 8) {
+  // Tier 1: Large Bold Hero Primary Word — EXACTLY ONCE!
+  if (primaryText.length > 0) {
     itemsToPlace.push({
-      text: heroWord,
-      fontSize: Math.round((40 + rand() * 6) * scaleRatio),
+      text: primaryText,
+      fontSize: Math.round((50 + rand() * 8) * scaleRatio),
+      fontWeight: 900,
+      isPrimary: true
+    });
+  } else if (fillerPool.length > 0) {
+    itemsToPlace.push({
+      text: fillerPool[0],
+      fontSize: Math.round((50 + rand() * 8) * scaleRatio),
       fontWeight: 900,
       isPrimary: true
     });
   }
 
-  // Tier 2: Large words across key shape regions
+  // Tier 2: Large words across key shape regions — ONLY from fillerPool (NO primaryText repetition!)
   const tier2Count = 8;
   for (let i = 0; i < tier2Count; i++) {
-    const word = i % 2 === 0 ? heroWord : secondaryWords[i % secondaryWords.length];
+    const word = fillerPool[i % fillerPool.length];
     itemsToPlace.push({
       text: word,
       fontSize: Math.round((30 + rand() * 8) * scaleRatio),
       fontWeight: 800,
-      isPrimary: word === heroWord
+      isPrimary: false
     });
   }
 
-  // Tier 3: Medium words
+  // Tier 3: Medium words — ONLY from fillerPool
   const tier3Count = 18;
   for (let i = 0; i < tier3Count; i++) {
-    const word = wordList[i % wordList.length];
+    const word = fillerPool[(i + 3) % fillerPool.length];
     itemsToPlace.push({
       text: word,
       fontSize: Math.round((21 + rand() * 6) * scaleRatio),
       fontWeight: 700,
-      isPrimary: word === heroWord
+      isPrimary: false
     });
   }
 
-  // Tier 4: Small words for density
+  // Tier 4: Small words for density — ONLY from fillerPool
   const tier4Count = 34;
   for (let i = 0; i < tier4Count; i++) {
-    const word = wordList[i % wordList.length];
+    const word = fillerPool[(i + 7) % fillerPool.length];
     itemsToPlace.push({
       text: word,
       fontSize: Math.round((14 + rand() * 5) * scaleRatio),
@@ -651,10 +650,10 @@ export function renderWordArtToCanvas(
     });
   }
 
-  // Tier 5: Mini contour words to trace the exact shape outline and corners
+  // Tier 5: Mini contour words to trace the exact shape outline and corners — ONLY from fillerPool
   const tier5Count = 48;
   for (let i = 0; i < tier5Count; i++) {
-    const word = wordList[i % wordList.length];
+    const word = fillerPool[(i + 13) % fillerPool.length];
     itemsToPlace.push({
       text: word,
       fontSize: Math.round((9 + rand() * 4) * scaleRatio),
@@ -689,8 +688,17 @@ export function renderWordArtToCanvas(
   };
 
   // 7. Place Each Word Item via Archimedean Spiral Search
+  let hasPlacedPrimary = false;
+
   for (let idx = 0; idx < itemsToPlace.length; idx++) {
     const item = itemsToPlace[idx];
+    const isItemPrimary = primaryText.length > 0 && item.text.toLowerCase() === primaryText.toLowerCase();
+
+    // Strict guard: ensure primary name is placed only once
+    if (isItemPrimary && hasPlacedPrimary) {
+      continue;
+    }
+
     let curFontSize = item.fontSize;
     let placed = false;
 
@@ -721,6 +729,9 @@ export function renderWordArtToCanvas(
 
         if (grid.canPlace(candidateX, candidateY, w, h, angle, 2.5)) {
           grid.markPlaced(candidateX, candidateY, w, h, angle, 2.5);
+          if (isItemPrimary) {
+            hasPlacedPrimary = true;
+          }
           placedWords.push({
             text: item.text,
             x: candidateX,

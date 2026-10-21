@@ -473,7 +473,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       options: true,
       view3D: false,
       view360: false,
-      roomView: false
+      roomView: true
     }
   },
   {
@@ -713,8 +713,8 @@ export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProdu
   // Centralized view capabilities:
   // 1. 360 View: disabled for Wall Display, Hexagon Prints, Split Canvas, Canvas Banner
   const is360Disabled = ['canvas-wall-art', 'canvas-hexagon', 'canvas-split', 'canvas-banner'].includes(pt.id);
-  // 2. Room View: disabled for Hexagon Prints, Split Canvas, Canvas Banner (Wall Display retains Room View)
-  const isRoomViewDisabled = ['canvas-hexagon', 'canvas-split', 'canvas-banner'].includes(pt.id);
+  // 2. Room View: disabled for Hexagon Prints, Canvas Banner (Wall Display and Split Canvas retain Room View)
+  const isRoomViewDisabled = ['canvas-hexagon', 'canvas-banner'].includes(pt.id);
 
   const supportsRoomView = !isRoomViewDisabled;
   const supports3DView = isEdgeProduct;

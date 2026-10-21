@@ -3643,13 +3643,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     initialPanY: number;
     containerWidth: number;
     containerHeight: number;
+    hasMoved: boolean;
   }>({
     x: 0,
     y: 0,
     initialPanX: 0,
     initialPanY: 0,
     containerWidth: 400,
-    containerHeight: 300
+    containerHeight: 300,
+    hasMoved: false
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -4426,6 +4428,22 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const handleRotate90 = handleRotateRight;
   const handleFit = () => updateActivePanelTransform(() => ({ scale: 1, panX: 0, panY: 0, fitMode: 'contain' }));
   const handleReset = () => updateActivePanelTransform(() => ({ scale: 1, panX: 0, panY: 0, rotation: 0, fitMode: 'cover' }));
+
+  // Directional nudge for predictable, intentional horizontal and vertical image positioning
+  const handleNudge = (dx: number, dy: number) => {
+    updateActivePanelTransform((curr) => {
+      const targetIdx = (isSplitProduct || isMosaicProduct) ? 0 : activePanelIndex;
+      const { maxPanX, maxPanY } = computePanBounds(curr.scale, targetIdx);
+      const step = 20;
+      const newPanX = maxPanX > 0.5 ? Math.max(-maxPanX, Math.min(maxPanX, (curr.panX || 0) + dx * step)) : 0;
+      const newPanY = maxPanY > 0.5 ? Math.max(-maxPanY, Math.min(maxPanY, (curr.panY || 0) + dy * step)) : 0;
+      return {
+        panX: newPanX,
+        panY: newPanY
+      };
+    });
+  };
+
   const handleApplyFilter = (filter: ColorFilterType) => updateActivePanelTransform(() => ({ filter }));
 
   // Fill: makes the uploaded image completely cover the canvas area (cover crop), preserving original image intact
@@ -4538,7 +4556,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Mouse/Touch Drag Handlers
   const handlePointerDown = (e: React.PointerEvent, panelIdx: number) => {
     setActivePanelIndex(panelIdx);
-    const curr = panelImages[panelIdx];
+    const targetIdx = (isSplitProduct || isMosaicProduct) ? 0 : panelIdx;
+    const curr = panelImages[targetIdx];
     if (!curr?.imageUrl) return;
 
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -4552,7 +4571,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       initialPanX: curr.panX,
       initialPanY: curr.panY,
       containerWidth: cWidth,
-      containerHeight: cHeight
+      containerHeight: cHeight,
+      hasMoved: false
     };
 
     try {
@@ -4566,12 +4586,22 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (!isDragging) return;
     const deltaX = e.clientX - dragStartRef.current.x;
     const deltaY = e.clientY - dragStartRef.current.y;
+
+    // Movement threshold (8px) to prevent accidental panning on clicks, taps, or tile interactions
+    if (!dragStartRef.current.hasMoved) {
+      if (Math.hypot(deltaX, deltaY) < 8) {
+        return;
+      }
+      dragStartRef.current.hasMoved = true;
+    }
+
     const { initialPanX, initialPanY, containerWidth, containerHeight } = dragStartRef.current;
 
-    const curr = panelImages[activePanelIndex];
+    const targetIdx = (isSplitProduct || isMosaicProduct) ? 0 : activePanelIndex;
+    const curr = panelImages[targetIdx];
     const scale = curr?.scale || 1;
 
-    const { maxPanX, maxPanY } = computePanBounds(scale, activePanelIndex, containerWidth, containerHeight);
+    const { maxPanX, maxPanY } = computePanBounds(scale, targetIdx, containerWidth, containerHeight);
 
     const rawPanX = initialPanX + deltaX;
     const rawPanY = initialPanY + deltaY;
@@ -8318,17 +8348,71 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             onRotateRight={handleRotateRight}
             extraControls={
               hasUploadedImage && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleReset();
-                  }}
-                  className="p-1 rounded-md text-stone-500 hover:text-stone-800 hover:bg-stone-200 transition-colors cursor-pointer ml-1"
-                  title="Reset zoom, position and rotation"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center gap-1 ml-1 pl-1 border-l border-stone-200">
+                  {/* Supported image-positioning controls for predictable horizontal and vertical adjustments */}
+                  <div className="flex items-center gap-0.5" title="Adjust image position">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNudge(-1, 0);
+                      }}
+                      className="p-1 rounded-md text-stone-600 hover:text-[#0E4A93] hover:bg-stone-200 transition-colors cursor-pointer"
+                      title="Move Left"
+                      aria-label="Move Left"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNudge(1, 0);
+                      }}
+                      className="p-1 rounded-md text-stone-600 hover:text-[#0E4A93] hover:bg-stone-200 transition-colors cursor-pointer"
+                      title="Move Right"
+                      aria-label="Move Right"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNudge(0, -1);
+                      }}
+                      className="p-1 rounded-md text-stone-600 hover:text-[#0E4A93] hover:bg-stone-200 transition-colors cursor-pointer"
+                      title="Move Up"
+                      aria-label="Move Up"
+                    >
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNudge(0, 1);
+                      }}
+                      className="p-1 rounded-md text-stone-600 hover:text-[#0E4A93] hover:bg-stone-200 transition-colors cursor-pointer"
+                      title="Move Down"
+                      aria-label="Move Down"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleReset();
+                    }}
+                    className="p-1 rounded-md text-stone-500 hover:text-stone-800 hover:bg-stone-200 transition-colors cursor-pointer"
+                    title="Reset zoom, position and rotation"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               )
             }
             prevStep={{
@@ -10174,8 +10258,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   const splitPanels = layoutDef.panels;
                   const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
                   const master = panelImages[0] || createDefaultPanel();
-                  const panXPct = ((master.panX || 0) / 420) * 100;
-                  const panYPct = ((master.panY || 0) / 420) * 100;
+
+                  const displayWidthInches = layoutDef.overallWidthInches || 36;
+                  const displayHeightInches = layoutDef.overallHeightInches || 24;
+                  const imgMeta = master?.uploadedImage;
+                  const natWidth = imgMeta?.width || 1200;
+                  const natHeight = imgMeta?.height || 800;
+                  const imgAspect = imgMeta?.aspectRatio || (natWidth / Math.max(1, natHeight));
+                  const layoutAspect = layoutDef.aspectRatio || (displayWidthInches / Math.max(1, displayHeightInches));
+                  const isWiderThanLayout = imgAspect >= layoutAspect;
+
+                  const roomScale = (productPixelSize?.width || 240) / Math.max(1, workspaceBoxSize.width || 420);
+                  const scaledPanX = (master.panX || 0) * roomScale;
+                  const scaledPanY = (master.panY || 0) * roomScale;
 
                   return (
                     <div className="relative w-full h-full pointer-events-none select-none">
@@ -10188,38 +10283,76 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             top: `${p.y * 100}%`,
                             width: `${p.w * 100}%`,
                             height: `${p.h * 100}%`,
-                            filter: 'drop-shadow(0 10px 18px rgba(0,0,0,0.35)) drop-shadow(0 2px 4px rgba(0,0,0,0.22))'
+                            filter: activeMaterial === 'acrylic'
+                              ? 'drop-shadow(0 12px 22px rgba(0,0,0,0.38)) drop-shadow(0 3px 6px rgba(0,0,0,0.22))'
+                              : 'drop-shadow(0 10px 18px rgba(0,0,0,0.35)) drop-shadow(0 2px 4px rgba(0,0,0,0.22))'
                           }}
                         >
-                          <div className="w-full h-full relative overflow-hidden bg-white rounded-xs">
+                          <div
+                            className={`w-full h-full relative overflow-hidden ${
+                              activeMaterial === 'acrylic'
+                                ? 'rounded-[1px] bg-[#10141a]'
+                                : 'rounded-[1px] bg-white'
+                            }`}
+                            style={
+                              activeMaterial === 'acrylic'
+                                ? {
+                                    boxShadow: '0 10px 20px -3px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.4) inset'
+                                  }
+                                : undefined
+                            }
+                          >
                             {masterImage ? (
-                              <div
-                                style={{
-                                  position: 'absolute',
-                                  width: `${(1 / p.w) * 100}%`,
-                                  height: `${(1 / p.h) * 100}%`,
-                                  left: `${-(p.x / p.w) * 100}%`,
-                                  top: `${-(p.y / p.h) * 100}%`
-                                }}
-                                className="pointer-events-none select-none"
-                              >
-                                <img
-                                  src={masterImage}
-                                  alt=""
+                              <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
+                                <div
                                   style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
-                                    transform: `translate3d(${panXPct}%, ${panYPct}%, 0) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                                    filter: getFilterCss(master.filter)
+                                    position: 'absolute',
+                                    width: `${(1 / p.w) * 100}%`,
+                                    height: `${(1 / p.h) * 100}%`,
+                                    left: `${-(p.x / p.w) * 100}%`,
+                                    top: `${-(p.y / p.h) * 100}%`
                                   }}
-                                />
-                                {activeMaterial === 'acrylic' && (
-                                  <div
-                                    className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
-                                    style={{ mixBlendMode: 'screen' }}
+                                  className="pointer-events-none select-none flex items-center justify-center overflow-visible"
+                                >
+                                  <img
+                                    src={masterImage}
+                                    alt={`Split Panel ${idx + 1}`}
+                                    draggable={false}
+                                    style={{
+                                      width: isWiderThanLayout ? 'auto' : '100%',
+                                      height: isWiderThanLayout ? '100%' : 'auto',
+                                      minWidth: '100%',
+                                      minHeight: '100%',
+                                      maxWidth: 'none',
+                                      maxHeight: 'none',
+                                      flexShrink: 0,
+                                      aspectRatio: `${natWidth} / ${natHeight}`,
+                                      objectFit: 'cover',
+                                      objectPosition: 'center center',
+                                      transform: `translate(${scaledPanX}px, ${scaledPanY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                      transformOrigin: 'center center',
+                                      filter: getFilterCss(master.filter)
+                                    }}
+                                    className="pointer-events-none select-none max-w-none"
                                   />
-                                )}
+                                  {/* Subtle canvas weave micro-texture for canvas only */}
+                                  {activeMaterial !== 'acrylic' && (
+                                    <div
+                                      className="absolute inset-0 pointer-events-none opacity-20 mix-blend-multiply"
+                                      style={{
+                                        backgroundImage:
+                                          'repeating-linear-gradient(0deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px)'
+                                      }}
+                                    />
+                                  )}
+                                  {/* Optical crystal depth reflection for acrylic */}
+                                  {activeMaterial === 'acrylic' && (
+                                    <div
+                                      className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
+                                      style={{ mixBlendMode: 'screen' }}
+                                    />
+                                  )}
+                                </div>
                               </div>
                             ) : (
                               <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-xs font-bold">
