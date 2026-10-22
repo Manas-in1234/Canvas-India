@@ -53,8 +53,8 @@ export const BulkProductDetailPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
           {/* Image */}
-          <div className="relative rounded-2xl overflow-hidden bg-stone-100 border border-stone-200/70 aspect-[4/3]">
-            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+          <div className="relative rounded-2xl overflow-hidden bg-stone-100 border border-stone-200/70 aspect-square">
+            <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
             <button
               type="button"
               className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-xs cursor-pointer"
