@@ -182,6 +182,17 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   const corkRowRef = useRef<HTMLDivElement>(null);
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
   const [bestsellerFormat, setBestsellerFormat] = useState<Record<string, 'canvas' | 'acrylic'>>({});
+  // Randomized per page-load so the floating "Click me to customize" text
+  // drifts a different way each visit — up, down, left, right or diagonal —
+  // instead of always rising the same way.
+  const [floatPath] = useState(() => {
+    const rand = (min: number, max: number) => Math.round(min + Math.random() * (max - min));
+    return {
+      x1: rand(-40, 40), y1: rand(-45, 25), r1: rand(-10, 10),
+      x2: rand(-40, 40), y2: rand(-45, 25), r2: rand(-10, 10),
+      x3: rand(-40, 40), y3: rand(-45, 25), r3: rand(-10, 10),
+    };
+  });
 
   const handleCopyCoupon = (code: string) => {
     navigator.clipboard.writeText(code).catch(() => {});
@@ -216,14 +227,13 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         @keyframes ci-float-text {
           0%   { transform: translate(-50%, 0) rotate(0deg); opacity: 0; }
           10%  { opacity: 1; }
-          22%  { transform: translate(calc(-50% + 22px), -10px) rotate(8deg); }
-          38%  { transform: translate(calc(-50% - 18px), -22px) rotate(-7deg); }
-          54%  { transform: translate(calc(-50% + 14px), -36px) rotate(6deg); }
-          70%  { transform: translate(calc(-50% - 10px), -48px) rotate(-5deg); opacity: 1; }
-          88%  { opacity: 0; }
-          100% { transform: translate(calc(-50% + 6px), -58px) rotate(3deg); opacity: 0; }
+          30%  { transform: translate(calc(-50% + var(--fx1)), var(--fy1)) rotate(var(--fr1)); }
+          55%  { transform: translate(calc(-50% + var(--fx2)), var(--fy2)) rotate(var(--fr2)); opacity: 1; }
+          80%  { transform: translate(calc(-50% + var(--fx3)), var(--fy3)) rotate(var(--fr3)); }
+          92%  { opacity: 0; }
+          100% { transform: translate(calc(-50% + var(--fx3)), var(--fy3)) rotate(var(--fr3)); opacity: 0; }
         }
-        .ci-float-text { animation: ci-float-text 4.2s ease-in-out infinite; }
+        .ci-float-text { animation: ci-float-text 4.6s ease-in-out infinite; }
       `}</style>
 
       {/* HERO */}
@@ -315,10 +325,23 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <div className="relative inline-block">
-                {/* Text that floats up out of the button and fades, looping */}
+                {/* Text that floats out of the button in a random direction
+                    (up/down/left/right/diagonal, re-rolled each page load)
+                    and fades, looping */}
                 <span
                   className="ci-float-text absolute left-1/2 bottom-1/2 text-xs font-bold text-[#E8752A] whitespace-nowrap pointer-events-none"
-                  style={{ textShadow: '0 1px 3px rgba(255,255,255,0.9), 0 0 1px rgba(255,255,255,0.9)' }}
+                  style={{
+                    textShadow: '0 1px 3px rgba(255,255,255,0.9), 0 0 1px rgba(255,255,255,0.9)',
+                    ['--fx1' as any]: `${floatPath.x1}px`,
+                    ['--fy1' as any]: `${floatPath.y1}px`,
+                    ['--fr1' as any]: `${floatPath.r1}deg`,
+                    ['--fx2' as any]: `${floatPath.x2}px`,
+                    ['--fy2' as any]: `${floatPath.y2}px`,
+                    ['--fr2' as any]: `${floatPath.r2}deg`,
+                    ['--fx3' as any]: `${floatPath.x3}px`,
+                    ['--fy3' as any]: `${floatPath.y3}px`,
+                    ['--fr3' as any]: `${floatPath.r3}deg`,
+                  }}
                   aria-hidden="true"
                 >
                   Click me to customize ❤️
