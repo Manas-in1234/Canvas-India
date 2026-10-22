@@ -830,7 +830,20 @@ export const Header: React.FC<HeaderProps> = ({
                     >
                       <button
                         type="button"
-                        onClick={() => handleNavClick(cat.slug)}
+                        onClick={(e) => {
+                          // Gifts & Occasions is purely a dropdown entry
+                          // point to its mega-menu groups — clicking it only
+                          // toggles the dropdown instead of navigating away.
+                          if (cat.slug === 'gifts') {
+                            if (isMenuOpen) {
+                              setActiveMegaMenu(null);
+                            } else {
+                              handleMegaMenuEnter(cat.slug, e.currentTarget.getBoundingClientRect());
+                            }
+                            return;
+                          }
+                          handleNavClick(cat.slug);
+                        }}
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap border ${
                           isActive
                             ? 'text-[#0E4A93] font-bold bg-blue-50/80 border-blue-200/60 shadow-2xs'
