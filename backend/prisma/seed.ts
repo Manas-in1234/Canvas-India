@@ -47,6 +47,10 @@ const PERMISSIONS = [
   'artwork.view',
   'artwork.approve',
   'artwork.reject',
+  'shapes.view',
+  'shapes.create',
+  'shapes.approve',
+  'shapes.reject',
 
   // Production Management (Phase 3)
   'production.view',
