@@ -4,6 +4,11 @@ import { ChevronRight, Check, Heart } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 import { ACRYLIC_STYLE_LANDING_DATA } from '../data/acrylicStyleLandingData';
+import { SHOP_CATEGORIES } from '../data/shopCategories';
+
+// Every Print World catalogue design (Devotional Art, Line Art, etc.)
+// starts at this price — pulled from catalogueProducts.ts.
+const CATALOGUE_BASE_PRICE = 249;
 
 const SERIF = '"Playfair Display", Georgia, serif';
 
@@ -123,6 +128,46 @@ const BulkSection: React.FC<{ title: string; items: BulkItem[] }> = ({ title, it
   </section>
 );
 
+// Print World catalogue categories (Devotional Art, Line Art, etc.) — these
+// are pre-designed prints across many individual designs rather than one
+// customizable product, so bulk cards link straight to that category's
+// listing page instead of a single-product detail/customize flow.
+const CatalogueBulkSection: React.FC = () => (
+  <section className="py-8 sm:py-10">
+    <Container>
+      <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight mb-5">Other Bulk Categories</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+        {SHOP_CATEGORIES.map((cat) => {
+          const bulkPrice = bulkUnitPriceFor(CATALOGUE_BASE_PRICE, MIN_BULK_QTY);
+          return (
+            <Link
+              key={cat.categorySlug}
+              to={cat.path}
+              className="group text-left cursor-pointer block"
+            >
+              <div className="relative aspect-square rounded-xl overflow-hidden bg-stone-100 border border-stone-200/70 group-hover:border-[#0E4A93]/40 group-hover:shadow-md transition-all">
+                <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" loading="lazy" />
+                <span className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-xs">
+                  <Heart className="w-3.5 h-3.5 text-stone-500" />
+                </span>
+              </div>
+              <div className="mt-2.5 text-sm font-bold text-stone-900 group-hover:text-[#0E4A93] transition-colors">
+                Bulk {cat.name}
+              </div>
+              <div className="text-xs font-semibold text-stone-700 mt-0.5">
+                From ₹{bulkPrice.toLocaleString('en-IN')} each
+              </div>
+              <div className="text-[11px] text-stone-400 mt-0.5">
+                Minimum quantity {MIN_BULK_QTY}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </Container>
+  </section>
+);
+
 export const BulkOrdersPage: React.FC = () => {
   const { onOpenQuote } = useShop();
 
@@ -163,7 +208,7 @@ export const BulkOrdersPage: React.FC = () => {
               Bulk &amp; Corporate Orders
             </h1>
             <p className="mt-3 text-sm sm:text-base text-stone-600 leading-relaxed">
-              Canvas and acrylic prints at volume pricing for offices, events, hotels and gifting programs — every size and style below ships as a bulk run.
+              Canvas, acrylic and every catalogue print category at volume pricing for offices, events, hotels and gifting programs — every size and style below ships as a bulk run.
             </p>
 
             <ul className="mt-5 space-y-1.5">
@@ -188,6 +233,7 @@ export const BulkOrdersPage: React.FC = () => {
 
       {canvasItems.length > 0 && <BulkSection title="Canvas Bulk Orders" items={canvasItems} />}
       {acrylicItems.length > 0 && <BulkSection title="Acrylic Bulk Orders" items={acrylicItems} />}
+      <CatalogueBulkSection />
 
       <section className="py-8 sm:py-10 border-t border-stone-200/80">
         <Container>
