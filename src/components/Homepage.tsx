@@ -812,46 +812,6 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         </Container>
       </section>
 
-      {/* WHY CHOOSE */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0A3573] via-[#0E4A93] to-[#5B2BB8] text-white py-14 sm:py-16">
-        <div className="absolute -right-16 -top-16 w-72 h-72 rounded-full bg-[#E8752A]/30 blur-3xl" />
-        <div className="absolute -left-16 bottom-0 w-72 h-72 rounded-full bg-[#EC4899]/25 blur-3xl" />
-        <Container className="relative">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            <div className="lg:col-span-5">
-              <h2 className="text-4xl font-bold leading-tight" style={{ fontFamily: SERIF }}>
-                Why Choose<br /><span className="bg-gradient-to-r from-amber-300 to-[#FF6FB1] bg-clip-text text-transparent">Canvas India?</span>
-              </h2>
-              <p className="text-sm text-white/80 mt-4 max-w-sm leading-relaxed">
-                We bring your ideas to life with high-quality canvas, acrylic and cork products — helping you create beautiful, handcrafted art that lasts and adds heart to your space.
-              </p>
-              <button
-                type="button"
-                onClick={() => navigate('/categories')}
-                className="mt-6 px-7 py-3 rounded-full bg-gradient-to-r from-[#FF8A3D] to-[#E8752A] hover:brightness-110 text-white text-sm font-bold inline-flex items-center gap-2 shadow-xl cursor-pointer transition"
-              >
-                Order Now <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-5 text-center">
-              {[
-                { icon: Palette, t: 'Premium Quality', c: 'from-[#F59E0B] to-[#EF4444]' },
-                { icon: Leaf, t: 'Eco-Friendly Materials', c: 'from-[#10B981] to-[#0EA5E9]' },
-                { icon: Heart, t: 'Trusted by Thousands', c: 'from-[#EC4899] to-[#8B5CF6]' },
-                { icon: MapPin, t: 'Proudly Indian', c: 'from-[#F97316] to-[#EAB308]' },
-              ].map(({ icon: Icon, t, c }) => (
-                <div key={t} className="flex flex-col items-center gap-3 bg-white/10 border border-white/20 rounded-2xl py-5 px-2 backdrop-blur-sm hover:bg-white/15 transition">
-                  <span className={`w-14 h-14 rounded-full bg-gradient-to-br ${c} flex items-center justify-center shadow-lg`}>
-                    <Icon className="w-6 h-6 text-white" strokeWidth={1.8} />
-                  </span>
-                  <span className="text-xs font-bold">{t}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Container>
-      </section>
-
       {/* CORPORATE & BULK ORDERS */}
       <section className="py-10 sm:py-14">
         <Container>
@@ -893,6 +853,46 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 </button>
                 <span className="text-xs text-white/70">Direct WhatsApp &amp; email quotes within 2 hours</span>
               </div>
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* WHY CHOOSE */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#0A3573] via-[#0E4A93] to-[#5B2BB8] text-white py-14 sm:py-16">
+        <div className="absolute -right-16 -top-16 w-72 h-72 rounded-full bg-[#E8752A]/30 blur-3xl" />
+        <div className="absolute -left-16 bottom-0 w-72 h-72 rounded-full bg-[#EC4899]/25 blur-3xl" />
+        <Container className="relative">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            <div className="lg:col-span-5">
+              <h2 className="text-4xl font-bold leading-tight" style={{ fontFamily: SERIF }}>
+                Why Choose<br /><span className="bg-gradient-to-r from-amber-300 to-[#FF6FB1] bg-clip-text text-transparent">Canvas India?</span>
+              </h2>
+              <p className="text-sm text-white/80 mt-4 max-w-sm leading-relaxed">
+                We bring your ideas to life with high-quality canvas, acrylic and cork products — helping you create beautiful, handcrafted art that lasts and adds heart to your space.
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate('/categories')}
+                className="mt-6 px-7 py-3 rounded-full bg-gradient-to-r from-[#FF8A3D] to-[#E8752A] hover:brightness-110 text-white text-sm font-bold inline-flex items-center gap-2 shadow-xl cursor-pointer transition"
+              >
+                Order Now <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-5 text-center">
+              {[
+                { icon: Palette, t: 'Premium Quality', c: 'from-[#F59E0B] to-[#EF4444]' },
+                { icon: Leaf, t: 'Eco-Friendly Materials', c: 'from-[#10B981] to-[#0EA5E9]' },
+                { icon: Heart, t: 'Trusted by Thousands', c: 'from-[#EC4899] to-[#8B5CF6]' },
+                { icon: MapPin, t: 'Proudly Indian', c: 'from-[#F97316] to-[#EAB308]' },
+              ].map(({ icon: Icon, t, c }) => (
+                <div key={t} className="flex flex-col items-center gap-3 bg-white/10 border border-white/20 rounded-2xl py-5 px-2 backdrop-blur-sm hover:bg-white/15 transition">
+                  <span className={`w-14 h-14 rounded-full bg-gradient-to-br ${c} flex items-center justify-center shadow-lg`}>
+                    <Icon className="w-6 h-6 text-white" strokeWidth={1.8} />
+                  </span>
+                  <span className="text-xs font-bold">{t}</span>
+                </div>
+              ))}
             </div>
           </div>
         </Container>
