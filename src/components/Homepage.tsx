@@ -214,12 +214,16 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         @keyframes ci-float { 0%,100% { transform: translateY(0) rotate(var(--r,0deg)); } 50% { transform: translateY(-10px) rotate(var(--r,0deg)); } }
         .ci-float { animation: ci-float 5s ease-in-out infinite; }
         @keyframes ci-float-text {
-          0% { transform: translate(-50%, 0); opacity: 0; }
-          15% { opacity: 1; }
-          75% { opacity: 1; }
-          100% { transform: translate(-50%, -40px); opacity: 0; }
+          0%   { transform: translate(-50%, 0) rotate(0deg); opacity: 0; }
+          10%  { opacity: 1; }
+          22%  { transform: translate(calc(-50% + 22px), -10px) rotate(8deg); }
+          38%  { transform: translate(calc(-50% - 18px), -22px) rotate(-7deg); }
+          54%  { transform: translate(calc(-50% + 14px), -36px) rotate(6deg); }
+          70%  { transform: translate(calc(-50% - 10px), -48px) rotate(-5deg); opacity: 1; }
+          88%  { opacity: 0; }
+          100% { transform: translate(calc(-50% + 6px), -58px) rotate(3deg); opacity: 0; }
         }
-        .ci-float-text { animation: ci-float-text 2.8s ease-out infinite; }
+        .ci-float-text { animation: ci-float-text 4.2s ease-in-out infinite; }
       `}</style>
 
       {/* HERO */}
