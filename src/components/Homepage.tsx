@@ -817,8 +817,8 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         <Container>
           <div className="relative overflow-hidden rounded-3xl bg-[#0A1C3D] text-white">
             <img
-              src={u('1497215728101-856f4ea42174', 1600)}
-              alt="Corporate office workspace"
+              src="/assets/canvas-india-branded-packaging.webp"
+              alt="Canvas India branded bulk order packaging"
               className="hidden sm:block absolute right-0 top-0 h-full w-[55%] object-cover object-center opacity-90"
               style={{
                 maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, #000 45%, #000 100%)',

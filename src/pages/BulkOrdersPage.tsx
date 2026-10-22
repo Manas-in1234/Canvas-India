@@ -7,8 +7,6 @@ import { ACRYLIC_STYLE_LANDING_DATA } from '../data/acrylicStyleLandingData';
 
 const SERIF = '"Playfair Display", Georgia, serif';
 
-const u = (id: string, w = 1600) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=90`;
-
 // Every bulk order, regardless of material, ships at this minimum run.
 export const MIN_BULK_QTY = 50;
 
@@ -142,8 +140,8 @@ export const BulkOrdersPage: React.FC = () => {
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#F7F1E5] border-b border-stone-200/60">
         <img
-          src={u('1497215728101-856f4ea42174', 2000)}
-          alt="Corporate office workspace"
+          src="/assets/canvas-india-branded-packaging.webp"
+          alt="Canvas India branded bulk order packaging"
           className="hidden lg:block absolute right-0 top-0 h-full w-[55%] object-cover object-center"
           style={{
             maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
