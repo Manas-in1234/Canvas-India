@@ -4,6 +4,7 @@ import { getQueryCompilerWasm } from './common/prisma-wasm/wasm-loader.js';
 import { createServicesContainer, ServicesContainer } from './common/services-container.js';
 import { hashPassword, verifyPassword, sha256Hex } from './common/crypto/password.js';
 import { randomBytes, createHmac } from 'node:crypto';
+import { WorkerShapes } from './customization/shapes/worker-shapes.js';
 
 export interface Env {
   DATABASE_URL: string;
@@ -214,6 +215,30 @@ export default {
     const { prisma, services } = await getServices(env);
 
     try {
+      if (pathname === '/api/v1/shapes' && method === 'GET') {
+        return jsonResponse(await new WorkerShapes(prisma).approved(), 200, request);
+      }
+      if (pathname === '/api/v1/admin/shapes' || pathname.startsWith('/api/v1/admin/shapes/')) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const shapes = new WorkerShapes(prisma);
+        const review = pathname.match(/^\/api\/v1\/admin\/shapes\/([^/]+)\/(approve|reject)$/);
+        const upload = pathname === '/api/v1/admin/shapes/upload' && method === 'POST';
+        const permission = upload ? 'shapes.create' : review && method === 'POST'
+          ? `shapes.${review[2]}` : 'shapes.view';
+        const denied = checkPermission(user, [permission], request);
+        if (denied) return denied;
+        if (upload) return jsonResponse(await shapes.upload(request, user.id), 201, request);
+        if (review && method === 'POST') {
+          const body = await request.json() as any;
+          return jsonResponse(await shapes.review(review[1], review[2] === 'approve' ? 'APPROVED' : 'REJECTED', user.id, body.reason), 200, request);
+        }
+        if (method === 'GET' && pathname === '/api/v1/admin/shapes')
+          return jsonResponse(await shapes.list(query.status), 200, request);
+        const detail = pathname.match(/^\/api\/v1\/admin\/shapes\/([^/]+)$/);
+        if (method === 'GET' && detail) return jsonResponse(await shapes.get(detail[1]), 200, request);
+        return jsonResponse({ message: 'Not found' }, 404, request);
+      }
       // -------------------------------------------------------------
       // 1. Health check
       // -------------------------------------------------------------
@@ -609,6 +634,252 @@ export default {
           const cart = await services.cart.getOrCreateForCustomer(customerId);
           return jsonResponse(await services.cart.removeDiscount(cart.id), 200, request);
         }
+      }
+
+      // -------------------------------------------------------------
+      // 6b. Storefront Public API: Customer Sync & Checkout Orders
+      // -------------------------------------------------------------
+      if (pathname === '/api/v1/storefront/customers/sync' && method === 'POST') {
+        const body = (await request.json().catch(() => ({}))) as any;
+        const email = body.email ? String(body.email).trim().toLowerCase() : null;
+        const phone = body.phone ? String(body.phone).trim() : null;
+        const name = body.name ? String(body.name).trim() : (email ? email.split('@')[0] : 'Customer');
+        const customId = body.id && typeof body.id === 'string' && body.id.length >= 20 ? body.id : undefined;
+
+        let customer = null;
+        if (customId) {
+          customer = await prisma.customer.findUnique({ where: { id: customId } }).catch(() => null);
+        }
+        if (!customer && email) {
+          customer = await prisma.customer.findFirst({ where: { email } }).catch(() => null);
+        }
+        if (!customer && phone) {
+          customer = await prisma.customer.findFirst({ where: { phone } }).catch(() => null);
+        }
+
+        if (customer) {
+          const updates: any = {};
+          if (name && (!customer.name || customer.name === 'Customer')) updates.name = name;
+          if (phone && !customer.phone) updates.phone = phone;
+          if (email && !customer.email) updates.email = email;
+          if (Object.keys(updates).length > 0) {
+            customer = await prisma.customer.update({ where: { id: customer.id }, data: updates });
+          }
+          return jsonResponse(customer, 200, request);
+        }
+
+        customer = await prisma.customer.create({
+          data: {
+            ...(customId ? { id: customId } : {}),
+            name: name || 'Customer',
+            email: email || null,
+            phone: phone || null,
+            isGuest: false,
+          },
+        });
+        return jsonResponse(customer, 201, request);
+      }
+
+      if (pathname === '/api/v1/storefront/orders' && method === 'POST') {
+        const body = (await request.json().catch(() => ({}))) as any;
+        const items = Array.isArray(body.items) ? body.items : [];
+        if (items.length === 0) {
+          return jsonResponse({ statusCode: 400, message: 'Order items are required' }, 400, request);
+        }
+
+        const email = body.customerEmail ? String(body.customerEmail).trim().toLowerCase() : null;
+        const phone = body.customerPhone ? String(body.customerPhone).trim() : null;
+        const name = body.customerName || (body.shippingAddress && body.shippingAddress.name) || (email ? email.split('@')[0] : 'Guest Customer');
+
+        let customer = null;
+        if (body.customerId) {
+          customer = await prisma.customer.findUnique({ where: { id: body.customerId } }).catch(() => null);
+        }
+        if (!customer && email) {
+          customer = await prisma.customer.findFirst({ where: { email } }).catch(() => null);
+        }
+        if (!customer && phone) {
+          customer = await prisma.customer.findFirst({ where: { phone } }).catch(() => null);
+        }
+        if (!customer) {
+          customer = await prisma.customer.create({
+            data: {
+              ...(body.customerId && body.customerId.length >= 20 ? { id: body.customerId } : {}),
+              name,
+              email: email || null,
+              phone: phone || null,
+              isGuest: !body.customerId,
+            },
+          });
+        }
+
+        const orderCount = await prisma.order.count();
+        const orderNumber = `CC${10000 + orderCount + 1}`;
+
+        const subtotal = Number(body.subtotal) || 0;
+        const discount = Number(body.discount) || 0;
+        const shippingFee = Number(body.shippingFee) || 0;
+        const tax = Number(body.tax) || 0;
+        const total = Number(body.total) || (subtotal - discount + shippingFee + tax);
+
+        const isPaid = body.payment?.status === 'captured' || Boolean(body.payment?.razorpayPaymentId);
+
+        const newOrder = await prisma.$transaction(async (tx) => {
+          const order = await tx.order.create({
+            data: {
+              orderNumber,
+              customerId: customer.id,
+              orderStatus: 'CONFIRMED',
+              paymentStatus: isPaid ? 'PAID' : 'PENDING',
+              shippingStatus: 'NOT_SHIPPED',
+              subtotal,
+              discount,
+              tax,
+              shipping: shippingFee,
+              total,
+              items: {
+                create: items.map((item: any, idx: number) => {
+                  const itemTitle = item.title || item.product?.name || `Item ${idx + 1}`;
+                  const itemPrice = Number(item.price) || 0;
+                  const itemQty = Number(item.quantity) || 1;
+                  const custDetails = item.customizationDetails || {};
+                  return {
+                    productNameSnapshot: itemTitle,
+                    variantSnapshot: {
+                      sku: item.sku || `PROD-${idx + 1}`,
+                      options: [
+                        { group: 'Size', value: custDetails.size || custDetails.dimensions || 'Standard' },
+                        { group: 'Style', value: custDetails.wrap || custDetails.style || custDetails.frame || 'Standard' },
+                      ],
+                      imageUrl: item.imageUrl || null,
+                    },
+                    priceSnapshot: itemPrice,
+                    configurationSnapshot: custDetails,
+                    designVersionSnapshot: custDetails,
+                    taxSnapshot: 0,
+                    quantity: itemQty,
+                  };
+                }),
+              },
+              addresses: {
+                create: [
+                  {
+                    type: 'SHIPPING',
+                    name: (body.shippingAddress && body.shippingAddress.name) || name,
+                    line1: (body.shippingAddress && (body.shippingAddress.street_address || body.shippingAddress.line1)) || 'Delivery Address',
+                    line2: (body.shippingAddress && (body.shippingAddress.apartment || body.shippingAddress.line2)) || null,
+                    city: (body.shippingAddress && body.shippingAddress.city) || 'City',
+                    state: (body.shippingAddress && body.shippingAddress.state) || 'State',
+                    postalCode: (body.shippingAddress && (body.shippingAddress.postal_code || body.shippingAddress.postalCode)) || '500001',
+                    country: (body.shippingAddress && body.shippingAddress.country) || 'IN',
+                    phone: (body.shippingAddress && body.shippingAddress.phone) || phone,
+                  },
+                  {
+                    type: 'BILLING',
+                    name: (body.shippingAddress && body.shippingAddress.name) || name,
+                    line1: (body.shippingAddress && (body.shippingAddress.street_address || body.shippingAddress.line1)) || 'Billing Address',
+                    line2: (body.shippingAddress && (body.shippingAddress.apartment || body.shippingAddress.line2)) || null,
+                    city: (body.shippingAddress && body.shippingAddress.city) || 'City',
+                    state: (body.shippingAddress && body.shippingAddress.state) || 'State',
+                    postalCode: (body.shippingAddress && (body.shippingAddress.postal_code || body.shippingAddress.postalCode)) || '500001',
+                    country: (body.shippingAddress && body.shippingAddress.country) || 'IN',
+                    phone: (body.shippingAddress && body.shippingAddress.phone) || phone,
+                  },
+                ],
+              },
+              events: {
+                create: [
+                  { type: 'order.created', message: `Order ${orderNumber} placed via storefront checkout` },
+                  ...(isPaid ? [{ type: 'order.paid', message: `Payment verified via Razorpay (${body.payment?.razorpayPaymentId || 'PAID'})` }] : []),
+                ],
+              },
+              ...(isPaid ? {
+                payments: {
+                  create: [
+                    {
+                      provider: 'RAZORPAY',
+                      status: 'PAID',
+                      amount: total,
+                      currency: 'INR',
+                      providerRef: body.payment?.razorpayPaymentId || null,
+                    },
+                  ],
+                },
+              } : {}),
+            },
+            include: {
+              items: true,
+              addresses: true,
+              customer: true,
+            },
+          });
+          return order;
+        });
+
+        return jsonResponse(newOrder, 201, request);
+      }
+
+      if (pathname === '/api/v1/storefront/orders' && method === 'GET') {
+        const customerId = query.customerId;
+        const email = query.email ? String(query.email).trim().toLowerCase() : undefined;
+        let whereClause: any = {};
+        if (customerId) {
+          whereClause = { customerId };
+        } else if (email) {
+          const cust = await prisma.customer.findFirst({ where: { email } });
+          if (!cust) return jsonResponse([], 200, request);
+          whereClause = { customerId: cust.id };
+        } else {
+          return jsonResponse([], 200, request);
+        }
+        const orders = await prisma.order.findMany({
+          where: whereClause,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            items: true,
+            addresses: true,
+            payments: true,
+          },
+        });
+        return jsonResponse(orders, 200, request);
+      }
+
+      const storefrontPaymentMatch = pathname.match(/^\/api\/v1\/storefront\/orders\/([^/]+)\/payment$/);
+      if (storefrontPaymentMatch && method === 'POST') {
+        const orderId = storefrontPaymentMatch[1];
+        const body = (await request.json().catch(() => ({}))) as any;
+        const status = body.status === 'captured' ? 'PAID' : (body.status === 'failed' ? 'FAILED' : 'PENDING');
+
+        await prisma.payment.create({
+          data: {
+            orderId,
+            provider: 'RAZORPAY',
+            status: status as any,
+            amount: Number(body.amount) || 0,
+            currency: body.currency || 'INR',
+            providerRef: body.razorpayPaymentId || null,
+          },
+        }).catch(() => null);
+
+        if (status === 'PAID') {
+          await prisma.order.update({
+            where: { id: orderId },
+            data: {
+              paymentStatus: 'PAID',
+              orderStatus: 'CONFIRMED',
+            },
+          }).catch(() => null);
+
+          await prisma.orderEvent.create({
+            data: {
+              orderId,
+              type: 'order.paid',
+              message: `Payment confirmed via Razorpay: ${body.razorpayPaymentId || 'PAID'}`,
+            },
+          }).catch(() => null);
+        }
+
+        return jsonResponse({ success: true }, 200, request);
       }
 
       if (pathname === '/api/v1/orders') {

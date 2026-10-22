@@ -7902,7 +7902,7 @@ export function getCanvasProductGeometry(
     return {
       productTypeId,
       geometryType: 'mosaic',
-      shapeId: 'shape-square',
+      shapeId: layoutDef.shapeId || (layoutDef.aspectRatio === 1 ? 'shape-square' : (layoutDef.aspectRatio > 1 ? 'shape-landscape' : 'shape-portrait')),
       aspectRatio: layoutDef.aspectRatio,
       widthInches: layoutDef.overallWidthInches,
       heightInches: layoutDef.overallHeightInches,

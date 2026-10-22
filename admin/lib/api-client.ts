@@ -7,6 +7,7 @@ export class ApiError extends Error {
   ) {
     super(message);
     this.name = 'ApiError';
+    Object.setPrototypeOf(this, ApiError.prototype);
   }
 }
 
@@ -26,13 +27,14 @@ async function request<T>(path: string, options: RequestInit = {}, isRetry = fal
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
 
-  if (response.status === 401 && !isRetry) {
+  const isAuthRequest = path === '/auth/login' || path === '/auth/refresh';
+  if (response.status === 401 && !isRetry && !isAuthRequest) {
     // Let the auth layer attempt a silent refresh, then retry once.
     const refreshed = await tryRefresh();
     if (refreshed) {
@@ -66,6 +68,7 @@ async function tryRefresh(): Promise<boolean> {
 }
 
 export const apiClient = {
+  upload: <T>(path: string, body: FormData) => request<T>(path, { method: 'POST', body }),
   get: <T>(path: string) => request<T>(path, { method: 'GET' }),
   post: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),

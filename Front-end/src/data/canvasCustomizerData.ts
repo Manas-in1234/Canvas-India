@@ -388,7 +388,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       hardware: true,
       options: true,
       view3D: false,
-      view360: true,
+      view360: false,
       roomView: true
     }
   },
@@ -444,8 +444,8 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       hardware: true,
       options: true,
       view3D: false,
-      view360: true,
-      roomView: true
+      view360: false,
+      roomView: false
     }
   },
   {
@@ -472,7 +472,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       hardware: true,
       options: true,
       view3D: false,
-      view360: true,
+      view360: false,
       roomView: true
     }
   },
@@ -642,8 +642,8 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       hardware: true,
       options: true,
       view3D: false,
-      view360: true,
-      roomView: true
+      view360: false,
+      roomView: false
     }
   },
   {
@@ -710,6 +710,16 @@ export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProdu
   const isCollageOrMosaic = pt.id === 'canvas-collage' || pt.id === 'canvas-mosaic' || pt.id === 'canvas-wall-art';
   const defaultThickness = isEdgeProduct ? (pt.defaultThicknessId === 'thick-gallery' ? 38 : 26) : 0;
 
+  // Centralized view capabilities:
+  // 1. 360 View: disabled for Wall Display, Hexagon Prints, Split Canvas, Canvas Banner
+  const is360Disabled = ['canvas-wall-art', 'canvas-hexagon', 'canvas-split', 'canvas-banner'].includes(pt.id);
+  // 2. Room View: disabled for Hexagon Prints, Canvas Banner (Wall Display and Split Canvas retain Room View)
+  const isRoomViewDisabled = ['canvas-hexagon', 'canvas-banner'].includes(pt.id);
+
+  const supportsRoomView = !isRoomViewDisabled;
+  const supports3DView = isEdgeProduct;
+  const supports360View = !is360Disabled;
+
   return {
     productId: pt.id,
     displayName: pt.name,
@@ -727,14 +737,14 @@ export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProdu
     wrap: isEdgeProduct,
     hardware: true,
     options: true,
-    roomView: true,
+    roomView: supportsRoomView,
     ...(pt.capabilities || {}),
     // Enforce strict invariants
     showPhysicalEdges: isEdgeProduct,
-    supports3DView: isEdgeProduct,
-    supports360View: true,
-    view3D: isEdgeProduct,
-    view360: true,
+    supports3DView,
+    supports360View,
+    view3D: supports3DView,
+    view360: supports360View,
     physicalThickness: defaultThickness,
     edgeMode: isEdgeProduct ? 'image-wrap' : 'none',
     imageFitMode: 'cover',

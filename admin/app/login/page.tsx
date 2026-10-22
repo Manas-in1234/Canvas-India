@@ -30,7 +30,11 @@ export default function LoginPage() {
       await login(email, password);
       router.replace('/');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Unable to sign in. Please try again.');
+      setError(
+        err instanceof ApiError ? err.message
+          : err instanceof Error ? err.message
+          : 'Unable to sign in. Please try again.',
+      );
     } finally {
       setIsSubmitting(false);
     }

@@ -229,7 +229,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
   const [selectedSymbols, setSelectedSymbols] = useState<string[]>([]);
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [colorSchemeName, setColorSchemeName] = useState<keyof typeof COLOR_SCHEMES>('Neutrals');
-  const [textDirection, setTextDirection] = useState<'horizontal' | 'vertical'>('horizontal');
+  const [textDirection, setTextDirection] = useState<'horizontal' | 'horizontal_vertical' | 'left_angled' | 'left_right_angled' | 'right_angled' | 'vertical'>('horizontal');
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -386,10 +386,27 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
         const metrics = ctx.measureText(item.text);
         let boxW = metrics.width * 1.04;
         let boxH = fontSize * 1.08;
+        let angle = 0;
         if (textDirection === 'vertical') {
+          angle = -Math.PI / 2;
+        } else if (textDirection === 'horizontal_vertical') {
+          angle = Math.random() > 0.4 ? 0 : -Math.PI / 2;
+        } else if (textDirection === 'left_angled') {
+          angle = -Math.PI / 4;
+        } else if (textDirection === 'left_right_angled') {
+          angle = Math.random() > 0.5 ? -Math.PI / 4 : Math.PI / 4;
+        } else if (textDirection === 'right_angled') {
+          angle = Math.PI / 4;
+        }
+
+        if (angle === -Math.PI / 2) {
           const tmp = boxW;
           boxW = boxH;
           boxH = tmp;
+        } else if (Math.abs(angle) === Math.PI / 4) {
+          const diag = (boxW + boxH) * 0.707;
+          boxW = diag;
+          boxH = diag;
         }
 
         const spot = findSpot(boxW, boxH);
@@ -402,7 +419,7 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
         const color = palette[Math.floor(Math.random() * palette.length)];
         ctx.save();
         ctx.translate(spot.x, spot.y);
-        if (textDirection === 'vertical') ctx.rotate(-Math.PI / 2);
+        if (angle !== 0) ctx.rotate(angle);
         ctx.font = `${fontSize}px ${fontFamily}`;
         ctx.fillStyle = color;
         ctx.globalAlpha = item.weight === 'large' ? 1 : item.weight === 'medium' ? 0.85 : 0.65;
@@ -636,10 +653,14 @@ export const WordArtStudioModal: React.FC<WordArtStudioModalProps> = ({ onClose,
                 <label className="block text-xs font-bold text-stone-700 mb-1.5">Text Direction</label>
                 <select
                   value={textDirection}
-                  onChange={(e) => setTextDirection(e.target.value as 'horizontal' | 'vertical')}
+                  onChange={(e) => setTextDirection(e.target.value as any)}
                   className="w-full px-3 py-2 text-sm border border-stone-300 rounded-md focus:outline-none focus:border-[#0E4A93] cursor-pointer"
                 >
                   <option value="horizontal">Horizontal</option>
+                  <option value="horizontal_vertical">Horizontal &amp; Vertical</option>
+                  <option value="left_angled">Left Angled</option>
+                  <option value="left_right_angled">Left &amp; Right Angled</option>
+                  <option value="right_angled">Right Angled</option>
                   <option value="vertical">Vertical</option>
                 </select>
               </div>

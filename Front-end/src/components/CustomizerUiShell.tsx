@@ -89,7 +89,7 @@ export const CustomizerHeader: React.FC<CustomizerHeaderProps> = ({
           title="Canvas India"
         >
           <img
-            src="/canvas-india-official-logo.png"
+            src="/canvas-india-official-logo.webp"
             alt="Canvas India"
             className="h-6 sm:h-8 md:h-9 w-auto max-w-[90px] sm:max-w-none object-contain block select-none"
           />
@@ -457,26 +457,28 @@ export const CustomizerTopToolbar: React.FC<CustomizerTopToolbarProps> = ({
         </button>
 
         {/* ROOM VIEW */}
-        <button
-          type="button"
-          disabled={isRoomViewDisabled}
-          aria-disabled={isRoomViewDisabled}
-          onClick={() => {
-            if (isRoomViewDisabled) return;
-            handleRoomView?.();
-          }}
-          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs ${
-            isRoomViewDisabled
-              ? 'bg-stone-100 text-stone-400 border-stone-200 opacity-50 cursor-not-allowed'
-              : isRoomViewActive
-              ? 'bg-[#0E4A93] text-white border-[#0E4A93] cursor-pointer'
-              : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400 cursor-pointer'
-          }`}
-          title={isRoomViewDisabled ? 'Upload an image first to enable Room View' : 'Preview on realistic wall'}
-        >
-          <Eye className="w-3.5 h-3.5" />
-          <span>ROOM VIEW</span>
-        </button>
+        {handleRoomView && (
+          <button
+            type="button"
+            disabled={isRoomViewDisabled}
+            aria-disabled={isRoomViewDisabled}
+            onClick={() => {
+              if (isRoomViewDisabled) return;
+              handleRoomView();
+            }}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs ${
+              isRoomViewDisabled
+                ? 'bg-stone-100 text-stone-400 border-stone-200 opacity-50 cursor-not-allowed'
+                : isRoomViewActive
+                ? 'bg-[#0E4A93] text-white border-[#0E4A93] cursor-pointer'
+                : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400 cursor-pointer'
+            }`}
+            title={isRoomViewDisabled ? 'Upload an image first to enable Room View' : 'Preview on realistic wall'}
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>ROOM VIEW</span>
+          </button>
+        )}
 
         {/* 3D VIEW & 360° VIEW (and any additional actions) */}
         {allExtraActions.map((act) => {

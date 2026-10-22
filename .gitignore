@@ -1,13 +1,17 @@
 node_modules/
+dist/
 .env
 .env.local
-dist/
-
-# Backend (nested)
 backend/node_modules/
 backend/dist/
 backend/.env
+backend/.neon-env
 backend/src/generated/prisma/
-
 .claude/
-
+*-settings.local.json
+inspect-production.cjs
+production-backup/
+production-*.cjs
+production-*.json
+backend/.worker-build/
+backend/.wrangler/

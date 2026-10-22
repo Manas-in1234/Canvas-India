@@ -2062,7 +2062,8 @@ export interface AcrylicShapeOption {
     | 'oval'
     | 'roundedRectangle'
     | 'heart'
-    | 'hexagon';
+    | 'hexagon'
+    | 'custom'; // admin-uploaded, auto-traced shape (see customShapesApi)
   name: string;
   category: 'basic' | 'special' | 'decorative';
   description: string;
