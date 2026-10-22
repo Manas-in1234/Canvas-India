@@ -213,8 +213,13 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       <style>{`
         @keyframes ci-float { 0%,100% { transform: translateY(0) rotate(var(--r,0deg)); } 50% { transform: translateY(-10px) rotate(var(--r,0deg)); } }
         .ci-float { animation: ci-float 5s ease-in-out infinite; }
-        @keyframes ci-glow { 0%,100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
-        .ci-glow { animation: ci-glow 2s ease-in-out infinite; }
+        @keyframes ci-float-text {
+          0% { transform: translate(-50%, 0); opacity: 0; }
+          15% { opacity: 1; }
+          75% { opacity: 1; }
+          100% { transform: translate(-50%, -40px); opacity: 0; }
+        }
+        .ci-float-text { animation: ci-float-text 2.8s ease-out infinite; }
       `}</style>
 
       {/* HERO */}
@@ -306,8 +311,14 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <div className="relative inline-block">
-                {/* Live pulsing orange glow behind the button */}
-                <span className="ci-glow absolute -inset-4 rounded-full bg-[#E8752A] blur-xl pointer-events-none" aria-hidden="true" />
+                {/* Text that floats up out of the button and fades, looping */}
+                <span
+                  className="ci-float-text absolute left-1/2 bottom-1/2 text-xs font-bold text-[#E8752A] whitespace-nowrap pointer-events-none"
+                  style={{ textShadow: '0 1px 3px rgba(255,255,255,0.9), 0 0 1px rgba(255,255,255,0.9)' }}
+                  aria-hidden="true"
+                >
+                  Click me to customize ❤️
+                </span>
                 <button
                   type="button"
                   onClick={handleStartCreatingCanvas}
