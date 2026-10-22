@@ -171,7 +171,7 @@ const Stars: React.FC = () => (
 const arrowBtn =
   'w-10 h-10 rounded-full bg-white border border-stone-200 shadow-md flex items-center justify-center text-[#0E4A93] hover:bg-[#E8752A] hover:text-white hover:border-[#E8752A] transition-colors cursor-pointer shrink-0';
 
-export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCart, allProducts, onCustomize, wishlistIds, onToggleWishlist, onOpenQuote }) => {
+export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCart, allProducts, onCustomize, wishlistIds, onToggleWishlist }) => {
   const navigate = useNavigate();
   const carouselRef = useRef<HTMLDivElement>(null);
   const testiRef = useRef<HTMLDivElement>(null);
@@ -846,7 +846,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               <div className="shrink-0 flex flex-col items-start lg:items-end gap-2">
                 <button
                   type="button"
-                  onClick={onOpenQuote}
+                  onClick={() => navigate('/bulk-order')}
                   className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#FF8A3D] to-[#E8752A] hover:brightness-110 text-white text-sm font-bold shadow-xl cursor-pointer transition"
                 >
                   Get a Custom Quote <ArrowRight className="w-4 h-4" />
