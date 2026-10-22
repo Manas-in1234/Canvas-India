@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight, Tag, Copy, Check, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote, Image as ImageIcon, LayoutGrid, Grid2x2, Columns3, Grid3x3, Music, Type, Rows3, Building2, FileText, Percent, Zap } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Tag, Copy, Check, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote, Image as ImageIcon, LayoutGrid, Grid2x2, Columns3, Grid3x3, Music, Type, Rows3 } from 'lucide-react';
 import { Product } from '../types';
 import { OCCASIONS } from '../data/occasionsData';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
@@ -815,43 +815,42 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       {/* CORPORATE & BULK ORDERS */}
       <section className="py-10 sm:py-14">
         <Container>
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0A1C3D] via-[#0E4A93] to-[#145DB8] text-white px-6 sm:px-10 lg:px-14 py-10 sm:py-12">
-            <div className="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-[#E8752A]/25 blur-3xl pointer-events-none" />
-            <div className="absolute -left-16 -bottom-16 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-            <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-              <div className="max-w-xl">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-amber-300 text-xs font-black uppercase tracking-wider">
-                  <Building2 className="w-3.5 h-3.5" />
-                  <span>B2B &amp; Bulk Solutions</span>
-                </div>
-                <h2 className="mt-4 text-3xl sm:text-4xl font-bold leading-tight" style={{ fontFamily: SERIF }}>
-                  Corporate &amp; Bulk Orders
-                </h2>
-                <p className="mt-3 text-sm sm:text-base text-white/85 leading-relaxed">
-                  Custom employee welcome kits, company branded T-shirts, uniform mugs, business cards &amp; promotional giveaways.
-                </p>
-                <div className="mt-5 flex flex-wrap gap-2.5">
-                  {[
-                    { icon: FileText, label: 'GST Invoice Available' },
-                    { icon: Percent, label: 'Volume Discounts' },
-                    { icon: Zap, label: 'Fast Turnaround Across India' },
-                  ].map(({ icon: Icon, label }) => (
-                    <span key={label} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold text-white/90">
-                      <Icon className="w-3.5 h-3.5 text-amber-300" />
-                      {label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="shrink-0 flex flex-col items-start lg:items-end gap-2">
+          <div className="relative overflow-hidden rounded-3xl bg-[#0A1C3D] text-white">
+            <img
+              src={u('1497215728101-856f4ea42174', 1600)}
+              alt="Corporate office workspace"
+              className="hidden sm:block absolute right-0 top-0 h-full w-[55%] object-cover object-center opacity-90"
+              style={{
+                maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, #000 45%, #000 100%)',
+                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, #000 45%, #000 100%)',
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0A1C3D] via-[#0A1C3D]/90 sm:via-[#0A1C3D]/75 to-transparent pointer-events-none" />
+            <div className="relative px-6 sm:px-10 lg:px-14 py-10 sm:py-12 max-w-xl">
+              <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-300">B2B &amp; Bulk Solutions</span>
+              <h2 className="mt-3 text-3xl sm:text-4xl font-bold leading-tight" style={{ fontFamily: SERIF }}>
+                Corporate &amp; Bulk Orders
+              </h2>
+              <p className="mt-3 text-sm sm:text-base text-white/80 leading-relaxed max-w-md">
+                Custom employee welcome kits, company branded T-shirts, uniform mugs, business cards &amp; promotional giveaways.
+              </p>
+              <ul className="mt-5 space-y-1.5">
+                {['GST Invoice Available', 'Volume Discounts', 'Fast Turnaround Across India'].map((label) => (
+                  <li key={label} className="flex items-center gap-2 text-sm text-white/80">
+                    <Check className="w-4 h-4 text-amber-300 shrink-0" />
+                    {label}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-6 flex flex-col items-start gap-2">
                 <button
                   type="button"
                   onClick={() => navigate('/bulk-order')}
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#FF8A3D] to-[#E8752A] hover:brightness-110 text-white text-sm font-bold shadow-xl cursor-pointer transition"
+                  className="inline-flex items-center gap-2 text-sm font-bold text-white bg-[#E8752A] hover:bg-[#D3631A] rounded-full px-6 py-3 shadow-lg shadow-orange-950/40 transition-colors cursor-pointer"
                 >
                   Get a Custom Quote <ArrowRight className="w-4 h-4" />
                 </button>
-                <span className="text-xs text-white/70">Direct WhatsApp &amp; email quotes within 2 hours</span>
+                <span className="text-xs text-white/60">Direct WhatsApp &amp; email quotes within 2 hours</span>
               </div>
             </div>
           </div>

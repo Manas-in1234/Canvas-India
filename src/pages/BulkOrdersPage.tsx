@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Building2, FileText, Percent, Zap, Heart, PackageCheck } from 'lucide-react';
+import { ChevronRight, Check, Heart } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 import { ACRYLIC_STYLE_LANDING_DATA } from '../data/acrylicStyleLandingData';
 
 const SERIF = '"Playfair Display", Georgia, serif';
-const BLUE = '#0E4A93';
-const ORANGE = '#E8752A';
+
+const u = (id: string, w = 1600) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=90`;
 
 // Every bulk order, regardless of material, ships at this minimum run.
 const MIN_BULK_QTY = 50;
@@ -89,48 +89,51 @@ export const BulkOrdersPage: React.FC = () => {
     <div className="w-full bg-[#FFFDF9] text-stone-900 font-manrope">
 
       {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-r from-[#0A1C3D] via-[#0E4A93] to-[#145DB8] text-white">
-        <div className="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-[#E8752A]/25 blur-3xl pointer-events-none" />
-        <div className="absolute -left-16 -bottom-16 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+      <section className="relative overflow-hidden bg-[#F7F1E5] border-b border-stone-200/60">
+        <img
+          src={u('1497215728101-856f4ea42174', 2000)}
+          alt="Corporate office workspace"
+          className="hidden lg:block absolute right-0 top-0 h-full w-[55%] object-cover object-center"
+          style={{
+            maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
+          }}
+        />
+        <div className="hidden lg:block absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent pointer-events-none" />
+
         <Container className="relative py-10 sm:py-14">
-          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-white/60 mb-6">
-            <Link to="/" className="hover:text-white transition-colors">Home</Link>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-white font-semibold">Bulk &amp; Corporate Orders</span>
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-stone-500 mb-6">
+            <Link to="/" className="hover:text-[#0E4A93] transition-colors">Home</Link>
+            <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
+            <span className="text-stone-900 font-semibold">Bulk &amp; Corporate Orders</span>
           </nav>
 
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-amber-300 text-xs font-black uppercase tracking-wider">
-            <Building2 className="w-3.5 h-3.5" />
-            <span>B2B &amp; Bulk Solutions</span>
-          </div>
-          <h1 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight" style={{ fontFamily: SERIF }}>
-            Bulk &amp; Corporate Orders
-          </h1>
-          <p className="mt-3 text-sm sm:text-base text-white/85 max-w-2xl leading-relaxed">
-            Canvas and acrylic prints at volume pricing for offices, events, hotels and gifting programs — every size and style below ships as a bulk run.
-          </p>
+          <div className="max-w-xl">
+            <span className="text-[11px] font-black uppercase tracking-[0.25em] text-[#E8752A]">B2B &amp; Bulk Solutions</span>
+            <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-stone-900" style={{ fontFamily: SERIF }}>
+              Bulk &amp; Corporate Orders
+            </h1>
+            <p className="mt-3 text-sm sm:text-base text-stone-600 leading-relaxed">
+              Canvas and acrylic prints at volume pricing for offices, events, hotels and gifting programs — every size and style below ships as a bulk run.
+            </p>
 
-          <div className="mt-5 flex flex-wrap gap-2.5">
-            {[
-              { icon: PackageCheck, label: `Minimum Order: ${MIN_BULK_QTY} Units` },
-              { icon: FileText, label: 'GST Invoice Available' },
-              { icon: Percent, label: 'Volume Discounts' },
-              { icon: Zap, label: 'Fast Turnaround Across India' },
-            ].map(({ icon: Icon, label }) => (
-              <span key={label} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold text-white/90">
-                <Icon className="w-3.5 h-3.5 text-amber-300" />
-                {label}
-              </span>
-            ))}
-          </div>
+            <ul className="mt-5 space-y-1.5">
+              {[`Minimum order: ${MIN_BULK_QTY} units`, 'GST invoice available', 'Volume discounts', 'Fast turnaround across India'].map((label) => (
+                <li key={label} className="flex items-center gap-2 text-sm text-stone-700">
+                  <Check className="w-4 h-4 text-[#0E4A93] shrink-0" />
+                  {label}
+                </li>
+              ))}
+            </ul>
 
-          <button
-            type="button"
-            onClick={onOpenQuote}
-            className="mt-6 inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#FF8A3D] to-[#E8752A] hover:brightness-110 text-white text-sm font-bold shadow-xl cursor-pointer transition"
-          >
-            Get a Custom Quote
-          </button>
+            <button
+              type="button"
+              onClick={onOpenQuote}
+              className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-white bg-[#E8752A] hover:bg-[#D3631A] rounded-full px-6 py-3 shadow-lg shadow-orange-950/20 transition-colors cursor-pointer"
+            >
+              Get a Custom Quote
+            </button>
+          </div>
         </Container>
       </section>
 
