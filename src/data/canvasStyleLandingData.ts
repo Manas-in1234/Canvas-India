@@ -591,13 +591,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         customizeHref: '/customize/canvas/canvas-single?category=PANORAMIC'
       }
     ],
-    galleryTitle: 'Moments wide enough to fill a wall',
-    galleryItems: [
-      { label: 'Weddings', image: PHOTO.weddingCouple },
-      { label: 'Skylines', icon: 'mountain' },
-      { label: 'Landscapes', icon: 'mountain' },
-      { label: 'Group Shots', icon: 'users' }
-    ],
     historyTitle: 'The History of the Panorama',
     historyParagraphs: [
       'Immersive, wide-format art is older than photography itself — murals designed to wrap around a viewer have been found in Pompeii, dating back to around 20 AD.',
@@ -649,13 +642,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         image: PHOTO.split5PanelBeachSunset,
         customizeHref: '/customize/canvas/canvas-split?layout=split-5p-57-75-97-stepped'
       }
-    ],
-    galleryTitle: 'Panel counts for every wall',
-    galleryItems: [
-      { label: '3 Panels', icon: 'columns' },
-      { label: '5 Panels', icon: 'columns' },
-      { label: 'Landscape', icon: 'mountain' },
-      { label: 'Portrait', icon: 'frame' }
     ],
     historyTitle: 'The History of the Multi-Panel Format',
     historyParagraphs: [
@@ -717,13 +703,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         image: PHOTO.hexagon7PanelFamily,
         customizeHref: '/customize/canvas/canvas-hexagon?layout=hex-horizontal-bundle-5'
       }
-    ],
-    galleryTitle: 'Cluster ideas',
-    galleryItems: [
-      { label: 'Single Hexagon', icon: 'hexagon' },
-      { label: 'Honeycomb Cluster', icon: 'hexagon' },
-      { label: 'Mixed Grid', visual: 'mosaic-grid' },
-      { label: 'Office Wall', image: PHOTO.officeHallway }
     ],
     historyTitle: 'Why the Hexagon?',
     historyParagraphs: [
@@ -801,13 +780,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         customizeHref: '/customize/canvas/canvas-pop-art'
       }
     ],
-    galleryTitle: 'Great for any occasion',
-    galleryItems: [
-      { label: 'Solo Portraits', icon: 'users' },
-      { label: 'Couples', icon: 'heart' },
-      { label: 'Family', icon: 'images' },
-      { label: 'Pets', icon: 'paw' }
-    ],
     historyTitle: 'The History of Caricature',
     historyParagraphs: [
       'The word "caricature" comes from the Italian caricare, meaning "to load" or "exaggerate." Leonardo da Vinci was already sketching people with unusual, striking features centuries before the term existed, and Italian artist Pier Leone Ghezzi is credited with popularizing the style among European aristocracy in the early 1700s.',
@@ -850,13 +822,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         image: PHOTO.bannerBlueGoldAbstract,
         customizeHref: '/customize/canvas/canvas-banner'
       }
-    ],
-    galleryTitle: 'Finish options',
-    galleryItems: [
-      { label: 'Grommets', icon: 'scroll' },
-      { label: 'Pole Pockets', icon: 'scroll' },
-      { label: 'Wood Rails', icon: 'scroll' },
-      { label: 'Twine Hanging', icon: 'scroll' }
     ],
     historyTitle: 'The History of the Banner',
     historyParagraphs: [
