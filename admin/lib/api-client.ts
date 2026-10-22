@@ -7,6 +7,7 @@ export class ApiError extends Error {
   ) {
     super(message);
     this.name = 'ApiError';
+    Object.setPrototypeOf(this, ApiError.prototype);
   }
 }
 
@@ -32,7 +33,8 @@ async function request<T>(path: string, options: RequestInit = {}, isRetry = fal
     },
   });
 
-  if (response.status === 401 && !isRetry) {
+  const isAuthRequest = path === '/auth/login' || path === '/auth/refresh';
+  if (response.status === 401 && !isRetry && !isAuthRequest) {
     // Let the auth layer attempt a silent refresh, then retry once.
     const refreshed = await tryRefresh();
     if (refreshed) {
