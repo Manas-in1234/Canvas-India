@@ -88,4 +88,15 @@ describe('PricingService', () => {
     const price = service.calculateCustomSizePrice(new Prisma.Decimal(10), 20, 30);
     expect(price.toString()).toBe('6000'); // 10 per sq. unit * (20 * 30)
   });
+
+  it('prices a non-rectangular shape by its bounding rectangle, not its silhouette', () => {
+    const prisma = {} as PrismaService;
+    const service = new PricingService(prisma);
+
+    // A heart/custom shape rendered inside a 24x18 canvas is billed for the
+    // full 24x18 bounding box, matching the client-provided pricing sheet
+    // (rate * width * height), not some smaller traced silhouette area.
+    const price = service.calculateShapeBoundingBoxPrice(new Prisma.Decimal('1.65'), 24, 18);
+    expect(price.toString()).toBe('712.8'); // 1.65 * (24 * 18)
+  });
 });

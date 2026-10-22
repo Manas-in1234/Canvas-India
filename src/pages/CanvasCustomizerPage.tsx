@@ -130,6 +130,12 @@ import {
   CANVAS_EDGE_3D_PRODUCT_IDS,
   ClipartItem
 } from '../data/canvasCustomizerData';
+
+// Non-rectangular shapes are billed by their bounding rectangle's area, not
+// their actual silhouette area (client-specified pricing rule). Rectangular
+// shapes, including roundedRectangle, keep the plain per-size price.
+const NON_RECTANGULAR_SHAPE_TYPES = new Set(['circle', 'oval', 'heart', 'hexagon', 'custom']);
+const SHAPE_AREA_RATE_PER_SQIN = 1.65;
 import {
   getLayoutSlots,
   LayoutSlotDefinition,
@@ -3783,7 +3789,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const unitPrice = useMemo(() => {
     let price = sizePrice;
 
-    if (shapeApplies && currentShape.priceAddon) price += currentShape.priceAddon;
+    if (shapeApplies) {
+      if (NON_RECTANGULAR_SHAPE_TYPES.has(currentShape.shapeType)) {
+        // Client-specified pricing: a non-rectangular shape (heart, hexagon,
+        // custom admin-traced outlines, ...) is billed by its bounding
+        // rectangle's area, not its actual silhouette area.
+        const boundingWidth = isCustomSize && canUseCustomSize ? customWidth : (currentSizeOption.widthInches ?? customWidth);
+        const boundingHeight = isCustomSize && canUseCustomSize ? customHeight : (currentSizeOption.heightInches ?? customHeight);
+        price += Math.round(boundingWidth * boundingHeight * SHAPE_AREA_RATE_PER_SQIN);
+      } else if (currentShape.priceAddon) {
+        price += currentShape.priceAddon;
+      }
+    }
 
     const wrap = WRAP_OPTIONS.find((w) => w.id === selectedWrapId);
     if (wrap) price += wrap.price;
@@ -3816,6 +3833,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     sizePrice,
     shapeApplies,
     currentShape,
+    isCustomSize,
+    canUseCustomSize,
+    customWidth,
+    customHeight,
+    currentSizeOption,
     selectedWrapId,
     selectedThicknessId,
     selectedBorderWidthId,

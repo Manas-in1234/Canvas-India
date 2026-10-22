@@ -64,6 +64,21 @@ export class PricingService {
     return basePricePerUnitArea.times(area);
   }
 
+  /**
+   * Non-rectangular shapes (heart, hexagon, admin-traced custom shapes, ...)
+   * are billed by their bounding rectangle's area, not their actual
+   * silhouette area — this is the client's specified pricing rule, not an
+   * approximation. Rectangular shapes should go through
+   * calculateCustomSizePrice directly rather than this wrapper.
+   */
+  calculateShapeBoundingBoxPrice(
+    ratePerUnitArea: Prisma.Decimal,
+    boundingWidth: number,
+    boundingHeight: number,
+  ): Prisma.Decimal {
+    return this.calculateCustomSizePrice(ratePerUnitArea, boundingWidth, boundingHeight);
+  }
+
   private ruleMatches(
     conditions: Prisma.JsonValue,
     variant: { options: { optionValue: { value: string; optionGroup?: { name: string } } }[] },
