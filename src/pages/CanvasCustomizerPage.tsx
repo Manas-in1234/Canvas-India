@@ -2290,6 +2290,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const nextTab = toolbarItems[Math.min(toolbarItems.length - 1, activeTabIndex + 1)] || toolbarItems[toolbarItems.length - 1];
 
   // SHAPE tab state
+  const [customShapes, setCustomShapes] = useState<CustomShapeDto[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    fetchApprovedCustomShapes().then((shapes) => {
+      if (!cancelled) setCustomShapes(shapes);
+    });
+    return () => { cancelled = true; };
+  }, []);
+  const customShapeOptions = useMemo(() => customShapes.map(toShapeOption), [customShapes]);
   const [selectedShapeId, setSelectedShapeId] = useState<string>(() => {
     const initialPt = resolveCurrentProductId(routeMaterial, productId);
     if (initialPt === 'canvas-single' || initialPt === 'canvas-classic') {
@@ -2305,11 +2314,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const list = activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES;
     const pt = list.find((p) => p.id === selectedProductTypeId);
     const targetShapeId =
-      pt?.supportedShapeIds && pt.supportedShapeIds.length === 1
+      !selectedShapeId.startsWith('custom-') && pt?.supportedShapeIds && pt.supportedShapeIds.length === 1
         ? pt.supportedShapeIds[0]
         : selectedShapeId;
-    return CANVAS_SHAPES.find((s) => s.id === targetShapeId) || CANVAS_SHAPES[0];
-  }, [activeMaterial, selectedProductTypeId, selectedShapeId]);
+    return customShapeOptions.find((s) => s.id === targetShapeId)
+      || CANVAS_SHAPES.find((s) => s.id === targetShapeId) || CANVAS_SHAPES[0];
+  }, [activeMaterial, selectedProductTypeId, selectedShapeId, customShapeOptions]);
 
   // Available size options for the current product type and active shape (from centralized productSizeShapeConfig)
   const availableSizeOptions = useMemo<SizeOption[]>(() => {
@@ -2824,18 +2834,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Admin-uploaded, auto-traced shapes (approved only) layered on top of the
   // built-in shape list — see src/api/customShapesApi.ts.
-  const [customShapes, setCustomShapes] = useState<CustomShapeDto[]>([]);
-  useEffect(() => {
-    let cancelled = false;
-    fetchApprovedCustomShapes().then((shapes) => {
-      if (!cancelled) setCustomShapes(shapes);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-  const customShapeOptions = useMemo(() => customShapes.map(toShapeOption), [customShapes]);
-
   const filteredShapes = useMemo(() => {
     let list = CANVAS_SHAPES;
     if (selectedProductType?.supportedShapeIds && selectedProductType.supportedShapeIds.length > 0) {
@@ -9335,7 +9333,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
         const isHexagonCluster = isHexagonProduct && panels.length > 1;
         const isRectShape = !geom.clipPath && ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
-        const activeClipPath = isHexagonProduct
+        const activeClipPath = shapeApplies && currentShape.shapeType === 'custom'
+          ? currentShape.clipPathStyle
+          : isHexagonProduct
           ? (geom.clipPath || HEXAGON_HORIZONTAL_CLIP_PATH)
           : isRectShape
           ? undefined
@@ -10488,7 +10488,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 }
 
                 // 4. Single Non-Rectangular or Rectangular Canvas & Acrylic on Room Wall
-                const clipStyle = isHexagonProduct ? HEXAGON_CLIP_PATH : (isRectangularShape ? undefined : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined)));
+                const clipStyle = shapeApplies && currentShape.shapeType === 'custom'
+                  ? currentShape.clipPathStyle
+                  : isHexagonProduct ? HEXAGON_CLIP_PATH : (isRectangularShape ? undefined : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined)));
                 const hasClip = Boolean(clipStyle);
                 const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges);
 

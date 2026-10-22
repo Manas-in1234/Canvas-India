@@ -26,7 +26,7 @@ async function request<T>(path: string, options: RequestInit = {}, isRetry = fal
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
@@ -66,6 +66,7 @@ async function tryRefresh(): Promise<boolean> {
 }
 
 export const apiClient = {
+  upload: <T>(path: string, body: FormData) => request<T>(path, { method: 'POST', body }),
   get: <T>(path: string) => request<T>(path, { method: 'GET' }),
   post: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),

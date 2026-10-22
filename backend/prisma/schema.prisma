@@ -634,6 +634,7 @@ enum MovementType {
 // distinguished by assetType. ownerType/ownerId is a polymorphic pair
 // (e.g. "Customer"/customerId) rather than a hard FK, matching the doc.
 model Asset {
+  contentBytes          Bytes?        @map("content_bytes")
   id           String            @id @default(uuid())
   ownerType    String            @map("owner_type") // e.g. "Customer"
   ownerId      String            @map("owner_id")

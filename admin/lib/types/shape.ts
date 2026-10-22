@@ -5,6 +5,7 @@ export interface CustomShapeListItem {
   name: string;
   sourceAssetId: string;
   previewAssetId: string | null;
+  previewUrl?: string | null;
   svgPathData: string;
   status: CustomShapeStatus;
   createdBy: string;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -15,14 +15,19 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api/v1';
-
-export function ShapeDetailClient({ id }: { id: string }) {
+export function ShapeDetailClient({ id: initialId }: { id: string }) {
+  const [id, setId] = useState(initialId);
+  useEffect(() => {
+    const queryId = new URLSearchParams(window.location.search).get('id');
+    const pathId = window.location.pathname.split('/').filter(Boolean).pop();
+    setId(queryId || (pathId !== 'placeholder' ? pathId : '') || initialId);
+  }, [initialId]);
   const { hasPermission } = usePermission();
   const queryClient = useQueryClient();
 
   const { data: shape, isLoading, isError } = useQuery({
     queryKey: ['shapes', id],
+    enabled: !!id && id !== 'placeholder',
     queryFn: () => apiClient.get<CustomShapeListItem>(`/admin/shapes/${id}`),
   });
 
@@ -85,10 +90,10 @@ export function ShapeDetailClient({ id }: { id: string }) {
             <CardTitle className="text-base">Source photo</CardTitle>
           </CardHeader>
           <CardContent>
-            {shape.previewAssetId ? (
+            {shape.previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={`${API_BASE_URL}/customization/assets/${shape.previewAssetId}/download-url`}
+                src={shape.previewUrl}
                 alt={shape.name}
                 className="w-full rounded-md border bg-muted object-contain"
               />
