@@ -516,7 +516,7 @@ export const CanvasStyleLandingPage: React.FC<{ data: CanvasStyleLandingData; ma
           <h2 className="text-base sm:text-lg font-extrabold text-stone-900 mb-4">{data.galleryTitle}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {data.galleryItems.map((item) => (
-              <div key={item.label} className="space-y-2">
+              <div key={item.label} className="space-y-2 max-w-[140px] mx-auto w-full">
                 <div className="aspect-square rounded-2xl overflow-hidden">
                   {item.visual ? (
                     renderVisual(item.visual)
