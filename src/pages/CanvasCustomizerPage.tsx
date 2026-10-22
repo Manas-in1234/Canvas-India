@@ -110,6 +110,7 @@ import {
   DEFAULT_LYRIC_CONFIG,
   getLyricTemplate
 } from '../data/lyricCanvasData';
+import { fetchApprovedCustomShapes, toShapeOption, type CustomShapeDto } from '../api/customShapesApi';
 import {
   CANVAS_SHAPES,
   CanvasShapeOption,
@@ -2821,14 +2822,32 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return LAYOUT_PRESETS;
   }, [selectedProductType]);
 
+  // Admin-uploaded, auto-traced shapes (approved only) layered on top of the
+  // built-in shape list — see src/api/customShapesApi.ts.
+  const [customShapes, setCustomShapes] = useState<CustomShapeDto[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    fetchApprovedCustomShapes().then((shapes) => {
+      if (!cancelled) setCustomShapes(shapes);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const customShapeOptions = useMemo(() => customShapes.map(toShapeOption), [customShapes]);
+
   const filteredShapes = useMemo(() => {
     let list = CANVAS_SHAPES;
     if (selectedProductType?.supportedShapeIds && selectedProductType.supportedShapeIds.length > 0) {
       list = list.filter((s) => selectedProductType.supportedShapeIds!.includes(s.id));
     }
+    // Admin-uploaded custom shapes aren't in any product's static
+    // supportedShapeIds allowlist (it can't know about them ahead of time),
+    // so they're appended after that filter rather than excluded by it.
+    list = [...list, ...customShapeOptions];
     if (shapeFilterCategory === 'ALL') return list;
     return list.filter((s) => s.category.toUpperCase() === shapeFilterCategory);
-  }, [shapeFilterCategory, selectedProductType]);
+  }, [shapeFilterCategory, selectedProductType, customShapeOptions]);
 
   // WRAP & BORDER tab
   const [selectedWrapId, setSelectedWrapId] = useState<string>('full-bleed');
@@ -6449,6 +6468,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           <clipPath id="acrylic-clip-shape-organic-blob" clipPathUnits="objectBoundingBox">
             <path d="M 0.5,0.02 C 0.78,0 0.98,0.18 0.98,0.45 C 0.98,0.75 0.8,0.98 0.52,0.96 C 0.25,0.94 0.02,0.78 0.02,0.5 C 0.02,0.22 0.22,0.04 0.5,0.02 Z" />
           </clipPath>
+          {/* Admin-uploaded custom shapes: unlike the hand-authored clipPaths
+              above, these ids aren't known until the approved-shapes fetch
+              resolves, so they're rendered dynamically here. */}
+          {customShapes.map((shape) => (
+            <clipPath key={shape.id} id={`custom-clip-${shape.id}`} clipPathUnits="objectBoundingBox">
+              <path d={shape.svgPathData} />
+            </clipPath>
+          ))}
         </defs>
       </svg>
 
