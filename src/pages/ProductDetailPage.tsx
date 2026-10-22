@@ -11,7 +11,9 @@ import {
   ArrowRight,
   CheckCircle2,
   Layers,
-  Pencil
+  Pencil,
+  Package,
+  ChevronDown
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
@@ -20,6 +22,7 @@ import { WallPreview } from '../components/WallPreview';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { Product } from '../types';
 import { FrameSwatch, HookIcon, HOOK_OPTIONS, BackOfFrameView } from '../components/FrameHookVisuals';
+import { QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
 
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
@@ -101,6 +104,8 @@ export const ProductDetailPage: React.FC = () => {
   const [customSizeW, setCustomSizeW] = useState<string>('');
   const [customSizeH, setCustomSizeH] = useState<string>('');
   const [selectedHook, setSelectedHook] = useState<string>('Sawtooth Hanger');
+  const [bulkPanelOpen, setBulkPanelOpen] = useState<boolean>(false);
+  const [customBulkQty, setCustomBulkQty] = useState<string>('');
 
   // In-page customization state
   const [customText, setCustomText] = useState<string>('');
@@ -203,6 +208,8 @@ export const ProductDetailPage: React.FC = () => {
       setCustomWidth(8);
       setCustomHeight(8);
       setQuantity(1);
+      setBulkPanelOpen(false);
+      setCustomBulkQty('');
       setActiveImageIndex(0);
       setCustomText('');
       setUploadedFile(null);
@@ -311,8 +318,13 @@ export const ProductDetailPage: React.FC = () => {
 
   const handleAddToCartWithVariants = () => {
     if (!product) return;
+    // At bulk quantities, charge the same discounted per-unit price shown
+    // in the bulk panel — never show one price and charge another.
+    const cartProduct = quantity >= MIN_BULK_QTY
+      ? { ...product, price: bulkUnitPriceFor(product.price, quantity) }
+      : product;
     onAddToCart(
-      product,
+      cartProduct,
       selectedSize,
       selectedFinish,
       quantity,
@@ -702,6 +714,77 @@ export const ProductDetailPage: React.FC = () => {
                   <span className="w-10 text-center text-xs font-extrabold text-stone-900">{quantity}</span>
                   <button type="button" onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-100 font-bold transition-colors cursor-pointer" aria-label="Increase quantity">+</button>
                 </div>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setBulkPanelOpen((v) => !v)}
+                  className="flex items-center gap-1.5 text-xs font-bold text-[#0E4A93] hover:underline cursor-pointer"
+                >
+                  <Package className="w-3.5 h-3.5" />
+                  <span>Order this item in bulk</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${bulkPanelOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {bulkPanelOpen && (
+                  <div className="mt-3 p-4 rounded-xl border border-stone-200 bg-stone-50 space-y-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      {QTY_PRICE_TIERS.map((tier) => {
+                        const tierPrice = bulkUnitPriceFor(product.price, tier.qty);
+                        const isActive = quantity === tier.qty;
+                        return (
+                          <button
+                            key={tier.qty}
+                            type="button"
+                            onClick={() => { setQuantity(tier.qty); setCustomBulkQty(''); }}
+                            className={`px-2 py-2 rounded-lg border-2 text-center transition-all cursor-pointer ${
+                              isActive ? 'border-[#0E4A93] bg-blue-50/60' : 'border-stone-200 bg-white hover:border-stone-400'
+                            }`}
+                          >
+                            <div className={`text-xs font-extrabold ${isActive ? 'text-[#0E4A93]' : 'text-stone-900'}`}>{tier.qty} units</div>
+                            <div className="text-[10px] text-stone-500 mt-0.5">₹{tierPrice.toLocaleString('en-IN')} each</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div>
+                      <label htmlFor="custom-bulk-qty" className="text-[11px] font-bold text-stone-700 block mb-1">
+                        Or enter a custom quantity
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          id="custom-bulk-qty"
+                          type="number"
+                          min={MIN_BULK_QTY}
+                          value={customBulkQty}
+                          onChange={(e) => setCustomBulkQty(e.target.value)}
+                          placeholder={`${MIN_BULK_QTY}+`}
+                          className="w-28 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const n = Number(customBulkQty);
+                            if (n >= MIN_BULK_QTY) setQuantity(n);
+                          }}
+                          className="px-4 py-2 text-xs font-bold rounded-lg border-2 border-stone-300 text-stone-700 hover:border-stone-400 transition-colors cursor-pointer"
+                        >
+                          Apply
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-stone-400 mt-1">Minimum bulk order: {MIN_BULK_QTY} units</p>
+                    </div>
+
+                    {quantity >= MIN_BULK_QTY && (
+                      <div className="pt-2 border-t border-stone-200 text-xs text-stone-700">
+                        <span className="font-bold text-[#0E4A93]">₹{bulkUnitPriceFor(product.price, quantity).toLocaleString('en-IN')} each</span>
+                        {' '}× {quantity} = <span className="font-bold">₹{(bulkUnitPriceFor(product.price, quantity) * quantity).toLocaleString('en-IN')}</span> total
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
