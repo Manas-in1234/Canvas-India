@@ -14,9 +14,15 @@ const ROUTES: Record<string, string> = {
   'corporate-printing': '/corporate-orders',
 };
 
+// Canvas, Acrylic, Cork, Gifts & Occasions and Corporate Orders already have
+// their own dedicated top-level nav entries and category pages — this grid
+// is for the OTHER catalogue categories, not a duplicate of those.
+const EXCLUDED_SLUGS = new Set(['canvas', 'acrylic', 'cork', 'gifts', 'corporate-orders']);
+
 export const AllCategoriesPage: React.FC = () => {
   const navigate = useNavigate();
   React.useEffect(() => { document.title = 'All Categories | Canvas India'; }, []);
+  const categories = PRIMARY_CATEGORIES.filter((cat) => !EXCLUDED_SLUGS.has(cat.slug));
 
   return (
     <div className="w-full bg-[#FFFDF9] py-8 sm:py-12 text-stone-900 font-manrope min-h-[70vh]">
@@ -29,7 +35,7 @@ export const AllCategoriesPage: React.FC = () => {
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">All Categories</h1>
         <p className="text-sm text-stone-500 mt-1 mb-8">Browse every product category at Canvas India</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
-          {PRIMARY_CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <button
               key={cat.slug}
               type="button"
