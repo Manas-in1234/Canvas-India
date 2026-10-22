@@ -291,7 +291,11 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const handleNavClick = (slug: string) => {
-    onSelectCategory(slug);
+    if (slug === 'corporate-orders') {
+      navigate('/bulk-order');
+    } else {
+      onSelectCategory(slug);
+    }
     setActiveMegaMenu(null);
     setAllCategoriesOpen(false);
     setMobileMenuOpen(false);
