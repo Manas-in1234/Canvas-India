@@ -53,12 +53,12 @@ export const BulkProductDetailPage: React.FC = () => {
   const item = useMemo(() => (material && slug ? getBulkItem(material, slug) : undefined), [material, slug]);
 
   const [quantity, setQuantity] = useState<number>(MIN_BULK_QTY);
-  const [activeImage, setActiveImage] = useState<string>('');
+  const [activeVariantIndex, setActiveVariantIndex] = useState<number>(0);
 
   useEffect(() => {
     setQuantity(MIN_BULK_QTY);
+    setActiveVariantIndex(0);
     if (item) {
-      setActiveImage(item.images[0] || item.image);
       document.title = `Bulk ${item.name} | Canvas India`;
     }
   }, [item]);
@@ -74,12 +74,13 @@ export const BulkProductDetailPage: React.FC = () => {
     return <NotFoundPage />;
   }
 
-  const bulkUnitPrice = bulkUnitPriceFor(item.unitPrice, quantity);
+  const activeVariant = item.variants[activeVariantIndex] || item.variants[0];
+  const bulkUnitPrice = bulkUnitPriceFor(activeVariant.price, quantity);
   const totalPrice = bulkUnitPrice * quantity;
 
   const handleContinueToCustomize = () => {
-    const separator = item.customizeHref.includes('?') ? '&' : '?';
-    navigate(`${item.customizeHref}${separator}qty=${quantity}`);
+    const separator = activeVariant.customizeHref.includes('?') ? '&' : '?';
+    navigate(`${activeVariant.customizeHref}${separator}qty=${quantity}`);
   };
 
   return (
@@ -95,10 +96,11 @@ export const BulkProductDetailPage: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
-          {/* Gallery */}
+          {/* Gallery — each thumbnail is its own selectable layout/style,
+              not just a different preview photo. */}
           <div>
             <div className="relative rounded-2xl overflow-hidden bg-stone-100 border border-stone-200/70 aspect-square">
-              <img src={activeImage} alt={item.name} className="w-full h-full object-contain" />
+              <img src={activeVariant.image} alt={activeVariant.name} className="w-full h-full object-contain" />
               <button
                 type="button"
                 className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-xs cursor-pointer"
@@ -107,18 +109,19 @@ export const BulkProductDetailPage: React.FC = () => {
                 <Heart className="w-4 h-4 text-stone-600" />
               </button>
             </div>
-            {item.images.length > 1 && (
+            {item.variants.length > 1 && (
               <div className="flex gap-2.5 mt-3 overflow-x-auto">
-                {item.images.map((img) => (
+                {item.variants.map((variant, idx) => (
                   <button
-                    key={img}
+                    key={`${variant.name}-${idx}`}
                     type="button"
-                    onClick={() => setActiveImage(img)}
+                    onClick={() => setActiveVariantIndex(idx)}
+                    title={variant.name}
                     className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-                      activeImage === img ? 'border-emerald-600 ring-2 ring-emerald-600/20' : 'border-stone-200 hover:border-stone-400 opacity-80 hover:opacity-100'
+                      idx === activeVariantIndex ? 'border-emerald-600 ring-2 ring-emerald-600/20' : 'border-stone-200 hover:border-stone-400 opacity-80 hover:opacity-100'
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img src={variant.image} alt={variant.name} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -128,9 +131,9 @@ export const BulkProductDetailPage: React.FC = () => {
           {/* Info + Purchase */}
           <div className="space-y-5">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">Bulk {item.name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">Bulk {activeVariant.name}</h1>
               <p className="text-sm text-stone-600 mt-2 leading-relaxed">
-                Order {item.name.toLowerCase()} in volume for offices, events, hotels and gifting programs — start leaving an unforgettable mark on every wall you print for.
+                Order {activeVariant.name.toLowerCase()} in volume for offices, events, hotels and gifting programs — start leaving an unforgettable mark on every wall you print for.
               </p>
             </div>
 
@@ -174,7 +177,7 @@ export const BulkProductDetailPage: React.FC = () => {
               >
                 {QTY_PRICE_TIERS.map((tier) => (
                   <option key={tier.qty} value={tier.qty}>
-                    {tier.qty} units — ₹{bulkUnitPriceFor(item.unitPrice, tier.qty).toLocaleString('en-IN')} each
+                    {tier.qty} units — ₹{bulkUnitPriceFor(activeVariant.price, tier.qty).toLocaleString('en-IN')} each
                   </option>
                 ))}
               </select>
@@ -206,7 +209,7 @@ export const BulkProductDetailPage: React.FC = () => {
           <h2 className="text-lg font-bold text-stone-900 mb-3">Volume Pricing Guide</h2>
           <div className="rounded-xl border border-stone-200 overflow-hidden text-sm bg-white divide-y divide-stone-100 max-w-md">
             {QTY_PRICE_TIERS.map((tier) => {
-              const tierPrice = bulkUnitPriceFor(item.unitPrice, tier.qty);
+              const tierPrice = bulkUnitPriceFor(activeVariant.price, tier.qty);
               const isActive = tier.qty === quantity;
               return (
                 <button

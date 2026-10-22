@@ -28,14 +28,25 @@ export function bulkUnitPriceFor(basePrice: number, qty: number): number {
   return Math.round(basePrice * tier.discount);
 }
 
+// One selectable variant within a bulk item's gallery — its own real photo,
+// name and customize link (with its own ?layout= when that style is a
+// specific panel/shape layout), so picking a thumbnail picks that exact
+// variant to customize, not just a different preview photo.
+export interface BulkVariant {
+  name: string;
+  image: string;
+  price: number;
+  customizeHref: string;
+}
+
 export interface BulkItem {
   slug: string;
   material: 'canvas' | 'acrylic';
   name: string;
   image: string;
-  images: string[];
   unitPrice: number;
   customizeHref: string;
+  variants: BulkVariant[];
 }
 
 export function buildBulkItems(): BulkItem[] {
@@ -46,9 +57,11 @@ export function buildBulkItems(): BulkItem[] {
       material: 'canvas' as const,
       name: d.pageTitle,
       image: d.styles[0].image!,
-      images: d.styles.map((s) => s.image).filter((img): img is string => Boolean(img)),
       unitPrice: d.styles[0].price,
       customizeHref: d.styles[0].customizeHref,
+      variants: d.styles
+        .filter((s): s is typeof s & { image: string } => Boolean(s.image))
+        .map((s) => ({ name: s.name, image: s.image, price: s.price, customizeHref: s.customizeHref })),
     }));
   const acrylic = Object.values(ACRYLIC_STYLE_LANDING_DATA)
     .filter((d) => d.styles[0]?.image)
@@ -57,9 +70,11 @@ export function buildBulkItems(): BulkItem[] {
       material: 'acrylic' as const,
       name: d.pageTitle,
       image: d.styles[0].image!,
-      images: d.styles.map((s) => s.image).filter((img): img is string => Boolean(img)),
       unitPrice: d.styles[0].price,
       customizeHref: d.styles[0].customizeHref,
+      variants: d.styles
+        .filter((s): s is typeof s & { image: string } => Boolean(s.image))
+        .map((s) => ({ name: s.name, image: s.image, price: s.price, customizeHref: s.customizeHref })),
     }));
   return [...canvas, ...acrylic];
 }
