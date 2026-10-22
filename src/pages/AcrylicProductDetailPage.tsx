@@ -694,11 +694,11 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
               <button
                 type="button"
                 onClick={() => setBulkPanelOpen((v) => !v)}
-                className="flex items-center gap-1.5 text-xs font-bold text-[#0E4A93] hover:underline cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-[#0E4A93] text-sm font-bold text-[#0E4A93] hover:bg-blue-50/60 transition-colors cursor-pointer"
               >
-                <PackageCheck className="w-3.5 h-3.5" />
+                <PackageCheck className="w-5 h-5" />
                 <span>Order this item in bulk</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${bulkPanelOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-5 h-5 transition-transform ${bulkPanelOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {bulkPanelOpen && (
