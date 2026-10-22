@@ -28,6 +28,11 @@ the root `wrangler.toml`. Preserve the existing Hyperdrive binding and runtime
 configuration. The runtime support files also preserve the existing checkout
 and authentication behavior already deployed in production.
 
+Query caching is disabled on the existing Hyperdrive configuration. The backend
+uses that connection for authentication, permissions, and shape review, which
+require fresh reads after writes. Hyperdrive otherwise serves a stale approved
+shape list even after a successful review. Connection pooling remains enabled.
+
 Validation covers PNG and JPEG upload, private preview, pending/rejected shape
 exclusion, approval visibility, repeated-review rejection, unauthenticated admin
 access, and the existing product endpoint. Temporary verification records are
