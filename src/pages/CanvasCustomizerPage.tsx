@@ -3529,7 +3529,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [retouchChecks, setRetouchChecks] = useState<Record<string, boolean>>({});
   const [majorRetouchText, setMajorRetouchText] = useState<string>('');
   const [proofRequested, setProofRequested] = useState<boolean>(false);
-  const [quantity, setQuantity] = useState<number>(1);
+  const [quantity, setQuantity] = useState<number>(() => {
+    const requestedQty = Number(searchParams.get('qty'));
+    return requestedQty > 0 ? requestedQty : 1;
+  });
 
   // Material Variant (from Change Material modal)
   const [selectedMaterialId, setSelectedMaterialId] = useState<string>('standard-cotton');

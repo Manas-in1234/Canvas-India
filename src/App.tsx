@@ -33,6 +33,7 @@ import { MobileUploadPage } from './pages/MobileUploadPage';
 import { FestiveOffersPage } from './pages/FestiveOffersPage';
 import { ReadymadeOffersPage } from './pages/ReadymadeOffersPage';
 import { BulkOrdersPage } from './pages/BulkOrdersPage';
+import { BulkProductDetailPage } from './pages/BulkProductDetailPage';
 import { OccasionPage } from './pages/OccasionPage';
 
 // Auth & Checkout Pages
@@ -121,6 +122,7 @@ export function App() {
 
             <Route path="/bulk-order" element={<BulkOrdersPage />} />
             <Route path="/bulk-orders" element={<BulkOrdersPage />} />
+            <Route path="/bulk-order/:material/:slug" element={<BulkProductDetailPage />} />
 
             <Route path="/corporate-orders" element={<CategoryPage categorySlug="corporate-orders" />} />
             <Route path="/corporate" element={<CategoryPage categorySlug="corporate-orders" />} />

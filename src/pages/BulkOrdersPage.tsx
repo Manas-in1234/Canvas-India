@@ -10,22 +10,55 @@ const SERIF = '"Playfair Display", Georgia, serif';
 const u = (id: string, w = 1600) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=90`;
 
 // Every bulk order, regardless of material, ships at this minimum run.
-const MIN_BULK_QTY = 50;
+export const MIN_BULK_QTY = 50;
 // Flat per-unit discount applied to a style's normal starting price once
 // ordered at bulk — these are quote-based, not live cart prices.
-const BULK_DISCOUNT = 0.8;
+export const BULK_DISCOUNT = 0.8;
 
-interface BulkItem {
+export interface BulkItem {
+  slug: string;
+  material: 'canvas' | 'acrylic';
   name: string;
   image: string;
   unitPrice: number;
+  customizeHref: string;
+}
+
+export function buildBulkItems(): BulkItem[] {
+  const canvas = Object.values(CANVAS_STYLE_LANDING_DATA)
+    .filter((d) => d.styles[0]?.image)
+    .map((d) => ({
+      slug: d.slug,
+      material: 'canvas' as const,
+      name: d.pageTitle,
+      image: d.styles[0].image!,
+      unitPrice: d.styles[0].price,
+      customizeHref: d.styles[0].customizeHref,
+    }));
+  const acrylic = Object.values(ACRYLIC_STYLE_LANDING_DATA)
+    .filter((d) => d.styles[0]?.image)
+    .map((d) => ({
+      slug: d.slug,
+      material: 'acrylic' as const,
+      name: d.pageTitle,
+      image: d.styles[0].image!,
+      unitPrice: d.styles[0].price,
+      customizeHref: d.styles[0].customizeHref,
+    }));
+  return [...canvas, ...acrylic];
+}
+
+// Canvas and Acrylic style slugs overlap (e.g. both have "wall-display" and
+// "photo-collage"), so lookups are keyed on material + slug together.
+export function getBulkItem(material: string, slug: string): BulkItem | undefined {
+  return buildBulkItems().find((item) => item.material === material && item.slug === slug);
 }
 
 const Container: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
   <div className={`w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 ${className}`}>{children}</div>
 );
 
-const BulkSection: React.FC<{ title: string; items: BulkItem[]; onQuote: () => void }> = ({ title, items, onQuote }) => (
+const BulkSection: React.FC<{ title: string; items: BulkItem[] }> = ({ title, items }) => (
   <section className="py-8 sm:py-10">
     <Container>
       <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight mb-5">{title}</h2>
@@ -33,11 +66,10 @@ const BulkSection: React.FC<{ title: string; items: BulkItem[]; onQuote: () => v
         {items.map((item) => {
           const bulkPrice = Math.round(item.unitPrice * BULK_DISCOUNT);
           return (
-            <button
-              key={item.name}
-              type="button"
-              onClick={onQuote}
-              className="group text-left cursor-pointer"
+            <Link
+              key={`${item.material}-${item.slug}`}
+              to={`/bulk-order/${item.material}/${item.slug}`}
+              className="group text-left cursor-pointer block"
             >
               <div className="relative aspect-square rounded-xl overflow-hidden bg-stone-100 border border-stone-200/70 group-hover:border-[#0E4A93]/40 group-hover:shadow-md transition-all">
                 <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
@@ -54,7 +86,7 @@ const BulkSection: React.FC<{ title: string; items: BulkItem[]; onQuote: () => v
               <div className="text-[11px] text-stone-400 mt-0.5">
                 Minimum quantity {MIN_BULK_QTY}
               </div>
-            </button>
+            </Link>
           );
         })}
       </div>
@@ -69,21 +101,9 @@ export const BulkOrdersPage: React.FC = () => {
     document.title = 'Bulk & Corporate Orders | Canvas India';
   }, []);
 
-  const canvasItems: BulkItem[] = useMemo(
-    () =>
-      Object.values(CANVAS_STYLE_LANDING_DATA)
-        .filter((d) => d.styles[0]?.image)
-        .map((d) => ({ name: d.pageTitle, image: d.styles[0].image!, unitPrice: d.styles[0].price })),
-    []
-  );
-
-  const acrylicItems: BulkItem[] = useMemo(
-    () =>
-      Object.values(ACRYLIC_STYLE_LANDING_DATA)
-        .filter((d) => d.styles[0]?.image)
-        .map((d) => ({ name: d.pageTitle, image: d.styles[0].image!, unitPrice: d.styles[0].price })),
-    []
-  );
+  const allItems = useMemo(() => buildBulkItems(), []);
+  const canvasItems = useMemo(() => allItems.filter((i) => i.material === 'canvas'), [allItems]);
+  const acrylicItems = useMemo(() => allItems.filter((i) => i.material === 'acrylic'), [allItems]);
 
   return (
     <div className="w-full bg-[#FFFDF9] text-stone-900 font-manrope">
@@ -137,8 +157,8 @@ export const BulkOrdersPage: React.FC = () => {
         </Container>
       </section>
 
-      {canvasItems.length > 0 && <BulkSection title="Canvas Bulk Orders" items={canvasItems} onQuote={onOpenQuote} />}
-      {acrylicItems.length > 0 && <BulkSection title="Acrylic Bulk Orders" items={acrylicItems} onQuote={onOpenQuote} />}
+      {canvasItems.length > 0 && <BulkSection title="Canvas Bulk Orders" items={canvasItems} />}
+      {acrylicItems.length > 0 && <BulkSection title="Acrylic Bulk Orders" items={acrylicItems} />}
 
       <section className="py-8 sm:py-10 border-t border-stone-200/80">
         <Container>
