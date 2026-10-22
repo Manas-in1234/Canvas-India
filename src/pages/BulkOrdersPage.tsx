@@ -11,15 +11,29 @@ const u = (id: string, w = 1600) => `https://images.unsplash.com/${id}?w=${w}&au
 
 // Every bulk order, regardless of material, ships at this minimum run.
 export const MIN_BULK_QTY = 50;
-// Flat per-unit discount applied to a style's normal starting price once
-// ordered at bulk — these are quote-based, not live cart prices.
-export const BULK_DISCOUNT = 0.8;
+
+// Genuine volume pricing — the more units, the lower the per-unit discount
+// factor (applied to the style's normal single-unit starting price).
+export const QTY_PRICE_TIERS: { qty: number; discount: number }[] = [
+  { qty: 50, discount: 0.85 },
+  { qty: 100, discount: 0.8 },
+  { qty: 150, discount: 0.76 },
+  { qty: 200, discount: 0.72 },
+  { qty: 300, discount: 0.67 },
+  { qty: 500, discount: 0.6 },
+];
+
+export function bulkUnitPriceFor(basePrice: number, qty: number): number {
+  const tier = [...QTY_PRICE_TIERS].reverse().find((t) => qty >= t.qty) || QTY_PRICE_TIERS[0];
+  return Math.round(basePrice * tier.discount);
+}
 
 export interface BulkItem {
   slug: string;
   material: 'canvas' | 'acrylic';
   name: string;
   image: string;
+  images: string[];
   unitPrice: number;
   customizeHref: string;
 }
@@ -32,6 +46,7 @@ export function buildBulkItems(): BulkItem[] {
       material: 'canvas' as const,
       name: d.pageTitle,
       image: d.styles[0].image!,
+      images: d.styles.map((s) => s.image).filter((img): img is string => Boolean(img)),
       unitPrice: d.styles[0].price,
       customizeHref: d.styles[0].customizeHref,
     }));
@@ -42,6 +57,7 @@ export function buildBulkItems(): BulkItem[] {
       material: 'acrylic' as const,
       name: d.pageTitle,
       image: d.styles[0].image!,
+      images: d.styles.map((s) => s.image).filter((img): img is string => Boolean(img)),
       unitPrice: d.styles[0].price,
       customizeHref: d.styles[0].customizeHref,
     }));
@@ -64,7 +80,7 @@ const BulkSection: React.FC<{ title: string; items: BulkItem[] }> = ({ title, it
       <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight mb-5">{title}</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
         {items.map((item) => {
-          const bulkPrice = Math.round(item.unitPrice * BULK_DISCOUNT);
+          const bulkPrice = bulkUnitPriceFor(item.unitPrice, MIN_BULK_QTY);
           return (
             <Link
               key={`${item.material}-${item.slug}`}
