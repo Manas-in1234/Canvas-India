@@ -219,27 +219,12 @@ export const AcrylicCategoryPage: React.FC = () => {
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-3xl overflow-hidden border border-stone-200 shadow-xl bg-stone-100 group aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3]">
                 <img
-                  src="/assets/acrylic/acrylic-panel-living.webp"
-                  alt="Acrylic Prints and Wall Art in Living Room"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    if (target.src !== '/assets/acrylic/acrylic-custom-wall-art.webp') {
-                      target.src = '/assets/acrylic/acrylic-custom-wall-art.webp';
-                    }
-                  }}
+                  src="/assets/acrylic/acrylic-pig-painting.png"
+                  alt="Acrylic Prints and Wall Art"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/10 pointer-events-none" />
-
-                {/* Floating Highlight Badge */}
-                <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-md border border-stone-200/80 flex items-center gap-2.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <div>
-                    <div className="text-[11px] font-black text-stone-900 leading-tight">Crystal Clear Optical Acrylic</div>
-                    <div className="text-[10px] text-stone-500">Starting from ₹899 | Up to 60% OFF</div>
-                  </div>
-                </div>
 
               </div>
             </div>
