@@ -213,10 +213,6 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       <style>{`
         @keyframes ci-float { 0%,100% { transform: translateY(0) rotate(var(--r,0deg)); } 50% { transform: translateY(-10px) rotate(var(--r,0deg)); } }
         .ci-float { animation: ci-float 5s ease-in-out infinite; }
-        @keyframes ci-glow-a { 0%,100% { opacity: 0.55; transform: scale(1) rotate(0deg); } 50% { opacity: 0.95; transform: scale(1.15) rotate(8deg); } }
-        @keyframes ci-glow-b { 0%,100% { opacity: 0.4; transform: scale(1.05) rotate(0deg); } 50% { opacity: 0.8; transform: scale(0.9) rotate(-10deg); } }
-        .ci-glow-a { animation: ci-glow-a 2.6s ease-in-out infinite; }
-        .ci-glow-b { animation: ci-glow-b 2.6s ease-in-out infinite 0.4s; }
       `}</style>
 
       {/* HERO */}
@@ -308,19 +304,6 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <div className="relative inline-block">
-                {/* Layered pulsing glow — two softly blurred blobs (orange +
-                    gold) pulsing out of phase with a slow rotation, for more
-                    depth than a single flat color pulse. */}
-                <span
-                  className="ci-glow-a absolute -inset-5 rounded-full pointer-events-none"
-                  style={{ background: 'radial-gradient(circle, #FF8A3D 0%, #E8752A 55%, transparent 75%)', filter: 'blur(22px)' }}
-                  aria-hidden="true"
-                />
-                <span
-                  className="ci-glow-b absolute -inset-3 rounded-full pointer-events-none"
-                  style={{ background: 'radial-gradient(circle, #FFD37A 0%, #FFB347 60%, transparent 75%)', filter: 'blur(14px)' }}
-                  aria-hidden="true"
-                />
                 <button
                   type="button"
                   onClick={handleStartCreatingCanvas}
