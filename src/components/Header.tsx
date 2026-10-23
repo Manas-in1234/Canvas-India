@@ -87,25 +87,11 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     description: 'Natural 8mm eco-friendly cork pinboards',
   },
   {
-    name: 'Gifts & Occasions',
-    slug: 'gifts',
-    route: '/gifts',
-    image: 'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?w=400&auto=format&fit=crop&q=80',
-    description: 'Special photo gifts for birthdays & celebrations',
-  },
-  {
-    name: 'Bulk Order',
+    name: 'Corporate Orders',
     slug: 'bulk-order',
     route: '/bulk-order',
-    image: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?w=400&auto=format&fit=crop&q=80',
-    description: 'Volume discounts for events, schools & resellers',
-  },
-  {
-    name: 'Corporate Orders',
-    slug: 'corporate-orders',
-    route: '/corporate-orders',
     image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80',
-    description: 'Office branding, corporate kits & GST billing',
+    description: 'Corporate kits, bulk & volume discounts for events, schools & resellers',
   },
 ];
 
