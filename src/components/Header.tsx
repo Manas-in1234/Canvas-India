@@ -114,17 +114,9 @@ export const Header: React.FC<HeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [allCategoriesOpen, setAllCategoriesOpen] = useState(false);
 
-  // "Gifts & Occasions" has no dedicated page of its own — it should take
-  // the shopper straight to the homepage's "Shop by Occasion" section.
+  // "Gifts & Occasions" opens the dedicated "Shop by Occasion" listing page.
   const goToShopOccasions = () => {
-    if (location.pathname === '/') {
-      document.getElementById('shop-occasions')?.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      navigate('/');
-      setTimeout(() => {
-        document.getElementById('shop-occasions')?.scrollIntoView({ behavior: 'smooth' });
-      }, 150);
-    }
+    navigate('/occasions');
   };
 
   // Dynamic active category state derived from current pathname
