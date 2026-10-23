@@ -675,12 +675,21 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                   key={o.slug}
                   type="button"
                   onClick={() => navigate(`/occasions/${o.slug}`)}
-                  className="group snap-start shrink-0 w-[42%] sm:w-[23%] lg:w-[16%] relative aspect-[4/5] rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer text-left"
+                  className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
                 >
-                  <img src={o.bannerImage} alt={o.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${o.tint} via-transparent to-transparent`} />
-                  <span className="absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center text-lg shadow">{o.emoji}</span>
-                  <div className="absolute bottom-0 left-0 right-0 p-3 text-white font-bold text-sm" style={{ fontFamily: SERIF }}>{o.name}</div>
+                  <div className="relative w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
+                    <img src={o.bannerImage} alt={o.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <span className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-base shadow-sm">{o.emoji}</span>
+                  </div>
+                  <div className="flex items-start justify-between gap-2 px-1">
+                    <div className="min-w-0">
+                      <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1 truncate">{o.name}</h3>
+                      <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">Personalized gifts &amp; keepsakes</p>
+                    </div>
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
+                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </div>
+                  </div>
                 </button>
               ))}
             </div>
