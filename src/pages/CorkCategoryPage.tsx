@@ -101,7 +101,7 @@ export const CorkCategoryPage: React.FC = () => {
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-stone-500 mb-6">
             <Link to="/" className="hover:text-[#0E4A93] transition-colors">Home</Link>
             <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
-            <span className="font-semibold text-stone-900">Cork Products</span>
+            <span className="font-semibold text-stone-900">{isCorkPatternsOnlyRoute ? 'Cork Pattern Prints' : 'Cork Products'}</span>
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
@@ -118,10 +118,12 @@ export const CorkCategoryPage: React.FC = () => {
                   className="text-3xl sm:text-4xl lg:text-5xl font-black text-stone-950 tracking-tight leading-tight"
                   style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
                 >
-                  Cork Products
+                  {isCorkPatternsOnlyRoute ? 'Cork Pattern Prints' : 'Cork Products'}
                 </h1>
                 <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-2xl">
-                  Textured, eco-friendly cork-finish prints — from geometric motifs to natural wood-grain designs. Lightweight, durable and ready to hang in any room.
+                  {isCorkPatternsOnlyRoute
+                    ? 'Textured, eco-friendly cork-finish prints in geometric motifs and natural wood-grain designs. Lightweight, durable and ready to hang in any room.'
+                    : 'Textured, eco-friendly cork-finish prints — from geometric motifs to natural wood-grain designs. Lightweight, durable and ready to hang in any room.'}
                 </p>
               </div>
 
