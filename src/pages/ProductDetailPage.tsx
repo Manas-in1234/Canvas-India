@@ -137,8 +137,10 @@ export const ProductDetailPage: React.FC = () => {
   const SIMPLE_VARIANT_CATEGORIES = ['cork', 'cork-art-patterns', 'yoga-fitness'];
 
   // Yoga mats, bricks, rollers etc. don't hang on a wall — no hook/hanger
-  // options apply to them.
-  const showHookTab = product ? product.categorySlug !== 'yoga-fitness' : true;
+  // options apply to them. Every cork-catalog product (corkCatalog.ts) is
+  // one of these wellness items and shares categorySlug 'cork' regardless —
+  // 'cork-art-patterns' is excluded here since those ARE framed wall prints.
+  const showHookTab = product ? !['cork', 'yoga-fitness'].includes(product.categorySlug) : true;
 
   // Shape options for this product. Every wall-hangable category gets the
   // same reduced shape range by default (Cork and yoga mats don't use
