@@ -5,6 +5,7 @@ import {
   renderProductLayoutDiagram,
   ProductLayoutDefinition
 } from '../data/productGeometry';
+import { bulkUnitPriceFor, MIN_BULK_QTY } from '../pages/BulkOrdersPage';
 
 export type LayoutModalOption = ProductLayoutDefinition;
 
@@ -17,6 +18,9 @@ export interface SelectLayoutModalProps {
   currentLayoutId?: string;
   onSelectLayout: (layout: LayoutModalOption) => void;
   onHighlightLayout?: (layout: LayoutModalOption) => void;
+  /** When set to a bulk quantity (>= MIN_BULK_QTY), every layout's displayed
+   * price reflects the same volume discount shown on the Bulk Orders page. */
+  bulkQuantity?: number;
 }
 
 const COLLAGE_CATEGORIES: Array<{ id: 'landscape' | 'panoramic' | 'portrait' | 'square'; label: string }> = [
@@ -64,8 +68,10 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
   productName,
   currentLayoutId = '',
   onSelectLayout,
-  onHighlightLayout
+  onHighlightLayout,
+  bulkQuantity
 }) => {
+  const hasBulkDiscount = bulkQuantity !== undefined && bulkQuantity >= MIN_BULK_QTY;
   if (!isOpen) return null;
 
   // Single source of truth for layouts
@@ -378,9 +384,15 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
                         )}
                         {(layout.priceRange || (material === 'acrylic' && layout.acrylicPrice ? layout.acrylicPrice : layout.price)) && (
                           <span className="font-extrabold text-[#0E4A93] ml-auto">
-                            {material === 'acrylic' && layout.acrylicPrice
-                              ? `₹${layout.acrylicPrice.toFixed(2)}`
-                              : (layout.priceRange || `₹${layout.price.toFixed(2)}`)}
+                            {(() => {
+                              const rawPrice = material === 'acrylic' && layout.acrylicPrice ? layout.acrylicPrice : layout.price;
+                              if (hasBulkDiscount && rawPrice) {
+                                return `₹${bulkUnitPriceFor(rawPrice, bulkQuantity!).toFixed(2)}`;
+                              }
+                              return material === 'acrylic' && layout.acrylicPrice
+                                ? `₹${layout.acrylicPrice.toFixed(2)}`
+                                : (layout.priceRange || `₹${layout.price.toFixed(2)}`);
+                            })()}
                           </span>
                         )}
                       </div>

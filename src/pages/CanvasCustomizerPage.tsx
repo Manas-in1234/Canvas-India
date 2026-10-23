@@ -7506,7 +7506,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           }}
                           title={opt.label}
                           subtitle={opt.dimensionsSummary}
-                          priceText={`₹${opt.price.toLocaleString('en-IN')}`}
+                          priceText={`₹${(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(opt.price, quantity) : opt.price).toLocaleString('en-IN')}`}
                           previewHeightClass="h-16 p-1.5"
                           preview={renderSizePreview(opt, isSelected)}
                         />
@@ -11961,6 +11961,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         customWidth={customWidth}
         customHeight={customHeight}
         onSelectSizeAndShape={handleApplySizeAndShape}
+        bulkQuantity={quantity}
       />
 
       {/* Select Layout Modal */}
@@ -11973,6 +11974,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         currentLayoutId={selectedLayoutId}
         onSelectLayout={handleApplyLayoutFromModal}
         onHighlightLayout={handleHighlightLayoutFromModal}
+        bulkQuantity={quantity}
       />
 
       {/* Word Art Size + Ratio Modal */}

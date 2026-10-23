@@ -5,6 +5,7 @@ import {
   getProductSizeShapeOptions,
   getProductSupportedShapes
 } from '../data/productSizeShapeConfig';
+import { bulkUnitPriceFor, MIN_BULK_QTY } from '../pages/BulkOrdersPage';
 
 export interface SelectSizeShapeModalProps {
   isOpen: boolean;
@@ -29,6 +30,9 @@ export interface SelectSizeShapeModalProps {
     panelsCount?: number;
     panels?: any[];
   }) => void;
+  /** When set to a bulk quantity (>= MIN_BULK_QTY), every size's displayed
+   * price reflects the same volume discount shown on the Bulk Orders page. */
+  bulkQuantity?: number;
 }
 
 export type SinglePrintCategory = 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL';
@@ -44,9 +48,13 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   isCustomSize = false,
   customWidth = 10,
   customHeight = 10,
-  onSelectSizeAndShape
+  onSelectSizeAndShape,
+  bulkQuantity
 }) => {
   if (!isOpen) return null;
+
+  const hasBulkDiscount = bulkQuantity !== undefined && bulkQuantity >= MIN_BULK_QTY;
+  const displayPrice = (price: number) => (hasBulkDiscount ? bulkUnitPriceFor(price, bulkQuantity!) : price);
 
   const isQuotes = productId.toLowerCase() === 'canvas-quotes';
   const isDigitalPainting = productId.toLowerCase() === 'canvas-digital-painting';
@@ -1068,7 +1076,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
                       {opt.label}
                     </span>
                     <span className="text-sm font-extrabold text-[#0E4A93]">
-                      ₹{opt.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      ₹{displayPrice(opt.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
@@ -1158,10 +1166,12 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
             <span className="ml-2 font-bold text-[#0E4A93]">
               ₹
               {showCustomSize
-                ? Math.round(
-                    Math.max(8, localCustomW) * Math.max(8, localCustomH) * (material === 'acrylic' ? 4.5 : 2.5)
+                ? displayPrice(
+                    Math.round(
+                      Math.max(8, localCustomW) * Math.max(8, localCustomH) * (material === 'acrylic' ? 4.5 : 2.5)
+                    )
                   ).toLocaleString('en-IN', { minimumFractionDigits: 2 })
-                : currentSelectedOption?.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                : currentSelectedOption && displayPrice(currentSelectedOption.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </span>
           </div>
           <div className="flex items-center gap-2.5">
