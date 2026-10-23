@@ -6537,34 +6537,37 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             <div className="space-y-1.5 py-2.5 text-stone-600">
               <div className="flex justify-between">
                 <span>Base ({selectedProductTypeId === 'canvas-banner' ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}` : isCustomSize && canUseCustomSize ? `${customWidth}"×${customHeight}"` : currentSizeOption.dimensionsSummary}):</span>
-                <span className="font-bold text-stone-900">₹{sizePrice}</span>
+                <span className="font-bold text-stone-900">₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(sizePrice, quantity) : sizePrice).toFixed(0)}</span>
               </div>
               {selectedWrapId !== 'canvas-lite' && selectedProductTypeId !== 'canvas-banner' && (
                 <div className="flex justify-between">
                   <span>Wrap:</span>
-                  <span className="font-bold text-stone-900">+₹{WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.price}</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.price || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
                 </div>
               )}
               {selectedHardwareId !== 'no-hooks' && (
                 <div className="flex justify-between">
                   <span>Hardware:</span>
                   <span className="font-bold text-stone-900">
-                    +₹{selectedProductTypeId === 'canvas-banner'
-                      ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
-                      : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)}
+                    +₹{(() => {
+                      const p = selectedProductTypeId === 'canvas-banner'
+                        ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
+                        : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0);
+                      return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0);
+                    })()}
                   </span>
                 </div>
               )}
               {selectedDisplayOptionId === 'dust-cover' && (
                 <div className="flex justify-between">
                   <span>Dust Cover:</span>
-                  <span className="font-bold text-stone-900">+₹49</span>
+                  <span className="font-bold text-stone-900">+₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(49, quantity) : 49).toFixed(0)}</span>
                 </div>
               )}
               {selectedLaminationId !== 'none' && (
                 <div className="flex justify-between">
                   <span>Lamination ({LAMINATION_OPTIONS.find((l) => l.id === selectedLaminationId)?.label}):</span>
-                  <span className="font-bold text-stone-900">+₹{LAMINATION_OPTIONS.find((l) => l.id === selectedLaminationId)?.price}</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = LAMINATION_OPTIONS.find((l) => l.id === selectedLaminationId)?.price || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
                 </div>
               )}
               <div className="flex justify-between pt-1.5 border-t border-stone-100 text-stone-900 font-extrabold">
@@ -7943,7 +7946,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           selected={isSelected}
                           onClick={() => setSelectedFrameId(f.id)}
                           title={f.name}
-                          priceText={f.price === 0 ? 'Free' : `+₹${f.price.toFixed(0)}`}
+                          priceText={f.price === 0 ? 'Free' : `+₹${(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(f.price, quantity) : f.price).toFixed(0)}`}
                           previewHeightClass="h-16 p-1.5"
                           preview={
                             <div
@@ -8030,7 +8033,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           }
                         }}
                         title={title}
-                        priceText={hw.price === 0 ? 'Free' : `+₹${hw.price}`}
+                        priceText={hw.price === 0 ? 'Free' : `+₹${(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(hw.price, quantity) : hw.price).toFixed(0)}`}
                         previewHeightClass="h-16 p-1.5"
                         preview={renderHardwareIcon(hw.id)}
                       />
@@ -8070,7 +8073,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             {opt.label}
                           </span>
                           <span className="flex items-center gap-1.5 text-xs font-extrabold text-[#0E4A93]">
-                            {opt.price === 0 ? 'Free' : `+₹${opt.price.toFixed(0)}`}
+                            {opt.price === 0 ? 'Free' : `+₹${(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(opt.price, quantity) : opt.price).toFixed(0)}`}
                             <Info className="w-3.5 h-3.5 text-stone-400" />
                           </span>
                         </label>
@@ -8142,7 +8145,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           />
                           {lam.label}
                         </span>
-                        <span className="text-xs font-black text-[#0E4A93]">{lam.price === 0 ? 'Free' : `+₹${lam.price.toFixed(0)}`}</span>
+                        <span className="text-xs font-black text-[#0E4A93]">{lam.price === 0 ? 'Free' : `+₹${(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(lam.price, quantity) : lam.price).toFixed(0)}`}</span>
                       </label>
                     );
                   })}
