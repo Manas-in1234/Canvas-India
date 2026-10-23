@@ -28,9 +28,9 @@ const PHOTO = {
   officeWorkspace: u('1497215728101-856f4ea42174'), // office desk with plants, city view
   officeHallway: u('1497366216548-37526070297c'), // office interior hallway
   weddingGalleryWall: '/assets/canvas-styles/wall-display-wedding-gallery.webp', // user-supplied: 6-panel asymmetric wedding photo gallery over a sofa
-  wallDisplayRainyStreet: '/assets/canvas-styles/wall-display-rainy-street-couple.webp', // user-supplied: painted couple under umbrella on rainy city street
-  wallDisplayOceanSunset: '/assets/canvas-styles/wall-display-ocean-sunset.webp', // user-supplied: painted ocean sunset with gold clouds
   wallDisplay3PanelLivingRoom: '/assets/canvas-styles/wall-display-3panel-living-room-boho.webp', // user-supplied: real 3-equal-panel boho arch/sun canvas set over a green sofa
+  wallDisplayHeartEyesCouple: '/assets/canvas-styles/wall-display-heart-eyes-couple.png', // user-supplied: couple holding paper hearts over their eyes, single-panel canvas on yellow background
+  wallDisplay6PanelBohoArt: '/assets/canvas-styles/wall-display-6panel-boho-art.png', // user-supplied: 6-panel (3x2) terracotta/boho abstract art grid — face, moon, sun motifs
   hexagon3PanelMomDaughter: '/assets/canvas-styles/hexagon-3panel-mom-daughter.webp', // user-supplied: 3 real hexagon panels, mother/daughter photos
   hexagon4PanelAutumnWedding: '/assets/canvas-styles/hexagon-4panel-autumn-wedding.webp', // user-supplied: 4 real hexagon panels in diamond arrangement, autumn/wedding photos
   hexagon7PanelFamily: '/assets/canvas-styles/hexagon-7panel-family.webp', // user-supplied: 6 real hexagon panels honeycomb cluster, family photos on dark green (user-confirmed count)
@@ -195,21 +195,21 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         customizeHref: '/customize/canvas/canvas-wall-art'
       },
       {
-        id: 'canvas-rainy-street-romance',
+        id: 'canvas-heart-eyes-couple',
         number: '03',
-        name: 'Rainy Street Romance Canvas',
-        description: 'A couple sharing an umbrella on a glowing, rain-slicked street — rich impasto color perfect as a statement piece above a sofa or bed.',
-        price: 899,
-        image: PHOTO.wallDisplayRainyStreet,
+        name: 'Heart Eyes Couple Canvas',
+        description: 'A playful single-panel portrait of a couple holding paper hearts over their eyes — a bright, fun statement piece for a bedroom or hallway.',
+        price: 799,
+        image: PHOTO.wallDisplayHeartEyesCouple,
         customizeHref: '/customize/canvas/canvas-wall-art'
       },
       {
-        id: 'canvas-ocean-sunset',
+        id: 'canvas-6panel-boho-art',
         number: '04',
-        name: 'Ocean Sunset Canvas',
-        description: 'A sweeping painted sunset over the ocean, clouds lit gold against deep blue — a calm, large-format centerpiece for any wall display.',
-        price: 999,
-        image: PHOTO.wallDisplayOceanSunset,
+        name: '6-Panel Boho Art Gallery Canvas',
+        description: 'A 6-panel (3×2) terracotta boho art grid — abstract face, moon and sun motifs arranged together for a cohesive, gallery-style wall feature.',
+        price: 1499,
+        image: PHOTO.wallDisplay6PanelBohoArt,
         customizeHref: '/customize/canvas/canvas-wall-art'
       }
     ],
