@@ -114,6 +114,19 @@ export const Header: React.FC<HeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [allCategoriesOpen, setAllCategoriesOpen] = useState(false);
 
+  // "Gifts & Occasions" has no dedicated page of its own — it should take
+  // the shopper straight to the homepage's "Shop by Occasion" section.
+  const goToShopOccasions = () => {
+    if (location.pathname === '/') {
+      document.getElementById('shop-occasions')?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/');
+      setTimeout(() => {
+        document.getElementById('shop-occasions')?.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    }
+  };
+
   // Dynamic active category state derived from current pathname
   const activeNav = useMemo(() => {
     const path = location.pathname.toLowerCase();
@@ -279,6 +292,8 @@ export const Header: React.FC<HeaderProps> = ({
   const handleNavClick = (slug: string) => {
     if (slug === 'corporate-orders') {
       navigate('/bulk-order');
+    } else if (slug === 'gifts') {
+      goToShopOccasions();
     } else {
       onSelectCategory(slug);
     }
@@ -820,16 +835,14 @@ export const Header: React.FC<HeaderProps> = ({
                     >
                       <button
                         type="button"
-                        onClick={(e) => {
-                          // Gifts & Occasions is purely a dropdown entry
-                          // point to its mega-menu groups — clicking it only
-                          // toggles the dropdown instead of navigating away.
+                        onClick={() => {
+                          // Gifts & Occasions has no dedicated listing page —
+                          // clicking it jumps straight to the homepage's
+                          // "Shop by Occasion" section. The dropdown with
+                          // individual occasions still opens on hover.
                           if (cat.slug === 'gifts') {
-                            if (isMenuOpen) {
-                              setActiveMegaMenu(null);
-                            } else {
-                              handleMegaMenuEnter(cat.slug, e.currentTarget.getBoundingClientRect());
-                            }
+                            setActiveMegaMenu(null);
+                            goToShopOccasions();
                             return;
                           }
                           handleNavClick(cat.slug);
