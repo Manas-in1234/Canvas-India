@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   SlidersHorizontal,
   X,
@@ -31,6 +31,12 @@ export const CorkCategoryPage: React.FC = () => {
     onToggleWishlist
   } = useShop();
 
+  const location = useLocation();
+  // Landing directly on /cork-art-patterns (the "Cork Pattern Print" card's
+  // link) should show only that subcategory by default, not every cork
+  // product — /cork and /cork-prints keep showing the full cork listing.
+  const isCorkPatternsOnlyRoute = location.pathname === '/cork-art-patterns';
+
   const [minPrice, setMinPrice] = useState<number>(PRICE_MIN_DEFAULT);
   const [maxPrice, setMaxPrice] = useState<number>(PRICE_MAX_DEFAULT);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
@@ -38,7 +44,9 @@ export const CorkCategoryPage: React.FC = () => {
   // listing with just the checked categories' products, shown on this same
   // page instead of navigating elsewhere. With none checked, Cork's own
   // products show as usual.
-  const [extraCategorySlugs, setExtraCategorySlugs] = useState<string[]>([]);
+  const [extraCategorySlugs, setExtraCategorySlugs] = useState<string[]>(
+    isCorkPatternsOnlyRoute ? ['cork-art-patterns'] : []
+  );
 
   const allCork = useMemo(
     () =>
@@ -63,7 +71,7 @@ export const CorkCategoryPage: React.FC = () => {
   const handleResetFilters = () => {
     setMinPrice(PRICE_MIN_DEFAULT);
     setMaxPrice(PRICE_MAX_DEFAULT);
-    setExtraCategorySlugs([]);
+    setExtraCategorySlugs(isCorkPatternsOnlyRoute ? ['cork-art-patterns'] : []);
   };
 
   const isFiltered =
@@ -93,7 +101,7 @@ export const CorkCategoryPage: React.FC = () => {
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-stone-500 mb-6">
             <Link to="/" className="hover:text-[#0E4A93] transition-colors">Home</Link>
             <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
-            <span className="font-semibold text-stone-900">Cork Art Patterns</span>
+            <span className="font-semibold text-stone-900">Cork Products</span>
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
@@ -110,7 +118,7 @@ export const CorkCategoryPage: React.FC = () => {
                   className="text-3xl sm:text-4xl lg:text-5xl font-black text-stone-950 tracking-tight leading-tight"
                   style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
                 >
-                  Cork Art Patterns
+                  Cork Products
                 </h1>
                 <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-2xl">
                   Textured, eco-friendly cork-finish prints — from geometric motifs to natural wood-grain designs. Lightweight, durable and ready to hang in any room.
