@@ -25,7 +25,7 @@ import { useShop } from '../context/ShopContext';
 import { ProductImage } from '../components/ProductImage';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { WallPreview } from '../components/WallPreview';
-import { HookIcon, HOOK_OPTIONS, BackOfFrameView } from '../components/FrameHookVisuals';
+import { HookIcon, HOOK_OPTIONS } from '../components/FrameHookVisuals';
 import { QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import {
   AcrylicProductReview,
@@ -41,7 +41,6 @@ export interface AcrylicProductDetailPageProps {
 // Sentinel inserted as the second gallery slot so that thumbnail renders a
 // live WallPreview (reacting to the selected shape/size) instead of a static image.
 const ROOM_VIEW_SENTINEL = '__ROOM_VIEW__';
-const BACK_VIEW_SENTINEL = '__BACK_VIEW__';
 
 // Default to the largest available size so the product — and its Room View
 // — looks substantial right away. Size lists are ordered smallest-to-largest.
@@ -128,11 +127,11 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
       });
     }
     if (list.length === 0) return list;
-    return [ROOM_VIEW_SENTINEL, BACK_VIEW_SENTINEL, ...list];
+    return [ROOM_VIEW_SENTINEL, ...list];
   }, [product]);
 
   const roomViewSourceImage = useMemo(() => {
-    return galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL && img !== BACK_VIEW_SENTINEL) || product.image;
+    return galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL) || product.image;
   }, [galleryImages, product]);
 
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
@@ -410,8 +409,6 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                 >
                   {imgUrl === ROOM_VIEW_SENTINEL ? (
                     <WallPreview imageSrc={roomViewSourceImage} shape={selectedShape} sizeLabel={selectedSize} className="w-full h-full" />
-                  ) : imgUrl === BACK_VIEW_SENTINEL ? (
-                    <BackOfFrameView hook={selectedHook} className="w-full h-full" />
                   ) : (
                     <ProductImage
                       src={imgUrl}
@@ -441,8 +438,6 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                   sizeLabel={selectedSize}
                   className="w-full h-full"
                 />
-              ) : galleryImages[activeImageIndex] === BACK_VIEW_SENTINEL ? (
-                <BackOfFrameView hook={selectedHook} className="w-full h-full" />
               ) : (
                 <SmartCropImage
                   src={galleryImages[activeImageIndex] || product.image}
