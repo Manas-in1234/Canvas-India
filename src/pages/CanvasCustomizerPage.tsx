@@ -2861,7 +2861,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Select Size & Shape Modal State
   const [isSizeShapeModalOpen, setIsSizeShapeModalOpen] = useState<boolean>(false);
-  const [isLayoutModalOpen, setIsLayoutModalOpen] = useState<boolean>(() => resolveCanvasProductTypeId(productId, catalogProduct) === 'canvas-collage');
+  const [isLayoutModalOpen, setIsLayoutModalOpen] = useState<boolean>(() => isLayoutProduct);
 
   // The Select Layout modal only makes sense for products with real, distinct multi-panel
   // arrangements. Everything else falls back to a single generic layout internally, which
