@@ -6,6 +6,7 @@ import { OCCASIONS } from '../data/occasionsData';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 import { ACRYLIC_PRODUCT_TYPES } from '../data/acrylicCustomizerData';
 import { ACRYLIC_STYLE_LANDING_DATA } from '../data/acrylicStyleLandingData';
+import { CORK_PRODUCT_CARDS } from '../data/corkProductCards';
 
 export interface HomepageProps {
   onSelectCategory: (slug: string, sub?: string) => void;
@@ -80,63 +81,6 @@ const CANVAS_STYLE_CARDS = Object.values(CANVAS_STYLE_LANDING_DATA)
     price: data.styles[0]!.price,
     href: `/canvas/${data.slug}`,
   }));
-
-const CORK_PRODUCT_CARDS = [
-  {
-    name: 'Cork Pattern Print',
-    price: 249,
-    image: '/assets/catalogue/cork-art-patterns/C-A_003.webp',
-    href: '/cork-art-patterns',
-  },
-  {
-    name: 'Yoga Mats',
-    price: 999,
-    image: '/assets/products/cork/9C-YA1/9c-ya1(1).webp',
-    href: '/yoga-fitness?sub=Yoga%20Mats',
-  },
-  {
-    name: 'Yoga Bricks',
-    price: 999,
-    image: '/assets/products/cork/9C-YA5/9C-YA5(1).webp',
-    href: '/yoga-fitness?sub=Yoga%20Bricks',
-  },
-  {
-    name: 'Yoga Wedges',
-    price: 999,
-    image: '/assets/products/cork/9C-YA8/9C-YA8.webp',
-    href: '/yoga-fitness?sub=Yoga%20Wedges',
-  },
-  {
-    name: 'Yoga Rollers',
-    price: 999,
-    image: '/assets/products/cork/9C-YA6/9C-YA6(1).webp',
-    href: '/yoga-fitness?sub=Yoga%20Rollers',
-  },
-  {
-    name: 'Yoga Balls',
-    price: 999,
-    image: '/assets/products/cork/9C-YA7/9C-YA7(1).webp',
-    href: '/yoga-fitness?sub=Yoga%20Balls',
-  },
-  {
-    name: 'Massage Sets',
-    price: 999,
-    image: '/assets/products/cork/9C-YA9/9C-YA9.webp',
-    href: '/yoga-fitness?sub=Massage%20Sets',
-  },
-  {
-    name: 'Knee Pads',
-    price: 999,
-    image: '/assets/products/cork/9C-YA11/9C-YA11(1).webp',
-    href: '/yoga-fitness?sub=Knee%20Pads',
-  },
-  {
-    name: 'Yoga Bags',
-    price: 999,
-    image: '/assets/products/cork/9C-YB1/9C-YB1.webp',
-    href: '/yoga-fitness?sub=Yoga%20Bags',
-  },
-];
 
 const TESTIMONIALS = [
   { name: 'Asha S.', city: 'Bengaluru', text: 'Amazing quality and vibrant colours! My canvas turned out even better than I imagined!', img: 'https://randomuser.me/api/portraits/women/44.jpg' },
@@ -490,7 +434,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           <div className="hidden sm:flex justify-end mt-4">
             <button
               type="button"
-              onClick={() => onSelectCategory('canvas')}
+              onClick={() => navigate('/canvas-styles')}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
             >
               View All <ArrowRight className="w-3.5 h-3.5" />
@@ -499,7 +443,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
           <button
             type="button"
-            onClick={() => onSelectCategory('canvas')}
+            onClick={() => navigate('/canvas-styles')}
             className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
           >
             View All Canvas &amp; Boards <ArrowRight className="w-3.5 h-3.5" />
@@ -567,7 +511,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           <div className="hidden sm:flex justify-end mt-4">
             <button
               type="button"
-              onClick={() => onSelectCategory('acrylic')}
+              onClick={() => navigate('/acrylic-styles')}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
             >
               View All <ArrowRight className="w-3.5 h-3.5" />
@@ -576,7 +520,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
           <button
             type="button"
-            onClick={() => onSelectCategory('acrylic')}
+            onClick={() => navigate('/acrylic-styles')}
             className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
           >
             View All Acrylic Prints <ArrowRight className="w-3.5 h-3.5" />
@@ -639,7 +583,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             <div className="hidden sm:flex justify-end mt-4">
               <button
                 type="button"
-                onClick={() => onSelectCategory('cork')}
+                onClick={() => navigate('/cork-products')}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
               >
                 View All <ArrowRight className="w-3.5 h-3.5" />
@@ -648,7 +592,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
             <button
               type="button"
-              onClick={() => onSelectCategory('cork')}
+              onClick={() => navigate('/cork-products')}
               className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
             >
               View All Cork Products <ArrowRight className="w-3.5 h-3.5" />

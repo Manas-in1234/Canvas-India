@@ -25,6 +25,9 @@ import { CanvasCategoryPage } from './pages/CanvasCategoryPage';
 import { CanvasStylePage } from './pages/CanvasStylePage';
 import { AcrylicStylePage } from './pages/AcrylicStylePage';
 import { CorkCategoryPage } from './pages/CorkCategoryPage';
+import { CanvasStylesPage } from './pages/CanvasStylesPage';
+import { AcrylicStylesPage } from './pages/AcrylicStylesPage';
+import { CorkProductsPage } from './pages/CorkProductsPage';
 import { AcrylicCustomizerPage } from './pages/AcrylicCustomizerPage';
 import { AllCategoriesPage } from './pages/AllCategoriesPage';
 import { AllOccasionsPage } from './pages/AllOccasionsPage';
@@ -97,17 +100,23 @@ export function App() {
             <Route path="/canvas" element={<CanvasCategoryPage />} />
             {/* /canvas-prints is an alias that uses the generic CategoryPage for SEO parity */}
             <Route path="/canvas-prints" element={<CategoryPage categorySlug="canvas" />} />
+            {/* "View All" grid of every Canvas style/format card (homepage's Canvas & Boards row) */}
+            <Route path="/canvas-styles" element={<CanvasStylesPage />} />
             {/* Dedicated landing page per Canvas dropdown style (Pop Art, Wall Display, etc.) */}
             <Route path="/canvas/:styleSlug" element={<CanvasStylePage />} />
             {/* Acrylic — dedicated category page */}
             <Route path="/acrylic" element={<AcrylicCategoryPage />} />
             <Route path="/acrylic-prints" element={<AcrylicCategoryPage />} />
+            {/* "View All" grid of every Acrylic style/format card (homepage's Acrylic Prints row) */}
+            <Route path="/acrylic-styles" element={<AcrylicStylesPage />} />
             {/* Dedicated landing page per Acrylic product type (Wall Display, Split Acrylic, etc.) */}
             <Route path="/acrylic/:styleSlug" element={<AcrylicStylePage />} />
             <Route path="/posters" element={<CategoryPage categorySlug="posters" />} />
 
             <Route path="/cork" element={<CorkCategoryPage />} />
             <Route path="/cork-prints" element={<CorkCategoryPage />} />
+            {/* "View All" grid of every Cork format card (homepage's Cork Products row) */}
+            <Route path="/cork-products" element={<CorkProductsPage />} />
 
             <Route path="/yoga-fitness" element={<CategoryPage categorySlug="yoga-fitness" />} />
             <Route path="/home-decor" element={<CategoryPage categorySlug="home-decor" />} />
