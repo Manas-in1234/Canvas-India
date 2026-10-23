@@ -182,24 +182,6 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   const corkRowRef = useRef<HTMLDivElement>(null);
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
   const [bestsellerFormat, setBestsellerFormat] = useState<Record<string, 'canvas' | 'acrylic'>>({});
-  // Randomized per page-load so each floating phrase drifts a different way
-  // each visit — up, down, left, right or diagonal — instead of a fixed
-  // loop. Each phrase starts from its own side of the button (bias) and
-  // wanders near there so "from the bottom/left/right" stays recognizable.
-  const [floatPaths] = useState(() => {
-    const rand = (min: number, max: number) => Math.round(min + Math.random() * (max - min));
-    const makePath = (biasX: number, biasY: number) => ({
-      x1: biasX + rand(-30, 30), y1: biasY + rand(-30, 10), r1: rand(-10, 10),
-      x2: biasX + rand(-30, 30), y2: biasY + rand(-45, 0), r2: rand(-10, 10),
-      x3: biasX + rand(-30, 30), y3: biasY + rand(-55, -10), r3: rand(-10, 10),
-    });
-    return {
-      clickMe: makePath(0, 0),
-      loved: makePath(0, 55),
-      creativity: makePath(-95, 0),
-      start: makePath(95, 0),
-    };
-  });
 
   const handleCopyCoupon = (code: string) => {
     navigator.clipboard.writeText(code).catch(() => {});
@@ -231,16 +213,10 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       <style>{`
         @keyframes ci-float { 0%,100% { transform: translateY(0) rotate(var(--r,0deg)); } 50% { transform: translateY(-10px) rotate(var(--r,0deg)); } }
         .ci-float { animation: ci-float 5s ease-in-out infinite; }
-        @keyframes ci-float-text {
-          0%   { transform: translate(calc(-50% + var(--fx0, 0px)), var(--fy0, 0px)) rotate(0deg); opacity: 0; }
-          10%  { opacity: 1; }
-          30%  { transform: translate(calc(-50% + var(--fx1)), var(--fy1)) rotate(var(--fr1)); }
-          55%  { transform: translate(calc(-50% + var(--fx2)), var(--fy2)) rotate(var(--fr2)); opacity: 1; }
-          80%  { transform: translate(calc(-50% + var(--fx3)), var(--fy3)) rotate(var(--fr3)); }
-          92%  { opacity: 0; }
-          100% { transform: translate(calc(-50% + var(--fx3)), var(--fy3)) rotate(var(--fr3)); opacity: 0; }
-        }
-        .ci-float-text { animation: ci-float-text 4.6s ease-in-out infinite; }
+        @keyframes ci-glow-a { 0%,100% { opacity: 0.55; transform: scale(1) rotate(0deg); } 50% { opacity: 0.95; transform: scale(1.15) rotate(8deg); } }
+        @keyframes ci-glow-b { 0%,100% { opacity: 0.4; transform: scale(1.05) rotate(0deg); } 50% { opacity: 0.8; transform: scale(0.9) rotate(-10deg); } }
+        .ci-glow-a { animation: ci-glow-a 2.6s ease-in-out infinite; }
+        .ci-glow-b { animation: ci-glow-b 2.6s ease-in-out infinite 0.4s; }
       `}</style>
 
       {/* HERO */}
@@ -332,39 +308,19 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <div className="relative inline-block">
-                {/* Four phrases, each starting from its own side of the
-                    button (center/bottom/left/right) and floating off in a
-                    random direction — re-rolled each page load — then
-                    fading, looping, staggered so they don't sync up. */}
-                {([
-                  { text: 'Click me to customize ❤️', path: floatPaths.clickMe, x0: 0, y0: 0, delay: 0 },
-                  { text: 'For your loved ones', path: floatPaths.loved, x0: 0, y0: 55, delay: 1.1 },
-                  { text: 'Show your creativity', path: floatPaths.creativity, x0: -95, y0: 0, delay: 2.2 },
-                  { text: "Let's start", path: floatPaths.start, x0: 95, y0: 0, delay: 3.3 },
-                ] as const).map((p) => (
-                  <span
-                    key={p.text}
-                    className="ci-float-text absolute left-1/2 bottom-1/2 text-sm sm:text-base font-extrabold text-[#E8752A] whitespace-nowrap pointer-events-none"
-                    style={{
-                      textShadow: '0 1px 4px rgba(255,255,255,0.95), 0 0 2px rgba(255,255,255,0.95)',
-                      animationDelay: `${p.delay}s`,
-                      ['--fx0' as any]: `${p.x0}px`,
-                      ['--fy0' as any]: `${p.y0}px`,
-                      ['--fx1' as any]: `${p.path.x1}px`,
-                      ['--fy1' as any]: `${p.path.y1}px`,
-                      ['--fr1' as any]: `${p.path.r1}deg`,
-                      ['--fx2' as any]: `${p.path.x2}px`,
-                      ['--fy2' as any]: `${p.path.y2}px`,
-                      ['--fr2' as any]: `${p.path.r2}deg`,
-                      ['--fx3' as any]: `${p.path.x3}px`,
-                      ['--fy3' as any]: `${p.path.y3}px`,
-                      ['--fr3' as any]: `${p.path.r3}deg`,
-                    }}
-                    aria-hidden="true"
-                  >
-                    {p.text}
-                  </span>
-                ))}
+                {/* Layered pulsing glow — two softly blurred blobs (orange +
+                    gold) pulsing out of phase with a slow rotation, for more
+                    depth than a single flat color pulse. */}
+                <span
+                  className="ci-glow-a absolute -inset-5 rounded-full pointer-events-none"
+                  style={{ background: 'radial-gradient(circle, #FF8A3D 0%, #E8752A 55%, transparent 75%)', filter: 'blur(22px)' }}
+                  aria-hidden="true"
+                />
+                <span
+                  className="ci-glow-b absolute -inset-3 rounded-full pointer-events-none"
+                  style={{ background: 'radial-gradient(circle, #FFD37A 0%, #FFB347 60%, transparent 75%)', filter: 'blur(14px)' }}
+                  aria-hidden="true"
+                />
                 <button
                   type="button"
                   onClick={handleStartCreatingCanvas}
