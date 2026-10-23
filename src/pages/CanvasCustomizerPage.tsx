@@ -51,7 +51,9 @@ import {
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { QuotesTemplateSidebarPanel } from '../components/QuotesTemplateSidebarPanel';
-import { getQuoteTemplate, QuoteTemplateItem } from '../data/quoteTemplatesData';
+import { SelectPreferenceModal } from '../components/SelectPreferenceModal';
+import { QuotesCreateOwnPanel } from '../components/QuotesCreateOwnPanel';
+import { getQuoteTemplate, QuoteTemplateItem, QUOTE_TEMPLATES } from '../data/quoteTemplatesData';
 import { WordArtSizeRatioModal } from '../components/WordArtSizeRatioModal';
 import { WordArtPersonalizeModal } from '../components/WordArtPersonalizeModal';
 import { DigitalPaintingOptionsPanel } from '../components/DigitalPaintingOptionsPanel';
@@ -765,24 +767,138 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Heart Canvas', dimension: '12" × 12"', widthRatio: 12, heightRatio: 12 }]
   },
 
-  // 5. Oval Canvas (canvas-oval) - Starts at ₹1,380.67
+  // 5. Oval Canvas (canvas-oval) - Starts at ₹1,380.67 (Requirement 3: Horizontal & Vertical)
+  // Horizontal Oval (W > H)
+  {
+    id: 'oval-10x8-h',
+    productTypeId: 'canvas-oval',
+    label: 'Oval: 10" × 8" (Horizontal)',
+    dimensionsSummary: '10" × 8"',
+    price: 1380.67,
+    categories: ['RECOMMENDED', 'SMALL'],
+    widthInches: 10,
+    heightInches: 8,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Oval Canvas', dimension: '10" × 8"', widthRatio: 10, heightRatio: 8 }]
+  },
+  {
+    id: 'oval-14x10-h',
+    productTypeId: 'canvas-oval',
+    label: 'Oval: 14" × 10" (Horizontal)',
+    dimensionsSummary: '14" × 10"',
+    price: 1699.0,
+    categories: ['RECOMMENDED'],
+    widthInches: 14,
+    heightInches: 10,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Oval Canvas', dimension: '14" × 10"', widthRatio: 14, heightRatio: 10 }]
+  },
+  {
+    id: 'oval-16x12-h',
+    productTypeId: 'canvas-oval',
+    label: 'Oval: 16" × 12" (Horizontal)',
+    dimensionsSummary: '16" × 12"',
+    price: 1999.0,
+    categories: ['RECOMMENDED'],
+    widthInches: 16,
+    heightInches: 12,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Oval Canvas', dimension: '16" × 12"', widthRatio: 16, heightRatio: 12 }]
+  },
+  {
+    id: 'oval-20x16-h',
+    productTypeId: 'canvas-oval',
+    label: 'Oval: 20" × 16" (Horizontal)',
+    dimensionsSummary: '20" × 16"',
+    price: 2599.0,
+    categories: ['LARGE'],
+    widthInches: 20,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Oval Canvas', dimension: '20" × 16"', widthRatio: 20, heightRatio: 16 }]
+  },
+  {
+    id: 'oval-24x18-h',
+    productTypeId: 'canvas-oval',
+    label: 'Oval: 24" × 18" (Horizontal)',
+    dimensionsSummary: '24" × 18"',
+    price: 3299.0,
+    categories: ['LARGE'],
+    widthInches: 24,
+    heightInches: 18,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Oval Canvas', dimension: '24" × 18"', widthRatio: 24, heightRatio: 18 }]
+  },
+  // Vertical Oval (W < H)
   {
     id: 'oval-8x10',
     productTypeId: 'canvas-oval',
-    label: 'Oval: 8" × 10"',
+    label: 'Oval: 8" × 10" (Vertical)',
     dimensionsSummary: '8" × 10"',
     price: 1380.67,
-    categories: ['RECOMMENDED'],
+    categories: ['RECOMMENDED', 'SMALL'],
+    widthInches: 8,
+    heightInches: 10,
+    panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Oval Canvas', dimension: '8" × 10"', widthRatio: 8, heightRatio: 10 }]
+  },
+  {
+    id: 'oval-10x14-v',
+    productTypeId: 'canvas-oval',
+    label: 'Oval: 10" × 14" (Vertical)',
+    dimensionsSummary: '10" × 14"',
+    price: 1699.0,
+    categories: ['RECOMMENDED'],
+    widthInches: 10,
+    heightInches: 14,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Oval Canvas', dimension: '10" × 14"', widthRatio: 10, heightRatio: 14 }]
   },
   {
     id: 'oval-12x16',
     productTypeId: 'canvas-oval',
-    label: 'Oval: 12" × 16"',
+    label: 'Oval: 12" × 16" (Vertical)',
     dimensionsSummary: '12" × 16"',
     price: 1899.0,
     categories: ['RECOMMENDED'],
+    widthInches: 12,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Oval Canvas', dimension: '12" × 16"', widthRatio: 12, heightRatio: 16 }]
+  },
+  {
+    id: 'oval-16x20-v',
+    productTypeId: 'canvas-oval',
+    label: 'Oval: 16" × 20" (Vertical)',
+    dimensionsSummary: '16" × 20"',
+    price: 2599.0,
+    categories: ['LARGE'],
+    widthInches: 16,
+    heightInches: 20,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Oval Canvas', dimension: '16" × 20"', widthRatio: 16, heightRatio: 20 }]
+  },
+  {
+    id: 'oval-18x24-v',
+    productTypeId: 'canvas-oval',
+    label: 'Oval: 18" × 24" (Vertical)',
+    dimensionsSummary: '18" × 24"',
+    price: 3299.0,
+    categories: ['LARGE'],
+    widthInches: 18,
+    heightInches: 24,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Oval Canvas', dimension: '18" × 24"', widthRatio: 18, heightRatio: 24 }]
   },
 
   // 6. Wall Display (canvas-wall-art) - Starts at ₹856.90
@@ -1333,16 +1449,153 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Banner Canvas', dimension: '16" × 24"', widthRatio: 16, heightRatio: 24 }]
   },
 
-  // 16. Pop Art (canvas-pop-art) - Starts at ₹598.00
+  // 16. Pop Art (canvas-pop-art) - Starts at ₹399.00 (Requirement 5: Predefined sizes across all categories)
+  // Small & Square
+  {
+    id: 'pop-8x8',
+    productTypeId: 'canvas-pop-art',
+    label: 'Pop Art: 8" × 8"',
+    dimensionsSummary: '8" × 8"',
+    price: 399.0,
+    categories: ['SMALL', 'SQUARE'],
+    widthInches: 8,
+    heightInches: 8,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '8" × 8"', widthRatio: 8, heightRatio: 8 }]
+  },
+  {
+    id: 'pop-8x10',
+    productTypeId: 'canvas-pop-art',
+    label: 'Pop Art: 8" × 10"',
+    dimensionsSummary: '8" × 10"',
+    price: 449.0,
+    categories: ['SMALL', 'RECOMMENDED'],
+    widthInches: 8,
+    heightInches: 10,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '8" × 10"', widthRatio: 8, heightRatio: 10 }]
+  },
+  {
+    id: 'pop-10x10',
+    productTypeId: 'canvas-pop-art',
+    label: 'Pop Art: 10" × 10"',
+    dimensionsSummary: '10" × 10"',
+    price: 499.0,
+    categories: ['SMALL', 'SQUARE'],
+    widthInches: 10,
+    heightInches: 10,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }]
+  },
+  {
+    id: 'pop-12x8',
+    productTypeId: 'canvas-pop-art',
+    label: 'Pop Art: 12" × 8"',
+    dimensionsSummary: '12" × 8"',
+    price: 499.0,
+    categories: ['SMALL', 'PANORAMIC'],
+    widthInches: 12,
+    heightInches: 8,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '12" × 8"', widthRatio: 12, heightRatio: 8 }]
+  },
   {
     id: 'pop-12x12',
     productTypeId: 'canvas-pop-art',
     label: 'Pop Art: 12" × 12"',
     dimensionsSummary: '12" × 12"',
     price: 598.0,
-    categories: ['RECOMMENDED', 'SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE', 'SMALL'],
+    widthInches: 12,
+    heightInches: 12,
+    panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '12" × 12"', widthRatio: 12, heightRatio: 12 }]
   },
+  {
+    id: 'pop-14x11',
+    productTypeId: 'canvas-pop-art',
+    label: 'Pop Art: 14" × 11"',
+    dimensionsSummary: '14" × 11"',
+    price: 699.0,
+    categories: ['SMALL'],
+    widthInches: 14,
+    heightInches: 11,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '14" × 11"', widthRatio: 14, heightRatio: 11 }]
+  },
+  // Panoramic
+  {
+    id: 'pop-18x12',
+    productTypeId: 'canvas-pop-art',
+    label: 'Pop Art: 18" × 12"',
+    dimensionsSummary: '18" × 12"',
+    price: 799.0,
+    categories: ['PANORAMIC', 'RECOMMENDED'],
+    widthInches: 18,
+    heightInches: 12,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '18" × 12"', widthRatio: 18, heightRatio: 12 }]
+  },
+  {
+    id: 'pop-24x12',
+    productTypeId: 'canvas-pop-art',
+    label: 'Pop Art: 24" × 12"',
+    dimensionsSummary: '24" × 12"',
+    price: 999.0,
+    categories: ['PANORAMIC'],
+    widthInches: 24,
+    heightInches: 12,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '24" × 12"', widthRatio: 24, heightRatio: 12 }]
+  },
+  {
+    id: 'pop-24x16',
+    productTypeId: 'canvas-pop-art',
+    label: 'Pop Art: 24" × 16"',
+    dimensionsSummary: '24" × 16"',
+    price: 1299.0,
+    categories: ['PANORAMIC', 'RECOMMENDED'],
+    widthInches: 24,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '24" × 16"', widthRatio: 24, heightRatio: 16 }]
+  },
+  {
+    id: 'pop-30x20',
+    productTypeId: 'canvas-pop-art',
+    label: 'Pop Art: 30" × 20"',
+    dimensionsSummary: '30" × 20"',
+    price: 1799.0,
+    categories: ['PANORAMIC', 'LARGE'],
+    widthInches: 30,
+    heightInches: 20,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '30" × 20"', widthRatio: 30, heightRatio: 20 }]
+  },
+  {
+    id: 'pop-36x24',
+    productTypeId: 'canvas-pop-art',
+    label: 'Pop Art: 36" × 24"',
+    dimensionsSummary: '36" × 24"',
+    price: 2299.0,
+    categories: ['PANORAMIC', 'LARGE'],
+    widthInches: 36,
+    heightInches: 24,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '36" × 24"', widthRatio: 36, heightRatio: 24 }]
+  },
+  // Square & Large
   {
     id: 'pop-16x16',
     productTypeId: 'canvas-pop-art',
@@ -1350,7 +1603,76 @@ const SIZE_OPTIONS: SizeOption[] = [
     dimensionsSummary: '16" × 16"',
     price: 999.0,
     categories: ['RECOMMENDED', 'SQUARE'],
+    widthInches: 16,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
+  },
+  {
+    id: 'pop-16x20',
+    productTypeId: 'canvas-pop-art',
+    label: 'Pop Art: 16" × 20"',
+    dimensionsSummary: '16" × 20"',
+    price: 1399.0,
+    categories: ['LARGE'],
+    widthInches: 16,
+    heightInches: 20,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '16" × 20"', widthRatio: 16, heightRatio: 20 }]
+  },
+  {
+    id: 'pop-18x24',
+    productTypeId: 'canvas-pop-art',
+    label: 'Pop Art: 18" × 24"',
+    dimensionsSummary: '18" × 24"',
+    price: 1599.0,
+    categories: ['LARGE'],
+    widthInches: 18,
+    heightInches: 24,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '18" × 24"', widthRatio: 18, heightRatio: 24 }]
+  },
+  {
+    id: 'pop-20x20',
+    productTypeId: 'canvas-pop-art',
+    label: 'Pop Art: 20" × 20"',
+    dimensionsSummary: '20" × 20"',
+    price: 1499.0,
+    categories: ['LARGE', 'SQUARE'],
+    widthInches: 20,
+    heightInches: 20,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '20" × 20"', widthRatio: 20, heightRatio: 20 }]
+  },
+  {
+    id: 'pop-24x24',
+    productTypeId: 'canvas-pop-art',
+    label: 'Pop Art: 24" × 24"',
+    dimensionsSummary: '24" × 24"',
+    price: 1999.0,
+    categories: ['LARGE', 'SQUARE'],
+    widthInches: 24,
+    heightInches: 24,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '24" × 24"', widthRatio: 24, heightRatio: 24 }]
+  },
+  {
+    id: 'pop-24x30',
+    productTypeId: 'canvas-pop-art',
+    label: 'Pop Art: 24" × 30"',
+    dimensionsSummary: '24" × 30"',
+    price: 2199.0,
+    categories: ['LARGE'],
+    widthInches: 24,
+    heightInches: 30,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '24" × 30"', widthRatio: 24, heightRatio: 30 }]
   },
 
   // 17. Word Art (canvas-word-art) - Starts at ₹198.00
@@ -2151,7 +2473,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         upload: !isBusRollProduct,
         sizes: !isSplitProduct && !isCollageProduct && !isMosaicProduct && !isWallArtProduct && !isHexagonProduct && !isBusRollProduct,
         shapes: !isSplitProduct && !isCollageProduct && !isMosaicProduct && !isWallArtProduct && !isHexagonProduct && !isBusRollProduct && !isLyricProduct && !isQuotesProduct && !isWordArtProduct,
-        layouts: isCollageProduct || isMosaicProduct || isSplitProduct || isWallArtProduct || isHexagonProduct,
+        layouts: (isSinglePrintCanvas || isLyricProduct) && !isMosaicProduct && !isWallArtProduct && !isCollageProduct && !isSplitProduct && !isHexagonProduct,
         effects: isDigitalPaintingProduct,
         busRoll: isBusRollProduct,
         wrap: false,
@@ -2949,6 +3271,83 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     setActiveTab('UPLOAD');
   };
 
+  // Quotes on Canvas & Quotes on Acrylic Preference State (Requirement 1)
+  const [quotesPreference, setQuotesPreference] = useState<'create-own' | 'collection' | null>(null);
+  const [isQuotesPreferenceModalOpen, setIsQuotesPreferenceModalOpen] = useState<boolean>(false);
+  const [quoteBgColor, setQuoteBgColor] = useState<string>('#FFFFFF');
+  const [quoteBgImage, setQuoteBgImage] = useState<string | null>(null);
+  const [quoteCustomText, setQuoteCustomText] = useState<string>('The future belongs to those who believe in the beauty of their dreams.');
+  const [quoteAuthor, setQuoteAuthor] = useState<string>('Eleanor Roosevelt');
+  const [quoteFontFamily, setQuoteFontFamily] = useState<string>('Playfair Display');
+  const [quoteTextColor, setQuoteTextColor] = useState<string>('#1C1917');
+  const [quoteAlignment, setQuoteAlignment] = useState<'left' | 'center' | 'right'>('center');
+  const [quoteFontSize, setQuoteFontSize] = useState<number>(28);
+  const [hasQuoteContrast, setHasQuoteContrast] = useState<boolean>(false);
+
+  // Open Quotes Preference Modal on initial visit to Quotes on Canvas or Quotes on Acrylic
+  useEffect(() => {
+    if (isQuotesProduct && quotesPreference === null) {
+      setIsQuotesPreferenceModalOpen(true);
+    }
+  }, [isQuotesProduct, quotesPreference]);
+
+  const handleSelectCollectionPreference = () => {
+    setQuotesPreference('collection');
+    setIsQuotesPreferenceModalOpen(false);
+    const tmpl = getQuoteTemplate(selectedQuoteTemplateId) || getQuoteTemplate('quote-inspire-01');
+    if (tmpl) {
+      handleSelectQuoteTemplate(tmpl);
+    }
+  };
+
+  const handleSelectCreateOwnPreference = () => {
+    setQuotesPreference('create-own');
+    setIsQuotesPreferenceModalOpen(false);
+    setPanelImages((prev) => {
+      const cur = prev[0];
+      const isTemplateImg = QUOTE_TEMPLATES.some((t) => t.image === cur?.imageUrl);
+      if (isTemplateImg) {
+        return {
+          ...prev,
+          0: {
+            ...createDefaultPanel(),
+            imageUrl: quoteBgImage || '',
+            fitMode: 'cover'
+          }
+        };
+      }
+      return prev;
+    });
+  };
+
+  const handleSelectQuoteBgImage = (url: string) => {
+    setQuoteBgImage(url);
+    setPanelImages((prev) => ({
+      ...prev,
+      0: {
+        ...createDefaultPanel(),
+        imageUrl: url,
+        fitMode: 'cover',
+        scale: 1,
+        rotation: 0,
+        panX: 0,
+        panY: 0
+      }
+    }));
+  };
+
+  const handleRemoveQuoteBgImage = () => {
+    setQuoteBgImage(null);
+    setPanelImages((prev) => ({
+      ...prev,
+      0: {
+        ...createDefaultPanel(),
+        imageUrl: '',
+        fitMode: 'cover'
+      }
+    }));
+  };
+
   // Quotes on Canvas State (Selected Quote Template -> Auto-mounts into Slot 0)
   const [selectedQuoteTemplateId, setSelectedQuoteTemplateId] = useState<string>('quote-inspire-01');
 
@@ -3567,10 +3966,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     setLyricConfig((prev) => ({
       ...prev,
       selectedTemplateId: tpl.id,
-      title: prev.title !== undefined ? prev.title : tpl.defaultText.title,
-      artistOrSubtitle: prev.artistOrSubtitle !== undefined ? prev.artistOrSubtitle : tpl.defaultText.artistOrSubtitle,
-      lyrics: prev.lyrics !== undefined ? prev.lyrics : tpl.defaultText.lyrics,
-      dateOrNames: prev.dateOrNames !== undefined ? prev.dateOrNames : (tpl.defaultText.dateOrNames || ''),
+      layout: tpl.defaultLayout,
+      title: tpl.defaultText.title,
+      artistOrSubtitle: tpl.defaultText.artistOrSubtitle,
+      lyrics: tpl.defaultText.lyrics,
+      dateOrNames: tpl.defaultText.dateOrNames || '',
       fontFamily: tpl.defaultTypography.fontFamily,
       textColor: tpl.defaultTypography.textColor,
       alignment: tpl.defaultTypography.alignment,
@@ -3840,7 +4240,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Single source of truth for whether at least ONE valid customer image is currently uploaded
   const hasUploadedImage = useMemo(() => {
-    if (isBusRollProduct || isLyricProduct) {
+    if (isBusRollProduct || isLyricProduct || isQuotesProduct) {
       return true;
     }
     const anySlotHasImage = Object.values(panelImages).some(
@@ -4584,8 +4984,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Mouse/Touch Drag Handlers
   const handlePointerDown = (e: React.PointerEvent, panelIdx: number) => {
+    if (isMosaicProduct) {
+      // Requirement 6: Keep image fixed during workspace / tile interaction
+      // Intentional repositioning is performed predictably via supported nudge controls
+      return;
+    }
     setActivePanelIndex(panelIdx);
-    const targetIdx = (isSplitProduct || isMosaicProduct) ? 0 : panelIdx;
+    const targetIdx = isSplitProduct ? 0 : panelIdx;
     const curr = panelImages[targetIdx];
     if (!curr?.imageUrl) return;
 
@@ -4682,6 +5087,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       ];
     });
     setSelectedElement({ type: 'text', id: 'tpl-text' });
+  };
+
+  const handleRemoveTemplate = () => {
+    setSelectedTemplateId(null);
+    setTextElements((prev) => prev.filter((t) => t.id !== 'tpl-text'));
+    setSelectedElement((prev) => (prev?.id === 'tpl-text' ? null : prev));
+    setShowTextModal(false);
   };
 
   const activeTemplate = useMemo(() => DESIGN_TEMPLATES.find((t) => t.id === selectedTemplateId) || null, [selectedTemplateId]);
@@ -4905,7 +5317,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         majorRetouchText: majorRetouchText || undefined,
         proofRequested,
         template: selectedTemplateId ? DESIGN_TEMPLATES.find((t) => t.id === selectedTemplateId)?.name : undefined,
-        quoteTemplate: isQuotesProduct ? getQuoteTemplate(selectedQuoteTemplateId)?.title : undefined,
+        quotePreference: isQuotesProduct ? (quotesPreference || 'collection') : undefined,
+        quoteTemplate: isQuotesProduct ? (quotesPreference === 'create-own' ? 'Create Your Own' : getQuoteTemplate(selectedQuoteTemplateId)?.title) : undefined,
+        quoteCustomText: isQuotesProduct && quotesPreference === 'create-own' ? quoteCustomText : undefined,
+        quoteAuthor: isQuotesProduct && quotesPreference === 'create-own' ? quoteAuthor : undefined,
+        quoteBgColor: isQuotesProduct && quotesPreference === 'create-own' ? quoteBgColor : undefined,
         digitalPaintingEffect: isDigitalPaintingProduct ? getDigitalPaintingEffect(digitalPaintingConfig.selectedEffectId).name : undefined,
         digitalPaintingSubject: isDigitalPaintingProduct ? digitalPaintingConfig.subjectType : undefined,
         digitalPaintingBackground: isDigitalPaintingProduct ? (
@@ -5224,6 +5640,53 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   };
 
   // Dedicated Lyric Canvas Typography Overlay (for canvas-lyric)
+  const renderQuotesCreateOwnOverlay = (scaleFactor: number = 1) => {
+    if (!isQuotesProduct || quotesPreference !== 'create-own') return null;
+    const fs = (px: number) => `${Math.max(9, Math.round(px * scaleFactor))}px`;
+    const fontFamilies: Record<string, string> = {
+      'Playfair Display': '"Playfair Display", Georgia, serif',
+      'Cormorant Garamond': '"Cormorant Garamond", Garamond, serif',
+      'Dancing Script': '"Dancing Script", cursive',
+      'Montserrat': '"Montserrat", sans-serif',
+      'Cinzel': '"Cinzel", serif',
+      'Oswald': '"Oswald", sans-serif'
+    };
+    const font = fontFamilies[quoteFontFamily] || '"Playfair Display", serif';
+    const hasPhoto = Boolean(quoteBgImage || panelImages[0]?.imageUrl);
+
+    return (
+      <div
+        className="absolute inset-0 z-25 flex flex-col items-center justify-center pointer-events-none select-none p-5 sm:p-7 text-center"
+        style={{
+          fontFamily: font,
+          color: quoteTextColor,
+          textAlign: quoteAlignment,
+          textShadow: hasQuoteContrast || hasPhoto ? '0 1px 4px rgba(0,0,0,0.85), 0 2px 8px rgba(0,0,0,0.6)' : undefined
+        }}
+      >
+        {hasQuoteContrast && hasPhoto && (
+          <div className="absolute inset-0 bg-black/20 pointer-events-none -z-10" />
+        )}
+        {quoteCustomText && (
+          <div
+            className="leading-relaxed whitespace-pre-line font-bold max-w-[92%]"
+            style={{ fontSize: fs(quoteFontSize) }}
+          >
+            &ldquo;{quoteCustomText}&rdquo;
+          </div>
+        )}
+        {quoteAuthor && (
+          <div
+            className="mt-3 opacity-90 italic tracking-wider font-medium"
+            style={{ fontSize: fs(Math.max(10, Math.round(quoteFontSize * 0.55))) }}
+          >
+            {quoteAuthor}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderLyricOverlay = (scaleFactor: number = 1) => {
     const fontFamilies: Record<string, string> = {
       'Playfair Display': '"Playfair Display", Georgia, "Times New Roman", serif',
@@ -5744,7 +6207,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               }
             }}
             className={`relative bg-[#d8dce2] rounded-[2px] overflow-hidden border border-stone-300/80 transition-all select-none ${
-              masterImage ? 'cursor-grab active:cursor-grabbing shadow-2xl' : 'cursor-pointer hover:border-[#0E4A93] shadow-xl'
+              masterImage ? 'shadow-2xl' : 'cursor-pointer hover:border-[#0E4A93] shadow-xl'
             }`}
             style={{
               aspectRatio: String(layout.aspectRatio),
@@ -6719,19 +7182,53 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </div>
               </div>
             ) : isQuotesProduct ? (
-              <QuotesTemplateSidebarPanel
-                selectedTemplateId={selectedQuoteTemplateId}
-                onSelectTemplate={handleSelectQuoteTemplate}
-                onChangeSizeClick={() => setIsSizeShapeModalOpen(true)}
-                currentSizeLabel={currentSizeOption?.label || '8" × 8"'}
-                currentPrice={totalPrice}
-                onOpenTextModal={() => {
-                  if (textElements.length === 0) {
-                    handleAddText();
-                  }
-                  setShowTextModal(true);
-                }}
-              />
+              quotesPreference === 'create-own' ? (
+                <QuotesCreateOwnPanel
+                  quoteBgColor={quoteBgColor}
+                  onChangeQuoteBgColor={setQuoteBgColor}
+                  quoteBgImage={quoteBgImage}
+                  onSelectQuoteBgImage={handleSelectQuoteBgImage}
+                  onRemoveQuoteBgImage={handleRemoveQuoteBgImage}
+                  uploadedPhotos={uploadedPhotos}
+                  onTriggerUpload={() => {
+                    uploadTargetRef.current = 0;
+                    fileInputRef.current?.click();
+                  }}
+                  quoteText={quoteCustomText}
+                  onChangeQuoteText={setQuoteCustomText}
+                  quoteAuthor={quoteAuthor}
+                  onChangeQuoteAuthor={setQuoteAuthor}
+                  fontFamily={quoteFontFamily}
+                  onChangeFontFamily={setQuoteFontFamily}
+                  textColor={quoteTextColor}
+                  onChangeTextColor={setQuoteTextColor}
+                  textAlignment={quoteAlignment}
+                  onChangeTextAlignment={setQuoteAlignment}
+                  fontSize={quoteFontSize}
+                  onChangeFontSize={setQuoteFontSize}
+                  hasTextContrast={hasQuoteContrast}
+                  onToggleTextContrast={() => setHasQuoteContrast(!hasQuoteContrast)}
+                  currentSizeLabel={currentSizeOption?.label || '8" × 8"'}
+                  currentPrice={totalPrice}
+                  onChangeSizeClick={() => setIsSizeShapeModalOpen(true)}
+                  onChangePreferenceClick={() => setIsQuotesPreferenceModalOpen(true)}
+                />
+              ) : (
+                <QuotesTemplateSidebarPanel
+                  selectedTemplateId={selectedQuoteTemplateId}
+                  onSelectTemplate={handleSelectQuoteTemplate}
+                  onChangeSizeClick={() => setIsSizeShapeModalOpen(true)}
+                  currentSizeLabel={currentSizeOption?.label || '8" × 8"'}
+                  currentPrice={totalPrice}
+                  onChangePreferenceClick={() => setIsQuotesPreferenceModalOpen(true)}
+                  onOpenTextModal={() => {
+                    if (textElements.length === 0) {
+                      handleAddText();
+                    }
+                    setShowTextModal(true);
+                  }}
+                />
+              )
             ) : (
             <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
               <div>
@@ -7588,28 +8085,56 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             ) : (
               <div className="p-4 space-y-3.5">
                 <>
-                  {/* Remove Design/Template Header Action Tile (Matching Screenshot 1) */}
-                  <div className="pb-1 border-b border-stone-200">
-                    <span className="text-xs font-bold text-stone-700 block mb-1.5">
-                      Remove Design/Template
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedTemplateId(null);
-                        setTextElements((prev) => prev.filter((t) => t.id !== 'tpl-text'));
-                      }}
-                      className={`w-20 h-20 rounded-xl border-2 flex items-center justify-center transition-all cursor-pointer ${
-                        selectedTemplateId
-                          ? 'border-orange-500 bg-orange-50/40 hover:bg-orange-100 shadow-xs'
-                          : 'border-stone-300 bg-stone-50 hover:bg-stone-100'
-                      }`}
-                      title="Clear active design or template"
-                    >
-                      <div className="relative w-14 h-14 border border-stone-400 bg-white rounded-lg flex items-center justify-center shadow-2xs">
-                        <X className="w-8 h-8 text-stone-400 stroke-[2.5]" />
-                      </div>
-                    </button>
+                  {/* Remove Design/Template Header Action Tile (Requirement 2) */}
+                  <div className="pb-2 border-b border-stone-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-stone-800">
+                        Design Template
+                      </span>
+                      {selectedTemplateId && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveTemplate}
+                          className="text-[11px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-md transition-colors cursor-pointer flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Remove Template</span>
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleRemoveTemplate}
+                        className={`w-16 h-16 rounded-xl border-2 flex flex-col items-center justify-center transition-all cursor-pointer ${
+                          !selectedTemplateId
+                            ? 'border-[#0E4A93] bg-blue-50/30 ring-2 ring-[#0E4A93]/20 shadow-xs'
+                            : 'border-stone-200 bg-stone-50 hover:border-stone-400'
+                        }`}
+                        title="Plain Print (No template)"
+                      >
+                        <div className="relative w-8 h-8 border border-stone-300 bg-white rounded flex items-center justify-center shadow-2xs">
+                          <X className="w-4 h-4 text-stone-400 stroke-[2.5]" />
+                        </div>
+                        <span className="text-[9px] font-bold text-stone-600 mt-1">None</span>
+                      </button>
+                      {activeTemplate && (
+                        <div className="flex-1 p-2 bg-blue-50/60 rounded-xl border border-blue-200/80 flex items-center justify-between">
+                          <div className="min-w-0 pr-2">
+                            <span className="text-[10px] font-black uppercase text-[#0E4A93] block">Active:</span>
+                            <span className="text-xs font-bold text-stone-900 truncate block">{activeTemplate.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleRemoveTemplate}
+                            className="p-1.5 rounded-lg bg-white hover:bg-rose-50 text-rose-600 border border-stone-200 shadow-2xs transition-colors cursor-pointer shrink-0"
+                            title="Remove this design"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* DESIGNS vs LAYOUTS Tabs (Matching Screenshot 1) */}
@@ -8492,6 +9017,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   </>
                 ) : (
                   <>
+                    {isQuotesProduct && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setIsQuotesPreferenceModalOpen(true)}
+                          className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-[#0E4A93] border border-blue-200/80 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                          <SlidersHorizontal className="w-2.5 h-2.5" />
+                          <span>Preference: {quotesPreference === 'create-own' ? 'Create Your Own' : 'Our Collection'} (Change)</span>
+                        </button>
+                        <span>•</span>
+                      </>
+                    )}
                     <span>
                       Material:{' '}
                       <strong className="text-stone-900">
@@ -8897,7 +9435,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                   activePanelIndex === 0 ? 'ring-2 ring-[#0E4A93]/50' : ''
                                 } overflow-hidden`}
                                 style={{
-                                  backgroundColor: selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : '#FFFFFF',
+                                  backgroundColor: (isQuotesProduct && quotesPreference === 'create-own' && !quoteBgImage) ? quoteBgColor : (selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : '#FFFFFF'),
                                   clipPath: (showPhysicalEdges || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? undefined
                                     : currentShape.clipPathStyle,
@@ -9181,6 +9719,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                                 {/* Lyric typography overlay for Canvas & Acrylic */}
                                 {isLyricProduct && renderLyricOverlay()}
+                                {isQuotesProduct && quotesPreference === 'create-own' && renderQuotesCreateOwnOverlay()}
 
                                 {/* Acrylic crystal optical surface gloss reflection & standoffs */}
                                 {activeMaterial === 'acrylic' && (
@@ -9500,6 +10039,38 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 />
               )}
             </div>
+          ) : isLyricProduct ? (
+            <div
+              className="w-full h-full relative overflow-hidden pointer-events-none select-none flex items-center justify-center"
+              style={{
+                backgroundColor: lyricConfig.layout === 'sheet-music-bg' ? '#FEF9C3' : (lyricConfig.layout === 'quote-solid-bg' ? '#FAF5FF' : '#FFFFFF')
+              }}
+            >
+              {lyricConfig.layout === 'sheet-music-bg' && (
+                <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#78350f_1px,transparent_1px)] [background-size:12px_12px]" />
+              )}
+            </div>
+          ) : isQuotesProduct && quotesPreference === 'create-own' ? (
+            <div
+              className="w-full h-full relative overflow-hidden pointer-events-none select-none"
+              style={{ backgroundColor: quoteBgColor }}
+            />
+          ) : isLyricProduct ? (
+            <div
+              className="w-full h-full relative overflow-hidden pointer-events-none select-none flex items-center justify-center"
+              style={{
+                backgroundColor: lyricConfig.layout === 'sheet-music-bg' ? '#FEF9C3' : (lyricConfig.layout === 'quote-solid-bg' ? '#FAF5FF' : '#FFFFFF')
+              }}
+            >
+              {lyricConfig.layout === 'sheet-music-bg' && (
+                <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#78350f_1px,transparent_1px)] [background-size:12px_12px]" />
+              )}
+            </div>
+          ) : isQuotesProduct && quotesPreference === 'create-own' ? (
+            <div
+              className="w-full h-full relative overflow-hidden pointer-events-none select-none"
+              style={{ backgroundColor: quoteBgColor }}
+            />
           ) : (
             <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-[10px] font-bold pointer-events-none select-none">
               {isCollageProduct ? `Slot ${idx + 1}` : `Panel ${idx + 1}`}
@@ -9521,6 +10092,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 <div className="relative w-full h-full">
                   {renderSlotPhoto(0, scaleFactor)}
                   {isLyricProduct && renderLyricOverlay(scaleFactor)}
+                  {isQuotesProduct && quotesPreference === 'create-own' && renderQuotesCreateOwnOverlay(scaleFactor)}
                 </div>
               ) : isHexagonProduct ? (
                 (() => {
@@ -12013,6 +12585,21 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             selectedStyleId: style.id
           }));
         }}
+      />
+
+      {/* Quotes on Canvas / Acrylic Preference Modal (Requirement 1) */}
+      <SelectPreferenceModal
+        isOpen={isQuotesPreferenceModalOpen}
+        onClose={() => {
+          if (quotesPreference === null) {
+            setQuotesPreference('collection');
+          }
+          setIsQuotesPreferenceModalOpen(false);
+        }}
+        selectedPreference={quotesPreference}
+        onSelectCreateOwn={handleSelectCreateOwnPreference}
+        onSelectCollection={handleSelectCollectionPreference}
+        title={activeMaterial === 'acrylic' ? 'QUOTES ON ACRYLIC — SELECT PREFERENCE' : 'QUOTES ON CANVAS — SELECT PREFERENCE'}
       />
 
       {/* Lyric on Canvas Template Selection Modal */}

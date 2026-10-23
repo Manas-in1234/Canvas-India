@@ -5,6 +5,7 @@ import {
   getProductSizeShapeOptions,
   getProductSupportedShapes
 } from '../data/productSizeShapeConfig';
+import { bulkUnitPriceFor, MIN_BULK_QTY } from '../pages/BulkOrdersPage';
 
 export interface SelectSizeShapeModalProps {
   isOpen: boolean;
@@ -29,6 +30,9 @@ export interface SelectSizeShapeModalProps {
     panelsCount?: number;
     panels?: any[];
   }) => void;
+  /** When set to a bulk quantity (>= MIN_BULK_QTY), every size's displayed
+   * price reflects the same volume discount shown on the Bulk Orders page. */
+  bulkQuantity?: number;
 }
 
 export type SinglePrintCategory = 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL';
@@ -44,9 +48,13 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   isCustomSize = false,
   customWidth = 10,
   customHeight = 10,
-  onSelectSizeAndShape
+  onSelectSizeAndShape,
+  bulkQuantity
 }) => {
   if (!isOpen) return null;
+
+  const hasBulkDiscount = bulkQuantity !== undefined && bulkQuantity >= MIN_BULK_QTY;
+  const displayPrice = (price: number) => (hasBulkDiscount ? bulkUnitPriceFor(price, bulkQuantity!) : price);
 
   const isQuotes = productId.toLowerCase() === 'canvas-quotes';
   const isDigitalPainting = productId.toLowerCase() === 'canvas-digital-painting';
@@ -918,11 +926,14 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
       );
     }
 
-    // 4. Oval Canvas
+    // 4. Oval Canvas (Horizontal vs Vertical distinct SVGs - Requirement 3)
     if (isOval) {
+      const isHorizontal = opt.widthInches >= opt.heightInches;
+      const rx = isHorizontal ? 55 : 36;
+      const ry = isHorizontal ? 36 : 48;
       return (
         <svg viewBox="0 0 160 110" className="w-full h-full max-h-24">
-          <ellipse cx="80" cy="55" rx="55" ry="38" fill={fillColor} stroke={strokeColor} strokeWidth="2" />
+          <ellipse cx="80" cy="55" rx={rx} ry={ry} fill={fillColor} stroke={strokeColor} strokeWidth="2" />
           <text x="80" y="58" fill="#0E4A93" fontSize="9.5" fontWeight="bold" textAnchor="middle">
             {opt.widthInches}&quot; × {opt.heightInches}&quot;
           </text>
@@ -1068,7 +1079,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
                       {opt.label}
                     </span>
                     <span className="text-sm font-extrabold text-[#0E4A93]">
-                      ₹{opt.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      ₹{displayPrice(opt.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
@@ -1158,10 +1169,12 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
             <span className="ml-2 font-bold text-[#0E4A93]">
               ₹
               {showCustomSize
-                ? Math.round(
-                    Math.max(8, localCustomW) * Math.max(8, localCustomH) * (material === 'acrylic' ? 4.5 : 2.5)
+                ? displayPrice(
+                    Math.round(
+                      Math.max(8, localCustomW) * Math.max(8, localCustomH) * (material === 'acrylic' ? 4.5 : 2.5)
+                    )
                   ).toLocaleString('en-IN', { minimumFractionDigits: 2 })
-                : currentSelectedOption?.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                : currentSelectedOption && displayPrice(currentSelectedOption.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </span>
           </div>
           <div className="flex items-center gap-2.5">

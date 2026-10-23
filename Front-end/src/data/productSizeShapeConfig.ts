@@ -92,11 +92,18 @@ export const STANDARD_SHAPE_SIZES: Record<string, Array<{ width: number; height:
   ],
   // Oval: proportional oval dimensions (Requirement 9)
   'shape-oval': [
-    { width: 10, height: 8, label: '8" × 10"', acrylicPrice: 750.0, canvasPrice: 1380.67 },
-    { width: 14, height: 10, label: '10" × 14"', acrylicPrice: 1190.0, canvasPrice: 1699.0 },
-    { width: 16, height: 12, label: '12" × 16"', acrylicPrice: 1490.0, canvasPrice: 1999.0 },
-    { width: 20, height: 16, label: '16" × 20"', acrylicPrice: 2190.0, canvasPrice: 2599.0 },
-    { width: 24, height: 18, label: '18" × 24"', acrylicPrice: 2890.0, canvasPrice: 3299.0 }
+    // Horizontal Oval (W > H)
+    { width: 10, height: 8, label: '10" × 8" (Horizontal)', acrylicPrice: 750.0, canvasPrice: 1380.67 },
+    { width: 14, height: 10, label: '14" × 10" (Horizontal)', acrylicPrice: 1190.0, canvasPrice: 1699.0 },
+    { width: 16, height: 12, label: '16" × 12" (Horizontal)', acrylicPrice: 1490.0, canvasPrice: 1999.0 },
+    { width: 20, height: 16, label: '20" × 16" (Horizontal)', acrylicPrice: 2190.0, canvasPrice: 2599.0 },
+    { width: 24, height: 18, label: '24" × 18" (Horizontal)', acrylicPrice: 2890.0, canvasPrice: 3299.0 },
+    // Vertical Oval (W < H)
+    { width: 8, height: 10, label: '8" × 10" (Vertical)', acrylicPrice: 750.0, canvasPrice: 1380.67 },
+    { width: 10, height: 14, label: '10" × 14" (Vertical)', acrylicPrice: 1190.0, canvasPrice: 1699.0 },
+    { width: 12, height: 16, label: '12" × 16" (Vertical)', acrylicPrice: 1490.0, canvasPrice: 1999.0 },
+    { width: 16, height: 20, label: '16" × 20" (Vertical)', acrylicPrice: 2190.0, canvasPrice: 2599.0 },
+    { width: 18, height: 24, label: '18" × 24" (Vertical)', acrylicPrice: 2890.0, canvasPrice: 3299.0 }
   ],
   // Heart: proportional sizes (Requirement 9)
   'shape-heart': [

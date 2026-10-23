@@ -210,7 +210,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       upload: true,
       sizes: false,
       shapes: false,
-      layouts: true,
+      layouts: false,
       wrap: false,
       hardware: true,
       options: true,
@@ -244,7 +244,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       upload: true,
       sizes: false,
       shapes: false,
-      layouts: true,
+      layouts: false,
       wrap: false,
       hardware: true,
       options: true,
@@ -278,7 +278,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       upload: true,
       sizes: false,
       shapes: false,
-      layouts: true,
+      layouts: false,
       wrap: false,
       hardware: true,
       options: true,
@@ -312,7 +312,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
       upload: true,
       sizes: false,
       shapes: false,
-      layouts: true,
+      layouts: false,
       wrap: false,
       hardware: true,
       options: true,
@@ -1161,7 +1161,7 @@ export const DESIGN_TEMPLATES: DesignTemplate[] = [
     borderColor: '#FFFFFF',
     backgroundColor: 'transparent',
     defaultText: 'Our Family Story',
-    image: '/assets/customizer/acrylic/products/acrylic-wall-art.jpg'
+    image: '/assets/customizer/acrylic/products/acrylic-wall-art.webp'
   },
   {
     id: 'tmpl-quad-story',
@@ -1171,7 +1171,7 @@ export const DESIGN_TEMPLATES: DesignTemplate[] = [
     borderWidth: 4,
     borderColor: '#FFFFFF',
     backgroundColor: '#F8FAFC',
-    image: '/assets/customizer/acrylic/products/acrylic-collage.jpg'
+    image: '/assets/customizer/acrylic/products/acrylic-collage.webp'
   }
 ];
 
@@ -1472,21 +1472,21 @@ export const COLOR_FINISH_OPTIONS: ColorFinishOption[] = [
     label: 'Original',
     tag: 'FREE!',
     cssFilter: 'none',
-    defaultImg: '/assets/customizer/acrylic/products/acrylic-photo-panel.jpg'
+    defaultImg: '/assets/customizer/acrylic/products/acrylic-photo-panel.webp'
   },
   {
     id: 'sepia',
     label: 'Sepia',
     tag: 'FREE!',
     cssFilter: 'sepia(0.85) contrast(1.1) brightness(0.95)',
-    defaultImg: '/assets/customizer/acrylic/products/acrylic-photo-panel.jpg'
+    defaultImg: '/assets/customizer/acrylic/products/acrylic-photo-panel.webp'
   },
   {
     id: 'grayscale',
     label: 'GrayScale',
     tag: 'FREE!',
     cssFilter: 'grayscale(100%) contrast(1.05)',
-    defaultImg: '/assets/customizer/acrylic/products/acrylic-photo-panel.jpg'
+    defaultImg: '/assets/customizer/acrylic/products/acrylic-photo-panel.webp'
   }
 ];
 
@@ -2062,7 +2062,8 @@ export interface AcrylicShapeOption {
     | 'oval'
     | 'roundedRectangle'
     | 'heart'
-    | 'hexagon';
+    | 'hexagon'
+    | 'custom'; // admin-uploaded, auto-traced shape (see customShapesApi)
   name: string;
   category: 'basic' | 'special' | 'decorative';
   description: string;

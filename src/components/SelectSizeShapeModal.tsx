@@ -926,11 +926,14 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
       );
     }
 
-    // 4. Oval Canvas
+    // 4. Oval Canvas (Horizontal vs Vertical distinct SVGs - Requirement 3)
     if (isOval) {
+      const isHorizontal = opt.widthInches >= opt.heightInches;
+      const rx = isHorizontal ? 55 : 36;
+      const ry = isHorizontal ? 36 : 48;
       return (
         <svg viewBox="0 0 160 110" className="w-full h-full max-h-24">
-          <ellipse cx="80" cy="55" rx="55" ry="38" fill={fillColor} stroke={strokeColor} strokeWidth="2" />
+          <ellipse cx="80" cy="55" rx={rx} ry={ry} fill={fillColor} stroke={strokeColor} strokeWidth="2" />
           <text x="80" y="58" fill="#0E4A93" fontSize="9.5" fontWeight="bold" textAnchor="middle">
             {opt.widthInches}&quot; × {opt.heightInches}&quot;
           </text>

@@ -7840,7 +7840,7 @@ export function getCanvasProductGeometry(
       productTypeId,
       geometryType: 'oval',
       shapeId: 'shape-oval',
-      aspectRatio: rawAspect || 1.25,
+      aspectRatio: (width && height ? width / height : (rawAspect || 1.25)),
       widthInches: width,
       heightInches: height,
       clipPath: OVAL_CLIP_PATH,
@@ -7850,11 +7850,15 @@ export function getCanvasProductGeometry(
       renderSvgPreview: ({ isSelected, widthInches, heightInches }) => {
         const strokeColor = isSelected ? '#0E4A93' : '#64748b';
         const fillColor = isSelected ? '#0E4A9322' : '#f8fafc';
+        const w = widthInches || width || 10;
+        const h = heightInches || height || 8;
+        const rx = w >= h ? 24 : 17;
+        const ry = w >= h ? 17 : 24;
         return (
           <svg viewBox="0 0 60 48" className="w-full h-full max-h-12">
-            <ellipse cx="30" cy="24" rx="24" ry="17" fill={fillColor} stroke={strokeColor} strokeWidth="1.8" />
-            <text x="30" y="26" fill={strokeColor} fontSize="7" fontWeight="bold" textAnchor="middle">
-              {widthInches || 10}&quot;×{heightInches || 8}&quot;
+            <ellipse cx="30" cy="24" rx={rx} ry={ry} fill={fillColor} stroke={strokeColor} strokeWidth="1.8" />
+            <text x="30" y="26" fill={strokeColor} fontSize="6.5" fontWeight="bold" textAnchor="middle">
+              {w}&quot;×{h}&quot;
             </text>
           </svg>
         );
