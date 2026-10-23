@@ -147,6 +147,7 @@ import { SelectLayoutModal, LayoutModalOption } from '../components/SelectLayout
 import { AcrylicLiveTextEditor, TextElement } from '../components/AcrylicLiveTextEditor';
 import { AcrylicClipartModal, ClipartElement } from '../components/AcrylicClipartModal';
 import { getProductSizeShapeOptions, getSizesForProductAndShape } from '../data/productSizeShapeConfig';
+import { bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import {
   getCanvasProductGeometry,
   getHexagonClusterLayout,
@@ -3812,6 +3813,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (selectedMaterialId === 'premium-cotton') price += 250;
     else if (selectedMaterialId === 'archival-cotton') price += 450;
 
+    // Bulk quantities (reached via the Bulk Orders "Continue to Customize"
+    // flow, or just typed into the quantity field directly) get the same
+    // volume discount shown there — applied here, after every size, shape,
+    // frame, hardware and material addon has already been summed, so the
+    // discount scales the whole configured price rather than just the base.
+    if (quantity >= MIN_BULK_QTY) price = bulkUnitPriceFor(price, quantity);
+
     return price;
   }, [
     sizePrice,
@@ -3824,7 +3832,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     selectedHardwareId,
     selectedDisplayOptionId,
     selectedLaminationId,
-    selectedMaterialId
+    selectedMaterialId,
+    quantity
   ]);
 
   const totalPrice = unitPrice * quantity;
