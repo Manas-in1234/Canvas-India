@@ -522,7 +522,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 1498.50,
     widthInches: 8,
     heightInches: 8,
-    categories: ['RECOMMENDED', 'SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE', 'SMALL'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '8" × 8"', widthRatio: 8, heightRatio: 8 }]
   },
   {
@@ -533,7 +533,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 1699.00,
     widthInches: 10,
     heightInches: 10,
-    categories: ['SQUARE'],
+    categories: ['SQUARE', 'SMALL'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }]
   },
   {
@@ -544,7 +544,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 1899.00,
     widthInches: 12,
     heightInches: 12,
-    categories: ['RECOMMENDED', 'SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE', 'SMALL'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '12" × 12"', widthRatio: 12, heightRatio: 12 }]
   },
   {
@@ -555,7 +555,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 2299.00,
     widthInches: 16,
     heightInches: 16,
-    categories: ['SQUARE'],
+    categories: ['SQUARE', 'SMALL'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
   },
   {
@@ -566,7 +566,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 2799.00,
     widthInches: 20,
     heightInches: 20,
-    categories: ['SQUARE'],
+    categories: ['SQUARE', 'LARGE'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '20" × 20"', widthRatio: 20, heightRatio: 20 }]
   },
   {
@@ -577,7 +577,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 1999.00,
     widthInches: 12,
     heightInches: 18,
-    categories: ['RECOMMENDED'],
+    categories: ['RECOMMENDED', 'SMALL'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '12" × 18"', widthRatio: 12, heightRatio: 18 }]
   },
   {
@@ -588,7 +588,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 2499.00,
     widthInches: 16,
     heightInches: 20,
-    categories: ['RECOMMENDED'],
+    categories: ['RECOMMENDED', 'LARGE'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '16" × 20"', widthRatio: 16, heightRatio: 20 }]
   },
   {
@@ -599,7 +599,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 2999.00,
     widthInches: 18,
     heightInches: 24,
-    categories: ['PANORAMIC'],
+    categories: ['PANORAMIC', 'LARGE'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '18" × 24"', widthRatio: 18, heightRatio: 24 }]
   },
   {
@@ -610,7 +610,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 3499.00,
     widthInches: 20,
     heightInches: 30,
-    categories: ['PANORAMIC'],
+    categories: ['PANORAMIC', 'LARGE'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '20" × 30"', widthRatio: 20, heightRatio: 30 }]
   },
   {
@@ -621,7 +621,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 4299.00,
     widthInches: 24,
     heightInches: 36,
-    categories: ['PANORAMIC'],
+    categories: ['PANORAMIC', 'LARGE'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '24" × 36"', widthRatio: 24, heightRatio: 36 }]
   }
 ];

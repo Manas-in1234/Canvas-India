@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { X, Check, ArrowRight } from 'lucide-react';
+import { X, Check, ArrowRight, RotateCcw } from 'lucide-react';
 import {
   SizeShapeOption,
   getProductSizeShapeOptions,
@@ -33,6 +33,7 @@ export interface SelectSizeShapeModalProps {
   /** When set to a bulk quantity (>= MIN_BULK_QTY), every size's displayed
    * price reflects the same volume discount shown on the Bulk Orders page. */
   bulkQuantity?: number;
+  onResetSize?: () => void;
 }
 
 export type SinglePrintCategory = 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL';
@@ -49,7 +50,8 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   customWidth = 10,
   customHeight = 10,
   onSelectSizeAndShape,
-  bulkQuantity
+  bulkQuantity,
+  onResetSize
 }) => {
   if (!isOpen) return null;
 
@@ -999,14 +1001,30 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
               {productName}
             </span>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center cursor-pointer transition-colors"
-            title="Close"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            {onResetSize && (
+              <button
+                type="button"
+                onClick={() => {
+                  onResetSize();
+                  onClose();
+                }}
+                className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 hover:text-stone-900 text-xs font-bold rounded-xl border border-stone-200 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                title="Reset to default product size"
+              >
+                <RotateCcw className="w-3.5 h-3.5 stroke-[2.2]" />
+                <span>Reset Size</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center cursor-pointer transition-colors"
+              title="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Single Print Category Tabs: RECOMMENDED | SQUARE | PANORAMIC | LARGE | SMALL */}

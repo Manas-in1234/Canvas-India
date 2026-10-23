@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Palette,
   Image as ImageIcon,
@@ -125,6 +125,13 @@ export const QuotesCreateOwnPanel: React.FC<QuotesCreateOwnPanelProps> = ({
 }) => {
   const [bgMode, setBgMode] = useState<'solid' | 'photo'>(quoteBgImage ? 'photo' : 'solid');
 
+  // Synchronize bgMode when external quoteBgImage changes
+  useEffect(() => {
+    if (quoteBgImage) {
+      setBgMode('photo');
+    }
+  }, [quoteBgImage]);
+
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-white select-none">
       {/* 1. Header with Title & Change Preference Button */}
@@ -215,7 +222,13 @@ export const QuotesCreateOwnPanel: React.FC<QuotesCreateOwnPanelProps> = ({
                     <button
                       key={c.hex}
                       type="button"
-                      onClick={() => onChangeQuoteBgColor(c.hex)}
+                      onClick={() => {
+                        setBgMode('solid');
+                        if (quoteBgImage) {
+                          onRemoveQuoteBgImage();
+                        }
+                        onChangeQuoteBgColor(c.hex);
+                      }}
                       className={`relative aspect-square rounded-lg border transition-all cursor-pointer flex items-center justify-center ${
                         isSelected
                           ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/40 shadow-xs scale-105'
@@ -244,15 +257,25 @@ export const QuotesCreateOwnPanel: React.FC<QuotesCreateOwnPanelProps> = ({
               <div className="flex items-center gap-2 pt-1 border-t border-stone-200/60">
                 <input
                   type="color"
-                  value={quoteBgColor}
-                  onChange={(e) => onChangeQuoteBgColor(e.target.value)}
+                  value={quoteBgColor.startsWith('#') && quoteBgColor.length === 7 ? quoteBgColor : '#FFFFFF'}
+                  onChange={(e) => {
+                    setBgMode('solid');
+                    if (quoteBgImage) onRemoveQuoteBgImage();
+                    onChangeQuoteBgColor(e.target.value);
+                  }}
                   className="w-7 h-7 rounded-md border border-stone-300 cursor-pointer p-0.5 bg-white"
                   title="Custom color picker"
                 />
                 <input
                   type="text"
                   value={quoteBgColor}
-                  onChange={(e) => onChangeQuoteBgColor(e.target.value)}
+                  onChange={(e) => {
+                    let val = e.target.value.trim();
+                    if (!val.startsWith('#') && val.length > 0) val = '#' + val;
+                    setBgMode('solid');
+                    if (quoteBgImage) onRemoveQuoteBgImage();
+                    onChangeQuoteBgColor(val);
+                  }}
                   className="flex-1 py-1 px-2 border border-stone-200 rounded-md text-xs font-mono uppercase bg-white text-stone-800"
                   placeholder="#FFFFFF"
                 />
@@ -268,7 +291,10 @@ export const QuotesCreateOwnPanel: React.FC<QuotesCreateOwnPanelProps> = ({
                 {quoteBgImage && (
                   <button
                     type="button"
-                    onClick={onRemoveQuoteBgImage}
+                    onClick={() => {
+                      onRemoveQuoteBgImage();
+                      setBgMode('solid');
+                    }}
                     className="text-[10px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
                   >
                     <Trash2 className="w-2.5 h-2.5" />
@@ -280,7 +306,10 @@ export const QuotesCreateOwnPanel: React.FC<QuotesCreateOwnPanelProps> = ({
               {/* Upload Button */}
               <button
                 type="button"
-                onClick={onTriggerUpload}
+                onClick={() => {
+                  setBgMode('photo');
+                  onTriggerUpload();
+                }}
                 className="w-full py-2.5 px-3 border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50 rounded-xl text-xs font-bold text-[#0E4A93] flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
               >
                 <Upload className="w-4 h-4 stroke-[2.2]" />
@@ -296,7 +325,10 @@ export const QuotesCreateOwnPanel: React.FC<QuotesCreateOwnPanelProps> = ({
                       <button
                         key={`${url}-${i}`}
                         type="button"
-                        onClick={() => onSelectQuoteBgImage(url)}
+                        onClick={() => {
+                          setBgMode('photo');
+                          onSelectQuoteBgImage(url);
+                        }}
                         className={`relative aspect-square rounded-lg border-2 overflow-hidden transition-all cursor-pointer group bg-stone-100 ${
                           isSelected
                             ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/30 shadow-xs'

@@ -1088,8 +1088,35 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Lyric Canvas: 8" × 8"',
     dimensionsSummary: '8" × 8"',
     price: 1498.50,
-    categories: ['RECOMMENDED', 'SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE', 'SMALL'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '8" × 8"', widthRatio: 8, heightRatio: 8 }]
+  },
+  {
+    id: 'lyric-10x10',
+    productTypeId: 'canvas-lyric',
+    label: 'Lyric Canvas: 10" × 10"',
+    dimensionsSummary: '10" × 10"',
+    price: 1699.00,
+    categories: ['SQUARE', 'SMALL'],
+    panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }]
+  },
+  {
+    id: 'lyric-12x12',
+    productTypeId: 'canvas-lyric',
+    label: 'Lyric Canvas: 12" × 12"',
+    dimensionsSummary: '12" × 12"',
+    price: 1899.00,
+    categories: ['RECOMMENDED', 'SQUARE', 'SMALL'],
+    panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '12" × 12"', widthRatio: 12, heightRatio: 12 }]
+  },
+  {
+    id: 'lyric-16x16',
+    productTypeId: 'canvas-lyric',
+    label: 'Lyric Canvas: 16" × 16"',
+    dimensionsSummary: '16" × 16"',
+    price: 2299.00,
+    categories: ['SQUARE', 'SMALL'],
+    panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
   },
   {
     id: 'lyric-12x18',
@@ -1097,8 +1124,53 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Lyric Canvas: 12" × 18"',
     dimensionsSummary: '12" × 18"',
     price: 1999.0,
-    categories: ['RECOMMENDED'],
+    categories: ['RECOMMENDED', 'SMALL'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '12" × 18"', widthRatio: 12, heightRatio: 18 }]
+  },
+  {
+    id: 'lyric-16x20',
+    productTypeId: 'canvas-lyric',
+    label: 'Lyric Canvas: 16" × 20"',
+    dimensionsSummary: '16" × 20"',
+    price: 2499.00,
+    categories: ['RECOMMENDED', 'LARGE'],
+    panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '16" × 20"', widthRatio: 16, heightRatio: 20 }]
+  },
+  {
+    id: 'lyric-18x24',
+    productTypeId: 'canvas-lyric',
+    label: 'Lyric Canvas: 18" × 24"',
+    dimensionsSummary: '18" × 24"',
+    price: 2999.00,
+    categories: ['PANORAMIC', 'LARGE'],
+    panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '18" × 24"', widthRatio: 18, heightRatio: 24 }]
+  },
+  {
+    id: 'lyric-20x20',
+    productTypeId: 'canvas-lyric',
+    label: 'Lyric Canvas: 20" × 20"',
+    dimensionsSummary: '20" × 20"',
+    price: 2799.00,
+    categories: ['SQUARE', 'LARGE'],
+    panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '20" × 20"', widthRatio: 20, heightRatio: 20 }]
+  },
+  {
+    id: 'lyric-20x30',
+    productTypeId: 'canvas-lyric',
+    label: 'Lyric Canvas: 20" × 30"',
+    dimensionsSummary: '20" × 30"',
+    price: 3499.00,
+    categories: ['PANORAMIC', 'LARGE'],
+    panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '20" × 30"', widthRatio: 20, heightRatio: 30 }]
+  },
+  {
+    id: 'lyric-24x36',
+    productTypeId: 'canvas-lyric',
+    label: 'Lyric Canvas: 24" × 36"',
+    dimensionsSummary: '24" × 36"',
+    price: 4299.00,
+    categories: ['PANORAMIC', 'LARGE'],
+    panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '24" × 36"', widthRatio: 24, heightRatio: 36 }]
   },
 
   // 12. Digital Painting (canvas-digital-painting) - Starts at ₹2,199.00
@@ -1108,7 +1180,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Digital Painting: 10" × 10"',
     dimensionsSummary: '10" × 10"',
     price: 2199.0,
-    categories: ['RECOMMENDED', 'SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE', 'SMALL'],
     widthInches: 10,
     heightInches: 10,
     panelsCount: 1,
@@ -1116,51 +1188,12 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }]
   },
   {
-    id: 'painting-16x16',
-    productTypeId: 'canvas-digital-painting',
-    label: 'Digital Painting: 16" × 16"',
-    dimensionsSummary: '16" × 16"',
-    price: 2899.0,
-    categories: ['RECOMMENDED', 'SQUARE'],
-    widthInches: 16,
-    heightInches: 16,
-    panelsCount: 1,
-    diagramType: 'single-shape',
-    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
-  },
-  {
-    id: 'painting-18x18',
-    productTypeId: 'canvas-digital-painting',
-    label: 'Digital Painting: 18" × 18"',
-    dimensionsSummary: '18" × 18"',
-    price: 3299.0,
-    categories: ['SQUARE'],
-    widthInches: 18,
-    heightInches: 18,
-    panelsCount: 1,
-    diagramType: 'single-shape',
-    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '18" × 18"', widthRatio: 18, heightRatio: 18 }]
-  },
-  {
-    id: 'painting-20x20',
-    productTypeId: 'canvas-digital-painting',
-    label: 'Digital Painting: 20" × 20"',
-    dimensionsSummary: '20" × 20"',
-    price: 3799.0,
-    categories: ['RECOMMENDED', 'SQUARE'],
-    widthInches: 20,
-    heightInches: 20,
-    panelsCount: 1,
-    diagramType: 'single-shape',
-    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '20" × 20"', widthRatio: 20, heightRatio: 20 }]
-  },
-  {
     id: 'painting-12x18',
     productTypeId: 'canvas-digital-painting',
     label: 'Digital Painting: 12" × 18"',
     dimensionsSummary: '12" × 18"',
     price: 2598.0,
-    categories: ['RECOMMENDED'],
+    categories: ['RECOMMENDED', 'SMALL'],
     widthInches: 12,
     heightInches: 18,
     panelsCount: 1,
@@ -1173,7 +1206,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Digital Painting: 18" × 12"',
     dimensionsSummary: '18" × 12"',
     price: 2598.0,
-    categories: ['PANORAMIC'],
+    categories: ['PANORAMIC', 'SMALL'],
     widthInches: 18,
     heightInches: 12,
     panelsCount: 1,
@@ -1181,12 +1214,51 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '18" × 12"', widthRatio: 18, heightRatio: 12 }]
   },
   {
+    id: 'painting-16x16',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 16" × 16"',
+    dimensionsSummary: '16" × 16"',
+    price: 2899.0,
+    categories: ['RECOMMENDED', 'SQUARE', 'SMALL'],
+    widthInches: 16,
+    heightInches: 16,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
+  },
+  {
+    id: 'painting-18x18',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 18" × 18"',
+    dimensionsSummary: '18" × 18"',
+    price: 3299.0,
+    categories: ['SQUARE', 'LARGE'],
+    widthInches: 18,
+    heightInches: 18,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '18" × 18"', widthRatio: 18, heightRatio: 18 }]
+  },
+  {
+    id: 'painting-20x20',
+    productTypeId: 'canvas-digital-painting',
+    label: 'Digital Painting: 20" × 20"',
+    dimensionsSummary: '20" × 20"',
+    price: 3799.0,
+    categories: ['RECOMMENDED', 'SQUARE', 'LARGE'],
+    widthInches: 20,
+    heightInches: 20,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Painting Canvas', dimension: '20" × 20"', widthRatio: 20, heightRatio: 20 }]
+  },
+  {
     id: 'painting-16x24',
     productTypeId: 'canvas-digital-painting',
     label: 'Digital Painting: 16" × 24"',
     dimensionsSummary: '16" × 24"',
     price: 3299.0,
-    categories: ['RECOMMENDED'],
+    categories: ['RECOMMENDED', 'LARGE'],
     widthInches: 16,
     heightInches: 24,
     panelsCount: 1,
@@ -1199,7 +1271,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Digital Painting: 24" × 16"',
     dimensionsSummary: '24" × 16"',
     price: 3299.0,
-    categories: ['PANORAMIC'],
+    categories: ['PANORAMIC', 'LARGE'],
     widthInches: 24,
     heightInches: 16,
     panelsCount: 1,
@@ -1212,7 +1284,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Digital Painting: 20" × 30"',
     dimensionsSummary: '20" × 30"',
     price: 4499.0,
-    categories: ['RECOMMENDED'],
+    categories: ['RECOMMENDED', 'LARGE'],
     widthInches: 20,
     heightInches: 30,
     panelsCount: 1,
@@ -1225,7 +1297,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Digital Painting: 24" × 36"',
     dimensionsSummary: '24" × 36"',
     price: 5499.0,
-    categories: ['PANORAMIC'],
+    categories: ['PANORAMIC', 'LARGE'],
     widthInches: 24,
     heightInches: 36,
     panelsCount: 1,
@@ -1240,7 +1312,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Quotes Canvas: 8" × 8"',
     dimensionsSummary: '8" × 8"',
     price: 999.0,
-    categories: ['RECOMMENDED', 'SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE', 'SMALL'],
     widthInches: 8,
     heightInches: 8,
     panelsCount: 1,
@@ -1253,7 +1325,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Quotes Canvas: 10" × 10"',
     dimensionsSummary: '10" × 10"',
     price: 1199.0,
-    categories: ['RECOMMENDED', 'SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE', 'SMALL'],
     widthInches: 10,
     heightInches: 10,
     panelsCount: 1,
@@ -1266,7 +1338,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Quotes Canvas: 12" × 12"',
     dimensionsSummary: '12" × 12"',
     price: 1399.0,
-    categories: ['RECOMMENDED', 'SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE', 'SMALL'],
     widthInches: 12,
     heightInches: 12,
     panelsCount: 1,
@@ -1279,7 +1351,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Quotes Canvas: 16" × 16"',
     dimensionsSummary: '16" × 16"',
     price: 1799.0,
-    categories: ['SQUARE'],
+    categories: ['SQUARE', 'SMALL'],
     widthInches: 16,
     heightInches: 16,
     panelsCount: 1,
@@ -1292,7 +1364,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Quotes Canvas: 12" × 18"',
     dimensionsSummary: '12" × 18"',
     price: 1499.0,
-    categories: ['RECOMMENDED'],
+    categories: ['RECOMMENDED', 'SMALL'],
     widthInches: 12,
     heightInches: 18,
     panelsCount: 1,
@@ -1305,7 +1377,7 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Quotes Canvas: 18" × 12"',
     dimensionsSummary: '18" × 12"',
     price: 1499.0,
-    categories: ['PANORAMIC'],
+    categories: ['PANORAMIC', 'SMALL'],
     widthInches: 18,
     heightInches: 12,
     panelsCount: 1,
@@ -1313,12 +1385,38 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '18" × 12"', widthRatio: 18, heightRatio: 12 }]
   },
   {
+    id: 'quotes-18x18',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 18" × 18"',
+    dimensionsSummary: '18" × 18"',
+    price: 1799.0,
+    categories: ['SQUARE', 'LARGE'],
+    widthInches: 18,
+    heightInches: 18,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '18" × 18"', widthRatio: 18, heightRatio: 18 }]
+  },
+  {
+    id: 'quotes-20x20',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 20" × 20"',
+    dimensionsSummary: '20" × 20"',
+    price: 2199.0,
+    categories: ['SQUARE', 'LARGE'],
+    widthInches: 20,
+    heightInches: 20,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '20" × 20"', widthRatio: 20, heightRatio: 20 }]
+  },
+  {
     id: 'quotes-16x24',
     productTypeId: 'canvas-quotes',
     label: 'Quotes Canvas: 16" × 24"',
     dimensionsSummary: '16" × 24"',
     price: 2199.0,
-    categories: ['RECOMMENDED'],
+    categories: ['RECOMMENDED', 'LARGE'],
     widthInches: 16,
     heightInches: 24,
     panelsCount: 1,
@@ -1331,12 +1429,38 @@ const SIZE_OPTIONS: SizeOption[] = [
     label: 'Quotes Canvas: 24" × 16"',
     dimensionsSummary: '24" × 16"',
     price: 2199.0,
-    categories: ['PANORAMIC'],
+    categories: ['PANORAMIC', 'LARGE'],
     widthInches: 24,
     heightInches: 16,
     panelsCount: 1,
     diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '24" × 16"', widthRatio: 24, heightRatio: 16 }]
+  },
+  {
+    id: 'quotes-30x20',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 30" × 20"',
+    dimensionsSummary: '30" × 20"',
+    price: 2599.0,
+    categories: ['PANORAMIC', 'RECOMMENDED', 'LARGE'],
+    widthInches: 30,
+    heightInches: 20,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '30" × 20"', widthRatio: 30, heightRatio: 20 }]
+  },
+  {
+    id: 'quotes-36x24',
+    productTypeId: 'canvas-quotes',
+    label: 'Quotes Canvas: 36" × 24"',
+    dimensionsSummary: '36" × 24"',
+    price: 3199.0,
+    categories: ['PANORAMIC', 'LARGE'],
+    widthInches: 36,
+    heightInches: 24,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Quotes Canvas', dimension: '36" × 24"', widthRatio: 36, heightRatio: 24 }]
   },
 
   // 14. Bus Roll (canvas-bus-roll) - Starts at ₹599.00
@@ -3320,6 +3444,41 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     });
   };
 
+  const handleSelectQuoteBgColor = (color: string) => {
+    setQuoteBgColor(color);
+    if (quoteBgImage) {
+      setQuoteBgImage(null);
+      setPanelImages((prev) => ({
+        ...prev,
+        0: {
+          ...createDefaultPanel(),
+          imageUrl: '',
+          fitMode: 'cover'
+        }
+      }));
+    }
+    // Auto-contrast text color against chosen background
+    const cleanHex = color.replace('#', '');
+    if (cleanHex.length === 6) {
+      const r = parseInt(cleanHex.substring(0, 2), 16) / 255;
+      const g = parseInt(cleanHex.substring(2, 4), 16) / 255;
+      const b = parseInt(cleanHex.substring(4, 6), 16) / 255;
+      const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+      const textClean = quoteTextColor.replace('#', '');
+      if (textClean.length === 6) {
+        const tr = parseInt(textClean.substring(0, 2), 16) / 255;
+        const tg = parseInt(textClean.substring(2, 4), 16) / 255;
+        const tb = parseInt(textClean.substring(4, 6), 16) / 255;
+        const textLum = 0.299 * tr + 0.587 * tg + 0.114 * tb;
+        if (lum < 0.45 && textLum < 0.45) {
+          setQuoteTextColor('#FFFFFF');
+        } else if (lum > 0.65 && textLum > 0.65) {
+          setQuoteTextColor('#1C1917');
+        }
+      }
+    }
+  };
+
   const handleSelectQuoteBgImage = (url: string) => {
     setQuoteBgImage(url);
     setPanelImages((prev) => ({
@@ -3346,6 +3505,52 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         fitMode: 'cover'
       }
     }));
+  };
+
+  // Reset Size to product default size option (Requirement 4)
+  const handleResetSize = () => {
+    const defaultSizeId = selectedProductType?.defaultSizeOptionId;
+    const targetOpt = availableSizeOptions.find((opt) => opt.id === defaultSizeId) || availableSizeOptions[0];
+    if (!targetOpt) return;
+
+    setIsCustomSize(false);
+    setSelectedSizeId(targetOpt.id);
+
+    if (targetOpt.categories && targetOpt.categories.length > 0) {
+      if (!targetOpt.categories.includes(sizeCategoryFilter)) {
+        const validCat = targetOpt.categories.find(
+          (c): c is 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL' =>
+            ['RECOMMENDED', 'SQUARE', 'PANORAMIC', 'LARGE', 'SMALL'].includes(c as any)
+        );
+        if (validCat) {
+          setSizeCategoryFilter(validCat);
+        }
+      }
+    }
+
+    const width = targetOpt.widthInches || 10;
+    const height = targetOpt.heightInches || 10;
+    setCustomWidth(width);
+    setCustomHeight(height);
+
+    if (isWordArtProduct) {
+      const matchingWordSize = Object.values(WORD_ART_SIZE_CATALOG).flat().find((w) => w.id === targetOpt.id);
+      if (matchingWordSize) {
+        setWordArtSizeOption(matchingWordSize);
+      }
+    }
+
+    if (isSinglePrintCanvas) {
+      if (width === height) {
+        setSelectedShapeId('shape-square');
+      } else if (width > height) {
+        setSelectedShapeId('shape-landscape');
+      } else {
+        setSelectedShapeId('shape-portrait');
+      }
+    } else if (!['shape-circle', 'shape-oval', 'shape-heart', 'shape-triangle', 'shape-hexagon'].includes(selectedShapeId)) {
+      setSelectedShapeId(width === height ? 'shape-square' : 'shape-rectangle');
+    }
   };
 
   // Quotes on Canvas State (Selected Quote Template -> Auto-mounts into Slot 0)
@@ -4984,13 +5189,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Mouse/Touch Drag Handlers
   const handlePointerDown = (e: React.PointerEvent, panelIdx: number) => {
-    if (isMosaicProduct) {
-      // Requirement 6: Keep image fixed during workspace / tile interaction
-      // Intentional repositioning is performed predictably via supported nudge controls
-      return;
-    }
-    setActivePanelIndex(panelIdx);
-    const targetIdx = isSplitProduct ? 0 : panelIdx;
+    const targetIdx = (isSplitProduct || isMosaicProduct) ? 0 : panelIdx;
+    setActivePanelIndex(targetIdx);
     const curr = panelImages[targetIdx];
     if (!curr?.imageUrl) return;
 
@@ -5290,6 +5490,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         ? popArtConfig.processedImageUrl
         : (isLyricProduct && !panelImages[0]?.imageUrl)
         ? selectedLyricTemplate.previewImage
+        : (isQuotesProduct && quotesPreference === 'create-own' && !quoteBgImage)
+        ? `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600"><rect width="100%" height="100%" fill="${encodeURIComponent(quoteBgColor)}"/><text x="50%" y="45%" text-anchor="middle" fill="${encodeURIComponent(quoteTextColor)}" font-family="Georgia, serif" font-size="28" font-weight="bold">${encodeURIComponent(quoteCustomText.slice(0, 60))}</text><text x="50%" y="60%" text-anchor="middle" fill="${encodeURIComponent(quoteTextColor)}" font-family="Georgia, serif" font-size="18" font-style="italic">— ${encodeURIComponent(quoteAuthor)}</text></svg>`
+        : (isQuotesProduct && quotesPreference === 'collection')
+        ? (getQuoteTemplate(selectedQuoteTemplateId)?.image || firstImage)
         : firstImage,
       calculatedPrice: totalPrice,
       material: activeMaterial === 'acrylic' ? 'Premium 3mm/5mm Optical Acrylic' : (MATERIAL_VARIANTS.find((m) => m.id === selectedMaterialId)?.name || 'Standard 280 GSM Cotton Canvas'),
@@ -5322,6 +5526,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         quoteCustomText: isQuotesProduct && quotesPreference === 'create-own' ? quoteCustomText : undefined,
         quoteAuthor: isQuotesProduct && quotesPreference === 'create-own' ? quoteAuthor : undefined,
         quoteBgColor: isQuotesProduct && quotesPreference === 'create-own' ? quoteBgColor : undefined,
+        quoteBgImage: isQuotesProduct && quotesPreference === 'create-own' ? (quoteBgImage || undefined) : undefined,
+        quoteFontFamily: isQuotesProduct && quotesPreference === 'create-own' ? quoteFontFamily : undefined,
+        quoteTextColor: isQuotesProduct && quotesPreference === 'create-own' ? quoteTextColor : undefined,
         digitalPaintingEffect: isDigitalPaintingProduct ? getDigitalPaintingEffect(digitalPaintingConfig.selectedEffectId).name : undefined,
         digitalPaintingSubject: isDigitalPaintingProduct ? digitalPaintingConfig.subjectType : undefined,
         digitalPaintingBackground: isDigitalPaintingProduct ? (
@@ -6207,7 +6414,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               }
             }}
             className={`relative bg-[#d8dce2] rounded-[2px] overflow-hidden border border-stone-300/80 transition-all select-none ${
-              masterImage ? 'shadow-2xl' : 'cursor-pointer hover:border-[#0E4A93] shadow-xl'
+              masterImage ? 'shadow-2xl cursor-grab active:cursor-grabbing' : 'cursor-pointer hover:border-[#0E4A93] shadow-xl'
             }`}
             style={{
               aspectRatio: String(layout.aspectRatio),
@@ -7185,7 +7392,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               quotesPreference === 'create-own' ? (
                 <QuotesCreateOwnPanel
                   quoteBgColor={quoteBgColor}
-                  onChangeQuoteBgColor={setQuoteBgColor}
+                  onChangeQuoteBgColor={handleSelectQuoteBgColor}
                   quoteBgImage={quoteBgImage}
                   onSelectQuoteBgImage={handleSelectQuoteBgImage}
                   onRemoveQuoteBgImage={handleRemoveQuoteBgImage}
@@ -7734,19 +7941,30 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         ₹{sizePrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (isWordArtProduct) {
-                          setIsWordArtSizeModalOpen(true);
-                        } else {
-                          setIsSizeShapeModalOpen(true);
-                        }
-                      }}
-                      className="px-3.5 py-1.5 bg-[#0E4A93] hover:bg-[#0A366C] text-white text-xs font-bold rounded-xl shadow-xs transition-transform hover:scale-102 cursor-pointer"
-                    >
-                      Change Size
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleResetSize}
+                        className="px-3 py-1.5 bg-white hover:bg-stone-50 text-stone-700 hover:text-stone-900 text-xs font-bold rounded-xl border border-stone-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs hover:scale-102"
+                        title="Reset to default product size"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5 stroke-[2.2]" />
+                        <span>Reset Size</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isWordArtProduct) {
+                            setIsWordArtSizeModalOpen(true);
+                          } else {
+                            setIsSizeShapeModalOpen(true);
+                          }
+                        }}
+                        className="px-3.5 py-1.5 bg-[#0E4A93] hover:bg-[#0A366C] text-white text-xs font-bold rounded-xl shadow-xs transition-transform hover:scale-102 cursor-pointer"
+                      >
+                        Change Size
+                      </button>
+                    </div>
                   </div>
 
                   {/* 5 Size Categories matching Canvas India brand */}
@@ -9630,6 +9848,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                         </span>
                                       </div>
                                     </div>
+                                  ) : (isQuotesProduct && quotesPreference === 'create-own') ? (
+                                    /* Solid background for Quotes Create Your Own: no white placeholder or overlay */
+                                    null
                                   ) : (
                                     <div
                                       onClick={() => fileInputRef.current?.click()}
@@ -9846,9 +10067,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       {/* ROOM / 3D / 360 VIEWER */}
       {viewerMode && hasUploadedImage && (() => {
         // Shared live customization state values for all 3 preview modes (Room, 3D, 360)
+        const isQuotesCreateOwnSolid = isQuotesProduct && quotesPreference === 'create-own' && !quoteBgImage;
         const primaryPhotoUrl =
           (selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl)
             ? popArtConfig.processedImageUrl
+            : isQuotesCreateOwnSolid
+            ? ''
             : (panelImages[activePanelIndex]?.imageUrl ||
                panelImages[0]?.imageUrl ||
                Object.values(panelImages).find((p) => Boolean(p?.imageUrl))?.imageUrl ||
@@ -9977,7 +10201,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         const renderSlotPhoto = (idx: number, photoScaleFactor: number = 1) => {
           const p = panelImages[idx];
           const isMultiSlotProduct = isCollageProduct || isWallArtProduct || isHexagonProduct;
-          const url = (selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl)
+          const url = isQuotesCreateOwnSolid
+            ? null
+            : (selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl)
             ? popArtConfig.processedImageUrl
             : (isMultiSlotProduct
                 ? (p?.imageUrl || null)
