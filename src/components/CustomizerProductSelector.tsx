@@ -1,5 +1,6 @@
 import React from 'react';
 import { Check } from 'lucide-react';
+import { bulkUnitPriceFor, MIN_BULK_QTY } from '../pages/BulkOrdersPage';
 
 export type CustomizerProductIconType =
   | 'block'
@@ -43,15 +44,22 @@ export interface CustomizerProductCardProps {
   product: CustomizerProductItem;
   isSelected: boolean;
   onSelect: (productId: string) => void;
+  /** When set to a bulk quantity (>= MIN_BULK_QTY), the displayed starting
+   * price reflects the same volume discount shown on the Bulk Orders page. */
+  bulkQuantity?: number;
 }
 
 export const CustomizerProductCard: React.FC<CustomizerProductCardProps> = ({
   product: pt,
   isSelected,
-  onSelect
+  onSelect,
+  bulkQuantity
 }) => {
   const rawPrice = typeof pt.price === 'number' && !isNaN(pt.price) ? pt.price : pt.startingPrice;
-  const safePrice = typeof rawPrice === 'number' && !isNaN(rawPrice) ? rawPrice : 0;
+  const basePrice = typeof rawPrice === 'number' && !isNaN(rawPrice) ? rawPrice : 0;
+  const safePrice = bulkQuantity !== undefined && bulkQuantity >= MIN_BULK_QTY
+    ? bulkUnitPriceFor(basePrice, bulkQuantity)
+    : basePrice;
 
   return (
     <div
@@ -227,6 +235,10 @@ export interface CustomizerProductSelectorProps {
   selectedProductId: string;
   onSelectProduct: (productId: string) => void;
   onSwitchMaterial: () => void;
+  /** When set to a bulk quantity (>= MIN_BULK_QTY), every card's displayed
+   * starting price reflects the same volume discount shown on the Bulk
+   * Orders page. */
+  bulkQuantity?: number;
 }
 
 const MATERIAL_TABS = ['CANVAS', 'ACRYLIC'] as const;
@@ -236,7 +248,8 @@ export const CustomizerProductSelector: React.FC<CustomizerProductSelectorProps>
   products,
   selectedProductId,
   onSelectProduct,
-  onSwitchMaterial
+  onSwitchMaterial,
+  bulkQuantity
 }) => {
   const safeProducts = Array.isArray(products) ? products : [];
 
@@ -281,6 +294,7 @@ export const CustomizerProductSelector: React.FC<CustomizerProductSelectorProps>
               product={pt}
               isSelected={selectedProductId === pt.id}
               onSelect={onSelectProduct}
+              bulkQuantity={bulkQuantity}
             />
           ))}
         </div>

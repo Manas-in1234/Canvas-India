@@ -6650,6 +6650,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               selectedProductId={selectedProductTypeId}
               onSelectProduct={selectProduct}
               onSwitchMaterial={handleSwitchMaterial}
+              bulkQuantity={quantity}
             />
           )}
 
