@@ -152,13 +152,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         customizeHref: '/customize/canvas/canvas-oval'
       }
     ],
-    galleryTitle: 'Shapes for every wall',
-    galleryItems: [
-      { label: 'Round', image: PHOTO.shapedCanvasRound },
-      { label: 'Triangle', image: PHOTO.shapedCanvasTriangle },
-      { label: 'Heart', image: PHOTO.shapedCanvasHeart },
-      { label: 'Oval', image: PHOTO.shapedCanvasOval }
-    ],
     historyTitle: 'The History of Shaped Canvas',
     historyParagraphs: [
       'Painting on a non-rectangular surface is older than it looks. Renaissance masters like Raphael, Michelangelo, and Botticelli painted on round wooden panels called tondos, breaking from the standard rectangle centuries before it became a modern art movement.',
@@ -523,13 +516,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         image: '/assets/lyric-canvas/sheet-music-wall-art.svg',
         customizeHref: '/customize/canvas/canvas-lyric'
       }
-    ],
-    galleryTitle: 'A template for every milestone',
-    galleryItems: [
-      { label: 'Weddings', image: '/assets/lyric-canvas/wedding-vows-canvas.svg' },
-      { label: 'Anniversaries', image: '/assets/lyric-canvas/first-anniversary-gift.svg' },
-      { label: 'Couples', image: '/assets/lyric-canvas/couples-personalized-art.svg' },
-      { label: 'Forever Young', image: '/assets/lyric-canvas/forever-young-lyrics.svg' }
     ],
     historyTitle: 'A Modern Twist on an Old Tradition',
     historyParagraphs: [
