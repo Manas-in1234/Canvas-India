@@ -6690,7 +6690,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   </div>
                   <div className="flex items-center justify-between text-xs font-bold text-stone-800">
                     <span>{wordArtSizeOption.label}</span>
-                    <span className="text-[#0E4A93] font-black">₹{wordArtSizeOption.price.toFixed(2)}</span>
+                    <span className="text-[#0E4A93] font-black">₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(wordArtSizeOption.price, quantity) : wordArtSizeOption.price).toFixed(2)}</span>
                   </div>
                   <div className="text-[11px] text-stone-500 font-medium">
                     Ratio: <span className="font-bold text-stone-700">{wordArtSizeOption.ratioTab}</span> ({wordArtSizeOption.widthInches}" × {wordArtSizeOption.heightInches}")
@@ -7377,7 +7377,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                             {/* Price text */}
                             <div className="text-[11px] text-[#0E4A93] text-center font-extrabold">
-                              ₹{(opt.price + popStyleAdjustment).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(opt.price + popStyleAdjustment, quantity) : opt.price + popStyleAdjustment).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                           </div>
                         );
@@ -7443,7 +7443,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       </div>
 
                       <div className="text-xs font-black text-[#0E4A93] ml-2">
-                        ₹{customSizePrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(customSizePrice, quantity) : customSizePrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     </div>
                   </div>
@@ -11984,6 +11984,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         selectedSizeId={wordArtSizeOption.id}
         onSelectSize={handleSelectWordArtSize}
         onCreateWordArt={handleCreateWordArtFromSize}
+        bulkQuantity={quantity}
       />
 
       {/* Word Art Personalization Modal */}
@@ -11994,6 +11995,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         initialConfig={wordArtConfig}
         onChangeSize={handleWordArtChangeSize}
         onAddToProduct={handleAddWordArtToProduct}
+        bulkQuantity={quantity}
       />
 
       {/* Pop Art Style Selection Modal */}

@@ -10,6 +10,7 @@ import {
   DEFAULT_WORD_ART_CONFIG,
   renderWordArtToCanvas
 } from '../data/wordArtData';
+import { bulkUnitPriceFor, MIN_BULK_QTY } from '../pages/BulkOrdersPage';
 
 export interface WordArtPersonalizeModalProps {
   isOpen: boolean;
@@ -18,6 +19,9 @@ export interface WordArtPersonalizeModalProps {
   initialConfig?: WordArtConfig;
   onChangeSize: () => void;
   onAddToProduct: (dataUrl: string, config: WordArtConfig) => void;
+  /** When set to a bulk quantity (>= MIN_BULK_QTY), the displayed price
+   * reflects the same volume discount shown on the Bulk Orders page. */
+  bulkQuantity?: number;
 }
 
 export const WordArtPersonalizeModal: React.FC<WordArtPersonalizeModalProps> = ({
@@ -26,8 +30,12 @@ export const WordArtPersonalizeModal: React.FC<WordArtPersonalizeModalProps> = (
   selectedSize,
   initialConfig = DEFAULT_WORD_ART_CONFIG,
   onChangeSize,
-  onAddToProduct
+  onAddToProduct,
+  bulkQuantity
 }) => {
+  const displayPrice = bulkQuantity !== undefined && bulkQuantity >= MIN_BULK_QTY
+    ? bulkUnitPriceFor(selectedSize.price, bulkQuantity)
+    : selectedSize.price;
   const [config, setConfig] = useState<WordArtConfig>(initialConfig);
   const [otherTextRaw, setOtherTextRaw] = useState<string>(
     initialConfig.otherText.join('\n')
@@ -108,7 +116,7 @@ export const WordArtPersonalizeModal: React.FC<WordArtPersonalizeModalProps> = (
               {selectedSize.label} Word Art on Canvas
             </h2>
             <span className="hidden sm:inline-block text-[11px] font-bold text-blue-100 bg-white/15 px-2.5 py-0.5 rounded-full border border-white/20">
-              ₹{selectedSize.price.toFixed(2)}
+              ₹{displayPrice.toFixed(2)}
             </span>
           </div>
           <button
