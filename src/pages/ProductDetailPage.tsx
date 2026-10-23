@@ -136,6 +136,10 @@ export const ProductDetailPage: React.FC = () => {
   // picker, no Custom dimensions.
   const SIMPLE_VARIANT_CATEGORIES = ['cork', 'cork-art-patterns', 'yoga-fitness'];
 
+  // Yoga mats, bricks, rollers etc. don't hang on a wall — no hook/hanger
+  // options apply to them.
+  const showHookTab = product ? product.categorySlug !== 'yoga-fitness' : true;
+
   // Shape options for this product. Every wall-hangable category gets the
   // same reduced shape range by default (Cork and yoga mats don't use
   // shapes); products can still override with their own explicit list.
@@ -205,6 +209,7 @@ export const ProductDetailPage: React.FC = () => {
       setCustomWidth(8);
       setCustomHeight(8);
       setQuantity(1);
+      setSizeShapeTab('size');
       setBulkPanelOpen(false);
       setCustomBulkQty('');
       setActiveImageIndex(0);
@@ -570,13 +575,15 @@ export const ProductDetailPage: React.FC = () => {
                         Frame
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => setSizeShapeTab('hook')}
-                      className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'hook' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
-                    >
-                      Hook
-                    </button>
+                    {showHookTab && (
+                      <button
+                        type="button"
+                        onClick={() => setSizeShapeTab('hook')}
+                        className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'hook' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                      >
+                        Hook
+                      </button>
+                    )}
                   </div>
 
                   {sizeShapeTab === 'size' && product.sizes && product.sizes.length > 0 && (
@@ -678,7 +685,7 @@ export const ProductDetailPage: React.FC = () => {
                     </div>
                   )}
 
-                  {sizeShapeTab === 'hook' && (
+                  {showHookTab && sizeShapeTab === 'hook' && (
                     <div className="grid grid-cols-4 gap-2">
                       {HOOK_OPTIONS.map((hookOpt) => (
                         <button
