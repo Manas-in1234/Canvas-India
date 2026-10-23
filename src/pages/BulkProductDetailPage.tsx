@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ChevronRight, ChevronDown, Heart, FileText, Percent, Truck, PackageCheck } from 'lucide-react';
+import { ChevronRight, ChevronDown, Heart, Percent, Truck, PackageCheck } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { getBulkItem, buildBulkItems, QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import { NotFoundPage } from './NotFoundPage';
@@ -141,10 +141,6 @@ export const BulkProductDetailPage: React.FC = () => {
               <li className="flex items-start gap-2">
                 <PackageCheck className="w-4 h-4 text-[#0E4A93] shrink-0 mt-0.5" />
                 <span><strong>Lower cost per unit</strong> — the more you order, the less each piece costs.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <FileText className="w-4 h-4 text-[#0E4A93] shrink-0 mt-0.5" />
-                <span>GST invoice available on every bulk order.</span>
               </li>
               <li className="flex items-start gap-2">
                 <Percent className="w-4 h-4 text-[#0E4A93] shrink-0 mt-0.5" />
