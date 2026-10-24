@@ -189,8 +189,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           <div className="font-bold text-white text-4xl leading-tight mt-1 drop-shadow-lg" style={{ fontFamily: SERIF }}>
             Up to 20% Off
           </div>
-          <p className="text-sm text-white/90 font-medium mt-2 drop-shadow">+ Free shipping on orders ₹999 and above</p>
-          <span className="inline-flex items-center gap-2 mt-5 text-sm font-bold text-white bg-[#E8752A] group-hover:bg-[#D3631A] rounded-full px-5 py-2.5 shadow-lg shadow-orange-950/40 transition-colors">
+          <span className="inline-flex items-center gap-2 mt-3.5 text-sm font-bold text-white bg-[#E8752A] group-hover:bg-[#D3631A] rounded-full px-5 py-2.5 shadow-lg shadow-orange-950/40 transition-colors">
             Customize Festive Gift <ArrowRight className="w-4 h-4" />
           </span>
         </button>
@@ -272,7 +271,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 <div className="font-bold text-white text-2xl leading-tight mt-0.5 drop-shadow-md" style={{ fontFamily: SERIF }}>
                   Up to 20% Off
                 </div>
-                <p className="text-xs text-amber-100/90 font-medium mt-1">+ Free shipping on orders ₹999+</p>
+                <span className="inline-flex items-center gap-1.5 mt-2.5 text-xs font-bold text-white bg-[#E8752A] rounded-full px-3.5 py-1.5 shadow-md self-start">
+                  Customize Festive Gift <ArrowRight className="w-3.5 h-3.5" />
+                </span>
               </div>
             </button>
 
