@@ -189,9 +189,9 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
   {
     id: 'acrylic-wall-art',
     name: 'Wall Display',
-    price: 2338.90,
-    startingPrice: 2338.90,
-    image: '/images/acrylic/shapes/rectangle.svg',
+    price: 1050,
+    startingPrice: 1050,
+    image: '/assets/canvas-styles/acrylic-wall-display-3panel.webp',
     iconType: 'wall',
     defaultLayout: 'threeCollage',
     defaultLayoutId: 'wall-display-3a',

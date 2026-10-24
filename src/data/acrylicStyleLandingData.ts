@@ -47,7 +47,7 @@ const STANDARD_ACRYLIC_FEATURES = [
 // rest have no distinct real photos anywhere in the app — the customizer
 // itself only ever used generic shape placeholders — so they use a plain,
 // accurate icon instead of a mismatched stock photo.
-const STYLE_META: Record<string, {
+export const STYLE_META: Record<string, {
   slug: string;
   intro: string;
   step2: { title: string; desc: string };
@@ -495,4 +495,9 @@ export const ACRYLIC_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> 
 
 export function getAcrylicStyleLandingData(slug: string): CanvasStyleLandingData | undefined {
   return ACRYLIC_STYLE_LANDING_DATA[slug];
+}
+
+export function getAcrylicLandingDataByProductId(productId: string): CanvasStyleLandingData | undefined {
+  const meta = STYLE_META[productId];
+  return meta ? ACRYLIC_STYLE_LANDING_DATA[meta.slug] : undefined;
 }

@@ -5,7 +5,7 @@ import { Product } from '../types';
 import { OCCASIONS } from '../data/occasionsData';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 import { ACRYLIC_PRODUCT_TYPES } from '../data/acrylicCustomizerData';
-import { ACRYLIC_STYLE_LANDING_DATA } from '../data/acrylicStyleLandingData';
+import { ACRYLIC_STYLE_LANDING_DATA, getAcrylicLandingDataByProductId } from '../data/acrylicStyleLandingData';
 import { CORK_PRODUCT_CARDS } from '../data/corkProductCards';
 
 export interface HomepageProps {
@@ -60,11 +60,11 @@ const ACRYLIC_STYLE_ICONS: Record<string, React.ElementType> = {
   quotes: Quote,
 };
 const ACRYLIC_STYLE_CARDS = ACRYLIC_PRODUCT_TYPES.map((pt) => {
-  const landingData = Object.values(ACRYLIC_STYLE_LANDING_DATA).find((d) => d.styles[0]?.id === pt.id);
+  const landingData = getAcrylicLandingDataByProductId(pt.id);
   return {
     name: pt.name,
-    price: pt.startingPrice,
-    image: landingData?.styles[0]?.image,
+    price: landingData?.styles[0]?.price ?? pt.startingPrice,
+    image: landingData?.styles[0]?.image || pt.image,
     icon: ACRYLIC_STYLE_ICONS[pt.iconType || ''] || (pt.id === 'acrylic-bus-roll' ? Rows3 : pt.id === 'acrylic-word-art' ? Type : ImageIcon),
     href: landingData ? `/acrylic/${landingData.slug}` : `/customize/acrylic/${pt.id}`,
   };

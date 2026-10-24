@@ -1,16 +1,16 @@
 import React from 'react';
 import { StyleGridPage } from '../components/StyleGridPage';
 import { ACRYLIC_PRODUCT_TYPES } from '../data/acrylicCustomizerData';
-import { ACRYLIC_STYLE_LANDING_DATA } from '../data/acrylicStyleLandingData';
+import { ACRYLIC_STYLE_LANDING_DATA, getAcrylicLandingDataByProductId } from '../data/acrylicStyleLandingData';
 
 // Same card set as the homepage's "Acrylic Prints" row (one per real acrylic
 // product type), just shown in full instead of a scrollable strip.
 const ACRYLIC_STYLE_CARDS = ACRYLIC_PRODUCT_TYPES.map((pt) => {
-  const landingData = Object.values(ACRYLIC_STYLE_LANDING_DATA).find((d) => d.styles[0]?.id === pt.id);
+  const landingData = getAcrylicLandingDataByProductId(pt.id);
   return {
     name: pt.name,
-    price: pt.startingPrice,
-    image: landingData?.styles[0]?.image,
+    price: landingData?.styles[0]?.price ?? pt.startingPrice,
+    image: landingData?.styles[0]?.image || pt.image,
     href: landingData ? `/acrylic/${landingData.slug}` : `/customize/acrylic/${pt.id}`,
   };
 });
