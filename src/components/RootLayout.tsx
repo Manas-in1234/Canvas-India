@@ -83,7 +83,7 @@ export const RootLayout: React.FC = () => {
     // Generic category page routes (from origin/main)
     const categoryRoutes = [
       'acrylic', 'posters', 'cork', 'yoga-fitness',
-      'home-decor', 'custom-prints', 'gifts', 'bulk-order', 'corporate-orders', 'designers-architects',
+      'home-decor', 'custom-prints', 'bulk-order', 'designers-architects',
       'wall-art', 'photo-frames',
       'devotional-art', 'scenery-landscape-art', 'tribal-ethnic-art', 'line-art',
       'motivational-posters', 'cork-art-patterns'
@@ -102,8 +102,16 @@ export const RootLayout: React.FC = () => {
       navigate('/cork');
       return;
     }
-    if (slug === 'corporate') {
-      navigate('/corporate-orders');
+    // Gifts & Occasions has no dedicated product listing — it goes to the
+    // "Shop by Occasion" hub instead.
+    if (slug === 'gifts') {
+      navigate('/occasions');
+      return;
+    }
+    // Corporate Orders has no dedicated product listing — it goes to the
+    // Bulk & Corporate Orders page instead.
+    if (slug === 'corporate' || slug === 'corporate-orders' || slug === 'corporate-printing') {
+      navigate('/bulk-order');
       return;
     }
     if (slug === 'bulk-orders') {

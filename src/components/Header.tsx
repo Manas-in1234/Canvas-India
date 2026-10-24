@@ -129,8 +129,7 @@ export const Header: React.FC<HeaderProps> = ({
     if (path === '/yoga-fitness') return 'yoga-fitness';
     if (path === '/home-decor') return 'home-decor';
     if (path === '/custom-prints') return 'custom-prints';
-    if (path === '/gifts') return 'gifts';
-    if (path === '/corporate-orders' || path === '/corporate') return 'corporate-orders';
+    if (path === '/occasions' || path.startsWith('/occasions/')) return 'gifts';
     if (path === '/bulk-order' || path === '/bulk-orders') return 'bulk-order';
     if (path === '/designers-architects') return 'designers-architects';
     if (path === '/devotional-art') return 'devotional-art';

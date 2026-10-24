@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ShopProvider } from './context/ShopContext';
 import { RootLayout } from './components/RootLayout';
@@ -121,7 +121,8 @@ export function App() {
             <Route path="/yoga-fitness" element={<CategoryPage categorySlug="yoga-fitness" />} />
             <Route path="/home-decor" element={<CategoryPage categorySlug="home-decor" />} />
             <Route path="/custom-prints" element={<CategoryPage categorySlug="custom-prints" />} />
-            <Route path="/gifts" element={<CategoryPage categorySlug="gifts" />} />
+            {/* /gifts had no products of its own (always "No Products Found") — redirect to the real Gifts & Occasions hub */}
+            <Route path="/gifts" element={<Navigate to="/occasions" replace />} />
 
             {/* Festive Offers landing page */}
             <Route path="/festive-offers" element={<FestiveOffersPage />} />
@@ -133,8 +134,9 @@ export function App() {
             <Route path="/bulk-orders" element={<BulkOrdersPage />} />
             <Route path="/bulk-order/:material/:slug" element={<BulkProductDetailPage />} />
 
-            <Route path="/corporate-orders" element={<CategoryPage categorySlug="corporate-orders" />} />
-            <Route path="/corporate" element={<CategoryPage categorySlug="corporate-orders" />} />
+            {/* /corporate-orders had no products of its own (always "No Products Found") — redirect to the real Bulk & Corporate Orders page */}
+            <Route path="/corporate-orders" element={<Navigate to="/bulk-order" replace />} />
+            <Route path="/corporate" element={<Navigate to="/bulk-order" replace />} />
 
             <Route path="/wall-art" element={<CategoryPage categorySlug="wall-art" />} />
             <Route path="/photo-frames" element={<CategoryPage categorySlug="photo-frames" />} />

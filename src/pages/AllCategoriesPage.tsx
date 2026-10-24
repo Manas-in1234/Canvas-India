@@ -10,8 +10,10 @@ const ROUTES: Record<string, string> = {
   'acrylic-prints': '/acrylic',
   'cork-prints': '/cork',
   'bulk-orders': '/bulk-order',
-  'corporate': '/corporate-orders',
-  'corporate-printing': '/corporate-orders',
+  'corporate': '/bulk-order',
+  'corporate-printing': '/bulk-order',
+  'corporate-orders': '/bulk-order',
+  'gifts': '/occasions',
 };
 
 // Canvas, Acrylic, Cork, Gifts & Occasions and Corporate Orders already have

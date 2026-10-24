@@ -93,8 +93,8 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
               <li><Link to="/canvas" className="hover:text-white transition-colors">Canvas Frames</Link></li>
               <li><Link to="/acrylic" className="hover:text-white transition-colors">Acrylic Wall Art</Link></li>
               <li><Link to="/cork" className="hover:text-white transition-colors">Natural Cork Prints &amp; Yoga Mats</Link></li>
-              <li><Link to="/gifts" className="hover:text-white transition-colors">Gifts &amp; Celebrations</Link></li>
-              <li><Link to="/corporate-orders" className="hover:text-white transition-colors">Corporate Branding</Link></li>
+              <li><Link to="/occasions" className="hover:text-white transition-colors">Gifts &amp; Celebrations</Link></li>
+              <li><Link to="/bulk-order" className="hover:text-white transition-colors">Corporate Branding</Link></li>
             </ul>
           </div>
 
@@ -102,14 +102,14 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
           <div className="space-y-2.5">
             <h4 className="font-bold text-xs uppercase tracking-wider text-white">Occasions & Gifting</h4>
             <ul className="space-y-2 text-stone-400 text-xs">
-              <li><Link to="/gifts?sub=Birthday" className="hover:text-white transition-colors">Birthday Gifts</Link></li>
-              <li><Link to="/gifts?sub=Anniversary" className="hover:text-white transition-colors">Anniversary Frames</Link></li>
-              <li><Link to="/gifts?sub=Wedding" className="hover:text-white transition-colors">Wedding Keepsakes</Link></li>
-              <li><Link to="/gifts?sub=Valentine's%20Day" className="hover:text-white transition-colors">Valentine's Day Gifts</Link></li>
-              <li><Link to="/gifts?sub=Housewarming" className="hover:text-white transition-colors">Housewarming Art</Link></li>
-              <li><Link to="/gifts?sub=Festivals" className="hover:text-white transition-colors">Festive &amp; Diwali Specials</Link></li>
-              <li><Link to="/gifts?sub=Mother's%20Day" className="hover:text-white transition-colors">Mother's &amp; Father's Day</Link></li>
-              <li><Link to="/gifts?sub=Corporate%20Gifts" className="hover:text-white transition-colors">Corporate Hampers</Link></li>
+              <li><Link to="/occasions/birthday" className="hover:text-white transition-colors">Birthday Gifts</Link></li>
+              <li><Link to="/occasions/anniversary" className="hover:text-white transition-colors">Anniversary Frames</Link></li>
+              <li><Link to="/occasions/wedding" className="hover:text-white transition-colors">Wedding Keepsakes</Link></li>
+              <li><Link to="/occasions/valentines-day" className="hover:text-white transition-colors">Valentine's Day Gifts</Link></li>
+              <li><Link to="/occasions/housewarming" className="hover:text-white transition-colors">Housewarming Art</Link></li>
+              <li><Link to="/occasions/festive-offers" className="hover:text-white transition-colors">Festive &amp; Diwali Specials</Link></li>
+              <li><Link to="/occasions/mothers-day" className="hover:text-white transition-colors">Mother's &amp; Father's Day</Link></li>
+              <li><Link to="/bulk-order" className="hover:text-white transition-colors">Corporate Hampers</Link></li>
             </ul>
           </div>
 
