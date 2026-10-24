@@ -53,6 +53,8 @@ const STYLE_META: Record<string, {
   step2: { title: string; desc: string };
   icon: import('../components/CanvasStyleLandingPage').CanvasStyleIcon;
   image?: string;
+  /** Direct styles override when a format has dedicated panel-wise styles with custom prices and links */
+  styles?: import('../components/CanvasStyleLandingPage').CanvasStyleHighlight[];
   /** For multi-panel formats (collage/split/wall-art/mosaic), the real
    * layout id (from productGeometry.tsx) that matches what the main style
    * card's own image actually shows, deep-linked via ?layout= so
@@ -64,6 +66,9 @@ const STYLE_META: Record<string, {
   tipsTitle?: string;
   tipsSubtitle?: string;
   tipsItems?: { title: string; desc: string }[];
+  infoTitle?: string;
+  infoSubtitle?: string;
+  infoItems?: { title: string; desc: string }[];
   /** Additional real-photo style cards shown after the main one, for
    * formats with more than one verified real example — each deep-linking
    * to its own matching layout the same way. */
@@ -87,34 +92,61 @@ const STYLE_META: Record<string, {
     intro: 'A cluster of acrylic panels arranged together as one striking gallery-wall display.',
     step2: { title: 'Pick Your Panel Layout', desc: 'Choose a multi-panel gallery arrangement, then fine-tune individual panel sizes.' },
     icon: 'wall',
-    image: '/assets/canvas-styles/acrylic-wall-forest-selfie.webp',
+    image: '/assets/canvas-styles/acrylic-wall-display-3panel.webp',
+    styles: [
+      {
+        id: 'acrylic-wall-display-3panel',
+        number: '01',
+        name: '3-Panel Acrylic Gallery Wall Display',
+        description: 'A luminous 3-panel acrylic gallery installation (18" × 24" overall) featuring a 12"×18" tall centerpiece balanced by dual 10"×8" accent panels — floating on polished stainless steel standoffs with crystal glass clarity.',
+        price: 1050,
+        image: '/assets/canvas-styles/acrylic-wall-display-3panel.webp',
+        customizeHref: '/customize/acrylic/acrylic-wall-art?layout=wall-display-3a'
+      },
+      {
+        id: 'acrylic-wall-display-4panel',
+        number: '02',
+        name: '4-Panel Acrylic Showcase Display',
+        description: 'An architectural 4-piece acrylic wall display (34" × 24" overall) featuring a 24"×16" portrait panel, an 11"×17" horizontal header, and dual 12"×8" companion bases — high-gloss optical acrylic that adds depth to modern interiors.',
+        price: 1990,
+        image: '/assets/canvas-styles/acrylic-wall-display-4panel.webp',
+        customizeHref: '/customize/acrylic/acrylic-wall-art?layout=wall-display-4a'
+      },
+      {
+        id: 'acrylic-wall-display-5panel',
+        number: '03',
+        name: '5-Panel Stepped Acrylic Pyramid Display',
+        description: 'A dramatic 5-panel symmetrical pyramid (62" × 36" overall) with a commanding 20"×16" center apex panel flanked by stepped 14"×11" and 10"×8" panels — ultra-vivid sub-surface UV printing with sleek chrome standoff mounting.',
+        price: 2150,
+        image: '/assets/canvas-styles/acrylic-wall-display-5panel.webp',
+        customizeHref: '/customize/acrylic/acrylic-wall-art?layout=wall-display-5a'
+      },
+      {
+        id: 'acrylic-wall-display-7panel',
+        number: '04',
+        name: '7-Panel Acrylic Centerpiece Halo Display',
+        description: 'A grand 7-panel acrylic gallery cluster (44" × 26" overall) featuring a 26"×26" square hero center encircled by six 8"×8" mini satellite acrylic prints — diamond-polished beveled edges creating an immersive optical centerpiece.',
+        price: 2490,
+        image: '/assets/canvas-styles/acrylic-wall-display-7panel.webp',
+        customizeHref: '/customize/acrylic/acrylic-wall-art?layout=wall-display-7a'
+      }
+    ],
+    infoTitle: 'Choose Your Acrylic Panel Count',
+    infoSubtitle: 'Every layout below is a real multi-panel acrylic configuration available in the customizer — pick one to start, then customize sizes, standoff hardware, and acrylic thickness.',
+    infoItems: [
+      { title: '3-Piece Acrylic Display', desc: '(1) 12"×18" Tall + (2) 10"×8" Mini panels on standoff mounts' },
+      { title: '4-Piece Acrylic Showcase', desc: '(1) 24"×16" + (1) 11"×17" + (2) 12"×8" Standoff-mounted panels' },
+      { title: '5-Piece Stepped Acrylic Pyramid', desc: '(2) 10"×8" + (2) 14"×11" + (1) 20"×16" Stepped gallery set' },
+      { title: '6-Piece Panoramic Horizon', desc: '(1) 10"×10" + (1) 18"×12" + (1) 28"×18" + (2) 11"×16" + (1) 10"×12"' },
+      { title: '7-Piece Centerpiece Halo', desc: '(1) 26"×26" Hero + (6) 8"×8" Mini satellite panels' },
+      { title: '9-Piece Matrix Grid', desc: '(9) 12"×12" Equal Squares in a 3×3 Grid' },
+      { title: '10-Piece Grand Pantheon Wall', desc: '(1) 24"×32" + (2) 16"×20" + (2) 12"×16" + (2) 10"×12" + (3) 8"×10"' }
+    ],
     historyTitle: 'The History of the Gallery Wall',
     historyParagraphs: [
       'The densely packed "gallery wall" look traces back to the Paris Salon, which from 1667 accepted far more paintings than its walls could comfortably hold, so organizers covered every inch floor to ceiling with little regard for matching styles.',
       'That "salon-style hang" had its own hierarchy — prized works hung "on the line" at eye level, lesser ones pushed toward the ceiling or floor — a practice London\'s Royal Academy soon adopted too.',
       'The look eventually left the gallery altogether, becoming a deliberate home-decorating style in its own right — and a cluster of acrylic panels is simply that same arrangement, made modern with a glossy, glass-like finish.'
-    ],
-    extraStyles: [
-      {
-        name: 'Pier Sunset Acrylic Display',
-        description: 'A sweeping boardwalk sunset, floating on standoff mounts for a gallery-style hang on any wall.',
-        image: '/assets/canvas-styles/acrylic-wall-pier-sunset.webp'
-      },
-      {
-        name: 'Rocky Beach Sunset Acrylic Display',
-        description: 'A calm rocky shoreline at sunset, printed edge-to-edge for a vivid, glass-like glow.',
-        image: '/assets/canvas-styles/acrylic-wall-rocky-beach-sunset.webp'
-      },
-      {
-        name: 'Portrait Acrylic Display',
-        description: 'A warm couple portrait on a compact standoff-mounted panel — perfect for a desk, shelf, or entryway wall.',
-        image: '/assets/canvas-styles/acrylic-wall-couple-portrait.webp'
-      },
-      {
-        name: 'Abstract Art Acrylic Display',
-        description: 'Bold modern abstract artwork, framed by crystal-clear acrylic for a contemporary gallery look.',
-        image: '/assets/canvas-styles/acrylic-wall-abstract-face.webp'
-      }
     ]
   },
   'acrylic-collage': {
@@ -418,7 +450,7 @@ export const ACRYLIC_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> 
       stepsTitle: `How to Customize Your ${pt.name}`,
       stepsSubtitle: 'From upload to finish in 5 simple steps.',
       steps: buildAcrylicSteps(meta.step2),
-      styles: [
+      styles: meta.styles ?? [
         {
           id: pt.id,
           number: '01',
@@ -438,6 +470,13 @@ export const ACRYLIC_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> 
           customizeHref: `/customize/acrylic/${pt.id}${extra.layoutId ? `?layout=${extra.layoutId}` : ''}`
         }))
       ],
+      ...(meta.infoTitle && meta.infoItems
+        ? {
+            infoTitle: meta.infoTitle,
+            infoSubtitle: meta.infoSubtitle,
+            infoItems: meta.infoItems
+          }
+        : {}),
       ...(meta.tipsTitle && meta.tipsItems
         ? {
             tipsTitle: meta.tipsTitle,
