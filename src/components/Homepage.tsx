@@ -764,7 +764,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       {/* CORPORATE & BULK ORDERS */}
       <section className="py-10 sm:py-14">
         <Container>
-          <div className="relative overflow-hidden rounded-3xl bg-[#0A1C3D] text-white">
+          <div className="relative overflow-hidden rounded-3xl bg-[#0A1C3D] text-white min-h-[380px] sm:min-h-[420px] flex items-center">
             <img
               src="/assets/canvas-india-branded-packaging.webp"
               alt="Canvas India branded bulk order packaging"
@@ -783,23 +783,14 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               <p className="mt-3 text-sm sm:text-base text-white/80 leading-relaxed max-w-md">
                 Custom employee welcome kits, company branded T-shirts, uniform mugs, business cards &amp; promotional giveaways.
               </p>
-              <ul className="mt-5 space-y-1.5">
-                {['GST Invoice Available', 'Volume Discounts', 'Fast Turnaround Across India'].map((label) => (
-                  <li key={label} className="flex items-center gap-2 text-sm text-white/80">
-                    <Check className="w-4 h-4 text-amber-300 shrink-0" />
-                    {label}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-6 flex flex-col items-start gap-2">
+              <div className="mt-6">
                 <button
                   type="button"
-                  onClick={() => navigate('/bulk-order')}
+                  onClick={() => navigate('/corporate-orders')}
                   className="inline-flex items-center gap-2 text-sm font-bold text-white bg-[#E8752A] hover:bg-[#D3631A] rounded-full px-6 py-3 shadow-lg shadow-orange-950/40 transition-colors cursor-pointer"
                 >
-                  Get a Custom Quote <ArrowRight className="w-4 h-4" />
+                  Shop Corporate Products <ArrowRight className="w-4 h-4" />
                 </button>
-                <span className="text-xs text-white/60">Direct WhatsApp &amp; email quotes within 2 hours</span>
               </div>
             </div>
           </div>

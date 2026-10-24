@@ -199,7 +199,7 @@ export const BulkOrdersPage: React.FC = () => {
             <span className="text-stone-900 font-semibold">Bulk &amp; Corporate Orders</span>
           </nav>
 
-          <div className="max-w-xl mx-auto text-center">
+          <div className="max-w-xl">
             <span className="text-[11px] font-black uppercase tracking-[0.25em] text-[#E8752A]">B2B &amp; Bulk Solutions</span>
             <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-stone-900" style={{ fontFamily: SERIF }}>
               Bulk &amp; Corporate Orders
