@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import QRCode from 'qrcode';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -2718,27 +2718,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return items.filter((item) => item.enabled);
   }, [activeMaterial, productCapabilities, isSingleOrShapedCanvas, isBusRollProduct, isPopArtProduct, isLyricProduct, isWordArtProduct, isQuotesProduct]);
 
-  // Contextual workflow instruction derived dynamically from selected product's actual capabilities
-  const productSupportsSizes = useMemo(() => {
-    return toolbarItems.some((item) => item.id === 'SELECT SIZE');
-  }, [toolbarItems]);
-
-  const productSupportsLayouts = useMemo(() => {
-    return toolbarItems.some((item) => item.id === 'LAYOUTS & DESIGNS');
-  }, [toolbarItems]);
-
-  const contextualInstruction = useMemo(() => {
-    if (productSupportsSizes && productSupportsLayouts) {
-      return 'Change the size or layout, or continue to the next section.';
-    }
-    if (productSupportsSizes) {
-      return 'Change the size or continue to the next section.';
-    }
-    if (productSupportsLayouts) {
-      return 'Change the layout or continue to the next section.';
-    }
-    return 'Continue to the next section.';
-  }, [productSupportsSizes, productSupportsLayouts]);
+  // Product tabs supported check
 
   // If the active tab is not supported by the currently selected product, safely revert to PRODUCTS
   useEffect(() => {
@@ -3364,6 +3344,71 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const savedWordArtDataUrlRef = useRef<string | null>(null);
   const savedWordArtConfigRef = useRef<WordArtConfig | null>(null);
 
+  const isWordArtArtwork = useCallback((url: string | null | undefined): boolean => {
+    if (!url) return false;
+    return Boolean(
+      (activeWordArtDataUrl && url === activeWordArtDataUrl) ||
+      (savedWordArtDataUrlRef.current && url === savedWordArtDataUrlRef.current)
+    );
+  }, [activeWordArtDataUrl]);
+
+  // Product change lifecycle: Detach Word Art when moving away; restore when returning to Word Art
+  const prevWordArtProductTypeIdRef = useRef<string>(selectedProductTypeId);
+  useEffect(() => {
+    const prevType = prevWordArtProductTypeIdRef.current;
+    const wasWordArt = prevType.includes('word');
+    const isNowWordArt = selectedProductTypeId.includes('word');
+    prevWordArtProductTypeIdRef.current = selectedProductTypeId;
+
+    if (wasWordArt && !isNowWordArt) {
+      // Switching away from Word Art to another product: detach completely
+      if (activeWordArtDataUrl) {
+        savedWordArtDataUrlRef.current = activeWordArtDataUrl;
+      }
+      if (wordArtConfig) {
+        savedWordArtConfigRef.current = wordArtConfig;
+      }
+      const staleWordArtUrl = activeWordArtDataUrl || savedWordArtDataUrlRef.current;
+      setActiveWordArtDataUrl(null);
+
+      // Clean slot 0 so the next product does not inherit Word Art
+      setPanelImages((prev) => {
+        if (prev[0]?.imageUrl && (prev[0].imageUrl === staleWordArtUrl || (staleWordArtUrl && prev[0].imageUrl.startsWith('data:image')))) {
+          const next = { ...prev };
+          delete next[0];
+          return next;
+        }
+        return prev;
+      });
+
+      // Detach from upload gallery tray
+      if (staleWordArtUrl) {
+        setUploadedPhotos((prev) => prev.filter((p) => p !== staleWordArtUrl));
+      }
+    } else if (!wasWordArt && isNowWordArt) {
+      // Returning to Word Art: restore previous configuration and rendered artwork
+      if (savedWordArtDataUrlRef.current) {
+        const restoredUrl = savedWordArtDataUrlRef.current;
+        setActiveWordArtDataUrl(restoredUrl);
+        if (savedWordArtConfigRef.current) {
+          setWordArtConfig(savedWordArtConfigRef.current);
+        }
+        setPanelImages((prev) => ({
+          ...prev,
+          0: {
+            ...createDefaultPanel(),
+            imageUrl: restoredUrl,
+            fitMode: 'contain',
+            scale: 1,
+            rotation: 0,
+            panX: 0,
+            panY: 0
+          }
+        }));
+      }
+    }
+  }, [selectedProductTypeId, activeWordArtDataUrl, wordArtConfig]);
+
   const handleSelectWordArtSize = (size: WordArtSizeOption) => {
     setWordArtSizeOption(size);
     setSelectedSizeId(size.id);
@@ -3376,6 +3421,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       renderWordArtToCanvas(offscreen, wordArtConfig, exportWidth, exportHeight);
       const dataUrl = offscreen.toDataURL('image/png', 0.95);
       setActiveWordArtDataUrl(dataUrl);
+      savedWordArtDataUrlRef.current = dataUrl;
       setPanelImages((prev) => ({
         ...prev,
         0: {
@@ -3402,7 +3448,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   const handleAddWordArtToProduct = (dataUrl: string, config: WordArtConfig) => {
     setActiveWordArtDataUrl(dataUrl);
+    savedWordArtDataUrlRef.current = dataUrl;
     setWordArtConfig(config);
+    savedWordArtConfigRef.current = config;
 
     // Apply high-res Word Art artwork directly into slot 0
     setPanelImages((prev) => ({
@@ -4204,8 +4252,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [lyricConfig.selectedTemplateId]);
 
   const handleSelectLyricTemplate = (tpl: LyricCanvasTemplate) => {
-    setLyricConfig((prev) => ({
-      ...prev,
+    setLyricConfig({
       selectedTemplateId: tpl.id,
       layout: tpl.defaultLayout,
       title: tpl.defaultText.title,
@@ -4222,7 +4269,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       textAlign: tpl.defaultTypography.alignment,
       overlayDarkness: tpl.defaultBackground.overlayDarkness,
       compositeImageUrl: null
-    }));
+    });
   };
 
   // Creative Tools State
@@ -4491,13 +4538,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       return true;
     }
     const anySlotHasImage = Object.values(panelImages).some(
-      (p) => Boolean(p?.imageUrl && p.imageUrl.trim().length > 0)
+      (p) => Boolean(p?.imageUrl && p.imageUrl.trim().length > 0 && (isWordArtProduct || !isWordArtArtwork(p.imageUrl)))
     );
     const anyTrayHasImage = uploadedPhotos.some(
-      (url) => Boolean(url && url.trim().length > 0)
+      (url) => Boolean(url && url.trim().length > 0 && (isWordArtProduct || !isWordArtArtwork(url)))
     );
     return anySlotHasImage || anyTrayHasImage;
-  }, [panelImages, uploadedPhotos, selectedProductTypeId, selectedLyricTemplate, lyricConfig.lyrics, lyricConfig.lyricsText]);
+  }, [panelImages, uploadedPhotos, selectedProductTypeId, selectedLyricTemplate, isWordArtProduct, isWordArtArtwork, lyricConfig.lyrics, lyricConfig.lyricsText]);
 
   // Validation: at least one uploaded photo
   const filledPanelsCount = useMemo(() => {
@@ -5705,7 +5752,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const layout = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
     const splitPanels = layout.panels;
     const N = splitPanels.length;
-    const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
+    const rawPanel0 = panelImages[0]?.imageUrl;
+    const validPanelImg = (!isWordArtProduct && isWordArtArtwork(rawPanel0)) ? null : rawPanel0;
+    const validTrayImg = uploadedPhotos.find((p) => !isWordArtArtwork(p)) || null;
+    const masterImage = validPanelImg || validTrayImg || null;
     const master = panelImages[0] || createDefaultPanel();
 
     const displayWidthInches = layout.overallWidthInches || 36;
@@ -5876,24 +5926,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
             {/* If empty, central single upload action overlay */}
             {!masterImage && (
-              <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-4 text-center group pointer-events-none">
-                <div
+              <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
+                <button
+                  type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-12 h-12 rounded-2xl bg-white shadow-lg border border-stone-200 flex items-center justify-center text-[#0E4A93] group-hover:scale-110 transition-all mb-2 pointer-events-auto cursor-pointer"
+                  className="px-5 py-2.5 bg-white hover:bg-stone-50 text-stone-800 hover:text-[#0E4A93] font-bold text-xs sm:text-sm rounded-xl shadow-md border border-stone-200 flex items-center gap-2 pointer-events-auto cursor-pointer transition-all hover:scale-105"
                 >
-                  <Upload className="w-5 h-5 stroke-[2.4] text-[#0E4A93]" />
-                </div>
-                <span className="text-xs sm:text-sm font-black text-stone-800 bg-white/90 px-3 py-1 rounded-full shadow-xs">
-                  Upload Image for {activeMaterial === 'acrylic' ? 'Split Acrylic' : 'Split Canvas'} ({N} Panels)
-                </span>
+                  <Upload className="w-4 h-4 stroke-[2.4] text-[#0E4A93]" />
+                  <span>Upload Image</span>
+                </button>
               </div>
             )}
           </div>
         </div>
-
-        <p className="text-[11px] font-semibold text-stone-500 mt-2.5 text-center">
-          1 Photo Split Continuously Across {N} Physical Panels • Drag photo to pan, use toolbar to Zoom/Rotate
-        </p>
       </div>
     );
   };
@@ -5965,10 +6010,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const s = (px: number) => Math.max(1, Math.round(px * scaleFactor));
     const fs = (px: number, min = 7) => `${Math.max(min, Math.round(px * scaleFactor))}px`;
     const scrimAlpha = Math.min(0.9, Math.max(0, (lyricConfig.overlayDarkness ?? 35) / 100));
-    const hasPhoto = Boolean(panelImages[0]?.imageUrl);
+    const hasPhoto = Boolean(panelImages[0]?.imageUrl && !isWordArtArtwork(panelImages[0]?.imageUrl));
+    const isLightColor = (hex: string) => {
+      const h = (hex || '').toLowerCase().trim();
+      return h === '#ffffff' || h === '#fef08a' || h === '#fffbeb' || h === '#f4f4f5' || h === '#fde047' || h === '#f5ebe0';
+    };
     const effectiveTextColor = hasPhoto
-      ? (lyricConfig.textColor || '#FFFFFF')
-      : (lyricConfig.textColor && lyricConfig.textColor !== '#FFFFFF' ? lyricConfig.textColor : '#1E293B');
+      ? (lyricConfig.textColor || selectedLyricTemplate.defaultTypography.textColor || '#FFFFFF')
+      : (isLightColor(lyricConfig.textColor)
+          ? (selectedLyricTemplate.defaultTypography.textColor && !isLightColor(selectedLyricTemplate.defaultTypography.textColor)
+              ? selectedLyricTemplate.defaultTypography.textColor
+              : '#1E293B')
+          : (lyricConfig.textColor || selectedLyricTemplate.defaultTypography.textColor || '#1E293B'));
     const textAlign = lyricConfig.alignment || lyricConfig.textAlign || 'center';
     const layout = lyricConfig.layout || selectedLyricTemplate.defaultLayout || 'photo-lyrics-overlay';
     const title = lyricConfig.title !== undefined ? lyricConfig.title : (lyricConfig.songTitle ?? selectedLyricTemplate.name);
@@ -6429,7 +6482,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const renderMosaicCanvas = () => {
     const layout = activeMosaicLayout;
     const count = layout.panelsCount || layout.panels.length;
-    const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
+    const rawPanel0 = panelImages[0]?.imageUrl;
+    const validPanelImg = (!isWordArtProduct && isWordArtArtwork(rawPanel0)) ? null : rawPanel0;
+    const validTrayImg = uploadedPhotos.find((p) => !isWordArtArtwork(p)) || null;
+    const masterImage = validPanelImg || validTrayImg || null;
     const master = panelImages[0] || createDefaultPanel();
 
     const totalCols = layout.cols || (count === 16 ? 4 : count === 25 ? 5 : count === 36 ? 6 : count === 20 ? 4 : count === 15 ? 3 : count === 12 && layout.aspectRatio > 1 ? 4 : 3);
@@ -7718,12 +7774,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </button>
               </div>
 
-              {/* Split Canvas & Photo Mosaic single image notification */}
-              {(isSplitProduct || isMosaicProduct) && (
+              {/* Photo Mosaic single image notification */}
+              {isMosaicProduct && (
                 <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 text-xs font-semibold text-[#0E4A93]">
-                  {isMosaicProduct
-                    ? 'Upload 1 photo — it spans seamlessly across the entire mosaic product.'
-                    : `Upload 1 photo — it is divided seamlessly across the ${panels.length || 3} physical canvas panels.`}
+                  Upload 1 photo — it spans seamlessly across the entire mosaic product.
                 </div>
               )}
 
@@ -9385,12 +9439,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           >
             {/* Stage: everything the customer designs on (frames + movable text/clipart) */}
             <div ref={stageRef} className="relative w-full flex flex-col items-center" onPointerDown={() => setSelectedElement(null)}>
-              {/* Contextual Product Workflow Instruction Banner */}
-              <div className="w-full max-w-xl mx-auto mb-2.5 bg-blue-50/90 border border-blue-200/90 text-stone-800 text-xs font-semibold px-3.5 py-1.5 rounded-xl flex items-center justify-center gap-1.5 shadow-2xs select-none text-center">
-                <Info className="w-3.5 h-3.5 text-[#0E4A93] shrink-0" />
-                <span>{contextualInstruction}</span>
-              </div>
-
               {/* WALL DISPLAY (Physical Multi-Panel Gallery Wall Layout) */}
               {isWallArtProduct && renderWallDisplayCanvas()}
 
@@ -9514,6 +9562,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                           const effectiveEdgeColor = (isQuotesProduct && quotesPreference === 'create-own' && !quoteBgImage)
                             ? quoteBgColor
+                            : (isLyricProduct && !panelImages[0]?.imageUrl)
+                            ? (selectedLyricTemplate.defaultBackground.color || '#FFFFFF')
                             : (isBlackBorderWrap ? '#0F172A' : '#FFFFFF');
 
                           const crossClipPath = showPhysicalEdges
@@ -9734,7 +9784,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                   activePanelIndex === 0 ? 'ring-2 ring-[#0E4A93]/50' : ''
                                 } overflow-hidden`}
                                 style={{
-                                  backgroundColor: (isQuotesProduct && quotesPreference === 'create-own' && !quoteBgImage) ? quoteBgColor : (selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : '#FFFFFF'),
+                                  backgroundColor: (isQuotesProduct && quotesPreference === 'create-own' && !quoteBgImage)
+                                    ? quoteBgColor
+                                    : (isLyricProduct && !panelImages[0]?.imageUrl)
+                                    ? (selectedLyricTemplate.defaultBackground.color || '#FFFFFF')
+                                    : (selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : '#FFFFFF'),
                                   clipPath: (showPhysicalEdges || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? undefined
                                     : currentShape.clipPathStyle,
@@ -9768,7 +9822,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                 )}
 
                                 {/* Word Art Floating Controls (EDIT / DELETE) as shown in reference */}
-                                {(isWordArtProduct || Boolean(activeWordArtDataUrl)) && panelImages[0]?.imageUrl && (
+                                {isWordArtProduct && panelImages[0]?.imageUrl && (
                                   <div className="absolute top-2 right-2 z-35 flex items-center bg-white/95 backdrop-blur-xs rounded-lg shadow-md border border-stone-200 divide-x divide-stone-200 overflow-hidden">
                                     <button
                                       type="button"
@@ -9803,7 +9857,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                 )}
 
                                 {/* Front Canvas Print Image */}
-                                {panelImages[0]?.imageUrl && (
+                                {panelImages[0]?.imageUrl && (isWordArtProduct || !isWordArtArtwork(panelImages[0]?.imageUrl)) && (
                                   <div className="w-full h-full overflow-hidden relative flex items-center justify-center pointer-events-none select-none">
                                     <img
                                       src={(selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl) ? popArtConfig.processedImageUrl : panelImages[0].imageUrl}
@@ -9898,7 +9952,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                     <div
                                       onClick={() => fileInputRef.current?.click()}
                                       className="w-full h-full relative cursor-pointer group select-none"
+                                      style={{
+                                        backgroundColor: selectedLyricTemplate.defaultBackground.color || '#FFFFFF'
+                                      }}
                                     >
+                                      {/* Texture pattern overlay if specified by template */}
+                                      {(selectedLyricTemplate.defaultBackground.texture === 'sheet-music' || lyricConfig.layout === 'sheet-music-bg') && (
+                                        <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#78350f_1px,transparent_1px)] [background-size:12px_12px] pointer-events-none" />
+                                      )}
+                                      {selectedLyricTemplate.defaultBackground.texture === 'parchment' && (
+                                        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#78350f_1.5px,transparent_1.5px)] [background-size:16px_16px] pointer-events-none" />
+                                      )}
+
                                       {/* Clean, Non-Obtrusive Upload Prompt at Top of Canvas - Never blocks lyrics */}
                                       <div className="absolute top-3 inset-x-3 sm:top-4 sm:inset-x-4 mx-auto max-w-[280px] bg-white/95 hover:bg-white backdrop-blur-xs rounded-xl p-2.5 sm:p-3 border-2 border-dashed border-[#0E4A93]/35 hover:border-[#0E4A93] shadow-sm hover:shadow-md flex items-center gap-2.5 transition-all z-30 pointer-events-auto">
                                         <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#0E4A93] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
@@ -10137,16 +10202,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       {viewerMode && hasUploadedImage && (() => {
         // Shared live customization state values for all 3 preview modes (Room, 3D, 360)
         const isQuotesCreateOwnSolid = isQuotesProduct && quotesPreference === 'create-own' && !quoteBgImage;
+        const rawPanel0Url =
+          panelImages[activePanelIndex]?.imageUrl ||
+          panelImages[0]?.imageUrl ||
+          Object.values(panelImages).find((p) => Boolean(p?.imageUrl))?.imageUrl;
+        const validPanelUrl = (!isWordArtProduct && isWordArtArtwork(rawPanel0Url)) ? '' : (rawPanel0Url || '');
+        const validTrayUrl = uploadedPhotos.find((url) => isWordArtProduct || !isWordArtArtwork(url)) || '';
+
         const primaryPhotoUrl =
           (selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl)
             ? popArtConfig.processedImageUrl
             : isQuotesCreateOwnSolid
             ? ''
-            : (panelImages[activePanelIndex]?.imageUrl ||
-               panelImages[0]?.imageUrl ||
-               Object.values(panelImages).find((p) => Boolean(p?.imageUrl))?.imageUrl ||
-               uploadedPhotos[0] ||
-               '');
+            : (validPanelUrl || validTrayUrl || '');
 
         const effectiveSizeForViewer = isWordArtProduct
           ? {
@@ -10270,13 +10338,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         const renderSlotPhoto = (idx: number, photoScaleFactor: number = 1) => {
           const p = panelImages[idx];
           const isMultiSlotProduct = isCollageProduct || isWallArtProduct || isHexagonProduct;
+          const rawPanelUrl = (!isWordArtProduct && isWordArtArtwork(p?.imageUrl)) ? null : (p?.imageUrl || null);
           const url = isQuotesCreateOwnSolid
             ? null
             : (selectedProductTypeId === 'canvas-pop-art' && popArtConfig.processedImageUrl)
             ? popArtConfig.processedImageUrl
             : (isMultiSlotProduct
-                ? (p?.imageUrl || null)
-                : (p?.imageUrl || (idx === 0 ? primaryPhotoUrl : null)));
+                ? rawPanelUrl
+                : (rawPanelUrl || (idx === 0 ? primaryPhotoUrl : null)));
           const panX = (p?.panX || 0) * photoScaleFactor;
           const panY = (p?.panY || 0) * photoScaleFactor;
           const sc = p?.scale || 1;
@@ -10340,27 +10409,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             <div
               className="w-full h-full relative overflow-hidden pointer-events-none select-none flex items-center justify-center"
               style={{
-                backgroundColor: lyricConfig.layout === 'sheet-music-bg' ? '#FEF9C3' : (lyricConfig.layout === 'quote-solid-bg' ? '#FAF5FF' : '#FFFFFF')
+                backgroundColor: selectedLyricTemplate.defaultBackground.color || '#FFFFFF'
               }}
             >
-              {lyricConfig.layout === 'sheet-music-bg' && (
+              {(selectedLyricTemplate.defaultBackground.texture === 'sheet-music' || lyricConfig.layout === 'sheet-music-bg') && (
                 <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#78350f_1px,transparent_1px)] [background-size:12px_12px]" />
               )}
-            </div>
-          ) : isQuotesProduct && quotesPreference === 'create-own' ? (
-            <div
-              className="w-full h-full relative overflow-hidden pointer-events-none select-none"
-              style={{ backgroundColor: quoteBgColor }}
-            />
-          ) : isLyricProduct ? (
-            <div
-              className="w-full h-full relative overflow-hidden pointer-events-none select-none flex items-center justify-center"
-              style={{
-                backgroundColor: lyricConfig.layout === 'sheet-music-bg' ? '#FEF9C3' : (lyricConfig.layout === 'quote-solid-bg' ? '#FAF5FF' : '#FFFFFF')
-              }}
-            >
-              {lyricConfig.layout === 'sheet-music-bg' && (
-                <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#78350f_1px,transparent_1px)] [background-size:12px_12px]" />
+              {selectedLyricTemplate.defaultBackground.texture === 'parchment' && (
+                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#78350f_1.5px,transparent_1.5px)] [background-size:16px_16px]" />
               )}
             </div>
           ) : isQuotesProduct && quotesPreference === 'create-own' ? (
