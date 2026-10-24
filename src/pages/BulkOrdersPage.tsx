@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Check, Heart } from 'lucide-react';
+import { ChevronRight, Heart } from 'lucide-react';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 import { ACRYLIC_STYLE_LANDING_DATA } from '../data/acrylicStyleLandingData';
 import { SHOP_CATEGORIES } from '../data/shopCategories';
@@ -199,7 +199,7 @@ export const BulkOrdersPage: React.FC = () => {
             <span className="text-stone-900 font-semibold">Bulk &amp; Corporate Orders</span>
           </nav>
 
-          <div className="max-w-xl">
+          <div className="max-w-xl mx-auto text-center">
             <span className="text-[11px] font-black uppercase tracking-[0.25em] text-[#E8752A]">B2B &amp; Bulk Solutions</span>
             <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-stone-900" style={{ fontFamily: SERIF }}>
               Bulk &amp; Corporate Orders
@@ -207,15 +207,6 @@ export const BulkOrdersPage: React.FC = () => {
             <p className="mt-3 text-sm sm:text-base text-stone-600 leading-relaxed">
               Canvas, acrylic and every catalogue print category at volume pricing for offices, events, hotels and gifting programs — every size and style below ships as a bulk run.
             </p>
-
-            <ul className="mt-5 space-y-1.5">
-              {[`Minimum order: ${MIN_BULK_QTY} units`, 'GST invoice available', 'Volume discounts', 'Fast turnaround across India'].map((label) => (
-                <li key={label} className="flex items-center gap-2 text-sm text-stone-700">
-                  <Check className="w-4 h-4 text-[#0E4A93] shrink-0" />
-                  {label}
-                </li>
-              ))}
-            </ul>
           </div>
         </Container>
       </section>
