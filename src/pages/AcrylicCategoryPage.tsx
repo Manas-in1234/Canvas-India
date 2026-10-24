@@ -7,7 +7,6 @@ import {
   ChevronRight,
   FilterX,
   Sparkles,
-  CheckCircle2,
   ShoppingCart
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
@@ -193,25 +192,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Key Trust Badges */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-stone-200/70 text-xs text-stone-600">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Sub-Surface UV Inks</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Diamond Polished</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">100% Moisture Proof</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Pan-India Delivery</span>
-                </div>
-              </div>
+
 
             </div>
 

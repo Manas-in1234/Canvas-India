@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, Sparkles, CheckCircle2, ShieldCheck, Truck, Zap } from 'lucide-react';
+import { ArrowRight, Sparkles, Zap } from 'lucide-react';
 
 interface HeroProps {
   onStartCreating: () => void;
@@ -95,21 +95,7 @@ export const Hero: React.FC<HeroProps> = ({
               </div>
             </div>
 
-            {/* Trust Badges Strip (Clean Line) */}
-            <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs font-semibold text-stone-600 pt-2 select-none">
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                <span>100% Quality Guarantee</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Truck className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                <span>Free Shipping &gt; ₹999</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
-                <span>Safe Delivery Box</span>
-              </div>
-            </div>
+
           </div>
 
           {/* Right Column: Floating Lifestyle Scene (No Enclosing Card Box) */}

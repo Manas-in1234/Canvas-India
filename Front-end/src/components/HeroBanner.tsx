@@ -4,7 +4,6 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
-  CheckCircle2,
   Upload,
   Percent,
   Layers,
@@ -139,25 +138,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 </button>
               </div>
 
-              {/* Promotional Highlights Checkmarks */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-white/15 text-xs text-stone-200 font-medium">
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                  <span>Premium Printing</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                  <span>Made in India</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                  <span>Custom Sizes</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                  <span>Pan-India Delivery</span>
-                </div>
-              </div>
+
 
             </div>
 

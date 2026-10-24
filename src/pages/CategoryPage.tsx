@@ -9,7 +9,6 @@ import {
   X,
   SlidersHorizontal,
   RotateCcw,
-  CheckCircle2,
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
@@ -315,25 +314,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
             </div>
           </div>
 
-          {/* Quality checkmarks */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 mt-6 border-t border-stone-200/70 text-xs text-stone-600">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-semibold">Museum Quality Prints</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-semibold">Fade-Resistant Inks</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-semibold">Ready to Hang</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-semibold">Pan-India Delivery</span>
-            </div>
-          </div>
+
 
           {/* Special Custom Prints 5-Step Workflow Banner */}
           {activeSlug === 'custom-prints' && (
