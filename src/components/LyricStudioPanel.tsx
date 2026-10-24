@@ -180,8 +180,12 @@ export const LyricStudioPanel: React.FC<LyricStudioPanelProps> = ({
                 onChangeConfig((prev) => ({
                   ...prev,
                   title: p.title,
+                  songTitle: p.title,
                   artistOrSubtitle: p.artist,
-                  lyrics: p.lyrics
+                  artistOrNames: p.artist,
+                  lyrics: p.lyrics,
+                  lyricsText: p.lyrics,
+                  compositeImageUrl: null
                 }));
               }}
               className="px-2.5 py-1 bg-stone-100 hover:bg-[#0E4A93] hover:text-white rounded-lg text-[10px] font-extrabold text-stone-700 transition-colors cursor-pointer"
@@ -203,7 +207,7 @@ export const LyricStudioPanel: React.FC<LyricStudioPanelProps> = ({
             value={config.title}
             onChange={(e) => {
               const val = e.target.value;
-              onChangeConfig((prev) => ({ ...prev, title: val }));
+              onChangeConfig((prev) => ({ ...prev, title: val, songTitle: val, compositeImageUrl: null }));
             }}
             placeholder="e.g. A Thousand Years"
             className="w-full px-2.5 py-1.5 text-xs font-bold border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93] bg-white text-stone-900"
@@ -218,7 +222,7 @@ export const LyricStudioPanel: React.FC<LyricStudioPanelProps> = ({
             value={config.artistOrSubtitle}
             onChange={(e) => {
               const val = e.target.value;
-              onChangeConfig((prev) => ({ ...prev, artistOrSubtitle: val }));
+              onChangeConfig((prev) => ({ ...prev, artistOrSubtitle: val, artistOrNames: val, compositeImageUrl: null }));
             }}
             placeholder="e.g. Sarah & David"
             className="w-full px-2.5 py-1.5 text-xs font-bold border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93] bg-white text-stone-900"
@@ -236,7 +240,7 @@ export const LyricStudioPanel: React.FC<LyricStudioPanelProps> = ({
           value={config.dateOrNames}
           onChange={(e) => {
             const val = e.target.value;
-            onChangeConfig((prev) => ({ ...prev, dateOrNames: val }));
+            onChangeConfig((prev) => ({ ...prev, dateOrNames: val, dateOrInscription: val, compositeImageUrl: null }));
           }}
           placeholder="e.g. October 14, 2024 • Established 2024"
           className="w-full px-2.5 py-1.5 text-xs font-bold border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93] bg-white text-stone-900"
@@ -259,7 +263,9 @@ export const LyricStudioPanel: React.FC<LyricStudioPanelProps> = ({
               onClick={() => {
                 onChangeConfig((prev) => ({
                   ...prev,
-                  lyrics: ''
+                  lyrics: '',
+                  lyricsText: '',
+                  compositeImageUrl: null
                 }));
               }}
               className="text-[10px] font-bold text-rose-500 hover:text-rose-700 cursor-pointer flex items-center gap-0.5"
@@ -274,7 +280,7 @@ export const LyricStudioPanel: React.FC<LyricStudioPanelProps> = ({
           value={config.lyrics}
           onChange={(e) => {
             const val = e.target.value;
-            onChangeConfig((prev) => ({ ...prev, lyrics: val }));
+            onChangeConfig((prev) => ({ ...prev, lyrics: val, lyricsText: val, compositeImageUrl: null }));
           }}
           placeholder="Paste or type your favorite lyrics, vows, or words here..."
           className="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl focus:outline-none focus:border-[#0E4A93] bg-white text-stone-900 resize-y leading-relaxed font-normal"

@@ -60,6 +60,7 @@ import { DigitalPaintingOptionsPanel } from '../components/DigitalPaintingOption
 import {
   DEFAULT_DIGITAL_PAINTING_CONFIG,
   type DigitalPaintingConfig,
+  type DigitalPaintingEffectId,
   getDigitalPaintingEffect
 } from '../data/digitalPaintingData';
 import { BusRollLineEditorPanel } from '../components/BusRollLineEditorPanel';
@@ -223,6 +224,20 @@ const getFilterCss = (filter: ColorFilterType): string => {
     case 'original':
     default:
       return 'none';
+  }
+};
+
+const getDigitalPaintingFilterCss = (effectId: DigitalPaintingEffectId): string => {
+  switch (effectId) {
+    case 'effect-charcoal':
+      return 'grayscale(100%) contrast(1.6) brightness(1.05)';
+    case 'effect-knife':
+      return 'contrast(1.35) saturate(1.45) brightness(1.03)';
+    case 'effect-comic':
+      return 'contrast(1.4) saturate(1.8) brightness(1.02)';
+    case 'effect-oil':
+    default:
+      return 'contrast(1.18) saturate(1.35) brightness(1.02)';
   }
 };
 type SizeCategory = 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL' | 'MULTI_PANEL' | 'RECTANGLE';
@@ -2502,6 +2517,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Active step in the left toolbar
   const [activeTab, setActiveTab] = useState<ToolbarTab>(() => {
     const initialPt = resolveCurrentProductId(routeMaterial, productId);
+    if (initialPt.includes('digital') || initialPt.includes('painting')) return 'EFFECTS & OPTIONS';
     if (initialPt.includes('bus')) return 'CREATE BUS ROLL';
     if (initialPt.includes('banner')) return 'UPLOAD';
     return 'PRODUCTS';
@@ -2818,6 +2834,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
 
     if (isPopArtProduct) {
+      if (activeMaterial === 'acrylic') {
+        return POP_ART_SIZE_OPTIONS.map((s) => ({
+          ...s,
+          productTypeId: 'acrylic-pop-art',
+          price: Math.round(s.price * 1.5)
+        })) as unknown as SizeOption[];
+      }
       return POP_ART_SIZE_OPTIONS as unknown as SizeOption[];
     }
 
@@ -3338,6 +3361,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   );
   const [wordArtConfig, setWordArtConfig] = useState<WordArtConfig>(DEFAULT_WORD_ART_CONFIG);
   const [activeWordArtDataUrl, setActiveWordArtDataUrl] = useState<string | null>(null);
+  const savedWordArtDataUrlRef = useRef<string | null>(null);
+  const savedWordArtConfigRef = useRef<WordArtConfig | null>(null);
 
   const handleSelectWordArtSize = (size: WordArtSizeOption) => {
     setWordArtSizeOption(size);
@@ -3841,7 +3866,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
-      setActiveTab('UPLOAD');
+      setActiveTab('EFFECTS & OPTIONS');
       navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
@@ -4061,8 +4086,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       }
 
       // Keep sidebar size category filter aligned with selected size
-      if (isSinglePrintCanvas) {
-        const matchingOpt = SIZE_OPTIONS.find((s) => s.id === config.sizeId);
+      if (isSinglePrintCanvas || isPopArtProduct) {
+        const pool = isPopArtProduct ? (POP_ART_SIZE_OPTIONS as unknown as SizeOption[]) : SIZE_OPTIONS;
+        const matchingOpt = pool.find((s) => s.id === config.sizeId);
         if (matchingOpt && !matchingOpt.categories.includes(sizeCategoryFilter)) {
           if (matchingOpt.categories.includes('PANORAMIC')) {
             setSizeCategoryFilter('PANORAMIC');
@@ -4072,6 +4098,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             setSizeCategoryFilter('LARGE');
           } else if (matchingOpt.categories.includes('SMALL')) {
             setSizeCategoryFilter('SMALL');
+          } else if (matchingOpt.categories.includes('RECOMMENDED')) {
+            setSizeCategoryFilter('RECOMMENDED');
           }
         }
       }
@@ -4181,13 +4209,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       selectedTemplateId: tpl.id,
       layout: tpl.defaultLayout,
       title: tpl.defaultText.title,
+      songTitle: tpl.defaultText.title,
       artistOrSubtitle: tpl.defaultText.artistOrSubtitle,
+      artistOrNames: tpl.defaultText.artistOrSubtitle,
       lyrics: tpl.defaultText.lyrics,
+      lyricsText: tpl.defaultText.lyrics,
       dateOrNames: tpl.defaultText.dateOrNames || '',
+      dateOrInscription: tpl.defaultText.dateOrNames || '',
       fontFamily: tpl.defaultTypography.fontFamily,
       textColor: tpl.defaultTypography.textColor,
       alignment: tpl.defaultTypography.alignment,
-      overlayDarkness: tpl.defaultBackground.overlayDarkness
+      textAlign: tpl.defaultTypography.alignment,
+      overlayDarkness: tpl.defaultBackground.overlayDarkness,
+      compositeImageUrl: null
     }));
   };
 
@@ -4703,6 +4737,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const handlePanelClick = (panelIdx: number) => {
     setActivePanelIndex(panelIdx);
     if (!panelImages[panelIdx]?.imageUrl) {
+      if (isWordArtProduct) {
+        setIsWordArtPersonalizeModalOpen(true);
+        return;
+      }
       uploadTargetRef.current = panelIdx;
       fileInputRef.current?.click();
     }
@@ -5863,7 +5901,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Dedicated Lyric Canvas Typography Overlay (for canvas-lyric)
   const renderQuotesCreateOwnOverlay = (scaleFactor: number = 1) => {
     if (!isQuotesProduct || quotesPreference !== 'create-own') return null;
-    const fs = (px: number) => `${Math.max(9, Math.round(px * scaleFactor))}px`;
     const fontFamilies: Record<string, string> = {
       'Playfair Display': '"Playfair Display", Georgia, serif',
       'Cormorant Garamond': '"Cormorant Garamond", Garamond, serif',
@@ -5874,14 +5911,22 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     };
     const font = fontFamilies[quoteFontFamily] || '"Playfair Display", serif';
     const hasPhoto = Boolean(quoteBgImage || panelImages[0]?.imageUrl);
+    const textLen = (quoteCustomText || '').length;
+    const lengthFactor = textLen > 160 ? 0.65 : textLen > 110 ? 0.75 : textLen > 60 ? 0.85 : 1;
+    const effectiveQuoteFs = Math.max(7, Math.round(quoteFontSize * scaleFactor * lengthFactor));
+    const effectiveAuthorFs = Math.max(6, Math.round(quoteFontSize * 0.5 * scaleFactor * lengthFactor));
+    const scaledPad = Math.max(6, Math.round(20 * scaleFactor));
 
     return (
       <div
-        className="absolute inset-0 z-25 flex flex-col items-center justify-center pointer-events-none select-none p-5 sm:p-7 text-center"
+        className="absolute inset-0 z-25 flex flex-col pointer-events-none select-none overflow-hidden max-h-full"
         style={{
           fontFamily: font,
           color: quoteTextColor,
           textAlign: quoteAlignment,
+          padding: `${scaledPad}px`,
+          justifyContent: 'center',
+          alignItems: quoteAlignment === 'left' ? 'flex-start' : quoteAlignment === 'right' ? 'flex-end' : 'center',
           textShadow: hasQuoteContrast || hasPhoto ? '0 1px 4px rgba(0,0,0,0.85), 0 2px 8px rgba(0,0,0,0.6)' : undefined
         }}
       >
@@ -5890,16 +5935,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         )}
         {quoteCustomText && (
           <div
-            className="leading-relaxed whitespace-pre-line font-bold max-w-[92%]"
-            style={{ fontSize: fs(quoteFontSize) }}
+            className="leading-relaxed whitespace-pre-line font-bold max-w-[94%] overflow-hidden"
+            style={{ fontSize: `${effectiveQuoteFs}px` }}
           >
             &ldquo;{quoteCustomText}&rdquo;
           </div>
         )}
         {quoteAuthor && (
           <div
-            className="mt-3 opacity-90 italic tracking-wider font-medium"
-            style={{ fontSize: fs(Math.max(10, Math.round(quoteFontSize * 0.55))) }}
+            className="mt-2 opacity-90 italic tracking-wider font-medium overflow-hidden truncate max-w-[94%]"
+            style={{ fontSize: `${effectiveAuthorFs}px` }}
           >
             {quoteAuthor}
           </div>
@@ -9798,7 +9843,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                         objectPosition: 'center center',
                                         transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                         transformOrigin: 'center center',
-                                        filter: getFilterCss(panelImages[0].filter),
+                                        filter: isDigitalPaintingProduct
+                                          ? `${getFilterCss(panelImages[0].filter) !== 'none' ? getFilterCss(panelImages[0].filter) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)}`
+                                          : getFilterCss(panelImages[0].filter),
                                         transition: isDragging ? 'none' : 'transform 0.15s ease-out'
                                       }}
                                       className="pointer-events-none select-none max-w-none"
@@ -9810,7 +9857,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                 {!panelImages[0]?.imageUrl && (
                                   isWordArtProduct ? (
                                     <div
-                                      onClick={() => setIsWordArtPersonalizeModalOpen(true)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsWordArtPersonalizeModalOpen(true);
+                                      }}
                                       className="w-full h-full flex flex-col items-center justify-center bg-white p-6 text-center cursor-pointer group select-none"
                                     >
                                       <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#0E4A93] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-xs">
@@ -9843,24 +9893,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                         Supported formats: PNG, JPG, JPEG, WEBP, BMP
                                       </span>
                                     </div>
-                                  ) : selectedProductTypeId === 'canvas-pop-art' ? (
-                                    <div
-                                      onClick={() => fileInputRef.current?.click()}
-                                      className="w-full h-full flex flex-col items-center justify-center bg-white p-6 text-center cursor-pointer group select-none"
-                                    >
-                                      <div className="w-14 h-14 rounded-2xl bg-amber-50 text-[#E8752A] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-xs">
-                                        <Sparkles className="w-7 h-7" />
-                                      </div>
-                                      <span className="text-sm font-black text-[#0E4A93] mb-1">
-                                        Upload Photo for {selectedPopStyle?.name || 'Pop Art'}
-                                      </span>
-                                      <span className="text-xs text-stone-500 max-w-xs mb-3">
-                                        Upload your photo to transform it into this iconic Pop Art style
-                                      </span>
-                                      <span className="px-4 py-1.5 bg-[#0E4A93] hover:bg-[#0b3c77] text-white text-xs font-bold rounded-lg shadow-xs transition-colors">
-                                        Browse Files
-                                      </span>
-                                    </div>
+
                                   ) : isLyricProduct ? (
                                     <div
                                       onClick={() => fileInputRef.current?.click()}
@@ -10277,7 +10310,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   aspectRatio: `${slotNatWidth} / ${slotNatHeight}`,
                   objectFit: isContain ? 'contain' : 'cover',
                   objectPosition: 'center center',
-                  filter: getFilterCss(flt),
+                  filter: isDigitalPaintingProduct
+                    ? `${getFilterCss(flt) !== 'none' ? getFilterCss(flt) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)}`
+                    : getFilterCss(flt),
                   transform: `translate(${panX}px, ${panY}px) scale(${sc}) rotate(${rot}deg) scaleX(${mirrorImage ? -1 : 1})`,
                   transformOrigin: 'center center',
                   backfaceVisibility: 'hidden',
@@ -12000,7 +12035,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                               objectPosition: 'center center',
                                               transform: `translate(${viewerPanX}px, ${viewerPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                               transformOrigin: 'center center',
-                                              filter: getFilterCss(viewerFilter)
+                                              filter: isDigitalPaintingProduct ? `${getFilterCss(viewerFilter) !== 'none' ? getFilterCss(viewerFilter) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)}` : getFilterCss(viewerFilter)
                                             }}
                                             className="pointer-events-none select-none max-w-none"
                                           />
@@ -12060,7 +12095,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                               objectPosition: 'center center',
                                               transform: `translate(${viewerPanX}px, ${viewerPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                               transformOrigin: 'center center',
-                                              filter: getFilterCss(viewerFilter)
+                                              filter: isDigitalPaintingProduct ? `${getFilterCss(viewerFilter) !== 'none' ? getFilterCss(viewerFilter) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)}` : getFilterCss(viewerFilter)
                                             }}
                                             className="pointer-events-none select-none max-w-none"
                                           />
@@ -12120,7 +12155,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                               objectPosition: 'center center',
                                               transform: `translate(${viewerPanX}px, ${viewerPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                               transformOrigin: 'center center',
-                                              filter: getFilterCss(viewerFilter)
+                                              filter: isDigitalPaintingProduct ? `${getFilterCss(viewerFilter) !== 'none' ? getFilterCss(viewerFilter) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)}` : getFilterCss(viewerFilter)
                                             }}
                                             className="pointer-events-none select-none max-w-none"
                                           />
@@ -12173,7 +12208,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                               objectPosition: 'center center',
                                               transform: `translate(${viewerPanX}px, ${viewerPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                               transformOrigin: 'center center',
-                                              filter: getFilterCss(viewerFilter)
+                                              filter: isDigitalPaintingProduct ? `${getFilterCss(viewerFilter) !== 'none' ? getFilterCss(viewerFilter) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)}` : getFilterCss(viewerFilter)
                                             }}
                                             className="pointer-events-none select-none max-w-none"
                                           />
@@ -12560,7 +12595,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                                   objectPosition: 'center center',
                                                   transform: `translate(${thumbPanX}px, ${thumbPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                                   transformOrigin: 'center center',
-                                                  filter: getFilterCss(viewerFilter)
+                                                  filter: isDigitalPaintingProduct ? `${getFilterCss(viewerFilter) !== 'none' ? getFilterCss(viewerFilter) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)}` : getFilterCss(viewerFilter)
                                                 }}
                                                 className="pointer-events-none select-none max-w-none"
                                               />
@@ -12612,7 +12647,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                                   objectPosition: 'center center',
                                                   transform: `translate(${thumbPanX}px, ${thumbPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                                   transformOrigin: 'center center',
-                                                  filter: getFilterCss(viewerFilter)
+                                                  filter: isDigitalPaintingProduct ? `${getFilterCss(viewerFilter) !== 'none' ? getFilterCss(viewerFilter) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)}` : getFilterCss(viewerFilter)
                                                 }}
                                                 className="pointer-events-none select-none max-w-none"
                                               />
@@ -12664,7 +12699,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                                   objectPosition: 'center center',
                                                   transform: `translate(${thumbPanX}px, ${thumbPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                                   transformOrigin: 'center center',
-                                                  filter: getFilterCss(viewerFilter)
+                                                  filter: isDigitalPaintingProduct ? `${getFilterCss(viewerFilter) !== 'none' ? getFilterCss(viewerFilter) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)}` : getFilterCss(viewerFilter)
                                                 }}
                                                 className="pointer-events-none select-none max-w-none"
                                               />
@@ -12716,7 +12751,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                                   objectPosition: 'center center',
                                                   transform: `translate(${thumbPanX}px, ${thumbPanY}px) scale(${viewerScale}) rotate(${viewerRot}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                                   transformOrigin: 'center center',
-                                                  filter: getFilterCss(viewerFilter)
+                                                  filter: isDigitalPaintingProduct ? `${getFilterCss(viewerFilter) !== 'none' ? getFilterCss(viewerFilter) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)}` : getFilterCss(viewerFilter)
                                                 }}
                                                 className="pointer-events-none select-none max-w-none"
                                               />

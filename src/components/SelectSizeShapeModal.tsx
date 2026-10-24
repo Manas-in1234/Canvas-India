@@ -61,6 +61,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   const isQuotes = productId.toLowerCase() === 'canvas-quotes';
   const isDigitalPainting = productId.toLowerCase() === 'canvas-digital-painting';
   const isLyric = productId.toLowerCase() === 'canvas-lyric' || productId.toLowerCase().includes('lyric');
+  const isPopArt = productId.toLowerCase().includes('pop');
 
   const isSinglePrint = useMemo(() => {
     const norm = productId.toLowerCase();
@@ -84,6 +85,246 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   // Single Print predefined sizes per category
   const singlePrintSizes = useMemo(() => {
     const isAcrylic = material === 'acrylic';
+
+    if (isPopArt) {
+      const squareSizes: SizeShapeOption[] = [
+        {
+          id: 'pop-sq-8x8',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '8" × 8"',
+          dimensionsSummary: '8" × 8"',
+          widthInches: 8,
+          heightInches: 8,
+          price: isAcrylic ? 599.0 : 399.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-sq-10x10',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '10" × 10"',
+          dimensionsSummary: '10" × 10"',
+          widthInches: 10,
+          heightInches: 10,
+          price: isAcrylic ? 674.0 : 449.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-12x12',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '12" × 12"',
+          dimensionsSummary: '12" × 12"',
+          widthInches: 12,
+          heightInches: 12,
+          price: isAcrylic ? 749.0 : 499.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-16x16',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '16" × 16"',
+          dimensionsSummary: '16" × 16"',
+          widthInches: 16,
+          heightInches: 16,
+          price: isAcrylic ? 1199.0 : 799.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-sq-18x18',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '18" × 18"',
+          dimensionsSummary: '18" × 18"',
+          widthInches: 18,
+          heightInches: 18,
+          price: isAcrylic ? 1499.0 : 999.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-sq-20x20',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '20" × 20"',
+          dimensionsSummary: '20" × 20"',
+          widthInches: 20,
+          heightInches: 20,
+          price: isAcrylic ? 1799.0 : 1199.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        }
+      ];
+
+      const panoramicSizes: SizeShapeOption[] = [
+        {
+          id: 'pop-pan-12x8',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '12" × 8"',
+          dimensionsSummary: '12" × 8"',
+          widthInches: 12,
+          heightInches: 8,
+          price: isAcrylic ? 674.0 : 449.0,
+          aspectRatio: 12 / 8,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-pan-12x18',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '12" × 18"',
+          dimensionsSummary: '12" × 18"',
+          widthInches: 12,
+          heightInches: 18,
+          price: isAcrylic ? 974.0 : 649.0,
+          aspectRatio: 12 / 18,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-pan-16x20',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '16" × 20"',
+          dimensionsSummary: '16" × 20"',
+          widthInches: 16,
+          heightInches: 20,
+          price: isAcrylic ? 1349.0 : 899.0,
+          aspectRatio: 16 / 20,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-pan-16x24',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '16" × 24"',
+          dimensionsSummary: '16" × 24"',
+          widthInches: 16,
+          heightInches: 24,
+          price: isAcrylic ? 1649.0 : 1099.0,
+          aspectRatio: 16 / 24,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-pan-16x32',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '16" × 32"',
+          dimensionsSummary: '16" × 32"',
+          widthInches: 16,
+          heightInches: 32,
+          price: isAcrylic ? 2099.0 : 1399.0,
+          aspectRatio: 16 / 32,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-pan-18x24',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '18" × 24"',
+          dimensionsSummary: '18" × 24"',
+          widthInches: 18,
+          heightInches: 24,
+          price: isAcrylic ? 1949.0 : 1299.0,
+          aspectRatio: 18 / 24,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-pan-20x30',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '20" × 30"',
+          dimensionsSummary: '20" × 30"',
+          widthInches: 20,
+          heightInches: 30,
+          price: isAcrylic ? 2549.0 : 1699.0,
+          aspectRatio: 20 / 30,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-pan-24x36',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '24" × 36"',
+          dimensionsSummary: '24" × 36"',
+          widthInches: 24,
+          heightInches: 36,
+          price: isAcrylic ? 2999.0 : 1999.0,
+          aspectRatio: 24 / 36,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        }
+      ];
+
+      const recommendedSizes: SizeShapeOption[] = [
+        squareSizes[1], // 10x10
+        squareSizes[2], // 12x12
+        squareSizes[3], // 16x16
+        panoramicSizes[1], // 12x18
+        panoramicSizes[2], // 16x20
+        panoramicSizes[3], // 16x24
+        panoramicSizes[6]  // 20x30
+      ];
+
+      const largeSizes: SizeShapeOption[] = [
+        squareSizes[4], // 18x18
+        squareSizes[5], // 20x20
+        panoramicSizes[3], // 16x24
+        panoramicSizes[4], // 16x32
+        panoramicSizes[5], // 18x24
+        panoramicSizes[6], // 20x30
+        panoramicSizes[7]  // 24x36
+      ];
+
+      const smallSizes: SizeShapeOption[] = [
+        squareSizes[0], // 8x8
+        squareSizes[1], // 10x10
+        squareSizes[2], // 12x12
+        panoramicSizes[0], // 12x8
+        panoramicSizes[1]  // 12x18
+      ];
+
+      return {
+        RECOMMENDED: recommendedSizes,
+        SQUARE: squareSizes,
+        PANORAMIC: panoramicSizes,
+        LARGE: largeSizes,
+        SMALL: smallSizes
+      };
+    }
 
     if (isLyric) {
       const squareSizes: SizeShapeOption[] = [
@@ -764,7 +1005,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
       LARGE: largeSizes,
       SMALL: smallSizes
     };
-  }, [material]);
+  }, [material, isLyric, isQuotes, isDigitalPainting, isPopArt]);
 
   // Options for shaped products (Round, Triangle, Heart, Oval)
   const shapedProductOptions = useMemo(() => {
@@ -781,7 +1022,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
 
   // Selected Option state
   const defaultOptionId = isSinglePrint
-    ? (isQuotes ? 'quotes-8x8' : isDigitalPainting ? 'painting-10x10' : material === 'acrylic' ? 'sq-10x10' : 'single-10x10')
+    ? (isQuotes ? 'quotes-8x8' : isDigitalPainting ? 'painting-10x10' : isPopArt ? 'pop-12x12' : material === 'acrylic' ? 'sq-10x10' : 'single-10x10')
     : (shapedProductOptions[0]?.id || '');
 
   const [selectedOptionId, setSelectedOptionId] = useState<string>(() => {
