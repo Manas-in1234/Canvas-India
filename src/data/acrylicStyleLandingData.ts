@@ -98,7 +98,7 @@ const STYLE_META: Record<string, {
         id: 'acrylic-wall-display-3panel',
         number: '01',
         name: '3-Panel Acrylic Gallery Wall Display',
-        description: 'A luminous 3-panel acrylic gallery installation (18" × 24" overall) featuring a 12"×18" tall centerpiece balanced by dual 10"×8" accent panels — floating on polished stainless steel standoffs with crystal glass clarity.',
+        description: 'A luminous 3-panel multi-photo acrylic gallery (18" × 24" overall) featuring 3 distinct photos across a 12"×18" tall centerpiece balanced by dual 10"×8" accent panels — floating on polished stainless steel standoffs with crystal glass clarity.',
         price: 1050,
         image: '/assets/canvas-styles/acrylic-wall-display-3panel.webp',
         customizeHref: '/customize/acrylic/acrylic-wall-art?layout=wall-display-3a'
@@ -107,7 +107,7 @@ const STYLE_META: Record<string, {
         id: 'acrylic-wall-display-4panel',
         number: '02',
         name: '4-Panel Acrylic Showcase Display',
-        description: 'An architectural 4-piece acrylic wall display (34" × 24" overall) featuring a 24"×16" portrait panel, an 11"×17" horizontal header, and dual 12"×8" companion bases — high-gloss optical acrylic that adds depth to modern interiors.',
+        description: 'An architectural 4-piece acrylic wall display (34" × 24" overall) featuring 4 separate photos on a 24"×16" portrait panel, an 11"×17" horizontal header, and dual 12"×8" companion bases — high-gloss optical acrylic that adds depth to modern interiors.',
         price: 1990,
         image: '/assets/canvas-styles/acrylic-wall-display-4panel.webp',
         customizeHref: '/customize/acrylic/acrylic-wall-art?layout=wall-display-4a'
@@ -116,7 +116,7 @@ const STYLE_META: Record<string, {
         id: 'acrylic-wall-display-5panel',
         number: '03',
         name: '5-Panel Stepped Acrylic Pyramid Display',
-        description: 'A dramatic 5-panel symmetrical pyramid (62" × 36" overall) with a commanding 20"×16" center apex panel flanked by stepped 14"×11" and 10"×8" panels — ultra-vivid sub-surface UV printing with sleek chrome standoff mounting.',
+        description: 'A dramatic 5-panel layout (62" × 36" overall) where each panel presents an individual photo — with a commanding 20"×16" center apex panel flanked by stepped 14"×11" and 10"×8" panels with sleek chrome standoff mounting.',
         price: 2150,
         image: '/assets/canvas-styles/acrylic-wall-display-5panel.webp',
         customizeHref: '/customize/acrylic/acrylic-wall-art?layout=wall-display-5a'
@@ -125,7 +125,7 @@ const STYLE_META: Record<string, {
         id: 'acrylic-wall-display-7panel',
         number: '04',
         name: '7-Panel Acrylic Centerpiece Halo Display',
-        description: 'A grand 7-panel acrylic gallery cluster (44" × 26" overall) featuring a 26"×26" square hero center encircled by six 8"×8" mini satellite acrylic prints — diamond-polished beveled edges creating an immersive optical centerpiece.',
+        description: 'A grand 7-panel acrylic gallery cluster (44" × 26" overall) displaying 7 unique photos — featuring a 26"×26" square hero center encircled by six 8"×8" satellite acrylic prints with diamond-polished beveled edges.',
         price: 2490,
         image: '/assets/canvas-styles/acrylic-wall-display-7panel.webp',
         customizeHref: '/customize/acrylic/acrylic-wall-art?layout=wall-display-7a'
