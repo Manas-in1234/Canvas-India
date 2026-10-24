@@ -29,6 +29,9 @@ const PHOTO = {
   officeHallway: u('1497366216548-37526070297c'), // office interior hallway
   weddingGalleryWall: '/assets/canvas-styles/wall-display-wedding-gallery.webp', // user-supplied: 6-panel asymmetric wedding photo gallery over a sofa
   wallDisplay3PanelLivingRoom: '/assets/canvas-styles/wall-display-3panel-living-room-boho.webp', // user-supplied: real 3-equal-panel boho arch/sun canvas set over a green sofa
+  wallDisplay4PanelLivingRoom: '/assets/canvas-styles/wall-display-4panel-living-room.webp', // 4-panel living room gallery display
+  wallDisplay5PanelLivingRoom: '/assets/canvas-styles/wall-display-5panel-living-room.webp', // 5-panel stepped pyramid living room gallery display
+  wallDisplay7PanelLivingRoom: '/assets/canvas-styles/wall-display-7panel-living-room.webp', // 7-panel centerpiece halo living room gallery display
   wallDisplayHeartEyesCouple: '/assets/canvas-styles/wall-display-heart-eyes-couple.webp', // user-supplied: couple holding paper hearts over their eyes, single-panel canvas on yellow background
   wallDisplay6PanelBohoArt: '/assets/canvas-styles/wall-display-6panel-boho-art.webp', // user-supplied: 6-panel (3x2) terracotta/boho abstract art grid — face, moon, sun motifs
   hexagon3PanelMomDaughter: '/assets/canvas-styles/hexagon-3panel-mom-daughter.webp', // user-supplied: 3 real hexagon panels, mother/daughter photos
@@ -177,40 +180,40 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     }),
     styles: [
       {
-        id: 'canvas-wall-art',
+        id: 'wall-display-3panel',
         number: '01',
-        name: 'Asymmetric Gallery Wall Display',
-        description: 'Varied-size panels arranged asymmetrically — a large central photo flanked by smaller accent panels — for a striking, editorial-style focal point above a sofa or bed.',
+        name: '3-Panel Living Room Gallery Set',
+        description: 'A harmonious 3-panel gallery display (18" × 24" overall) featuring a 12"×18" tall centerpiece canvas balanced by dual 10"×8" accent panels — ideal above a loveseat, console, or hallway credenza.',
         price: 856.9,
-        image: PHOTO.weddingGalleryWall,
-        customizeHref: '/customize/canvas/canvas-wall-art'
-      },
-      {
-        id: 'canvas-living-room-set',
-        number: '02',
-        name: 'Living Room Gallery Canvas Set (3 Panels)',
-        description: 'Triptych 3-panel split wall art set for modern living rooms and master bedrooms.',
-        price: 2299,
         image: PHOTO.wallDisplay3PanelLivingRoom,
-        customizeHref: '/customize/canvas/canvas-wall-art'
+        customizeHref: '/customize/canvas/canvas-wall-art?layout=wall-display-3a'
       },
       {
-        id: 'canvas-heart-eyes-couple',
+        id: 'wall-display-4panel',
+        number: '02',
+        name: '4-Panel Gallery Showcase',
+        description: 'An expansive 4-panel architectural layout (34" × 24" overall) featuring a 24"×16" portrait canvas, an 11"×17" horizontal header, and dual 12"×8" side-by-side bases — designed to make your main living room wall pop.',
+        price: 1693.85,
+        image: PHOTO.wallDisplay4PanelLivingRoom,
+        customizeHref: '/customize/canvas/canvas-wall-art?layout=wall-display-4a'
+      },
+      {
+        id: 'wall-display-5panel',
         number: '03',
-        name: 'Heart Eyes Couple Canvas',
-        description: 'A playful single-panel portrait of a couple holding paper hearts over their eyes — a bright, fun statement piece for a bedroom or hallway.',
-        price: 799,
-        image: PHOTO.wallDisplayHeartEyesCouple,
-        customizeHref: '/customize/canvas/canvas-wall-art'
+        name: '5-Panel Stepped Pyramid Wall Display',
+        description: 'A dramatic 5-panel symmetrical pyramid (62" × 36" overall) with a commanding 20"×16" center apex canvas flanked by stepped 14"×11" and 10"×8" side panels — breathtaking above wide sectional sofas and in spacious living spaces.',
+        price: 1772.7,
+        image: PHOTO.wallDisplay5PanelLivingRoom,
+        customizeHref: '/customize/canvas/canvas-wall-art?layout=wall-display-5a'
       },
       {
-        id: 'canvas-6panel-boho-art',
+        id: 'wall-display-7panel',
         number: '04',
-        name: '6-Panel Boho Art Gallery Canvas',
-        description: 'A 6-panel (3×2) terracotta boho art grid — abstract face, moon and sun motifs arranged together for a cohesive, gallery-style wall feature.',
-        price: 1499,
-        image: PHOTO.wallDisplay6PanelBohoArt,
-        customizeHref: '/customize/canvas/canvas-wall-art'
+        name: '7-Panel Centerpiece Halo Wall Display',
+        description: 'A breathtaking 7-panel gallery centerpiece (44" × 26" overall) showcasing a prominent 26"×26" square hero canvas encircled by six 8"×8" mini satellite canvases — perfect for family milestones, travel stories, and feature gallery walls.',
+        price: 1999,
+        image: PHOTO.wallDisplay7PanelLivingRoom,
+        customizeHref: '/customize/canvas/canvas-wall-art?layout=wall-display-7a'
       }
     ],
     infoTitle: 'Choose Your Panel Count',
