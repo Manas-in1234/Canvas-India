@@ -786,10 +786,10 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               <div className="mt-6">
                 <button
                   type="button"
-                  onClick={() => navigate('/corporate-orders')}
+                  onClick={() => navigate('/bulk-order')}
                   className="inline-flex items-center gap-2 text-sm font-bold text-white bg-[#E8752A] hover:bg-[#D3631A] rounded-full px-6 py-3 shadow-lg shadow-orange-950/40 transition-colors cursor-pointer"
                 >
-                  Shop Corporate Products <ArrowRight className="w-4 h-4" />
+                  Corporate Orders <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
