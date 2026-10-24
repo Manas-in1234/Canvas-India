@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Check, Heart } from 'lucide-react';
-import { useShop } from '../context/ShopContext';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 import { ACRYLIC_STYLE_LANDING_DATA } from '../data/acrylicStyleLandingData';
 import { SHOP_CATEGORIES } from '../data/shopCategories';
@@ -169,8 +168,6 @@ const CatalogueBulkSection: React.FC = () => (
 );
 
 export const BulkOrdersPage: React.FC = () => {
-  const { onOpenQuote } = useShop();
-
   useEffect(() => {
     document.title = 'Bulk & Corporate Orders | Canvas India';
   }, []);
@@ -219,14 +216,6 @@ export const BulkOrdersPage: React.FC = () => {
                 </li>
               ))}
             </ul>
-
-            <button
-              type="button"
-              onClick={onOpenQuote}
-              className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-white bg-[#E8752A] hover:bg-[#D3631A] rounded-full px-6 py-3 shadow-lg shadow-orange-950/20 transition-colors cursor-pointer"
-            >
-              Get a Custom Quote
-            </button>
           </div>
         </Container>
       </section>
@@ -238,7 +227,7 @@ export const BulkOrdersPage: React.FC = () => {
       <section className="py-8 sm:py-10 border-t border-stone-200/80">
         <Container>
           <p className="text-xs text-stone-500 text-center">
-            Prices shown are indicative bulk starting prices per unit at {MIN_BULK_QTY}+ units — final pricing depends on size, finish and exact quantity. Request a quote for an itemized estimate.
+            Prices shown are indicative bulk starting prices per unit at {MIN_BULK_QTY}+ units — final pricing depends on size, finish and exact quantity.
           </p>
         </Container>
       </section>

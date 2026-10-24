@@ -281,8 +281,8 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
       'Pan-India multi-location drop shipping',
       'Digital proof approval before mass printing'
     ],
-    ctaText: 'Request Bulk Quote',
-    ctaType: 'quote'
+    ctaText: 'Explore Collection',
+    ctaType: 'category'
   },
   'corporate-orders': {
     id: 'corporate-orders',
@@ -312,8 +312,8 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
       'Employee onboarding milestone awards & welcome kits',
       'Dedicated enterprise project manager'
     ],
-    ctaText: 'Request Corporate Quote',
-    ctaType: 'quote'
+    ctaText: 'Explore Collection',
+    ctaType: 'category'
   },
   'wall-art': {
     id: 'wall-art',

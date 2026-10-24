@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ChevronRight, ChevronDown, Heart, Percent, Truck, PackageCheck } from 'lucide-react';
-import { useShop } from '../context/ShopContext';
 import { getBulkItem, buildBulkItems, QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import { NotFoundPage } from './NotFoundPage';
 
@@ -12,11 +11,11 @@ const Container: React.FC<{ children: React.ReactNode; className?: string }> = (
 const FAQS = [
   {
     q: 'How does bulk pricing work?',
-    a: 'The per-unit price drops automatically as your order quantity goes up — pick a quantity below the price updates to that tier right away. Final pricing can vary slightly by size and finish; request a quote for an exact itemized estimate.',
+    a: 'The per-unit price drops automatically as your order quantity goes up — pick a quantity below and the price updates to that tier right away. Final pricing can vary slightly by size and finish.',
   },
   {
     q: 'Can every piece have a different photo?',
-    a: 'Yes. Bulk orders aren’t limited to one repeated image — once you continue to the customizer, you can set up each piece individually before checkout, or send us your files for a batch setup via "Request a Quote Instead".',
+    a: 'Yes. Bulk orders aren’t limited to one repeated image — once you continue to the customizer, you can set up each piece individually before checkout.',
   },
   {
     q: 'Do you provide a GST invoice?',
@@ -24,7 +23,7 @@ const FAQS = [
   },
   {
     q: 'What’s the turnaround time?',
-    a: 'Bulk runs typically take longer than a single print due to production volume. Exact timelines depend on quantity, size and finish — we’ll confirm a delivery date when you request a quote.',
+    a: 'Bulk runs typically take longer than a single print due to production volume. Exact timelines depend on quantity, size and finish — estimated delivery dates are displayed during checkout.',
   },
 ];
 
@@ -48,7 +47,6 @@ const FaqItem: React.FC<{ q: string; a: string }> = ({ q, a }) => {
 export const BulkProductDetailPage: React.FC = () => {
   const { material, slug } = useParams<{ material: string; slug: string }>();
   const navigate = useNavigate();
-  const { onOpenQuote } = useShop();
 
   const item = useMemo(() => (material && slug ? getBulkItem(material, slug) : undefined), [material, slug]);
 
@@ -180,20 +178,13 @@ export const BulkProductDetailPage: React.FC = () => {
               <p className="text-xs text-stone-400 mt-1.5">Minimum: {MIN_BULK_QTY} units</p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <div className="pt-2">
               <button
                 type="button"
                 onClick={handleContinueToCustomize}
-                className="flex-1 py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm transition-all cursor-pointer"
+                className="w-full py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm transition-all cursor-pointer"
               >
                 Continue to Customize ({quantity} units)
-              </button>
-              <button
-                type="button"
-                onClick={onOpenQuote}
-                className="flex-1 py-3.5 px-6 rounded-xl border-2 border-stone-300 text-stone-700 hover:border-stone-400 font-bold text-sm transition-all cursor-pointer"
-              >
-                Request a Quote Instead
               </button>
             </div>
           </div>
@@ -229,7 +220,6 @@ export const BulkProductDetailPage: React.FC = () => {
             <ul className="space-y-2 text-sm text-stone-600 list-disc pl-4">
               <li>Minimum order quantity is {MIN_BULK_QTY} units per style.</li>
               <li>Mix sizes or finishes within one bulk order — pricing is calculated on total quantity.</li>
-              <li>For orders exceeding ₹20,000 in value, request a quote for assisted setup.</li>
               <li>Handcrafted in India — every piece is printed and finished at our own facility.</li>
             </ul>
           </div>

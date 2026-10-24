@@ -282,36 +282,29 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
             </div>
 
             {/* Quick Action CTA based on Category */}
-            <div className="flex items-center gap-3 shrink-0">
-              {activeSlug === 'bulk-order' || activeSlug === 'corporate-orders' ? (
-                <button
-                  type="button"
-                  onClick={onOpenQuote}
-                  className="px-5 py-3 rounded-xl bg-[#E8752A] hover:bg-[#D3631A] text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition-all cursor-pointer"
-                >
-                  <Package className="w-4 h-4" />
-                  <span>{activeSlug === 'bulk-order' ? 'Request Bulk Quote →' : 'Request Corporate Quote →'}</span>
-                </button>
-              ) : activeSlug === 'custom-prints' ? (
-                <button
-                  type="button"
-                  onClick={() => onOpenCustomize()}
-                  className="px-5 py-3 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition-all cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-300" />
-                  <span>Start Custom Project →</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onOpenQuote}
-                  className="px-4 py-2.5 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-100 font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <span>Need Custom Dimensions?</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
+            {activeSlug !== 'bulk-order' && activeSlug !== 'corporate-orders' && (
+              <div className="flex items-center gap-3 shrink-0">
+                {activeSlug === 'custom-prints' ? (
+                  <button
+                    type="button"
+                    onClick={() => onOpenCustomize()}
+                    className="px-5 py-3 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-300" />
+                    <span>Start Custom Project →</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onOpenQuote}
+                    className="px-4 py-2.5 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-100 font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <span>Need Custom Dimensions?</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
 
