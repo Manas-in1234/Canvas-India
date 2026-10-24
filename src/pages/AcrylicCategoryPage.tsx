@@ -200,7 +200,7 @@ export const AcrylicCategoryPage: React.FC = () => {
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-3xl overflow-hidden border border-stone-200 shadow-xl bg-stone-100 group aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3]">
                 <img
-                  src="/assets/acrylic/acrylic-butterfly-art.png"
+                  src="/assets/acrylic/acrylic-butterfly-art.webp"
                   alt="Acrylic Prints and Wall Art"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />

@@ -29,8 +29,8 @@ const PHOTO = {
   officeHallway: u('1497366216548-37526070297c'), // office interior hallway
   weddingGalleryWall: '/assets/canvas-styles/wall-display-wedding-gallery.webp', // user-supplied: 6-panel asymmetric wedding photo gallery over a sofa
   wallDisplay3PanelLivingRoom: '/assets/canvas-styles/wall-display-3panel-living-room-boho.webp', // user-supplied: real 3-equal-panel boho arch/sun canvas set over a green sofa
-  wallDisplayHeartEyesCouple: '/assets/canvas-styles/wall-display-heart-eyes-couple.png', // user-supplied: couple holding paper hearts over their eyes, single-panel canvas on yellow background
-  wallDisplay6PanelBohoArt: '/assets/canvas-styles/wall-display-6panel-boho-art.png', // user-supplied: 6-panel (3x2) terracotta/boho abstract art grid — face, moon, sun motifs
+  wallDisplayHeartEyesCouple: '/assets/canvas-styles/wall-display-heart-eyes-couple.webp', // user-supplied: couple holding paper hearts over their eyes, single-panel canvas on yellow background
+  wallDisplay6PanelBohoArt: '/assets/canvas-styles/wall-display-6panel-boho-art.webp', // user-supplied: 6-panel (3x2) terracotta/boho abstract art grid — face, moon, sun motifs
   hexagon3PanelMomDaughter: '/assets/canvas-styles/hexagon-3panel-mom-daughter.webp', // user-supplied: 3 real hexagon panels, mother/daughter photos
   hexagon4PanelAutumnWedding: '/assets/canvas-styles/hexagon-4panel-autumn-wedding.webp', // user-supplied: 4 real hexagon panels in diamond arrangement, autumn/wedding photos
   hexagon7PanelFamily: '/assets/canvas-styles/hexagon-7panel-family.webp', // user-supplied: 6 real hexagon panels honeycomb cluster, family photos on dark green (user-confirmed count)
