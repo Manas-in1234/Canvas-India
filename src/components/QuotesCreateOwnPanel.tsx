@@ -171,7 +171,7 @@ export const QuotesCreateOwnPanel: React.FC<QuotesCreateOwnPanelProps> = ({
               <span>1. Background Style</span>
             </span>
             <span className="text-[10px] font-bold text-stone-500 bg-white px-2 py-0.5 rounded-full border border-stone-200">
-              {bgMode === 'solid' ? 'Solid Color' : 'Uploaded Photo'}
+              {bgMode === 'solid' ? 'Solid Color' : (quoteBgImage ? 'Photo Applied' : 'Photo Background')}
             </span>
           </div>
 
@@ -184,7 +184,7 @@ export const QuotesCreateOwnPanel: React.FC<QuotesCreateOwnPanelProps> = ({
                 if (quoteBgImage) onRemoveQuoteBgImage();
               }}
               className={`py-1.5 px-2 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                bgMode === 'solid' && !quoteBgImage
+                bgMode === 'solid'
                   ? 'bg-[#0E4A93] text-white shadow-2xs'
                   : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
               }`}
@@ -196,12 +196,9 @@ export const QuotesCreateOwnPanel: React.FC<QuotesCreateOwnPanelProps> = ({
               type="button"
               onClick={() => {
                 setBgMode('photo');
-                if (!quoteBgImage && uploadedPhotos.length > 0) {
-                  onSelectQuoteBgImage(uploadedPhotos[0]);
-                }
               }}
               className={`py-1.5 px-2 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                bgMode === 'photo' || Boolean(quoteBgImage)
+                bgMode === 'photo'
                   ? 'bg-[#0E4A93] text-white shadow-2xs'
                   : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
               }`}
@@ -212,7 +209,7 @@ export const QuotesCreateOwnPanel: React.FC<QuotesCreateOwnPanelProps> = ({
           </div>
 
           {/* Mode 1: Solid Color Palette */}
-          {bgMode === 'solid' && !quoteBgImage && (
+          {bgMode === 'solid' && (
             <div className="space-y-2.5 pt-1">
               <span className="text-[11px] font-bold text-stone-600 block">Choose Color:</span>
               <div className="grid grid-cols-6 gap-2">
@@ -284,18 +281,19 @@ export const QuotesCreateOwnPanel: React.FC<QuotesCreateOwnPanelProps> = ({
           )}
 
           {/* Mode 2: Photo Background Selection */}
-          {(bgMode === 'photo' || Boolean(quoteBgImage)) && (
+          {bgMode === 'photo' && (
             <div className="space-y-2.5 pt-1">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-stone-600">Select Image:</span>
+                <span className="text-[11px] font-bold text-stone-600">
+                  {quoteBgImage ? 'Active Background Image:' : 'Select Photo from Uploads:'}
+                </span>
                 {quoteBgImage && (
                   <button
                     type="button"
                     onClick={() => {
                       onRemoveQuoteBgImage();
-                      setBgMode('solid');
                     }}
-                    className="text-[10px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
+                    className="text-[10px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-md border border-rose-200 transition-colors"
                   >
                     <Trash2 className="w-2.5 h-2.5" />
                     <span>Remove Photo</span>

@@ -3019,11 +3019,21 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       const next: Record<number, PanelImageState> = {};
       Object.keys(prev).forEach((k) => {
         const idx = Number(k);
+        if (isMosaicProduct && idx === 0) {
+          const cur = prev[0];
+          if (cur) {
+            const { maxPanX, maxPanY } = computePanBounds(cur.scale || 1, 0);
+            const clampedX = maxPanX > 0.5 ? Math.max(-maxPanX, Math.min(maxPanX, cur.panX)) : 0;
+            const clampedY = maxPanY > 0.5 ? Math.max(-maxPanY, Math.min(maxPanY, cur.panY)) : 0;
+            next[0] = { ...cur, fitMode: 'cover', panX: clampedX, panY: clampedY };
+            return;
+          }
+        }
         next[idx] = { ...prev[idx], fitMode: 'cover', scale: 1, panX: 0, panY: 0 };
       });
       return next;
     });
-  }, [selectedSizeId, customWidth, customHeight, isSinglePrintCanvas, selectedProductTypeId]);
+  }, [selectedSizeId, customWidth, customHeight, isSinglePrintCanvas, selectedProductTypeId, isMosaicProduct]);
 
   // Currently Active Panel Slot for drag/transform/upload targeting
   const [activePanelIndex, setActivePanelIndex] = useState<number>(0);
@@ -3427,6 +3437,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const handleSelectCreateOwnPreference = () => {
     setQuotesPreference('create-own');
     setIsQuotesPreferenceModalOpen(false);
+    // Ensure uploadedPhotos does not contain collection template images
+    setUploadedPhotos((prev) => prev.filter((img) => !QUOTE_TEMPLATES.some((t) => t.image === img)));
     setPanelImages((prev) => {
       const cur = prev[0];
       const isTemplateImg = QUOTE_TEMPLATES.some((t) => t.image === cur?.imageUrl);
@@ -3580,8 +3592,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         }
       }
     }));
-
-    setUploadedPhotos((prev) => [tmpl.image, ...prev.filter((p) => p !== tmpl.image)]);
   };
 
   // Digital Painting State
@@ -3704,9 +3714,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
   }, [selectedProductTypeId, isBusRollProduct, busRollConfig]);
 
-  // If initial product is Quotes on Canvas / Acrylic, initialize default quote template into slot 0
+  // If initial product is Quotes on Canvas / Acrylic, initialize default quote template into slot 0 (only when collection preference is active)
   useEffect(() => {
-    if (isQuotesProduct) {
+    if (isQuotesProduct && quotesPreference === 'collection') {
       const tmpl = getQuoteTemplate(selectedQuoteTemplateId) || getQuoteTemplate('quote-inspire-01');
       if (tmpl && !panelImages[0]?.imageUrl) {
         setPanelImages((prev) => ({
@@ -3727,10 +3737,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             }
           }
         }));
-        setUploadedPhotos((prev) => [tmpl.image, ...prev.filter((p) => p !== tmpl.image)]);
       }
     }
-  }, [selectedProductTypeId, isQuotesProduct, selectedQuoteTemplateId]);
+  }, [selectedProductTypeId, isQuotesProduct, selectedQuoteTemplateId, quotesPreference]);
 
   const prevProductTypeIdRef = useRef(selectedProductTypeId);
   const prevMaterialRef = useRef(activeMaterial);
@@ -3794,7 +3803,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
       setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
       const tmpl = getQuoteTemplate(selectedQuoteTemplateId) || getQuoteTemplate('quote-inspire-01');
-      if (tmpl) {
+      if (tmpl && quotesPreference === 'collection') {
         setPanelImages((prev) => ({
           ...prev,
           0: {
@@ -3813,7 +3822,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             }
           }
         }));
-        setUploadedPhotos((prev) => [tmpl.image, ...prev.filter((p) => p !== tmpl.image)]);
       }
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
@@ -4621,6 +4629,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 fitMode: (productCapabilities.imageFitMode === 'contain' ? 'contain' : 'cover')
               }
             }));
+            if (isQuotesProduct && quotesPreference === 'create-own') {
+              setQuoteBgImage(result);
+            }
             setActivePanelIndex(target);
             setValidationWarning(null);
             endPreloader(PRELOADER_MIN_MS);
@@ -4635,6 +4646,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 fitMode: (productCapabilities.imageFitMode === 'contain' ? 'contain' : 'cover')
               }
             }));
+            if (isQuotesProduct && quotesPreference === 'create-own') {
+              setQuoteBgImage(result);
+            }
             setActivePanelIndex(target);
             setValidationWarning(null);
             endPreloader(PRELOADER_MIN_MS);
@@ -6425,43 +6439,59 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           >
             {masterImage ? (
               <div className="w-full h-full relative overflow-hidden flex items-center justify-center pointer-events-none select-none">
-                <img
-                  src={masterImage}
-                  alt="Photo Mosaic"
-                  draggable={false}
-                  onLoad={(e) => {
-                    const imgEl = e.currentTarget;
-                    if (imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0 && !imgMeta?.width) {
-                      setPanelImages((prev) => {
-                        const cur = prev[0];
-                        if (!cur) return prev;
-                        return {
-                          ...prev,
-                          [0]: {
-                            ...cur,
-                            uploadedImage: {
-                              originalSrc: cur.imageUrl || '',
-                              width: imgEl.naturalWidth,
-                              height: imgEl.naturalHeight,
-                              aspectRatio: imgEl.naturalWidth / imgEl.naturalHeight
-                            }
-                          }
-                        };
-                      });
-                    }
-                  }}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
-                    objectPosition: 'center center',
-                    transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                    transformOrigin: 'center center',
-                    filter: getFilterCss(master.filter),
-                    transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                  }}
-                  className="pointer-events-none select-none max-w-none"
-                />
+                {(() => {
+                  const natWidth = imgMeta?.width || 1200;
+                  const natHeight = imgMeta?.height || 800;
+                  const imgAspect = imgMeta?.aspectRatio || (natWidth / Math.max(1, natHeight));
+                  const mosaicAspect = layout.aspectRatio || (displayWidthInches / Math.max(1, displayHeightInches)) || 1;
+                  const isWiderThanMosaic = imgAspect >= mosaicAspect;
+
+                  return (
+                    <img
+                      src={masterImage}
+                      alt="Photo Mosaic"
+                      draggable={false}
+                      onLoad={(e) => {
+                        const imgEl = e.currentTarget;
+                        if (imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0 && !imgMeta?.width) {
+                          setPanelImages((prev) => {
+                            const cur = prev[0];
+                            if (!cur) return prev;
+                            return {
+                              ...prev,
+                              [0]: {
+                                ...cur,
+                                uploadedImage: {
+                                  originalSrc: cur.imageUrl || '',
+                                  width: imgEl.naturalWidth,
+                                  height: imgEl.naturalHeight,
+                                  aspectRatio: imgEl.naturalWidth / imgEl.naturalHeight
+                                }
+                              }
+                            };
+                          });
+                        }
+                      }}
+                      style={{
+                        width: isWiderThanMosaic ? 'auto' : '100%',
+                        height: isWiderThanMosaic ? '100%' : 'auto',
+                        minWidth: '100%',
+                        minHeight: '100%',
+                        maxWidth: 'none',
+                        maxHeight: 'none',
+                        flexShrink: 0,
+                        aspectRatio: `${natWidth} / ${natHeight}`,
+                        objectFit: 'cover',
+                        objectPosition: 'center center',
+                        transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                        transformOrigin: 'center center',
+                        filter: getFilterCss(master.filter),
+                        transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                      }}
+                      className="pointer-events-none select-none max-w-none"
+                    />
+                  );
+                })()}
                 {/* Subtle physical cotton canvas weave micro-texture for Canvas only */}
                 {activeMaterial === 'canvas' && (
                   <div
@@ -7396,7 +7426,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   quoteBgImage={quoteBgImage}
                   onSelectQuoteBgImage={handleSelectQuoteBgImage}
                   onRemoveQuoteBgImage={handleRemoveQuoteBgImage}
-                  uploadedPhotos={uploadedPhotos}
+                  uploadedPhotos={uploadedPhotos.filter((img) => !QUOTE_TEMPLATES.some((t) => t.image === img))}
                   onTriggerUpload={() => {
                     uploadTargetRef.current = 0;
                     fileInputRef.current?.click();
@@ -9133,57 +9163,59 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             extraControls={
               hasUploadedImage && (
                 <div className="flex items-center gap-1 ml-1 pl-1 border-l border-stone-200">
-                  {/* Supported image-positioning controls for predictable horizontal and vertical adjustments */}
-                  <div className="flex items-center gap-0.5" title="Adjust image position">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleNudge(-1, 0);
-                      }}
-                      className="p-1 rounded-md text-stone-600 hover:text-[#0E4A93] hover:bg-stone-200 transition-colors cursor-pointer"
-                      title="Move Left"
-                      aria-label="Move Left"
-                    >
-                      <ChevronLeft className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleNudge(1, 0);
-                      }}
-                      className="p-1 rounded-md text-stone-600 hover:text-[#0E4A93] hover:bg-stone-200 transition-colors cursor-pointer"
-                      title="Move Right"
-                      aria-label="Move Right"
-                    >
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleNudge(0, -1);
-                      }}
-                      className="p-1 rounded-md text-stone-600 hover:text-[#0E4A93] hover:bg-stone-200 transition-colors cursor-pointer"
-                      title="Move Up"
-                      aria-label="Move Up"
-                    >
-                      <ChevronUp className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleNudge(0, 1);
-                      }}
-                      className="p-1 rounded-md text-stone-600 hover:text-[#0E4A93] hover:bg-stone-200 transition-colors cursor-pointer"
-                      title="Move Down"
-                      aria-label="Move Down"
-                    >
-                      <ChevronDown className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  {/* Supported image-positioning controls for predictable horizontal and vertical adjustments (hidden on Photo Mosaic per Requirement 2D) */}
+                  {!isMosaicProduct && (
+                    <div className="flex items-center gap-0.5" title="Adjust image position">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleNudge(-1, 0);
+                        }}
+                        className="p-1 rounded-md text-stone-600 hover:text-[#0E4A93] hover:bg-stone-200 transition-colors cursor-pointer"
+                        title="Move Left"
+                        aria-label="Move Left"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleNudge(1, 0);
+                        }}
+                        className="p-1 rounded-md text-stone-600 hover:text-[#0E4A93] hover:bg-stone-200 transition-colors cursor-pointer"
+                        title="Move Right"
+                        aria-label="Move Right"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleNudge(0, -1);
+                        }}
+                        className="p-1 rounded-md text-stone-600 hover:text-[#0E4A93] hover:bg-stone-200 transition-colors cursor-pointer"
+                        title="Move Up"
+                        aria-label="Move Up"
+                      >
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleNudge(0, 1);
+                        }}
+                        className="p-1 rounded-md text-stone-600 hover:text-[#0E4A93] hover:bg-stone-200 transition-colors cursor-pointer"
+                        title="Move Down"
+                        aria-label="Move Down"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
 
                   <button
                     type="button"
@@ -9435,6 +9467,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           const imgAspect = imgMeta?.aspectRatio || (natWidth / Math.max(1, natHeight));
                           const isWiderThanFrame = imgAspect >= printAspect;
 
+                          const effectiveEdgeColor = (isQuotesProduct && quotesPreference === 'create-own' && !quoteBgImage)
+                            ? quoteBgColor
+                            : (isBlackBorderWrap ? '#0F172A' : '#FFFFFF');
+
                           const crossClipPath = showPhysicalEdges
                             ? `polygon(${visibleDepthPx}px 0px, calc(100% - ${visibleDepthPx}px) 0px, calc(100% - ${visibleDepthPx}px) ${visibleDepthPx}px, 100% ${visibleDepthPx}px, 100% calc(100% - ${visibleDepthPx}px), calc(100% - ${visibleDepthPx}px) calc(100% - ${visibleDepthPx}px), calc(100% - ${visibleDepthPx}px) 100%, ${visibleDepthPx}px 100%, ${visibleDepthPx}px calc(100% - ${visibleDepthPx}px), 0px calc(100% - ${visibleDepthPx}px), 0px ${visibleDepthPx}px, ${visibleDepthPx}px ${visibleDepthPx}px)`
                             : undefined;
@@ -9451,7 +9487,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                       bottom: '100%',
                                       height: `${visibleDepthPx}px`,
                                       borderBottom: 'none',
-                                      backgroundColor: isBlackBorderWrap ? '#0F172A' : '#FFFFFF'
+                                      backgroundColor: effectiveEdgeColor
                                     }}
                                   >
                                     {panelImages[0]?.imageUrl && isImageWrapped && (
@@ -9498,7 +9534,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                       right: '100%',
                                       width: `${visibleDepthPx}px`,
                                       borderRight: 'none',
-                                      backgroundColor: isBlackBorderWrap ? '#0F172A' : '#FFFFFF'
+                                      backgroundColor: effectiveEdgeColor
                                     }}
                                   >
                                     {panelImages[0]?.imageUrl && isImageWrapped && (
@@ -9545,7 +9581,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                       top: '100%',
                                       height: `${visibleDepthPx}px`,
                                       borderTop: 'none',
-                                      backgroundColor: isBlackBorderWrap ? '#0F172A' : '#FFFFFF',
+                                      backgroundColor: effectiveEdgeColor,
                                       boxShadow: '0 12px 20px -4px rgba(15, 23, 42, 0.12)'
                                     }}
                                   >
@@ -9593,7 +9629,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                       left: '100%',
                                       width: `${visibleDepthPx}px`,
                                       borderLeft: 'none',
-                                      backgroundColor: isBlackBorderWrap ? '#0F172A' : '#FFFFFF'
+                                      backgroundColor: effectiveEdgeColor
                                     }}
                                   >
                                     {panelImages[0]?.imageUrl && isImageWrapped && (
@@ -10436,24 +10472,41 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   return (
                     <div className="relative w-full h-full pointer-events-none select-none bg-stone-100 overflow-hidden">
                       {masterImage ? (
-                        <div className="w-full h-full relative">
-                          <img
-                            src={masterImage}
-                            alt=""
-                            draggable={false}
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
-                              objectPosition: 'center center',
-                              transform: `translate(${panX}px, ${panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                              transformOrigin: 'center center',
-                              filter: getFilterCss(master.filter),
-                              backfaceVisibility: 'hidden',
-                              WebkitBackfaceVisibility: 'hidden'
-                            }}
-                            className="w-full h-full pointer-events-none"
-                          />
+                        <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
+                          {(() => {
+                            const imgMeta = master?.uploadedImage;
+                            const natWidth = imgMeta?.width || 1200;
+                            const natHeight = imgMeta?.height || 800;
+                            const imgAspect = imgMeta?.aspectRatio || (natWidth / Math.max(1, natHeight));
+                            const mosaicAspect = layoutDef.aspectRatio || 1;
+                            const isWiderThanMosaic = imgAspect >= mosaicAspect;
+
+                            return (
+                              <img
+                                src={masterImage}
+                                alt=""
+                                draggable={false}
+                                style={{
+                                  width: isWiderThanMosaic ? 'auto' : '100%',
+                                  height: isWiderThanMosaic ? '100%' : 'auto',
+                                  minWidth: '100%',
+                                  minHeight: '100%',
+                                  maxWidth: 'none',
+                                  maxHeight: 'none',
+                                  flexShrink: 0,
+                                  aspectRatio: `${natWidth} / ${natHeight}`,
+                                  objectFit: 'cover',
+                                  objectPosition: 'center center',
+                                  transform: `translate(${panX}px, ${panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                  transformOrigin: 'center center',
+                                  filter: getFilterCss(master.filter),
+                                  backfaceVisibility: 'hidden',
+                                  WebkitBackfaceVisibility: 'hidden'
+                                }}
+                                className="pointer-events-none select-none max-w-none"
+                              />
+                            );
+                          })()}
                           {/* Subtle physical cotton canvas weave micro-texture for Canvas only */}
                           {activeMaterial === 'canvas' && (
                             <div
@@ -10928,20 +10981,38 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         }
                       >
                         {masterImage ? (
-                          <div className="w-full h-full relative overflow-hidden">
-                            <img
-                              src={masterImage}
-                              alt="Photo Mosaic"
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: master.fitMode === 'contain' ? 'contain' : 'cover',
-                                objectPosition: 'center center',
-                                transform: `translate(${scaledPanX}px, ${scaledPanY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                                transformOrigin: 'center center',
-                                filter: getFilterCss(master.filter)
-                              }}
-                            />
+                          <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
+                            {(() => {
+                              const imgMeta = master?.uploadedImage;
+                              const natWidth = imgMeta?.width || 1200;
+                              const natHeight = imgMeta?.height || 800;
+                              const imgAspect = imgMeta?.aspectRatio || (natWidth / Math.max(1, natHeight));
+                              const mosaicAspect = layoutDef.aspectRatio || 1;
+                              const isWiderThanMosaic = imgAspect >= mosaicAspect;
+
+                              return (
+                                <img
+                                  src={masterImage}
+                                  alt="Photo Mosaic"
+                                  style={{
+                                    width: isWiderThanMosaic ? 'auto' : '100%',
+                                    height: isWiderThanMosaic ? '100%' : 'auto',
+                                    minWidth: '100%',
+                                    minHeight: '100%',
+                                    maxWidth: 'none',
+                                    maxHeight: 'none',
+                                    flexShrink: 0,
+                                    aspectRatio: `${natWidth} / ${natHeight}`,
+                                    objectFit: 'cover',
+                                    objectPosition: 'center center',
+                                    transform: `translate(${scaledPanX}px, ${scaledPanY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                    transformOrigin: 'center center',
+                                    filter: getFilterCss(master.filter)
+                                  }}
+                                  className="pointer-events-none select-none max-w-none"
+                                />
+                              );
+                            })()}
                             {/* Subtle physical cotton canvas weave micro-texture for Canvas only */}
                             {activeMaterial === 'canvas' && (
                               <div
@@ -11527,6 +11598,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 // Side / thickness base color
                 const sideBaseColor = hasOuterFrame && frameColor
                   ? frameColor
+                  : (isQuotesProduct && quotesPreference === 'create-own' && !quoteBgImage)
+                  ? quoteBgColor
                   : selectedBorderWidthId !== 'none'
                   ? selectedBorderColor
                   : selectedWrapId === 'white-border'
@@ -11707,7 +11780,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                                 style={{
                                                   clipPath: HEXAGON_CLIP_PATH,
                                                   WebkitClipPath: HEXAGON_CLIP_PATH,
-                                                  backgroundColor: slice.isRearHalf && !hasOuterFrame ? '#b89365' : sideBaseColor,
+                                                  backgroundColor: (isQuotesProduct && quotesPreference === 'create-own' && !quoteBgImage) ? quoteBgColor : (slice.isRearHalf && !hasOuterFrame ? '#b89365' : sideBaseColor),
                                                   filter: `brightness(${edgeShade.toFixed(2)})`
                                                 }}
                                               />
