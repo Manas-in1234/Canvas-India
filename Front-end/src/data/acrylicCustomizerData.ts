@@ -189,9 +189,9 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
   {
     id: 'acrylic-wall-art',
     name: 'Wall Display',
-    price: 2338.90,
-    startingPrice: 2338.90,
-    image: '/images/acrylic/shapes/rectangle.svg',
+    price: 1050,
+    startingPrice: 1050,
+    image: '/assets/canvas-styles/acrylic-wall-display-3panel.webp',
     iconType: 'wall',
     defaultLayout: 'threeCollage',
     defaultLayoutId: 'wall-display-3a',
@@ -1565,10 +1565,11 @@ export const ACRYLIC_BORDER_COLORS = [
 ];
 
 export const THICKNESS_OPTIONS = [
-  { id: '3mm', label: '3mm Lightweight Cast Acrylic', price: 0 },
-  { id: '5mm', label: '5mm Standard Studio Acrylic', price: 150.00 },
-  { id: '8mm', label: '8mm Premium Optical Cast Acrylic', price: 250.00 },
-  { id: '18mm', label: '18mm Heavy Block Acrylic', price: 450.00 }
+  { id: '3mm', label: '3mm Lightweight Cast Acrylic', name: '3mm Cast Acrylic', thicknessMm: 3, price: 0 },
+  { id: '5mm', label: '5mm Standard Studio Acrylic', name: '5mm Studio Acrylic', thicknessMm: 5, price: 150.00, badge: 'Recommended' },
+  { id: '8mm', label: '8mm Premium Optical Cast Acrylic', name: '8mm Optical Cast', thicknessMm: 8, price: 250.00, badge: 'Museum Quality' },
+  { id: 'custom-thickness', label: 'Custom Thickness', name: 'Custom Thickness', thicknessMm: 6, price: 200.00 },
+  { id: '18mm', label: '18mm Heavy Block Acrylic', name: '18mm Heavy Block', thicknessMm: 18, price: 450.00 }
 ];
 
 export const PAPER_OPTIONS = [

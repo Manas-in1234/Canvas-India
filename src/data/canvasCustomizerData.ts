@@ -961,6 +961,7 @@ export interface CanvasThicknessOption {
   id: string;
   label: string;
   name?: string;
+  thicknessInches?: number;
   price: number;
   depthPx: number;
   description?: string;
@@ -968,10 +969,11 @@ export interface CanvasThicknessOption {
 }
 
 export const CANVAS_THICKNESS_OPTIONS: CanvasThicknessOption[] = [
-  { id: 'canvas-lite', label: '0.5" Canvas Lite (Slim Stretcher)', name: '0.5" Canvas Lite', price: 0, depthPx: 16, description: 'Ultra slim & lightweight, economical mount', badge: 'Popular' },
-  { id: 'thin-gallery', label: '0.75" Thin Gallery Wrap', name: '0.75" Thin Gallery Wrap', price: 130.0, depthPx: 26, description: 'Standard modern gallery profile' },
-  { id: 'thick-gallery', label: '1.5" Thick Gallery Wrap (Museum Quality)', name: '1.5" Thick Gallery Wrap', price: 155.0, depthPx: 44, description: 'Museum-grade premium deep projection', badge: 'Museum Depth' },
-  { id: 'hanging-canvas', label: 'Unframed Rolled Canvas', name: 'Unframed Rolled Canvas', price: 85.0, depthPx: 8, description: 'Flexible unmounted rolled canvas or hanging bar' }
+  { id: 'canvas-lite', label: 'Canvas Lite (0.50")', name: 'Canvas Lite', thicknessInches: 0.5, price: 0, depthPx: 14, description: 'Ultra slim & lightweight, economical mount' },
+  { id: 'thin-gallery', label: 'Thin Gallery Wrap (0.75")', name: 'Thin Gallery Wrap', thicknessInches: 0.75, price: 130.0, depthPx: 20, description: 'Standard modern gallery profile', badge: 'Recommended' },
+  { id: 'thick-gallery', label: 'Thick Gallery Wrap (1.5")', name: 'Thick Gallery Wrap', thicknessInches: 1.5, price: 155.0, depthPx: 34, description: 'Museum-grade premium deep projection', badge: 'Museum Quality' },
+  { id: 'custom-thickness', label: 'Custom Thickness', name: 'Custom Thickness', thicknessInches: 1.0, price: 140.0, depthPx: 24, description: 'Specify custom canvas frame depth' },
+  { id: 'hanging-canvas', label: 'Unframed Rolled Canvas', name: 'Unframed Rolled Canvas', thicknessInches: 0.25, price: 85.0, depthPx: 8, description: 'Flexible unmounted rolled canvas or hanging bar' }
 ];
 
 export const CANVAS_PAPER_OPTIONS = [
