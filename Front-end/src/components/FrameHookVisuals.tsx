@@ -64,7 +64,7 @@ export function getFrameCategory(finish?: string): FrameCategory {
 }
 
 export const FrameSwatch: React.FC<{ category: string; size?: number }> = ({ category, size = 36 }) => {
-  const look = FRAME_LOOK[category] || FRAME_LOOK['No Frame'];
+  const look = FRAME_LOOK[category as FrameCategory] || FRAME_LOOK['No Frame'];
   const swatchBg = category === 'No Frame' ? 'linear-gradient(135deg, #F5F3EE, #E7E2D7)' : look.frame;
   return (
     <div

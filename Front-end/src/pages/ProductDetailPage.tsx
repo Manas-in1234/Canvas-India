@@ -497,30 +497,29 @@ export const ProductDetailPage: React.FC = () => {
                         {product.discountPercent}% OFF
                       </div>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={() => onToggleWishlist(product.id)}
+                      className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-700 hover:text-rose-600 shadow-md flex items-center justify-center transition-all cursor-pointer z-10"
+                      title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+                    >
+                      <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
+                    </button>
+
+                    {galleryImages.length > 1 && (
+                      <>
+                        <button type="button" onClick={handlePrevImage} aria-label="Previous image" className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100 z-10">
+                          <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button type="button" onClick={handleNextImage} aria-label="Next image" className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100 z-10">
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 );
               })()}
-
-                <button
-                  type="button"
-                  onClick={() => onToggleWishlist(product.id)}
-                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-700 hover:text-rose-600 shadow-md flex items-center justify-center transition-all cursor-pointer"
-                  title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-                >
-                  <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
-                </button>
-
-                {galleryImages.length > 1 && (
-                  <>
-                    <button type="button" onClick={handlePrevImage} aria-label="Previous image" className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100">
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button type="button" onClick={handleNextImage} aria-label="Next image" className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100">
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </>
-                )}
-              </div>
             </div>
 
             {/* Info + Purchase Card */}
