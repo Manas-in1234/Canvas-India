@@ -21,7 +21,7 @@ import { ProductImage } from '../components/ProductImage';
 import { WallPreview } from '../components/WallPreview';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { Product } from '../types';
-import { FrameSwatch, HookIcon, HOOK_OPTIONS, FRAME_LOOK, getFrameCategory } from '../components/FrameHookVisuals';
+import { FrameSwatch, HookIcon, HOOK_OPTIONS, FRAME_LOOK, getFrameCategory, FrameCategory } from '../components/FrameHookVisuals';
 import { QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
 
@@ -89,6 +89,7 @@ export const ProductDetailPage: React.FC = () => {
   // Variant state
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedFinish, setSelectedFinish] = useState<string>('');
+  const [selectedFrame, setSelectedFrame] = useState<FrameCategory>('No Frame');
   const [selectedMaterial, setSelectedMaterial] = useState<string>('');
   const [selectedShape, setSelectedShape] = useState<string>('');
   const [customWidth, setCustomWidth] = useState<number>(8);
@@ -160,10 +161,10 @@ export const ProductDetailPage: React.FC = () => {
   // preview's frame border (see finishStyle.ts), so a pick here always has
   // a matching real finish value to send to cart. Every category present in
   // the product's own finishes list is offered — nothing invented.
-  const FRAME_CATEGORY_ORDER: { label: 'No Frame' | 'Black Frame' | 'Wooden Frame' | 'White Frame' | 'Gold Frame'; test: (f: string) => boolean }[] = [
+  const FRAME_CATEGORY_ORDER: { label: FrameCategory; test: (f: string) => boolean }[] = [
     { label: 'No Frame', test: (f) => /print only|rolled|gallery wrap|satin|lustre|matte canvas|no frame/.test(f) },
     { label: 'Black Frame', test: (f) => /black/.test(f) },
-    { label: 'Wooden Frame', test: (f) => (/teak|oak|brown|natural/.test(f) || (/wood/.test(f) && !/black|white|gold/.test(f))) },
+    { label: 'Wooden Frame', test: (f) => (/teak|oak|walnut|brown|natural|rustic/.test(f) || (/wood/.test(f) && !/black|white|gold/.test(f))) },
     { label: 'White Frame', test: (f) => /white/.test(f) },
     { label: 'Gold Frame', test: (f) => /gold/.test(f) },
   ];
@@ -175,7 +176,7 @@ export const ProductDetailPage: React.FC = () => {
         const match = lower.find(({ l }) => cat.test(l));
         return match ? { label: cat.label, value: match.raw } : null;
       })
-      .filter((o): o is { label: 'No Frame' | 'Black Frame' | 'Wooden Frame' | 'White Frame' | 'Gold Frame'; value: string } => Boolean(o));
+      .filter((o): o is { label: FrameCategory; value: string } => Boolean(o));
   }, [product]);
 
   // Same catalogue design also offered as Canvas / Acrylic — siblings share a
@@ -202,8 +203,11 @@ export const ProductDetailPage: React.FC = () => {
   useEffect(() => {
     if (product) {
       const defaultShape = product.shape || availableShapes[0] || '';
+      const initialFinish = product.finishes?.[0] || 'Standard Finish';
+      const initialFrameCat = getFrameCategory(initialFinish);
       setSelectedSize(pickDefaultSize(product.availableSizes) || pickDefaultSize(product.sizes) || '12x18 inch');
-      setSelectedFinish(product.finishes?.[0] || 'Standard Finish');
+      setSelectedFinish(initialFinish);
+      setSelectedFrame(initialFrameCat);
       setSelectedMaterial(availableMaterials[0] || 'Standard');
       setSelectedShape(defaultShape);
       setSelectedHook('Sawtooth Hanger');
@@ -234,15 +238,13 @@ export const ProductDetailPage: React.FC = () => {
     }
   }, [product, availableMaterials, availableShapes]);
 
-  // Gallery images (product primary + any secondary images). Wall-hangable
-  // categories get a leading "Room View" sentinel slot — shown first, like
-  // canvaschamp — rendered live via WallPreview, reacting to the selected
-  // shape/size instead of a static photo.
+  // Gallery images (product primary + any secondary images, plus a Room View slot
+  // rendered live via WallPreview reacting to selected size/frame).
   const galleryImages = useMemo(() => {
     if (!product) return [];
     const base = product.images && product.images.length > 0 ? product.images : [product.image];
     if (product.categorySlug === 'yoga-fitness' || product.categorySlug === 'cork') return base;
-    return [ROOM_VIEW_SENTINEL, ...base];
+    return [...base, ROOM_VIEW_SENTINEL];
   }, [product]);
 
   // The real product photo used inside the live Room View preview (first non-sentinel image)
@@ -434,9 +436,9 @@ export const ProductDetailPage: React.FC = () => {
             {/* Main Image */}
             <div className="order-1 lg:order-2 lg:col-span-5 min-w-0">
               {(() => {
-                const currentFrameCategory = getFrameCategory(selectedFinish);
-                const currentFrameLook = FRAME_LOOK[currentFrameCategory] || FRAME_LOOK['No Frame'];
-                const hasSelectedFrame = currentFrameCategory !== 'No Frame';
+                const currentFrameLook = FRAME_LOOK[selectedFrame] || FRAME_LOOK['No Frame'];
+                const hasSelectedFrame = selectedFrame !== 'No Frame';
+                const containerAspectVal = selectedShape === 'Square' ? 1 : selectedShape === 'Panoramic' ? 16 / 9 : 4 / 5;
 
                 return (
                   <div
@@ -457,9 +459,10 @@ export const ProductDetailPage: React.FC = () => {
                     ) : hasSelectedFrame ? (
                       <div className="relative w-full h-full flex items-center justify-center p-3 sm:p-5">
                         <div
-                          className="relative max-w-full max-h-full aspect-[4/5] rounded-[3px] transition-all duration-300 flex items-center justify-center"
+                          className="relative max-w-full max-h-full rounded-[3px] transition-all duration-300 flex items-center justify-center shadow-2xl"
                           style={{
-                            padding: 'clamp(12px, 2.8vw, 18px)',
+                            aspectRatio: containerAspectVal,
+                            padding: 'clamp(14px, 3.2vw, 24px)',
                             background: currentFrameLook.frame,
                             boxShadow: currentFrameLook.boxShadow,
                             border: `1px solid ${currentFrameLook.borderColor}`,
@@ -469,7 +472,7 @@ export const ProductDetailPage: React.FC = () => {
                             <SmartCropImage
                               src={uploadedFile || galleryImages[activeImageIndex] || product.image}
                               alt={product.name}
-                              containerAspect={4 / 5}
+                              containerAspect={containerAspectVal}
                               className="w-full h-full"
                             />
                             {/* Realistic frame inner shadow cast onto the artwork */}
@@ -484,7 +487,7 @@ export const ProductDetailPage: React.FC = () => {
                       <SmartCropImage
                         src={uploadedFile || galleryImages[activeImageIndex] || product.image}
                         alt={product.name}
-                        containerAspect={4 / 5}
+                        containerAspect={containerAspectVal}
                         className="w-full h-full"
                       />
                     )}
@@ -705,15 +708,23 @@ export const ProductDetailPage: React.FC = () => {
                   {frameOptions.length > 0 && sizeShapeTab === 'frame' && (
                     <div className="grid grid-cols-3 gap-2">
                       {frameOptions.map((opt) => {
-                        const isSelected = getFrameCategory(selectedFinish) === opt.label;
+                        const isSelected = selectedFrame === opt.label;
                         return (
                           <button
                             key={opt.label}
                             type="button"
-                            onClick={() => setSelectedFinish(opt.value)}
+                            onClick={() => {
+                              setSelectedFrame(opt.label);
+                              setSelectedFinish(opt.value);
+                              // Switch active image to artwork if on room view so the frame is directly visible on the artwork
+                              if (galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL) {
+                                const artIdx = galleryImages.findIndex((img) => img !== ROOM_VIEW_SENTINEL);
+                                if (artIdx !== -1) setActiveImageIndex(artIdx);
+                              }
+                            }}
                             className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
                               isSelected
-                                ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
+                                ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] ring-2 ring-[#0E4A93]/20 shadow-xs font-bold'
                                 : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
                             }`}
                           >

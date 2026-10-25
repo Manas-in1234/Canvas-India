@@ -4,20 +4,23 @@ import React from 'react';
 // a colored/textured outer frame border around a lighter inner mat,
 // so each option reads as an actual frame and applies realistically
 // onto product preview images.
+export type FrameCategory = 'No Frame' | 'Black Frame' | 'Wooden Frame' | 'White Frame' | 'Gold Frame';
+
 export interface FrameLookConfig {
   frame: string;
   isLight?: boolean;
-  borderColor?: string;
-  boxShadow?: string;
-  innerShadow?: string;
+  borderColor: string;
+  boxShadow: string;
+  innerShadow: string;
 }
 
-export const FRAME_LOOK: Record<string, FrameLookConfig> = {
+export const FRAME_LOOK: Record<FrameCategory, FrameLookConfig> = {
   'No Frame': {
     frame: 'transparent',
     isLight: true,
     borderColor: 'transparent',
     boxShadow: 'none',
+    innerShadow: 'none',
   },
   'Black Frame': {
     frame: 'linear-gradient(135deg, #383838 0%, #1a1a1a 45%, #0d0d0d 100%)',
@@ -50,12 +53,13 @@ export const FRAME_LOOK: Record<string, FrameLookConfig> = {
  * Accurately determines the frame category from any product finish string.
  * Ensures Black Wood Frame matches Black Frame, Teak/Oak Wood Frame matches Wooden Frame, etc.
  */
-export function getFrameCategory(finish?: string): 'No Frame' | 'Black Frame' | 'Wooden Frame' | 'White Frame' | 'Gold Frame' {
-  const l = (finish || '').toLowerCase();
+export function getFrameCategory(finish?: string): FrameCategory {
+  if (!finish) return 'No Frame';
+  const l = finish.toLowerCase();
   if (/black/.test(l)) return 'Black Frame';
   if (/white/.test(l)) return 'White Frame';
   if (/gold/.test(l)) return 'Gold Frame';
-  if (/teak|oak|brown|natural/.test(l) || (/wood/.test(l) && !/black|white|gold/.test(l))) return 'Wooden Frame';
+  if (/teak|oak|walnut|brown|natural|rustic/.test(l) || (/wood/.test(l) && !/black|white|gold/.test(l))) return 'Wooden Frame';
   return 'No Frame';
 }
 

@@ -1,50 +1,60 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { 
-  Star, 
-  Heart, 
-  ShoppingBag, 
-  Check, 
-  Truck, 
-  ShieldCheck, 
-  Award, 
-  MapPin, 
-  ChevronRight, 
-  Share2, 
-  Sparkles, 
+import {
+  Star,
+  Heart,
+  ShoppingBag,
+  ShieldCheck,
+  ChevronRight,
+  ChevronLeft,
+  Share2,
   ArrowRight,
   CheckCircle2,
-  Upload,
   Layers,
-  Sliders,
-  Type,
-  Maximize2
+  Pencil,
+  Package,
+  ChevronDown
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
 import { ProductImage } from '../components/ProductImage';
-import { CUSTOMER_REVIEWS } from '../data/storeData';
+import { WallPreview } from '../components/WallPreview';
+import { SmartCropImage } from '../components/SmartCropImage';
 import { Product } from '../types';
+import { FrameSwatch, HookIcon, HOOK_OPTIONS, FRAME_LOOK, getFrameCategory, FrameCategory } from '../components/FrameHookVisuals';
+import { QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
-import { CorkProductDetailPage } from './CorkProductDetailPage';
 
-interface FinishStyle { wall: string; border: number; color: string; shadow: string; outline: string; overlay: string; }
+// Sentinel inserted as the first gallery slot for wall-hangable categories so
+// the "Room View" thumbnail renders a live WallPreview instead of a static image.
+const ROOM_VIEW_SENTINEL = '__ROOM_VIEW__';
 
-// Visual swatch for a finish/style name: frame colour, edge treatment and surface sheen.
-const getFinishStyle = (name: string): FinishStyle => {
-  const n = name.toLowerCase();
-  const base: FinishStyle = { wall: '#ECE7DF', border: 0, color: 'transparent', shadow: '0 6px 10px -4px rgba(0,0,0,0.45), 3px 3px 0 #d6d0c4', outline: 'none', overlay: '' };
-  if (n.includes('black')) return { ...base, border: 5, color: '#161616', shadow: '0 6px 10px -4px rgba(0,0,0,0.5)' };
-  if (n.includes('white')) return { ...base, wall: '#E3E8EE', border: 5, color: '#FAFAFA', shadow: '0 6px 10px -4px rgba(0,0,0,0.35)' };
-  if (n.includes('gold')) return { ...base, border: 5, color: '#C9A227', shadow: '0 6px 10px -4px rgba(0,0,0,0.45)' };
-  if (n.includes('teak') || n.includes('oak') || n.includes('wood')) return { ...base, border: 6, color: n.includes('oak') ? '#C99A62' : '#8B5A2B', shadow: '0 6px 10px -4px rgba(0,0,0,0.45)' };
-  if (n.includes('anodized') || n.includes('metal')) return { ...base, border: 3, color: '#9AA3AD', shadow: '0 6px 10px -4px rgba(0,0,0,0.4)' };
-  if (n.includes('mirror')) return { ...base, shadow: '0 6px 10px -4px rgba(0,0,0,0.45), 3px 3px 0 #b9c6d6', overlay: 'linear-gradient(120deg, rgba(255,255,255,0.0) 40%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 60%)' };
-  if (n.includes('bevel')) return { ...base, border: 3, color: 'rgba(255,255,255,0.85)', overlay: 'linear-gradient(135deg, rgba(255,255,255,0.35), rgba(255,255,255,0) 50%)' };
-  if (n.includes('anti-glare') || n.includes('frost') || n.includes('matte') || n.includes('satin')) return { ...base, overlay: 'rgba(255,255,255,0.18)' };
-  if (n.includes('gloss') || n.includes('diamond') || n.includes('pearl') || n.includes('lustre')) return { ...base, overlay: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 45%, rgba(255,255,255,0.15) 100%)' };
-  return base; // gallery wrap / classic wrap / standard: image wraps the edge
-};
+// Default to the largest available size so the product — and its Room View
+// — looks substantial right away, instead of starting on the tiniest
+// option. Size lists are ordered smallest-to-largest.
+function pickDefaultSize(sizes?: string[]): string | undefined {
+  if (!sizes || sizes.length === 0) return undefined;
+  return sizes[sizes.length - 1];
+}
+
+// Simple outline swatch standing in for each shape in the icon-based Shape
+// tab, styled as a small rectangle whose own proportions hint at the shape
+// it represents.
+function ShapeIcon({ shape, active }: { shape: string; active: boolean }) {
+  const dims: Record<string, string> = {
+    standard: 'w-5 h-6',
+    square: 'w-6 h-6',
+    rectangle: 'w-7 h-5',
+    panoramic: 'w-8 h-4',
+  };
+  return (
+    <div
+      className={`${dims[shape.toLowerCase()] || 'w-6 h-6'} rounded-sm border-2 ${
+        active ? 'border-[#0E4A93]' : 'border-stone-400'
+      }`}
+    />
+  );
+}
 
 export const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -64,22 +74,41 @@ export const ProductDetailPage: React.FC = () => {
 
   const isWishlisted = product ? wishlistIds.includes(product.id) : false;
 
+  // Catalogue designs are named "<Name> <code>" or "<Name> <code> - <Material>"
+  // (e.g. "Tribal Art Print 001 - Canvas") — pull the numeric code out so it
+  // can be shown on its own below Quantity instead of cluttering the title.
+  const { displayName, productCode } = useMemo(() => {
+    if (!product) return { displayName: '', productCode: null as string | null };
+    const match = product.name.match(/^(.*?)\s+(\d{3,4})(\s*-\s*.+)?$/);
+    if (match) {
+      return { displayName: `${match[1]}${match[3] || ''}`.trim(), productCode: match[2] };
+    }
+    return { displayName: product.name, productCode: null as string | null };
+  }, [product]);
+
   // Variant state
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedFinish, setSelectedFinish] = useState<string>('');
+  const [selectedFrame, setSelectedFrame] = useState<FrameCategory>('No Frame');
   const [selectedMaterial, setSelectedMaterial] = useState<string>('');
+  const [selectedShape, setSelectedShape] = useState<string>('');
+  const [customWidth, setCustomWidth] = useState<number>(8);
+  const [customHeight, setCustomHeight] = useState<number>(8);
+  const [isCustomSize, setIsCustomSize] = useState<boolean>(false);
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
+  const [sizeShapeTab, setSizeShapeTab] = useState<'size' | 'shape' | 'frame' | 'hook'>('size');
+  const [customSizeOpen, setCustomSizeOpen] = useState<boolean>(false);
+  const [customSizeW, setCustomSizeW] = useState<string>('');
+  const [customSizeH, setCustomSizeH] = useState<string>('');
+  const [selectedHook, setSelectedHook] = useState<string>('Sawtooth Hanger');
+  const [bulkPanelOpen, setBulkPanelOpen] = useState<boolean>(false);
+  const [customBulkQty, setCustomBulkQty] = useState<string>('');
 
   // In-page customization state
   const [customText, setCustomText] = useState<string>('');
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
-  const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
 
-  // Delivery check state
-  const [pincode, setPincode] = useState<string>('500001');
-  const [pincodeChecked, setPincodeChecked] = useState<boolean>(false);
-  const [checkingPincode, setCheckingPincode] = useState<boolean>(false);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
 
   // Materials available for this product
@@ -104,17 +133,97 @@ export const ProductDetailPage: React.FC = () => {
     }
   }, [product]);
 
+  // Categories that only need Size + Frame (Finish) selection — no Shape
+  // picker, no Custom dimensions.
+  const SIMPLE_VARIANT_CATEGORIES = ['cork', 'cork-art-patterns', 'yoga-fitness'];
+
+  // Yoga mats, bricks, rollers etc. don't hang on a wall — no hook/hanger
+  // options apply to them. Every cork-catalog product (corkCatalog.ts) is
+  // one of these wellness items and shares categorySlug 'cork' regardless —
+  // 'cork-art-patterns' is excluded here since those ARE framed wall prints.
+  const showHookTab = product ? !['cork', 'yoga-fitness'].includes(product.categorySlug) : true;
+
+  // Shape options for this product. Every wall-hangable category gets the
+  // same reduced shape range by default (Cork and yoga mats don't use
+  // shapes); products can still override with their own explicit list.
+  const availableShapes = useMemo(() => {
+    if (!product) return [];
+    if (product.shapes && product.shapes.length > 0) return product.shapes;
+    if (SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug)) return [];
+    return ['Standard', 'Square', 'Rectangle', 'Panoramic'];
+  }, [product]);
+
+  const showCustomSize = product ? !SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug) : true;
+
+  // Frame picker — groups this product's real `finishes` values (which vary
+  // a lot in wording across the catalogue) into the frame looks customers
+  // actually choose between, using the same keyword matching as the live
+  // preview's frame border (see finishStyle.ts), so a pick here always has
+  // a matching real finish value to send to cart. Every category present in
+  // the product's own finishes list is offered — nothing invented.
+  const FRAME_CATEGORY_ORDER: { label: FrameCategory; test: (f: string) => boolean }[] = [
+    { label: 'No Frame', test: (f) => /print only|rolled|gallery wrap|satin|lustre|matte canvas|no frame/.test(f) },
+    { label: 'Black Frame', test: (f) => /black/.test(f) },
+    { label: 'Wooden Frame', test: (f) => (/teak|oak|walnut|brown|natural|rustic/.test(f) || (/wood/.test(f) && !/black|white|gold/.test(f))) },
+    { label: 'White Frame', test: (f) => /white/.test(f) },
+    { label: 'Gold Frame', test: (f) => /gold/.test(f) },
+  ];
+  const frameOptions = useMemo(() => {
+    if (!product?.finishes) return [];
+    const lower = product.finishes.map((f) => ({ raw: f, l: f.toLowerCase() }));
+    return FRAME_CATEGORY_ORDER
+      .map((cat) => {
+        const match = lower.find(({ l }) => cat.test(l));
+        return match ? { label: cat.label, value: match.raw } : null;
+      })
+      .filter((o): o is { label: FrameCategory; value: string } => Boolean(o));
+  }, [product]);
+
+  // Same catalogue design also offered as Canvas / Acrylic — siblings share a
+  // base catalogue id, prefixed with 'canvas-' or 'acrylic-' for those
+  // materials (see catalogueCanvasAcrylicProducts.ts). The plain poster print
+  // is not a selectable format — every catalogue design should only be
+  // offered as Canvas or Acrylic.
+  const formatSiblings = useMemo(() => {
+    if (!product) return [];
+    const baseId = product.id.startsWith('canvas-')
+      ? product.id.slice('canvas-'.length)
+      : product.id.startsWith('acrylic-')
+      ? product.id.slice('acrylic-'.length)
+      : product.id;
+    return [
+      { label: 'Canvas', id: `canvas-${baseId}` },
+      { label: 'Acrylic', id: `acrylic-${baseId}` }
+    ]
+      .map(({ label, id }) => ({ label, match: allProducts.find((p) => p.id === id) }))
+      .filter((c): c is { label: string; match: Product } => Boolean(c.match));
+  }, [product, allProducts]);
+
   // Sync variants when product changes
   useEffect(() => {
     if (product) {
-      setSelectedSize(product.availableSizes?.[0] || product.sizes?.[0] || '12x18 inch');
-      setSelectedFinish(product.finishes?.[0] || 'Standard Finish');
+      const defaultShape = product.shape || availableShapes[0] || '';
+      const initialFinish = product.finishes?.[0] || 'Standard Finish';
+      const initialFrameCat = getFrameCategory(initialFinish);
+      setSelectedSize(pickDefaultSize(product.availableSizes) || pickDefaultSize(product.sizes) || '12x18 inch');
+      setSelectedFinish(initialFinish);
+      setSelectedFrame(initialFrameCat);
       setSelectedMaterial(availableMaterials[0] || 'Standard');
+      setSelectedShape(defaultShape);
+      setSelectedHook('Sawtooth Hanger');
+      setIsCustomSize(false);
+      setCustomWidth(8);
+      setCustomHeight(8);
       setQuantity(1);
+      setSizeShapeTab('size');
+      setBulkPanelOpen(false);
+      setCustomBulkQty('');
       setActiveImageIndex(0);
       setCustomText('');
       setUploadedFile(null);
-      setUploadSuccess(false);
+      setCustomSizeOpen(false);
+      setCustomSizeW('');
+      setCustomSizeH('');
       document.title = `${product.name} | Canvas India`;
 
       // Save to recently viewed
@@ -127,16 +236,22 @@ export const ProductDetailPage: React.FC = () => {
         // ignore
       }
     }
-  }, [product, availableMaterials]);
+  }, [product, availableMaterials, availableShapes]);
 
-  // Gallery images (product primary + any secondary images)
+  // Gallery images (product primary + any secondary images, plus a Room View slot
+  // rendered live via WallPreview reacting to selected size/frame).
   const galleryImages = useMemo(() => {
     if (!product) return [];
-    if (product.images && product.images.length > 0) {
-      return product.images;
-    }
-    return [product.image];
+    const base = product.images && product.images.length > 0 ? product.images : [product.image];
+    if (product.categorySlug === 'yoga-fitness' || product.categorySlug === 'cork') return base;
+    return [...base, ROOM_VIEW_SENTINEL];
   }, [product]);
+
+  // The real product photo used inside the live Room View preview (first non-sentinel image)
+  const roomViewSourceImage = useMemo(() => {
+    const real = galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL);
+    return real || product?.image || '';
+  }, [galleryImages, product]);
 
   // Related products from same category or catalog
   const relatedProducts = useMemo(() => {
@@ -167,16 +282,6 @@ export const ProductDetailPage: React.FC = () => {
   }, [product?.id, allProducts]);
 
   // Handlers
-  const handleCheckPincode = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!pincode || pincode.trim().length < 6) return;
-    setCheckingPincode(true);
-    setTimeout(() => {
-      setCheckingPincode(false);
-      setPincodeChecked(true);
-    }, 350);
-  };
-
   const handleShare = () => {
     if (!product) return;
     if (navigator.share) {
@@ -192,27 +297,52 @@ export const ProductDetailPage: React.FC = () => {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setUploadedFile(reader.result as string);
-        setUploadSuccess(true);
-      };
-      reader.readAsDataURL(file);
+  const handleCustomSizeChange = (width: number, height: number) => {
+    setCustomWidth(width);
+    setCustomHeight(height);
+    setIsCustomSize(true);
+    setSelectedSize(`${width}" x ${height}" (Custom)`);
+  };
+
+  const applyCustomSize = () => {
+    const w = Number(customSizeW);
+    const h = Number(customSizeH);
+    if (w > 0 && h > 0) {
+      handleCustomSizeChange(w, h);
     }
+  };
+
+  const handlePrevImage = () => {
+    setUploadedFile(null);
+    setActiveImageIndex((idx) => (idx - 1 + galleryImages.length) % galleryImages.length);
+  };
+
+  const handleNextImage = () => {
+    setUploadedFile(null);
+    setActiveImageIndex((idx) => (idx + 1) % galleryImages.length);
   };
 
   const handleAddToCartWithVariants = () => {
     if (!product) return;
-    onAddToCart(product, selectedSize, selectedFinish, quantity, customText, uploadedFile || undefined, selectedMaterial);
-  };
-
-  const handleBuyNow = () => {
-    if (!product) return;
-    onAddToCart(product, selectedSize, selectedFinish, quantity, customText, uploadedFile || undefined, selectedMaterial);
-    navigate('/cart');
+    // At bulk quantities, charge the same discounted per-unit price shown
+    // in the bulk panel — never show one price and charge another.
+    const cartProduct = quantity >= MIN_BULK_QTY
+      ? { ...product, price: bulkUnitPriceFor(product.price, quantity) }
+      : product;
+    onAddToCart(
+      cartProduct,
+      selectedSize,
+      selectedFinish,
+      quantity,
+      customText,
+      uploadedFile || undefined,
+      selectedMaterial,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { hook: selectedHook }
+    );
   };
 
   if (!product) {
@@ -250,11 +380,6 @@ export const ProductDetailPage: React.FC = () => {
     return <AcrylicProductDetailPage product={product} />;
   }
 
-  // Dedicated Cork Product Detail Page with Reference 1 layout matching Acrylic
-  if (product.categorySlug === 'cork') {
-    return <CorkProductDetailPage product={product} />;
-  }
-
   const categoryName = product.category || 'Prints';
   const categoryLink = `/${product.categorySlug || 'canvas'}`;
 
@@ -278,473 +403,464 @@ export const ProductDetailPage: React.FC = () => {
             </>
           )}
           <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
-          <span className="text-stone-900 font-medium truncate max-w-[180px] sm:max-w-md">{product.name}</span>
+          <span className="text-stone-900 font-medium truncate max-w-[180px] sm:max-w-md">{displayName}</span>
         </nav>
 
         {/* ========================================================================= */}
-        {/* 2. MAIN 2-COLUMN PRODUCT DISPLAY                                          */}
+        {/* 2. MAIN PRODUCT DISPLAY                                                   */}
         {/* ========================================================================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-14 items-start">
-          
-          {/* LEFT: GALLERY (Sticky on desktop, 6-7 columns) */}
-          <div className="lg:col-span-6 xl:col-span-7 flex flex-col gap-4 sticky top-24">
-            
-            {/* Main Primary Image */}
-            <div className="relative w-full aspect-square sm:aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 shadow-xs group">
-              <ProductImage
-                src={uploadedFile || galleryImages[activeImageIndex] || product.image}
-                alt={product.name}
-                categorySlug={product.categorySlug}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 xl:gap-6 items-start">
 
-              {/* Live custom text preview on the product image */}
-              {customText.trim() && (
-                <div className="pointer-events-none absolute inset-x-6 top-1/2 -translate-y-1/2 text-center">
-                  <span
-                    className="inline-block max-w-full break-words text-white text-xl sm:text-3xl font-bold leading-tight"
-                    style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic', textShadow: '0 2px 10px rgba(0,0,0,0.65), 0 0 2px rgba(0,0,0,0.6)' }}
-                  >
-                    {customText}
-                  </span>
-                </div>
-              )}
-
-              {/* Uploaded User Photo Indicator Overlay */}
-              {uploadedFile && (
-                <div className="absolute top-4 left-4 bg-[#0E4A93] text-white text-[10px] font-bold px-2.5 py-1 rounded-md shadow-sm flex items-center gap-1">
-                  <Check className="w-3 h-3 text-emerald-400" />
-                  <span>Custom Artwork Applied</span>
-                </div>
-              )}
-
-              {/* Discount Tag */}
-              {!uploadedFile && product.discountPercent > 0 && (
-                <div className="absolute top-4 left-4 bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider">
-                  {product.discountPercent}% OFF
-                </div>
-              )}
-
-              {/* Wishlist Button */}
-              <button
-                type="button"
-                onClick={() => onToggleWishlist(product.id)}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-700 hover:text-rose-600 shadow-md flex items-center justify-center transition-all cursor-pointer"
-                title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-              >
-                <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
-              </button>
+            {/* Thumbnails — vertical strip on desktop, horizontal row on mobile */}
+            <div className="order-2 lg:order-1 lg:col-span-1 min-w-0 flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0">
+              {galleryImages.map((img, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => { setUploadedFile(null); setActiveImageIndex(idx); }}
+                  className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                    activeImageIndex === idx && !uploadedFile
+                      ? 'border-emerald-600 ring-2 ring-emerald-600/20'
+                      : 'border-stone-200 hover:border-stone-400 opacity-80 hover:opacity-100'
+                  }`}
+                >
+                  {img === ROOM_VIEW_SENTINEL ? (
+                    <WallPreview imageSrc={roomViewSourceImage} shape={selectedShape} sizeLabel={selectedSize} finish={selectedFinish} className="w-full h-full" />
+                  ) : (
+                    <ProductImage src={img} alt={`View ${idx + 1}`} categorySlug={product.categorySlug} className="w-full h-full object-cover" />
+                  )}
+                </button>
+              ))}
             </div>
 
-            {/* Gallery Thumbnails */}
-            {galleryImages.length > 1 && (
-              <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
-                {galleryImages.map((img, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      setUploadedFile(null);
-                      setActiveImageIndex(idx);
-                    }}
-                    className={`shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
-                      activeImageIndex === idx && !uploadedFile
-                        ? 'border-[#0E4A93] shadow-md ring-2 ring-[#0E4A93]/20' 
-                        : 'border-stone-200 hover:border-stone-400 opacity-80 hover:opacity-100'
+            {/* Main Image */}
+            <div className="order-1 lg:order-2 lg:col-span-5 min-w-0">
+              {(() => {
+                const currentFrameLook = FRAME_LOOK[selectedFrame] || FRAME_LOOK['No Frame'];
+                const hasSelectedFrame = selectedFrame !== 'No Frame';
+                const containerAspectVal = selectedShape === 'Square' ? 1 : selectedShape === 'Panoramic' ? 16 / 9 : 4 / 5;
+
+                return (
+                  <div
+                    className={`relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group mx-auto w-auto max-w-full flex items-center justify-center ${
+                      galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL
+                        ? 'aspect-[16/9] h-[42vh] sm:h-[46vh] min-h-[260px] max-h-[420px]'
+                        : 'aspect-[4/5] h-[48vh] sm:h-[52vh] min-h-[300px] max-h-[500px]'
                     }`}
                   >
-                    <ProductImage src={img} alt={`View ${idx + 1}`} categorySlug={product.categorySlug} className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
+                    {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
+                      <WallPreview
+                        imageSrc={uploadedFile || roomViewSourceImage}
+                        shape={selectedShape}
+                        sizeLabel={selectedSize}
+                        finish={selectedFinish}
+                        className="w-full h-full"
+                      />
+                    ) : hasSelectedFrame ? (
+                      <div className="relative w-full h-full flex items-center justify-center p-3 sm:p-5">
+                        <div
+                          className="relative max-w-full max-h-full rounded-[3px] transition-all duration-300 flex items-center justify-center shadow-2xl"
+                          style={{
+                            aspectRatio: containerAspectVal,
+                            padding: 'clamp(14px, 3.2vw, 24px)',
+                            background: currentFrameLook.frame,
+                            boxShadow: currentFrameLook.boxShadow,
+                            border: `1px solid ${currentFrameLook.borderColor}`,
+                          }}
+                        >
+                          <div className="relative w-full h-full overflow-hidden rounded-[1px] bg-stone-50 flex items-center justify-center">
+                            <SmartCropImage
+                              src={uploadedFile || galleryImages[activeImageIndex] || product.image}
+                              alt={product.name}
+                              containerAspect={containerAspectVal}
+                              className="w-full h-full"
+                            />
+                            {/* Realistic frame inner shadow cast onto the artwork */}
+                            <div
+                              className="absolute inset-0 pointer-events-none"
+                              style={{ boxShadow: currentFrameLook.innerShadow }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <SmartCropImage
+                        src={uploadedFile || galleryImages[activeImageIndex] || product.image}
+                        alt={product.name}
+                        containerAspect={containerAspectVal}
+                        className="w-full h-full"
+                      />
+                    )}
 
-            {/* Trust Badges Strip (Box-Free, underneath gallery) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-stone-200/80 text-left">
-              <div className="flex items-start gap-2.5">
-                <Award className="w-5 h-5 text-[#E8752A] shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-bold text-xs text-stone-900">Museum Grade</div>
-                  <div className="text-[11px] text-stone-500">12-color archival inks</div>
-                </div>
-              </div>
+                    {!uploadedFile && product.discountPercent > 0 && (
+                      <div className="absolute top-4 left-4 bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider z-10">
+                        {product.discountPercent}% OFF
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
-              <div className="flex items-start gap-2.5">
-                <Truck className="w-5 h-5 text-[#0E4A93] shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-bold text-xs text-stone-900">Free Delivery</div>
-                  <div className="text-[11px] text-stone-500">On orders ₹999+</div>
-                </div>
-              </div>
+                <button
+                  type="button"
+                  onClick={() => onToggleWishlist(product.id)}
+                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-700 hover:text-rose-600 shadow-md flex items-center justify-center transition-all cursor-pointer"
+                  title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+                >
+                  <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
+                </button>
 
-              <div className="flex items-start gap-2.5">
-                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-bold text-xs text-stone-900">Safe Payments</div>
-                  <div className="text-[11px] text-stone-500">UPI, NetBanking & Cards</div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2.5">
-                <MapPin className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-bold text-xs text-stone-900">Pan-India Ship</div>
-                  <div className="text-[11px] text-stone-500">19,000+ PIN codes</div>
-                </div>
+                {galleryImages.length > 1 && (
+                  <>
+                    <button type="button" onClick={handlePrevImage} aria-label="Previous image" className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100">
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button type="button" onClick={handleNextImage} aria-label="Next image" className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100">
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
-          </div>
-
-          {/* RIGHT: PRODUCT INFO & PURCHASE CONTROLS (5-6 columns) */}
-          <div className="lg:col-span-6 xl:col-span-5 flex flex-col gap-5 text-left">
-            
-            {/* Header: Category & Share */}
-            <div>
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <Link 
-                    to={categoryLink}
-                    className="text-xs uppercase font-bold tracking-widest text-[#0E4A93] hover:underline"
-                  >
-                    {categoryName}
-                  </Link>
-                  {product.subcategory && (
-                    <span className="text-xs text-stone-400 font-medium">/ {product.subcategory}</span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleShare}
-                  className="text-xs text-stone-500 hover:text-stone-900 flex items-center gap-1.5 transition-colors cursor-pointer py-1 px-2 rounded-md hover:bg-stone-100"
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>{copiedLink ? 'Link Copied!' : 'Share'}</span>
-                </button>
-              </div>
-
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight mt-1">
-                {product.name}
-              </h1>
-
-              {/* Status & Ratings */}
-              <div className="flex items-center gap-2.5 mt-2.5 text-xs text-stone-600">
-                {product.rating !== null && product.rating > 0 ? (
-                  <>
+            {/* Info + Purchase Card */}
+            <div className="order-3 lg:col-span-6 min-w-0 flex flex-col gap-3.5 text-left">
+              <div>
+                <h1 className="text-lg sm:text-xl font-extrabold text-stone-900 tracking-tight">{displayName}</h1>
+                {product.rating !== null && product.rating > 0 && (
+                  <div className="flex items-center gap-2 text-xs text-stone-600 mt-1">
                     <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded text-amber-800 font-bold">
                       <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                       <span>{product.rating}</span>
                     </div>
-                    <span>•</span>
-                    <span className="underline decoration-stone-300">{product.reviewsCount || 48} Customer Reviews</span>
-                    <span>•</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-bold text-[11px] px-2 py-0.5 rounded">
-                      New Arrival
-                    </span>
-                    <span>•</span>
-                  </>
+                    <span className="underline decoration-stone-300">({product.reviewsCount || 48} reviews)</span>
+                  </div>
                 )}
-                
-                <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>{product.stockStatus || 'In Stock & Handcrafted'}</span>
-                </span>
               </div>
-            </div>
 
-            {/* Short Description */}
-            <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
-              {product.shortDescription || product.description}
-            </p>
-
-            {/* Pricing */}
-            <div className="pb-4 border-b border-stone-200">
               <div className="flex items-baseline gap-3">
-                <span className="text-3xl sm:text-4xl font-extrabold text-stone-950">
-                  ₹{product.price.toLocaleString('en-IN')}
-                </span>
-                <span className="text-base sm:text-lg text-stone-400 line-through">
+                <span className="text-2xl sm:text-3xl font-extrabold text-stone-950">₹{product.price.toLocaleString('en-IN')}</span>
+                <span className="text-base text-stone-400 line-through">
                   ₹{(product.compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)).toLocaleString('en-IN')}
                 </span>
                 {product.discountPercent > 0 && (
-                  <span className="text-sm font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                    Save ₹{((product.compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)) - product.price).toLocaleString('en-IN')} ({product.discountPercent}%)
+                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                    {product.discountPercent}% OFF
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-stone-500 mt-1">Inclusive of GST taxes. Free shipping on orders above ₹999 across India.</p>
-            </div>
 
-            {/* ========================================================================= */}
-            {/* PROMINENT "CUSTOMIZE YOUR PRODUCT" WORKFLOW                               */}
-            {/* ========================================================================= */}
-            {product.customizationAvailable && (
-              <div className="p-4 rounded-xl bg-orange-50/70 border border-orange-200/80 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-black uppercase tracking-wider text-[#E8752A] flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-[#E8752A]" />
-                    <span>Customize Your Product</span>
-                  </div>
-                  <span className="text-[10px] font-bold bg-[#E8752A] text-white px-2 py-0.5 rounded-full">
-                    Step-by-Step
-                  </span>
-                </div>
-
-                {/* 7-Step Visual List */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-stone-700 font-medium">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-white text-[#0E4A93] font-bold text-[11px] flex items-center justify-center border border-orange-200 shrink-0">1</span>
-                    <span>Select Size</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-white text-[#0E4A93] font-bold text-[11px] flex items-center justify-center border border-orange-200 shrink-0">2</span>
-                    <span>Select Material</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-white text-[#0E4A93] font-bold text-[11px] flex items-center justify-center border border-orange-200 shrink-0">3</span>
-                    <span>Select Finish</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-white text-[#0E4A93] font-bold text-[11px] flex items-center justify-center border border-orange-200 shrink-0">4</span>
-                    <span>Upload Your Design</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-white text-[#0E4A93] font-bold text-[11px] flex items-center justify-center border border-orange-200 shrink-0">5</span>
-                    <span>Add Custom Text</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-white text-[#0E4A93] font-bold text-[11px] flex items-center justify-center border border-orange-200 shrink-0">6</span>
-                    <span>Choose Quantity</span>
-                  </div>
-                </div>
-
-                {/* Upload & Custom Text In-Page Inputs */}
-                <div className="pt-2 border-t border-orange-200/60 space-y-2.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-800 mb-1 flex items-center gap-1">
-                      <Upload className="w-3 h-3 text-[#E8752A]" />
-                      <span>4. Upload Your Photo or Artwork:</span>
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <label className="flex-1 px-3 py-2 bg-white border border-stone-300 rounded-lg text-xs text-stone-600 hover:border-[#0E4A93] cursor-pointer flex items-center justify-between">
-                        <span className="truncate">{uploadSuccess ? 'Photo attached successfully!' : 'Choose JPG, PNG or WebP file...'}</span>
-                        <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-                        <span className="px-2 py-0.5 bg-stone-100 text-[10px] font-bold rounded">Browse</span>
-                      </label>
-                      {uploadSuccess && (
-                        <button 
-                          type="button" 
-                          onClick={() => { setUploadedFile(null); setUploadSuccess(false); }}
-                          className="text-[11px] text-rose-600 hover:underline cursor-pointer"
-                        >
-                          Clear
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-800 mb-1 flex items-center gap-1">
-                      <Type className="w-3 h-3 text-[#E8752A]" />
-                      <span>5. Add Custom Text (e.g. Names, Date, Mantra):</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={customText}
-                      onChange={(e) => setCustomText(e.target.value)}
-                      placeholder="Optional text to print on product..."
-                      className="w-full px-3 py-1.5 text-xs bg-white rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
-                    />
-                  </div>
-                </div>
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-600">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <span>Lowest Price Guaranteed</span>
               </div>
-            )}
 
-            {/* 1. Size Selector */}
-            {product.sizes && product.sizes.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-stone-800">1. Available Sizes:</span>
-                  <span className="text-stone-500 font-medium">{selectedSize}</span>
+              {productCode && (
+                <div className="text-base text-stone-500 font-medium">
+                  Code: <span className="text-stone-700 font-bold text-lg">{productCode}</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {product.sizes.map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => setSelectedSize(size)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-                        selectedSize === size
-                          ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
-                          : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+              )}
 
-            {/* 2. Material Selector */}
-            {availableMaterials.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-stone-800">2. Material:</span>
-                  <span className="text-stone-500 font-medium">{selectedMaterial}</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {availableMaterials.map((mat) => (
-                    <button
-                      key={mat}
-                      type="button"
-                      onClick={() => setSelectedMaterial(mat)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-                        selectedMaterial === mat
-                          ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] shadow-2xs'
-                          : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
-                      }`}
-                    >
-                      {mat}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 3. Finish Selector */}
-            {product.finishes && product.finishes.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-stone-800">3. Finish &amp; Style:</span>
-                  <span className="text-stone-500 font-medium">{selectedFinish}</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {product.finishes.map((finish) => {
-                    const fs = getFinishStyle(finish);
-                    const active = selectedFinish === finish;
-                    return (
+              {/* Format: Poster / Canvas / Acrylic — same design, different materials */}
+              {formatSiblings.length > 1 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">Format:</span>
+                  <div className="flex items-center gap-1.5">
+                    {formatSiblings.map(({ label, match }) => (
                       <button
-                        key={finish}
+                        key={match.id}
                         type="button"
-                        onClick={() => setSelectedFinish(finish)}
-                        className={`p-1.5 text-left rounded-xl border-2 transition-all cursor-pointer ${
-                          active
-                            ? 'border-[#0E4A93] bg-blue-50/60 shadow-2xs'
-                            : 'border-stone-200 bg-white hover:border-stone-400'
+                        onClick={() => {
+                          if (match.id !== product.id) navigate(`/products/${match.slug || match.id}`);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
+                          match.id === product.id
+                            ? 'bg-[#0E4A93] border-[#0E4A93] text-white'
+                            : 'bg-white border-stone-300 text-stone-700 hover:border-[#0E4A93]'
                         }`}
                       >
-                        <div className="relative aspect-[4/3] bg-stone-200 rounded-md overflow-hidden flex items-center justify-center" style={{ background: fs.wall }}>
-                          <div
-                            className="relative w-[62%] aspect-[4/3] overflow-hidden"
-                            style={{ border: `${fs.border}px solid ${fs.color}`, boxShadow: fs.shadow, outline: fs.outline }}
-                          >
-                            <img src={galleryImages[0] || product.image} alt="" className="w-full h-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }} />
-                            {fs.overlay && <div className="absolute inset-0 pointer-events-none" style={{ background: fs.overlay }} />}
-                          </div>
-                        </div>
-                        <div className={`mt-1.5 px-0.5 text-[11px] font-semibold leading-tight ${active ? 'text-[#0E4A93]' : 'text-stone-700'}`}>{finish}</div>
+                        {label}
                       </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Quantity Selector */}
-            <div className="flex items-center gap-4 pt-1">
-              <span className="font-bold text-xs text-stone-800">6. Quantity:</span>
-              <div className="inline-flex items-center border border-stone-200 rounded-lg bg-white overflow-hidden shadow-2xs">
-                <button
-                  type="button"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-100 font-bold transition-colors cursor-pointer"
-                  aria-label="Decrease quantity"
-                >
-                  -
-                </button>
-                <span className="w-10 text-center text-xs font-extrabold text-stone-900">{quantity}</span>
-                <button
-                  type="button"
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-100 font-bold transition-colors cursor-pointer"
-                  aria-label="Increase quantity"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            {/* Action CTAs: Add to Cart & Buy Now */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <button
-                type="button"
-                onClick={handleAddToCartWithVariants}
-                className="flex-1 py-3.5 px-6 rounded-xl bg-[#E8752A] hover:bg-[#D3631A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                <span>7. Add to Cart</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                className="flex-1 py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
-              >
-                <span>Buy Now</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Indian Delivery Check Section */}
-            <div className="p-4 rounded-xl bg-stone-50 border border-stone-200/80 space-y-2.5">
-              <div className="flex items-center gap-2 text-xs font-bold text-stone-800">
-                <Truck className="w-4 h-4 text-[#0E4A93]" />
-                <span>Delivery Options &amp; Timelines</span>
-              </div>
-              
-              <form onSubmit={handleCheckPincode} className="flex gap-2">
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={pincode}
-                  onChange={(e) => {
-                    setPincode(e.target.value.replace(/\D/g, ''));
-                    setPincodeChecked(false);
-                  }}
-                  placeholder="Enter 6-digit Pincode"
-                  className="flex-1 px-3 py-1.5 text-xs bg-white rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
-                />
-                <button
-                  type="submit"
-                  disabled={checkingPincode}
-                  className="px-4 py-1.5 text-xs font-bold bg-stone-800 hover:bg-stone-950 text-white rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  {checkingPincode ? 'Checking...' : 'Check'}
-                </button>
-              </form>
-
-              {pincodeChecked && (
-                <div className="text-xs text-stone-700 space-y-1 pt-1 border-t border-stone-200">
-                  <div className="flex items-center gap-1.5 text-emerald-700 font-semibold">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Delivery available to PIN {pincode} in 3–5 business days</span>
-                  </div>
-                  <div className="text-[11px] text-stone-500">
-                    • Free doorstep delivery eligible (Order ₹999+)
-                    <br />
-                    • Multi-layer insured packaging with protective corner guards
+                    ))}
                   </div>
                 </div>
               )}
+
+              {/* Size / Shape / Frame / Hook Tabs */}
+              {((product.sizes && product.sizes.length > 0) || availableShapes.length > 0) && (
+                <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-center gap-6 border-b border-stone-200 mb-4 overflow-x-auto">
+                    <button
+                      type="button"
+                      onClick={() => setSizeShapeTab('size')}
+                      className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'size' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                    >
+                      Size
+                    </button>
+                    {availableShapes.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setSizeShapeTab('shape')}
+                        className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'shape' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                      >
+                        Shape
+                      </button>
+                    )}
+                    {frameOptions.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setSizeShapeTab('frame')}
+                        className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'frame' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                      >
+                        Frame
+                      </button>
+                    )}
+                    {showHookTab && (
+                      <button
+                        type="button"
+                        onClick={() => setSizeShapeTab('hook')}
+                        className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'hook' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                      >
+                        Hook
+                      </button>
+                    )}
+                  </div>
+
+                  {sizeShapeTab === 'size' && product.sizes && product.sizes.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {product.sizes.map((size) => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => { setIsCustomSize(false); setSelectedSize(size); }}
+                          className={`px-1.5 py-2 text-[11px] leading-tight font-semibold rounded-lg border-2 text-center transition-all cursor-pointer ${
+                            selectedSize === size && !isCustomSize
+                              ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
+                              : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
+                          }`}
+                        >
+                          {size.replace(' inch', '')}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {sizeShapeTab === 'size' && showCustomSize && (
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        onClick={() => setCustomSizeOpen((v) => !v)}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-700 cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>Need a Custom Size?</span>
+                      </button>
+                      {customSizeOpen && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <input
+                            type="number"
+                            min={4}
+                            value={customSizeW}
+                            onChange={(e) => setCustomSizeW(e.target.value)}
+                            placeholder="Width [W] in"
+                            className="w-0 flex-1 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
+                          />
+                          <input
+                            type="number"
+                            min={4}
+                            value={customSizeH}
+                            onChange={(e) => setCustomSizeH(e.target.value)}
+                            placeholder="Height [H] in"
+                            className="w-0 flex-1 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
+                          />
+                          <button
+                            type="button"
+                            onClick={applyCustomSize}
+                            className="shrink-0 px-4 py-2 text-xs font-bold rounded-full border-2 border-stone-300 text-stone-700 hover:border-stone-400 transition-colors cursor-pointer"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {availableShapes.length > 0 && sizeShapeTab === 'shape' && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {availableShapes.map((shapeOpt) => (
+                        <button
+                          key={shapeOpt}
+                          type="button"
+                          onClick={() => setSelectedShape(shapeOpt)}
+                          className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
+                            selectedShape === shapeOpt
+                              ? 'border-[#0E4A93] bg-blue-50/60'
+                              : 'border-stone-200 bg-white hover:border-stone-400'
+                          }`}
+                        >
+                          <ShapeIcon shape={shapeOpt} active={selectedShape === shapeOpt} />
+                          <span className={`text-[10px] font-semibold ${selectedShape === shapeOpt ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{shapeOpt}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {frameOptions.length > 0 && sizeShapeTab === 'frame' && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {frameOptions.map((opt) => {
+                        const isSelected = selectedFrame === opt.label;
+                        return (
+                          <button
+                            key={opt.label}
+                            type="button"
+                            onClick={() => {
+                              setSelectedFrame(opt.label);
+                              setSelectedFinish(opt.value);
+                              // Switch active image to artwork if on room view so the frame is directly visible on the artwork
+                              if (galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL) {
+                                const artIdx = galleryImages.findIndex((img) => img !== ROOM_VIEW_SENTINEL);
+                                if (artIdx !== -1) setActiveImageIndex(artIdx);
+                              }
+                            }}
+                            className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
+                              isSelected
+                                ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] ring-2 ring-[#0E4A93]/20 shadow-xs font-bold'
+                                : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
+                            }`}
+                          >
+                            <FrameSwatch category={opt.label} />
+                            <span className="text-[10px] font-semibold text-center leading-tight">{opt.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {showHookTab && sizeShapeTab === 'hook' && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {HOOK_OPTIONS.map((hookOpt) => (
+                        <button
+                          key={hookOpt}
+                          type="button"
+                          onClick={() => setSelectedHook(hookOpt)}
+                          className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
+                            selectedHook === hookOpt
+                              ? 'border-[#0E4A93] bg-blue-50/60'
+                              : 'border-stone-200 bg-white hover:border-stone-400'
+                          }`}
+                        >
+                          <HookIcon type={hookOpt} active={selectedHook === hookOpt} />
+                          <span className={`text-[10px] font-semibold leading-tight text-center ${selectedHook === hookOpt ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{hookOpt}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="flex items-center gap-4">
+                <span className="font-bold text-xs text-stone-800">Quantity:</span>
+                <div className="inline-flex items-center border border-stone-200 rounded-lg bg-white overflow-hidden shadow-2xs">
+                  <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-100 font-bold transition-colors cursor-pointer" aria-label="Decrease quantity">-</button>
+                  <span className="w-10 text-center text-xs font-extrabold text-stone-900">{quantity}</span>
+                  <button type="button" onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-100 font-bold transition-colors cursor-pointer" aria-label="Increase quantity">+</button>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setBulkPanelOpen((v) => !v)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-[#0E4A93] text-sm font-bold text-[#0E4A93] hover:bg-blue-50/60 transition-colors cursor-pointer"
+                >
+                  <Package className="w-5 h-5" />
+                  <span>Order this item in bulk</span>
+                  <ChevronDown className={`w-5 h-5 transition-transform ${bulkPanelOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {bulkPanelOpen && (
+                  <div className="mt-3 p-4 rounded-xl border border-stone-200 bg-stone-50 space-y-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      {QTY_PRICE_TIERS.map((tier) => {
+                        const tierPrice = bulkUnitPriceFor(product.price, tier.qty);
+                        const isActive = quantity === tier.qty;
+                        return (
+                          <button
+                            key={tier.qty}
+                            type="button"
+                            onClick={() => { setQuantity(tier.qty); setCustomBulkQty(''); }}
+                            className={`px-2 py-2 rounded-lg border-2 text-center transition-all cursor-pointer ${
+                              isActive ? 'border-[#0E4A93] bg-blue-50/60' : 'border-stone-200 bg-white hover:border-stone-400'
+                            }`}
+                          >
+                            <div className={`text-xs font-extrabold ${isActive ? 'text-[#0E4A93]' : 'text-stone-900'}`}>{tier.qty} units</div>
+                            <div className="text-[10px] text-stone-500 mt-0.5">₹{tierPrice.toLocaleString('en-IN')} each</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div>
+                      <label htmlFor="custom-bulk-qty" className="text-[11px] font-bold text-stone-700 block mb-1">
+                        Or enter a custom quantity
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          id="custom-bulk-qty"
+                          type="number"
+                          min={MIN_BULK_QTY}
+                          value={customBulkQty}
+                          onChange={(e) => setCustomBulkQty(e.target.value)}
+                          placeholder={`${MIN_BULK_QTY}+`}
+                          className="w-28 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const n = Number(customBulkQty);
+                            if (n >= MIN_BULK_QTY) setQuantity(n);
+                          }}
+                          className="px-4 py-2 text-xs font-bold rounded-lg border-2 border-stone-300 text-stone-700 hover:border-stone-400 transition-colors cursor-pointer"
+                        >
+                          Apply
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-stone-400 mt-1">Minimum bulk order: {MIN_BULK_QTY} units</p>
+                    </div>
+
+                    {quantity >= MIN_BULK_QTY && (
+                      <div className="pt-2 border-t border-stone-200 text-xs text-stone-700">
+                        <span className="font-bold text-[#0E4A93]">₹{bulkUnitPriceFor(product.price, quantity).toLocaleString('en-IN')} each</span>
+                        {' '}× {quantity} = <span className="font-bold">₹{(bulkUnitPriceFor(product.price, quantity) * quantity).toLocaleString('en-IN')}</span> total
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={handleAddToCartWithVariants}
+                  className="flex-1 py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>Add to Cart</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onToggleWishlist(product.id)}
+                  className={`flex-1 py-3.5 px-6 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    isWishlisted ? 'border-rose-300 bg-rose-50 text-rose-600' : 'border-stone-300 text-stone-700 hover:border-stone-400'
+                  }`}
+                >
+                  <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600' : ''}`} />
+                  <span>{isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}</span>
+                </button>
+              </div>
             </div>
 
           </div>
-
-        </div>
 
         {/* ========================================================================= */}
         {/* 3. PRODUCT SPECIFICATIONS & APPLICATIONS                                  */}
@@ -753,41 +869,8 @@ export const ProductDetailPage: React.FC = () => {
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             
-            {/* Left: Product Description & Craftsmanship */}
-            <div className="lg:col-span-7 space-y-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
-                Product Description &amp; Craftsmanship
-              </h2>
-
-              <p className="text-sm text-stone-700 leading-relaxed">
-                {product.description} Handcrafted at Canvas India&apos;s dedicated print studio, each personalized piece undergoes meticulous color grading, museum-grade pigment printing, and professional artisan assembly. Whether displayed in your living room, gifted for an anniversary, or installed in modern corporate spaces, our prints are built to retain vibrancy and depth for over 50 years.
-              </p>
-
-              {/* Recommended Applications */}
-              <div className="space-y-3 pt-2">
-                <h3 className="font-bold text-sm text-stone-900">Recommended Applications &amp; Spaces:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {(product.applications || ['Living Room', 'Master Bedroom', 'Home Office', 'Dining Foyer', 'Corridors']).map((app) => (
-                    <span key={app} className="px-3 py-1 bg-stone-100 text-stone-700 rounded-full text-xs font-semibold border border-stone-200">
-                      {app}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-3 pt-2">
-                <h3 className="font-bold text-sm text-stone-900">Care &amp; Handling Instructions:</h3>
-                <ul className="text-xs text-stone-600 space-y-1.5 list-disc pl-5 leading-relaxed">
-                  <li>Dust gently with a clean, dry microfiber cloth. Avoid abrasive cleaning pads.</li>
-                  <li>For acrylic glass surfaces, use a soft cotton cloth lightly dampened with water.</li>
-                  <li>Keep out of continuous direct rainfall and excessive humidity.</li>
-                  <li>Pre-installed hanging hardware makes mounting effortless on standard wall hooks or screws.</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Right: Specifications Table */}
-            <div className="lg:col-span-5 space-y-4">
+            {/* Specifications Table */}
+            <div className="lg:col-span-12 space-y-4">
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
                 Product Specifications
               </h2>
