@@ -21,7 +21,7 @@ import { ProductImage } from '../components/ProductImage';
 import { WallPreview } from '../components/WallPreview';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { Product } from '../types';
-import { FrameSwatch, HookIcon, HOOK_OPTIONS } from '../components/FrameHookVisuals';
+import { FrameSwatch, HookIcon, HOOK_OPTIONS, FRAME_LOOK, getFrameCategory } from '../components/FrameHookVisuals';
 import { QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
 
@@ -160,10 +160,10 @@ export const ProductDetailPage: React.FC = () => {
   // preview's frame border (see finishStyle.ts), so a pick here always has
   // a matching real finish value to send to cart. Every category present in
   // the product's own finishes list is offered — nothing invented.
-  const FRAME_CATEGORY_ORDER: { label: string; test: (f: string) => boolean }[] = [
-    { label: 'No Frame', test: (f) => /print only|rolled|gallery wrap|satin|lustre|matte canvas/.test(f) },
+  const FRAME_CATEGORY_ORDER: { label: 'No Frame' | 'Black Frame' | 'Wooden Frame' | 'White Frame' | 'Gold Frame'; test: (f: string) => boolean }[] = [
+    { label: 'No Frame', test: (f) => /print only|rolled|gallery wrap|satin|lustre|matte canvas|no frame/.test(f) },
     { label: 'Black Frame', test: (f) => /black/.test(f) },
-    { label: 'Wooden Frame', test: (f) => /wood|teak|oak/.test(f) },
+    { label: 'Wooden Frame', test: (f) => (/teak|oak|brown|natural/.test(f) || (/wood/.test(f) && !/black|white|gold/.test(f))) },
     { label: 'White Frame', test: (f) => /white/.test(f) },
     { label: 'Gold Frame', test: (f) => /gold/.test(f) },
   ];
@@ -175,7 +175,7 @@ export const ProductDetailPage: React.FC = () => {
         const match = lower.find(({ l }) => cat.test(l));
         return match ? { label: cat.label, value: match.raw } : null;
       })
-      .filter((o): o is { label: string; value: string } => Boolean(o));
+      .filter((o): o is { label: 'No Frame' | 'Black Frame' | 'Wooden Frame' | 'White Frame' | 'Gold Frame'; value: string } => Boolean(o));
   }, [product]);
 
   // Same catalogue design also offered as Canvas / Acrylic — siblings share a
@@ -433,35 +433,70 @@ export const ProductDetailPage: React.FC = () => {
 
             {/* Main Image */}
             <div className="order-1 lg:order-2 lg:col-span-5 min-w-0">
-              <div
-                className={`relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group mx-auto w-auto max-w-full ${
-                  galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL
-                    ? 'aspect-[16/9] h-[42vh] sm:h-[46vh] min-h-[260px] max-h-[420px]'
-                    : 'aspect-[4/5] h-[48vh] sm:h-[52vh] min-h-[300px] max-h-[500px]'
-                }`}
-              >
-                {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
-                  <WallPreview
-                    imageSrc={uploadedFile || roomViewSourceImage}
-                    shape={selectedShape}
-                    sizeLabel={selectedSize}
-                    finish={selectedFinish}
-                    className="w-full h-full"
-                  />
-                ) : (
-                  <SmartCropImage
-                    src={uploadedFile || galleryImages[activeImageIndex] || product.image}
-                    alt={product.name}
-                    containerAspect={4 / 5}
-                    className="w-full h-full"
-                  />
-                )}
+              {(() => {
+                const currentFrameCategory = getFrameCategory(selectedFinish);
+                const currentFrameLook = FRAME_LOOK[currentFrameCategory] || FRAME_LOOK['No Frame'];
+                const hasSelectedFrame = currentFrameCategory !== 'No Frame';
 
-                {!uploadedFile && product.discountPercent > 0 && (
-                  <div className="absolute top-4 left-4 bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider">
-                    {product.discountPercent}% OFF
+                return (
+                  <div
+                    className={`relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group mx-auto w-auto max-w-full flex items-center justify-center ${
+                      galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL
+                        ? 'aspect-[16/9] h-[42vh] sm:h-[46vh] min-h-[260px] max-h-[420px]'
+                        : 'aspect-[4/5] h-[48vh] sm:h-[52vh] min-h-[300px] max-h-[500px]'
+                    }`}
+                  >
+                    {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
+                      <WallPreview
+                        imageSrc={uploadedFile || roomViewSourceImage}
+                        shape={selectedShape}
+                        sizeLabel={selectedSize}
+                        finish={selectedFinish}
+                        className="w-full h-full"
+                      />
+                    ) : hasSelectedFrame ? (
+                      <div className="relative w-full h-full flex items-center justify-center p-3 sm:p-5">
+                        <div
+                          className="relative max-w-full max-h-full aspect-[4/5] rounded-[3px] transition-all duration-300 flex items-center justify-center"
+                          style={{
+                            padding: 'clamp(12px, 2.8vw, 18px)',
+                            background: currentFrameLook.frame,
+                            boxShadow: currentFrameLook.boxShadow,
+                            border: `1px solid ${currentFrameLook.borderColor}`,
+                          }}
+                        >
+                          <div className="relative w-full h-full overflow-hidden rounded-[1px] bg-stone-50 flex items-center justify-center">
+                            <SmartCropImage
+                              src={uploadedFile || galleryImages[activeImageIndex] || product.image}
+                              alt={product.name}
+                              containerAspect={4 / 5}
+                              className="w-full h-full"
+                            />
+                            {/* Realistic frame inner shadow cast onto the artwork */}
+                            <div
+                              className="absolute inset-0 pointer-events-none"
+                              style={{ boxShadow: currentFrameLook.innerShadow }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <SmartCropImage
+                        src={uploadedFile || galleryImages[activeImageIndex] || product.image}
+                        alt={product.name}
+                        containerAspect={4 / 5}
+                        className="w-full h-full"
+                      />
+                    )}
+
+                    {!uploadedFile && product.discountPercent > 0 && (
+                      <div className="absolute top-4 left-4 bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider z-10">
+                        {product.discountPercent}% OFF
+                      </div>
+                    )}
                   </div>
-                )}
+                );
+              })()}
 
                 <button
                   type="button"
@@ -669,21 +704,24 @@ export const ProductDetailPage: React.FC = () => {
 
                   {frameOptions.length > 0 && sizeShapeTab === 'frame' && (
                     <div className="grid grid-cols-3 gap-2">
-                      {frameOptions.map((opt) => (
-                        <button
-                          key={opt.label}
-                          type="button"
-                          onClick={() => setSelectedFinish(opt.value)}
-                          className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
-                            selectedFinish === opt.value
-                              ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
-                              : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
-                          }`}
-                        >
-                          <FrameSwatch category={opt.label} />
-                          <span className="text-[10px] font-semibold text-center leading-tight">{opt.label}</span>
-                        </button>
-                      ))}
+                      {frameOptions.map((opt) => {
+                        const isSelected = getFrameCategory(selectedFinish) === opt.label;
+                        return (
+                          <button
+                            key={opt.label}
+                            type="button"
+                            onClick={() => setSelectedFinish(opt.value)}
+                            className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
+                              isSelected
+                                ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
+                                : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
+                            }`}
+                          >
+                            <FrameSwatch category={opt.label} />
+                            <span className="text-[10px] font-semibold text-center leading-tight">{opt.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
 

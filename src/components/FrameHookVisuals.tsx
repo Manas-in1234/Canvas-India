@@ -1,22 +1,71 @@
 import React from 'react';
 
-// Small "mitered corner" swatch: a colored/textured outer frame border
-// around a lighter inner mat, so each option reads as an actual frame
-// rather than a flat color square.
-const FRAME_LOOK: Record<string, { frame: string; isLight?: boolean }> = {
-  'No Frame': { frame: 'linear-gradient(135deg, #F5F3EE, #E7E2D7)', isLight: true },
-  'Black Frame': { frame: 'linear-gradient(135deg, #3a3a3a, #0f0f0f)' },
-  'Wooden Frame': { frame: 'linear-gradient(135deg, #C99A62, #6B3F1D)' },
-  'White Frame': { frame: 'linear-gradient(135deg, #FFFFFF, #E4E1DA)', isLight: true },
-  'Gold Frame': { frame: 'linear-gradient(135deg, #F1D98B, #9C7A1F)' },
+// Small "mitered corner" swatch and full-size frame visual styles:
+// a colored/textured outer frame border around a lighter inner mat,
+// so each option reads as an actual frame and applies realistically
+// onto product preview images.
+export interface FrameLookConfig {
+  frame: string;
+  isLight?: boolean;
+  borderColor?: string;
+  boxShadow?: string;
+  innerShadow?: string;
+}
+
+export const FRAME_LOOK: Record<string, FrameLookConfig> = {
+  'No Frame': {
+    frame: 'transparent',
+    isLight: true,
+    borderColor: 'transparent',
+    boxShadow: 'none',
+  },
+  'Black Frame': {
+    frame: 'linear-gradient(135deg, #383838 0%, #1a1a1a 45%, #0d0d0d 100%)',
+    borderColor: '#111111',
+    boxShadow: '0 16px 36px -8px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.18)',
+    innerShadow: 'inset 0 3px 8px rgba(0,0,0,0.6), inset 0 0 2px rgba(0,0,0,0.4)',
+  },
+  'Wooden Frame': {
+    frame: 'linear-gradient(135deg, #C28D56 0%, #8F5724 45%, #663812 100%)',
+    borderColor: '#542E0D',
+    boxShadow: '0 16px 36px -8px rgba(0,0,0,0.45), 0 4px 12px rgba(0,0,0,0.25), inset 0 1px 1px rgba(255,255,255,0.3)',
+    innerShadow: 'inset 0 3px 8px rgba(0,0,0,0.5), inset 0 0 2px rgba(0,0,0,0.3)',
+  },
+  'White Frame': {
+    frame: 'linear-gradient(135deg, #FFFFFF 0%, #F5F3ED 50%, #E7E3D8 100%)',
+    isLight: true,
+    borderColor: '#D4CFBE',
+    boxShadow: '0 16px 36px -8px rgba(0,0,0,0.22), 0 4px 12px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.9)',
+    innerShadow: 'inset 0 2px 6px rgba(0,0,0,0.22), inset 0 0 2px rgba(0,0,0,0.12)',
+  },
+  'Gold Frame': {
+    frame: 'linear-gradient(135deg, #F7DC88 0%, #CD9E30 45%, #9E7216 100%)',
+    borderColor: '#825E0F',
+    boxShadow: '0 16px 36px -8px rgba(0,0,0,0.38), 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.55)',
+    innerShadow: 'inset 0 3px 8px rgba(0,0,0,0.45), inset 0 0 2px rgba(0,0,0,0.25)',
+  },
 };
+
+/**
+ * Accurately determines the frame category from any product finish string.
+ * Ensures Black Wood Frame matches Black Frame, Teak/Oak Wood Frame matches Wooden Frame, etc.
+ */
+export function getFrameCategory(finish?: string): 'No Frame' | 'Black Frame' | 'Wooden Frame' | 'White Frame' | 'Gold Frame' {
+  const l = (finish || '').toLowerCase();
+  if (/black/.test(l)) return 'Black Frame';
+  if (/white/.test(l)) return 'White Frame';
+  if (/gold/.test(l)) return 'Gold Frame';
+  if (/teak|oak|brown|natural/.test(l) || (/wood/.test(l) && !/black|white|gold/.test(l))) return 'Wooden Frame';
+  return 'No Frame';
+}
 
 export const FrameSwatch: React.FC<{ category: string; size?: number }> = ({ category, size = 36 }) => {
   const look = FRAME_LOOK[category] || FRAME_LOOK['No Frame'];
+  const swatchBg = category === 'No Frame' ? 'linear-gradient(135deg, #F5F3EE, #E7E2D7)' : look.frame;
   return (
     <div
       className={`rounded-[3px] shadow-sm ${look.isLight ? 'border border-stone-300' : ''}`}
-      style={{ width: size, height: size, padding: category === 'No Frame' ? 2 : 5, background: look.frame }}
+      style={{ width: size, height: size, padding: category === 'No Frame' ? 2 : 5, background: swatchBg }}
     >
       <div className="w-full h-full rounded-[1px] bg-gradient-to-br from-stone-200 to-stone-300" />
     </div>

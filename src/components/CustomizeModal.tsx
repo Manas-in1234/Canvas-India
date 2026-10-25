@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, UploadCloud, Check, ShoppingCart, SlidersHorizontal, Sparkles, Layers, Box, CheckCircle2, ZoomIn, ZoomOut, RotateCw, RefreshCw, AlignStartVertical, AlignCenterVertical, AlignEndVertical } from 'lucide-react';
 import { Product } from '../types';
+import { FRAME_LOOK, getFrameCategory } from './FrameHookVisuals';
 
 type TextPosition = 'top' | 'center' | 'bottom';
 
@@ -179,41 +180,78 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
           
           {/* Top Row: Live Interactive Preview & Image Upload */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-            {/* Live Visual Preview Frame with Realistic Acrylic Glass Effect */}
+            {/* Live Visual Preview Frame with Realistic Acrylic Glass or Frame Effect */}
             <div className="space-y-2">
-              <div className="relative aspect-[4/3] bg-stone-100 rounded-xl overflow-hidden border-2 border-stone-200 shadow-md flex items-center justify-center">
-                <img
-                  src={photoPreview}
-                  alt="Customized Preview"
-                  className="w-full h-full object-contain transition-transform duration-150 ease-out"
-                  style={{ transform: `scale(${zoom}) rotate(${rotation}deg)` }}
-                />
+              {(() => {
+                const modalFrameCat = !isAcrylic ? getFrameCategory(selectedFinish) : 'No Frame';
+                const modalFrameLook = FRAME_LOOK[modalFrameCat] || FRAME_LOOK['No Frame'];
+                const hasModalFrame = modalFrameCat !== 'No Frame';
 
-                {/* Gloss Acrylic Reflection Overlay */}
-                {isAcrylic && (
-                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/15 to-white/30 pointer-events-none" />
-                )}
-
-                {customText && (
+                return (
                   <div
-                    className={`absolute left-2 right-2 bg-black/75 backdrop-blur-xs text-white text-[11px] font-semibold py-1 px-2 rounded text-center truncate ${
-                      textPosition === 'top' ? 'top-2' : textPosition === 'center' ? 'top-1/2 -translate-y-1/2' : 'bottom-2'
+                    className={`relative aspect-[4/3] bg-stone-100 rounded-xl overflow-hidden border-2 border-stone-200 shadow-md flex items-center justify-center ${
+                      hasModalFrame ? 'p-2.5 sm:p-3' : ''
                     }`}
                   >
-                    {customText}
-                  </div>
-                )}
+                    {hasModalFrame ? (
+                      <div
+                        className="relative max-w-full max-h-full aspect-[4/3] rounded-[2px] flex items-center justify-center shadow-lg"
+                        style={{
+                          padding: '10px',
+                          background: modalFrameLook.frame,
+                          boxShadow: modalFrameLook.boxShadow,
+                          border: `1px solid ${modalFrameLook.borderColor}`,
+                        }}
+                      >
+                        <div className="relative w-full h-full overflow-hidden rounded-[1px] bg-stone-50 flex items-center justify-center">
+                          <img
+                            src={photoPreview}
+                            alt="Customized Preview"
+                            className="w-full h-full object-contain transition-transform duration-150 ease-out"
+                            style={{ transform: `scale(${zoom}) rotate(${rotation}deg)` }}
+                          />
+                          <div
+                            className="absolute inset-0 pointer-events-none"
+                            style={{ boxShadow: modalFrameLook.innerShadow }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <img
+                        src={photoPreview}
+                        alt="Customized Preview"
+                        className="w-full h-full object-contain transition-transform duration-150 ease-out"
+                        style={{ transform: `scale(${zoom}) rotate(${rotation}deg)` }}
+                      />
+                    )}
 
-                <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-xs text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                  {selectedSize} {isAcrylic && selectedThickness && `• ${selectedThickness}`}
-                </div>
+                    {/* Gloss Acrylic Reflection Overlay */}
+                    {isAcrylic && (
+                      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/15 to-white/30 pointer-events-none" />
+                    )}
 
-                {isAcrylic && selectedBase && selectedBase !== 'Without Base' && (
-                  <div className="absolute bottom-2 left-2 bg-[#0E4A93]/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                    {selectedBase}
+                    {customText && (
+                      <div
+                        className={`absolute left-2 right-2 bg-black/75 backdrop-blur-xs text-white text-[11px] font-semibold py-1 px-2 rounded text-center truncate ${
+                          textPosition === 'top' ? 'top-2' : textPosition === 'center' ? 'top-1/2 -translate-y-1/2' : 'bottom-2'
+                        }`}
+                      >
+                        {customText}
+                      </div>
+                    )}
+
+                    <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-xs text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                      {selectedSize} {isAcrylic && selectedThickness && `• ${selectedThickness}`}
+                    </div>
+
+                    {isAcrylic && selectedBase && selectedBase !== 'Without Base' && (
+                      <div className="absolute bottom-2 left-2 bg-[#0E4A93]/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                        {selectedBase}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })()}
 
               {/* Image Zoom / Rotate / Reset Controls */}
               <div className="flex items-center justify-center gap-1.5">

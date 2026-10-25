@@ -62,13 +62,21 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         </button>
 
         {/* Left: Product Image */}
-        <div className="md:w-1/2 relative bg-stone-100 flex items-center justify-center">
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            className="w-full h-full min-h-[300px] max-h-[460px] object-cover object-center"
-          />
-          <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-stone-900 shadow-xs border border-white">
+        <div className="md:w-1/2 relative bg-stone-100 flex items-center justify-center p-4">
+          <div
+            className={`relative max-w-full max-h-full transition-all duration-300 flex items-center justify-center ${
+              selectedFinish === 'Hand-Stained Floater Frame'
+                ? 'rounded-[3px] shadow-xl p-2.5 bg-gradient-to-br from-[#B5804C] via-[#8C5626] to-[#683B16] border border-[#573110]'
+                : ''
+            }`}
+          >
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="w-full h-full min-h-[300px] max-h-[460px] object-cover object-center"
+            />
+          </div>
+          <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-stone-900 shadow-xs border border-white z-10">
             {product.category} Edition
           </div>
         </div>
