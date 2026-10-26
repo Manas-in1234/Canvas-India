@@ -56,8 +56,11 @@ function ShapeIcon({ shape, active }: { shape: string; active: boolean }) {
   );
 }
 
-export const ProductDetailPage: React.FC = () => {
-  const { productId } = useParams<{ productId: string }>();
+interface StandardProductDetailPageProps {
+  product: Product;
+}
+
+const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ product }) => {
   const navigate = useNavigate();
   const { 
     allProducts, 
@@ -67,12 +70,7 @@ export const ProductDetailPage: React.FC = () => {
     onOpenCustomize 
   } = useShop();
 
-  // Find product by id or slug
-  const product = useMemo(() => {
-    return allProducts.find((p) => p.id === productId || p.slug === productId);
-  }, [allProducts, productId]);
-
-  const isWishlisted = product ? wishlistIds.includes(product.id) : false;
+  const isWishlisted = wishlistIds.includes(product.id);
 
   // Catalogue designs are named "<Name> <code>" or "<Name> <code> - <Material>"
   // (e.g. "Tribal Art Print 001 - Canvas") — pull the numeric code out so it
@@ -356,60 +354,22 @@ export const ProductDetailPage: React.FC = () => {
     );
   };
 
-  if (!product) {
-    return (
-      <div className="w-full bg-[#FFFDF9] py-20 text-center text-stone-900 font-manrope min-h-[65vh] flex items-center justify-center">
-        <div className="max-w-md mx-auto px-4 space-y-4">
-          <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto text-stone-400">
-            <Layers className="w-8 h-8" />
-          </div>
-          <h1 className="text-2xl font-bold text-stone-900">Product Not Found</h1>
-          <p className="text-xs sm:text-sm text-stone-500 leading-relaxed">
-            The requested product (<code className="text-stone-700 bg-stone-100 px-1.5 py-0.5 rounded font-mono text-xs">{productId}</code>) could not be found.
-          </p>
-          <div className="pt-2 flex justify-center gap-3">
-            <Link
-              to="/canvas"
-              className="px-5 py-2.5 bg-[#0E4A93] text-white text-xs font-bold rounded-lg shadow-sm hover:bg-[#09356A] transition-colors"
-            >
-              Browse Catalog
-            </Link>
-            <Link
-              to="/"
-              className="px-5 py-2.5 border border-stone-300 text-stone-800 text-xs font-bold rounded-lg hover:border-stone-400 transition-colors"
-            >
-              Go to Home
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
- 
-  // Dedicated Acrylic Product Detail Page with Reference 1 layout & customizer drawer
-  if (product.categorySlug === 'acrylic') {
-    return <AcrylicProductDetailPage product={product} />;
-  }
-
   const categoryName = product.category || 'Prints';
   const categoryLink = `/${product.categorySlug || 'canvas'}`;
 
   // Ensure the striked-off original price is ALWAYS strictly higher than the current selling price
-  const effectiveOriginalPrice = useMemo(() => {
-    if (!product) return 0;
-    const rawCompare = (product.compareAtPrice && product.compareAtPrice > product.price)
-      ? product.compareAtPrice
-      : (product.originalPrice && product.originalPrice > product.price)
-      ? product.originalPrice
-      : Math.round(product.price * 1.35);
-    return rawCompare > product.price ? rawCompare : Math.round(product.price * 1.35);
-  }, [product]);
+  const rawCompare = (product.compareAtPrice && product.compareAtPrice > product.price)
+    ? product.compareAtPrice
+    : (product.originalPrice && product.originalPrice > product.price)
+    ? product.originalPrice
+    : Math.round(product.price * 1.35);
+  const effectiveOriginalPrice = rawCompare > product.price ? rawCompare : Math.round(product.price * 1.35);
 
-  const effectiveDiscount = useMemo(() => {
-    if (!product || !effectiveOriginalPrice) return 0;
-    if (product.discountPercent && product.discountPercent > 0) return product.discountPercent;
-    return Math.max(15, Math.round(((effectiveOriginalPrice - product.price) / effectiveOriginalPrice) * 100));
-  }, [product, effectiveOriginalPrice]);
+  const effectiveDiscount = (!effectiveOriginalPrice)
+    ? 0
+    : (product.discountPercent && product.discountPercent > 0)
+    ? product.discountPercent
+    : Math.max(15, Math.round(((effectiveOriginalPrice - product.price) / effectiveOriginalPrice) * 100));
 
   return (
     <div className="w-full bg-[#FFFDF9] py-6 sm:py-10 text-stone-900 font-manrope">
@@ -1064,6 +1024,53 @@ export const ProductDetailPage: React.FC = () => {
       </div>
     </div>
   );
+};
+
+export const ProductDetailPage: React.FC = () => {
+  const { productId } = useParams<{ productId: string }>();
+  const { allProducts } = useShop();
+
+  // Find product by id or slug
+  const product = useMemo(() => {
+    return allProducts.find((p) => p.id === productId || p.slug === productId);
+  }, [allProducts, productId]);
+
+  if (!product) {
+    return (
+      <div className="w-full bg-[#FFFDF9] py-20 text-center text-stone-900 font-manrope min-h-[65vh] flex items-center justify-center">
+        <div className="max-w-md mx-auto px-4 space-y-4">
+          <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto text-stone-400">
+            <Layers className="w-8 h-8" />
+          </div>
+          <h1 className="text-2xl font-bold text-stone-900">Product Not Found</h1>
+          <p className="text-xs sm:text-sm text-stone-500 leading-relaxed">
+            The requested product (<code className="text-stone-700 bg-stone-100 px-1.5 py-0.5 rounded font-mono text-xs">{productId}</code>) could not be found.
+          </p>
+          <div className="pt-2 flex justify-center gap-3">
+            <Link
+              to="/canvas"
+              className="px-5 py-2.5 bg-[#0E4A93] text-white text-xs font-bold rounded-lg shadow-sm hover:bg-[#09356A] transition-colors"
+            >
+              Browse Catalog
+            </Link>
+            <Link
+              to="/"
+              className="px-5 py-2.5 border border-stone-300 text-stone-800 text-xs font-bold rounded-lg hover:border-stone-400 transition-colors"
+            >
+              Go to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Dedicated Acrylic Product Detail Page with Reference 1 layout & customizer drawer
+  if (product.categorySlug === 'acrylic') {
+    return <AcrylicProductDetailPage key={product.id} product={product} />;
+  }
+
+  return <StandardProductDetailPage key={product.id} product={product} />;
 };
 
 export default ProductDetailPage;

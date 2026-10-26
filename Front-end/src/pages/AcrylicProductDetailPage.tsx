@@ -16,20 +16,68 @@ import {
   SlidersHorizontal,
   ArrowRight,
   PackageCheck,
-  Info
+  Info,
+  Pencil,
+  ChevronDown
 } from 'lucide-react';
 import { Product } from '../types';
 import { useShop } from '../context/ShopContext';
 import { ProductImage } from '../components/ProductImage';
-import { 
-  AcrylicProductReview, 
-  getProductReviews, 
-  saveProductReview, 
-  getRelatedAcrylicProducts 
+import { SmartCropImage } from '../components/SmartCropImage';
+import { WallPreview } from '../components/WallPreview';
+import { HookIcon, HOOK_OPTIONS } from '../components/FrameHookVisuals';
+import { QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
+import {
+  AcrylicProductReview,
+  getProductReviews,
+  saveProductReview,
+  getRelatedAcrylicProducts
 } from '../data/acrylicReviews';
 
 export interface AcrylicProductDetailPageProps {
   product: Product;
+}
+
+// Sentinel inserted as the second gallery slot so that thumbnail renders a
+// live WallPreview (reacting to the selected shape/size) instead of a static image.
+const ROOM_VIEW_SENTINEL = '__ROOM_VIEW__';
+
+// Default to the largest available size so the product — and its Room View
+// — looks substantial right away. Size lists are ordered smallest-to-largest.
+function pickDefaultSize(sizes?: string[]): string | undefined {
+  if (!sizes || sizes.length === 0) return undefined;
+  return sizes[sizes.length - 1];
+}
+
+// The Popular shape always shows 25x30 as its size, regardless of the
+// product's own catalogue sizes.
+function sizeForShape(shape: string, sizes?: string[]): string | undefined {
+  if (shape.toLowerCase() === 'popular') return '25x30 inch';
+  return pickDefaultSize(sizes);
+}
+
+// Simple outline swatch standing in for each shape in the icon-based Shape
+// tab, matching the Canvas product page's ShapeIcon — styled as a small
+// rectangle whose own proportions (or roundness, for Circle) hint at the
+// shape it represents.
+function ShapeIcon({ shape, active }: { shape: string; active: boolean }) {
+  const dims: Record<string, string> = {
+    popular: 'w-5 h-6',
+    square: 'w-6 h-6',
+    rectangle: 'w-7 h-5',
+    panoramic: 'w-8 h-4',
+    circle: 'w-6 h-6',
+    triangle: 'w-6 h-6'
+  };
+  const shapeKey = shape.toLowerCase();
+  const rounded = shapeKey === 'circle' ? 'rounded-full' : 'rounded-sm';
+  return (
+    <div
+      className={`${dims[shapeKey] || 'w-6 h-6'} ${rounded} border-2 ${
+        active ? 'border-[#0E4A93]' : 'border-stone-400'
+      }`}
+    />
+  );
 }
 
 export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> = ({ product }) => {
@@ -38,7 +86,38 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
 
   const isWishlisted = wishlistIds.includes(product.id);
 
-  // Gallery State
+  // Catalogue designs are named "<Name> <code>" or "<Name> <code> - <Material>"
+  // (e.g. "Tribal Art Print 001 - Acrylic") — pull the numeric code out so it
+  // can be shown on its own below Quantity instead of cluttering the title.
+  const { displayName, productCode } = useMemo(() => {
+    const match = product.name.match(/^(.*?)\s+(\d{3,4})(\s*-\s*.+)?$/);
+    if (match) {
+      return { displayName: `${match[1]}${match[3] || ''}`.trim(), productCode: match[2] };
+    }
+    return { displayName: product.name, productCode: null as string | null };
+  }, [product]);
+
+  // Same catalogue design also offered as Canvas — siblings share a base
+  // catalogue id, prefixed with 'canvas-' or 'acrylic-' for those materials
+  // (see catalogueCanvasAcrylicProducts.ts). Only Canvas/Acrylic are offered
+  // as switchable formats — the plain poster print is not a selectable option.
+  const formatSiblings = useMemo(() => {
+    const baseId = product.id.startsWith('acrylic-')
+      ? product.id.slice('acrylic-'.length)
+      : product.id.startsWith('canvas-')
+      ? product.id.slice('canvas-'.length)
+      : product.id;
+    return [
+      { label: 'Canvas', id: `canvas-${baseId}` },
+      { label: 'Acrylic', id: `acrylic-${baseId}` }
+    ]
+      .map(({ label, id }) => ({ label, match: allProducts.find((p) => p.id === id) }))
+      .filter((c): c is { label: string; match: Product } => Boolean(c.match));
+  }, [product, allProducts]);
+
+  // Gallery State — a live "Room View" slot is inserted as the second image
+  // (after the real primary photo) so the frame hanging on a wall reacts to
+  // the selected shape/size instead of a static pre-baked photo.
   const galleryImages = useMemo(() => {
     const list: string[] = [];
     if (product.image) list.push(product.image);
@@ -47,13 +126,13 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
         if (!list.includes(img)) list.push(img);
       });
     }
-    // Add additional angles if available
-    if (list.length < 3) {
-      list.push('/assets/acrylic/acrylic-panel-living.jpg');
-      list.push('/assets/acrylic/acrylic-panel-standoff.jpg');
-    }
-    return list;
+    if (list.length === 0) return list;
+    return [ROOM_VIEW_SENTINEL, ...list];
   }, [product]);
+
+  const roomViewSourceImage = useMemo(() => {
+    return galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL) || product.image;
+  }, [galleryImages, product]);
 
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
 
@@ -66,13 +145,30 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   ];
   const availablePapers = product.availablePapers || ['White Luster Photo Paper', 'Metallic Pearl Paper'];
   const availableBases = product.availableBases || ['Without Base', 'Acrylic Base', 'Solid Wood Base'];
+  const availableShapes = product.shapes && product.shapes.length > 0
+    ? product.shapes
+    : ['Popular', 'Square', 'Rectangle', 'Panoramic'];
 
   const [selectedStyle, setSelectedStyle] = useState<string>(availableStyles[0]);
   const [selectedThickness, setSelectedThickness] = useState<string>(availableThicknesses[0]);
   const [selectedSize, setSelectedSize] = useState<string>(availableSizes[0]);
   const [selectedPaper, setSelectedPaper] = useState<string>(availablePapers[0]);
   const [selectedBase, setSelectedBase] = useState<string>(availableBases[0]);
+  const [selectedShape, setSelectedShape] = useState<string>(product.shape || availableShapes[0]);
+  const [customWidth, setCustomWidth] = useState<number>(8);
+  const [customHeight, setCustomHeight] = useState<number>(8);
+  const [isCustomSize, setIsCustomSize] = useState<boolean>(false);
   const [quantity, setQuantity] = useState<number>(1);
+
+  // Size/Shape selector card state — matches the Canvas product page's
+  // tabbed Size|Shape card instead of two separately-labeled pill sections.
+  const [sizeShapeTab, setSizeShapeTab] = useState<'size' | 'shape' | 'hook'>('size');
+  const [customSizeOpen, setCustomSizeOpen] = useState<boolean>(false);
+  const [customSizeW, setCustomSizeW] = useState<string>('');
+  const [customSizeH, setCustomSizeH] = useState<string>('');
+  const [selectedHook, setSelectedHook] = useState<string>('Sawtooth Hanger');
+  const [bulkPanelOpen, setBulkPanelOpen] = useState<boolean>(false);
+  const [customBulkQty, setCustomBulkQty] = useState<string>('');
 
   // Bottom Tabs State ('description' | 'specifications' | 'shipping' | 'reviews')
   const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'shipping' | 'reviews'>('description');
@@ -81,13 +177,40 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   useEffect(() => {
     setSelectedStyle(availableStyles[0] || 'Block');
     setSelectedThickness(availableThicknesses[0] || '7mm');
-    setSelectedSize(availableSizes[0] || '4" x 4"');
+    const defaultShape = product.shape || availableShapes[0] || '';
+    setSelectedSize(sizeForShape(defaultShape, availableSizes) || '4" x 4"');
     setSelectedPaper(availablePapers[0] || 'White Luster Photo Paper');
     setSelectedBase(availableBases[0] || 'Without Base');
+    setSelectedShape(defaultShape);
+    setIsCustomSize(false);
+    setCustomWidth(8);
+    setCustomHeight(8);
     setQuantity(1);
     setActiveImageIndex(0);
+    setSizeShapeTab('size');
+    setSelectedHook('Sawtooth Hanger');
+    setBulkPanelOpen(false);
+    setCustomBulkQty('');
+    setCustomSizeOpen(false);
+    setCustomSizeW('');
+    setCustomSizeH('');
     document.title = `${product.name} | Canvas India`;
   }, [product]);
+
+  const handleCustomSizeChange = (width: number, height: number) => {
+    setCustomWidth(width);
+    setCustomHeight(height);
+    setIsCustomSize(true);
+    setSelectedSize(`${width}" x ${height}" (Custom)`);
+  };
+
+  const applyCustomSize = () => {
+    const w = Number(customSizeW);
+    const h = Number(customSizeH);
+    if (w > 0 && h > 0) {
+      handleCustomSizeChange(w, h);
+    }
+  };
 
   // Gallery Navigation Controls
   const handlePrevImage = () => {
@@ -205,16 +328,15 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
     return Math.round(((originalUnitPrice - unitPrice) / originalUnitPrice) * 100);
   }, [originalUnitPrice, unitPrice]);
 
-  const totalDiscountedPrice = unitPrice * quantity;
-  const totalOriginalPrice = originalUnitPrice * quantity;
-  const totalSavings = totalOriginalPrice - totalDiscountedPrice;
-
   // Add to Cart from PDP
   const handleAddToCart = () => {
+    // At bulk quantities, charge the same discounted per-unit price shown
+    // in the bulk panel — never show one price and charge another.
+    const cartPrice = quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(unitPrice, quantity) : unitPrice;
     onAddToCart(
       {
         ...product,
-        price: unitPrice,
+        price: cartPrice,
       },
       selectedSize,
       `${selectedThickness} Acrylic - ${selectedStyle}`,
@@ -225,7 +347,8 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
       selectedThickness,
       selectedStyle,
       selectedBase,
-      selectedPaper
+      selectedPaper,
+      { hook: selectedHook }
     );
   };
 
@@ -246,368 +369,412 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
     <div className="w-full bg-[#FFFDF9] text-stone-900 font-manrope min-h-screen">
       
       {/* ========================================================================= */}
-      {/* 1. FUNCTIONAL BREADCRUMB STRIP                                            */}
+      {/* MAIN PRODUCT SECTION — mirrors the Canvas product page's layout exactly */}
       {/* ========================================================================= */}
-      <div className="w-full border-b border-stone-200 bg-white">
-        <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-3.5">
-          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-stone-500 overflow-x-auto scrollbar-none">
-            <Link to="/" className="hover:text-[#0E4A93] transition-colors whitespace-nowrap">Home</Link>
-            <ChevronRight className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-            <Link to="/acrylic" className="hover:text-[#0E4A93] transition-colors whitespace-nowrap">Acrylic</Link>
-            <ChevronRight className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-            <Link 
-              to={`/acrylic?sub=${encodeURIComponent(product.subcategory || 'Photo Panels')}`} 
-              className="hover:text-[#0E4A93] transition-colors whitespace-nowrap"
+      <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-6 sm:py-10">
+
+        {/* 1. BREADCRUMBS */}
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-stone-500 mb-6 sm:mb-8 overflow-x-auto scrollbar-none">
+          <Link to="/" className="hover:text-[#0E4A93] transition-colors whitespace-nowrap">Home</Link>
+          <ChevronRight className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+          <Link to="/acrylic" className="hover:text-[#0E4A93] transition-colors whitespace-nowrap">Acrylic</Link>
+          <ChevronRight className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+          <Link
+            to={`/acrylic?sub=${encodeURIComponent(product.subcategory || 'Photo Panels')}`}
+            className="hover:text-[#0E4A93] transition-colors whitespace-nowrap"
+          >
+            {product.subcategory || 'Photo Panels'}
+          </Link>
+          <ChevronRight className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+          <span className="font-bold text-stone-900 truncate">{displayName}</span>
+        </nav>
+
+        {/* 2. MAIN PRODUCT DISPLAY */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 xl:gap-6 items-start">
+
+          {/* Thumbnails — vertical strip on desktop, horizontal row on mobile */}
+          <div className="order-2 lg:order-1 lg:col-span-1 min-w-0 flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0">
+            {galleryImages.map((imgUrl, idx) => {
+              const isActive = activeImageIndex === idx;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setActiveImageIndex(idx)}
+                  className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                    isActive
+                      ? 'border-emerald-600 ring-2 ring-emerald-600/20'
+                      : 'border-stone-200 hover:border-stone-400 opacity-80 hover:opacity-100'
+                  }`}
+                >
+                  {imgUrl === ROOM_VIEW_SENTINEL ? (
+                    <WallPreview imageSrc={roomViewSourceImage} shape={selectedShape} sizeLabel={selectedSize} className="w-full h-full" />
+                  ) : (
+                    <ProductImage
+                      src={imgUrl}
+                      alt={`${product.name} preview ${idx + 1}`}
+                      category="acrylic"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Main Image */}
+          <div className="order-1 lg:order-2 lg:col-span-5 min-w-0">
+            <div
+              className={`relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group mx-auto w-auto max-w-full ${
+                galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL
+                  ? 'aspect-[16/9] h-[42vh] sm:h-[46vh] min-h-[260px] max-h-[420px]'
+                  : 'aspect-[4/5] h-[48vh] sm:h-[52vh] min-h-[300px] max-h-[500px]'
+              }`}
             >
-              {product.subcategory || 'Photo Panels'}
-            </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-            <span className="font-bold text-stone-900 truncate">{product.name}</span>
-          </nav>
-        </div>
-      </div>
+              {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
+                <WallPreview
+                  imageSrc={roomViewSourceImage}
+                  shape={selectedShape}
+                  sizeLabel={selectedSize}
+                  className="w-full h-full"
+                />
+              ) : (
+                <SmartCropImage
+                  src={galleryImages[activeImageIndex] || product.image}
+                  alt={product.name}
+                  containerAspect={4 / 5}
+                  className="w-full h-full"
+                />
+              )}
 
-      {/* ========================================================================= */}
-      {/* 2. MAIN TWO-COLUMN PRODUCT SECTION                                        */}
-      {/* ========================================================================= */}
-      <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-8 sm:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14">
-          
-          {/* --------------------------------------------------------------------- */}
-          {/* LEFT COLUMN: PRODUCT IMAGE GALLERY                                    */}
-          {/* --------------------------------------------------------------------- */}
-          <div className="lg:col-span-7 space-y-4">
-            
-            {/* Main Stage Image Container */}
-            <div className="relative aspect-[4/3] bg-stone-100 rounded-3xl overflow-hidden border border-stone-200 shadow-md group">
-              
-              <ProductImage
-                src={galleryImages[activeImageIndex] || product.image}
-                alt={product.name}
-                category="acrylic"
-                className="w-full h-full object-cover transition-all duration-300"
-              />
-
-              {/* Acrylic Gloss Glass Sheen Effect Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-transparent pointer-events-none" />
-
-              {/* Discount Tag Overlay */}
-              <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5">
-                <span className="bg-[#E8752A] text-white text-xs font-black px-3 py-1 rounded-full shadow-md tracking-wide uppercase">
+              {discountPercent > 0 && (
+                <div className="absolute top-4 left-4 bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider">
                   {discountPercent}% OFF
-                </span>
-                {product.badge && product.badge !== 'Custom' && (
-                  <span className="bg-[#0E4A93] text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-xs">
-                    {product.badge}
-                  </span>
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* Wishlist Heart Button Overlay */}
               <button
                 type="button"
                 onClick={() => onToggleWishlist(product.id)}
-                className={`absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md shadow-md transition-all cursor-pointer ${
-                  isWishlisted
-                    ? 'bg-rose-50 text-rose-600'
-                    : 'bg-white/90 text-stone-600 hover:text-rose-600 hover:bg-white'
-                }`}
-                aria-label="Toggle Wishlist"
+                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-700 hover:text-rose-600 shadow-md flex items-center justify-center transition-all cursor-pointer"
+                title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
               >
                 <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
               </button>
 
-              {/* Previous Image Navigation Arrow */}
               {galleryImages.length > 1 && (
-                <button
-                  type="button"
-                  onClick={handlePrevImage}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white text-stone-800 shadow-md flex items-center justify-center transition-all opacity-80 hover:opacity-100 cursor-pointer z-10"
-                  aria-label="Previous Image"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
+                <>
+                  <button type="button" onClick={handlePrevImage} aria-label="Previous image" className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100">
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button type="button" onClick={handleNextImage} aria-label="Next image" className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100">
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
               )}
+            </div>
+          </div>
 
-              {/* Next Image Navigation Arrow */}
-              {galleryImages.length > 1 && (
-                <button
-                  type="button"
-                  onClick={handleNextImage}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white text-stone-800 shadow-md flex items-center justify-center transition-all opacity-80 hover:opacity-100 cursor-pointer z-10"
-                  aria-label="Next Image"
-                >
-                  <ChevronRight className="w-6 h-6" />
-                </button>
+          {/* Info + Purchase Card */}
+          <div className="order-3 lg:col-span-6 min-w-0 flex flex-col gap-3.5 text-left">
+            <div>
+              <h1 className="text-lg sm:text-xl font-extrabold text-stone-900 tracking-tight">{displayName}</h1>
+              {averageRating > 0 && (
+                <div className="flex items-center gap-2 text-xs text-stone-600 mt-1">
+                  <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded text-amber-800 font-bold">
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    <span>{averageRating}</span>
+                  </div>
+                  <span className="underline decoration-stone-300">({totalReviewsCount} reviews)</span>
+                </div>
               )}
-
-              {/* Thickness / Optical Tag */}
-              <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-xs text-white text-xs font-semibold px-3 py-1 rounded-lg">
-                {selectedThickness} Optical Cast Acrylic
-              </div>
             </div>
 
-            {/* Thumbnail Gallery Underneath */}
-            {galleryImages.length > 1 && (
-              <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
-                {galleryImages.map((imgUrl, idx) => {
-                  const isActive = activeImageIndex === idx;
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setActiveImageIndex(idx)}
-                      className={`relative w-20 sm:w-24 aspect-square rounded-2xl overflow-hidden border-2 transition-all cursor-pointer shrink-0 ${
-                        isActive
-                          ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/20 shadow-md scale-105'
-                          : 'border-stone-200 hover:border-stone-400 opacity-80 hover:opacity-100'
-                      }`}
-                    >
-                      <ProductImage
-                        src={imgUrl}
-                        alt={`${product.name} preview ${idx + 1}`}
-                        category="acrylic"
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  );
-                })}
+            <div className="flex items-baseline gap-3">
+              <span className="text-2xl sm:text-3xl font-extrabold text-stone-950">₹{unitPrice.toLocaleString('en-IN')}</span>
+              <span className="text-base text-stone-400 line-through">₹{originalUnitPrice.toLocaleString('en-IN')}</span>
+              {discountPercent > 0 && (
+                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                  {discountPercent}% OFF
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-600">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>Lowest Price Guaranteed</span>
+            </div>
+
+            {productCode && (
+              <div className="text-base text-stone-500 font-medium">
+                Code: <span className="text-stone-700 font-bold text-lg">{productCode}</span>
               </div>
             )}
 
-          </div>
-
-          {/* --------------------------------------------------------------------- */}
-          {/* RIGHT COLUMN: PRODUCT INFORMATION & PURCHASE / CUSTOMIZATION         */}
-          {/* --------------------------------------------------------------------- */}
-          <div className="lg:col-span-5 space-y-6">
-            
-            {/* Title & Category Header */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-widest text-[#0E4A93]">
-                  ACRYLIC / {product.subcategory || 'Photo Panels'}
-                </span>
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>In Stock</span>
-                </span>
-              </div>
-
-              <h1 className="text-2xl sm:text-3xl font-black text-stone-950 tracking-tight leading-tight">
-                {product.name}
-              </h1>
-
-              {/* Star Rating Display */}
-              <div className="flex items-center gap-2 pt-1 text-xs">
-                <div className="flex items-center gap-0.5 text-amber-500">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+            {/* Format: Canvas / Acrylic — same design, different materials */}
+            {formatSiblings.length > 1 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">Format:</span>
+                <div className="flex items-center gap-1.5">
+                  {formatSiblings.map(({ label, match }) => (
+                    <button
+                      key={match.id}
+                      type="button"
+                      onClick={() => {
+                        if (match.id !== product.id) navigate(`/products/${match.slug || match.id}`);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
+                        match.id === product.id
+                          ? 'bg-[#0E4A93] border-[#0E4A93] text-white'
+                          : 'bg-white border-stone-300 text-stone-700 hover:border-[#0E4A93]'
+                      }`}
+                    >
+                      {label}
+                    </button>
                   ))}
                 </div>
-                <span className="font-extrabold text-stone-900">
-                  {product.rating || '4.8'} / 5
-                </span>
-                <span className="text-stone-400">•</span>
-                <span className="text-stone-500 underline cursor-pointer hover:text-[#0E4A93]">
-                  {product.reviewsCount || 48} Customer Reviews
-                </span>
               </div>
-            </div>
-
-            {/* Price Display */}
-            <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200/80 space-y-2">
-              <div className="flex items-baseline justify-between">
-                <div className="flex items-baseline gap-2.5">
-                  <span className="text-3xl font-black text-stone-950 tracking-tight">
-                    ₹{totalDiscountedPrice.toLocaleString('en-IN')}
-                  </span>
-                  <span className="text-sm font-semibold text-stone-400 line-through">
-                    ₹{totalOriginalPrice.toLocaleString('en-IN')}
-                  </span>
-                  <span className="text-xs font-extrabold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded">
-                    Save ₹{totalSavings.toLocaleString('en-IN')} ({discountPercent}%)
-                  </span>
-                </div>
-              </div>
-
-              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-100/70 text-[#92400e] text-[10px] font-black uppercase tracking-wider">
-                <ShieldCheck className="w-3 h-3 text-[#E8752A]" />
-                <span>LOWEST PRICE GUARANTEED</span>
-              </div>
-            </div>
-
-            {/* Short Description */}
-            <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
-              {product.shortDescription || 'Personalized Acrylic Photo Blocks provide a clean, modern display for photographs and artwork, featuring crystal-clear cast acrylic, diamond-polished beveled edges, and an immersive dimensional appearance.'}
-            </p>
+            )}
 
             {/* =================================================================== */}
             {/* PRODUCT CONFIGURATION SELECTORS                                     */}
             {/* =================================================================== */}
-            <div className="space-y-4 pt-2 border-t border-stone-200">
-              
-              {/* 1. SELECT STYLE */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
-                <label className="text-xs font-bold text-stone-700 sm:col-span-1">
-                  Select Style:
-                </label>
-                <div className="sm:col-span-2">
-                  <select
-                    value={selectedStyle}
-                    onChange={(e) => setSelectedStyle(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer shadow-2xs"
-                  >
-                    {availableStyles.map((style) => (
-                      <option key={style} value={style}>{style}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+            <div className="space-y-4">
 
-              {/* 2. SELECT THICKNESS */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
-                <label className="text-xs font-bold text-stone-700 sm:col-span-1">
-                  Select Thickness:
-                </label>
-                <div className="sm:col-span-2">
-                  <select
-                    value={selectedThickness}
-                    onChange={(e) => setSelectedThickness(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer shadow-2xs"
-                  >
-                    {availableThicknesses.map((th) => (
-                      <option key={th} value={th}>{th}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* 3. SELECT SIZE */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
-                <label className="text-xs font-bold text-stone-700 sm:col-span-1">
-                  Select Size:
-                </label>
-                <div className="sm:col-span-2">
-                  <select
-                    value={selectedSize}
-                    onChange={(e) => setSelectedSize(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer shadow-2xs"
-                  >
-                    {availableSizes.map((size) => (
-                      <option key={size} value={size}>{size}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* 4. SELECT PAPER */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
-                <label className="text-xs font-bold text-stone-700 sm:col-span-1">
-                  Select Paper:
-                </label>
-                <div className="sm:col-span-2">
-                  <select
-                    value={selectedPaper}
-                    onChange={(e) => setSelectedPaper(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer shadow-2xs"
-                  >
-                    {availablePapers.map((paper) => (
-                      <option key={paper} value={paper}>{paper}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* 5. SELECT BASE */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
-                <label className="text-xs font-bold text-stone-700 sm:col-span-1">
-                  Select Base:
-                </label>
-                <div className="sm:col-span-2">
-                  <select
-                    value={selectedBase}
-                    onChange={(e) => setSelectedBase(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer shadow-2xs"
-                  >
-                    {availableBases.map((base) => (
-                      <option key={base} value={base}>{base}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* 6. QUANTITY SELECTOR */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2 pt-1">
-                <label className="text-xs font-bold text-stone-700 sm:col-span-1">
-                  Quantity:
-                </label>
-                <div className="sm:col-span-2 flex items-center gap-3">
-                  <div className="inline-flex items-center border border-stone-300 rounded-xl bg-white shadow-2xs">
+              {/* SIZE / SHAPE — matches the Canvas product page's tabbed card */}
+              {(availableSizes.length > 0 || availableShapes.length > 0) && (
+                <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-center gap-6 border-b border-stone-200 mb-4 overflow-x-auto">
                     <button
                       type="button"
-                      onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                      className="px-3 py-1.5 text-stone-600 hover:text-stone-900 font-black cursor-pointer transition-colors"
-                      aria-label="Decrease quantity"
+                      onClick={() => setSizeShapeTab('size')}
+                      className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'size' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
                     >
-                      −
+                      Size
                     </button>
-                    <span className="px-3 py-1.5 text-xs font-bold text-stone-900 min-w-[28px] text-center">
-                      {quantity}
-                    </span>
+                    {availableShapes.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setSizeShapeTab('shape')}
+                        className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'shape' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                      >
+                        Shape
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => setQuantity((prev) => prev + 1)}
-                      className="px-3 py-1.5 text-stone-600 hover:text-stone-900 font-black cursor-pointer transition-colors"
-                      aria-label="Increase quantity"
+                      onClick={() => setSizeShapeTab('hook')}
+                      className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'hook' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
                     >
-                      +
+                      Hook
                     </button>
                   </div>
-                  <span className="text-xs text-stone-500">
-                    Total: <strong className="text-stone-900">₹{totalDiscountedPrice.toLocaleString('en-IN')}</strong>
-                  </span>
+
+                  {sizeShapeTab === 'size' && availableSizes.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {availableSizes.map((size) => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => { setIsCustomSize(false); setSelectedSize(size); }}
+                          className={`px-1.5 py-2 text-[11px] leading-tight font-semibold rounded-lg border-2 text-center transition-all cursor-pointer ${
+                            selectedSize === size && !isCustomSize
+                              ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
+                              : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
+                          }`}
+                        >
+                          {size.replace(' inch', '')}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {sizeShapeTab === 'size' && (
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        onClick={() => setCustomSizeOpen((v) => !v)}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-700 cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>Need a Custom Size?</span>
+                      </button>
+                      {customSizeOpen && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <input
+                            type="number"
+                            min={4}
+                            value={customSizeW}
+                            onChange={(e) => setCustomSizeW(e.target.value)}
+                            placeholder="Width [W] in"
+                            className="w-0 flex-1 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
+                          />
+                          <input
+                            type="number"
+                            min={4}
+                            value={customSizeH}
+                            onChange={(e) => setCustomSizeH(e.target.value)}
+                            placeholder="Height [H] in"
+                            className="w-0 flex-1 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
+                          />
+                          <button
+                            type="button"
+                            onClick={applyCustomSize}
+                            className="shrink-0 px-4 py-2 text-xs font-bold rounded-full border-2 border-stone-300 text-stone-700 hover:border-stone-400 transition-colors cursor-pointer"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {availableShapes.length > 0 && sizeShapeTab === 'shape' && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {availableShapes.map((shapeOpt) => (
+                        <button
+                          key={shapeOpt}
+                          type="button"
+                          onClick={() => {
+                            setSelectedShape(shapeOpt);
+                            if (shapeOpt.toLowerCase() === 'popular') setSelectedSize('25x30 inch');
+                          }}
+                          className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
+                            selectedShape === shapeOpt
+                              ? 'border-[#0E4A93] bg-blue-50/60'
+                              : 'border-stone-200 bg-white hover:border-stone-400'
+                          }`}
+                        >
+                          <ShapeIcon shape={shapeOpt} active={selectedShape === shapeOpt} />
+                          <span className={`text-[10px] font-semibold ${selectedShape === shapeOpt ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{shapeOpt}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {sizeShapeTab === 'hook' && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {HOOK_OPTIONS.map((hookOpt) => (
+                        <button
+                          key={hookOpt}
+                          type="button"
+                          onClick={() => setSelectedHook(hookOpt)}
+                          className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
+                            selectedHook === hookOpt
+                              ? 'border-[#0E4A93] bg-blue-50/60'
+                              : 'border-stone-200 bg-white hover:border-stone-400'
+                          }`}
+                        >
+                          <HookIcon type={hookOpt} active={selectedHook === hookOpt} />
+                          <span className={`text-[10px] font-semibold leading-tight text-center ${selectedHook === hookOpt ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{hookOpt}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
 
             </div>
 
-            {/* =================================================================== */}
-            {/* TWO PRIMARY ACTIONS: [ CUSTOMIZE ] & [ ADD TO CART ]                */}
-            {/* =================================================================== */}
-            <div className="pt-4 space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* 1. CUSTOMIZE BUTTON */}
-                <button
-                  type="button"
-                  onClick={handleOpenCustomizer}
-                  className="w-full py-3.5 px-4 bg-[#0E4A93] hover:bg-[#09356A] active:scale-[0.99] text-white text-xs font-black rounded-xl shadow-md hover:shadow-lg flex items-center justify-center gap-2 tracking-wide transition-all cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-300" />
-                  <span>CUSTOMIZE</span>
-                </button>
-
-                {/* 2. ADD TO CART BUTTON */}
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  className="w-full py-3.5 px-4 bg-[#E8752A] hover:bg-[#d6651d] active:scale-[0.99] text-white text-xs font-black rounded-xl shadow-md hover:shadow-lg flex items-center justify-center gap-2 tracking-wide transition-all cursor-pointer"
-                >
-                  <ShoppingCart className="w-4 h-4 text-white" />
-                  <span>ADD TO CART</span>
-                </button>
+            <div className="flex items-center gap-4">
+              <span className="font-bold text-xs text-stone-800">Quantity:</span>
+              <div className="inline-flex items-center border border-stone-200 rounded-lg bg-white overflow-hidden shadow-2xs">
+                <button type="button" onClick={() => setQuantity((prev) => Math.max(1, prev - 1))} className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-100 font-bold transition-colors cursor-pointer" aria-label="Decrease quantity">-</button>
+                <span className="w-10 text-center text-xs font-extrabold text-stone-900">{quantity}</span>
+                <button type="button" onClick={() => setQuantity((prev) => prev + 1)} className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-100 font-bold transition-colors cursor-pointer" aria-label="Increase quantity">+</button>
               </div>
+            </div>
 
-              <div className="flex items-center justify-center gap-4 text-[11px] text-stone-500 pt-1">
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>100% Quality Guaranteed</span>
-                </span>
-                <span className="flex items-center gap-1">
-                  <Truck className="w-3.5 h-3.5 text-[#0E4A93]" />
-                  <span>Free Pan-India Delivery &gt;₹999</span>
-                </span>
-              </div>
+            <div>
+              <button
+                type="button"
+                onClick={() => setBulkPanelOpen((v) => !v)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-[#0E4A93] text-sm font-bold text-[#0E4A93] hover:bg-blue-50/60 transition-colors cursor-pointer"
+              >
+                <PackageCheck className="w-5 h-5" />
+                <span>Order this item in bulk</span>
+                <ChevronDown className={`w-5 h-5 transition-transform ${bulkPanelOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {bulkPanelOpen && (
+                <div className="mt-3 p-4 rounded-xl border border-stone-200 bg-stone-50 space-y-3">
+                  <div className="grid grid-cols-3 gap-2">
+                    {QTY_PRICE_TIERS.map((tier) => {
+                      const tierPrice = bulkUnitPriceFor(unitPrice, tier.qty);
+                      const isActive = quantity === tier.qty;
+                      return (
+                        <button
+                          key={tier.qty}
+                          type="button"
+                          onClick={() => { setQuantity(tier.qty); setCustomBulkQty(''); }}
+                          className={`px-2 py-2 rounded-lg border-2 text-center transition-all cursor-pointer ${
+                            isActive ? 'border-[#0E4A93] bg-blue-50/60' : 'border-stone-200 bg-white hover:border-stone-400'
+                          }`}
+                        >
+                          <div className={`text-xs font-extrabold ${isActive ? 'text-[#0E4A93]' : 'text-stone-900'}`}>{tier.qty} units</div>
+                          <div className="text-[10px] text-stone-500 mt-0.5">₹{tierPrice.toLocaleString('en-IN')} each</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div>
+                    <label htmlFor="acrylic-custom-bulk-qty" className="text-[11px] font-bold text-stone-700 block mb-1">
+                      Or enter a custom quantity
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        id="acrylic-custom-bulk-qty"
+                        type="number"
+                        min={MIN_BULK_QTY}
+                        value={customBulkQty}
+                        onChange={(e) => setCustomBulkQty(e.target.value)}
+                        placeholder={`${MIN_BULK_QTY}+`}
+                        className="w-28 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const n = Number(customBulkQty);
+                          if (n >= MIN_BULK_QTY) setQuantity(n);
+                        }}
+                        className="px-4 py-2 text-xs font-bold rounded-lg border-2 border-stone-300 text-stone-700 hover:border-stone-400 transition-colors cursor-pointer"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-stone-400 mt-1">Minimum bulk order: {MIN_BULK_QTY} units</p>
+                  </div>
+
+                  {quantity >= MIN_BULK_QTY && (
+                    <div className="pt-2 border-t border-stone-200 text-xs text-stone-700">
+                      <span className="font-bold text-[#0E4A93]">₹{bulkUnitPriceFor(unitPrice, quantity).toLocaleString('en-IN')} each</span>
+                      {' '}× {quantity} = <span className="font-bold">₹{(bulkUnitPriceFor(unitPrice, quantity) * quantity).toLocaleString('en-IN')}</span> total
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                className="flex-1 py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                <span>Add to Cart</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleWishlist(product.id)}
+                className={`flex-1 py-3.5 px-6 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  isWishlisted ? 'border-rose-300 bg-rose-50 text-rose-600' : 'border-stone-300 text-stone-700 hover:border-stone-400'
+                }`}
+              >
+                <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600' : ''}`} />
+                <span>{isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}</span>
+              </button>
             </div>
 
           </div>
@@ -980,7 +1147,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                         src={rel.image} 
                         alt={rel.name}
                         onError={(e) => {
-                          e.currentTarget.src = '/assets/acrylic/acrylic-fallback.jpg';
+                          e.currentTarget.src = '/products/placeholders/acrylic-placeholder.svg';
                         }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
