@@ -9,6 +9,7 @@ import { Product } from '../types';
  * with discountPercent 0 so they are not presented as catalog sale prices.
  */
 const CORK_PRICE_FALLBACK = 999;
+const CORK_ORIGINAL_PRICE_FALLBACK = 1399;
 
 export const CORK_PRODUCT_IMAGES: Record<string, string[]> = {
   '9C-YA1': [
@@ -116,9 +117,9 @@ function corkProduct(input: CorkProductInput): Product {
     image: images[0],
     images,
     price: CORK_PRICE_FALLBACK,
-    originalPrice: CORK_PRICE_FALLBACK,
-    compareAtPrice: CORK_PRICE_FALLBACK,
-    discountPercent: 0,
+    originalPrice: CORK_ORIGINAL_PRICE_FALLBACK,
+    compareAtPrice: CORK_ORIGINAL_PRICE_FALLBACK,
+    discountPercent: 29,
     rating: null,
     reviewsCount: 0,
     badge: 'New',

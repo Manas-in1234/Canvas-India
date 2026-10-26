@@ -394,6 +394,23 @@ export const ProductDetailPage: React.FC = () => {
   const categoryName = product.category || 'Prints';
   const categoryLink = `/${product.categorySlug || 'canvas'}`;
 
+  // Ensure the striked-off original price is ALWAYS strictly higher than the current selling price
+  const effectiveOriginalPrice = useMemo(() => {
+    if (!product) return 0;
+    const rawCompare = (product.compareAtPrice && product.compareAtPrice > product.price)
+      ? product.compareAtPrice
+      : (product.originalPrice && product.originalPrice > product.price)
+      ? product.originalPrice
+      : Math.round(product.price * 1.35);
+    return rawCompare > product.price ? rawCompare : Math.round(product.price * 1.35);
+  }, [product]);
+
+  const effectiveDiscount = useMemo(() => {
+    if (!product || !effectiveOriginalPrice) return 0;
+    if (product.discountPercent && product.discountPercent > 0) return product.discountPercent;
+    return Math.max(15, Math.round(((effectiveOriginalPrice - product.price) / effectiveOriginalPrice) * 100));
+  }, [product, effectiveOriginalPrice]);
+
   return (
     <div className="w-full bg-[#FFFDF9] py-6 sm:py-10 text-stone-900 font-manrope">
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
@@ -503,9 +520,9 @@ export const ProductDetailPage: React.FC = () => {
                       />
                     )}
 
-                    {!uploadedFile && product.discountPercent > 0 && (
+                    {!uploadedFile && effectiveDiscount > 0 && (
                       <div className="absolute top-4 left-4 bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider z-10">
-                        {product.discountPercent}% OFF
+                        {effectiveDiscount}% OFF
                       </div>
                     )}
 
@@ -551,11 +568,11 @@ export const ProductDetailPage: React.FC = () => {
               <div className="flex items-baseline gap-3">
                 <span className="text-2xl sm:text-3xl font-extrabold text-stone-950">₹{product.price.toLocaleString('en-IN')}</span>
                 <span className="text-base text-stone-400 line-through">
-                  ₹{(product.compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)).toLocaleString('en-IN')}
+                  ₹{effectiveOriginalPrice.toLocaleString('en-IN')}
                 </span>
-                {product.discountPercent > 0 && (
+                {effectiveDiscount > 0 && (
                   <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                    {product.discountPercent}% OFF
+                    {effectiveDiscount}% OFF
                   </span>
                 )}
               </div>

@@ -255,7 +255,7 @@ export const OrderCustomizerModal: React.FC<OrderCustomizerModalProps> = ({
                     ₹{config.price.toLocaleString('en-IN')}
                   </span>
                   <span className="text-xs text-stone-400 line-through ml-2">
-                    ₹{config.originalPrice.toLocaleString('en-IN')}
+                    ₹{Math.max(config.originalPrice, Math.round(config.price * 1.35)).toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>

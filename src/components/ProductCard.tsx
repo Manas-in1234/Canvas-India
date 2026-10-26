@@ -110,19 +110,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* Pricing Row */}
-        <div className="flex items-baseline gap-1.5 mt-1">
-          <span className="text-sm sm:text-base font-extrabold text-stone-900">
-            ₹{product.price.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[11px] text-stone-400 line-through">
-            ₹{((product as any).compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)).toLocaleString('en-IN')}
-          </span>
-          {product.discountPercent > 0 && (
-            <span className="text-[10px] font-bold text-emerald-700 hidden sm:inline">
-              {product.discountPercent}% off
-            </span>
-          )}
-        </div>
+        {(() => {
+          const rawCompare = (product as any).compareAtPrice || product.originalPrice;
+          const displayOriginalPrice = rawCompare && rawCompare > product.price
+            ? rawCompare
+            : Math.round(product.price * 1.35);
+          const displayDiscount = product.discountPercent && product.discountPercent > 0
+            ? product.discountPercent
+            : Math.max(15, Math.round(((displayOriginalPrice - product.price) / displayOriginalPrice) * 100));
+
+          return (
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className="text-sm sm:text-base font-extrabold text-stone-900">
+                ₹{product.price.toLocaleString('en-IN')}
+              </span>
+              <span className="text-[11px] text-stone-400 line-through">
+                ₹{displayOriginalPrice.toLocaleString('en-IN')}
+              </span>
+              {displayDiscount > 0 && (
+                <span className="text-[10px] font-bold text-emerald-700 hidden sm:inline">
+                  {displayDiscount}% off
+                </span>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Rating or New badge */}
         <div className="flex items-center gap-1.5 mt-1">

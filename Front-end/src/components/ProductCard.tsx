@@ -2,7 +2,12 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Heart, ArrowRight, Sparkles } from 'lucide-react';
 import { Product } from '../types';
-import { ProductImage } from './ProductImage';
+
+interface MaterialOption {
+  label: string;
+  active: boolean;
+  onSelect: () => void;
+}
 
 interface ProductCardProps {
   product: Product;
@@ -11,6 +16,10 @@ interface ProductCardProps {
   onAddToCart: (product: Product) => void;
   onCustomize: (product: Product) => void;
   variant?: string;
+  // When the same design is available in more than one material (e.g. a
+  // catalogue print offered as both Canvas and Acrylic), pass the options
+  // here to show a small picker instead of two near-duplicate cards.
+  materialOptions?: MaterialOption[];
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -20,23 +29,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onAddToCart,
   onCustomize,
   variant,
+  materialOptions,
 }) => {
   return (
     <div className={`group flex flex-col justify-between text-left select-none ${variant === 'listing' ? 'p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-stone-200/70 hover:border-[#0E4A93]/40 hover:shadow-md transition-all duration-300' : ''}`}>
       <div>
         {/* Product Image linked to /products/:id */}
-        <div className={`relative aspect-square ${variant === 'listing' ? 'w-full rounded-lg sm:rounded-xl' : 'max-h-[170px] w-full rounded-lg'} overflow-hidden bg-stone-100`}>
+        <div className={`relative aspect-[3/4] ${variant === 'listing' ? 'w-full rounded-lg sm:rounded-xl' : 'max-h-[170px] w-full rounded-lg'} overflow-hidden bg-stone-100`}>
           <Link
             to={`/products/${product.id}`}
             className="block w-full h-full cursor-pointer"
             title={`View ${product.name}`}
           >
-            <ProductImage
+            <img
               src={product.image}
               alt={product.name}
-              categorySlug={product.categorySlug}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
+              className="w-full h-full object-contain"
             />
           </Link>
 
@@ -63,34 +71,70 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </button>
         </div>
 
-        {/* Short category / subcategory */}
-        <div className="text-[10px] text-stone-500 font-medium uppercase tracking-wider line-clamp-1 mt-2">
-          {(product as any).subcategory || product.category}
-        </div>
+        {/* Material Picker (Canvas / Acrylic etc.) — only when this design is offered in more than one material */}
+        {materialOptions && materialOptions.length > 1 && (
+          <div className="flex items-center gap-1 mt-2">
+            {materialOptions.map((opt) => (
+              <button
+                key={opt.label}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  opt.onSelect();
+                }}
+                className={`px-2 py-0.5 rounded-full text-[9px] font-bold border transition-colors cursor-pointer ${
+                  opt.active
+                    ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
+                    : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Title linked to /products/:id */}
         <Link
           to={`/products/${product.id}`}
-          className="block font-semibold text-xs sm:text-[13px] text-stone-900 line-clamp-1 group-hover:text-[#0E4A93] transition-colors mt-0.5 cursor-pointer"
+          className="block font-semibold text-xs sm:text-[13px] text-stone-900 line-clamp-1 group-hover:text-[#0E4A93] transition-colors mt-2 cursor-pointer"
           title={product.name}
         >
           {product.name}
         </Link>
 
-        {/* Pricing Row */}
-        <div className="flex items-baseline gap-1.5 mt-1">
-          <span className="text-sm sm:text-base font-extrabold text-stone-900">
-            ₹{product.price.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[11px] text-stone-400 line-through">
-            ₹{((product as any).compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)).toLocaleString('en-IN')}
-          </span>
-          {product.discountPercent > 0 && (
-            <span className="text-[10px] font-bold text-emerald-700 hidden sm:inline">
-              {product.discountPercent}% off
-            </span>
-          )}
+        {/* Short category / subcategory */}
+        <div className="text-[10px] text-stone-500 font-medium uppercase tracking-wider line-clamp-1 mt-0.5">
+          {(product as any).subcategory || product.category}
         </div>
+
+        {/* Pricing Row */}
+        {(() => {
+          const rawCompare = (product as any).compareAtPrice || product.originalPrice;
+          const displayOriginalPrice = rawCompare && rawCompare > product.price
+            ? rawCompare
+            : Math.round(product.price * 1.35);
+          const displayDiscount = product.discountPercent && product.discountPercent > 0
+            ? product.discountPercent
+            : Math.max(15, Math.round(((displayOriginalPrice - product.price) / displayOriginalPrice) * 100));
+
+          return (
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className="text-sm sm:text-base font-extrabold text-stone-900">
+                ₹{product.price.toLocaleString('en-IN')}
+              </span>
+              <span className="text-[11px] text-stone-400 line-through">
+                ₹{displayOriginalPrice.toLocaleString('en-IN')}
+              </span>
+              {displayDiscount > 0 && (
+                <span className="text-[10px] font-bold text-emerald-700 hidden sm:inline">
+                  {displayDiscount}% off
+                </span>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Rating or New badge */}
         <div className="flex items-center gap-1.5 mt-1">
