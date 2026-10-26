@@ -5843,7 +5843,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           {/* CONTINUOUS SPLIT PHYSICAL CANVAS SURFACE */}
           <div
             {...panelHandlers(0)}
-            ref={registerWheelRef(0)}
+            ref={(node) => {
+              registerWheelRef(0)(node);
+              (workspaceCanvasBoxRef as any).current = node;
+            }}
             onClick={() => {
               if (!masterImage) fileInputRef.current?.click();
             }}
@@ -6841,6 +6844,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           </div>
 
           <div
+            ref={workspaceCanvasBoxRef}
             className="relative w-full max-w-2xl"
             style={{
               aspectRatio: String(layout.aspectRatio),
@@ -7031,6 +7035,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           </div>
 
           <div
+            ref={workspaceCanvasBoxRef}
             className="relative w-full max-w-2xl"
             style={{
               aspectRatio: String(layout.aspectRatio),
@@ -7315,6 +7320,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
     return (
       <div
+        ref={workspaceCanvasBoxRef}
         className="relative bg-[#d8dce2] rounded-[2px] overflow-hidden border border-stone-300/80 transition-all select-none shadow-xl mx-auto my-auto"
         style={{
           aspectRatio: String(layout.aspectRatio),
@@ -11147,13 +11153,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 // 1. Hexagon Prints on Room Wall
                 if (isHexagonProduct) {
                   const hexLayout = hexagonLayout || getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                  // Panels are dragged in the editor relative to the composite
+                  // workspace box (workspaceBoxSize) — room view renders that
+                  // same composite at productPixelSize, so pan offsets need to
+                  // be scaled by that ratio, not treated as a fixed percentage.
+                  const hexRoomScale = (productPixelSize?.width || 240) / Math.max(1, workspaceBoxSize.width || 420);
                   return (
                     <div className="relative w-full h-full pointer-events-none select-none">
                       {hexLayout.panels.map((pSpec, idx) => {
                         const p = panelImages[idx];
                         const url = p?.imageUrl || null;
-                        const panXPct = ((p?.panX || 0) / 420) * 100;
-                        const panYPct = ((p?.panY || 0) / 420) * 100;
+                        const panXpx = (p?.panX || 0) * hexRoomScale;
+                        const panYpx = (p?.panY || 0) * hexRoomScale;
                         const isVertical = pSpec.orientation === 'vertical' || hexLayout.orientation === 'vertical';
                         const hexClip = isVertical ? HEXAGON_VERTICAL_CLIP_PATH : HEXAGON_HORIZONTAL_CLIP_PATH;
                         return (
@@ -11183,7 +11194,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                     width: '100%',
                                     height: '100%',
                                     objectFit: p?.fitMode === 'contain' ? 'contain' : 'cover',
-                                    transform: `translate3d(${panXPct}%, ${panYPct}%, 0) scale(${p?.scale || 1}) rotate(${p?.rotation || 0}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                    transform: `translate(${panXpx}px, ${panYpx}px) scale(${p?.scale || 1}) rotate(${p?.rotation || 0}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                     filter: getFilterCss(p?.filter || 'original')
                                   }}
                                 />
@@ -11230,13 +11241,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 if (isWallArtProduct) {
                   const layoutDef = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   const wallPanels = layoutDef.panels;
+                  // Same reasoning as the Hexagon branch above: scale each
+                  // panel's editor pan offset by the room-view/editor size
+                  // ratio instead of treating it as a fixed percentage.
+                  const wallRoomScale = (productPixelSize?.width || 240) / Math.max(1, workspaceBoxSize.width || 420);
                   return (
                     <div className="relative w-full h-full pointer-events-none select-none">
                       {wallPanels.map((pos, idx) => {
                         const p = panelImages[idx];
                         const url = p?.imageUrl || null;
-                        const panXPct = ((p?.panX || 0) / 420) * 100;
-                        const panYPct = ((p?.panY || 0) / 420) * 100;
+                        const panXpx = (p?.panX || 0) * wallRoomScale;
+                        const panYpx = (p?.panY || 0) * wallRoomScale;
                         return (
                           <div
                             key={idx}
@@ -11258,7 +11273,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                     width: '100%',
                                     height: '100%',
                                     objectFit: p?.fitMode === 'contain' ? 'contain' : 'cover',
-                                    transform: `translate3d(${panXPct}%, ${panYPct}%, 0) scale(${p?.scale || 1}) rotate(${p?.rotation || 0}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                    transform: `translate(${panXpx}px, ${panYpx}px) scale(${p?.scale || 1}) rotate(${p?.rotation || 0}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                     filter: getFilterCss(p?.filter || 'original')
                                   }}
                                 />
@@ -11678,6 +11693,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 // 3b. Photo Collage on Room Wall
                 if (isCollageProduct) {
                   const collageDef = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
+                  // renderSlotPhoto's pan offsets are editor pixels calibrated
+                  // against the composite workspace box — scale them down to
+                  // match the much smaller room-view render, same as the
+                  // Hexagon/Wall Display branches above.
+                  const collageRoomScale = (productPixelSize?.width || 240) / Math.max(1, workspaceBoxSize.width || 420);
                   return (
                     <div
                       className="relative w-full h-full pointer-events-none select-none flex items-center justify-center"
@@ -11701,7 +11721,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                               }}
                             >
                               <div className="w-full h-full rounded-xs overflow-hidden bg-stone-200 flex items-center justify-center relative">
-                                {renderSlotPhoto(idx)}
+                                {renderSlotPhoto(idx, collageRoomScale)}
                                 {textElements
                                   .filter((t) => getSlotIndex(t) === idx && Boolean(t.text && t.text.trim()))
                                   .map((t) => (
