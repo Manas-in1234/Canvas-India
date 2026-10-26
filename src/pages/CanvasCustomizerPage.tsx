@@ -5874,11 +5874,21 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   top: `${p.y * 100}%`,
                   width: `${p.w * 100}%`,
                   height: `${p.h * 100}%`,
+                  // Real wall gap between separately-mounted split panels —
+                  // distinguishes Split Canvas from Photo Mosaic, which is
+                  // one continuous physical surface with zero panel gaps.
+                  padding: '9px',
+                  boxSizing: 'border-box'
+                }}
+                className="ci-slot-container relative select-none group cursor-pointer"
+              >
+              <div
+                style={{
                   boxShadow: activeMaterial === 'acrylic'
                     ? '0 12px 24px -4px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.4) inset'
                     : '0 12px 24px -4px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0,0,0,0.08)'
                 }}
-                className={`ci-slot-container relative bg-white rounded-[2px] overflow-hidden transition-all select-none group cursor-pointer ${
+                className={`relative w-full h-full bg-white rounded-[2px] overflow-hidden transition-all ${
                   isSelectedSlot
                     ? 'ring-2 ring-[#0E4A93] z-20 shadow-lg'
                     : activeMaterial === 'acrylic' ? 'border border-slate-200' : 'border border-stone-300/80'
@@ -5977,6 +5987,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   </div>
                 )}
                 {renderPanelTextItems(idx)}
+              </div>
               </div>
             );})}
 
@@ -11560,6 +11571,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   const roomScale = (productPixelSize?.width || 240) / Math.max(1, workspaceBoxSize.width || 420);
                   const scaledPanX = (master.panX || 0) * roomScale;
                   const scaledPanY = (master.panY || 0) * roomScale;
+                  // Mirror the editor's real wall gap between split panels,
+                  // scaled down to Room View's render size.
+                  const splitRoomGapPx = Math.max(1, Math.round(9 * roomScale));
 
                   return (
                     <div className="relative w-full h-full pointer-events-none select-none">
@@ -11572,6 +11586,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             top: `${p.y * 100}%`,
                             width: `${p.w * 100}%`,
                             height: `${p.h * 100}%`,
+                            padding: `${splitRoomGapPx}px`,
+                            boxSizing: 'border-box',
                             filter: activeMaterial === 'acrylic'
                               ? 'drop-shadow(0 12px 22px rgba(0,0,0,0.38)) drop-shadow(0 3px 6px rgba(0,0,0,0.22))'
                               : 'drop-shadow(0 10px 18px rgba(0,0,0,0.35)) drop-shadow(0 2px 4px rgba(0,0,0,0.22))'
