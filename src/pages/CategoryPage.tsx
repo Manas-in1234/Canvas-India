@@ -621,22 +621,6 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
               <ShopByCategoryFilter categories={filterCategories} selectedSlugs={extraCategorySlugs} onChange={handleCategoryFilterChange} />
             </div>
 
-            {/* Quality & Delivery Assurance Strip in Sidebar */}
-            <div className="pt-2 border-t border-stone-100 space-y-2 text-[11px] text-stone-500">
-              <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <span>{activeSlug === 'acrylic' ? 'Crystal-Clear Optical Acrylic' : activeSlug === 'cork' || activeSlug === 'yoga-fitness' ? '100% Natural Organic Cork' : '100% Cotton Canvas (380 GSM)'}</span>
-              </div>
-              <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <span>Ready to Hang with Hardware</span>
-              </div>
-              <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <span>Free Insured Delivery on ₹999+</span>
-              </div>
-            </div>
-
           </aside>
 
           {/* =================================================================== */}

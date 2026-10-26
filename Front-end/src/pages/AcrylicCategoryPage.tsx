@@ -569,22 +569,6 @@ export const AcrylicCategoryPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Quality & Delivery Assurance Strip in Sidebar */}
-              <div className="pt-2 border-t border-stone-100 space-y-2 text-[11px] text-stone-500">
-                <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Crystal-Clear Optical Acrylic</span>
-                </div>
-                <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Ready to Hang with Hardware</span>
-                </div>
-                <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Free Insured Delivery on ₹999+</span>
-                </div>
-              </div>
-
             </aside>
 
             {/* =================================================================== */}
