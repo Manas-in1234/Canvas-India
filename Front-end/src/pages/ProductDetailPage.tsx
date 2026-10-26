@@ -155,6 +155,17 @@ export const ProductDetailPage: React.FC = () => {
 
   const showCustomSize = product ? !SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug) : true;
 
+  // Wellness / physical cork and fitness products (yoga mats, bricks, wedges, rollers, balls,
+  // massage sets, knee pads, yoga bags, etc.) are 3D fitness items and do NOT have picture frames.
+  // Cork print pattern images ('cork-art-patterns') ARE wall decor and retain the full frame options.
+  const isCorkWellnessProduct = useMemo(() => {
+    if (!product) return false;
+    if (product.categorySlug === 'cork-art-patterns') return false;
+    if (product.categorySlug === 'cork' || product.categorySlug === 'yoga-fitness') return true;
+    const text = `${product.name} ${product.subcategory || ''} ${product.category || ''}`.toLowerCase();
+    return /yoga|mat|brick|roller|ball|peanut|wedge|massage|knee pad|bag|fitness/.test(text);
+  }, [product]);
+
   // Frame picker — groups this product's real `finishes` values (which vary
   // a lot in wording across the catalogue) into the frame looks customers
   // actually choose between, using the same keyword matching as the live
@@ -164,12 +175,12 @@ export const ProductDetailPage: React.FC = () => {
   const FRAME_CATEGORY_ORDER: { label: FrameCategory; test: (f: string) => boolean }[] = [
     { label: 'No Frame', test: (f) => /print only|rolled|gallery wrap|satin|lustre|matte canvas|no frame/.test(f) },
     { label: 'Black Frame', test: (f) => /black/.test(f) },
-    { label: 'Wooden Frame', test: (f) => (/teak|oak|walnut|brown|natural|rustic/.test(f) || (/wood/.test(f) && !/black|white|gold/.test(f))) },
+    { label: 'Wooden Frame', test: (f) => !/cork|eva|latex|rubber|foam/.test(f) && (/teak|oak|walnut|brown|rustic/.test(f) || (/wood/.test(f) && !/black|white|gold/.test(f)) || (/natural/.test(f) && /wood|frame|finish/.test(f))) },
     { label: 'White Frame', test: (f) => /white/.test(f) },
     { label: 'Gold Frame', test: (f) => /gold/.test(f) },
   ];
   const frameOptions = useMemo(() => {
-    if (!product?.finishes) return [];
+    if (!product?.finishes || isCorkWellnessProduct) return [];
     const lower = product.finishes.map((f) => ({ raw: f, l: f.toLowerCase() }));
     return FRAME_CATEGORY_ORDER
       .map((cat) => {
@@ -177,7 +188,7 @@ export const ProductDetailPage: React.FC = () => {
         return match ? { label: cat.label, value: match.raw } : null;
       })
       .filter((o): o is { label: FrameCategory; value: string } => Boolean(o));
-  }, [product]);
+  }, [product, isCorkWellnessProduct]);
 
   // Same catalogue design also offered as Canvas / Acrylic — siblings share a
   // base catalogue id, prefixed with 'canvas-' or 'acrylic-' for those
@@ -204,7 +215,7 @@ export const ProductDetailPage: React.FC = () => {
     if (product) {
       const defaultShape = product.shape || availableShapes[0] || '';
       const initialFinish = product.finishes?.[0] || 'Standard Finish';
-      const initialFrameCat = getFrameCategory(initialFinish);
+      const initialFrameCat = isCorkWellnessProduct ? 'No Frame' : getFrameCategory(initialFinish);
       setSelectedSize(pickDefaultSize(product.availableSizes) || pickDefaultSize(product.sizes) || '12x18 inch');
       setSelectedFinish(initialFinish);
       setSelectedFrame(initialFrameCat);
@@ -243,9 +254,9 @@ export const ProductDetailPage: React.FC = () => {
   const galleryImages = useMemo(() => {
     if (!product) return [];
     const base = product.images && product.images.length > 0 ? product.images : [product.image];
-    if (product.categorySlug === 'yoga-fitness' || product.categorySlug === 'cork') return base;
+    if (isCorkWellnessProduct || product.categorySlug === 'yoga-fitness' || product.categorySlug === 'cork') return base;
     return [...base, ROOM_VIEW_SENTINEL];
-  }, [product]);
+  }, [product, isCorkWellnessProduct]);
 
   // The real product photo used inside the live Room View preview (first non-sentinel image)
   const roomViewSourceImage = useMemo(() => {
@@ -437,7 +448,7 @@ export const ProductDetailPage: React.FC = () => {
             <div className="order-1 lg:order-2 lg:col-span-5 min-w-0">
               {(() => {
                 const currentFrameLook = FRAME_LOOK[selectedFrame] || FRAME_LOOK['No Frame'];
-                const hasSelectedFrame = selectedFrame !== 'No Frame';
+                const hasSelectedFrame = !isCorkWellnessProduct && selectedFrame !== 'No Frame';
                 const containerAspectVal = selectedShape === 'Square' ? 1 : selectedShape === 'Panoramic' ? 16 / 9 : 4 / 5;
 
                 return (
