@@ -1,18 +1,22 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth/auth-context';
-import { NavSidebar } from '@/components/nav-sidebar';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth/auth-context";
+import { AdminShell } from "@/components/admin-shell";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.replace('/login');
+      router.replace("/login");
     }
   }, [isLoading, user, router]);
 
@@ -29,10 +33,5 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return null;
   }
 
-  return (
-    <div className="flex flex-1">
-      <NavSidebar />
-      <main className="flex-1 overflow-y-auto p-6">{children}</main>
-    </div>
-  );
+  return <AdminShell>{children}</AdminShell>;
 }

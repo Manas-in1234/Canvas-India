@@ -1,86 +1,100 @@
-'use client';
+"use client";
+import { useRecordId } from "@/lib/use-record-id";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { ArrowLeft } from 'lucide-react';
-import { apiClient, ApiError } from '@/lib/api-client';
-import type { NdrCase } from '@/lib/types/shipping';
-import { StatusBadge } from '@/components/status-badge';
-import { usePermission } from '@/lib/auth/use-permission';
-import { formatDate } from '@/lib/format';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useState } from "react";
+import Link from "next/link";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
+import { apiClient, ApiError } from "@/lib/api-client";
+import type { NdrCase } from "@/lib/types/shipping";
+import { StatusBadge } from "@/components/status-badge";
+import { usePermission } from "@/lib/auth/use-permission";
+import { formatDate } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export function NdrDetailClient({ id }: { id: string }) {
+export function NdrDetailClient({ id: initialId }: { id: string }) {
+  const id = useRecordId(initialId);
   const { hasPermission } = usePermission();
   const queryClient = useQueryClient();
-  const canAct = hasPermission('ndr.action');
+  const canAct = hasPermission("ndr.action");
 
-  const { data: ndrCase, isLoading, isError } = useQuery({
-    queryKey: ['ndr-cases', id],
+  const {
+    data: ndrCase,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["ndr-cases", id],
+    enabled: !!id && id !== "placeholder",
     queryFn: () => apiClient.get<NdrCase>(`/shipping/ndr/${id}`),
   });
 
-  const [newAddress, setNewAddress] = useState('');
+  const [newAddress, setNewAddress] = useState("");
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ['ndr-cases', id] });
-    queryClient.invalidateQueries({ queryKey: ['ndr-cases'] });
+    queryClient.invalidateQueries({ queryKey: ["ndr-cases", id] });
+    queryClient.invalidateQueries({ queryKey: ["ndr-cases"] });
   };
 
   const onActionError = (label: string) => (err: unknown) => {
-    toast.error(err instanceof ApiError ? err.message : `Failed to ${label.toLowerCase()}`);
+    toast.error(
+      err instanceof ApiError
+        ? err.message
+        : `Failed to ${label.toLowerCase()}`,
+    );
   };
 
   const callCustomerMutation = useMutation({
     mutationFn: () => apiClient.post(`/shipping/ndr/${id}/call-customer`),
     onSuccess: () => {
-      toast.success('Customer contacted');
+      toast.success("Customer contacted");
       invalidate();
     },
-    onError: onActionError('Customer contacted'),
+    onError: onActionError("Customer contacted"),
   });
 
   const reattemptMutation = useMutation({
     mutationFn: () => apiClient.post(`/shipping/ndr/${id}/reattempt`),
     onSuccess: () => {
-      toast.success('Reattempt requested');
+      toast.success("Reattempt requested");
       invalidate();
     },
-    onError: onActionError('Reattempt requested'),
+    onError: onActionError("Reattempt requested"),
   });
 
   const cancelMutation = useMutation({
     mutationFn: () => apiClient.post(`/shipping/ndr/${id}/cancel`),
     onSuccess: () => {
-      toast.success('NDR case cancelled');
+      toast.success("NDR case cancelled");
       invalidate();
     },
-    onError: onActionError('NDR case cancelled'),
+    onError: onActionError("NDR case cancelled"),
   });
 
   const returnToOriginMutation = useMutation({
     mutationFn: () => apiClient.post(`/shipping/ndr/${id}/return-to-origin`),
     onSuccess: () => {
-      toast.success('Marked as returning to origin');
+      toast.success("Marked as returning to origin");
       invalidate();
     },
-    onError: onActionError('Marked as returning to origin'),
+    onError: onActionError("Marked as returning to origin"),
   });
 
   const changeAddressMutation = useMutation({
-    mutationFn: (address: string) => apiClient.post(`/shipping/ndr/${id}/change-address`, { address }),
+    mutationFn: (address: string) =>
+      apiClient.post(`/shipping/ndr/${id}/change-address`, { address }),
     onSuccess: () => {
-      toast.success('Address updated');
-      setNewAddress('');
+      toast.success("Address updated");
+      setNewAddress("");
       invalidate();
     },
     onError: (err: unknown) => {
-      toast.error(err instanceof ApiError ? err.message : 'Failed to change address');
+      toast.error(
+        err instanceof ApiError ? err.message : "Failed to change address",
+      );
     },
   });
 
@@ -97,17 +111,22 @@ export function NdrDetailClient({ id }: { id: string }) {
     return <p className="text-sm text-destructive">Failed to load NDR case.</p>;
   }
 
-  const isResolved = ndrCase.status !== 'NDR';
+  const isResolved = ndrCase.status !== "NDR";
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/ndr" className="mb-1 flex items-center gap-1 text-sm text-muted-foreground hover:underline">
+          <Link
+            href="/ndr"
+            className="mb-1 flex items-center gap-1 text-sm text-muted-foreground hover:underline"
+          >
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to NDR Cases
           </Link>
-          <h1 className="text-2xl font-semibold tracking-tight">Order {ndrCase.shipment.order.orderNumber}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Order {ndrCase.shipment.order.orderNumber}
+          </h1>
         </div>
         <StatusBadge status={ndrCase.status} />
       </div>
@@ -131,7 +150,7 @@ export function NdrDetailClient({ id }: { id: string }) {
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">AWB</span>
-            <span>{ndrCase.shipment.awbNumber ?? '—'}</span>
+            <span>{ndrCase.shipment.awbNumber ?? "—"}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Raised</span>
@@ -174,7 +193,11 @@ export function NdrDetailClient({ id }: { id: string }) {
               >
                 Return to Origin
               </Button>
-              <Button variant="destructive" disabled={cancelMutation.isPending} onClick={() => cancelMutation.mutate()}>
+              <Button
+                variant="destructive"
+                disabled={cancelMutation.isPending}
+                onClick={() => cancelMutation.mutate()}
+              >
                 Cancel Case
               </Button>
             </div>
@@ -182,7 +205,8 @@ export function NdrDetailClient({ id }: { id: string }) {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (newAddress.trim()) changeAddressMutation.mutate(newAddress.trim());
+                if (newAddress.trim())
+                  changeAddressMutation.mutate(newAddress.trim());
               }}
               className="flex gap-2"
             >
@@ -191,7 +215,10 @@ export function NdrDetailClient({ id }: { id: string }) {
                 value={newAddress}
                 onChange={(e) => setNewAddress(e.target.value)}
               />
-              <Button type="submit" disabled={changeAddressMutation.isPending || !newAddress.trim()}>
+              <Button
+                type="submit"
+                disabled={changeAddressMutation.isPending || !newAddress.trim()}
+              >
                 Change Address
               </Button>
             </form>

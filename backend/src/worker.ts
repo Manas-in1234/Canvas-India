@@ -5,6 +5,7 @@ import { createServicesContainer, ServicesContainer } from './common/services-co
 import { hashPassword, verifyPassword, sha256Hex } from './common/crypto/password.js';
 import { randomBytes, createHmac } from 'node:crypto';
 import { WorkerShapes } from './customization/shapes/worker-shapes.js';
+import { resolveAdminRead } from './common/admin-read-routes.js';
 
 export interface Env {
   DATABASE_URL: string;
@@ -215,6 +216,14 @@ export default {
     const { prisma, services } = await getServices(env);
 
     try {
+      const adminRead = method === 'GET' ? resolveAdminRead(pathname, prisma, services, query.status) : null;
+      if (adminRead) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, adminRead.permissions, request);
+        if (denied) return denied;
+        return jsonResponse(await adminRead.load(), 200, request);
+      }
       if (pathname === '/api/v1/shapes' && method === 'GET') {
         return jsonResponse(await new WorkerShapes(prisma).approved(), 200, request);
       }
@@ -1355,7 +1364,7 @@ export default {
       return jsonResponse({ statusCode: 404, message: `Cannot ${method} ${pathname}`, error: 'Not Found' }, 404, request);
     } catch (err: any) {
       console.error('API Error Stack:', err?.stack || err);
-      const status = typeof err?.getStatus === 'function' ? err.getStatus() : err?.status || 500;
+      const status = typeof err?.getStatus === 'function' ? err.getStatus() : err?.status || (err?.code === 'P2025' ? 404 : 500);
       const message = err?.message || 'Internal server error';
       return jsonResponse({ statusCode: status, message, stack: env.NODE_ENV === 'development' ? err?.stack : undefined }, status, request);
     }
