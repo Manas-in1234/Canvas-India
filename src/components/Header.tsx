@@ -310,8 +310,10 @@ export const Header: React.FC<HeaderProps> = ({
       clearTimeout(megaMenuTimeoutRef.current);
       megaMenuTimeoutRef.current = null;
     }
-    const estWidth = Math.min(850, window.innerWidth * 0.9);
-    const left = Math.min(Math.max(rect.left, 16), window.innerWidth - estWidth - 16);
+    const menuData = MEGA_MENUS_DATA[slug];
+    const targetWidth = menuData?.groups && menuData.groups[2] ? 1050 : 850;
+    const estWidth = Math.min(targetWidth, window.innerWidth - 32);
+    const left = Math.max(16, Math.min(rect.left, window.innerWidth - estWidth - 16));
     setMegaMenuPos({ top: rect.bottom + 2, left });
     setActiveMegaMenu(slug);
     setAllCategoriesOpen(false);
@@ -860,7 +862,7 @@ export const Header: React.FC<HeaderProps> = ({
                         <div
                           ref={megaMenuDropdownRef}
                           data-header-portal="mega-menu"
-                          className={`fixed ${menuData.groups[2] ? 'w-[1050px]' : 'w-[850px]'} max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-stone-200 z-50 p-5 lg:p-6 transition-all duration-200 animate-in fade-in slide-in-from-top-2 text-left select-none whitespace-normal`}
+                          className={`fixed ${menuData.groups[2] ? 'w-[1050px]' : 'w-[850px]'} max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-2xl border border-stone-200 z-50 p-5 lg:p-6 transition-all duration-200 animate-in fade-in slide-in-from-top-2 text-left select-none whitespace-normal`}
                           style={{ top: megaMenuPos.top, left: megaMenuPos.left }}
                           onMouseEnter={() => {
                             if (megaMenuTimeoutRef.current) {
