@@ -69,18 +69,19 @@ export const PRESET_ROOMS: RoomPreset[] = [
   {
     id: 'living',
     name: 'HOME / LIVING ROOM',
-    image: '/assets/acrylic/acrylic-panel-living.webp',
-    naturalAspect: 800 / 600,
-    // Main open living room wall above the sofa and left of the indoor plants/windows
+    image: '/assets/acrylic/acrylic-panel-living-room.webp',
+    naturalAspect: 772 / 472,
+    // Blank wall above the beige sofa, clear of the olive tree on the left
+    // and the curtain/window on the right
     wallBounds: {
-      minX: 0.08,
-      maxX: 0.77,
-      minY: 0.04,
-      maxY: 0.53
+      minX: 0.30,
+      maxX: 0.86,
+      minY: 0.03,
+      maxY: 0.56
     },
     defaultPosition: {
-      x: 0.46,
-      y: 0.18
+      x: 0.58,
+      y: 0.28
     }
   }
 ];
