@@ -69,7 +69,7 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     name: 'Canvas',
     slug: 'canvas',
     route: '/canvas',
-    image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=400&auto=format&fit=crop&q=80',
+    image: '/assets/canvas/canvas-promo-living-room.jpg',
     description: 'Museum-grade 380 GSM cotton canvas prints',
   },
   {
@@ -969,6 +969,12 @@ export const Header: React.FC<HeaderProps> = ({
                                     src={menuData.promo.image}
                                     alt={menuData.promo.title}
                                     className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const target = e.currentTarget;
+                                      if (!target.src.includes('canvas-promo-living-room')) {
+                                        target.src = '/assets/canvas/canvas-promo-living-room.jpg';
+                                      }
+                                    }}
                                   />
                                   <div className="absolute top-2 left-2 bg-[#E8752A] text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
                                     {menuData.promo.badge}
