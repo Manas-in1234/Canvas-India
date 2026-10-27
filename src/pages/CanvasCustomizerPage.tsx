@@ -6114,7 +6114,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           }}
         >
           <div
-            className="w-full max-w-[88%] rounded-2xl flex flex-col items-center text-center shadow-2xl backdrop-blur-md"
+            className={`w-full max-w-[88%] rounded-sm flex flex-col items-center text-center ${hasPhoto ? 'backdrop-blur-sm' : ''}`}
             style={{
               background: hasPhoto
                 ? `rgba(15, 23, 42, ${Math.max(0.45, scrimAlpha * 0.9)})`
@@ -6122,6 +6122,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               border: hasPhoto
                 ? '1px solid rgba(255, 255, 255, 0.28)'
                 : '1px solid rgba(15, 23, 42, 0.12)',
+              boxShadow: hasPhoto
+                ? '0 4px 14px rgba(0, 0, 0, 0.3)'
+                : '0 1px 3px rgba(15, 23, 42, 0.08)',
               padding: `${s(14)}px ${s(16)}px`,
               gap: `${s(6)}px`,
               color: hasPhoto ? (lyricConfig.textColor || '#FFFFFF') : effectiveTextColor
