@@ -6537,11 +6537,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           )}
           {Boolean(text && text.trim().length > 0) && (
             <div
-              className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden min-h-0"
+              className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden min-h-0 grow"
               style={{
                 fontSize: fs(10.5),
-                textAlign,
-                maxHeight: `${s(140)}px`
+                textAlign
               }}
             >
               {text}
