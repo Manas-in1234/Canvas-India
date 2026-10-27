@@ -6497,7 +6497,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     // Default: photo-lyrics-overlay (bottom gradient with elegant typography)
     return (
       <div
-        className="absolute inset-0 z-25 flex flex-col justify-end pointer-events-none select-none"
+        className="absolute inset-0 z-25 flex flex-col justify-end pointer-events-none select-none overflow-hidden"
         style={{
           padding: `${s(16)}px ${s(18)}px`,
           background: hasPhoto
@@ -6508,9 +6508,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           textShadow
         }}
       >
-        <div className="space-y-1 drop-shadow-md">
+        {/* flex-col with a maxHeight cap so, on a small Room View box, only
+            the lyrics line (flex-shrink) gives up space — the title/date/
+            artist/divider above it (all shrink-0) always render in full
+            instead of being pushed off the top edge and clipped. */}
+        <div className="space-y-1 drop-shadow-md flex flex-col min-h-0" style={{ maxHeight: '100%' }}>
           {(Boolean(title && title.trim().length > 0) || Boolean(date && date.trim().length > 0)) && (
-            <div className="flex items-baseline justify-between gap-2">
+            <div className="flex items-baseline justify-between gap-2 shrink-0">
               {Boolean(title && title.trim().length > 0) && (
                 <span className="font-black uppercase tracking-wider truncate" style={{ fontSize: fs(14) }}>
                   {title}
@@ -6524,16 +6528,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             </div>
           )}
           {Boolean(artist && artist.trim().length > 0) && (
-            <div className="italic opacity-90" style={{ fontSize: fs(11) }}>
+            <div className="italic opacity-90 shrink-0" style={{ fontSize: fs(11) }}>
               {artist}
             </div>
           )}
           {(Boolean(title && title.trim().length > 0) || Boolean(artist && artist.trim().length > 0)) && Boolean(text && text.trim().length > 0) && (
-            <div className="w-12 h-px bg-current opacity-40 my-1" />
+            <div className="w-12 h-px bg-current opacity-40 my-1 shrink-0" />
           )}
           {Boolean(text && text.trim().length > 0) && (
             <div
-              className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden"
+              className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden min-h-0"
               style={{
                 fontSize: fs(10.5),
                 textAlign,
