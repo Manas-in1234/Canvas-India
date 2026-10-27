@@ -108,20 +108,43 @@ export const BulkProductDetailPage: React.FC = () => {
               </button>
             </div>
             {item.variants.length > 1 && (
-              <div className="flex gap-2.5 mt-3 overflow-x-auto">
-                {item.variants.map((variant, idx) => (
-                  <button
-                    key={`${variant.name}-${idx}`}
-                    type="button"
-                    onClick={() => setActiveVariantIndex(idx)}
-                    title={variant.name}
-                    className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-                      idx === activeVariantIndex ? 'border-emerald-600 ring-2 ring-emerald-600/20' : 'border-stone-200 hover:border-stone-400 opacity-80 hover:opacity-100'
-                    }`}
-                  >
-                    <img src={variant.image} alt={variant.name} className="w-full h-full object-cover" />
-                  </button>
-                ))}
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-xs text-stone-600 mb-2">
+                  <span className="font-bold text-stone-800">
+                    Select Design ({item.variants.length} available)
+                  </span>
+                  <span className="text-[11px] text-[#0E4A93] font-semibold">
+                    Selected: #{String(activeVariantIndex + 1).padStart(2, '0')} — {activeVariant.name}
+                  </span>
+                </div>
+                <div
+                  className={`gap-2 ${
+                    item.variants.length > 6
+                      ? 'grid grid-cols-5 sm:grid-cols-6 max-h-64 overflow-y-auto p-2 border border-stone-200/80 rounded-xl bg-stone-50/60'
+                      : 'flex overflow-x-auto pb-1'
+                  }`}
+                >
+                  {item.variants.map((variant, idx) => (
+                    <button
+                      key={`${variant.name}-${idx}`}
+                      type="button"
+                      onClick={() => setActiveVariantIndex(idx)}
+                      title={variant.name}
+                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                        item.variants.length <= 6 ? 'w-16 h-16 shrink-0' : 'w-full'
+                      } ${
+                        idx === activeVariantIndex
+                          ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/30 shadow-xs'
+                          : 'border-stone-200 hover:border-stone-400 opacity-80 hover:opacity-100 bg-white'
+                      }`}
+                    >
+                      <img src={variant.image} alt={variant.name} className="w-full h-full object-cover" />
+                      <span className="absolute bottom-0 inset-x-0 bg-stone-900/70 text-white text-[9px] font-bold text-center leading-tight py-0.5">
+                        #{String(idx + 1).padStart(2, '0')}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
