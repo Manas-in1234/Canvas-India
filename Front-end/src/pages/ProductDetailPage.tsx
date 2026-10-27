@@ -223,9 +223,15 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
       setIsCustomSize(false);
       setCustomWidth(8);
       setCustomHeight(8);
-      setQuantity(1);
-      setSizeShapeTab('size');
-      setBulkPanelOpen(false);
+      const searchParams = new URLSearchParams(window.location.search);
+      const urlQty = parseInt(searchParams.get('qty') || '', 10);
+      if (!isNaN(urlQty) && urlQty >= 50) {
+        setQuantity(urlQty);
+        setBulkPanelOpen(true);
+      } else {
+        setQuantity(1);
+        setBulkPanelOpen(false);
+      }
       setCustomBulkQty('');
       setActiveImageIndex(0);
       setCustomText('');

@@ -184,7 +184,9 @@ export const BulkProductDetailPage: React.FC = () => {
                 onClick={handleContinueToCustomize}
                 className="w-full py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm transition-all cursor-pointer"
               >
-                Continue to Customize ({quantity} units)
+                {item.material === 'cork' && !activeVariant.customizeHref.includes('customiz')
+                  ? `Proceed to Order (${quantity} units)`
+                  : `Continue to Customize (${quantity} units)`}
               </button>
             </div>
           </div>
@@ -237,7 +239,7 @@ export const BulkProductDetailPage: React.FC = () => {
         {otherItems.length > 0 && (
           <div className="mt-12 pt-8 border-t border-stone-200">
             <h2 className="text-lg font-bold text-stone-900 mb-4">
-              More {item.material === 'canvas' ? 'Canvas' : 'Acrylic'} Bulk Orders
+              More {item.material === 'canvas' ? 'Canvas' : item.material === 'acrylic' ? 'Acrylic' : 'Cork'} Bulk Orders
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-6">
               {otherItems.map((other) => {

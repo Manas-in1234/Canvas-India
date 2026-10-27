@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, Heart } from 'lucide-react';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 import { ACRYLIC_STYLE_LANDING_DATA } from '../data/acrylicStyleLandingData';
+import { CORK_BULK_ITEMS } from '../data/corkBulkData';
 import { SHOP_CATEGORIES } from '../data/shopCategories';
 
 // Every Print World catalogue design (Devotional Art, Line Art, etc.)
@@ -43,7 +44,7 @@ export interface BulkVariant {
 
 export interface BulkItem {
   slug: string;
-  material: 'canvas' | 'acrylic';
+  material: 'canvas' | 'acrylic' | 'cork';
   name: string;
   image: string;
   unitPrice: number;
@@ -78,7 +79,7 @@ export function buildBulkItems(): BulkItem[] {
         .filter((s): s is typeof s & { image: string } => Boolean(s.image))
         .map((s) => ({ name: s.name, image: s.image, price: s.price, customizeHref: s.customizeHref })),
     }));
-  return [...canvas, ...acrylic];
+  return [...canvas, ...acrylic, ...CORK_BULK_ITEMS];
 }
 
 // Canvas and Acrylic style slugs overlap (e.g. both have "wall-display" and
@@ -175,6 +176,7 @@ export const BulkOrdersPage: React.FC = () => {
   const allItems = useMemo(() => buildBulkItems(), []);
   const canvasItems = useMemo(() => allItems.filter((i) => i.material === 'canvas'), [allItems]);
   const acrylicItems = useMemo(() => allItems.filter((i) => i.material === 'acrylic'), [allItems]);
+  const corkItems = useMemo(() => allItems.filter((i) => i.material === 'cork'), [allItems]);
 
   return (
     <div className="w-full bg-[#FFFDF9] text-stone-900 font-manrope">
@@ -205,7 +207,7 @@ export const BulkOrdersPage: React.FC = () => {
               Bulk &amp; Corporate Orders
             </h1>
             <p className="mt-3 text-sm sm:text-base text-stone-600 leading-relaxed">
-              Canvas, acrylic and every catalogue print category at volume pricing for offices, events, hotels and gifting programs — every size and style below ships as a bulk run.
+              Canvas, acrylic, sustainable cork and every catalogue print category at volume pricing for offices, studios, events, hotels and gifting programs — every size and style below ships as a bulk run.
             </p>
           </div>
         </Container>
@@ -213,6 +215,7 @@ export const BulkOrdersPage: React.FC = () => {
 
       {canvasItems.length > 0 && <BulkSection title="Canvas Bulk Orders" items={canvasItems} />}
       {acrylicItems.length > 0 && <BulkSection title="Acrylic Bulk Orders" items={acrylicItems} />}
+      {corkItems.length > 0 && <BulkSection title="Cork Bulk Orders" items={corkItems} />}
       <CatalogueBulkSection />
 
       <section className="py-8 sm:py-10 border-t border-stone-200/80">
