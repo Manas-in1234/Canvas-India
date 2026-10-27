@@ -51,15 +51,32 @@ export const BulkProductDetailPage: React.FC = () => {
   const item = useMemo(() => (material && slug ? getBulkItem(material, slug) : undefined), [material, slug]);
 
   const [quantity, setQuantity] = useState<number>(MIN_BULK_QTY);
+  const [customBulkQty, setCustomBulkQty] = useState<string>('');
+  const [customQtyError, setCustomQtyError] = useState<string>('');
   const [activeVariantIndex, setActiveVariantIndex] = useState<number>(0);
 
   useEffect(() => {
-    setQuantity(MIN_BULK_QTY);
+    const params = new URLSearchParams(window.location.search);
+    const urlQty = parseInt(params.get('qty') || '', 10);
+    const initialQty = !isNaN(urlQty) && urlQty >= MIN_BULK_QTY ? urlQty : MIN_BULK_QTY;
+    setQuantity(initialQty);
+    setCustomBulkQty(urlQty && !QTY_PRICE_TIERS.some((t) => t.qty === urlQty) ? String(urlQty) : '');
+    setCustomQtyError('');
     setActiveVariantIndex(0);
     if (item) {
       document.title = `Bulk ${item.name} | Canvas India`;
     }
   }, [item]);
+
+  const handleApplyCustomQty = () => {
+    const n = parseInt(customBulkQty, 10);
+    if (isNaN(n) || n < MIN_BULK_QTY) {
+      setCustomQtyError(`Minimum bulk order: ${MIN_BULK_QTY} units`);
+      return;
+    }
+    setCustomQtyError('');
+    setQuantity(n);
+  };
 
   const otherItems = useMemo(() => {
     if (!item) return [];
@@ -182,23 +199,77 @@ export const BulkProductDetailPage: React.FC = () => {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="bulk-qty" className="text-sm font-bold text-stone-900 block mb-1.5">
-                Quantity<span className="text-[#E8752A]">*</span>
-              </label>
-              <select
-                id="bulk-qty"
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                className="w-full sm:w-72 px-3 py-2.5 text-sm font-semibold bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-[#0E4A93]"
-              >
-                {QTY_PRICE_TIERS.map((tier) => (
-                  <option key={tier.qty} value={tier.qty}>
-                    {tier.qty} units — ₹{bulkUnitPriceFor(activeVariant.price, tier.qty).toLocaleString('en-IN')} each
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-stone-400 mt-1.5">Minimum: {MIN_BULK_QTY} units</p>
+            {/* Quantity Controls: Preset dropdown + Custom quantity input side-by-side */}
+            <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6 pt-1">
+              {/* Preset Tier Dropdown */}
+              <div className="w-full sm:w-64">
+                <label htmlFor="bulk-qty" className="text-sm font-bold text-stone-900 block mb-1.5">
+                  Quantity<span className="text-[#E8752A]">*</span>
+                </label>
+                <select
+                  id="bulk-qty"
+                  value={QTY_PRICE_TIERS.some((t) => t.qty === quantity) ? quantity : ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setQuantity(Number(e.target.value));
+                      setCustomBulkQty('');
+                      setCustomQtyError('');
+                    }
+                  }}
+                  className="w-full px-3 py-2 text-sm font-semibold bg-white border border-stone-300 rounded-xl focus:outline-none focus:border-[#0E4A93] h-[42px]"
+                >
+                  {!QTY_PRICE_TIERS.some((t) => t.qty === quantity) && (
+                    <option value="">Custom: {quantity} units</option>
+                  )}
+                  {QTY_PRICE_TIERS.map((tier) => (
+                    <option key={tier.qty} value={tier.qty}>
+                      {tier.qty} units — ₹{bulkUnitPriceFor(activeVariant.price, tier.qty).toLocaleString('en-IN')} each
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-stone-400 mt-1.5 font-normal">Preset volume tiers</p>
+              </div>
+
+              {/* Custom Quantity Input — added beside quantity as requested */}
+              <div className="w-full sm:w-auto">
+                <label htmlFor="custom-bulk-qty" className="text-sm font-bold text-stone-800 block mb-1.5">
+                  Or enter a custom quantity
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="custom-bulk-qty"
+                    type="number"
+                    min={MIN_BULK_QTY}
+                    value={customBulkQty}
+                    onChange={(e) => {
+                      setCustomBulkQty(e.target.value);
+                      if (customQtyError) setCustomQtyError('');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleApplyCustomQty();
+                      }
+                    }}
+                    placeholder={`${MIN_BULK_QTY}+`}
+                    className="w-24 px-3 py-2 text-sm font-medium rounded-xl border border-stone-300 bg-white focus:outline-none focus:border-[#0E4A93] h-[42px]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyCustomQty}
+                    className="px-4 py-2 text-sm font-semibold rounded-xl border border-stone-300 text-stone-800 hover:border-[#0E4A93] hover:text-[#0E4A93] hover:bg-blue-50/40 bg-white transition-colors cursor-pointer shadow-xs h-[42px]"
+                  >
+                    Apply
+                  </button>
+                </div>
+                {customQtyError ? (
+                  <p className="text-xs text-rose-600 mt-1.5 font-medium">{customQtyError}</p>
+                ) : (
+                  <p className="text-xs text-stone-400 mt-1.5 font-normal">
+                    Minimum bulk order: {MIN_BULK_QTY} units
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="pt-2">
@@ -222,15 +293,18 @@ export const BulkProductDetailPage: React.FC = () => {
           <div className="rounded-xl border border-stone-200 overflow-hidden text-sm bg-white divide-y divide-stone-100 max-w-md">
             {QTY_PRICE_TIERS.map((tier) => {
               const tierPrice = bulkUnitPriceFor(activeVariant.price, tier.qty);
-              const isActive = tier.qty === quantity;
+              const activeTier = [...QTY_PRICE_TIERS].reverse().find((t) => quantity >= t.qty) || QTY_PRICE_TIERS[0];
+              const isActive = tier.qty === activeTier.qty;
               return (
                 <button
                   key={tier.qty}
                   type="button"
-                  onClick={() => setQuantity(tier.qty)}
+                  onClick={() => { setQuantity(tier.qty); setCustomBulkQty(''); setCustomQtyError(''); }}
                   className={`w-full flex items-center justify-between px-4 py-2.5 text-left cursor-pointer transition-colors ${isActive ? 'bg-blue-50/60' : 'hover:bg-stone-50'}`}
                 >
-                  <span className={`font-semibold ${isActive ? 'text-[#0E4A93]' : 'text-stone-800'}`}>{tier.qty}+ units</span>
+                  <span className={`font-semibold ${isActive ? 'text-[#0E4A93]' : 'text-stone-800'}`}>
+                    {tier.qty}+ units {isActive && quantity !== tier.qty ? `(Active: ${quantity} units)` : ''}
+                  </span>
                   <span className={`font-bold ${isActive ? 'text-[#0E4A93]' : 'text-stone-900'}`}>₹{tierPrice.toLocaleString('en-IN')} each</span>
                 </button>
               );
