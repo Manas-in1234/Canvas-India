@@ -571,7 +571,7 @@ export const MEGA_MENUS_DATA: Record<string, MegaMenuConfig> = {
       title: 'Turn Your Memories Into Wall Art',
       tagline: 'Premium Cotton Canvas Prints stretched on kiln-dried pine wood with 12-color archival inks.',
       badge: 'Starting at ₹499',
-      image: '/assets/canvas/canvas-promo-living-room.jpg',
+      image: '/assets/canvas/canvas-promo-framed-art.jpg',
       buttonText: 'Explore Canvas Frames',
       slug: 'canvas',
       actionType: 'category',
@@ -975,7 +975,7 @@ export const PRIMARY_CATEGORIES: PrimaryCategoryItem[] = [
     slug: 'canvas',
     iconName: 'Palette',
     startingPrice: 499,
-    image: '/assets/canvas/canvas-promo-living-room.jpg',
+    image: '/assets/canvas/canvas-promo-framed-art.jpg',
     description: 'Museum-grade 380 GSM cotton canvas prints',
   },
   {

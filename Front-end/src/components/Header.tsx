@@ -64,7 +64,7 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     name: 'Canvas',
     slug: 'canvas',
     route: '/canvas',
-    image: '/assets/canvas/canvas-promo-living-room.jpg',
+    image: '/assets/canvas/canvas-promo-framed-art.jpg',
     description: 'Museum-grade 380 GSM cotton canvas prints',
   },
   {
@@ -976,8 +976,8 @@ export const Header: React.FC<HeaderProps> = ({
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
                                       const target = e.currentTarget;
-                                      if (!target.src.includes('canvas-promo-living-room')) {
-                                        target.src = '/assets/canvas/canvas-promo-living-room.jpg';
+                                      if (!target.src.includes('canvas-promo-framed-art')) {
+                                        target.src = '/assets/canvas/canvas-promo-framed-art.jpg';
                                       }
                                     }}
                                   />
