@@ -64,7 +64,11 @@ const PHOTO = {
   popArtWarholZebra: '/assets/canvas-styles/pop-art-warhol-zebra.webp', // user-supplied: Warhol-style zebra painting
   popArtCaricature: '/assets/canvas-styles/pop-art-caricature-takeabreak.webp', // user-supplied: illustrated "Take a Break" portrait
   popArtLichtenstein: '/assets/canvas-styles/pop-art-lichtenstein-crying.webp', // user-supplied: Lichtenstein-style crying girl
-  popArtPixel: '/assets/canvas-styles/pop-art-pixel-mario.webp' // user-supplied: pixel-art Mario painting
+  popArtPixel: '/assets/canvas-styles/pop-art-pixel-mario.webp', // user-supplied: pixel-art Mario painting
+  caricatureWedding: '/assets/canvas-styles/caricature-wedding-couple.webp',
+  caricatureKidsPets: '/assets/canvas-styles/caricature-kids-pets.webp',
+  caricatureFamily: '/assets/canvas-styles/caricature-family-group.webp',
+  caricatureProfession: '/assets/canvas-styles/caricature-profession-hobby.webp'
 };
 
 // The customizer's real tab order is Upload -> Size/Layout -> Wrap & Border
@@ -751,7 +755,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     heroTitle: 'What is a Custom Caricature?',
     heroSubtitle:
       'Digital caricature portraits printed on canvas. Our digital artists turn your photo into a playful, exaggerated hand-drawn-style portrait, then print it on gallery-wrapped canvas.',
-    stylesSectionTitle: 'Explore Our Caricature Style',
+    stylesSectionTitle: 'Explore Our Caricature Styles',
     stepsTitle: 'How to Customize Your Caricature',
     stepsSubtitle: 'From upload to finish in 5 simple steps.',
     steps: buildCustomizeSteps({
@@ -760,13 +764,40 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     }),
     styles: [
       {
-        id: 'caricatures',
+        id: 'wedding-caricature',
         number: '01',
-        name: 'Caricatures',
-        description: 'Playful cartoon caricature styling with bold hand-drawn contours, comic cel shading, and warm tones.',
+        name: 'Wedding Caricature',
+        description: 'Turn your wedding or anniversary photo into a funny, sweet caricature on gallery-wrapped canvas with customized attire, romantic garden themes, and personalized touches.',
         price: 599,
-        image: '/assets/pop-art/caricatures.svg',
-        customizeHref: '/customize/canvas/canvas-pop-art'
+        image: PHOTO.caricatureWedding,
+        customizeHref: '/customize/canvas/canvas-single'
+      },
+      {
+        id: 'kids-pets-caricature',
+        number: '02',
+        name: 'For the Kids & Pets',
+        description: 'Kids love cartoons and would love to have their cartoon made which will definitely cheer them up instantly. Have one made with their pets or one with their best friend.',
+        price: 599,
+        image: PHOTO.caricatureKidsPets,
+        customizeHref: '/customize/canvas/canvas-single'
+      },
+      {
+        id: 'family-group-caricature',
+        number: '03',
+        name: 'Family & Group Caricatures',
+        description: 'Bring the whole family or friend circle together in a heartwarming cartoon portrait — capturing everyone’s smiles, unique quirks, and personalities on archival canvas.',
+        price: 799,
+        image: PHOTO.caricatureFamily,
+        customizeHref: '/customize/canvas/canvas-single'
+      },
+      {
+        id: 'profession-hobby-caricature',
+        number: '04',
+        name: 'Profession & Hobby Caricatures',
+        description: 'Celebrate careers, milestones, and passions — depicted as doctors, pilots, musicians, or caped superheroes with fun work props and energetic comic pop art backdrops.',
+        price: 599,
+        image: PHOTO.caricatureProfession,
+        customizeHref: '/customize/canvas/canvas-single'
       }
     ],
     historyTitle: 'The History of Caricature',
