@@ -6514,9 +6514,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             instead of being pushed off the top edge and clipped. */}
         <div className="space-y-1 drop-shadow-md flex flex-col min-h-0" style={{ maxHeight: '100%' }}>
           {(Boolean(title && title.trim().length > 0) || Boolean(date && date.trim().length > 0)) && (
-            <div className="flex items-baseline justify-between gap-2 shrink-0">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 shrink-0">
               {Boolean(title && title.trim().length > 0) && (
-                <span className="font-black uppercase tracking-wider truncate" style={{ fontSize: fs(14) }}>
+                <span className="font-black uppercase tracking-wider" style={{ fontSize: fs(14) }}>
                   {title}
                 </span>
               )}
