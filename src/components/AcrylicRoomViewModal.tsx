@@ -247,10 +247,7 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
     // specifically, instead of raising the floor for every product.
     const isTextHeavyProduct =
       (productId || '').includes('lyric') || (productId || '').includes('quote');
-    // 170px wasn't enough headroom for a title + artist + divider + several
-    // lines of lyrics/quote text to render without clipping — 260px gives
-    // that full stack room to breathe at any card layout.
-    const minBoxPx = isTextHeavyProduct ? 260 : 48;
+    const minBoxPx = isTextHeavyProduct ? 190 : 48;
 
     // Room-scale mapping:
     // - Small sizes (4x4, 8x8, 8x10, 12x12) -> compact wall piece (~9% - 13% of room width)
@@ -294,17 +291,6 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
       const ratio = maxAllowedH / heightPx;
       widthPx *= ratio;
       heightPx *= ratio;
-    }
-
-    // The wall-fit clamp above can shrink a text-heavy product back below
-    // its legibility floor on a tighter wall — re-assert the floor last so
-    // its text never gets clipped by the room-view frame, even if that
-    // means the card no longer leaves full drag margin on a small wall.
-    const postClampLargerPx = Math.max(widthPx, heightPx);
-    if (isTextHeavyProduct && postClampLargerPx < minBoxPx && postClampLargerPx > 0) {
-      const reUpRatio = minBoxPx / postClampLargerPx;
-      widthPx *= reUpRatio;
-      heightPx *= reUpRatio;
     }
 
     return {
