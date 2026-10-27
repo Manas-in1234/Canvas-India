@@ -266,12 +266,8 @@ export const BulkProductDetailPage: React.FC = () => {
                       Apply
                     </button>
                   </div>
-                  {customQtyError ? (
+                  {customQtyError && (
                     <p className="text-xs text-rose-600 mt-1.5 font-medium">{customQtyError}</p>
-                  ) : (
-                    <p className="text-xs text-stone-400 mt-1.5 font-normal">
-                      Minimum bulk order: {MIN_BULK_QTY} units
-                    </p>
                   )}
                 </div>
               </div>
