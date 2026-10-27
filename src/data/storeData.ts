@@ -906,11 +906,25 @@ export const MEGA_MENUS_DATA: Record<string, MegaMenuConfig> = {
         ],
       },
       {
+        title: 'Cork Bulk Orders',
+        iconType: 'circleDot',
+        items: [
+          { name: 'Cork Pattern Prints', slug: 'bulk-order', href: '/bulk-order/cork/cork-pattern-prints', description: 'Natural textured cork wall art in bulk' },
+          { name: 'Yoga Mats', slug: 'bulk-order', href: '/bulk-order/cork/yoga-mats', description: 'Cork fabric & natural tree rubber mats' },
+          { name: 'Yoga Bricks', slug: 'bulk-order', href: '/bulk-order/cork/yoga-bricks', description: 'High-density solid cork balance bricks' },
+          { name: 'Yoga Wedges', slug: 'bulk-order', href: '/bulk-order/cork/yoga-wedges', description: 'Wrist & ankle alignment support wedges' },
+          { name: 'Yoga Rollers', slug: 'bulk-order', href: '/bulk-order/cork/yoga-rollers', description: 'Deep tissue cork foam & peanut rollers' },
+          { name: 'Yoga Balls', slug: 'bulk-order', href: '/bulk-order/cork/yoga-balls', description: 'Solid cork trigger-point massage balls' },
+          { name: 'Massage Sets', slug: 'bulk-order', href: '/bulk-order/cork/massage-sets', description: '3-in-1 cork roller, ball & storage sets' },
+          { name: 'Knee Pads', slug: 'bulk-order', href: '/bulk-order/cork/knee-pads', description: 'Rubberized cork joint cushioning pads' },
+          { name: 'Yoga Bags', slug: 'bulk-order', href: '/bulk-order/cork/yoga-bags', description: 'Cork-trimmed mat bags & kit duffles' },
+          { name: 'View All Cork Bulk', slug: 'bulk-order', href: '/bulk-order', description: 'Full Cork & Yoga fitness bulk catalog' },
+        ],
+      },
+      {
         title: 'Category Bulk Orders',
         iconType: 'package',
         items: [
-          { name: 'Cork Wellness & Yoga', slug: 'bulk-order', href: '/bulk-order/cork/yoga-mats', description: 'Eco-friendly cork mats, bricks & recovery gear' },
-          { name: 'Cork Pattern Prints', slug: 'bulk-order', href: '/bulk-order/cork/cork-pattern-prints', description: 'Natural textured cork wall art in bulk' },
           { name: 'Devotional Art', slug: 'bulk-order', href: '/devotional-art', description: 'Spiritual prints in bulk for temples & offices' },
           { name: 'Line Art', slug: 'bulk-order', href: '/line-art', description: 'Minimal monochrome prints in bulk' },
           { name: 'Motivational Posters', slug: 'bulk-order', href: '/motivational-posters', description: 'Quote posters for offices in bulk' },
