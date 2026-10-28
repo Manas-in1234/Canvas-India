@@ -111,6 +111,7 @@ import {
   getLyricTemplate
 } from '../data/lyricCanvasData';
 import { fetchApprovedCustomShapes, toShapeOption, type CustomShapeDto } from '../api/customShapesApi';
+import { fetchShapeAreaRate, SHAPE_AREA_RATE_FALLBACK } from '../api/pricingSettingsApi';
 import {
   CANVAS_SHAPES,
   CanvasShapeOption,
@@ -135,7 +136,6 @@ import {
 // their actual silhouette area (client-specified pricing rule). Rectangular
 // shapes, including roundedRectangle, keep the plain per-size price.
 const NON_RECTANGULAR_SHAPE_TYPES = new Set(['circle', 'oval', 'heart', 'hexagon', 'custom']);
-const SHAPE_AREA_RATE_PER_SQIN = 1.65;
 import {
   getLayoutSlots,
   LayoutSlotDefinition,
@@ -2842,6 +2842,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, []);
   const customShapeOptions = useMemo(() => customShapes.map(toShapeOption), [customShapes]);
 
+  // Admin-editable rate (see admin Pricing screen) used to bill non-rectangular
+  // shapes by bounding-box area — falls back to the seeded default if the fetch fails.
+  const [shapeAreaRate, setShapeAreaRate] = useState<number>(SHAPE_AREA_RATE_FALLBACK);
+  useEffect(() => {
+    let cancelled = false;
+    fetchShapeAreaRate().then((rate) => {
+      if (!cancelled) setShapeAreaRate(rate);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const filteredShapes = useMemo(() => {
     let list = CANVAS_SHAPES;
     if (selectedProductType?.supportedShapeIds && selectedProductType.supportedShapeIds.length > 0) {
@@ -3796,7 +3809,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         // rectangle's area, not its actual silhouette area.
         const boundingWidth = isCustomSize && canUseCustomSize ? customWidth : (currentSizeOption.widthInches ?? customWidth);
         const boundingHeight = isCustomSize && canUseCustomSize ? customHeight : (currentSizeOption.heightInches ?? customHeight);
-        price += Math.round(boundingWidth * boundingHeight * SHAPE_AREA_RATE_PER_SQIN);
+        price += Math.round(boundingWidth * boundingHeight * shapeAreaRate);
       } else if (currentShape.priceAddon) {
         price += currentShape.priceAddon;
       }
@@ -3838,6 +3851,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     customWidth,
     customHeight,
     currentSizeOption,
+    shapeAreaRate,
     selectedWrapId,
     selectedThicknessId,
     selectedBorderWidthId,
