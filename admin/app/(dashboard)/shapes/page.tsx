@@ -9,6 +9,7 @@ import { apiClient, ApiError } from '@/lib/api-client';
 import type { CustomShapeListItem } from '@/lib/types/shape';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { StatusBadge } from '@/components/status-badge';
+import { Badge } from '@/components/ui/badge';
 import { usePermission } from '@/lib/auth/use-permission';
 import { formatDate } from '@/lib/format';
 import { Button } from '@/components/ui/button';
@@ -83,12 +84,19 @@ export default function ShapesPage() {
             className="h-10 w-10 rounded object-contain bg-muted"
           />
         ) : (
-          <div className="h-10 w-10 rounded bg-muted" />
+          <svg viewBox="0 0 1 1" className="h-10 w-10 rounded bg-muted p-1">
+            {row.clipPathType === 'SVG_PATH' && <path d={row.clipPathValue} fill="currentColor" className="text-slate-600" />}
+          </svg>
         ),
     },
     { header: 'Name', cell: (row) => row.name },
+    {
+      header: 'Origin',
+      cell: (row) => <Badge variant="outline">{row.origin === 'BUILT_IN' ? 'Built-in' : 'Uploaded'}</Badge>,
+    },
+    { header: 'Price', cell: (row) => (row.priceMode === 'AREA_RATE' ? `Rs.${row.areaRatePerSqIn}/sq.in` : `Rs.${row.flatPrice}`) },
     { header: 'Status', cell: (row) => <StatusBadge status={row.status} /> },
-    { header: 'Uploaded', cell: (row) => formatDate(row.createdAt) },
+    { header: 'Updated', cell: (row) => formatDate(row.createdAt) },
   ];
 
   return (
