@@ -3243,16 +3243,27 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         aspectRatio,
         name: searchParams.get('prefillName') || 'Design'
       };
-      // Switch to a custom canvas size that matches the artwork's own
-      // aspect ratio exactly, instead of cropping (fit 'cover') or
-      // letterboxing (fit 'contain') it into a generic square/rectangle.
-      const longSide = 12;
-      let w = aspectRatio >= 1 ? longSide : longSide * aspectRatio;
-      let h = aspectRatio >= 1 ? longSide / aspectRatio : longSide;
-      w = Math.max(6, Math.min(30, Math.round(w * 2) / 2));
-      h = Math.max(6, Math.min(30, Math.round(h * 2) / 2));
-      setCustomWidth(w);
-      setCustomHeight(h);
+      // Switch to a custom canvas size that best matches the artwork's own
+      // aspect ratio, instead of cropping (fit 'cover') or letterboxing
+      // (fit 'contain') it into a generic square/rectangle. The Custom
+      // Size dropdowns only offer CUSTOM_SIZE_STEPS values, so pick the
+      // (width, height) pair from that exact list whose ratio is closest
+      // to the artwork's — anything else can't even be displayed there.
+      let bestW = CUSTOM_SIZE_STEPS[0];
+      let bestH = CUSTOM_SIZE_STEPS[0];
+      let bestErr = Infinity;
+      for (const stepW of CUSTOM_SIZE_STEPS) {
+        for (const stepH of CUSTOM_SIZE_STEPS) {
+          const err = Math.abs(Math.log(stepW / stepH) - Math.log(aspectRatio));
+          if (err < bestErr) {
+            bestErr = err;
+            bestW = stepW;
+            bestH = stepH;
+          }
+        }
+      }
+      setCustomWidth(bestW);
+      setCustomHeight(bestH);
       setIsCustomSize(true);
       setUploadedPhotos((prev) => (prev.includes(prefillImage) ? prev : [prefillImage, ...prev]));
       setPanelImages((prev) => ({
