@@ -349,6 +349,44 @@ const OPTION_CATEGORIES_SEED: SeedOptionCategory[] = [
   },
 ];
 
+// The original hand-authored shapes (ACRYLIC_SHAPES in
+// src/data/acrylicCustomizerData.ts), seeded into the same CustomShape table
+// as admin-uploaded shapes so they're all admin-manageable from one screen.
+// Values copied exactly from that file so this changes nothing about how
+// customers see these shapes today — origin/status just make them visible
+// to the admin Shapes screen alongside uploads. clipPathType is
+// CSS_FUNCTION for every shape except Heart, which is stored as its real
+// SVG path (copied from the hardcoded <clipPath id="acrylic-clip-shape-heart">
+// def in CanvasCustomizerPage.tsx) rather than the "url(#...)" reference
+// the frontend data file uses, since a url() reference isn't something an
+// admin could meaningfully edit.
+interface BuiltInShapeSeed {
+  id: string;
+  name: string;
+  shapeType: string;
+  category: string;
+  aspectRatio: number;
+  isSingleDimension: boolean;
+  clipPathType: 'SVG_PATH' | 'CSS_FUNCTION';
+  clipPathValue: string;
+  flatPrice: number;
+}
+
+const BUILT_IN_SHAPES_SEED: BuiltInShapeSeed[] = [
+  { id: 'shape-square', name: 'Square', shapeType: 'square', category: 'basic', aspectRatio: 1, isSingleDimension: true, clipPathType: 'CSS_FUNCTION', clipPathValue: 'inset(0 round 14px)', flatPrice: 0 },
+  { id: 'shape-rectangle', name: 'Rectangle', shapeType: 'rectangle', category: 'basic', aspectRatio: 1.333, isSingleDimension: false, clipPathType: 'CSS_FUNCTION', clipPathValue: 'inset(0 round 14px)', flatPrice: 0 },
+  { id: 'shape-landscape', name: 'Landscape', shapeType: 'landscape', category: 'basic', aspectRatio: 1.6, isSingleDimension: false, clipPathType: 'CSS_FUNCTION', clipPathValue: 'inset(0 round 14px)', flatPrice: 0 },
+  { id: 'shape-portrait', name: 'Portrait', shapeType: 'portrait', category: 'basic', aspectRatio: 0.75, isSingleDimension: false, clipPathType: 'CSS_FUNCTION', clipPathValue: 'inset(0 round 14px)', flatPrice: 0 },
+  { id: 'shape-circle', name: 'Circle', shapeType: 'circle', category: 'basic', aspectRatio: 1, isSingleDimension: true, clipPathType: 'CSS_FUNCTION', clipPathValue: 'circle(50% at 50% 50%)', flatPrice: 0 },
+  { id: 'shape-oval', name: 'Oval', shapeType: 'oval', category: 'basic', aspectRatio: 1.333, isSingleDimension: false, clipPathType: 'CSS_FUNCTION', clipPathValue: 'ellipse(50% 38% at 50% 50%)', flatPrice: 0 },
+  { id: 'shape-rounded-rect', name: 'Rounded Rectangle', shapeType: 'roundedRectangle', category: 'basic', aspectRatio: 1.333, isSingleDimension: false, clipPathType: 'CSS_FUNCTION', clipPathValue: 'inset(0 round 28px)', flatPrice: 0 },
+  { id: 'shape-heart', name: 'Heart', shapeType: 'heart', category: 'special', aspectRatio: 1, isSingleDimension: true, clipPathType: 'SVG_PATH', clipPathValue: 'M 0.5,0.85 C 0.12,0.58 0.02,0.38 0.02,0.24 C 0.02,0.08 0.14,0.02 0.28,0.02 C 0.38,0.02 0.46,0.08 0.5,0.18 C 0.54,0.08 0.62,0.02 0.72,0.02 C 0.86,0.02 0.98,0.08 0.98,0.24 C 0.98,0.38 0.88,0.58 0.5,0.85 Z', flatPrice: 150 },
+  { id: 'shape-hexagon', name: 'Hexagon', shapeType: 'hexagon', category: 'special', aspectRatio: 1, isSingleDimension: true, clipPathType: 'CSS_FUNCTION', clipPathValue: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)', flatPrice: 150 },
+  { id: 'shape-triangle', name: 'Triangle', shapeType: 'triangle', category: 'special', aspectRatio: 1, isSingleDimension: true, clipPathType: 'CSS_FUNCTION', clipPathValue: 'polygon(50% 0%, 0% 100%, 100% 100%)', flatPrice: 150 },
+  { id: 'shape-panoramic', name: 'Panoramic', shapeType: 'panoramic', category: 'special', aspectRatio: 3, isSingleDimension: false, clipPathType: 'CSS_FUNCTION', clipPathValue: 'inset(0 round 14px)', flatPrice: 0 },
+  { id: 'shape-banner', name: 'Banner', shapeType: 'banner', category: 'special', aspectRatio: 0.5, isSingleDimension: false, clipPathType: 'CSS_FUNCTION', clipPathValue: 'inset(0 round 14px)', flatPrice: 0 },
+];
+
 async function main() {
   // Seed permissions.
   for (const key of PERMISSIONS) {
@@ -589,6 +627,28 @@ async function main() {
         },
       });
     }
+  }
+
+  for (const [index, shape] of BUILT_IN_SHAPES_SEED.entries()) {
+    await prisma.customShape.upsert({
+      where: { id: shape.id },
+      update: {},
+      create: {
+        id: shape.id,
+        name: shape.name,
+        origin: 'BUILT_IN',
+        clipPathType: shape.clipPathType,
+        clipPathValue: shape.clipPathValue,
+        shapeType: shape.shapeType,
+        category: shape.category,
+        aspectRatio: shape.aspectRatio,
+        isSingleDimension: shape.isSingleDimension,
+        priceMode: 'FLAT',
+        flatPrice: shape.flatPrice,
+        sortOrder: index,
+        status: 'APPROVED',
+      },
+    });
   }
 
   // eslint-disable-next-line no-console

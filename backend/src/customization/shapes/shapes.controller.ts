@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ShapesService } from './shapes.service.js';
 import { CreateShapeDto } from './dto/create-shape.dto.js';
 import { ReviewShapeDto } from './dto/review-shape.dto.js';
+import { UpdateShapeMetadataDto } from './dto/update-shape-metadata.dto.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator.js';
@@ -40,6 +41,12 @@ export class AdminShapesController {
   @RequirePermissions('shapes.create')
   create(@Body() dto: CreateShapeDto, @CurrentUser() user: AuthenticatedUser) {
     return this.shapesService.create({ name: dto.name, sourceAssetId: dto.sourceAssetId, createdBy: user.id });
+  }
+
+  @Patch(':id')
+  @RequirePermissions('shapes.create')
+  updateMetadata(@Param('id') id: string, @Body() dto: UpdateShapeMetadataDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.shapesService.updateMetadata(id, dto, user.id);
   }
 
   @Post(':id/approve')

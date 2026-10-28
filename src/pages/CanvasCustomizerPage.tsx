@@ -110,7 +110,7 @@ import {
   DEFAULT_LYRIC_CONFIG,
   getLyricTemplate
 } from '../data/lyricCanvasData';
-import { fetchApprovedCustomShapes, toShapeOption, type CustomShapeDto } from '../api/customShapesApi';
+import { fetchApprovedCustomShapes, filterToUnknownShapes, toShapeOption, type CustomShapeDto } from '../api/customShapesApi';
 import { fetchPricingRates, SHAPE_AREA_RATE_FALLBACK, ACRYLIC_THICKNESS_RATE_FALLBACKS } from '../api/pricingSettingsApi';
 import { fetchOptionCategoryItems, type OptionCategoryItemDto } from '../api/optionCategoriesApi';
 import {
@@ -2846,7 +2846,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       cancelled = true;
     };
   }, []);
-  const customShapeOptions = useMemo(() => customShapes.map(toShapeOption), [customShapes]);
+  // Built-in shapes now also exist in the backend's shape catalog (so
+  // they're admin-manageable), but the hardcoded CANVAS_SHAPES list stays
+  // the real source of truth for anything it already knows — only fetched
+  // shapes with an id outside that list (uploaded ones) actually get added,
+  // so this never changes how an existing shape renders or prices today.
+  const knownShapeIds = useMemo(() => new Set(CANVAS_SHAPES.map((s) => s.id)), []);
+  const customShapeOptions = useMemo(
+    () => filterToUnknownShapes(customShapes, knownShapeIds).map(toShapeOption),
+    [customShapes, knownShapeIds],
+  );
 
   // Admin-editable rates (see admin Pricing screen) used to bill non-rectangular
   // shapes and acrylic sheet thickness by bounding-box area — falls back to
@@ -6722,12 +6731,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           </clipPath>
           {/* Admin-uploaded custom shapes: unlike the hand-authored clipPaths
               above, these ids aren't known until the approved-shapes fetch
-              resolves, so they're rendered dynamically here. */}
-          {customShapes.map((shape) => (
-            <clipPath key={shape.id} id={`custom-clip-${shape.id}`} clipPathUnits="objectBoundingBox">
-              <path d={shape.svgPathData} />
-            </clipPath>
-          ))}
+              resolves, so they're rendered dynamically here. Built-in shapes
+              returned by the same fetch are excluded (see knownShapeIds) —
+              this file's own hardcoded clipPaths already handle those, and
+              some built-ins use a CSS_FUNCTION clip-path (not a <path> at
+              all), which this block can't render anyway. */}
+          {filterToUnknownShapes(customShapes, knownShapeIds)
+            .filter((shape) => shape.clipPathType === 'SVG_PATH')
+            .map((shape) => (
+              <clipPath key={shape.id} id={`custom-clip-${shape.id}`} clipPathUnits="objectBoundingBox">
+                <path d={shape.clipPathValue} />
+              </clipPath>
+            ))}
         </defs>
       </svg>
 

@@ -766,32 +766,58 @@ enum AssetUploadStatus {
   FAILED
 }
 
-// Admin-uploaded shapes: an admin uploads a photo of an arbitrary shape and
-// the backend traces its silhouette into an SVG path, so it can be offered
-// to customers as a custom die-cut/clip-path shape alongside the built-in
-// shapes (square, circle, heart, ...). Starts PENDING so a bad auto-trace
-// never reaches the storefront without a reviewer looking at it first,
-// mirroring the Artwork review flow.
+// The full shape catalog: both admin-uploaded auto-traced shapes AND the
+// original hand-authored built-in shapes (square, heart, hexagon, ...),
+// unified into one admin-manageable table. origin distinguishes the two;
+// only ADMIN_UPLOADED shapes go through sourceAssetId/the trace pipeline/
+// PENDING review — BUILT_IN shapes are seeded directly as APPROVED.
+//
+// Built-in shapes don't all use an SVG <path> the way traced uploads do —
+// they're a mix of CSS clip-path functions (inset()/polygon() for
+// rectangular/hexagon/triangle shapes) and one url(#id) reference to a
+// hardcoded SVG def (heart). clipPathType/clipPathValue is a generic pair
+// that can hold either, since forcing every shape into svgPathData's
+// normalized-SVG-path assumption doesn't fit the CSS-function ones.
 model CustomShape {
-  id              String            @id @default(uuid())
-  name            String
-  sourceAssetId   String            @map("source_asset_id")
-  sourceAsset     Asset             @relation("CustomShapeSource", fields: [sourceAssetId], references: [id])
-  previewAssetId  String?           @map("preview_asset_id")
-  previewAsset    Asset?            @relation("CustomShapePreview", fields: [previewAssetId], references: [id])
-  // Normalized SVG path data (objectBoundingBox 0-1 coordinate space), ready
-  // to drop into a <clipPath clipPathUnits="objectBoundingBox"> the same way
-  // the hand-authored shapes (e.g. shape-heart) already work on the storefront.
-  svgPathData     String            @map("svg_path_data")
-  status          CustomShapeStatus @default(PENDING)
-  createdBy       String            @map("created_by")
-  reviewedBy      String?           @map("reviewed_by")
-  reviewedAt      DateTime?         @map("reviewed_at")
-  rejectionReason String?           @map("rejection_reason")
-  createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
+  id                String            @id @default(uuid())
+  name              String
+  origin            ShapeOrigin       @default(ADMIN_UPLOADED)
+  sourceAssetId     String?           @map("source_asset_id")
+  sourceAsset       Asset?            @relation("CustomShapeSource", fields: [sourceAssetId], references: [id])
+  previewAssetId    String?           @map("preview_asset_id")
+  previewAsset      Asset?            @relation("CustomShapePreview", fields: [previewAssetId], references: [id])
+  clipPathType      ClipPathType      @default(SVG_PATH) @map("clip_path_type")
+  // SVG_PATH: normalized <path d="..."> data (objectBoundingBox 0-1 space).
+  // CSS_FUNCTION: a raw CSS clip-path value, e.g. "inset(0 round 14px)" or
+  // "polygon(25% 0%, 75% 0%, ...)" — used only by some built-in shapes.
+  clipPathValue     String            @map("clip_path_value")
+  shapeType         String?           @map("shape_type") // e.g. "square", "heart" — display/grouping only, not used in pricing logic
+  category          String            @default("special") // "basic" | "special" | "decorative"
+  aspectRatio       Decimal           @default(1) @map("aspect_ratio") @db.Decimal(6, 4)
+  isSingleDimension Boolean           @default(true) @map("is_single_dimension")
+  priceMode         OptionPriceMode   @default(FLAT) @map("price_mode")
+  flatPrice         Decimal           @default(0) @map("flat_price") @db.Decimal(12, 2)
+  areaRatePerSqIn   Decimal?          @map("area_rate_per_sqin") @db.Decimal(12, 4)
+  sortOrder         Int               @default(0) @map("sort_order")
+  status            CustomShapeStatus @default(PENDING)
+  createdBy         String?           @map("created_by")
+  reviewedBy        String?           @map("reviewed_by")
+  reviewedAt        DateTime?         @map("reviewed_at")
+  rejectionReason   String?           @map("rejection_reason")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
 
   @@map("custom_shapes")
+}
+
+enum ShapeOrigin {
+  BUILT_IN
+  ADMIN_UPLOADED
+}
+
+enum ClipPathType {
+  SVG_PATH
+  CSS_FUNCTION
 }
 
 enum CustomShapeStatus {

@@ -26,15 +26,15 @@ export class ShapesService {
   findAll(status?: string) {
     return this.prisma.customShape.findMany({
       where: status ? { status: status as never } : undefined,
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
     });
   }
 
-  /** Shapes customers can actually pick from in the live customizer. */
+  /** Shapes customers can actually pick from in the live customizer — built-in and admin-uploaded alike. */
   findApproved() {
     return this.prisma.customShape.findMany({
       where: { status: 'APPROVED' },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
     });
   }
 
@@ -58,7 +58,7 @@ export class ShapesService {
       throw new BadRequestException('Could not read image dimensions for shape tracing');
     }
 
-    const svgPathData = await this.traceToNormalizedPath(original, width, height);
+    const clipPathValue = await this.traceToNormalizedPath(original, width, height);
 
     const previewBuffer = await sharp(original)
       .resize(PREVIEW_MAX_DIMENSION, PREVIEW_MAX_DIMENSION, { fit: 'inside' })
@@ -83,13 +83,50 @@ export class ShapesService {
     return this.prisma.customShape.create({
       data: {
         name: dto.name,
+        origin: 'ADMIN_UPLOADED',
         sourceAssetId: dto.sourceAssetId,
         previewAssetId: previewAsset.id,
-        svgPathData,
+        clipPathType: 'SVG_PATH',
+        clipPathValue,
         status: 'PENDING',
         createdBy: dto.createdBy,
       },
     });
+  }
+
+  /**
+   * Updates editable metadata on any shape — built-in or uploaded. Never
+   * touches the clip-path geometry itself. status doubles as the on/off
+   * toggle (REJECTED = hidden from the storefront), reusing the same field
+   * the upload-review flow already uses rather than adding a parallel
+   * isActive flag.
+   */
+  async updateMetadata(
+    id: string,
+    dto: {
+      name?: string;
+      priceMode?: 'FLAT' | 'AREA_RATE';
+      flatPrice?: string;
+      areaRatePerSqIn?: string;
+      status?: 'APPROVED' | 'REJECTED';
+    },
+    adminUserId: string,
+  ) {
+    await this.getExisting(id);
+
+    const updated = await this.prisma.customShape.update({
+      where: { id },
+      data: dto as never,
+    });
+
+    await this.auditService.record({
+      adminUserId,
+      action: 'CUSTOM_SHAPE_METADATA_UPDATED',
+      entityType: 'CustomShape',
+      entityId: id,
+    });
+
+    return updated;
   }
 
   async approve(id: string, adminUserId: string, reason?: string) {
