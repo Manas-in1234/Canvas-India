@@ -6608,7 +6608,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           }}
         >
           <div
-            className="w-full max-w-[88%] rounded-2xl flex flex-col items-center text-center shadow-2xl backdrop-blur-md"
+            className={`w-full max-w-[88%] rounded-sm flex flex-col items-center text-center ${hasPhoto ? 'backdrop-blur-sm' : ''}`}
             style={{
               background: hasPhoto
                 ? `rgba(15, 23, 42, ${Math.max(0.45, scrimAlpha * 0.9)})`
@@ -6616,6 +6616,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               border: hasPhoto
                 ? '1px solid rgba(255, 255, 255, 0.28)'
                 : '1px solid rgba(15, 23, 42, 0.12)',
+              boxShadow: hasPhoto
+                ? '0 4px 14px rgba(0, 0, 0, 0.3)'
+                : '0 1px 3px rgba(15, 23, 42, 0.08)',
               padding: `${s(14)}px ${s(16)}px`,
               gap: `${s(6)}px`,
               color: hasPhoto ? (lyricConfig.textColor || '#FFFFFF') : effectiveTextColor
@@ -6988,7 +6991,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     // Default: photo-lyrics-overlay (bottom gradient with elegant typography)
     return (
       <div
-        className="absolute inset-0 z-25 flex flex-col justify-end pointer-events-none select-none"
+        className="absolute inset-0 z-25 flex flex-col justify-end pointer-events-none select-none overflow-hidden"
         style={{
           padding: `${s(16)}px ${s(18)}px`,
           background: hasPhoto
@@ -6999,11 +7002,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           textShadow
         }}
       >
-        <div className="space-y-1 drop-shadow-md">
+        {/* flex-col with a maxHeight cap so, on a small Room View box, only
+            the lyrics line (flex-grow/shrink) gives up space — the title/
+            date/artist/divider above it (all shrink-0) always render in
+            full instead of being pushed off the top edge and clipped. */}
+        <div className="space-y-1 drop-shadow-md flex flex-col min-h-0" style={{ maxHeight: '100%' }}>
           {(Boolean(title && title.trim().length > 0) || Boolean(date && date.trim().length > 0)) && (
-            <div className="flex items-baseline justify-between gap-2">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 shrink-0">
               {Boolean(title && title.trim().length > 0) && (
-                <span className="font-black uppercase tracking-wider truncate" style={{ fontSize: fs(14) }}>
+                <span className="font-black uppercase tracking-wider" style={{ fontSize: fs(14) }}>
                   {title}
                 </span>
               )}
@@ -7015,20 +7022,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             </div>
           )}
           {Boolean(artist && artist.trim().length > 0) && (
-            <div className="italic opacity-90" style={{ fontSize: fs(11) }}>
+            <div className="italic opacity-90 shrink-0" style={{ fontSize: fs(11) }}>
               {artist}
             </div>
           )}
           {(Boolean(title && title.trim().length > 0) || Boolean(artist && artist.trim().length > 0)) && Boolean(text && text.trim().length > 0) && (
-            <div className="w-12 h-px bg-current opacity-40 my-1" />
+            <div className="w-12 h-px bg-current opacity-40 my-1 shrink-0" />
           )}
           {Boolean(text && text.trim().length > 0) && (
             <div
-              className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden"
+              className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden min-h-0 grow"
               style={{
                 fontSize: fs(10.5),
-                textAlign,
-                maxHeight: `${s(140)}px`
+                textAlign
               }}
             >
               {text}
