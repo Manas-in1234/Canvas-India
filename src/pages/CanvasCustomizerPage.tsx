@@ -111,7 +111,7 @@ import {
   getLyricTemplate
 } from '../data/lyricCanvasData';
 import { fetchApprovedCustomShapes, toShapeOption, type CustomShapeDto } from '../api/customShapesApi';
-import { fetchShapeAreaRate, SHAPE_AREA_RATE_FALLBACK } from '../api/pricingSettingsApi';
+import { fetchPricingRates, SHAPE_AREA_RATE_FALLBACK, ACRYLIC_THICKNESS_RATE_FALLBACKS } from '../api/pricingSettingsApi';
 import {
   CANVAS_SHAPES,
   CanvasShapeOption,
@@ -2842,13 +2842,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, []);
   const customShapeOptions = useMemo(() => customShapes.map(toShapeOption), [customShapes]);
 
-  // Admin-editable rate (see admin Pricing screen) used to bill non-rectangular
-  // shapes by bounding-box area — falls back to the seeded default if the fetch fails.
+  // Admin-editable rates (see admin Pricing screen) used to bill non-rectangular
+  // shapes and acrylic sheet thickness by bounding-box area — falls back to
+  // the seeded defaults if the fetch fails.
   const [shapeAreaRate, setShapeAreaRate] = useState<number>(SHAPE_AREA_RATE_FALLBACK);
+  const [acrylicThicknessRates, setAcrylicThicknessRates] = useState<Record<string, number>>(ACRYLIC_THICKNESS_RATE_FALLBACKS);
   useEffect(() => {
     let cancelled = false;
-    fetchShapeAreaRate().then((rate) => {
-      if (!cancelled) setShapeAreaRate(rate);
+    fetchPricingRates().then((rates) => {
+      if (cancelled) return;
+      setShapeAreaRate(rates.shapeAreaRate);
+      setAcrylicThicknessRates(rates.acrylicThicknessRates);
     });
     return () => {
       cancelled = true;
@@ -3825,10 +3829,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       // ids (canvas-lite, thin-gallery, ...) never match an acrylic
       // thickness id, so acrylic thickness pricing silently applied nothing.
       const acrylicThickness = ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId);
-      if (acrylicThickness?.ratePerSqIn) {
+      const liveRate = acrylicThickness ? acrylicThicknessRates[acrylicThickness.id] : undefined;
+      if (liveRate) {
         const boundingWidth = isCustomSize && canUseCustomSize ? customWidth : (currentSizeOption.widthInches ?? customWidth);
         const boundingHeight = isCustomSize && canUseCustomSize ? customHeight : (currentSizeOption.heightInches ?? customHeight);
-        price += Math.round(boundingWidth * boundingHeight * acrylicThickness.ratePerSqIn);
+        price += Math.round(boundingWidth * boundingHeight * liveRate);
       } else if (acrylicThickness) {
         price += acrylicThickness.price;
       }
@@ -3868,6 +3873,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     customHeight,
     currentSizeOption,
     shapeAreaRate,
+    acrylicThicknessRates,
     activeMaterial,
     selectedWrapId,
     selectedThicknessId,
