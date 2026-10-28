@@ -3245,7 +3245,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           rotation: 0,
           panX: 0,
           panY: 0,
-          fitMode: 'cover'
+          // 'contain' (not 'cover') — this is a fixed catalogue design, not
+          // a user photo to crop-to-fill; the whole artwork must stay visible.
+          fitMode: 'contain'
         }
       }));
     };
@@ -3253,7 +3255,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setUploadedPhotos((prev) => (prev.includes(prefillImage) ? prev : [prefillImage, ...prev]));
       setPanelImages((prev) => ({
         ...prev,
-        0: { ...createDefaultPanel(), imageUrl: prefillImage, fitMode: 'cover' }
+        0: { ...createDefaultPanel(), imageUrl: prefillImage, fitMode: 'contain' }
       }));
     };
     img.src = prefillImage;
