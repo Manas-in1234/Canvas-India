@@ -396,6 +396,47 @@ enum OptionPriceMode {
   AREA_RATE
 }
 
+// Admin-manageable size presets, replacing what was five separate hardcoded
+// systems in the frontend (a "centralized" shape+preset config, a flat
+// acrylic-only SIZE_OPTIONS array, a 1400-line page-local SIZE_OPTIONS array,
+// a runtime price-multiplier scheme for several special products, and a
+// product-geometry layout table) — none of which shared one scope key or
+// pricing mechanism. This unifies them: every size option is one row keyed
+// by productTypeId (+ shapeId when the "standard shape size" scope applies,
+// null for multi-panel layout presets which are self-contained), carrying
+// both acrylicPrice and canvasPrice explicitly rather than a multiplier or a
+// second hardcoded list, since real prices genuinely differ by material and
+// are not a fixed ratio of each other.
+model SizePreset {
+  id                String   @id @default(uuid())
+  productTypeId     String   @map("product_type_id")
+  // Null for the generic "standard shape size" scope (applies across
+  // whichever shape is selected via STANDARD_SHAPE_SIZES-equivalent lookup);
+  // set for shape-scoped single-panel presets. Multi-panel layout presets
+  // (wall display, split, collage, mosaic, hexagon) don't vary by shape in
+  // the current data, so this stays null for those too.
+  shapeId           String?  @map("shape_id")
+  label             String
+  dimensionsSummary String   @map("dimensions_summary")
+  widthInches       Decimal  @map("width_inches") @db.Decimal(6, 2)
+  heightInches      Decimal  @map("height_inches") @db.Decimal(6, 2)
+  acrylicPrice      Decimal  @map("acrylic_price") @db.Decimal(12, 2)
+  canvasPrice       Decimal  @map("canvas_price") @db.Decimal(12, 2)
+  category          String? // free-form grouping (e.g. "RECOMMENDED", "SQUARE") — not a fixed enum since real categories vary per product family
+  panelsCount       Int?     @map("panels_count")
+  // Per-panel breakdown for multi-panel presets: [{ id, label, dimension,
+  // widthRatio, heightRatio }] — null for single-panel sizes.
+  panels            Json?
+  arrangement       String?
+  sortOrder         Int      @default(0) @map("sort_order")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@index([productTypeId, shapeId])
+  @@map("size_presets")
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // COMMERCE — cart & orders (scope §44–45, §89, §114, §87 Commerce)
 // ─────────────────────────────────────────────────────────────────────────

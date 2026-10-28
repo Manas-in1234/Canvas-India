@@ -7,6 +7,7 @@ import { OptionsModule } from './options/options.module.js';
 import { VariantsModule } from './variants/variants.module.js';
 import { PricingModule } from './pricing/pricing.module.js';
 import { OptionCategoriesModule } from './option-categories/option-categories.module.js';
+import { SizePresetsModule } from './size-presets/size-presets.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { OptionCategoriesModule } from './option-categories/option-categories.mo
     VariantsModule,
     PricingModule,
     OptionCategoriesModule,
+    SizePresetsModule,
   ],
   exports: [
     ProductsModule,
@@ -28,6 +30,7 @@ import { OptionCategoriesModule } from './option-categories/option-categories.mo
     VariantsModule,
     PricingModule,
     OptionCategoriesModule,
+    SizePresetsModule,
   ],
 })
 export class CatalogModule {}
