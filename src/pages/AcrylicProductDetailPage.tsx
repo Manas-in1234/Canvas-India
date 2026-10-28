@@ -173,6 +173,21 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   // a quantity-tier preview with nowhere to go.
   const bulkItem = useMemo(() => getBulkItem('acrylic', product.categorySlug), [product.categorySlug]);
 
+  // Pre-designed Print World catalogue art (Devotional Art, Line Art, etc.),
+  // re-offered here as a plain Acrylic product (categorySlug is just
+  // 'acrylic'), has no real Size/Shape/Hook variants of its own — every
+  // size is the same fixed artwork. Identified by id, e.g.
+  // "acrylic-tribal-ethnic-art-a-a-001" — same detection as the Canvas
+  // product page, so both formats of these designs get the Customize
+  // button instead of a buy-as-is flow.
+  const isCatalogueDesign = [
+    'devotional-art',
+    'line-art',
+    'motivational-posters',
+    'scenery-landscape-art',
+    'tribal-ethnic-art'
+  ].some((slug) => product.id.includes(slug));
+
   // Bottom Tabs State ('description' | 'specifications' | 'shipping' | 'reviews')
   const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'shipping' | 'reviews'>('description');
 
@@ -540,6 +555,17 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
             {/* =================================================================== */}
             {/* PRODUCT CONFIGURATION SELECTORS                                     */}
             {/* =================================================================== */}
+            {isCatalogueDesign ? (
+              <button
+                type="button"
+                onClick={() => navigate(`/customize/acrylic/single?prefillImage=${encodeURIComponent(product.image)}&prefillName=${encodeURIComponent(product.name)}`)}
+                className="w-full py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+              >
+                <Pencil className="w-4 h-4" />
+                <span>Customize this Product</span>
+              </button>
+            ) : (
+              <>
             <div className="space-y-4">
 
               {/* SIZE / SHAPE — matches the Canvas product page's tabbed card */}
@@ -717,6 +743,8 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                 <span>{isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}</span>
               </button>
             </div>
+              </>
+            )}
 
           </div>
 
