@@ -113,13 +113,20 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   // has no real Size/Shape/Frame/Hook variants of its own — every size is
   // the same fixed artwork — so instead of a buy-as-is flow it sends the
   // shopper straight into the customizer with this exact design preloaded.
-  const isCatalogueDesign = [
+  // These designs are also re-offered as plain Canvas/Acrylic products
+  // (catalogueCanvasAcrylicProducts.ts) with categorySlug just 'canvas' or
+  // 'acrylic' — those are identified by their id instead, e.g.
+  // "canvas-tribal-ethnic-art-a-a-001".
+  const CATALOGUE_DESIGN_SLUGS = [
     'devotional-art',
     'line-art',
     'motivational-posters',
     'scenery-landscape-art',
     'tribal-ethnic-art'
-  ].includes(product.categorySlug);
+  ];
+  const isCatalogueDesign =
+    CATALOGUE_DESIGN_SLUGS.includes(product.categorySlug) ||
+    CATALOGUE_DESIGN_SLUGS.some((slug) => product.id.includes(slug));
 
   // In-page customization state
   const [customText, setCustomText] = useState<string>('');
