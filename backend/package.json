@@ -45,10 +45,12 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.23.0",
+    "potrace": "^2.1.8",
     "razorpay": "^2.9.8",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "sharp": "^0.35.4"
+    "sharp": "^0.35.4",
+    "svgpath": "^2.6.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^12.0.0",

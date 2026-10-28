@@ -9,4 +9,5 @@
 /roles/*            /roles/placeholder            200
 /segments/*         /segments/placeholder         200
 /artwork/*          /artwork/placeholder          200
+/shapes/*           /shapes/placeholder           200
 /production/jobs/*  /production/jobs/placeholder  200

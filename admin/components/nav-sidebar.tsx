@@ -22,6 +22,7 @@ import {
   UserCog,
   ShieldCheck,
   Palette,
+  IndianRupee,
   BarChart3,
   Sparkles,
   UsersRound,
@@ -74,6 +75,7 @@ const NAV_SECTIONS: NavSection[] = [
     label: 'Production',
     links: [
       { href: '/artwork', label: 'Artwork Review', icon: Palette, requiredPermissions: ['artwork.view'] },
+      { href: '/shapes', label: 'Custom Shapes', icon: Sparkles, requiredPermissions: ['shapes.view'] },
       { href: '/production/board', label: 'Board', icon: LayoutGrid, requiredPermissions: ['production.view'] },
       { href: '/production/jobs', label: 'Jobs', icon: Factory, requiredPermissions: ['production.view'] },
       { href: '/production/machines', label: 'Machines', icon: Wrench, requiredPermissions: ['machines.view'] },
@@ -107,6 +109,7 @@ const NAV_SECTIONS: NavSection[] = [
     links: [
       { href: '/users', label: 'Admin Users', icon: UserCog, requiredPermissions: ['users.view'] },
       { href: '/roles', label: 'Roles', icon: ShieldCheck, requiredPermissions: ['roles.view'] },
+      { href: '/pricing', label: 'Pricing', icon: IndianRupee, requiredPermissions: ['pricing.view'] },
     ],
   },
   {
