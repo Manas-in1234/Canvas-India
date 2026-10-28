@@ -17,8 +17,7 @@ import {
   ArrowRight,
   PackageCheck,
   Info,
-  Pencil,
-  ChevronDown
+  Pencil
 } from 'lucide-react';
 import { Product } from '../types';
 import { useShop } from '../context/ShopContext';
@@ -26,7 +25,7 @@ import { ProductImage } from '../components/ProductImage';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { WallPreview } from '../components/WallPreview';
 import { HookIcon, HOOK_OPTIONS } from '../components/FrameHookVisuals';
-import { QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
+import { bulkUnitPriceFor, MIN_BULK_QTY, getBulkItem } from './BulkOrdersPage';
 import {
   AcrylicProductReview,
   getProductReviews,
@@ -167,8 +166,12 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   const [customSizeW, setCustomSizeW] = useState<string>('');
   const [customSizeH, setCustomSizeH] = useState<string>('');
   const [selectedHook, setSelectedHook] = useState<string>('Sawtooth Hanger');
-  const [bulkPanelOpen, setBulkPanelOpen] = useState<boolean>(false);
-  const [customBulkQty, setCustomBulkQty] = useState<string>('');
+
+  // The Bulk & Corporate Orders catalogue keys its items by material+slug —
+  // matches this exact style when it has one, so "Order this item in bulk"
+  // can jump straight to its dedicated bulk/customize flow instead of just
+  // a quantity-tier preview with nowhere to go.
+  const bulkItem = useMemo(() => getBulkItem('acrylic', product.categorySlug), [product.categorySlug]);
 
   // Bottom Tabs State ('description' | 'specifications' | 'shipping' | 'reviews')
   const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'shipping' | 'reviews'>('description');
@@ -189,8 +192,6 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
     setActiveImageIndex(0);
     setSizeShapeTab('size');
     setSelectedHook('Sawtooth Hanger');
-    setBulkPanelOpen(false);
-    setCustomBulkQty('');
     setCustomSizeOpen(false);
     setCustomSizeW('');
     setCustomSizeH('');
@@ -688,72 +689,12 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
             <div>
               <button
                 type="button"
-                onClick={() => setBulkPanelOpen((v) => !v)}
+                onClick={() => navigate(bulkItem ? `/bulk-order/${bulkItem.material}/${bulkItem.slug}` : '/bulk-order')}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-[#0E4A93] text-sm font-bold text-[#0E4A93] hover:bg-blue-50/60 transition-colors cursor-pointer"
               >
                 <PackageCheck className="w-5 h-5" />
                 <span>Order this item in bulk</span>
-                <ChevronDown className={`w-5 h-5 transition-transform ${bulkPanelOpen ? 'rotate-180' : ''}`} />
               </button>
-
-              {bulkPanelOpen && (
-                <div className="mt-3 p-4 rounded-xl border border-stone-200 bg-stone-50 space-y-3">
-                  <div className="grid grid-cols-3 gap-2">
-                    {QTY_PRICE_TIERS.map((tier) => {
-                      const tierPrice = bulkUnitPriceFor(unitPrice, tier.qty);
-                      const isActive = quantity === tier.qty;
-                      return (
-                        <button
-                          key={tier.qty}
-                          type="button"
-                          onClick={() => { setQuantity(tier.qty); setCustomBulkQty(''); }}
-                          className={`px-2 py-2 rounded-lg border-2 text-center transition-all cursor-pointer ${
-                            isActive ? 'border-[#0E4A93] bg-blue-50/60' : 'border-stone-200 bg-white hover:border-stone-400'
-                          }`}
-                        >
-                          <div className={`text-xs font-extrabold ${isActive ? 'text-[#0E4A93]' : 'text-stone-900'}`}>{tier.qty} units</div>
-                          <div className="text-[10px] text-stone-500 mt-0.5">₹{tierPrice.toLocaleString('en-IN')} each</div>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div>
-                    <label htmlFor="acrylic-custom-bulk-qty" className="text-[11px] font-bold text-stone-700 block mb-1">
-                      Or enter a custom quantity
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        id="acrylic-custom-bulk-qty"
-                        type="number"
-                        min={MIN_BULK_QTY}
-                        value={customBulkQty}
-                        onChange={(e) => setCustomBulkQty(e.target.value)}
-                        placeholder={`${MIN_BULK_QTY}+`}
-                        className="w-28 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const n = Number(customBulkQty);
-                          if (n >= MIN_BULK_QTY) setQuantity(n);
-                        }}
-                        className="px-4 py-2 text-xs font-bold rounded-lg border-2 border-stone-300 text-stone-700 hover:border-stone-400 transition-colors cursor-pointer"
-                      >
-                        Apply
-                      </button>
-                    </div>
-                    <p className="text-[10px] text-stone-400 mt-1">Minimum bulk order: {MIN_BULK_QTY} units</p>
-                  </div>
-
-                  {quantity >= MIN_BULK_QTY && (
-                    <div className="pt-2 border-t border-stone-200 text-xs text-stone-700">
-                      <span className="font-bold text-[#0E4A93]">₹{bulkUnitPriceFor(unitPrice, quantity).toLocaleString('en-IN')} each</span>
-                      {' '}× {quantity} = <span className="font-bold">₹{(bulkUnitPriceFor(unitPrice, quantity) * quantity).toLocaleString('en-IN')}</span> total
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
