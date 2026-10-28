@@ -14,6 +14,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const SETTING_LABELS: Record<string, string> = {
   shape_area_rate_per_sqin: 'Shape Area Rate (Rs. per sq. inch)',
+  acrylic_thickness_rate_3mm: 'Acrylic Thickness Rate — 3mm (Rs. per sq. inch)',
+  acrylic_thickness_rate_5mm: 'Acrylic Thickness Rate — 5mm (Rs. per sq. inch)',
+  acrylic_thickness_rate_6mm: 'Acrylic Thickness Rate — 6mm (Rs. per sq. inch)',
+  acrylic_thickness_rate_8mm: 'Acrylic Thickness Rate — 8mm (Rs. per sq. inch)',
 };
 
 function PricingSettingRow({ setting, canManage }: { setting: PricingSettingItem; canManage: boolean }) {
