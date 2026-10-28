@@ -133,34 +133,84 @@ export const WORD_ART_SHAPE_OPTIONS = [
 
 export const WORD_ART_COLOR_SCHEMES = [
   {
-    id: 'monochrome',
-    label: 'Monochrome (White/Slate)',
-    colors: ['#FFFFFF', '#F8FAFC', '#F1F5F9', '#E2E8F0', '#CBD5E1', '#94A3B8', '#64748B']
+    id: 'neutrals-plum',
+    label: 'Neutrals & Plum',
+    colors: ['#FFFFFF', '#4A4036', '#483D4A']
   },
   {
-    id: 'neutrals',
-    label: 'Neutrals (Cream/Stone)',
-    colors: ['#FFFFFF', '#FDFBF7', '#F5EBE1', '#E6D5C3', '#D4C3B3', '#A89F91', '#8C8275']
+    id: 'mint-steel-beige',
+    label: 'Mint / Steel Grey / Beige',
+    colors: ['#72B5A8', '#A8B0B5', '#9C8E82']
   },
   {
-    id: 'ocean',
-    label: 'Ocean Blues (Canvas India)',
-    colors: ['#FFFFFF', '#E0F2FE', '#BAE6FD', '#7DD3FC', '#38BDF8', '#0284C7', '#0E4A93', '#60A5FA']
+    id: 'greens',
+    label: 'Greens',
+    colors: ['#2ECC40', '#00B32C', '#007A1E']
+  },
+  {
+    id: 'blues',
+    label: 'Blues',
+    colors: ['#93C5FD', '#3B82F6', '#1D4ED8', '#1E3A8A']
+  },
+  {
+    id: 'warm-earth-tones',
+    label: 'Warm Earth Tones',
+    colors: ['#F5EBE1', '#D4A373', '#A98467', '#6C584C']
   },
   {
     id: 'sunset',
-    label: 'Sunset Glow (Warm Amber)',
-    colors: ['#FFFFFF', '#FEF08A', '#FDE047', '#FDBA74', '#FB923C', '#F43F5E', '#E11D48']
+    label: 'Sunset',
+    colors: ['#FEF08A', '#FDBA74', '#FB923C', '#F43F5E', '#BE123C']
   },
   {
-    id: 'emerald',
-    label: 'Emerald Forest (Nature)',
-    colors: ['#FFFFFF', '#D1FAE5', '#A7F3D0', '#6EE7B7', '#34D399', '#10B981', '#047857']
+    id: 'pastels',
+    label: 'Pastels',
+    colors: ['#FDE2E4', '#FAD2E1', '#E2ECE9', '#BEE1E6', '#DFE7FD']
   },
   {
-    id: 'vibrant',
-    label: 'Vibrant Multi-Color',
-    colors: ['#FFFFFF', '#F43F5E', '#8B5CF6', '#3B82F6', '#06B6D4', '#10B981', '#F59E0B']
+    id: 'black-gold',
+    label: 'Black & Gold',
+    colors: ['#FFFFFF', '#D4AF37', '#AA7C11', '#1A1A1A']
+  },
+  {
+    id: 'ocean',
+    label: 'Ocean',
+    colors: ['#E0F2FE', '#7DD3FC', '#0284C7', '#0369A1', '#0E4A93']
+  },
+  {
+    id: 'jewel-tones',
+    label: 'Jewel Tones',
+    colors: ['#0D9488', '#4338CA', '#7E22CE', '#BE185D', '#B45309']
+  },
+  {
+    id: 'monochrome',
+    label: 'Monochrome',
+    colors: ['#FFFFFF', '#CBD5E1', '#94A3B8', '#64748B', '#334155', '#0F172A']
+  },
+  {
+    id: 'bright-vibrant',
+    label: 'Bright & Vibrant',
+    colors: ['#F43F5E', '#8B5CF6', '#06B6D4', '#10B981', '#F59E0B']
+  },
+  {
+    id: 'rose-burgundy',
+    label: 'Rose & Burgundy',
+    colors: ['#FFE4E6', '#FDA4AF', '#F43F5E', '#9F1239', '#4C0519']
+  },
+  {
+    id: 'terracotta',
+    label: 'Terracotta',
+    colors: ['#FDF0ED', '#E07A5F', '#C85A32', '#9C4121', '#3D405B']
+  },
+  {
+    id: 'lavender',
+    label: 'Lavender',
+    colors: ['#F3E8FF', '#D8B4FE', '#A855F7', '#7E22CE', '#581C87']
+  },
+  {
+    id: 'forest-moss',
+    label: 'Forest & Moss',
+    colors: ['#ECFDF5', '#A7F3D0', '#34D399', '#059669', '#064E3B', '#2D4A22']
   }
 ];
 
@@ -181,7 +231,7 @@ export const DEFAULT_WORD_ART_CONFIG: WordArtConfig = {
     'Journey'
   ],
   shape: 'heart',
-  colorScheme: 'monochrome',
+  colorScheme: 'neutrals-plum',
   textDirection: 'horizontal',
   seed: 42
 };
@@ -550,9 +600,14 @@ export function renderWordArtToCanvas(
   const palette = rawPalette.map((c) => ensureColorContrast(c, bgColor));
   const primaryColor = ensureColorContrast(config.fontColor || '#FFFFFF', bgColor);
 
+  let paletteColorIdx = 0;
   const getWordColor = (isPrimary = false) => {
-    if (isPrimary && rand() > 0.3) return primaryColor;
-    return palette[Math.floor(rand() * palette.length)];
+    if (isPrimary) {
+      return primaryColor;
+    }
+    const color = palette[paletteColorIdx % palette.length];
+    paletteColorIdx++;
+    return color;
   };
 
   // 3. User Words Gathering & Hierarchy

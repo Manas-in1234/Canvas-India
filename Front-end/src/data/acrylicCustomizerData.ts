@@ -1411,6 +1411,7 @@ export interface FrameOption {
   image: string;
   borderCss: string;
   color: string;
+  category?: 'standard' | 'premium' | 'floating';
 }
 
 export const FRAME_OPTIONS: FrameOption[] = [
@@ -1420,39 +1421,44 @@ export const FRAME_OPTIONS: FrameOption[] = [
     price: 0,
     image: '/assets/customizer/acrylic/frames/no-frame.svg',
     borderCss: 'none',
-    color: 'transparent'
+    color: 'transparent',
+    category: 'floating'
   },
   {
     id: 'black-frame',
-    name: 'Modern Black Frame',
-    price: 350.00,
+    name: 'Black Floating Frame',
+    price: 1798.00,
     image: '/assets/customizer/acrylic/frames/black-frame.svg',
-    borderCss: '12px solid #18181b',
-    color: '#18181b'
-  },
-  {
-    id: 'gold-frame',
-    name: 'Brushed Gold Frame',
-    price: 450.00,
-    image: '/assets/customizer/acrylic/frames/gold-frame.svg',
-    borderCss: '12px solid #d4af37',
-    color: '#d4af37'
-  },
-  {
-    id: 'white-frame',
-    name: 'Gallery White Frame',
-    price: 350.00,
-    image: '/assets/customizer/acrylic/frames/white-frame.svg',
-    borderCss: '12px solid #ffffff',
-    color: '#ffffff'
+    borderCss: '16px solid #18181b',
+    color: '#18181b',
+    category: 'floating'
   },
   {
     id: 'wood-frame',
-    name: 'Natural Oak Frame',
-    price: 490.00,
+    name: 'Brown Floating Frame',
+    price: 1798.00,
     image: '/assets/customizer/acrylic/frames/wood-frame.svg',
-    borderCss: '12px solid #92400e',
-    color: '#92400e'
+    borderCss: '16px solid #7e481c',
+    color: '#7e481c',
+    category: 'floating'
+  },
+  {
+    id: 'white-frame',
+    name: 'White Floating Frame',
+    price: 1798.00,
+    image: '/assets/customizer/acrylic/frames/white-frame.svg',
+    borderCss: '16px solid #f8fafc',
+    color: '#f8fafc',
+    category: 'floating'
+  },
+  {
+    id: 'gold-frame',
+    name: 'Metal Floating Frame',
+    price: 1798.00,
+    image: '/assets/customizer/acrylic/frames/gold-frame.svg',
+    borderCss: '16px solid #bfa15f',
+    color: '#bfa15f',
+    category: 'floating'
   }
 ];
 

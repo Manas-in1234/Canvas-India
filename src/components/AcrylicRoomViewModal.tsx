@@ -626,10 +626,10 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
         </div>
 
         {/* Bottom Status Pill */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-stone-900/90 backdrop-blur-md px-4 py-2 rounded-full border border-stone-800 shadow-xl flex items-center gap-2.5 text-white text-xs pointer-events-none">
-          <Move className="w-3.5 h-3.5 text-[#E8752A]" />
-          <span className="font-semibold text-stone-200">
-            Drag product on the wall • Locked scale ({productDimensionLabel})
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-stone-900/90 backdrop-blur-md px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-stone-800 shadow-xl flex items-center gap-2 text-white text-[10px] sm:text-xs pointer-events-none max-w-[calc(100vw-2rem)] truncate">
+          <Move className="w-3.5 h-3.5 text-[#E8752A] shrink-0" />
+          <span className="font-semibold text-stone-200 truncate">
+            Drag product on wall • Locked scale ({productDimensionLabel})
           </span>
         </div>
       </div>

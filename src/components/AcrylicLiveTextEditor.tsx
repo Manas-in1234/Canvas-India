@@ -61,7 +61,7 @@ export const AcrylicLiveTextEditor: React.FC<AcrylicLiveTextEditorProps> = ({
 
   return (
     <div
-      className="absolute top-14 right-4 z-40 bg-white/95 backdrop-blur-md border border-stone-200 rounded-2xl shadow-2xl p-4 w-88 max-w-[calc(100vw-2rem)] select-none animate-in fade-in slide-in-from-top-2 duration-200"
+      className="absolute top-14 left-2 right-2 sm:left-auto sm:right-4 z-40 bg-white/95 backdrop-blur-md border border-stone-200 rounded-2xl shadow-2xl p-4 w-auto sm:w-88 max-h-[80vh] overflow-y-auto select-none animate-in fade-in slide-in-from-top-2 duration-200"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Header */}

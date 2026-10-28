@@ -110,19 +110,19 @@ export const WordArtPersonalizeModal: React.FC<WordArtPersonalizeModalProps> = (
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header - Canvas India Brand Styling */}
-        <div className="flex items-center justify-between px-6 py-4 bg-[#0E4A93] text-white">
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg sm:text-xl font-black tracking-tight">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-[#0E4A93] text-white">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <h2 className="text-base sm:text-xl font-black tracking-tight truncate">
               {selectedSize.label} Word Art on Canvas
             </h2>
-            <span className="hidden sm:inline-block text-[11px] font-bold text-blue-100 bg-white/15 px-2.5 py-0.5 rounded-full border border-white/20">
+            <span className="hidden sm:inline-block text-[11px] font-bold text-blue-100 bg-white/15 px-2.5 py-0.5 rounded-full border border-white/20 shrink-0">
               ₹{displayPrice.toFixed(2)}
             </span>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer transition-colors"
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer transition-colors shrink-0"
             title="Close"
           >
             <X className="w-4 h-4" />
@@ -253,22 +253,61 @@ export const WordArtPersonalizeModal: React.FC<WordArtPersonalizeModalProps> = (
               </select>
             </div>
 
-            {/* 6. Color Scheme */}
+            {/* 6. Color Scheme - Matching Reference Screenshot */}
             <div>
-              <label className="block text-xs font-black text-stone-800 uppercase tracking-wider mb-1">
-                Color Scheme
-              </label>
-              <select
-                value={config.colorScheme}
-                onChange={(e) => setConfig((prev) => ({ ...prev, colorScheme: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl border border-stone-300 text-stone-900 text-sm font-bold bg-white focus:ring-2 focus:ring-[#0E4A93] focus:border-[#0E4A93] outline-none cursor-pointer"
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-xs font-black text-stone-800 uppercase tracking-wider">
+                  Color Scheme
+                </label>
+                <span className="text-[11px] text-stone-400 font-bold">
+                  {WORD_ART_COLOR_SCHEMES.length} schemes
+                </span>
+              </div>
+              <div
+                className="max-h-44 overflow-y-auto space-y-1.5 p-1.5 rounded-xl border border-stone-200 bg-stone-50/50 pr-1 select-none"
+                role="radiogroup"
+                aria-label="Color Scheme"
               >
-                {WORD_ART_COLOR_SCHEMES.map((cs) => (
-                  <option key={cs.id} value={cs.id}>
-                    {cs.label}
-                  </option>
-                ))}
-              </select>
+                {WORD_ART_COLOR_SCHEMES.map((cs) => {
+                  const isSelected = config.colorScheme === cs.id;
+                  return (
+                    <button
+                      key={cs.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      onClick={() => setConfig((prev) => ({ ...prev, colorScheme: cs.id }))}
+                      className={`w-full flex items-center justify-between p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-[#0E4A93] bg-blue-50/80 ring-1 ring-[#0E4A93] shadow-xs'
+                          : 'border-stone-200 bg-white hover:bg-stone-50 hover:border-stone-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {/* Swatches in exact sequential application order */}
+                        <div className="flex items-center gap-1 shrink-0">
+                          {cs.colors.map((color, idx) => (
+                            <span
+                              key={idx}
+                              className="w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-xs border border-black/20 shadow-2xs block"
+                              style={{ backgroundColor: color }}
+                              title={color}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs font-bold text-stone-800 truncate">
+                          {cs.label}
+                        </span>
+                      </div>
+                      {isSelected && (
+                        <div className="w-4 h-4 rounded-full bg-[#0E4A93] text-white flex items-center justify-center shrink-0 ml-2">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* 7. Text Direction */}
@@ -289,11 +328,11 @@ export const WordArtPersonalizeModal: React.FC<WordArtPersonalizeModalProps> = (
               </select>
             </div>
 
-            {/* "VIEW YOUR PERSONALIZATION" Button */}
+            {/* "VIEW YOUR PERSONALIZATION" Button - Crimson Red styling matching reference */}
             <button
               type="button"
               onClick={handleViewPersonalization}
-              className="w-full py-3 rounded-xl bg-[#0E4A93] hover:bg-[#0a3770] text-white text-xs font-black uppercase tracking-wider shadow-sm hover:shadow transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+              className="w-full py-3 rounded-xl bg-[#B91C1C] hover:bg-[#991B1B] text-white text-xs font-black uppercase tracking-wider shadow-sm hover:shadow transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
             >
               <RefreshCw className="w-4 h-4" />
               VIEW YOUR PERSONALIZATION
@@ -322,11 +361,11 @@ export const WordArtPersonalizeModal: React.FC<WordArtPersonalizeModalProps> = (
         </div>
 
         {/* Footer Bar: CHANGE SIZE + ADD TO PRODUCT */}
-        <div className="px-6 py-4 bg-stone-50 border-t border-stone-200 flex items-center justify-between gap-4">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-stone-50 border-t border-stone-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <button
             type="button"
             onClick={onChangeSize}
-            className="px-5 py-2.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-700 text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2"
+            className="px-4 sm:px-5 py-2.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-700 text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             CHANGE SIZE
@@ -335,7 +374,7 @@ export const WordArtPersonalizeModal: React.FC<WordArtPersonalizeModalProps> = (
           <button
             type="button"
             onClick={handleApplyToProduct}
-            className="px-8 py-3 rounded-xl bg-[#0E4A93] hover:bg-[#0a3770] text-white text-sm font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center gap-2 active:scale-98"
+            className="px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl bg-[#0E4A93] hover:bg-[#0a3770] text-white text-xs sm:text-sm font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
           >
             <Check className="w-4 h-4 stroke-[3]" />
             ADD TO PRODUCT

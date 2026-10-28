@@ -405,7 +405,7 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-5 sm:px-6 py-4 bg-stone-50 border-t border-stone-200 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-stone-50 border-t border-stone-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
           <div className="text-xs text-stone-500 truncate mr-2">
             Selected Layout:{' '}
             <strong className="text-stone-900 font-black">
@@ -417,18 +417,18 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
                 : `${currentSelected?.panelsCount} ${currentSelected?.panelsCount === 1 ? 'Photo Slot' : 'Photo Slots'}`})
             </span>
           </div>
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center justify-end gap-2.5 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition-colors cursor-pointer"
+              className="px-3 sm:px-4 py-2 rounded-xl text-xs font-bold text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleApply}
-              className="px-6 py-2.5 rounded-xl text-xs font-black text-white bg-[#EA580C] hover:bg-[#C2410C] shadow-md transition-all hover:scale-102 cursor-pointer"
+              className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs font-black text-white bg-[#0E4A93] hover:bg-[#0A366C] shadow-md transition-all hover:scale-102 cursor-pointer text-center"
             >
               Apply Layout
             </button>

@@ -5,6 +5,7 @@ import {
   renderProductLayoutDiagram,
   ProductLayoutDefinition
 } from '../data/productGeometry';
+import { bulkUnitPriceFor, MIN_BULK_QTY } from '../pages/BulkOrdersPage';
 
 export type LayoutModalOption = ProductLayoutDefinition;
 
@@ -17,6 +18,9 @@ export interface SelectLayoutModalProps {
   currentLayoutId?: string;
   onSelectLayout: (layout: LayoutModalOption) => void;
   onHighlightLayout?: (layout: LayoutModalOption) => void;
+  /** When set to a bulk quantity (>= MIN_BULK_QTY), every layout's displayed
+   * price reflects the same volume discount shown on the Bulk Orders page. */
+  bulkQuantity?: number;
 }
 
 const COLLAGE_CATEGORIES: Array<{ id: 'landscape' | 'panoramic' | 'portrait' | 'square'; label: string }> = [
@@ -64,8 +68,10 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
   productName,
   currentLayoutId = '',
   onSelectLayout,
-  onHighlightLayout
+  onHighlightLayout,
+  bulkQuantity
 }) => {
+  const hasBulkDiscount = bulkQuantity !== undefined && bulkQuantity >= MIN_BULK_QTY;
   if (!isOpen) return null;
 
   // Single source of truth for layouts
@@ -378,9 +384,15 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
                         )}
                         {(layout.priceRange || (material === 'acrylic' && layout.acrylicPrice ? layout.acrylicPrice : layout.price)) && (
                           <span className="font-extrabold text-[#0E4A93] ml-auto">
-                            {material === 'acrylic' && layout.acrylicPrice
-                              ? `₹${layout.acrylicPrice.toFixed(2)}`
-                              : (layout.priceRange || `₹${layout.price.toFixed(2)}`)}
+                            {(() => {
+                              const rawPrice = material === 'acrylic' && layout.acrylicPrice ? layout.acrylicPrice : layout.price;
+                              if (hasBulkDiscount && rawPrice) {
+                                return `₹${bulkUnitPriceFor(rawPrice, bulkQuantity!).toFixed(2)}`;
+                              }
+                              return material === 'acrylic' && layout.acrylicPrice
+                                ? `₹${layout.acrylicPrice.toFixed(2)}`
+                                : (layout.priceRange || `₹${layout.price.toFixed(2)}`);
+                            })()}
                           </span>
                         )}
                       </div>
@@ -393,7 +405,7 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-5 sm:px-6 py-4 bg-stone-50 border-t border-stone-200 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-stone-50 border-t border-stone-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
           <div className="text-xs text-stone-500 truncate mr-2">
             Selected Layout:{' '}
             <strong className="text-stone-900 font-black">
@@ -405,18 +417,18 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
                 : `${currentSelected?.panelsCount} ${currentSelected?.panelsCount === 1 ? 'Photo Slot' : 'Photo Slots'}`})
             </span>
           </div>
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center justify-end gap-2.5 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition-colors cursor-pointer"
+              className="px-3 sm:px-4 py-2 rounded-xl text-xs font-bold text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleApply}
-              className="px-6 py-2.5 rounded-xl text-xs font-black text-white bg-[#EA580C] hover:bg-[#C2410C] shadow-md transition-all hover:scale-102 cursor-pointer"
+              className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs font-black text-white bg-[#0E4A93] hover:bg-[#0A366C] shadow-md transition-all hover:scale-102 cursor-pointer text-center"
             >
               Apply Layout
             </button>

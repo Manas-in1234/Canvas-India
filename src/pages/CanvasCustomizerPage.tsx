@@ -2336,6 +2336,137 @@ const renderWrapPreview = (id: string) => {
   );
 };
 
+// Helper renderer for realistic floating frame thumbnail cards in sidebar
+const renderFloatingFrameThumbnail = (frameId: string) => {
+  if (frameId === 'no-frame') {
+    return (
+      <div className="w-12 h-12 rounded border border-dashed border-stone-300 mx-auto flex items-center justify-center bg-stone-50">
+        <div className="w-8 h-8 rounded-xs bg-white border border-stone-200 shadow-2xs" />
+      </div>
+    );
+  }
+
+  const isBrown = frameId === 'wood-frame' || frameId.includes('brown');
+  const isBlack = frameId === 'black-frame' || frameId.includes('black');
+  const isWhite = frameId === 'white-frame' || frameId.includes('white');
+
+  const frameColor = isBrown
+    ? '#7e481c'
+    : isBlack
+    ? '#18181b'
+    : isWhite
+    ? '#f8fafc'
+    : '#bfa15f';
+
+  const mouldingBorder = isBrown
+    ? 'border-[#4a240c]'
+    : isBlack
+    ? 'border-[#09090b]'
+    : isWhite
+    ? 'border-[#cbd5e1]'
+    : 'border-[#7a5e23]';
+
+  return (
+    <div
+      className={`w-12 h-12 rounded mx-auto p-1.5 shadow-xs relative flex items-center justify-center border ${mouldingBorder}`}
+      style={{ backgroundColor: frameColor }}
+    >
+      {/* Recessed Floater Gap */}
+      <div className="w-full h-full bg-[#0c0d0e] p-1 rounded-xs flex items-center justify-center shadow-inner">
+        {/* Canvas thumbnail */}
+        <div className="w-full h-full bg-stone-100 rounded-2xs border border-stone-300/60 shadow-2xs" />
+      </div>
+    </div>
+  );
+};
+
+// Realistic physical floating frame enclosure with deep recessed shadow gap
+const renderFloatingFrameContainer = (
+  content: React.ReactNode,
+  opts: {
+    frameId: string;
+    displayWidthInches?: number;
+    displayHeightInches?: number;
+    aspectRatio?: number;
+    isMultiPanel?: boolean;
+    scale?: number;
+  }
+) => {
+  const frame = FRAME_OPTIONS.find((f) => f.id === opts.frameId);
+  if (!frame || frame.id === 'no-frame') {
+    return content;
+  }
+
+  const isBrown = frame.id === 'wood-frame' || frame.id.includes('brown');
+  const isBlack = frame.id === 'black-frame' || frame.id.includes('black');
+  const isWhite = frame.id === 'white-frame' || frame.id.includes('white');
+
+  // Hardwood texture/gradient for brown floating frame matching Screenshot 3
+  const mouldingGradient = isBrown
+    ? 'linear-gradient(135deg, #45220a 0%, #673514 15%, #8c4b1d 40%, #a45a25 50%, #763b17 75%, #4a2208 100%)'
+    : isBlack
+    ? 'linear-gradient(135deg, #141416 0%, #222225 35%, #2a2a2e 50%, #1c1c1f 75%, #101012 100%)'
+    : isWhite
+    ? 'linear-gradient(135deg, #edf2f7 0%, #ffffff 40%, #f8fafc 60%, #e2e8f0 100%)'
+    : 'linear-gradient(135deg, #997833 0%, #c4a45a 30%, #f5e2a8 50%, #b89342 70%, #7d6024 100%)';
+
+  const outerBorderColor = isBrown
+    ? '#381a07'
+    : isBlack
+    ? '#09090b'
+    : isWhite
+    ? '#cbd5e1'
+    : '#6b5119';
+
+  const bevelShadow = isBrown
+    ? 'inset 1.5px 1.5px 2px rgba(255,255,255,0.35), inset -1.5px -1.5px 3px rgba(0,0,0,0.65)'
+    : isBlack
+    ? 'inset 1px 1px 1.5px rgba(255,255,255,0.2), inset -1.5px -1.5px 3px rgba(0,0,0,0.85)'
+    : isWhite
+    ? 'inset 1.5px 1.5px 2px rgba(255,255,255,0.9), inset -1.5px -1.5px 3px rgba(0,0,0,0.18)'
+    : 'inset 1.5px 1.5px 2px rgba(255,255,255,0.55), inset -1.5px -1.5px 3px rgba(0,0,0,0.5)';
+
+  const mouldingPadding = opts.scale ? Math.max(8, Math.round(18 * opts.scale)) : 18;
+  const gapPadding = opts.scale ? Math.max(3, Math.round(7 * opts.scale)) : 7;
+
+  return (
+    <div
+      className="relative rounded-[3px] transition-all select-none"
+      style={{
+        padding: `${mouldingPadding}px`,
+        background: mouldingGradient,
+        border: `1px solid ${outerBorderColor}`,
+        boxShadow: '0 20px 48px -4px rgba(0,0,0,0.5), 0 8px 18px -2px rgba(0,0,0,0.32)'
+      }}
+    >
+      {/* Frame moulding bevel & mitred highlights */}
+      <div
+        className="absolute inset-0 pointer-events-none rounded-[2px]"
+        style={{ boxShadow: bevelShadow }}
+      />
+
+      {/* Recessed Floater Shadow Gap (Deep inset channel between frame moulding and canvas) */}
+      <div
+        className="relative bg-[#0b0c0e] rounded-[1px] overflow-hidden"
+        style={{
+          padding: `${gapPadding}px`,
+          boxShadow: 'inset 0 3px 8px 1px rgba(0,0,0,0.88), inset 0 0 3px 1px rgba(0,0,0,0.95)'
+        }}
+      >
+        {/* Elevated Canvas print inside the recessed tray */}
+        <div
+          className="relative transition-all"
+          style={{
+            boxShadow: '0 4px 14px 1px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.4)'
+          }}
+        >
+          {content}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const renderHardwareIcon = (id: string) => {
   if (id === 'hooks-hanging') {
     return (
@@ -2487,6 +2618,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const location = useLocation();
   const { allProducts, onAddToCartCustomized } = useShop();
 
+  const [isMobile, setIsMobile] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const routeMaterial: 'canvas' | 'acrylic' = useMemo(() => {
     if (materialProp) return materialProp;
     const path = location.pathname.toLowerCase();
@@ -2543,7 +2686,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (initialPt.includes('digital') || initialPt.includes('painting')) return 'EFFECTS & OPTIONS';
     if (initialPt.includes('bus')) return 'CREATE BUS ROLL';
     if (initialPt.includes('banner')) return 'UPLOAD';
-    return 'PRODUCTS';
+    return 'UPLOAD';
   });
 
   // Preloader overlay: visible for real async work (image reads) for however
@@ -2617,6 +2760,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const isSinglePrintCanvas = (activeMaterial === 'canvas' && (selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-classic')) ||
     (activeMaterial === 'acrylic' && (selectedProductTypeId === 'acrylic-print' || selectedProductTypeId === 'acrylic-single' || selectedProductTypeId === 'acrylic-photo-panel'));
   const isLayoutProduct = isWallArtProduct || isCollageProduct || isHexagonProduct || isSplitProduct || isMosaicProduct;
+  const isMultiFrameProduct = isWallArtProduct || isCollageProduct || isHexagonProduct || isSplitProduct || isMosaicProduct;
 
   const selectedProductType = useMemo(() => {
     const list = activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES;
@@ -2731,9 +2875,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           : UploadCloud,
         enabled: productCapabilities.upload !== false
       },
-      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSingleOrShapedCanvas && productCapabilities.sizes !== false },
+      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: true },
       { id: 'EFFECTS & OPTIONS', label: 'EFFECTS & OPTIONS', icon: Palette, enabled: productCapabilities.effects === true },
-      { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: productCapabilities.layouts === true },
+      { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: true },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
       { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal, enabled: productCapabilities.hardware !== false },
       { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false }
@@ -2743,11 +2887,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Product tabs supported check
 
-  // If the active tab is not supported by the currently selected product, safely revert to PRODUCTS
+  // If the active tab is not supported by the currently selected product, safely revert to UPLOAD
   useEffect(() => {
     const isCurrentTabSupported = toolbarItems.some((item) => item.id === activeTab);
     if (!isCurrentTabSupported) {
-      setActiveTab('PRODUCTS');
+      setActiveTab('UPLOAD');
     }
   }, [toolbarItems, activeTab]);
 
@@ -3063,6 +3207,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Currently Active Panel Slot for drag/transform/upload targeting
   const [activePanelIndex, setActivePanelIndex] = useState<number>(0);
+  // Hovered panel index for individual 3D physical edge preview on Wall Display & Split Canvas
+  const [hoveredPanelIndex, setHoveredPanelIndex] = useState<number | null>(null);
 
   // Uploaded photo collection (all photos uploaded in this session)
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
@@ -3337,6 +3483,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [selectedBorderColor, setSelectedBorderColor] = useState<string>('#FFFFFF');
   const [borderHexInput, setBorderHexInput] = useState<string>('#FFFFFF');
   const [selectedFrameId, setSelectedFrameId] = useState<string>('no-frame');
+  const [expandedFrameCategory, setExpandedFrameCategory] = useState<'standard' | 'premium' | 'floating'>('floating');
 
   // Thickness & Physical Depth Options (Canvas Stretcher & Acrylic Cast Depth)
   const [selectedThicknessId, setSelectedThicknessId] = useState<string>('thin-gallery');
@@ -3365,7 +3512,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Select Size & Shape Modal State
   const [isSizeShapeModalOpen, setIsSizeShapeModalOpen] = useState<boolean>(false);
-  const [isLayoutModalOpen, setIsLayoutModalOpen] = useState<boolean>(() => isLayoutProduct);
+  const [isLayoutModalOpen, setIsLayoutModalOpen] = useState<boolean>(false);
 
   // The Select Layout modal only makes sense for products with real, distinct multi-panel
   // arrangements. Everything else falls back to a single generic layout internally, which
@@ -3906,6 +4053,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setIsWordArtSizeModalOpen(true);
+      setActiveTab('UPLOAD');
       navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
@@ -4061,6 +4209,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSizeCategoryFilter('RECOMMENDED');
       setSelectedSizeId(activeMaterial === 'acrylic' ? 'rec-10x10' : 'single-10x10');
     } else if (isLayoutProduct) {
+      setSelectedFrameId('no-frame');
       const layouts = getProductLayouts(productId);
       const defaultLayout = layouts[0];
       if (defaultLayout) {
@@ -4097,14 +4246,22 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (isSingleOrShaped) {
       setIsSizeShapeModalOpen(true);
       setIsLayoutModalOpen(false);
+      setActiveTab('UPLOAD');
     } else if (isLayoutProduct) {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(true);
       setLayoutSubTab('LAYOUTS');
+      setActiveTab('UPLOAD');
     } else {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
-      setActiveTab('UPLOAD');
+      if (productId.includes('digital') || productId.includes('painting')) {
+        setActiveTab('EFFECTS & OPTIONS');
+      } else if (productId.includes('bus')) {
+        setActiveTab('CREATE BUS ROLL');
+      } else {
+        setActiveTab('UPLOAD');
+      }
     }
 
     navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
@@ -4395,6 +4552,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Dragging state for the active panel image
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const initialPinchDistRef = useRef<number | null>(null);
+  const initialPinchScaleRef = useRef<number>(1);
   const dragStartRef = useRef<{
     x: number;
     y: number;
@@ -4537,14 +4697,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const wrap = WRAP_OPTIONS.find((w) => w.id === selectedWrapId);
     if (wrap) price += wrap.price;
 
-    const thickness = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId);
-    if (thickness) price += thickness.price;
+    const thickness = (activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS).find((t: any) => t.id === selectedThicknessId);
+    if (thickness && thickness.price) price += thickness.price;
 
     price += CANVAS_BORDER_WIDTH_PRICES[selectedBorderWidthId] || 0;
-    if (shapeApplies) {
-      const frame = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
-      if (frame) price += frame.price;
-    }
+    const frame = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
+    if (frame && frame.price) price += frame.price;
 
     const hardwarePrice = selectedProductTypeId === 'canvas-banner'
       ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
@@ -4760,7 +4918,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 rotation: 0,
                 panX: 0,
                 panY: 0,
-                fitMode: (productCapabilities.imageFitMode === 'contain' ? 'contain' : 'cover')
+                fitMode: 'contain'
               }
             }));
             if (isQuotesProduct && quotesPreference === 'create-own') {
@@ -4777,7 +4935,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               [target]: {
                 ...createDefaultPanel(),
                 imageUrl: result,
-                fitMode: (productCapabilities.imageFitMode === 'contain' ? 'contain' : 'cover')
+                fitMode: 'contain'
               }
             }));
             if (isQuotesProduct && quotesPreference === 'create-own') {
@@ -4877,6 +5035,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const panelHandlers = (panelIdx: number) => ({
     onClick: () => handlePanelClick(panelIdx),
     onPointerDown: (e: React.PointerEvent) => handlePointerDown(e, panelIdx),
+    onPointerCancel: (e: React.PointerEvent) => handlePointerUp(e),
     onDragOver: (e: React.DragEvent) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'copy';
@@ -5339,27 +5498,37 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
   };
 
-  // Mouse/Touch Drag Handlers
+  // Mouse/Touch Drag Handlers with Multi-Touch Pinch-to-Zoom Support
   const handlePointerDown = (e: React.PointerEvent, panelIdx: number) => {
     const targetIdx = (isSplitProduct || isMosaicProduct) ? 0 : panelIdx;
     setActivePanelIndex(targetIdx);
     const curr = panelImages[targetIdx];
     if (!curr?.imageUrl) return;
 
+    activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const cWidth = rect.width > 0 ? rect.width : 400;
     const cHeight = rect.height > 0 ? rect.height : 300;
 
-    setIsDragging(true);
-    dragStartRef.current = {
-      x: e.clientX,
-      y: e.clientY,
-      initialPanX: curr.panX,
-      initialPanY: curr.panY,
-      containerWidth: cWidth,
-      containerHeight: cHeight,
-      hasMoved: false
-    };
+    if (activePointersRef.current.size >= 2) {
+      const pts = Array.from(activePointersRef.current.values());
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      initialPinchDistRef.current = dist > 0 ? dist : 1;
+      initialPinchScaleRef.current = curr.scale || 1;
+      setIsDragging(false);
+    } else {
+      setIsDragging(true);
+      dragStartRef.current = {
+        x: e.clientX,
+        y: e.clientY,
+        initialPanX: curr.panX,
+        initialPanY: curr.panY,
+        containerWidth: cWidth,
+        containerHeight: cHeight,
+        hasMoved: false
+      };
+    }
 
     try {
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -5369,13 +5538,28 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
+    if (activePointersRef.current.has(e.pointerId)) {
+      activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+
+    // 1. Multi-touch Pinch-to-Zoom
+    if (activePointersRef.current.size >= 2 && initialPinchDistRef.current) {
+      const pts = Array.from(activePointersRef.current.values());
+      const currentDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      const ratio = currentDist / initialPinchDistRef.current;
+      const targetScale = Math.max(1, Math.min(3, Number((initialPinchScaleRef.current * ratio).toFixed(2))));
+      updateActivePanelTransform(() => ({ scale: targetScale }));
+      return;
+    }
+
+    // 2. Single-Pointer Touch / Mouse Panning
     if (!isDragging) return;
     const deltaX = e.clientX - dragStartRef.current.x;
     const deltaY = e.clientY - dragStartRef.current.y;
 
-    // Movement threshold (8px) to prevent accidental panning on clicks, taps, or tile interactions
+    // Movement threshold (6px) to prevent accidental panning on clicks, taps, or tile interactions
     if (!dragStartRef.current.hasMoved) {
-      if (Math.hypot(deltaX, deltaY) < 8) {
+      if (Math.hypot(deltaX, deltaY) < 6) {
         return;
       }
       dragStartRef.current.hasMoved = true;
@@ -5403,13 +5587,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
-    if (isDragging) {
+    activePointersRef.current.delete(e.pointerId);
+    if (activePointersRef.current.size < 2) {
+      initialPinchDistRef.current = null;
+    }
+    if (activePointersRef.current.size === 0) {
       setIsDragging(false);
-      try {
-        (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-      } catch {
-        // Safe ignore
-      }
+    }
+    try {
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {
+      // Safe ignore
     }
   };
 
@@ -5520,7 +5708,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       ro.disconnect();
       window.removeEventListener('resize', updateSize);
     };
-  }, [printAspect, selectedProductTypeId, selectedShapeId, selectedSizeId]);
+  }, [printAspect, selectedProductTypeId, selectedShapeId, selectedSizeId, selectedLayoutId]);
 
   const currentLayout = useMemo(() => {
     return STANDARD_LAYOUT_PRESETS.find((l) => l.id === selectedLayoutId) || STANDARD_LAYOUT_PRESETS[0];
@@ -5635,7 +5823,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         : isBannerProduct
         ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
         : isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary,
-      finish: activeMaterial === 'acrylic' ? 'Diamond Polished Edge' : (WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label || 'Canvas Lite'),
+      finish: activeMaterial === 'acrylic'
+        ? (ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || '3mm Acrylic')
+        : (CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Thin Gallery Wrap (0.75")'),
       quantity,
       customText: customText || undefined,
       photoUrl: (isPopArtProduct && popArtConfig.processedImageUrl)
@@ -5662,10 +5852,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         productTypeId: selectedProductTypeId,
         sizeId: selectedSizeId,
         shape: shapeApplies ? currentShape.name : undefined,
-        wrap: activeMaterial === 'canvas' ? WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label : undefined,
+        wrap: activeMaterial === 'canvas' ? (CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label) : undefined,
         borderWidth: selectedBorderWidthId !== 'none' ? (selectedBorderWidthId === 'custom-color' ? 'Custom Border' : (ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.label || 'Thin Border')) : 'No Border',
         borderColor: selectedBorderWidthId !== 'none' ? selectedBorderColor : undefined,
-        frame: shapeApplies && activeMaterial === 'canvas' ? FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name : undefined,
+        frame: selectedFrameId !== 'no-frame' ? FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name : undefined,
         mirrorImage,
         display: activeMaterial === 'canvas' ? DISPLAY_OPTIONS.find((d) => d.id === selectedDisplayOptionId)?.label : undefined,
         lamination: activeMaterial === 'canvas' ? LAMINATION_OPTIONS.find((l) => l.id === selectedLaminationId)?.label : undefined,
@@ -5841,170 +6031,474 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           </div>
 
           {/* CONTINUOUS SPLIT PHYSICAL CANVAS SURFACE */}
-          <div
-            {...panelHandlers(0)}
-            ref={(node) => {
-              registerWheelRef(0)(node);
-              (workspaceCanvasBoxRef as any).current = node;
-            }}
-            onClick={() => {
-              if (!masterImage) fileInputRef.current?.click();
-            }}
-            className={`relative select-none ${
-              masterImage ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
-            }`}
-            style={{
-              aspectRatio: String(layout.aspectRatio),
-              width: `min(34rem, calc(54vh * ${layout.aspectRatio}))`,
-              maxWidth: '100%'
-            }}
-          >
-            {splitPanels.map((p, idx) => {
-              const isSelectedSlot = activePanelIndex === idx;
-              return (
-              <div
-                key={p.id || idx}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActivePanelIndex(idx);
-                }}
-                style={{
-                  position: 'absolute',
-                  left: `${p.x * 100}%`,
-                  top: `${p.y * 100}%`,
-                  width: `${p.w * 100}%`,
-                  height: `${p.h * 100}%`,
-                  // Real wall gap between separately-mounted split panels —
-                  // distinguishes Split Canvas from Photo Mosaic, which is
-                  // one continuous physical surface with zero panel gaps.
-                  padding: '9px',
-                  boxSizing: 'border-box'
-                }}
-                className="ci-slot-container relative select-none group cursor-pointer"
-              >
-              <div
-                style={{
-                  boxShadow: activeMaterial === 'acrylic'
-                    ? '0 12px 24px -4px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.4) inset'
-                    : '0 12px 24px -4px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0,0,0,0.08)'
-                }}
-                className={`relative w-full h-full bg-white rounded-[2px] overflow-hidden transition-all ${
-                  isSelectedSlot
-                    ? 'ring-2 ring-[#0E4A93] z-20 shadow-lg'
-                    : activeMaterial === 'acrylic' ? 'border border-slate-200' : 'border border-stone-300/80'
-                }`}
-              >
-                {/* 3D Canvas Edge highlight / Acrylic Polished Edge */}
+          {renderFloatingFrameContainer(
+            <div
+              {...panelHandlers(0)}
+              ref={(node) => {
+                registerWheelRef(0)(node);
+                (workspaceCanvasBoxRef as any).current = node;
+              }}
+              onClick={() => {
+                if (!masterImage) fileInputRef.current?.click();
+              }}
+              className={`relative select-none ${
+                masterImage ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
+              }`}
+              style={{
+                aspectRatio: String(layout.aspectRatio),
+                width: isMobile
+                  ? `min(calc(100vw - 4rem), calc(28vh * ${layout.aspectRatio}))`
+                  : `min(34rem, calc(54vh * ${layout.aspectRatio}))`,
+                maxHeight: isMobile ? '30vh' : undefined,
+                maxWidth: '100%'
+              }}
+            >
+              {splitPanels.map((p, idx) => {
+                const isSelectedSlot = activePanelIndex === idx;
+                const isHovered = hoveredPanelIndex === idx;
+                const showPanelEdges = isHovered && activeMaterial === 'canvas' && selectedFrameId === 'no-frame';
+                const panelDepthPx =
+                  selectedThicknessId === 'canvas-lite'
+                    ? 10
+                    : selectedThicknessId === 'thick-gallery'
+                    ? 28
+                    : selectedThicknessId === 'custom-thickness'
+                    ? Math.max(8, Math.min(36, Math.round(customThicknessInches * 18)))
+                    : 18;
+
+                const isImageWrapped = (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (master.fitMode !== 'contain');
+                const effectiveEdgeColor = selectedWrapId === 'black-border' ? '#0F172A' : '#FFFFFF';
+
+                const totalW = workspaceBoxSize.width || 420;
+                const totalH = workspaceBoxSize.height || 320;
+                const panelW = p.w * totalW;
+                const panelH = p.h * totalH;
+
+                const splitPanelShadow = activeMaterial === 'acrylic'
+                  ? (effectiveAcrylicThicknessMm >= 8
+                      ? '0 18px 32px -4px rgba(15, 23, 42, 0.36), 0 0 0 1px rgba(255, 255, 255, 0.5) inset'
+                      : effectiveAcrylicThicknessMm >= 5
+                      ? '0 12px 24px -4px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.4) inset'
+                      : '0 6px 14px -2px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.35) inset')
+                  : (selectedThicknessId === 'thick-gallery'
+                      ? '0 20px 36px -6px rgba(15, 23, 42, 0.38), 0 0 0 1px rgba(0,0,0,0.14)'
+                      : selectedThicknessId === 'thin-gallery'
+                      ? '0 12px 24px -4px rgba(15, 23, 42, 0.26), 0 0 0 1px rgba(0,0,0,0.1)'
+                      : '0 6px 14px -2px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(0,0,0,0.08)');
+
+                return (
                 <div
-                  className="absolute inset-0 pointer-events-none z-10"
-                  style={{
-                    boxShadow: activeMaterial === 'acrylic'
-                      ? 'inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.8)'
-                      : 'inset 0 0 0 1px rgba(255, 255, 255, 0.7), inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+                  key={p.id || idx}
+                  onPointerEnter={() => setHoveredPanelIndex(idx)}
+                  onPointerLeave={() => setHoveredPanelIndex((prev) => (prev === idx ? null : prev))}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActivePanelIndex(idx);
                   }}
-                />
-
-                {masterImage ? (
-                  <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
-                    <div
-                      style={{
-                        position: 'absolute',
-                        width: `${(1 / p.w) * 100}%`,
-                        height: `${(1 / p.h) * 100}%`,
-                        left: `${-(p.x / p.w) * 100}%`,
-                        top: `${-(p.y / p.h) * 100}%`
-                      }}
-                      className="pointer-events-none select-none flex items-center justify-center overflow-visible"
-                    >
-                      <img
-                        src={masterImage}
-                        alt={`Split Panel ${idx + 1}`}
-                        draggable={false}
-                        onLoad={(e) => {
-                          const imgEl = e.currentTarget;
-                          if (imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0 && !imgMeta?.width) {
-                            setPanelImages((prev) => {
-                              const cur = prev[0];
-                              if (!cur) return prev;
-                              return {
-                                ...prev,
-                                [0]: {
-                                  ...cur,
-                                  uploadedImage: {
-                                    originalSrc: cur.imageUrl || '',
-                                    width: imgEl.naturalWidth,
-                                    height: imgEl.naturalHeight,
-                                    aspectRatio: imgEl.naturalWidth / imgEl.naturalHeight
-                                  }
-                                }
-                              };
-                            });
-                          }
-                        }}
-                        style={{
-                          width: isWiderThanLayout ? 'auto' : '100%',
-                          height: isWiderThanLayout ? '100%' : 'auto',
-                          minWidth: '100%',
-                          minHeight: '100%',
-                          maxWidth: 'none',
-                          maxHeight: 'none',
-                          flexShrink: 0,
-                          aspectRatio: `${natWidth} / ${natHeight}`,
-                          objectFit: 'cover',
-                          objectPosition: 'center center',
-                          transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                          transformOrigin: 'center center',
-                          filter: getFilterCss(master.filter),
-                          transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                        }}
-                        className="pointer-events-none select-none max-w-none"
-                      />
-                      {/* Subtle canvas weave micro-texture for canvas only */}
-                      {activeMaterial !== 'acrylic' && (
-                        <div
-                          className="absolute inset-0 pointer-events-none opacity-20 mix-blend-multiply"
-                          style={{
-                            backgroundImage:
-                              'repeating-linear-gradient(0deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px)'
-                          }}
-                        />
-                      )}
-                      {/* Optical crystal depth reflection for acrylic */}
-                      {activeMaterial === 'acrylic' && (
-                        <div
-                          className="absolute inset-0 pointer-events-none opacity-25"
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 45%, transparent 60%)'
-                          }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  /* Empty state panel */
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-[#dcdfe4] text-center p-2 relative">
-                    <span className="text-[10px] font-bold text-stone-600">{p.label || `Panel ${idx + 1}`}</span>
-                  </div>
-                )}
-                {renderPanelTextItems(idx)}
-              </div>
-              </div>
-            );})}
-
-            {/* If empty, central single upload action overlay */}
-            {!masterImage && (
-              <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-5 py-2.5 bg-white hover:bg-stone-50 text-stone-800 hover:text-[#0E4A93] font-bold text-xs sm:text-sm rounded-xl shadow-md border border-stone-200 flex items-center gap-2 pointer-events-auto cursor-pointer transition-all hover:scale-105"
+                  style={{
+                    position: 'absolute',
+                    left: `${p.x * 100}%`,
+                    top: `${p.y * 100}%`,
+                    width: `${p.w * 100}%`,
+                    height: `${p.h * 100}%`,
+                    boxShadow: isHovered
+                      ? (activeMaterial === 'acrylic'
+                          ? '0 20px 32px -4px rgba(15, 23, 42, 0.32), 0 0 0 1px rgba(255, 255, 255, 0.6) inset'
+                          : '0 20px 32px -4px rgba(15, 23, 42, 0.32), 0 8px 16px -4px rgba(15, 23, 42, 0.2)')
+                      : splitPanelShadow,
+                    zIndex: isHovered ? 35 : isSelectedSlot ? 20 : 10,
+                    transform: isHovered ? 'scale(1.018)' : 'none',
+                    transformOrigin: 'center center',
+                    transition: 'transform 0.18s ease-out, box-shadow 0.18s ease-out'
+                  }}
+                  className="ci-slot-container relative rounded-[2px] overflow-visible select-none group cursor-pointer"
                 >
-                  <Upload className="w-4 h-4 stroke-[2.4] text-[#0E4A93]" />
-                  <span>Upload Image</span>
-                </button>
-              </div>
-            )}
-          </div>
+                  {/* Hover-based physical canvas edges (Canvas only) */}
+                  {showPanelEdges && (
+                    <>
+                      {/* Top Physical Edge */}
+                      <div
+                        className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0 border border-stone-300/80 transition-colors"
+                        style={{
+                          bottom: '100%',
+                          height: `${panelDepthPx}px`,
+                          borderBottom: 'none',
+                          backgroundColor: effectiveEdgeColor
+                        }}
+                      >
+                        {masterImage && isImageWrapped && (
+                          <div
+                            className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center"
+                            style={{
+                              top: '100%',
+                              left: 0,
+                              width: `${panelW}px`,
+                              height: `${panelH}px`,
+                              transformOrigin: 'top center',
+                              transform: 'scaleY(-1)'
+                            }}
+                          >
+                            <div
+                              style={{
+                                position: 'absolute',
+                                width: `${(1 / p.w) * 100}%`,
+                                height: `${(1 / p.h) * 100}%`,
+                                left: `${-(p.x / p.w) * 100}%`,
+                                top: `${-(p.y / p.h) * 100}%`
+                              }}
+                              className="pointer-events-none select-none flex items-center justify-center overflow-visible"
+                            >
+                              <img
+                                src={masterImage}
+                                alt=""
+                                style={{
+                                  width: isWiderThanLayout ? 'auto' : '100%',
+                                  height: isWiderThanLayout ? '100%' : 'auto',
+                                  minWidth: '100%',
+                                  minHeight: '100%',
+                                  maxWidth: 'none',
+                                  maxHeight: 'none',
+                                  flexShrink: 0,
+                                  aspectRatio: `${natWidth} / ${natHeight}`,
+                                  objectFit: 'cover',
+                                  objectPosition: 'center center',
+                                  transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                  transformOrigin: 'center center',
+                                  filter: `${getFilterCss(master.filter)} brightness(0.96)`,
+                                  transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                                }}
+                                className="pointer-events-none select-none max-w-none"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Left Physical Edge */}
+                      <div
+                        className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0 border border-stone-300/80 transition-colors"
+                        style={{
+                          right: '100%',
+                          width: `${panelDepthPx}px`,
+                          borderRight: 'none',
+                          backgroundColor: effectiveEdgeColor
+                        }}
+                      >
+                        {masterImage && isImageWrapped && (
+                          <div
+                            className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center"
+                            style={{
+                              left: '100%',
+                              top: 0,
+                              width: `${panelW}px`,
+                              height: `${panelH}px`,
+                              transformOrigin: 'left center',
+                              transform: 'scaleX(-1)'
+                            }}
+                          >
+                            <div
+                              style={{
+                                position: 'absolute',
+                                width: `${(1 / p.w) * 100}%`,
+                                height: `${(1 / p.h) * 100}%`,
+                                left: `${-(p.x / p.w) * 100}%`,
+                                top: `${-(p.y / p.h) * 100}%`
+                              }}
+                              className="pointer-events-none select-none flex items-center justify-center overflow-visible"
+                            >
+                              <img
+                                src={masterImage}
+                                alt=""
+                                style={{
+                                  width: isWiderThanLayout ? 'auto' : '100%',
+                                  height: isWiderThanLayout ? '100%' : 'auto',
+                                  minWidth: '100%',
+                                  minHeight: '100%',
+                                  maxWidth: 'none',
+                                  maxHeight: 'none',
+                                  flexShrink: 0,
+                                  aspectRatio: `${natWidth} / ${natHeight}`,
+                                  objectFit: 'cover',
+                                  objectPosition: 'center center',
+                                  transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                  transformOrigin: 'center center',
+                                  filter: `${getFilterCss(master.filter)} brightness(0.92)`,
+                                  transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                                }}
+                                className="pointer-events-none select-none max-w-none"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Bottom Physical Edge */}
+                      <div
+                        className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0 border border-stone-300/80 transition-colors"
+                        style={{
+                          top: '100%',
+                          height: `${panelDepthPx}px`,
+                          borderTop: 'none',
+                          backgroundColor: effectiveEdgeColor,
+                          boxShadow: '0 10px 18px -4px rgba(15, 23, 42, 0.2)'
+                        }}
+                      >
+                        {masterImage && isImageWrapped && (
+                          <div
+                            className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center"
+                            style={{
+                              bottom: '100%',
+                              left: 0,
+                              width: `${panelW}px`,
+                              height: `${panelH}px`,
+                              transformOrigin: 'bottom center',
+                              transform: 'scaleY(-1)'
+                            }}
+                          >
+                            <div
+                              style={{
+                                position: 'absolute',
+                                width: `${(1 / p.w) * 100}%`,
+                                height: `${(1 / p.h) * 100}%`,
+                                left: `${-(p.x / p.w) * 100}%`,
+                                top: `${-(p.y / p.h) * 100}%`
+                              }}
+                              className="pointer-events-none select-none flex items-center justify-center overflow-visible"
+                            >
+                              <img
+                                src={masterImage}
+                                alt=""
+                                style={{
+                                  width: isWiderThanLayout ? 'auto' : '100%',
+                                  height: isWiderThanLayout ? '100%' : 'auto',
+                                  minWidth: '100%',
+                                  minHeight: '100%',
+                                  maxWidth: 'none',
+                                  maxHeight: 'none',
+                                  flexShrink: 0,
+                                  aspectRatio: `${natWidth} / ${natHeight}`,
+                                  objectFit: 'cover',
+                                  objectPosition: 'center center',
+                                  transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                  transformOrigin: 'center center',
+                                  filter: `${getFilterCss(master.filter)} brightness(0.84)`,
+                                  transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                                }}
+                                className="pointer-events-none select-none max-w-none"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right Physical Edge */}
+                      <div
+                        className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0 border border-stone-300/80 transition-colors"
+                        style={{
+                          left: '100%',
+                          width: `${panelDepthPx}px`,
+                          borderLeft: 'none',
+                          backgroundColor: effectiveEdgeColor
+                        }}
+                      >
+                        {masterImage && isImageWrapped && (
+                          <div
+                            className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center"
+                            style={{
+                              right: '100%',
+                              top: 0,
+                              width: `${panelW}px`,
+                              height: `${panelH}px`,
+                              transformOrigin: 'right center',
+                              transform: 'scaleX(-1)'
+                            }}
+                          >
+                            <div
+                              style={{
+                                position: 'absolute',
+                                width: `${(1 / p.w) * 100}%`,
+                                height: `${(1 / p.h) * 100}%`,
+                                left: `${-(p.x / p.w) * 100}%`,
+                                top: `${-(p.y / p.h) * 100}%`
+                              }}
+                              className="pointer-events-none select-none flex items-center justify-center overflow-visible"
+                            >
+                              <img
+                                src={masterImage}
+                                alt=""
+                                style={{
+                                  width: isWiderThanLayout ? 'auto' : '100%',
+                                  height: isWiderThanLayout ? '100%' : 'auto',
+                                  minWidth: '100%',
+                                  minHeight: '100%',
+                                  maxWidth: 'none',
+                                  maxHeight: 'none',
+                                  flexShrink: 0,
+                                  aspectRatio: `${natWidth} / ${natHeight}`,
+                                  objectFit: 'cover',
+                                  objectPosition: 'center center',
+                                  transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                  transformOrigin: 'center center',
+                                  filter: `${getFilterCss(master.filter)} brightness(0.88)`,
+                                  transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                                }}
+                                className="pointer-events-none select-none max-w-none"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Front Face Panel Surface */}
+                  <div
+                    className={`w-full h-full relative rounded-[2px] overflow-hidden bg-white transition-all ${
+                      isSelectedSlot
+                        ? 'ring-2 ring-[#0E4A93] shadow-lg'
+                        : activeMaterial === 'acrylic' ? 'border border-slate-200' : 'border border-stone-300/80'
+                    }`}
+                  >
+                    {/* 3D Canvas Edge highlight / Acrylic Polished Edge */}
+                    <div
+                      className="absolute inset-0 pointer-events-none z-10"
+                      style={{
+                        boxShadow: activeMaterial === 'acrylic'
+                          ? 'inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.8)'
+                          : 'inset 0 0 0 1px rgba(255, 255, 255, 0.7), inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+
+                    {/* Crisp Front Print Line when physical edges are visible on hover */}
+                    {showPanelEdges && (
+                      <div
+                        className="absolute inset-0 pointer-events-none z-20"
+                        style={{
+                          boxShadow: 'inset 0 0 0 1.5px rgba(255, 255, 255, 0.95), 0 0 0 1px rgba(0, 0, 0, 0.35)'
+                        }}
+                      />
+                    )}
+
+                    {/* Border overlay for split panel */}
+                    {selectedBorderWidthId !== 'none' && (
+                      <div
+                        className="absolute inset-0 pointer-events-none z-25 rounded-[2px]"
+                        style={{
+                          border: `${selectedBorderWidthId === 'thin' || selectedBorderWidthId === 'custom-color' ? 4 : selectedBorderWidthId === 'medium' ? 8 : 12}px solid ${selectedBorderColor}`
+                        }}
+                      />
+                    )}
+
+                    {masterImage ? (
+                      <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
+                        <div
+                          style={{
+                            position: 'absolute',
+                            width: `${(1 / p.w) * 100}%`,
+                            height: `${(1 / p.h) * 100}%`,
+                            left: `${-(p.x / p.w) * 100}%`,
+                            top: `${-(p.y / p.h) * 100}%`
+                          }}
+                          className="pointer-events-none select-none flex items-center justify-center overflow-visible"
+                        >
+                          <img
+                            src={masterImage}
+                            alt={`Split Panel ${idx + 1}`}
+                            draggable={false}
+                            onLoad={(e) => {
+                              const imgEl = e.currentTarget;
+                              if (imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0 && !imgMeta?.width) {
+                                setPanelImages((prev) => {
+                                  const cur = prev[0];
+                                  if (!cur) return prev;
+                                  return {
+                                    ...prev,
+                                    [0]: {
+                                      ...cur,
+                                      uploadedImage: {
+                                        originalSrc: cur.imageUrl || '',
+                                        width: imgEl.naturalWidth,
+                                        height: imgEl.naturalHeight,
+                                        aspectRatio: imgEl.naturalWidth / imgEl.naturalHeight
+                                      }
+                                    }
+                                  };
+                                });
+                              }
+                            }}
+                            style={{
+                              width: isWiderThanLayout ? 'auto' : '100%',
+                              height: isWiderThanLayout ? '100%' : 'auto',
+                              minWidth: '100%',
+                              minHeight: '100%',
+                              maxWidth: 'none',
+                              maxHeight: 'none',
+                              flexShrink: 0,
+                              aspectRatio: `${natWidth} / ${natHeight}`,
+                              objectFit: 'cover',
+                              objectPosition: 'center center',
+                              transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                              transformOrigin: 'center center',
+                              filter: getFilterCss(master.filter),
+                              transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                            }}
+                            className="pointer-events-none select-none max-w-none"
+                          />
+                          {/* Subtle canvas weave micro-texture for canvas only */}
+                          {activeMaterial === 'canvas' && (
+                            <div
+                              className="absolute inset-0 pointer-events-none opacity-20 mix-blend-multiply"
+                              style={{
+                                backgroundImage:
+                                  'repeating-linear-gradient(0deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px)'
+                              }}
+                            />
+                          )}
+                          {/* Optical crystal depth reflection for acrylic */}
+                          {activeMaterial === 'acrylic' && (
+                            <div
+                              className="absolute inset-0 pointer-events-none opacity-25"
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 45%, transparent 60%)'
+                              }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      /* Empty state panel */
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-[#dcdfe4] text-center p-2 relative">
+                        <span className="text-[10px] font-bold text-stone-600">{p.label || `Panel ${idx + 1}`}</span>
+                      </div>
+                    )}
+                    {renderPanelTextItems(idx)}
+                  </div>
+                </div>
+              );
+            })}
+
+              {/* If empty, central single upload action overlay */}
+              {!masterImage && (
+                <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-5 py-2.5 bg-white hover:bg-stone-50 text-stone-800 hover:text-[#0E4A93] font-bold text-xs sm:text-sm rounded-xl shadow-md border border-stone-200 flex items-center gap-2 pointer-events-auto cursor-pointer transition-all hover:scale-105"
+                  >
+                    <Upload className="w-4 h-4 stroke-[2.4] text-[#0E4A93]" />
+                    <span>Upload Image</span>
+                  </button>
+                </div>
+              )}
+            </div>,
+            {
+              frameId: selectedFrameId,
+              displayWidthInches,
+              displayHeightInches,
+              aspectRatio: layout.aspectRatio,
+              isMultiPanel: true
+            }
+          )}
         </div>
       </div>
     );
@@ -6114,7 +6608,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           }}
         >
           <div
-            className={`w-full max-w-[88%] rounded-sm flex flex-col items-center text-center ${hasPhoto ? 'backdrop-blur-sm' : ''}`}
+            className="w-full max-w-[88%] rounded-2xl flex flex-col items-center text-center shadow-2xl backdrop-blur-md"
             style={{
               background: hasPhoto
                 ? `rgba(15, 23, 42, ${Math.max(0.45, scrimAlpha * 0.9)})`
@@ -6122,9 +6616,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               border: hasPhoto
                 ? '1px solid rgba(255, 255, 255, 0.28)'
                 : '1px solid rgba(15, 23, 42, 0.12)',
-              boxShadow: hasPhoto
-                ? '0 4px 14px rgba(0, 0, 0, 0.3)'
-                : '0 1px 3px rgba(15, 23, 42, 0.08)',
               padding: `${s(14)}px ${s(16)}px`,
               gap: `${s(6)}px`,
               color: hasPhoto ? (lyricConfig.textColor || '#FFFFFF') : effectiveTextColor
@@ -6497,7 +6988,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     // Default: photo-lyrics-overlay (bottom gradient with elegant typography)
     return (
       <div
-        className="absolute inset-0 z-25 flex flex-col justify-end pointer-events-none select-none overflow-hidden"
+        className="absolute inset-0 z-25 flex flex-col justify-end pointer-events-none select-none"
         style={{
           padding: `${s(16)}px ${s(18)}px`,
           background: hasPhoto
@@ -6508,15 +6999,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           textShadow
         }}
       >
-        {/* flex-col with a maxHeight cap so, on a small Room View box, only
-            the lyrics line (flex-shrink) gives up space — the title/date/
-            artist/divider above it (all shrink-0) always render in full
-            instead of being pushed off the top edge and clipped. */}
-        <div className="space-y-1 drop-shadow-md flex flex-col min-h-0" style={{ maxHeight: '100%' }}>
+        <div className="space-y-1 drop-shadow-md">
           {(Boolean(title && title.trim().length > 0) || Boolean(date && date.trim().length > 0)) && (
-            <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 shrink-0">
+            <div className="flex items-baseline justify-between gap-2">
               {Boolean(title && title.trim().length > 0) && (
-                <span className="font-black uppercase tracking-wider" style={{ fontSize: fs(14) }}>
+                <span className="font-black uppercase tracking-wider truncate" style={{ fontSize: fs(14) }}>
                   {title}
                 </span>
               )}
@@ -6528,19 +7015,20 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             </div>
           )}
           {Boolean(artist && artist.trim().length > 0) && (
-            <div className="italic opacity-90 shrink-0" style={{ fontSize: fs(11) }}>
+            <div className="italic opacity-90" style={{ fontSize: fs(11) }}>
               {artist}
             </div>
           )}
           {(Boolean(title && title.trim().length > 0) || Boolean(artist && artist.trim().length > 0)) && Boolean(text && text.trim().length > 0) && (
-            <div className="w-12 h-px bg-current opacity-40 my-1 shrink-0" />
+            <div className="w-12 h-px bg-current opacity-40 my-1" />
           )}
           {Boolean(text && text.trim().length > 0) && (
             <div
-              className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden min-h-0 grow"
+              className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden"
               style={{
                 fontSize: fs(10.5),
-                textAlign
+                textAlign,
+                maxHeight: `${s(140)}px`
               }}
             >
               {text}
@@ -6588,7 +7076,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             </div>
           </div>
 
-          {/* CONTINUOUS MOSAIC PHYSICAL CANVAS SURFACE (Zero Gaps) */}
+          {/* UNIFIED MOSAIC PHYSICAL PRODUCT FRAME (With spaced internal tiles) */}
           <div
             {...panelHandlers(0)}
             ref={(node) => {
@@ -6601,12 +7089,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 fileInputRef.current?.click();
               }
             }}
-            className={`relative bg-[#d8dce2] rounded-[2px] overflow-hidden border border-stone-300/80 transition-all select-none ${
+            className={`relative bg-white rounded-[2px] overflow-hidden border border-stone-200/90 transition-all select-none ${
               masterImage ? 'shadow-2xl cursor-grab active:cursor-grabbing' : 'cursor-pointer hover:border-[#0E4A93] shadow-xl'
             }`}
             style={{
               aspectRatio: String(layout.aspectRatio),
-              width: `min(30rem, calc(52vh * ${layout.aspectRatio}))`,
+              width: isMobile
+                ? `min(calc(100vw - 4rem), calc(28vh * ${layout.aspectRatio}))`
+                : `min(30rem, calc(52vh * ${layout.aspectRatio}))`,
+              maxHeight: isMobile ? '30vh' : undefined,
               maxWidth: '100%',
               boxShadow: activeMaterial === 'acrylic'
                 ? `0 ${Math.max(6, Math.round(effectiveAcrylicThicknessMm * 2.5))}px ${Math.max(12, Math.round(effectiveAcrylicThicknessMm * 4))}px -4px rgba(15, 23, 42, 0.32)`
@@ -6615,7 +7106,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           >
             {masterImage ? (
               <div className="w-full h-full relative overflow-hidden flex items-center justify-center pointer-events-none select-none">
-                {(() => {
+                {/* Spaced mosaic tiles displaying continuous image */}
+                {layout.panels.map((p, idx) => {
                   const natWidth = imgMeta?.width || 1200;
                   const natHeight = imgMeta?.height || 800;
                   const imgAspect = imgMeta?.aspectRatio || (natWidth / Math.max(1, natHeight));
@@ -6623,51 +7115,77 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   const isWiderThanMosaic = imgAspect >= mosaicAspect;
 
                   return (
-                    <img
-                      src={masterImage}
-                      alt="Photo Mosaic"
-                      draggable={false}
-                      onLoad={(e) => {
-                        const imgEl = e.currentTarget;
-                        if (imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0 && !imgMeta?.width) {
-                          setPanelImages((prev) => {
-                            const cur = prev[0];
-                            if (!cur) return prev;
-                            return {
-                              ...prev,
-                              [0]: {
-                                ...cur,
-                                uploadedImage: {
-                                  originalSrc: cur.imageUrl || '',
-                                  width: imgEl.naturalWidth,
-                                  height: imgEl.naturalHeight,
-                                  aspectRatio: imgEl.naturalWidth / imgEl.naturalHeight
-                                }
-                              }
-                            };
-                          });
-                        }
-                      }}
+                    <div
+                      key={p.id || idx}
                       style={{
-                        width: isWiderThanMosaic ? 'auto' : '100%',
-                        height: isWiderThanMosaic ? '100%' : 'auto',
-                        minWidth: '100%',
-                        minHeight: '100%',
-                        maxWidth: 'none',
-                        maxHeight: 'none',
-                        flexShrink: 0,
-                        aspectRatio: `${natWidth} / ${natHeight}`,
-                        objectFit: 'cover',
-                        objectPosition: 'center center',
-                        transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                        transformOrigin: 'center center',
-                        filter: getFilterCss(master.filter),
-                        transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                        position: 'absolute',
+                        left: `${p.x * 100}%`,
+                        top: `${p.y * 100}%`,
+                        width: `${p.w * 100}%`,
+                        height: `${p.h * 100}%`
                       }}
-                      className="pointer-events-none select-none max-w-none"
-                    />
+                      className="relative overflow-hidden rounded-[1px] bg-stone-100 flex items-center justify-center border border-stone-200/50 shadow-2xs"
+                    >
+                      <div
+                        style={{
+                          position: 'absolute',
+                          width: `${(1 / p.w) * 100}%`,
+                          height: `${(1 / p.h) * 100}%`,
+                          left: `${-(p.x / p.w) * 100}%`,
+                          top: `${-(p.y / p.h) * 100}%`
+                        }}
+                        className="pointer-events-none select-none flex items-center justify-center overflow-visible"
+                      >
+                        <img
+                          src={masterImage}
+                          alt={`Tile ${idx + 1}`}
+                          draggable={false}
+                          onLoad={(e) => {
+                            if (idx === 0) {
+                              const imgEl = e.currentTarget;
+                              if (imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0 && !imgMeta?.width) {
+                                setPanelImages((prev) => {
+                                  const cur = prev[0];
+                                  if (!cur) return prev;
+                                  return {
+                                    ...prev,
+                                    [0]: {
+                                      ...cur,
+                                      uploadedImage: {
+                                        originalSrc: cur.imageUrl || '',
+                                        width: imgEl.naturalWidth,
+                                        height: imgEl.naturalHeight,
+                                        aspectRatio: imgEl.naturalWidth / imgEl.naturalHeight
+                                      }
+                                    }
+                                  };
+                                });
+                              }
+                            }
+                          }}
+                          style={{
+                            width: isWiderThanMosaic ? 'auto' : '100%',
+                            height: isWiderThanMosaic ? '100%' : 'auto',
+                            minWidth: '100%',
+                            minHeight: '100%',
+                            maxWidth: 'none',
+                            maxHeight: 'none',
+                            flexShrink: 0,
+                            aspectRatio: `${natWidth} / ${natHeight}`,
+                            objectFit: 'cover',
+                            objectPosition: 'center center',
+                            transform: `translate(${master.panX}px, ${master.panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                            transformOrigin: 'center center',
+                            filter: getFilterCss(master.filter),
+                            transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                          }}
+                          className="pointer-events-none select-none max-w-none"
+                        />
+                      </div>
+                    </div>
                   );
-                })()}
+                })}
+
                 {/* Subtle physical cotton canvas weave micro-texture for Canvas only */}
                 {activeMaterial === 'canvas' && (
                   <div
@@ -6699,86 +7217,32 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     )}
                   </>
                 )}
-                {/* Visual tile boundary grid lines (Zero physical gaps) overlaid on image */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
-                  {Array.from({ length: totalCols - 1 }).map((_, c) => {
-                    const xPct = ((c + 1) / totalCols) * 100;
-                    return (
-                      <line
-                        key={`mv-${c}`}
-                        x1={`${xPct}%`}
-                        y1="0"
-                        x2={`${xPct}%`}
-                        y2="100%"
-                        stroke={activeMaterial === 'acrylic' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.55)'}
-                        strokeWidth={activeMaterial === 'acrylic' ? '1.8' : '1.5'}
-                        style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.65))' }}
-                      />
-                    );
-                  })}
-                  {Array.from({ length: totalRows - 1 }).map((_, r) => {
-                    const yPct = ((r + 1) / totalRows) * 100;
-                    return (
-                      <line
-                        key={`mh-${r}`}
-                        x1="0"
-                        y1={`${yPct}%`}
-                        x2="100%"
-                        y2={`${yPct}%`}
-                        stroke={activeMaterial === 'acrylic' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.55)'}
-                        strokeWidth={activeMaterial === 'acrylic' ? '1.8' : '1.5'}
-                        style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.65))' }}
-                      />
-                    );
-                  })}
-                </svg>
               </div>
             ) : (
-              /* Empty state: Canvas India single central upload button + internal divisions */
-              <div className="w-full h-full relative flex items-center justify-center bg-[#dcdfe4]">
-                {/* Internal tile divisions drawn on empty canvas surface (Zero physical gaps) */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
-                  {Array.from({ length: totalCols - 1 }).map((_, c) => {
-                    const xPct = ((c + 1) / totalCols) * 100;
-                    return (
-                      <line
-                        key={`emv-${c}`}
-                        x1={`${xPct}%`}
-                        y1="0"
-                        x2={`${xPct}%`}
-                        y2="100%"
-                        stroke="rgba(0, 0, 0, 0.2)"
-                        strokeWidth="1.5"
-                      />
-                    );
-                  })}
-                  {Array.from({ length: totalRows - 1 }).map((_, r) => {
-                    const yPct = ((r + 1) / totalRows) * 100;
-                    return (
-                      <line
-                        key={`emh-${r}`}
-                        x1="0"
-                        y1={`${yPct}%`}
-                        x2="100%"
-                        y2={`${yPct}%`}
-                        stroke="rgba(0, 0, 0, 0.2)"
-                        strokeWidth="1.5"
-                      />
-                    );
-                  })}
-                </svg>
-
-                {/* Centered Single Upload Action (Canvas India Branding) */}
-                <div className="relative z-20 flex flex-col items-center justify-center p-4 text-center group cursor-pointer">
-                  <div className="w-12 h-12 rounded-2xl bg-white shadow-md border border-stone-200/90 flex items-center justify-center text-[#0E4A93] group-hover:scale-110 group-hover:shadow-lg transition-all mb-2">
-                    <Upload className="w-5 h-5 stroke-[2.4] text-[#0E4A93]" />
+              /* Empty state: Canvas India single central upload button + spaced internal divisions */
+              <div className="w-full h-full relative flex items-center justify-center bg-white">
+                {/* Internal tile divisions in unified frame */}
+                {layout.panels.map((p, idx) => (
+                  <div
+                    key={p.id || idx}
+                    style={{
+                      position: 'absolute',
+                      left: `${p.x * 100}%`,
+                      top: `${p.y * 100}%`,
+                      width: `${p.w * 100}%`,
+                      height: `${p.h * 100}%`
+                    }}
+                    className="rounded-[1px] bg-stone-100 border border-stone-200/60 flex items-center justify-center"
+                  >
+                    <span className="text-[10px] font-semibold text-stone-400">{idx + 1}</span>
                   </div>
-                  <span className="text-xs sm:text-sm font-black text-stone-800 group-hover:text-[#0E4A93] transition-colors">
-                    Upload Image
-                  </span>
-                  <span className="text-[10px] font-semibold text-stone-500 mt-0.5">
-                    Click anywhere to upload photo for {layout.name} ({totalCols}×{totalRows})
-                  </span>
+                ))}
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
+                  <div className="w-12 h-12 rounded-full bg-[#0E4A93] text-white flex items-center justify-center shadow-lg mb-2 pointer-events-auto">
+                    <Upload className="w-6 h-6 stroke-[2.2]" />
+                  </div>
+                  <span className="text-xs font-bold text-stone-700">Upload Photo for Continuous Mosaic</span>
+                  <span className="text-[10px] text-stone-500 mt-0.5">Click to choose image</span>
                 </div>
               </div>
             )}
@@ -6861,12 +7325,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           </div>
 
           <div
-            ref={workspaceCanvasBoxRef}
+            ref={(node) => {
+              (workspaceCanvasBoxRef as any).current = node;
+            }}
             className="relative w-full max-w-2xl"
             style={{
               aspectRatio: String(layout.aspectRatio),
-              width: `min(34rem, calc(54vh * ${layout.aspectRatio}))`,
-              maxHeight: '56vh'
+              width: isMobile
+                ? `min(calc(100vw - 4rem), calc(28vh * ${layout.aspectRatio}))`
+                : `min(34rem, calc(54vh * ${layout.aspectRatio}))`,
+              maxHeight: isMobile ? '30vh' : '56vh'
             }}
           >
             {hexPanels.map((pSpec, idx) => {
@@ -6997,6 +7465,25 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           }}
                           className="pointer-events-none select-none max-w-none"
                         />
+                        {/* Subtle canvas weave micro-texture for canvas only */}
+                        {activeMaterial === 'canvas' && (
+                          <div
+                            className="absolute inset-0 pointer-events-none opacity-20 mix-blend-multiply"
+                            style={{
+                              backgroundImage:
+                                'repeating-linear-gradient(0deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px)'
+                            }}
+                          />
+                        )}
+                        {/* Optical crystal depth reflection for acrylic */}
+                        {activeMaterial === 'acrylic' && (
+                          <div
+                            className="absolute inset-0 pointer-events-none opacity-25"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 45%, transparent 60%)'
+                            }}
+                          />
+                        )}
                       </div>
                     ) : (
                     <div
@@ -7052,73 +7539,336 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           </div>
 
           <div
-            ref={workspaceCanvasBoxRef}
+            ref={(node) => {
+              (workspaceCanvasBoxRef as any).current = node;
+            }}
             className="relative w-full max-w-2xl"
             style={{
               aspectRatio: String(layout.aspectRatio),
-              width: `min(34rem, calc(54vh * ${layout.aspectRatio}))`,
-              maxHeight: '56vh'
+              width: isMobile
+                ? `min(calc(100vw - 4rem), calc(28vh * ${layout.aspectRatio}))`
+                : `min(34rem, calc(54vh * ${layout.aspectRatio}))`,
+              maxHeight: isMobile ? '30vh' : '56vh'
             }}
           >
             {wallPanels.map((pSpec, idx) => {
               const panel = panelImages[idx] || createDefaultPanel();
               const isTarget = activePanelIndex === idx;
+              const isHovered = hoveredPanelIndex === idx;
+              const showPanelEdges = isHovered && activeMaterial === 'canvas' && selectedFrameId === 'no-frame';
+              const panelDepthPx =
+                selectedThicknessId === 'canvas-lite'
+                  ? 10
+                  : selectedThicknessId === 'thick-gallery'
+                  ? 28
+                  : selectedThicknessId === 'custom-thickness'
+                  ? Math.max(8, Math.min(36, Math.round(customThicknessInches * 18)))
+                  : 18;
+
+              const isImageWrapped = (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (panel.fitMode !== 'contain');
+              const effectiveEdgeColor = selectedWrapId === 'black-border' ? '#0F172A' : '#FFFFFF';
+
+              const totalW = workspaceBoxSize.width || 420;
+              const totalH = workspaceBoxSize.height || 320;
+              const panelW = pSpec.w * totalW;
+              const panelH = pSpec.h * totalH;
+
+              const wallShadow = activeMaterial === 'acrylic'
+                ? (effectiveAcrylicThicknessMm >= 8
+                    ? '0 18px 32px -4px rgba(15, 23, 42, 0.36), 0 0 0 1px rgba(255, 255, 255, 0.5) inset'
+                    : effectiveAcrylicThicknessMm >= 5
+                    ? '0 12px 24px -4px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.4) inset'
+                    : '0 6px 14px -2px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.35) inset')
+                : (selectedThicknessId === 'thick-gallery'
+                    ? '0 20px 36px -6px rgba(15, 23, 42, 0.38), 0 0 0 1px rgba(0,0,0,0.14)'
+                    : selectedThicknessId === 'thin-gallery'
+                    ? '0 12px 24px -4px rgba(15, 23, 42, 0.26), 0 0 0 1px rgba(0,0,0,0.1)'
+                    : '0 6px 14px -2px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(0,0,0,0.08)');
+
+              const imgMeta = panel.uploadedImage;
+              const natWidth = imgMeta?.width || 1200;
+              const natHeight = imgMeta?.height || 800;
+              const imgAspect = imgMeta?.aspectRatio || (natWidth / Math.max(1, natHeight));
+              const slotAspect = (pSpec.w * layout.aspectRatio) / Math.max(0.001, pSpec.h);
+              const isWiderThanSlot = imgAspect >= slotAspect;
 
               return (
                 <div
                   key={pSpec.id || idx}
+                  onPointerEnter={() => setHoveredPanelIndex(idx)}
+                  onPointerLeave={() => setHoveredPanelIndex((prev) => (prev === idx ? null : prev))}
                   style={{
                     position: 'absolute',
                     left: `${pSpec.x * 100}%`,
                     top: `${pSpec.y * 100}%`,
                     width: `${pSpec.w * 100}%`,
                     height: `${pSpec.h * 100}%`,
-                    boxShadow: '0 10px 20px -4px rgba(15, 23, 42, 0.18)'
+                    boxShadow: isHovered
+                      ? (activeMaterial === 'acrylic'
+                          ? '0 20px 32px -4px rgba(15, 23, 42, 0.32), 0 0 0 1px rgba(255, 255, 255, 0.6) inset'
+                          : '0 20px 32px -4px rgba(15, 23, 42, 0.32), 0 8px 16px -4px rgba(15, 23, 42, 0.2)')
+                      : wallShadow,
+                    zIndex: isHovered ? 35 : isTarget ? 20 : 10,
+                    transform: isHovered ? 'scale(1.02)' : 'none',
+                    transformOrigin: 'center center',
+                    transition: 'transform 0.18s ease-out, box-shadow 0.18s ease-out'
                   }}
-                  className={`ci-slot-container relative bg-white rounded-lg overflow-hidden transition-all cursor-pointer group border ${
-                    isTarget
-                      ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/40 z-20 shadow-md'
-                      : 'border-stone-200 hover:border-stone-400 shadow-xs'
-                  }`}
-                  {...panelHandlers(idx)}
-                  ref={registerWheelRef(idx)}
+                  className="ci-slot-container relative rounded-[2px] overflow-visible transition-all cursor-pointer group"
                 >
-                  {/* 3D Canvas Chamfer Edge / White Edge */}
+                  {/* Hover-based physical canvas edges (Canvas only) */}
+                  {showPanelEdges && (
+                    <>
+                      {/* Top Physical Edge */}
+                      <div
+                        className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0 border border-stone-300/80 transition-colors"
+                        style={{
+                          bottom: '100%',
+                          height: `${panelDepthPx}px`,
+                          borderBottom: 'none',
+                          backgroundColor: effectiveEdgeColor
+                        }}
+                      >
+                        {panel.imageUrl && isImageWrapped && (
+                          <div
+                            className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center"
+                            style={{
+                              top: '100%',
+                              left: 0,
+                              width: `${panelW}px`,
+                              height: `${panelH}px`,
+                              transformOrigin: 'top center',
+                              transform: 'scaleY(-1)'
+                            }}
+                          >
+                            <img
+                              src={panel.imageUrl}
+                              alt=""
+                              style={{
+                                width: isWiderThanSlot ? 'auto' : '100%',
+                                height: isWiderThanSlot ? '100%' : 'auto',
+                                minWidth: '100%',
+                                minHeight: '100%',
+                                maxWidth: 'none',
+                                maxHeight: 'none',
+                                flexShrink: 0,
+                                aspectRatio: `${natWidth} / ${natHeight}`,
+                                objectFit: 'cover',
+                                objectPosition: 'center center',
+                                transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                transformOrigin: 'center center',
+                                filter: `${getFilterCss(panel.filter)} brightness(0.96)`,
+                                transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                              }}
+                              className="pointer-events-none select-none max-w-none"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Left Physical Edge */}
+                      <div
+                        className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0 border border-stone-300/80 transition-colors"
+                        style={{
+                          right: '100%',
+                          width: `${panelDepthPx}px`,
+                          borderRight: 'none',
+                          backgroundColor: effectiveEdgeColor
+                        }}
+                      >
+                        {panel.imageUrl && isImageWrapped && (
+                          <div
+                            className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center"
+                            style={{
+                              left: '100%',
+                              top: 0,
+                              width: `${panelW}px`,
+                              height: `${panelH}px`,
+                              transformOrigin: 'left center',
+                              transform: 'scaleX(-1)'
+                            }}
+                          >
+                            <img
+                              src={panel.imageUrl}
+                              alt=""
+                              style={{
+                                width: isWiderThanSlot ? 'auto' : '100%',
+                                height: isWiderThanSlot ? '100%' : 'auto',
+                                minWidth: '100%',
+                                minHeight: '100%',
+                                maxWidth: 'none',
+                                maxHeight: 'none',
+                                flexShrink: 0,
+                                aspectRatio: `${natWidth} / ${natHeight}`,
+                                objectFit: 'cover',
+                                objectPosition: 'center center',
+                                transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                transformOrigin: 'center center',
+                                filter: `${getFilterCss(panel.filter)} brightness(0.92)`,
+                                transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                              }}
+                              className="pointer-events-none select-none max-w-none"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Bottom Physical Edge */}
+                      <div
+                        className="absolute left-0 right-0 overflow-hidden pointer-events-none z-0 border border-stone-300/80 transition-colors"
+                        style={{
+                          top: '100%',
+                          height: `${panelDepthPx}px`,
+                          borderTop: 'none',
+                          backgroundColor: effectiveEdgeColor,
+                          boxShadow: '0 10px 18px -4px rgba(15, 23, 42, 0.2)'
+                        }}
+                      >
+                        {panel.imageUrl && isImageWrapped && (
+                          <div
+                            className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center"
+                            style={{
+                              bottom: '100%',
+                              left: 0,
+                              width: `${panelW}px`,
+                              height: `${panelH}px`,
+                              transformOrigin: 'bottom center',
+                              transform: 'scaleY(-1)'
+                            }}
+                          >
+                            <img
+                              src={panel.imageUrl}
+                              alt=""
+                              style={{
+                                width: isWiderThanSlot ? 'auto' : '100%',
+                                height: isWiderThanSlot ? '100%' : 'auto',
+                                minWidth: '100%',
+                                minHeight: '100%',
+                                maxWidth: 'none',
+                                maxHeight: 'none',
+                                flexShrink: 0,
+                                aspectRatio: `${natWidth} / ${natHeight}`,
+                                objectFit: 'cover',
+                                objectPosition: 'center center',
+                                transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                transformOrigin: 'center center',
+                                filter: `${getFilterCss(panel.filter)} brightness(0.84)`,
+                                transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                              }}
+                              className="pointer-events-none select-none max-w-none"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right Physical Edge */}
+                      <div
+                        className="absolute top-0 bottom-0 overflow-hidden pointer-events-none z-0 border border-stone-300/80 transition-colors"
+                        style={{
+                          left: '100%',
+                          width: `${panelDepthPx}px`,
+                          borderLeft: 'none',
+                          backgroundColor: effectiveEdgeColor
+                        }}
+                      >
+                        {panel.imageUrl && isImageWrapped && (
+                          <div
+                            className="absolute overflow-hidden pointer-events-none select-none flex items-center justify-center"
+                            style={{
+                              right: '100%',
+                              top: 0,
+                              width: `${panelW}px`,
+                              height: `${panelH}px`,
+                              transformOrigin: 'right center',
+                              transform: 'scaleX(-1)'
+                            }}
+                          >
+                            <img
+                              src={panel.imageUrl}
+                              alt=""
+                              style={{
+                                width: isWiderThanSlot ? 'auto' : '100%',
+                                height: isWiderThanSlot ? '100%' : 'auto',
+                                minWidth: '100%',
+                                minHeight: '100%',
+                                maxWidth: 'none',
+                                maxHeight: 'none',
+                                flexShrink: 0,
+                                aspectRatio: `${natWidth} / ${natHeight}`,
+                                objectFit: 'cover',
+                                objectPosition: 'center center',
+                                transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                transformOrigin: 'center center',
+                                filter: `${getFilterCss(panel.filter)} brightness(0.88)`,
+                                transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                              }}
+                              className="pointer-events-none select-none max-w-none"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Front Face Panel Surface */}
                   <div
-                    className="absolute inset-0 pointer-events-none z-10"
-                    style={{
-                      boxShadow: 'inset 0 0 0 1.5px rgba(255, 255, 255, 0.8), inset 0 2px 4px rgba(0, 0, 0, 0.12)'
-                    }}
-                  />
-
-                  {/* 90° Rotate Button Handle for active panel */}
-                  {panel.imageUrl && isTarget && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRotate90();
+                    className={`w-full h-full relative rounded-[2px] overflow-hidden bg-white border transition-all ${
+                      isTarget
+                        ? 'border-[#0E4A93] ring-2 ring-[#0E4A93]/40 shadow-md'
+                        : activeMaterial === 'acrylic' ? 'border-slate-200 shadow-xs' : 'border-stone-300/80 shadow-xs'
+                    }`}
+                    {...panelHandlers(idx)}
+                    ref={registerWheelRef(idx)}
+                  >
+                    {/* 3D Canvas Chamfer Edge / White Edge */}
+                    <div
+                      className="absolute inset-0 pointer-events-none z-10"
+                      style={{
+                        boxShadow: activeMaterial === 'acrylic'
+                          ? 'inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.8)'
+                          : 'inset 0 0 0 1.5px rgba(255, 255, 255, 0.8), inset 0 2px 4px rgba(0, 0, 0, 0.12)'
                       }}
-                      className="absolute top-2 left-2 z-30 w-7 h-7 rounded-full bg-white/90 backdrop-blur-xs border border-stone-300 shadow-md hover:scale-110 flex items-center justify-center text-stone-700 transition-transform cursor-pointer"
-                      title="Rotate photo 90°"
-                    >
-                      <RotateCw className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                    />
 
-                  {dragOverPanel === idx && (
-                    <div className="absolute inset-0 z-30 bg-[#E8752A]/25 border-4 border-dashed border-[#E8752A] pointer-events-none" />
-                  )}
+                    {/* Crisp Front Print Line when physical edges are visible on hover */}
+                    {showPanelEdges && (
+                      <div
+                        className="absolute inset-0 pointer-events-none z-20"
+                        style={{
+                          boxShadow: 'inset 0 0 0 1.5px rgba(255, 255, 255, 0.95), 0 0 0 1px rgba(0, 0, 0, 0.35)'
+                        }}
+                      />
+                    )}
 
-                  {(() => {
-                    const imgMeta = panel.uploadedImage;
-                    const natWidth = imgMeta?.width || 1200;
-                    const natHeight = imgMeta?.height || 800;
-                    const imgAspect = imgMeta?.aspectRatio || (natWidth / Math.max(1, natHeight));
-                    const slotAspect = (pSpec.w * layout.aspectRatio) / Math.max(0.001, pSpec.h);
-                    const isWiderThanSlot = imgAspect >= slotAspect;
+                    {/* Border overlay for wall panel */}
+                    {selectedBorderWidthId !== 'none' && (
+                      <div
+                        className="absolute inset-0 pointer-events-none z-25 rounded-[2px]"
+                        style={{
+                          border: `${selectedBorderWidthId === 'thin' || selectedBorderWidthId === 'custom-color' ? 4 : selectedBorderWidthId === 'medium' ? 8 : 12}px solid ${selectedBorderColor}`
+                        }}
+                      />
+                    )}
 
-                    return panel.imageUrl ? (
+                    {/* 90° Rotate Button Handle for active panel */}
+                    {panel.imageUrl && isTarget && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRotate90();
+                        }}
+                        className="absolute top-2 left-2 z-30 w-7 h-7 rounded-full bg-white/90 backdrop-blur-xs border border-stone-300 shadow-md hover:scale-110 flex items-center justify-center text-stone-700 transition-transform cursor-pointer"
+                        title="Rotate photo 90°"
+                      >
+                        <RotateCw className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+
+                    {dragOverPanel === idx && (
+                      <div className="absolute inset-0 z-30 bg-[#E8752A]/25 border-4 border-dashed border-[#E8752A] pointer-events-none" />
+                    )}
+
+                    {panel.imageUrl ? (
                       <div className="w-full h-full overflow-hidden relative flex items-center justify-center pointer-events-none select-none">
                         <img
                           src={panel.imageUrl}
@@ -7163,6 +7913,25 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           }}
                           className="pointer-events-none select-none max-w-none"
                         />
+                        {/* Subtle canvas weave micro-texture for canvas only */}
+                        {activeMaterial === 'canvas' && (
+                          <div
+                            className="absolute inset-0 pointer-events-none opacity-20 mix-blend-multiply"
+                            style={{
+                              backgroundImage:
+                                'repeating-linear-gradient(0deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, rgba(15,23,42,0.08) 0px, rgba(15,23,42,0.08) 1px, transparent 1px, transparent 3px)'
+                            }}
+                          />
+                        )}
+                        {/* Optical crystal depth reflection for acrylic */}
+                        {activeMaterial === 'acrylic' && (
+                          <div
+                            className="absolute inset-0 pointer-events-none opacity-25"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 45%, transparent 60%)'
+                            }}
+                          />
+                        )}
                       </div>
                     ) : (
                       <div
@@ -7177,10 +7946,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         </div>
                         <span className="text-[10px] font-bold text-stone-600">{pSpec.label || `Panel ${idx + 1}`}</span>
                       </div>
-                    );
-                  })()}
+                    )}
 
-                  {renderPanelTextItems(idx)}
+                    {renderPanelTextItems(idx)}
+                  </div>
                 </div>
               );
             })}
@@ -7209,7 +7978,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             width: `${pSpec.w * 100}%`,
             height: `${pSpec.h * 100}%`,
             boxSizing: 'border-box',
-            padding: '3px'
+            padding: isMobile ? '5px' : '7px'
           }}
         >
           <div
@@ -7335,22 +8104,48 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       );
     };
 
-    return (
+    const collageContent = (
       <div
-        ref={workspaceCanvasBoxRef}
+        ref={(node) => {
+          (workspaceCanvasBoxRef as any).current = node;
+        }}
         className="relative bg-[#d8dce2] rounded-[2px] overflow-hidden border border-stone-300/80 transition-all select-none shadow-xl mx-auto my-auto"
         style={{
           aspectRatio: String(layout.aspectRatio),
-          width: `min(30rem, calc(52vh * ${layout.aspectRatio}))`,
+          width: isMobile
+            ? `min(calc(100vw - 4rem), calc(28vh * ${layout.aspectRatio}))`
+            : `min(30rem, calc(52vh * ${layout.aspectRatio}))`,
+          maxHeight: isMobile ? '30vh' : undefined,
           maxWidth: '100%',
-          boxShadow: '0 20px 35px -8px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0,0,0,0.06)'
+          boxShadow: selectedThicknessId === 'thick-gallery'
+            ? '0 24px 44px -8px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(0,0,0,0.1)'
+            : selectedThicknessId === 'thin-gallery'
+            ? '0 18px 32px -6px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(0,0,0,0.08)'
+            : '0 10px 20px -4px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(0,0,0,0.06)'
         }}
       >
         <div className="relative w-full h-full">
           {collageSlots.map((slot, idx) => renderCollageSlot(idx, slot))}
         </div>
+        {/* Border overlay for collage canvas */}
+        {selectedBorderWidthId !== 'none' && (
+          <div
+            className="absolute inset-0 pointer-events-none z-25 rounded-[2px]"
+            style={{
+              border: `${selectedBorderWidthId === 'thin' || selectedBorderWidthId === 'custom-color' ? 4 : selectedBorderWidthId === 'medium' ? 8 : 12}px solid ${selectedBorderColor}`
+            }}
+          />
+        )}
       </div>
     );
+
+    return renderFloatingFrameContainer(collageContent, {
+      frameId: selectedFrameId,
+      displayWidthInches: layout.overallWidthInches || currentSizeOption?.widthInches || 16,
+      displayHeightInches: layout.overallHeightInches || currentSizeOption?.heightInches || 16,
+      aspectRatio: layout.aspectRatio,
+      isMultiPanel: true
+    });
   };
 
   return (
@@ -7484,7 +8279,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       {/* ===================================================================== */}
       {/* 2. BODY CONTAINER: 3-COLUMN LAYOUT (Shared with Acrylic Customizer)   */}
       {/* ===================================================================== */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+      <div className="flex-1 min-w-0 flex flex-col md:flex-row overflow-hidden relative">
         {/* COLUMN 1: LEFT VERTICAL SIDEBAR */}
         <CustomizerSidebar
           items={toolbarItems}
@@ -7847,31 +8642,31 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </button>
               )}
 
-              {/* Segmented Control: Computer vs Mobile QR */}
+              {/* Segmented Control: Computer/Device vs Mobile QR */}
               <div className="flex border border-stone-200 rounded-xl p-1 bg-stone-100">
                 <button
                   type="button"
                   onClick={() => setUploadMode('computer')}
-                  className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     uploadMode === 'computer'
                       ? 'bg-white text-[#0E4A93] shadow-xs'
                       : 'text-stone-600 hover:text-stone-900'
                   }`}
                 >
                   <Laptop className="w-3.5 h-3.5" />
-                  <span>Upload from PC or Laptop</span>
+                  <span>{isMobile ? 'Upload from Device' : 'Upload from PC or Laptop'}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setUploadMode('mobile')}
-                  className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     uploadMode === 'mobile'
                       ? 'bg-white text-[#0E4A93] shadow-xs'
                       : 'text-stone-600 hover:text-stone-900'
                   }`}
                 >
                   <Smartphone className="w-3.5 h-3.5" />
-                  <span>Upload from Mobile</span>
+                  <span>{isMobile ? 'QR Code / Link' : 'Upload from Mobile'}</span>
                 </button>
               </div>
 
@@ -7883,27 +8678,41 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               )}
 
               {uploadMode === 'computer' ? (
-                /* COMPUTER UPLOAD ZONE */
-                <div
-                  onClick={() => {
-                    uploadTargetRef.current = (isSplitProduct || isMosaicProduct) ? 0 : -1;
-                    fileInputRef.current?.click();
-                  }}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    handleFilesUpload(e.dataTransfer.files, (isSplitProduct || isMosaicProduct) ? 0 : -1);
-                  }}
-                  className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-6 text-center cursor-pointer transition-all group"
-                >
-                  <div className="w-12 h-12 rounded-full bg-white text-[#0E4A93] shadow-sm flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                    <UploadCloud className="w-6 h-6 stroke-[2.5]" />
-                  </div>
-                  <div className="text-xs font-bold text-stone-900">
-                    Click to Browse or Drag Photos
-                  </div>
-                  <div className="text-[11px] text-stone-500 mt-1">
-                    Supports JPG, PNG, WEBP up to 25MB
+                /* COMPUTER / DEVICE UPLOAD ZONE */
+                <div className="space-y-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      uploadTargetRef.current = (isSplitProduct || isMosaicProduct) ? 0 : -1;
+                      fileInputRef.current?.click();
+                    }}
+                    className="w-full py-3 px-4 bg-[#0E4A93] hover:bg-[#0B3A75] active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  >
+                    <UploadCloud className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
+                    <span>{isMobile ? 'Select Photo from Device' : 'Browse Photos to Upload'}</span>
+                  </button>
+
+                  <div
+                    onClick={() => {
+                      uploadTargetRef.current = (isSplitProduct || isMosaicProduct) ? 0 : -1;
+                      fileInputRef.current?.click();
+                    }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      handleFilesUpload(e.dataTransfer.files, (isSplitProduct || isMosaicProduct) ? 0 : -1);
+                    }}
+                    className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-4 sm:p-6 text-center cursor-pointer transition-all group"
+                  >
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white text-[#0E4A93] shadow-sm flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
+                      <UploadCloud className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+                    </div>
+                    <div className="text-xs font-bold text-stone-900">
+                      {isMobile ? 'Or tap here to choose from Gallery / Camera' : 'Click to Browse or Drag Photos'}
+                    </div>
+                    <div className="text-[11px] text-stone-500 mt-1">
+                      Supports JPG, PNG, WEBP up to 40MB
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -8161,7 +8970,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               {isSinglePrintCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct || isWordArtProduct ? (
                 <>
                   {/* Selected Size Summary Card */}
-                  <div className="flex items-center justify-between p-3.5 bg-blue-50/70 rounded-2xl border border-blue-100 mb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 sm:p-3.5 bg-blue-50/70 rounded-2xl border border-blue-100 mb-3">
                     <div>
                       <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Active Size</span>
                       <div className="text-sm font-black text-stone-900 mt-0.5">
@@ -8171,11 +8980,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         ₹{sizePrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <button
                         type="button"
                         onClick={handleResetSize}
-                        className="px-3 py-1.5 bg-white hover:bg-stone-50 text-stone-700 hover:text-stone-900 text-xs font-bold rounded-xl border border-stone-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs hover:scale-102"
+                        className="px-2.5 sm:px-3 py-1.5 bg-white hover:bg-stone-50 text-stone-700 hover:text-stone-900 text-xs font-bold rounded-xl border border-stone-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs hover:scale-102"
                         title="Reset to default product size"
                       >
                         <RotateCcw className="w-3.5 h-3.5 stroke-[2.2]" />
@@ -8338,7 +9147,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     <div className="text-center text-[11px] font-bold text-stone-700 mb-2">
                       Custom Size (Height × Width inches)
                     </div>
-                    <div className="flex items-center justify-center gap-2">
+                    <div className="flex items-center justify-center gap-2 flex-wrap">
                       <div className="relative">
                         <select
                           value={customHeight}
@@ -8765,281 +9574,240 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
           {/* --------------------------- WRAP & BORDER --------------------------- */}
           {activeTab === 'WRAP & BORDER' && (
-            <div className="p-4 space-y-5">
-              {/* 1. Canvas Wrap Thickness / Stretcher Bar Depth (or Acrylic Thickness) */}
+            <div className="p-3 sm:p-4 space-y-4">
+              {/* ==================== 1. WRAP SECTION (Matching Screenshot 1) ==================== */}
               {selectedProductTypeId !== 'canvas-banner' && (
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
-                      {activeMaterial === 'acrylic' ? '1. Acrylic Thickness' : '1. Canvas Wrap Thickness'}
-                    </label>
-                    <span className="text-[11px] font-bold text-[#0E4A93]">
-                      {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS).length} options
+                <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
+                  {/* Dark Section Header Bar */}
+                  <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider">
+                      {activeMaterial === 'acrylic' ? 'Thickness' : 'Wrap'}
+                    </span>
+                    <span className="text-[11px] font-semibold text-stone-200">
+                      {activeMaterial === 'acrylic' ? `${ACRYLIC_THICKNESS_OPTIONS.length} options` : '3 options'}
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS).map((th: any) => {
-                      const isSelected = selectedThicknessId === th.id;
-                      const displayTitle = th.name || th.label;
-                      const displaySub = th.thicknessInches
-                        ? (th.id === 'custom-thickness' ? `${customThicknessInches.toFixed(2)}" depth` : `${th.thicknessInches}" depth`)
-                        : th.thicknessMm
-                        ? (th.id === 'custom-thickness' ? `${customAcrylicThicknessMm}mm depth` : `${th.thicknessMm}mm depth`)
-                        : '';
-                      return (
-                        <CustomizerOptionCard
-                          key={th.id}
-                          selected={isSelected}
-                          onClick={() => setSelectedThicknessId(th.id)}
-                          badge={th.badge}
-                          title={displayTitle}
-                          subtitle={displaySub}
-                          priceText={th.price === 0 ? 'Included' : `+₹${th.price}`}
-                          previewHeightClass="h-16 p-1.5"
-                          preview={renderWrapPreview(th.id)}
-                        />
-                      );
-                    })}
-                  </div>
 
-                  {/* Custom Thickness Input & Slider when custom-thickness is selected */}
-                  {selectedThicknessId === 'custom-thickness' && (
-                    <div className="p-3.5 bg-blue-50/50 rounded-xl border border-blue-200/80 space-y-2.5 shadow-2xs">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-stone-800">
-                          {activeMaterial === 'acrylic' ? 'Specify Custom Thickness (mm):' : 'Specify Custom Thickness (inches):'}
-                        </span>
-                        <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-md border border-stone-300 shadow-2xs">
-                          <input
-                            type="number"
-                            min={activeMaterial === 'acrylic' ? 2 : 0.25}
-                            max={activeMaterial === 'acrylic' ? 25 : 3.0}
-                            step={activeMaterial === 'acrylic' ? 1 : 0.05}
-                            value={activeMaterial === 'acrylic' ? customAcrylicThicknessMm : customThicknessInches}
-                            onChange={(e) => {
-                              const val = parseFloat(e.target.value);
-                              if (!isNaN(val)) {
-                                if (activeMaterial === 'acrylic') {
-                                  setCustomAcrylicThicknessMm(Math.max(2, Math.min(25, val)));
-                                } else {
-                                  setCustomThicknessInches(Math.max(0.25, Math.min(3.0, Math.round(val * 100) / 100)));
-                                }
-                              }
-                            }}
-                            className="w-14 text-right font-extrabold text-xs text-[#0E4A93] outline-hidden"
+                  <div className="p-3 space-y-3">
+                    {/* Thickness Options Grid */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS.slice(0, 3) : CANVAS_THICKNESS_OPTIONS.slice(0, 3)).map((th: any) => {
+                        const isSelected = selectedThicknessId === th.id;
+                        const displayTitle = th.name || th.label.split('(')[0].trim();
+                        const displaySub = th.thicknessInches ? `(${th.thicknessInches.toFixed(2)}")` : th.thicknessMm ? `(${th.thicknessMm}mm)` : '';
+                        return (
+                          <CustomizerOptionCard
+                            key={th.id}
+                            selected={isSelected}
+                            onClick={() => setSelectedThicknessId(th.id)}
+                            badge={th.badge}
+                            title={displayTitle}
+                            subtitle={displaySub}
+                            priceText={`₹${th.price.toFixed(2)}`}
+                            previewHeightClass="h-16 p-1"
+                            preview={renderWrapPreview(th.id)}
                           />
-                          <span className="text-[11px] font-bold text-stone-500">
-                            {activeMaterial === 'acrylic' ? 'mm' : 'inch'}
-                          </span>
-                        </div>
-                      </div>
-                      <input
-                        type="range"
-                        min={activeMaterial === 'acrylic' ? 2 : 0.25}
-                        max={activeMaterial === 'acrylic' ? 25 : 3.0}
-                        step={activeMaterial === 'acrylic' ? 1 : 0.05}
-                        value={activeMaterial === 'acrylic' ? customAcrylicThicknessMm : customThicknessInches}
-                        onChange={(e) => {
-                          const val = parseFloat(e.target.value);
-                          if (!isNaN(val)) {
-                            if (activeMaterial === 'acrylic') {
-                              setCustomAcrylicThicknessMm(val);
-                            } else {
-                              setCustomThicknessInches(Math.round(val * 100) / 100);
-                            }
-                          }
-                        }}
-                        className="w-full accent-[#0E4A93] cursor-pointer"
-                      />
-                      <div className="flex justify-between text-[10px] font-bold text-stone-400">
-                        <span>{activeMaterial === 'acrylic' ? '2mm (Ultra Slim)' : '0.25" (Slim)'}</span>
-                        <span className="text-[#0E4A93] font-black">
-                          {activeMaterial === 'acrylic' ? `${customAcrylicThicknessMm}mm` : `${customThicknessInches.toFixed(2)}"`}
-                        </span>
-                        <span>{activeMaterial === 'acrylic' ? '25mm (Ultra Deep)' : '3.00" (Museum Extra Deep)'}</span>
-                      </div>
+                        );
+                      })}
                     </div>
-                  )}
-                </div>
-              )}
 
-              {/* 2. Edge Wrap Styles (For Canvas products) */}
-              {activeMaterial === 'canvas' && (
-                <div className="space-y-2.5 pt-3 border-t border-stone-200">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">2. Edge Wrap Finish</label>
-                    <span className="text-[11px] font-bold text-[#0E4A93]">{WRAP_OPTIONS.length} styles</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                    {WRAP_OPTIONS.map((w) => {
-                      const isSelected = selectedWrapId === w.id;
-                      return (
-                        <CustomizerOptionCard
-                          key={w.id}
-                          selected={isSelected}
-                          onClick={() => setSelectedWrapId(w.id)}
-                          title={w.name}
-                          priceText={w.price === 0 ? 'Included' : `+₹${w.price}`}
-                          previewHeightClass="h-14 p-1.5"
-                          preview={
-                            <div className="w-10 h-10 mx-auto relative flex items-center justify-center">
-                              <div className="w-9 h-9 rounded border border-stone-300 relative overflow-hidden bg-stone-100 flex items-center justify-center">
-                                {w.id === 'full-bleed' && (
-                                  <div className="w-full h-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500" />
-                                )}
-                                {w.id === 'clear-edge' && (
-                                  <div className="w-full h-full p-1 bg-stone-200">
-                                    <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 rounded-xs border border-dashed border-white" />
-                                  </div>
-                                )}
-                                {w.id === 'white-border' && (
-                                  <div className="w-full h-full p-1.5 bg-white border border-stone-300">
-                                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
-                                  </div>
-                                )}
-                                {w.id === 'black-border' && (
-                                  <div className="w-full h-full p-1.5 bg-[#0F172A]">
-                                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
-                                  </div>
-                                )}
-                                {w.id === 'no-wrap' && (
-                                  <div className="w-full h-full p-1 bg-stone-300">
-                                    <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xs" />
-                                  </div>
-                                )}
+                    {/* Custom Thickness Toggle & Slider */}
+                    {activeMaterial === 'canvas' && (
+                      <div className="pt-2 border-t border-stone-100">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedThicknessId(selectedThicknessId === 'custom-thickness' ? 'thin-gallery' : 'custom-thickness')}
+                          className={`w-full py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-between border transition-all ${
+                            selectedThicknessId === 'custom-thickness'
+                              ? 'border-[#0E4A93] bg-blue-50/50 text-[#0E4A93]'
+                              : 'border-stone-200 hover:border-stone-300 text-stone-700 bg-stone-50/60'
+                          }`}
+                        >
+                          <span>Custom Thickness</span>
+                          <span className="text-[11px] font-semibold text-stone-500">
+                            {selectedThicknessId === 'custom-thickness' ? `${customThicknessInches.toFixed(2)}"` : 'Specify custom'}
+                          </span>
+                        </button>
+
+                        {selectedThicknessId === 'custom-thickness' && (
+                          <div className="mt-2.5 p-3 bg-blue-50/40 rounded-xl border border-blue-200 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-stone-800">Specify Custom Depth:</span>
+                              <div className="flex items-center gap-1.5 bg-white px-2 py-0.5 rounded-md border border-stone-300">
+                                <input
+                                  type="number"
+                                  min={0.25}
+                                  max={3.0}
+                                  step={0.05}
+                                  value={customThicknessInches}
+                                  onChange={(e) => {
+                                    const val = parseFloat(e.target.value);
+                                    if (!isNaN(val)) setCustomThicknessInches(Math.max(0.25, Math.min(3.0, Math.round(val * 100) / 100)));
+                                  }}
+                                  className="w-12 text-right font-bold text-xs text-[#0E4A93] outline-hidden"
+                                />
+                                <span className="text-[11px] font-bold text-stone-500">inch</span>
                               </div>
                             </div>
-                          }
-                        />
-                      );
-                    })}
+                            <input
+                              type="range"
+                              min={0.25}
+                              max={3.0}
+                              step={0.05}
+                              value={customThicknessInches}
+                              onChange={(e) => setCustomThicknessInches(Math.round(parseFloat(e.target.value) * 100) / 100)}
+                              className="w-full accent-[#0E4A93] cursor-pointer"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
-              {/* 3. Border Options (No Border, Thin Border, Custom Border Color) */}
-              <div className="space-y-2.5 pt-3 border-t border-stone-200">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">
-                    {activeMaterial === 'canvas' ? '3. Border Options' : '2. Border Options'}
-                  </label>
-                  <span className="text-[11px] font-bold text-[#0E4A93]">
+              {/* ==================== 2. BORDER SECTION (Matching Screenshot 1 & 3) ==================== */}
+              <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
+                {/* Dark Section Header Bar */}
+                <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider">Border</span>
+                  <span className="text-[11px] font-semibold text-stone-200">
                     {selectedBorderWidthId === 'none' ? 'No Border' : 'Border Active'}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
-                  {/* Option 1: No Border */}
-                  <CustomizerOptionCard
-                    selected={selectedBorderWidthId === 'none'}
-                    onClick={() => setSelectedBorderWidthId('none')}
-                    title="No Border"
-                    subtitle="Border-free clean edge"
-                    priceText="Free"
-                    previewHeightClass="h-14 p-1.5"
-                    preview={
-                      <div className="w-10 h-10 rounded border border-dashed border-stone-300 mx-auto flex items-center justify-center bg-stone-50">
-                        <div className="w-7 h-7 rounded-xs bg-gradient-to-br from-sky-300 to-indigo-400 shadow-2xs" />
-                      </div>
-                    }
-                  />
-
-                  {/* Option 2: Thin Border */}
-                  <CustomizerOptionCard
-                    selected={selectedBorderWidthId === 'thin'}
-                    onClick={() => setSelectedBorderWidthId('thin')}
-                    title="Thin Border"
-                    subtitle="4mm standard outline"
-                    priceText="Free"
-                    previewHeightClass="h-14 p-1.5"
-                    preview={
-                      <div
-                        className="w-10 h-10 rounded mx-auto p-1 shadow-2xs transition-colors"
-                        style={{ backgroundColor: selectedBorderColor }}
-                      >
-                        <div className="w-full h-full rounded-xs bg-gradient-to-br from-sky-300 to-indigo-400" />
-                      </div>
-                    }
-                  />
-
-                  {/* Option 3: Custom Border Color */}
-                  <CustomizerOptionCard
-                    selected={selectedBorderWidthId === 'custom-color'}
-                    onClick={() => setSelectedBorderWidthId('custom-color')}
-                    title="Custom Color"
-                    subtitle="Custom Hex & Picker"
-                    priceText="Free"
-                    previewHeightClass="h-14 p-1.5"
-                    preview={
-                      <div
-                        className="w-10 h-10 rounded mx-auto p-1 shadow-2xs transition-colors relative"
-                        style={{ backgroundColor: selectedBorderColor }}
-                      >
-                        <div className="w-full h-full rounded-xs bg-white/90 flex items-center justify-center">
-                          <Palette className="w-4 h-4 text-[#0E4A93]" />
+                <div className="p-3 space-y-3">
+                  {/* Top Feature Cards: Mirror Image & Border Color */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Mirror Image */}
+                    <CustomizerOptionCard
+                      selected={mirrorImage}
+                      onClick={() => setMirrorImage(!mirrorImage)}
+                      title="Mirror Image"
+                      subtitle="Folded Edge"
+                      priceText="Free"
+                      previewHeightClass="h-14 p-1.5"
+                      preview={
+                        <div className="w-10 h-10 rounded border border-stone-300 mx-auto overflow-hidden bg-stone-100 flex items-center justify-center">
+                          <FlipHorizontal2 className="w-5 h-5 text-[#0E4A93]" />
                         </div>
-                      </div>
-                    }
-                  />
-                </div>
+                      }
+                    />
 
-                {/* Flexible Color-Selection Interface when border is selected */}
-                {selectedBorderWidthId !== 'none' && (
-                  <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200 space-y-3 shadow-2xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-stone-800">Border Color:</span>
-                      <div className="flex items-center gap-2">
-                        {/* Live Color Preview Swatch */}
+                    {/* Border Color */}
+                    <CustomizerOptionCard
+                      selected={selectedBorderWidthId !== 'none'}
+                      onClick={() => {
+                        if (selectedBorderWidthId === 'none') {
+                          setSelectedBorderWidthId('thin');
+                        } else {
+                          setSelectedBorderWidthId('none');
+                        }
+                      }}
+                      title="Border Color"
+                      subtitle={selectedBorderWidthId !== 'none' ? 'Active' : 'Click to Enable'}
+                      priceText="Free"
+                      previewHeightClass="h-14 p-1.5"
+                      preview={
                         <div
-                          className="w-6 h-6 rounded-md border border-stone-300 shadow-2xs transition-colors"
-                          style={{ backgroundColor: selectedBorderColor }}
-                          title={`Current border color: ${selectedBorderColor}`}
-                        />
-                        {/* Hex Input */}
-                        <div className="flex items-center bg-white px-2 py-1 rounded-md border border-stone-300 shadow-2xs text-xs font-mono font-bold text-stone-800">
-                          <span className="text-stone-400 mr-0.5">#</span>
-                          <input
-                            type="text"
-                            maxLength={6}
-                            value={borderHexInput.replace('#', '')}
-                            onChange={(e) => {
-                              const raw = e.target.value.replace(/[^0-9A-Fa-f]/g, '').slice(0, 6);
-                              setBorderHexInput('#' + raw);
-                              if (raw.length === 3 || raw.length === 6) {
-                                setSelectedBorderColor('#' + raw);
-                              }
-                            }}
-                            placeholder="FFFFFF"
-                            className="w-16 uppercase outline-hidden font-bold"
-                          />
+                          className="w-10 h-10 rounded mx-auto p-1 shadow-2xs transition-colors flex items-center justify-center"
+                          style={{ backgroundColor: selectedBorderWidthId !== 'none' ? selectedBorderColor : '#E2E8F0' }}
+                        >
+                          <div className="w-7 h-7 rounded-xs bg-white shadow-xs flex items-center justify-center">
+                            <Palette className="w-3.5 h-3.5 text-[#0E4A93]" />
+                          </div>
                         </div>
-                        {/* Native Color Picker Trigger */}
-                        <label className="relative cursor-pointer p-1.5 rounded-md bg-white border border-stone-300 hover:border-stone-400 shadow-2xs text-[#0E4A93] hover:bg-stone-50 transition-colors flex items-center gap-1 text-[11px] font-bold">
-                          <Pipette className="w-3.5 h-3.5" />
-                          <span>Picker</span>
-                          <input
-                            type="color"
-                            value={selectedBorderColor.startsWith('#') && selectedBorderColor.length === 7 ? selectedBorderColor : '#FFFFFF'}
-                            onChange={(e) => {
-                              const newColor = e.target.value.toUpperCase();
-                              setSelectedBorderColor(newColor);
-                              setBorderHexInput(newColor);
-                            }}
-                            className="sr-only"
-                          />
-                        </label>
-                      </div>
-                    </div>
+                      }
+                    />
+                  </div>
 
-                    {/* Quick Preset Swatches Palette */}
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 block mb-1.5">
-                        Quick Preset Swatches
-                      </span>
-                      <div className="flex items-center gap-2 flex-wrap">
+                  {/* Border Width Selection: Thin vs No Border */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <CustomizerOptionCard
+                      selected={selectedBorderWidthId === 'thin'}
+                      onClick={() => setSelectedBorderWidthId('thin')}
+                      title="Thin"
+                      subtitle="4mm border"
+                      priceText="Free"
+                      previewHeightClass="h-12 p-1"
+                      preview={
+                        <div
+                          className="w-8 h-8 rounded mx-auto p-0.5 shadow-2xs"
+                          style={{ backgroundColor: selectedBorderColor }}
+                        >
+                          <div className="w-full h-full rounded-2xs bg-stone-200" />
+                        </div>
+                      }
+                    />
+
+                    <CustomizerOptionCard
+                      selected={selectedBorderWidthId === 'none'}
+                      onClick={() => setSelectedBorderWidthId('none')}
+                      title="No Border"
+                      subtitle="Border-free edge"
+                      priceText="Free"
+                      previewHeightClass="h-12 p-1"
+                      preview={
+                        <div className="w-8 h-8 rounded border border-dashed border-stone-300 mx-auto bg-stone-50 flex items-center justify-center">
+                          <div className="w-6 h-6 rounded-2xs bg-stone-200" />
+                        </div>
+                      }
+                    />
+                  </div>
+
+                  {/* Flexible Custom Color Selection: Native Picker + Hex + Swatches */}
+                  {selectedBorderWidthId !== 'none' && (
+                    <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 space-y-2.5">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <span className="text-xs font-bold text-stone-800">Border Color:</span>
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                          {/* Live Color Swatch */}
+                          <div
+                            className="w-6 h-6 rounded-md border border-stone-300 shadow-2xs transition-colors"
+                            style={{ backgroundColor: selectedBorderColor }}
+                            title={`Selected color: ${selectedBorderColor}`}
+                          />
+                          {/* Hex Input */}
+                          <div className="flex items-center bg-white px-2 py-0.5 rounded-md border border-stone-300 shadow-2xs text-xs font-mono font-bold text-stone-800">
+                            <span className="text-stone-400 mr-0.5">#</span>
+                            <input
+                              type="text"
+                              maxLength={6}
+                              value={borderHexInput.replace('#', '')}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/[^0-9A-Fa-f]/g, '').slice(0, 6);
+                                setBorderHexInput('#' + raw);
+                                if (raw.length === 3 || raw.length === 6) {
+                                  setSelectedBorderColor('#' + raw);
+                                }
+                              }}
+                              placeholder="FFFFFF"
+                              className="w-16 uppercase outline-hidden font-bold"
+                            />
+                          </div>
+                          {/* Native Picker */}
+                          <label className="cursor-pointer px-2 py-1 rounded-md bg-white border border-stone-300 hover:border-stone-400 text-[#0E4A93] flex items-center gap-1 text-[11px] font-bold shadow-2xs">
+                            <Pipette className="w-3.5 h-3.5" />
+                            <span>Picker</span>
+                            <input
+                              type="color"
+                              value={selectedBorderColor.startsWith('#') && selectedBorderColor.length === 7 ? selectedBorderColor : '#FFFFFF'}
+                              onChange={(e) => {
+                                const col = e.target.value.toUpperCase();
+                                setSelectedBorderColor(col);
+                                setBorderHexInput(col);
+                              }}
+                              className="sr-only"
+                            />
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Quick Preset Swatches Palette */}
+                      <div className="flex items-center gap-1.5 flex-wrap pt-1">
                         {[
                           { name: 'White', hex: '#FFFFFF' },
-                          { name: 'Pure Black', hex: '#000000' },
+                          { name: 'Black', hex: '#000000' },
                           { name: 'Charcoal', hex: '#334155' },
                           { name: 'Warm Cream', hex: '#FDF8F0' },
                           { name: 'Royal Gold', hex: '#D4AF37' },
@@ -9055,88 +9823,131 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                               setSelectedBorderColor(c.hex);
                               setBorderHexInput(c.hex);
                             }}
-                            title={`${c.name} (${c.hex})`}
+                            title={c.name}
                             style={{ backgroundColor: c.hex }}
-                            className={`w-7 h-7 rounded-full border-2 transition-all cursor-pointer ${
+                            className={`w-6 h-6 rounded-full border transition-all cursor-pointer ${
                               selectedBorderColor.toUpperCase() === c.hex.toUpperCase()
-                                ? 'ring-2 ring-[#0E4A93] ring-offset-2 scale-110 shadow-xs'
+                                ? 'ring-2 ring-[#0E4A93] ring-offset-1 scale-110 shadow-xs'
                                 : 'border-stone-300 hover:scale-105'
                             }`}
                           />
                         ))}
                       </div>
                     </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ==================== 3. FRAMES SECTION (Matching Screenshot 3) ==================== */}
+              {!isMultiFrameProduct && (
+                <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
+                  {/* Dark Section Header Bar */}
+                  <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider">Frames</span>
+                    <span className="text-[11px] font-semibold text-stone-200">
+                      {FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name || 'No Frame'}
+                    </span>
                   </div>
-                )}
-              </div>
 
-              {/* 4. Floating Frame Options */}
-              <div className="space-y-2.5 pt-3 border-t border-stone-200">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">
-                    {activeMaterial === 'canvas' ? '4. Floating Frames' : '3. Floating Frames'}
-                  </label>
-                  <span className="text-[11px] font-bold text-[#0E4A93]">
-                    {FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name || 'No Frame'}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                  {FRAME_OPTIONS.map((f) => {
-                    const isSelected = selectedFrameId === f.id;
-                    return (
-                      <CustomizerOptionCard
-                        key={f.id}
-                        selected={isSelected}
-                        onClick={() => setSelectedFrameId(f.id)}
-                        title={f.name}
-                        priceText={f.price === 0 ? 'Free' : `+₹${(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(f.price, quantity) : f.price).toFixed(0)}`}
-                        previewHeightClass="h-16 p-1.5"
-                        preview={
-                          <div
-                            className="w-10 h-10 rounded mx-auto p-1 shadow-2xs"
-                            style={
-                              f.id === 'no-frame'
-                                ? {
-                                    backgroundImage: 'repeating-conic-gradient(#d6d3d1 0% 25%, #f5f5f4 0% 50%)',
-                                    backgroundSize: '8px 8px',
-                                    border: '1px solid #d6d3d1'
-                                  }
-                                : { backgroundColor: f.color, border: f.color === '#ffffff' ? '1px solid #d6d3d1' : undefined }
-                            }
-                          >
-                            <div className="w-full h-full rounded-xs bg-gradient-to-br from-sky-200 to-emerald-200" />
+                  <div className="divide-y divide-stone-100">
+                    {/* Accordion 1: Standard */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedFrameCategory(expandedFrameCategory === 'standard' ? 'floating' : 'standard')}
+                        className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
+                      >
+                        <span>Standard</span>
+                        {expandedFrameCategory === 'standard' ? (
+                          <ChevronDown className="w-4 h-4 text-stone-500" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-stone-400" />
+                        )}
+                      </button>
+                      {expandedFrameCategory === 'standard' && (
+                        <div className="p-3 bg-stone-50/50 text-xs text-stone-500 italic">
+                          Standard gallery frames are available in single canvas formats. Select Floating for museum-grade floating shadow gap frames.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Accordion 2: Premium */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedFrameCategory(expandedFrameCategory === 'premium' ? 'floating' : 'premium')}
+                        className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
+                      >
+                        <span>Premium</span>
+                        {expandedFrameCategory === 'premium' ? (
+                          <ChevronDown className="w-4 h-4 text-stone-500" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-stone-400" />
+                        )}
+                      </button>
+                      {expandedFrameCategory === 'premium' && (
+                        <div className="p-3 bg-stone-50/50 text-xs text-stone-500 italic">
+                          Premium artisanal framing with handcrafted solid hardwoods.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Accordion 3: Floating (Expanded as shown in Screenshot 3) */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedFrameCategory(expandedFrameCategory === 'floating' ? 'standard' : 'floating')}
+                        className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
+                      >
+                        <span>Floating</span>
+                        {expandedFrameCategory === 'floating' ? (
+                          <ChevronDown className="w-4 h-4 text-stone-500" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-stone-400" />
+                        )}
+                      </button>
+
+                      {expandedFrameCategory === 'floating' && (
+                        <div className="p-3 space-y-2.5">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {[
+                              { id: 'black-frame', name: 'Black Floating Frame', price: 1798.00 },
+                              { id: 'wood-frame', name: 'Brown Floating Frame', price: 1798.00 },
+                              { id: 'white-frame', name: 'White Floating Frame', price: 1798.00 },
+                              { id: 'gold-frame', name: 'Metal Floating Frame', price: 1798.00 }
+                            ].map((ff) => {
+                              const isSelected = selectedFrameId === ff.id;
+                              return (
+                                <CustomizerOptionCard
+                                  key={ff.id}
+                                  selected={isSelected}
+                                  onClick={() => setSelectedFrameId(isSelected ? 'no-frame' : ff.id)}
+                                  title={ff.name}
+                                  priceText={`₹${ff.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                  previewHeightClass="h-16 p-1.5"
+                                  preview={renderFloatingFrameThumbnail(ff.id)}
+                                />
+                              );
+                            })}
                           </div>
-                        }
-                      />
-                    );
-                  })}
-                </div>
-              </div>
 
-              {/* 5. Mirror Image Option */}
-              <div className="space-y-2 pt-3 border-t border-stone-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">
-                  {activeMaterial === 'canvas' ? '5. Mirror Image' : '4. Mirror Image'}
-                </label>
-                <label
-                  className={`flex items-center justify-between px-3.5 py-3 rounded-xl border-2 cursor-pointer transition-all ${
-                    mirrorImage
-                      ? 'border-[#0E4A93] bg-blue-50/20 shadow-xs'
-                      : 'border-stone-200 hover:border-stone-300 bg-white'
-                  }`}
-                >
-                  <span className="flex items-center gap-2 text-xs font-bold text-stone-800">
-                    <FlipHorizontal2 className="w-4 h-4 text-[#0E4A93]" />
-                    Flip photo horizontally
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={mirrorImage}
-                    onChange={(e) => setMirrorImage(e.target.checked)}
-                    className="accent-[#0E4A93] w-4 h-4"
-                  />
-                </label>
-              </div>
+                          {selectedFrameId !== 'no-frame' && (
+                            <div className="flex justify-end pt-1">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedFrameId('no-frame')}
+                                className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                              >
+                                Remove Frame (Frameless)
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {/* -------------------------- HARDWARE & FINISH ------------------------- */}
@@ -9403,7 +10214,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         {/* ------------------------------------------------------------------- */}
         {/* COLUMN 3: MAIN RIGHT LIVE CANVAS PREVIEW WORKSPACE                  */}
         {/* ------------------------------------------------------------------- */}
-        <main className="flex-1 flex flex-col h-full bg-[#E2E8F0]/60 relative overflow-hidden">
+        <main className="order-1 md:order-3 w-full min-w-0 h-[38vh] min-h-[230px] max-h-[42vh] md:h-full md:max-h-none md:flex-1 shrink-0 md:shrink flex flex-col bg-[#E2E8F0]/60 relative overflow-hidden">
           {/* Top Action Bar for Workspace */}
           {isBusRollProduct ? (
             <BusRollTopToolbar
@@ -9553,6 +10364,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             onZoomIn={handleZoomIn}
             onRotateLeft={handleRotateLeft}
             onRotateRight={handleRotateRight}
+            isContain={panelImages[activePanelIndex || 0]?.fitMode === 'contain'}
+            onToggleFit={hasUploadedImage ? () => {
+              const idx = (isSplitProduct || isMosaicProduct) ? 0 : (activePanelIndex || 0);
+              if (panelImages[idx]?.fitMode === 'contain') {
+                handleFill(idx);
+              } else {
+                handleFix(idx);
+              }
+            } : undefined}
+            onReset={hasUploadedImage ? handleReset : undefined}
             extraControls={
               hasUploadedImage && (
                 <div className="flex items-center gap-1 ml-1 pl-1 border-l border-stone-200">
@@ -9609,18 +10430,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       </button>
                     </div>
                   )}
-
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleReset();
-                    }}
-                    className="p-1 rounded-md text-stone-500 hover:text-stone-800 hover:bg-stone-200 transition-colors cursor-pointer"
-                    title="Reset zoom, position and rotation"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                  </button>
                 </div>
               )
             }
@@ -9637,7 +10446,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             bottomSlot={
-              <div className="flex flex-wrap items-center justify-center gap-2.5 text-[11px] font-bold text-stone-600 bg-white/90 backdrop-blur-xs px-4 py-1.5 rounded-full shadow-xs border border-stone-200/80">
+              <div className="hidden md:flex flex-wrap items-center justify-center gap-2.5 text-[11px] font-bold text-stone-600 bg-white/90 backdrop-blur-xs px-4 py-1.5 rounded-full shadow-xs border border-stone-200/80">
                 {activeMaterial === 'acrylic' ? (
                   <>
                     <span>
@@ -9750,7 +10559,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 !isHexagonProduct &&
                 (() => {
                 const frameOption = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
-                const borderWidthPx = ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0;
+                const hasFraming = Boolean(frameOption && frameOption.id !== 'no-frame');
+                const borderWidthPx = selectedBorderWidthId !== 'none'
+                  ? (selectedBorderWidthId === 'thin' || selectedBorderWidthId === 'custom-color' ? 4 : selectedBorderWidthId === 'medium' ? 8 : selectedBorderWidthId === 'thick' ? 12 : 4)
+                  : 0;
                 const thicknessOption = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId) || THICKNESS_OPTIONS[1];
                 const wrapDepthPx = (thicknessOption as any)?.depthPx || 26;
                 const visibleDepthPx =
@@ -9760,7 +10572,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     ? 18
                     : selectedThicknessId === 'thick-gallery'
                     ? 28
-                    : 14;
+                    : selectedThicknessId === 'custom-thickness'
+                    ? Math.max(8, Math.min(36, Math.round(customThicknessInches * 18)))
+                    : 18;
 
                 const displayWidthInches = isWordArtProduct
                   ? wordArtSizeOption.widthInches
@@ -9805,7 +10619,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     <div
                       className="w-full flex items-center justify-center py-1 mb-1 relative"
                       style={{
-                        width: `min(${printAspect > 1.4 ? '35rem' : printAspect > 1.15 ? '30rem' : '27rem'}, calc(52vh * ${printAspect}))`,
+                        width: isMobile
+                          ? `min(calc(100vw - 4rem), calc(28vh * ${printAspect}))`
+                          : `min(${printAspect > 1.4 ? '35rem' : printAspect > 1.15 ? '30rem' : '27rem'}, calc(52vh * ${printAspect}))`,
                         maxWidth: '100%'
                       }}
                     >
@@ -9835,19 +10651,23 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       </div>
 
                       {/* PHYSICAL CANVAS CONTAINER with clear visible edge & thickness */}
-                      <div
-                        ref={workspaceCanvasBoxRef}
-                        className="relative"
-                        style={{
-                          aspectRatio: String(printAspect),
-                          width: `min(${printAspect > 1.4 ? '35rem' : printAspect > 1.15 ? '30rem' : '27rem'}, calc(52vh * ${printAspect}))`,
-                          maxWidth: '100%'
-                        }}
-                      >
-                        {(() => {
-                          const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges);
+                      {renderFloatingFrameContainer(
+                        <div
+                          ref={workspaceCanvasBoxRef}
+                          className="relative"
+                          style={{
+                            aspectRatio: String(printAspect),
+                            width: isMobile
+                              ? `min(calc(100vw - 4rem), calc(28vh * ${printAspect}))`
+                              : `min(${printAspect > 1.4 ? '35rem' : printAspect > 1.15 ? '30rem' : '27rem'}, calc(52vh * ${printAspect}))`,
+                            maxHeight: isMobile ? '30vh' : '56vh',
+                            maxWidth: '100%'
+                          }}
+                        >
+                          {(() => {
+                            const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges) && !hasFraming;
                           const isWhiteEdge = selectedWrapId === 'white-border';
-                          const isImageWrapped = selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge';
+                          const isImageWrapped = (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && panelImages[0]?.fitMode === 'cover';
                           const imgMeta = panelImages[0]?.uploadedImage;
                           const natWidth = imgMeta?.width || 1200;
                           const natHeight = imgMeta?.height || 800;
@@ -10178,24 +10998,27 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                           });
                                         }
                                       }}
-                                      style={{
-                                        width: isWiderThanFrame ? 'auto' : '100%',
-                                        height: isWiderThanFrame ? '100%' : 'auto',
-                                        minWidth: '100%',
-                                        minHeight: '100%',
-                                        maxWidth: 'none',
-                                        maxHeight: 'none',
-                                        flexShrink: 0,
-                                        aspectRatio: `${natWidth} / ${natHeight}`,
-                                        objectFit: 'cover',
-                                        objectPosition: 'center center',
-                                        transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                                        transformOrigin: 'center center',
-                                        filter: isDigitalPaintingProduct
-                                          ? `${getFilterCss(panelImages[0].filter) !== 'none' ? getFilterCss(panelImages[0].filter) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)}`
-                                          : getFilterCss(panelImages[0].filter),
-                                        transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                                      }}
+                                      style={(() => {
+                                        const isSingleContain = panelImages[0]?.fitMode === 'contain';
+                                        return {
+                                          width: isSingleContain ? '100%' : (isWiderThanFrame ? 'auto' : '100%'),
+                                          height: isSingleContain ? '100%' : (isWiderThanFrame ? '100%' : 'auto'),
+                                          minWidth: isSingleContain ? '0' : '100%',
+                                          minHeight: isSingleContain ? '0' : '100%',
+                                          maxWidth: isSingleContain ? '100%' : 'none',
+                                          maxHeight: isSingleContain ? '100%' : 'none',
+                                          flexShrink: 0,
+                                          aspectRatio: `${natWidth} / ${natHeight}`,
+                                          objectFit: isSingleContain ? 'contain' : 'cover',
+                                          objectPosition: 'center center',
+                                          transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                          transformOrigin: 'center center',
+                                          filter: isDigitalPaintingProduct
+                                            ? `${getFilterCss(panelImages[0].filter) !== 'none' ? getFilterCss(panelImages[0].filter) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)}`
+                                            : getFilterCss(panelImages[0].filter),
+                                          transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                                        };
+                                      })()}
                                       className="pointer-events-none select-none max-w-none"
                                     />
                                   </div>
@@ -10399,20 +11222,20 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             </>
                           );
                         })()}
-                      </div>
-                    </div>
+                      </div>,
+                      {
+                        frameId: selectedFrameId,
+                        displayWidthInches,
+                        displayHeightInches,
+                        aspectRatio: printAspect
+                      }
+                    )}
                   </div>
-                );
+                </div>
+              );
 
-                if (frameOption && frameOption.id !== 'no-frame') {
-                  return (
-                    <div className="p-3 rounded-2xl shadow-xl mx-auto w-fit max-w-full" style={{ background: frameOption.color }}>
-                      {panelBox}
-                    </div>
-                  );
-                }
-                return panelBox;
-              })()}
+              return panelBox;
+            })()}
 
               {/* SPLIT CANVAS (Physical Multi-Panel Sliced Layout) */}
               {isSplitProduct && renderContinuousSplitCanvas()}
@@ -10552,10 +11375,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined));
 
         const frameOption = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
-        const hasOuterFrame = Boolean(shapeApplies && frameOption && frameOption.id !== 'no-frame');
+        const hasOuterFrame = Boolean(frameOption && frameOption.id !== 'no-frame');
         const frameColor = hasOuterFrame ? frameOption?.color : undefined;
-        const borderWidthPx = shapeApplies
-          ? ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0
+        const borderWidthPx = selectedBorderWidthId !== 'none'
+          ? (selectedBorderWidthId === 'thin' || selectedBorderWidthId === 'custom-color' ? 4 : selectedBorderWidthId === 'medium' ? 8 : selectedBorderWidthId === 'thick' ? 12 : 4)
           : 0;
         const isRectangularShape =
           !activeClipPath &&
@@ -10655,7 +11478,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
           return url ? (
             <div
-              className="w-full h-full overflow-hidden relative flex items-center justify-center bg-stone-100 pointer-events-none select-none"
+              className="w-full h-full overflow-hidden relative flex items-center justify-center bg-white pointer-events-none select-none"
               style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
             >
               <img
@@ -10663,12 +11486,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 alt={`Canvas Panel ${idx + 1}`}
                 draggable={false}
                 style={{
-                  width: slotIsWider ? 'auto' : '100%',
-                  height: slotIsWider ? '100%' : 'auto',
-                  minWidth: '100%',
-                  minHeight: '100%',
-                  maxWidth: 'none',
-                  maxHeight: 'none',
+                  width: isContain ? '100%' : (slotIsWider ? 'auto' : '100%'),
+                  height: isContain ? '100%' : (slotIsWider ? '100%' : 'auto'),
+                  minWidth: isContain ? '0' : '100%',
+                  minHeight: isContain ? '0' : '100%',
+                  maxWidth: isContain ? '100%' : 'none',
+                  maxHeight: isContain ? '100%' : 'none',
                   flexShrink: 0,
                   aspectRatio: `${slotNatWidth} / ${slotNatHeight}`,
                   objectFit: isContain ? 'contain' : 'cover',
@@ -10847,18 +11670,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 (() => {
                   const layoutDef = activeMosaicLayout;
                   const count = layoutDef.panelsCount || layoutDef.panels.length;
-                  const totalCols = layoutDef.cols || (count === 16 ? 4 : count === 25 ? 5 : count === 36 ? 6 : count === 20 ? 4 : count === 15 ? 3 : count === 12 && layoutDef.aspectRatio > 1 ? 4 : 3);
-                  const totalRows = layoutDef.rows || Math.ceil(count / totalCols);
                   const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
                   const master = panelImages[0] || createDefaultPanel();
                   const panX = (master.panX || 0) * scaleFactor;
                   const panY = (master.panY || 0) * scaleFactor;
 
                   return (
-                    <div className="relative w-full h-full pointer-events-none select-none bg-stone-100 overflow-hidden">
+                    <div className="relative w-full h-full pointer-events-none select-none bg-white overflow-hidden">
                       {masterImage ? (
                         <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
-                          {(() => {
+                          {layoutDef.panels.map((p, idx) => {
                             const imgMeta = master?.uploadedImage;
                             const natWidth = imgMeta?.width || 1200;
                             const natHeight = imgMeta?.height || 800;
@@ -10867,31 +11688,54 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             const isWiderThanMosaic = imgAspect >= mosaicAspect;
 
                             return (
-                              <img
-                                src={masterImage}
-                                alt=""
-                                draggable={false}
+                              <div
+                                key={p.id || idx}
                                 style={{
-                                  width: isWiderThanMosaic ? 'auto' : '100%',
-                                  height: isWiderThanMosaic ? '100%' : 'auto',
-                                  minWidth: '100%',
-                                  minHeight: '100%',
-                                  maxWidth: 'none',
-                                  maxHeight: 'none',
-                                  flexShrink: 0,
-                                  aspectRatio: `${natWidth} / ${natHeight}`,
-                                  objectFit: 'cover',
-                                  objectPosition: 'center center',
-                                  transform: `translate(${panX}px, ${panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                                  transformOrigin: 'center center',
-                                  filter: getFilterCss(master.filter),
-                                  backfaceVisibility: 'hidden',
-                                  WebkitBackfaceVisibility: 'hidden'
+                                  position: 'absolute',
+                                  left: `${p.x * 100}%`,
+                                  top: `${p.y * 100}%`,
+                                  width: `${p.w * 100}%`,
+                                  height: `${p.h * 100}%`
                                 }}
-                                className="pointer-events-none select-none max-w-none"
-                              />
+                                className="relative overflow-hidden rounded-[1px] bg-stone-100 flex items-center justify-center border border-stone-200/40"
+                              >
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    width: `${(1 / p.w) * 100}%`,
+                                    height: `${(1 / p.h) * 100}%`,
+                                    left: `${-(p.x / p.w) * 100}%`,
+                                    top: `${-(p.y / p.h) * 100}%`
+                                  }}
+                                  className="pointer-events-none select-none flex items-center justify-center overflow-visible"
+                                >
+                                  <img
+                                    src={masterImage}
+                                    alt=""
+                                    draggable={false}
+                                    style={{
+                                      width: isWiderThanMosaic ? 'auto' : '100%',
+                                      height: isWiderThanMosaic ? '100%' : 'auto',
+                                      minWidth: '100%',
+                                      minHeight: '100%',
+                                      maxWidth: 'none',
+                                      maxHeight: 'none',
+                                      flexShrink: 0,
+                                      aspectRatio: `${natWidth} / ${natHeight}`,
+                                      objectFit: 'cover',
+                                      objectPosition: 'center center',
+                                      transform: `translate(${panX}px, ${panY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                      transformOrigin: 'center center',
+                                      filter: getFilterCss(master.filter),
+                                      backfaceVisibility: 'hidden',
+                                      WebkitBackfaceVisibility: 'hidden'
+                                    }}
+                                    className="pointer-events-none select-none max-w-none"
+                                  />
+                                </div>
+                              </div>
                             );
-                          })()}
+                          })}
                           {/* Subtle physical cotton canvas weave micro-texture for Canvas only */}
                           {activeMaterial === 'canvas' && (
                             <div
@@ -10923,39 +11767,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                               )}
                             </>
                           )}
-                          {/* Internal mosaic division grid lines (0 gap) */}
-                          <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
-                            {Array.from({ length: totalCols - 1 }).map((_, c) => {
-                              const xPct = ((c + 1) / totalCols) * 100;
-                              return (
-                                <line
-                                  key={`front-mv-${c}`}
-                                  x1={`${xPct}%`}
-                                  y1="0"
-                                  x2={`${xPct}%`}
-                                  y2="100%"
-                                  stroke={activeMaterial === 'acrylic' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.55)'}
-                                  strokeWidth={activeMaterial === 'acrylic' ? '1.8' : '1.5'}
-                                  style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.65))' }}
-                                />
-                              );
-                            })}
-                            {Array.from({ length: totalRows - 1 }).map((_, r) => {
-                              const yPct = ((r + 1) / totalRows) * 100;
-                              return (
-                                <line
-                                  key={`front-mh-${r}`}
-                                  x1="0"
-                                  y1={`${yPct}%`}
-                                  x2="100%"
-                                  y2={`${yPct}%`}
-                                  stroke={activeMaterial === 'acrylic' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.55)'}
-                                  strokeWidth={activeMaterial === 'acrylic' ? '1.8' : '1.5'}
-                                  style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.65))' }}
-                                />
-                              );
-                            })}
-                          </svg>
                         </div>
                       ) : (
                         <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-[10px] font-bold">
@@ -11170,20 +11981,24 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 // 1. Hexagon Prints on Room Wall
                 if (isHexagonProduct) {
                   const hexLayout = hexagonLayout || getProductLayout('canvas-hexagon', selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
-                  // Panels are dragged in the editor relative to the composite
-                  // workspace box (workspaceBoxSize) — room view renders that
-                  // same composite at productPixelSize, so pan offsets need to
-                  // be scaled by that ratio, not treated as a fixed percentage.
-                  const hexRoomScale = (productPixelSize?.width || 240) / Math.max(1, workspaceBoxSize.width || 420);
+                  const roomScale = (productPixelSize?.width || 240) / Math.max(1, workspaceBoxSize.width || 420);
                   return (
                     <div className="relative w-full h-full pointer-events-none select-none">
                       {hexLayout.panels.map((pSpec, idx) => {
                         const p = panelImages[idx];
-                        const url = p?.imageUrl || null;
-                        const panXpx = (p?.panX || 0) * hexRoomScale;
-                        const panYpx = (p?.panY || 0) * hexRoomScale;
+                        const url = (!isWordArtProduct && isWordArtArtwork(p?.imageUrl)) ? null : (p?.imageUrl || null);
+                        const scaledPanX = (p?.panX || 0) * roomScale;
+                        const scaledPanY = (p?.panY || 0) * roomScale;
                         const isVertical = pSpec.orientation === 'vertical' || hexLayout.orientation === 'vertical';
                         const hexClip = isVertical ? HEXAGON_VERTICAL_CLIP_PATH : HEXAGON_HORIZONTAL_CLIP_PATH;
+
+                        const imgMeta = p?.uploadedImage;
+                        const natWidth = imgMeta?.width || 1200;
+                        const natHeight = imgMeta?.height || 800;
+                        const imgAspect = imgMeta?.aspectRatio || (natWidth / Math.max(1, natHeight));
+                        const slotAspect = isVertical ? 8.5 / 10 : 10 / 8.5;
+                        const isWiderThanSlot = imgAspect >= slotAspect;
+
                         return (
                           <div
                             key={pSpec.id || idx}
@@ -11204,21 +12019,44 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                               }}
                             >
                               {url ? (
-                                <img
-                                  src={url}
-                                  alt=""
-                                  style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: p?.fitMode === 'contain' ? 'contain' : 'cover',
-                                    transform: `translate(${panXpx}px, ${panYpx}px) scale(${p?.scale || 1}) rotate(${p?.rotation || 0}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                                    filter: getFilterCss(p?.filter || 'original')
-                                  }}
-                                />
+                                <div className="w-full h-full overflow-hidden relative flex items-center justify-center pointer-events-none select-none">
+                                  <img
+                                    src={url}
+                                    alt=""
+                                    draggable={false}
+                                    style={{
+                                      width: isWiderThanSlot ? 'auto' : '100%',
+                                      height: isWiderThanSlot ? '100%' : 'auto',
+                                      minWidth: '100%',
+                                      minHeight: '100%',
+                                      maxWidth: 'none',
+                                      maxHeight: 'none',
+                                      flexShrink: 0,
+                                      aspectRatio: `${natWidth} / ${natHeight}`,
+                                      objectFit: 'cover',
+                                      objectPosition: 'center center',
+                                      transform: `translate(${scaledPanX}px, ${scaledPanY}px) scale(${p?.scale || 1}) rotate(${p?.rotation || 0}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                      transformOrigin: 'center center',
+                                      filter: getFilterCss(p?.filter || 'original')
+                                    }}
+                                    className="pointer-events-none select-none max-w-none"
+                                  />
+                                </div>
                               ) : (
                                 <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-xs font-bold">
                                   {pSpec.label || `Hexagon ${idx + 1}`}
                                 </div>
+                              )}
+                              {selectedBorderWidthId !== 'none' && (
+                                <svg className="absolute inset-0 w-full h-full pointer-events-none z-25" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                  <polygon
+                                    points={isVertical ? "50,0 100,25 100,75 50,100 0,75 0,25" : "25,0 75,0 100,50 75,100 25,100 0,50"}
+                                    fill="none"
+                                    stroke={selectedBorderColor}
+                                    strokeWidth={selectedBorderWidthId === 'thin' || selectedBorderWidthId === 'custom-color' ? "3" : selectedBorderWidthId === 'medium' ? "6" : "9"}
+                                    vectorEffect="non-scaling-stroke"
+                                  />
+                                </svg>
                               )}
                               {textElements
                                 .filter((t) => getSlotIndex(t) === idx && Boolean(t.text && t.text.trim()))
@@ -11258,17 +12096,22 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 if (isWallArtProduct) {
                   const layoutDef = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   const wallPanels = layoutDef.panels;
-                  // Same reasoning as the Hexagon branch above: scale each
-                  // panel's editor pan offset by the room-view/editor size
-                  // ratio instead of treating it as a fixed percentage.
-                  const wallRoomScale = (productPixelSize?.width || 240) / Math.max(1, workspaceBoxSize.width || 420);
+                  const roomScale = (productPixelSize?.width || 240) / Math.max(1, workspaceBoxSize.width || 420);
                   return (
                     <div className="relative w-full h-full pointer-events-none select-none">
                       {wallPanels.map((pos, idx) => {
                         const p = panelImages[idx];
-                        const url = p?.imageUrl || null;
-                        const panXpx = (p?.panX || 0) * wallRoomScale;
-                        const panYpx = (p?.panY || 0) * wallRoomScale;
+                        const url = (!isWordArtProduct && isWordArtArtwork(p?.imageUrl)) ? null : (p?.imageUrl || null);
+                        const scaledPanX = (p?.panX || 0) * roomScale;
+                        const scaledPanY = (p?.panY || 0) * roomScale;
+
+                        const imgMeta = p?.uploadedImage;
+                        const natWidth = imgMeta?.width || 1200;
+                        const natHeight = imgMeta?.height || 800;
+                        const imgAspect = imgMeta?.aspectRatio || (natWidth / Math.max(1, natHeight));
+                        const slotAspect = (pos.w * layoutDef.aspectRatio) / Math.max(0.001, pos.h);
+                        const isWiderThanSlot = imgAspect >= slotAspect;
+
                         return (
                           <div
                             key={idx}
@@ -11283,21 +12126,47 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           >
                             <div className="w-full h-full relative overflow-hidden bg-white rounded-xs">
                               {url ? (
-                                <img
-                                  src={url}
-                                  alt=""
-                                  style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: p?.fitMode === 'contain' ? 'contain' : 'cover',
-                                    transform: `translate(${panXpx}px, ${panYpx}px) scale(${p?.scale || 1}) rotate(${p?.rotation || 0}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                                    filter: getFilterCss(p?.filter || 'original')
-                                  }}
-                                />
+                                <div className="w-full h-full overflow-hidden relative flex items-center justify-center pointer-events-none select-none">
+                                  <img
+                                    src={url}
+                                    alt=""
+                                    draggable={false}
+                                    style={{
+                                      width: isWiderThanSlot ? 'auto' : '100%',
+                                      height: isWiderThanSlot ? '100%' : 'auto',
+                                      minWidth: '100%',
+                                      minHeight: '100%',
+                                      maxWidth: 'none',
+                                      maxHeight: 'none',
+                                      flexShrink: 0,
+                                      aspectRatio: `${natWidth} / ${natHeight}`,
+                                      objectFit: 'cover',
+                                      objectPosition: 'center center',
+                                      transform: `translate(${scaledPanX}px, ${scaledPanY}px) scale(${p?.scale || 1}) rotate(${p?.rotation || 0}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                      transformOrigin: 'center center',
+                                      filter: getFilterCss(p?.filter || 'original')
+                                    }}
+                                    className="pointer-events-none select-none max-w-none"
+                                  />
+                                </div>
                               ) : (
                                 <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-xs font-bold">
                                   {pos.label || `Panel ${idx + 1}`}
                                 </div>
+                              )}
+                              {selectedBorderWidthId !== 'none' && (
+                                <div
+                                  className="absolute inset-0 pointer-events-none z-20"
+                                  style={{
+                                    border: `${selectedBorderWidthId === 'thin' || selectedBorderWidthId === 'custom-color' ? 3 : selectedBorderWidthId === 'medium' ? 6 : 9}px solid ${selectedBorderColor}`
+                                  }}
+                                />
+                              )}
+                              {activeMaterial === 'acrylic' && (
+                                <div
+                                  className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
+                                  style={{ mixBlendMode: 'screen' }}
+                                />
                               )}
                               {textElements
                                 .filter((t) => getSlotIndex(t) === idx && Boolean(t.text && t.text.trim()))
@@ -11325,12 +12194,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                     {t.text}
                                   </div>
                                 ))}
-                              {activeMaterial === 'acrylic' && (
-                                <div
-                                  className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
-                                  style={{ mixBlendMode: 'screen' }}
-                                />
-                              )}
                             </div>
                           </div>
                         );
@@ -11376,7 +12239,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       >
                         {masterImage ? (
                           <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
-                            {(() => {
+                            {layoutDef.panels.map((p, idx) => {
                               const imgMeta = master?.uploadedImage;
                               const natWidth = imgMeta?.width || 1200;
                               const natHeight = imgMeta?.height || 800;
@@ -11385,28 +12248,51 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                               const isWiderThanMosaic = imgAspect >= mosaicAspect;
 
                               return (
-                                <img
-                                  src={masterImage}
-                                  alt="Photo Mosaic"
+                                <div
+                                  key={p.id || idx}
                                   style={{
-                                    width: isWiderThanMosaic ? 'auto' : '100%',
-                                    height: isWiderThanMosaic ? '100%' : 'auto',
-                                    minWidth: '100%',
-                                    minHeight: '100%',
-                                    maxWidth: 'none',
-                                    maxHeight: 'none',
-                                    flexShrink: 0,
-                                    aspectRatio: `${natWidth} / ${natHeight}`,
-                                    objectFit: 'cover',
-                                    objectPosition: 'center center',
-                                    transform: `translate(${scaledPanX}px, ${scaledPanY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                                    transformOrigin: 'center center',
-                                    filter: getFilterCss(master.filter)
+                                    position: 'absolute',
+                                    left: `${p.x * 100}%`,
+                                    top: `${p.y * 100}%`,
+                                    width: `${p.w * 100}%`,
+                                    height: `${p.h * 100}%`
                                   }}
-                                  className="pointer-events-none select-none max-w-none"
-                                />
+                                  className="relative overflow-hidden rounded-[1px] bg-stone-100 flex items-center justify-center border border-stone-200/40"
+                                >
+                                  <div
+                                    style={{
+                                      position: 'absolute',
+                                      width: `${(1 / p.w) * 100}%`,
+                                      height: `${(1 / p.h) * 100}%`,
+                                      left: `${-(p.x / p.w) * 100}%`,
+                                      top: `${-(p.y / p.h) * 100}%`
+                                    }}
+                                    className="pointer-events-none select-none flex items-center justify-center overflow-visible"
+                                  >
+                                    <img
+                                      src={masterImage}
+                                      alt="Photo Mosaic"
+                                      style={{
+                                        width: isWiderThanMosaic ? 'auto' : '100%',
+                                        height: isWiderThanMosaic ? '100%' : 'auto',
+                                        minWidth: '100%',
+                                        minHeight: '100%',
+                                        maxWidth: 'none',
+                                        maxHeight: 'none',
+                                        flexShrink: 0,
+                                        aspectRatio: `${natWidth} / ${natHeight}`,
+                                        objectFit: 'cover',
+                                        objectPosition: 'center center',
+                                        transform: `translate(${scaledPanX}px, ${scaledPanY}px) scale(${master.scale}) rotate(${master.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                        transformOrigin: 'center center',
+                                        filter: getFilterCss(master.filter)
+                                      }}
+                                      className="pointer-events-none select-none max-w-none"
+                                    />
+                                  </div>
+                                </div>
                               );
-                            })()}
+                            })}
                             {/* Subtle physical cotton canvas weave micro-texture for Canvas only */}
                             {activeMaterial === 'canvas' && (
                               <div
@@ -11438,39 +12324,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                 )}
                               </>
                             )}
-                            {/* Internal mosaic division grid lines (0 gap) */}
-                            <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
-                              {Array.from({ length: totalCols - 1 }).map((_, c) => {
-                                const xPct = ((c + 1) / totalCols) * 100;
-                                return (
-                                  <line
-                                    key={`room-mv-${c}`}
-                                    x1={`${xPct}%`}
-                                    y1="0"
-                                    x2={`${xPct}%`}
-                                    y2="100%"
-                                    stroke={activeMaterial === 'acrylic' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.55)'}
-                                    strokeWidth={activeMaterial === 'acrylic' ? '1.8' : '1.5'}
-                                    style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.65))' }}
-                                  />
-                                );
-                              })}
-                              {Array.from({ length: totalRows - 1 }).map((_, r) => {
-                                const yPct = ((r + 1) / totalRows) * 100;
-                                return (
-                                  <line
-                                    key={`room-mh-${r}`}
-                                    x1="0"
-                                    y1={`${yPct}%`}
-                                    x2="100%"
-                                    y2={`${yPct}%`}
-                                    stroke={activeMaterial === 'acrylic' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.55)'}
-                                    strokeWidth={activeMaterial === 'acrylic' ? '1.8' : '1.5'}
-                                    style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.65))' }}
-                                  />
-                                );
-                              })}
-                            </svg>
                             {layoutDef.panels.map((p, idx) => {
                               const cellTexts = textElements.filter(
                                 (t) => getSlotIndex(t) === idx && Boolean(t.text && t.text.trim())
@@ -11577,9 +12430,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   const roomScale = (productPixelSize?.width || 240) / Math.max(1, workspaceBoxSize.width || 420);
                   const scaledPanX = (master.panX || 0) * roomScale;
                   const scaledPanY = (master.panY || 0) * roomScale;
-                  // Mirror the editor's real wall gap between split panels,
-                  // scaled down to Room View's render size.
-                  const splitRoomGapPx = Math.max(1, Math.round(9 * roomScale));
 
                   return (
                     <div className="relative w-full h-full pointer-events-none select-none">
@@ -11592,8 +12442,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             top: `${p.y * 100}%`,
                             width: `${p.w * 100}%`,
                             height: `${p.h * 100}%`,
-                            padding: `${splitRoomGapPx}px`,
-                            boxSizing: 'border-box',
                             filter: activeMaterial === 'acrylic'
                               ? 'drop-shadow(0 12px 22px rgba(0,0,0,0.38)) drop-shadow(0 3px 6px rgba(0,0,0,0.22))'
                               : 'drop-shadow(0 10px 18px rgba(0,0,0,0.35)) drop-shadow(0 2px 4px rgba(0,0,0,0.22))'
@@ -11715,21 +12563,24 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 // 3b. Photo Collage on Room Wall
                 if (isCollageProduct) {
                   const collageDef = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
-                  // renderSlotPhoto's pan offsets are editor pixels calibrated
-                  // against the composite workspace box — scale them down to
-                  // match the much smaller room-view render, same as the
-                  // Hexagon/Wall Display branches above.
-                  const collageRoomScale = (productPixelSize?.width || 240) / Math.max(1, workspaceBoxSize.width || 420);
-                  return (
-                    <div
-                      className="relative w-full h-full pointer-events-none select-none flex items-center justify-center"
-                      style={{
-                        filter: 'drop-shadow(0 14px 24px rgba(0,0,0,0.36)) drop-shadow(0 3px 6px rgba(0,0,0,0.22))'
-                      }}
-                    >
-                      <div className="relative w-full h-full rounded-xs bg-[#d8dce2] shadow-sm overflow-hidden">
-                        <div className="relative w-full h-full overflow-hidden">
-                          {collageDef.panels.map((pSpec, idx) => (
+                  const roomScale = (productPixelSize?.width || 240) / Math.max(1, workspaceBoxSize.width || 420);
+                  const collageRoomContent = (
+                    <div className="relative w-full h-full rounded-xs bg-[#d8dce2] shadow-sm overflow-hidden">
+                      <div className="relative w-full h-full overflow-hidden">
+                        {collageDef.panels.map((pSpec, idx) => {
+                          const p = panelImages[idx];
+                          const url = (!isWordArtProduct && isWordArtArtwork(p?.imageUrl)) ? null : (p?.imageUrl || null);
+                          const scaledPanX = (p?.panX || 0) * roomScale;
+                          const scaledPanY = (p?.panY || 0) * roomScale;
+
+                          const imgMeta = p?.uploadedImage;
+                          const natWidth = imgMeta?.width || 1200;
+                          const natHeight = imgMeta?.height || 800;
+                          const imgAspect = imgMeta?.aspectRatio || (natWidth / Math.max(1, natHeight));
+                          const slotAspect = (pSpec.w * collageDef.aspectRatio) / Math.max(0.001, pSpec.h);
+                          const isWiderThanSlot = imgAspect >= slotAspect;
+
+                          return (
                             <div
                               key={pSpec.id || idx}
                               style={{
@@ -11738,12 +12589,40 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                 top: `${pSpec.y * 100}%`,
                                 width: `${pSpec.w * 100}%`,
                                 height: `${pSpec.h * 100}%`,
-                                padding: '2px',
+                                padding: '4px',
                                 boxSizing: 'border-box'
                               }}
                             >
                               <div className="w-full h-full rounded-xs overflow-hidden bg-stone-200 flex items-center justify-center relative">
-                                {renderSlotPhoto(idx, collageRoomScale)}
+                                {url ? (
+                                  <div className="w-full h-full overflow-hidden relative flex items-center justify-center pointer-events-none select-none">
+                                    <img
+                                      src={url}
+                                      alt={`Slot ${idx + 1}`}
+                                      draggable={false}
+                                      style={{
+                                        width: isWiderThanSlot ? 'auto' : '100%',
+                                        height: isWiderThanSlot ? '100%' : 'auto',
+                                        minWidth: '100%',
+                                        minHeight: '100%',
+                                        maxWidth: 'none',
+                                        maxHeight: 'none',
+                                        flexShrink: 0,
+                                        aspectRatio: `${natWidth} / ${natHeight}`,
+                                        objectFit: 'cover',
+                                        objectPosition: 'center center',
+                                        transform: `translate(${scaledPanX}px, ${scaledPanY}px) scale(${p?.scale || 1}) rotate(${p?.rotation || 0}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                                        transformOrigin: 'center center',
+                                        filter: getFilterCss(p?.filter || 'original')
+                                      }}
+                                      className="pointer-events-none select-none max-w-none"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-[10px] font-bold pointer-events-none select-none">
+                                    {pSpec.label || `Slot ${idx + 1}`}
+                                  </div>
+                                )}
                                 {textElements
                                   .filter((t) => getSlotIndex(t) === idx && Boolean(t.text && t.text.trim()))
                                   .map((t) => (
@@ -11772,15 +12651,43 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                   ))}
                               </div>
                             </div>
-                          ))}
-                        </div>
-                        {activeMaterial === 'acrylic' && (
-                          <div
-                            className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
-                            style={{ mixBlendMode: 'screen' }}
-                          />
-                        )}
+                          );
+                        })}
                       </div>
+                      {selectedBorderWidthId !== 'none' && (
+                        <div
+                          className="absolute inset-0 pointer-events-none z-25 rounded-xs"
+                          style={{
+                            border: `${selectedBorderWidthId === 'thin' || selectedBorderWidthId === 'custom-color' ? 3 : selectedBorderWidthId === 'medium' ? 6 : 9}px solid ${selectedBorderColor}`
+                          }}
+                        />
+                      )}
+                      {activeMaterial === 'acrylic' && (
+                        <div
+                          className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
+                          style={{ mixBlendMode: 'screen' }}
+                        />
+                      )}
+                    </div>
+                  );
+
+                  return (
+                    <div
+                      className="relative w-full h-full pointer-events-none select-none flex items-center justify-center"
+                      style={{
+                        filter: 'drop-shadow(0 14px 24px rgba(0,0,0,0.36)) drop-shadow(0 3px 6px rgba(0,0,0,0.22))'
+                      }}
+                    >
+                      {hasOuterFrame
+                        ? renderFloatingFrameContainer(collageRoomContent, {
+                            frameId: selectedFrameId,
+                            scale: 0.65,
+                            displayWidthInches: collageDef.overallWidthInches || 16,
+                            displayHeightInches: collageDef.overallHeightInches || 16,
+                            aspectRatio: collageDef.aspectRatio,
+                            isMultiPanel: true
+                          })
+                        : collageRoomContent}
                     </div>
                   );
                 }
@@ -11792,6 +12699,55 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 const hasClip = Boolean(clipStyle);
                 const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges);
 
+                const singleCanvasContent = (
+                  <div
+                    className={`relative w-full h-full overflow-hidden bg-white pointer-events-none select-none ${
+                      !hasClip ? (shapeApplies ? currentShape.borderRadiusClass : 'rounded-xs') : ''
+                    }`}
+                    style={{
+                      clipPath: clipStyle,
+                      WebkitClipPath: clipStyle,
+                      boxShadow: !hasClip && !hasOuterFrame
+                        ? (activeMaterial === 'acrylic'
+                            ? '0 16px 32px rgba(0,0,0,0.28), 0 3px 8px rgba(0,0,0,0.18)'
+                            : showPhysicalEdges
+                            ? '4px 14px 28px -2px rgba(15, 23, 42, 0.44), 1px 4px 8px -1px rgba(15, 23, 42, 0.30)'
+                            : '0 12px 24px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2)')
+                        : undefined
+                    }}
+                  >
+                    {renderCanvasFrontDesign(roomProductWidth)}
+
+                    {/* Acrylic-specific realistic styling in Room View: glossy reflection + standoffs */}
+                    {activeMaterial === 'acrylic' && (
+                      <>
+                        {/* 4 corner metallic standoff mounts when standoff mounting is selected */}
+                        {(selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && !hasClip && (
+                          <>
+                            <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
+                              <div className="w-1 h-1 rounded-full bg-stone-700/60" />
+                            </div>
+                            <div className="absolute top-2 right-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
+                              <div className="w-1 h-1 rounded-full bg-stone-700/60" />
+                            </div>
+                            <div className="absolute bottom-2 left-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
+                              <div className="w-1 h-1 rounded-full bg-stone-700/60" />
+                            </div>
+                            <div className="absolute bottom-2 right-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
+                              <div className="w-1 h-1 rounded-full bg-stone-700/60" />
+                            </div>
+                          </>
+                        )}
+                        {/* Crystal optical acrylic glass gloss sheen */}
+                        <div
+                          className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
+                          style={{ mixBlendMode: 'screen' }}
+                        />
+                      </>
+                    )}
+                  </div>
+                );
+
                 return (
                   <div
                     className="relative w-full h-full pointer-events-none select-none flex items-center justify-center"
@@ -11801,53 +12757,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         : undefined
                     }}
                   >
-                    <div
-                      className={`relative w-full h-full overflow-hidden bg-white pointer-events-none select-none ${
-                        !hasClip ? (shapeApplies ? currentShape.borderRadiusClass : 'rounded-xs') : ''
-                      }`}
-                      style={{
-                        clipPath: clipStyle,
-                        WebkitClipPath: clipStyle,
-                        border: hasOuterFrame && frameColor ? `4px solid ${frameColor}` : undefined,
-                        boxShadow: !hasClip
-                          ? (activeMaterial === 'acrylic'
-                              ? '0 16px 32px rgba(0,0,0,0.28), 0 3px 8px rgba(0,0,0,0.18)'
-                              : showPhysicalEdges
-                              ? '4px 14px 28px -2px rgba(15, 23, 42, 0.44), 1px 4px 8px -1px rgba(15, 23, 42, 0.30)'
-                              : '0 12px 24px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2)')
-                          : undefined
-                      }}
-                    >
-                      {renderCanvasFrontDesign(roomProductWidth)}
-
-                      {/* Acrylic-specific realistic styling in Room View: glossy reflection + standoffs */}
-                      {activeMaterial === 'acrylic' && (
-                        <>
-                          {/* 4 corner metallic standoff mounts when standoff mounting is selected */}
-                          {(selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && !hasClip && (
-                            <>
-                              <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
-                                <div className="w-1 h-1 rounded-full bg-stone-700/60" />
-                              </div>
-                              <div className="absolute top-2 right-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
-                                <div className="w-1 h-1 rounded-full bg-stone-700/60" />
-                              </div>
-                              <div className="absolute bottom-2 left-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
-                                <div className="w-1 h-1 rounded-full bg-stone-700/60" />
-                              </div>
-                              <div className="absolute bottom-2 right-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
-                                <div className="w-1 h-1 rounded-full bg-stone-700/60" />
-                              </div>
-                            </>
-                          )}
-                          {/* Crystal optical acrylic glass gloss sheen */}
-                          <div
-                            className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
-                            style={{ mixBlendMode: 'screen' }}
-                          />
-                        </>
-                      )}
-                    </div>
+                    {hasOuterFrame
+                      ? renderFloatingFrameContainer(singleCanvasContent, {
+                          frameId: selectedFrameId,
+                          scale: 0.65,
+                          displayWidthInches: geom.widthInches,
+                          displayHeightInches: geom.heightInches,
+                          aspectRatio: previewAspect
+                        })
+                      : singleCanvasContent}
                   </div>
                 );
               }}

@@ -7138,26 +7138,204 @@ export const PRODUCT_LAYOUT_DEFINITIONS: Record<string, ProductLayoutDefinition[
 PRODUCT_LAYOUT_DEFINITIONS['canvas-classic'] = PRODUCT_LAYOUT_DEFINITIONS['canvas-single'];
 
 /**
+ * Applies standardized, proportional spacing between panels for:
+ * 1. Wall Display (canvas-wall-art / acrylic-wall-art)
+ * 2. Split Canvas (canvas-split / acrylic-split)
+ * 3. Hexagon Prints (canvas-hexagon / acrylic-hexagon)
+ * 4. Photo Collage (canvas-collage / acrylic-collage)
+ * 5. Photo Mosaic (canvas-mosaic / acrylic-mosaic)
+ */
+export function getSpacedLayout(layout: ProductLayoutDefinition): ProductLayoutDefinition {
+  if (!layout || !layout.panels || layout.panels.length <= 1) {
+    return layout;
+  }
+
+  const geom = (layout.geometryType || '').toLowerCase();
+  const prodId = (layout.productTypeId || '').toLowerCase();
+  const isSplit = geom.includes('split') || prodId.includes('split');
+  const isWall = geom.includes('wall') || prodId.includes('wall');
+  const isHexagon = geom.includes('hexagon') || prodId.includes('hexagon');
+  const isMosaic = geom.includes('mosaic') || prodId.includes('mosaic');
+  const isCollage = geom.includes('collage') || prodId.includes('collage');
+
+  if (!isSplit && !isWall && !isHexagon && !isMosaic && !isCollage) {
+    return layout;
+  }
+
+  // 1. Split Canvas: standardize gap between continuous split panels
+  if (isSplit) {
+    const N = layout.panels.length;
+    const isPureHorizontal = layout.panels.every((p) => Math.abs(p.y - layout.panels[0].y) < 0.05);
+    const isPureVertical = layout.panels.every((p) => Math.abs(p.x - layout.panels[0].x) < 0.05);
+
+    if (isPureHorizontal && N > 1) {
+      const gap = Math.min(0.045, 0.14 / (N - 1));
+      const totalGap = (N - 1) * gap;
+      const scale = 1 - totalGap;
+      const sortedIndices = layout.panels.map((p, idx) => ({ idx, x: p.x })).sort((a, b) => a.x - b.x);
+      const rankMap = new Map<number, number>();
+      sortedIndices.forEach((item, rank) => rankMap.set(item.idx, rank));
+
+      const spacedPanels = layout.panels.map((p, idx) => {
+        const rank = rankMap.get(idx) || 0;
+        const newW = p.w * scale;
+        const newX = p.x * scale + rank * gap;
+        return {
+          ...p,
+          x: Math.max(0, Math.min(1 - newW, newX)),
+          w: newW
+        };
+      });
+      return { ...layout, panels: spacedPanels };
+    }
+
+    if (isPureVertical && N > 1) {
+      const gap = Math.min(0.045, 0.14 / (N - 1));
+      const totalGap = (N - 1) * gap;
+      const scale = 1 - totalGap;
+      const sortedIndices = layout.panels.map((p, idx) => ({ idx, y: p.y })).sort((a, b) => a.y - b.y);
+      const rankMap = new Map<number, number>();
+      sortedIndices.forEach((item, rank) => rankMap.set(item.idx, rank));
+
+      const spacedPanels = layout.panels.map((p, idx) => {
+        const rank = rankMap.get(idx) || 0;
+        const newH = p.h * scale;
+        const newY = p.y * scale + rank * gap;
+        return {
+          ...p,
+          y: Math.max(0, Math.min(1 - newH, newY)),
+          h: newH
+        };
+      });
+      return { ...layout, panels: spacedPanels };
+    }
+
+    // Grid or compound split: scale panels around their centers
+    const scale = 0.93;
+    const spacedPanels = layout.panels.map((p) => {
+      const newW = p.w * scale;
+      const newH = p.h * scale;
+      const newX = p.x + (p.w - newW) / 2;
+      const newY = p.y + (p.h - newH) / 2;
+      return {
+        ...p,
+        x: newX,
+        y: newY,
+        w: newW,
+        h: newH
+      };
+    });
+    return { ...layout, panels: spacedPanels };
+  }
+
+  // 2. Wall Display: scale each frame around its center to increase and standardize separation
+  if (isWall) {
+    const scale = 0.92;
+    const spacedPanels = layout.panels.map((p) => {
+      const newW = p.w * scale;
+      const newH = p.h * scale;
+      const newX = p.x + (p.w - newW) / 2;
+      const newY = p.y + (p.h - newH) / 2;
+      return {
+        ...p,
+        x: newX,
+        y: newY,
+        w: newW,
+        h: newH
+      };
+    });
+    return { ...layout, panels: spacedPanels };
+  }
+
+  // 3. Hexagon Prints: scale bundled hexagons around their centers to create clean gaps
+  if (isHexagon) {
+    const scale = 0.91;
+    const spacedPanels = layout.panels.map((p) => {
+      const newW = p.w * scale;
+      const newH = p.h * scale;
+      const newX = p.x + (p.w - newW) / 2;
+      const newY = p.y + (p.h - newH) / 2;
+      return {
+        ...p,
+        x: newX,
+        y: newY,
+        w: newW,
+        h: newH
+      };
+    });
+    return { ...layout, panels: spacedPanels };
+  }
+
+  // 4. Photo Collage: scale collage panels slightly so outer bounding remains clean
+  if (isCollage) {
+    const scale = 0.95;
+    const spacedPanels = layout.panels.map((p) => {
+      const newW = p.w * scale;
+      const newH = p.h * scale;
+      const newX = p.x + (p.w - newW) / 2;
+      const newY = p.y + (p.h - newH) / 2;
+      return {
+        ...p,
+        x: newX,
+        y: newY,
+        w: newW,
+        h: newH
+      };
+    });
+    return { ...layout, panels: spacedPanels };
+  }
+
+  // 5. Photo Mosaic: unified outer product frame with matting margin and clean tile gaps
+  if (isMosaic) {
+    const cols = (layout as any).cols || Math.round(Math.sqrt(layout.panels.length)) || 4;
+    const rows = (layout as any).rows || Math.ceil(layout.panels.length / cols) || 4;
+    const outerMargin = 0.032;
+    const innerW = 1 - 2 * outerMargin;
+    const innerH = 1 - 2 * outerMargin;
+    const gapX = cols > 1 ? 0.011 : 0;
+    const gapY = rows > 1 ? 0.011 : 0;
+    const tileW = (innerW - (cols - 1) * gapX) / cols;
+    const tileH = (innerH - (rows - 1) * gapY) / rows;
+
+    const spacedPanels = layout.panels.map((p, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = outerMargin + col * (tileW + gapX);
+      const y = outerMargin + row * (tileH + gapY);
+      return {
+        ...p,
+        x,
+        y,
+        w: tileW,
+        h: tileH
+      };
+    });
+    return { ...layout, panels: spacedPanels };
+  }
+
+  return layout;
+}
+
+/**
  * Returns all layout definitions for a given productTypeId
  */
 export function getProductLayouts(productTypeId: string): ProductLayoutDefinition[] {
   const normId = (productTypeId || '').toLowerCase();
+  let baseLayouts: ProductLayoutDefinition[] = [];
   if (normId.includes('hexagon')) {
-    return PRODUCT_LAYOUT_DEFINITIONS['canvas-hexagon'];
+    baseLayouts = PRODUCT_LAYOUT_DEFINITIONS['canvas-hexagon'];
+  } else if (normId.includes('wall') || normId.includes('display')) {
+    baseLayouts = PRODUCT_LAYOUT_DEFINITIONS['canvas-wall-art'];
+  } else if (normId.includes('split')) {
+    baseLayouts = PRODUCT_LAYOUT_DEFINITIONS['canvas-split'];
+  } else if (normId.includes('collage')) {
+    baseLayouts = PRODUCT_LAYOUT_DEFINITIONS['canvas-collage'];
+  } else if (normId.includes('mosaic')) {
+    baseLayouts = PRODUCT_LAYOUT_DEFINITIONS['canvas-mosaic'];
+  } else {
+    baseLayouts = PRODUCT_LAYOUT_DEFINITIONS['canvas-single'] || [];
   }
-  if (normId.includes('wall') || normId.includes('display')) {
-    return PRODUCT_LAYOUT_DEFINITIONS['canvas-wall-art'];
-  }
-  if (normId.includes('split')) {
-    return PRODUCT_LAYOUT_DEFINITIONS['canvas-split'];
-  }
-  if (normId.includes('collage')) {
-    return PRODUCT_LAYOUT_DEFINITIONS['canvas-collage'];
-  }
-  if (normId.includes('mosaic')) {
-    return PRODUCT_LAYOUT_DEFINITIONS['canvas-mosaic'];
-  }
-  return PRODUCT_LAYOUT_DEFINITIONS['canvas-single'] || [];
+  return (baseLayouts || []).map(getSpacedLayout);
 }
 
 /**
@@ -7169,11 +7347,7 @@ export function getProductLayout(productTypeId: string, layoutId?: string): Prod
   const normKey = layoutId.toLowerCase().replace(/[^a-z0-9]/g, '');
   const isMosaicType = productTypeId.toLowerCase().includes('mosaic');
 
-  // Tier 1: exact matches always win, regardless of array order — an exact
-  // id match later in the list must never lose to a fuzzy match earlier in
-  // it (e.g. 'split-3p-75x50-triptych' vs the unrelated earlier
-  // 'split-4p-85x50-stacked-right', whose normalized id also happens to
-  // contain "5x5" from "85x50").
+  // Tier 1: exact matches always win, regardless of array order
   const exact = layouts.find((l) => {
     if (l.id === layoutId) return true;
     if (l.name.toLowerCase() === layoutId.toLowerCase()) return true;
@@ -7199,9 +7373,7 @@ export function getProductLayout(productTypeId: string, layoutId?: string): Prod
     if (layoutId === 'hexagon-3p-27x13.75' && l.id === 'hex-horizontal-bundle-3') return true;
     if (layoutId === 'hexagon-4p-27x19' && l.id === 'hex-horizontal-bundle-4') return true;
 
-    // Map legacy / alternative IDs for Mosaic — scoped to mosaic products only,
-    // since these short numeric substrings (e.g. "5x5") can coincidentally
-    // appear inside unrelated split/collage/wall-art layout ids too.
+    // Map legacy / alternative IDs for Mosaic
     if (isMosaicType) {
       if (normKey.includes('4x4') && lNorm.includes('4x4')) return true;
       if (normKey.includes('5x5') && lNorm.includes('5x5')) return true;
