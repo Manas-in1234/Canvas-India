@@ -2941,6 +2941,108 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return liveClipart.map((item) => (item.extras?.emoji as string) ?? '');
   }, [liveClipart]);
 
+  // Batch 2: price-bearing admin-managed categories. Hardware is genuinely
+  // material-specific (acrylic has Chrome Standoffs, canvas doesn't) so this
+  // re-fetches whenever activeMaterial changes; the rest are BOTH-scoped and
+  // just refetch harmlessly alongside it.
+  const [liveWrapStyles, setLiveWrapStyles] = useState<OptionCategoryItemDto[]>([]);
+  const [liveHardware, setLiveHardware] = useState<OptionCategoryItemDto[]>([]);
+  const [liveDisplayOptions, setLiveDisplayOptions] = useState<OptionCategoryItemDto[]>([]);
+  const [liveMaterialGrades, setLiveMaterialGrades] = useState<OptionCategoryItemDto[]>([]);
+  const [liveLaminations, setLiveLaminations] = useState<OptionCategoryItemDto[]>([]);
+  const [liveFrames, setLiveFrames] = useState<OptionCategoryItemDto[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    const material = activeMaterial === 'acrylic' ? 'ACRYLIC' : 'CANVAS';
+    Promise.all([
+      fetchOptionCategoryItems('wrap_style'),
+      fetchOptionCategoryItems('hardware', material),
+      fetchOptionCategoryItems('display_option'),
+      fetchOptionCategoryItems('material_grade'),
+      fetchOptionCategoryItems('lamination'),
+      fetchOptionCategoryItems('frame'),
+    ]).then(([wrapStyles, hardware, displayOptions, materialGrades, laminations, frames]) => {
+      if (cancelled) return;
+      setLiveWrapStyles(wrapStyles);
+      setLiveHardware(hardware);
+      setLiveDisplayOptions(displayOptions);
+      setLiveMaterialGrades(materialGrades);
+      setLiveLaminations(laminations);
+      setLiveFrames(frames);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeMaterial]);
+
+  const liveOrFallbackWrapStyles = useMemo(() => {
+    if (liveWrapStyles.length === 0) return WRAP_OPTIONS;
+    return liveWrapStyles.map((item) => ({
+      id: (item.extras?.id as string) ?? item.id,
+      name: item.label,
+      label: item.label,
+      price: Number(item.flatPrice),
+      description: item.description ?? '',
+      image: item.imageUrl ?? '',
+      borderWidth: (item.extras?.borderWidth as number) ?? 0,
+      borderColor: (item.extras?.borderColor as string) ?? 'transparent',
+    }));
+  }, [liveWrapStyles]);
+
+  const liveOrFallbackHardware = useMemo(() => {
+    if (liveHardware.length === 0) {
+      return activeMaterial === 'acrylic' ? ACRYLIC_HARDWARE_OPTIONS : HARDWARE_OPTIONS;
+    }
+    return liveHardware.map((item) => ({
+      id: (item.extras?.id as string) ?? item.id,
+      name: item.label,
+      label: item.label,
+      price: Number(item.flatPrice),
+      description: item.description ?? '',
+      image: item.imageUrl ?? '',
+    }));
+  }, [liveHardware, activeMaterial]);
+
+  const liveOrFallbackDisplayOptions = useMemo(() => {
+    if (liveDisplayOptions.length === 0) return DISPLAY_OPTIONS;
+    return liveDisplayOptions.map((item) => ({
+      id: (item.extras?.id as string) ?? item.id,
+      label: item.label,
+      price: Number(item.flatPrice),
+    }));
+  }, [liveDisplayOptions]);
+
+  const liveOrFallbackMaterialGrades = useMemo(() => {
+    if (liveMaterialGrades.length === 0) return MATERIAL_VARIANTS;
+    return liveMaterialGrades.map((item) => ({
+      id: (item.extras?.id as string) ?? item.id,
+      name: item.label,
+      tag: Number(item.flatPrice) === 0 ? 'Standard' : `+₹${item.flatPrice}`,
+      desc: item.description ?? '',
+    }));
+  }, [liveMaterialGrades]);
+
+  const liveOrFallbackLaminations = useMemo(() => {
+    if (liveLaminations.length === 0) return LAMINATION_OPTIONS;
+    return liveLaminations.map((item) => ({
+      id: (item.extras?.id as string) ?? item.id,
+      label: item.label,
+      price: Number(item.flatPrice),
+    }));
+  }, [liveLaminations]);
+
+  const liveOrFallbackFrames = useMemo(() => {
+    if (liveFrames.length === 0) return FRAME_OPTIONS;
+    return liveFrames.map((item) => ({
+      id: (item.extras?.id as string) ?? item.id,
+      name: item.label,
+      price: Number(item.flatPrice),
+      image: item.imageUrl ?? '',
+      borderCss: `12px solid ${(item.extras?.color as string) ?? '#000000'}`,
+      color: (item.extras?.color as string) ?? '#000000',
+    }));
+  }, [liveFrames]);
+
   const filteredShapes = useMemo(() => {
     let list = CANVAS_SHAPES;
     if (selectedProductType?.supportedShapeIds && selectedProductType.supportedShapeIds.length > 0) {
@@ -3901,7 +4003,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       }
     }
 
-    const wrap = WRAP_OPTIONS.find((w) => w.id === selectedWrapId);
+    const wrap = liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId);
     if (wrap) price += wrap.price;
 
     if (activeMaterial === 'acrylic') {
@@ -3926,25 +4028,24 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
     if (shapeApplies) {
       price += liveBorderWidthPrices[selectedBorderWidthId] || 0;
-      const frame = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
+      const frame = liveOrFallbackFrames.find((f) => f.id === selectedFrameId);
       if (frame) price += frame.price;
     }
 
-    // Acrylic's hardware picker renders ACRYLIC_HARDWARE_OPTIONS (includes
-    // Chrome Standoffs), but this previously always priced against the
-    // canvas-only flat HARDWARE_OPTIONS list, which has no standoffs entry —
-    // selecting it showed "+Rs.199" on the card but silently added Rs.0.
+    // liveOrFallbackHardware already resolves to the right list for the
+    // active material (admin-managed live data, or ACRYLIC_HARDWARE_OPTIONS/
+    // HARDWARE_OPTIONS as fallback) — this used to always price against the
+    // canvas-only flat list regardless of material, so selecting Chrome
+    // Standoffs on acrylic showed "+Rs.199" on the card but added Rs.0.
     const hardwarePrice = selectedProductTypeId === 'canvas-banner'
       ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
-      : activeMaterial === 'acrylic'
-      ? (ACRYLIC_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
-      : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0);
+      : (liveOrFallbackHardware.find((h) => h.id === selectedHardwareId)?.price || 0);
     price += hardwarePrice;
 
-    const display = DISPLAY_OPTIONS.find((d) => d.id === selectedDisplayOptionId);
+    const display = liveOrFallbackDisplayOptions.find((d) => d.id === selectedDisplayOptionId);
     if (display) price += display.price;
 
-    const lamination = LAMINATION_OPTIONS.find((l) => l.id === selectedLaminationId);
+    const lamination = liveOrFallbackLaminations.find((l) => l.id === selectedLaminationId);
     if (lamination) price += lamination.price;
 
     if (selectedMaterialId === 'premium-cotton') price += 250;
@@ -5009,7 +5110,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         : isBannerProduct
         ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
         : isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary,
-      finish: activeMaterial === 'acrylic' ? 'Diamond Polished Edge' : (WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label || 'Canvas Lite'),
+      finish: activeMaterial === 'acrylic' ? 'Diamond Polished Edge' : (liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.label || 'Canvas Lite'),
       quantity,
       customText: customText || undefined,
       photoUrl: (isPopArtProduct && popArtConfig.processedImageUrl)
@@ -5018,7 +5119,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         ? selectedLyricTemplate.previewImage
         : firstImage,
       calculatedPrice: totalPrice,
-      material: activeMaterial === 'acrylic' ? 'Premium 3mm/5mm Optical Acrylic' : (MATERIAL_VARIANTS.find((m) => m.id === selectedMaterialId)?.name || 'Standard 280 GSM Cotton Canvas'),
+      material: activeMaterial === 'acrylic' ? 'Premium 3mm/5mm Optical Acrylic' : (liveOrFallbackMaterialGrades.find((m) => m.id === selectedMaterialId)?.name || 'Standard 280 GSM Cotton Canvas'),
       style: isPopArtProduct
         ? `Pop Art (${getPopArtStyle(popArtConfig.selectedStyleId).name})`
         : isLyricProduct
@@ -5026,19 +5127,22 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         : selectedProductType.name,
       base: isBannerProduct
         ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware')
-        : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label || 'No Hooks'),
+        : (() => {
+            const hw = liveOrFallbackHardware.find((h) => h.id === selectedHardwareId) as { name?: string; label?: string } | undefined;
+            return hw?.name || hw?.label || 'No Hooks';
+          })(),
       customizationDetails: {
         material: activeMaterial,
         productTypeId: selectedProductTypeId,
         sizeId: selectedSizeId,
         shape: shapeApplies ? currentShape.name : undefined,
-        wrap: activeMaterial === 'canvas' ? WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label : undefined,
+        wrap: activeMaterial === 'canvas' ? liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.label : undefined,
         borderWidth: shapeApplies ? liveOrFallbackBorderWidths.find((b) => b.id === selectedBorderWidthId)?.label : undefined,
         borderColor: shapeApplies && selectedBorderWidthId !== 'none' ? selectedBorderColor : undefined,
-        frame: shapeApplies && activeMaterial === 'canvas' ? FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name : undefined,
+        frame: shapeApplies && activeMaterial === 'canvas' ? liveOrFallbackFrames.find((f) => f.id === selectedFrameId)?.name : undefined,
         mirrorImage,
-        display: activeMaterial === 'canvas' ? DISPLAY_OPTIONS.find((d) => d.id === selectedDisplayOptionId)?.label : undefined,
-        lamination: activeMaterial === 'canvas' ? LAMINATION_OPTIONS.find((l) => l.id === selectedLaminationId)?.label : undefined,
+        display: activeMaterial === 'canvas' ? liveOrFallbackDisplayOptions.find((d) => d.id === selectedDisplayOptionId)?.label : undefined,
+        lamination: activeMaterial === 'canvas' ? liveOrFallbackLaminations.find((l) => l.id === selectedLaminationId)?.label : undefined,
         retouching: retouchLabels,
         majorRetouchText: majorRetouchText || undefined,
         proofRequested,
@@ -6680,7 +6784,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               {selectedWrapId !== 'canvas-lite' && selectedProductTypeId !== 'canvas-banner' && (
                 <div className="flex justify-between">
                   <span>Wrap:</span>
-                  <span className="font-bold text-stone-900">+₹{WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.price}</span>
+                  <span className="font-bold text-stone-900">+₹{liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.price}</span>
                 </div>
               )}
               {selectedHardwareId !== 'no-hooks' && (
@@ -6689,7 +6793,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <span className="font-bold text-stone-900">
                     +₹{selectedProductTypeId === 'canvas-banner'
                       ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
-                      : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)}
+                      : (liveOrFallbackHardware.find((h) => h.id === selectedHardwareId)?.price || 0)}
                   </span>
                 </div>
               )}
@@ -6701,8 +6805,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               )}
               {selectedLaminationId !== 'none' && (
                 <div className="flex justify-between">
-                  <span>Lamination ({LAMINATION_OPTIONS.find((l) => l.id === selectedLaminationId)?.label}):</span>
-                  <span className="font-bold text-stone-900">+₹{LAMINATION_OPTIONS.find((l) => l.id === selectedLaminationId)?.price}</span>
+                  <span>Lamination ({liveOrFallbackLaminations.find((l) => l.id === selectedLaminationId)?.label}):</span>
+                  <span className="font-bold text-stone-900">+₹{liveOrFallbackLaminations.find((l) => l.id === selectedLaminationId)?.price}</span>
                 </div>
               )}
               <div className="flex justify-between pt-1.5 border-t border-stone-100 text-stone-900 font-extrabold">
@@ -6772,11 +6876,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 ? `${filteredLayoutPresets.length} Layouts`
                 : `${DESIGN_TEMPLATE_CATEGORIES.length} Categories`
               : activeTab === 'WRAP & BORDER'
-              ? `${WRAP_OPTIONS.length} Options`
+              ? `${liveOrFallbackWrapStyles.length} Options`
               : activeTab === 'HARDWARE & FINISH' && isBannerProduct
               ? `${CANVAS_BANNER_HARDWARE_OPTIONS.length} Options`
               : activeTab === 'HARDWARE & FINISH'
-              ? `${(activeMaterial === 'acrylic' ? ACRYLIC_HARDWARE_OPTIONS : HARDWARE_OPTIONS).length} Hardware`
+              ? `${liveOrFallbackHardware.length} Hardware`
               : 'Specifications'
           }
         >
@@ -7931,10 +8035,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">1. Edge Wrap Style</label>
-                  <span className="text-[11px] font-bold text-[#0E4A93]">{WRAP_OPTIONS.length} styles</span>
+                  <span className="text-[11px] font-bold text-[#0E4A93]">{liveOrFallbackWrapStyles.length} styles</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {WRAP_OPTIONS.map((w) => {
+                  {liveOrFallbackWrapStyles.map((w) => {
                     const isSelected = selectedWrapId === w.id;
                     return (
                       <CustomizerOptionCard
@@ -8072,7 +8176,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {FRAME_OPTIONS.map((f) => {
+                    {liveOrFallbackFrames.map((f) => {
                       const isSelected = selectedFrameId === f.id;
                       return (
                         <CustomizerOptionCard
@@ -8149,11 +8253,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     <span className="text-[11px] font-bold text-[#0E4A93]">{CANVAS_BANNER_HARDWARE_OPTIONS.length} options</span>
                   )}
                   {activeMaterial === 'acrylic' && (
-                    <span className="text-[11px] font-bold text-[#0E4A93]">{ACRYLIC_HARDWARE_OPTIONS.length} options</span>
+                    <span className="text-[11px] font-bold text-[#0E4A93]">{liveOrFallbackHardware.length} options</span>
                   )}
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {(selectedProductTypeId === 'canvas-banner' ? CANVAS_BANNER_HARDWARE_OPTIONS : (activeMaterial === 'acrylic' ? ACRYLIC_HARDWARE_OPTIONS : HARDWARE_OPTIONS)).map((hw: any) => {
+                  {(selectedProductTypeId === 'canvas-banner' ? CANVAS_BANNER_HARDWARE_OPTIONS : liveOrFallbackHardware).map((hw: any) => {
                     const isSelected = selectedHardwareId === hw.id;
                     const title = 'label' in hw ? hw.label : hw.name;
                     return (
@@ -8187,7 +8291,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 <div className="space-y-2.5 pt-3 border-t border-stone-200">
                   <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">3. Back Display Option</label>
                   <div className="space-y-2">
-                    {DISPLAY_OPTIONS.map((opt) => {
+                    {liveOrFallbackDisplayOptions.map((opt) => {
                       const isSelected = selectedDisplayOptionId === opt.id;
                       return (
                         <label
@@ -8260,7 +8364,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               <div className="space-y-2.5">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">1. Lamination Options</label>
                 <div className="space-y-2">
-                  {LAMINATION_OPTIONS.map((lam) => {
+                  {liveOrFallbackLaminations.map((lam) => {
                     const isSelected = selectedLaminationId === lam.id;
                     return (
                       <label
@@ -8620,7 +8724,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     <span>
                       Hardware:{' '}
                       <strong className="text-stone-900">
-                        {ACRYLIC_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label || 'No Hooks'}
+                        {(() => {
+                          const hw = liveOrFallbackHardware.find((h) => h.id === selectedHardwareId) as { name?: string; label?: string } | undefined;
+                          return hw?.name || hw?.label || 'No Hooks';
+                        })()}
                       </strong>
                     </span>
                   </>
@@ -8631,7 +8738,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       <strong className="text-stone-900">
                         {selectedProductTypeId === 'canvas-banner'
                           ? 'Premium Flexible Canvas Banner'
-                          : (MATERIAL_VARIANTS.find((m) => m.id === selectedMaterialId)?.name || 'Artist Cotton Canvas')}
+                          : (liveOrFallbackMaterialGrades.find((m) => m.id === selectedMaterialId)?.name || 'Artist Cotton Canvas')}
                       </strong>
                     </span>
                     {selectedProductTypeId === 'canvas-banner' ? (
@@ -8653,11 +8760,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         </span>
                         <span>•</span>
                         <span>
-                          Wrap: <strong className="text-stone-900">{WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.name}</strong>
+                          Wrap: <strong className="text-stone-900">{liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.name}</strong>
                         </span>
                         <span>•</span>
                         <span>
-                          Hardware: <strong className="text-stone-900">{HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label}</strong>
+                          Hardware: <strong className="text-stone-900">
+                            {(() => {
+                              const hw = liveOrFallbackHardware.find((h) => h.id === selectedHardwareId) as { name?: string; label?: string } | undefined;
+                              return hw?.name || hw?.label;
+                            })()}
+                          </strong>
                         </span>
                       </>
                     )}
@@ -8708,7 +8820,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 !isSplitProduct &&
                 !isHexagonProduct &&
                 (() => {
-                const frameOption = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
+                const frameOption = liveOrFallbackFrames.find((f) => f.id === selectedFrameId);
                 const borderWidthPx = liveOrFallbackBorderWidths.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0;
                 const thicknessOption = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId) || THICKNESS_OPTIONS[1];
                 const wrapDepthPx = thicknessOption?.depthPx || 26;
@@ -9489,7 +9601,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           ? undefined
           : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined));
 
-        const frameOption = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
+        const frameOption = liveOrFallbackFrames.find((f) => f.id === selectedFrameId);
         const hasOuterFrame = Boolean(shapeApplies && frameOption && frameOption.id !== 'no-frame');
         const frameColor = hasOuterFrame ? frameOption?.color : undefined;
         const borderWidthPx = shapeApplies
@@ -12019,7 +12131,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             </div>
 
             <div className="space-y-2.5">
-              {MATERIAL_VARIANTS.map((mat) => {
+              {liveOrFallbackMaterialGrades.map((mat) => {
                 const isSelected = selectedMaterialId === mat.id;
                 return (
                   <div

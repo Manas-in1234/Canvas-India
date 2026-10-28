@@ -247,6 +247,106 @@ const OPTION_CATEGORIES_SEED: SeedOptionCategory[] = [
       { label: 'Triangular Ruler', extras: { category: 'Business', emoji: '📐' } },
     ],
   },
+  // Batch 2: price-bearing categories. Wrap/Display/Material Grade/
+  // Lamination are genuinely one shared list in the live page today (no
+  // acrylic-specific variant is ever rendered) despite acrylic-named data
+  // files existing — seeded as BOTH to match real behavior, not aspiration.
+  // Finish has no live picker anywhere in the page (verified same as
+  // Backgrounds) but is seeded anyway, ready for whenever one is built.
+  {
+    baseKey: 'wrap_style',
+    materialScope: 'BOTH',
+    name: 'Wrap Style',
+    items: [
+      { label: 'Image Wrap', extras: { id: 'full-bleed', borderWidth: 0, borderColor: 'transparent' } },
+      { label: 'Mirror Wrap', extras: { id: 'clear-edge', borderWidth: 10, borderColor: 'rgba(255, 255, 255, 0.75)' } },
+      { label: 'White Border Wrap', flatPrice: 120, extras: { id: 'white-border', borderWidth: 16, borderColor: '#FFFFFF' } },
+      { label: 'Black Border Wrap', flatPrice: 120, extras: { id: 'black-border', borderWidth: 16, borderColor: '#0F172A' } },
+      { label: 'Solid Color Wrap', extras: { id: 'no-wrap', borderWidth: 0, borderColor: 'transparent' } },
+    ],
+  },
+  {
+    baseKey: 'hardware',
+    materialScope: 'CANVAS',
+    name: 'Hardware (Canvas)',
+    description: 'The flat canvas hardware list the live picker actually renders for canvas products.',
+    items: [
+      { label: 'No Hooks', extras: { id: 'no-hooks' } },
+      { label: 'Hooks for Hanging', extras: { id: 'hooks-hanging' } },
+      { label: 'Ready to Hang', extras: { id: 'ready-to-hang' } },
+      { label: 'Sawtooth Hanger', flatPrice: 25, extras: { id: 'sawtooth-hanger' } },
+      { label: 'Easel Back', flatPrice: 49, extras: { id: 'easel-back' } },
+      { label: 'Nail Free Hook', flatPrice: 49, extras: { id: 'nail-free-hook' } },
+    ],
+  },
+  {
+    baseKey: 'hardware',
+    materialScope: 'ACRYLIC',
+    name: 'Hardware (Acrylic)',
+    description: 'Includes Chrome Standoffs (Rs.200 = Rs.50/stud x 4-stud minimum, client pricing sheet) — the acrylic picker is the one place this list is actually rendered, now that its pricing bug is fixed.',
+    items: [
+      { label: 'Without Base / No Hooks', description: 'Clean unmounted acrylic panel for custom installation.', extras: { id: 'no-hooks' } },
+      { label: 'Hooks for Hanging', description: 'Twin self-levelling hanging hooks included at no charge.', extras: { id: 'hooks-hanging' } },
+      { label: 'Ready to Hang Cleat', description: 'Pre-installed recessed French cleat wall hanger.', extras: { id: 'ready-to-hang' } },
+      { label: 'Sawtooth Hanger', description: 'Heavy-duty brass sawtooth hanger attached to rear backing.', flatPrice: 25, extras: { id: 'sawtooth-hanger' } },
+      { label: 'Easel Back / Stand', description: 'Foldable tabletop stand for desk, shelf, and mantle display.', flatPrice: 49, extras: { id: 'easel-back' } },
+      { label: 'Nail Free Hook', description: 'Damage-free adhesive wall hook with high weight capacity.', flatPrice: 49, extras: { id: 'nail-free-hook' } },
+      { label: 'Chrome Standoffs', description: '4 architectural brushed chrome corner standoff bolts.', flatPrice: 200, extras: { id: 'standoff-mounts' } },
+    ],
+  },
+  {
+    baseKey: 'display_option',
+    materialScope: 'BOTH',
+    name: 'Display Option',
+    items: [
+      { label: 'Open Back', extras: { id: 'open-back' } },
+      { label: 'Dust Cover', flatPrice: 49, extras: { id: 'dust-cover' } },
+    ],
+  },
+  {
+    baseKey: 'material_grade',
+    materialScope: 'BOTH',
+    name: 'Material Grade',
+    items: [
+      { label: 'Standard 280 GSM Cotton Canvas', description: 'Durable poly-cotton blend canvas for everyday prints.', extras: { id: 'standard-cotton' } },
+      { label: 'Premium 380 GSM Cotton Canvas', description: '100% cotton museum-grade canvas with rich texture.', flatPrice: 250, extras: { id: 'premium-cotton' } },
+      { label: 'Archival Museum Canvas', description: 'Acid-free archival canvas rated for 100+ years of fade resistance.', flatPrice: 450, extras: { id: 'archival-cotton' } },
+    ],
+  },
+  {
+    baseKey: 'lamination',
+    materialScope: 'BOTH',
+    name: 'Lamination',
+    items: [
+      { label: 'No', extras: { id: 'none' } },
+      { label: 'Standard', flatPrice: 149, extras: { id: 'standard' } },
+      { label: 'Premium', flatPrice: 249, extras: { id: 'premium' } },
+    ],
+  },
+  {
+    baseKey: 'frame',
+    materialScope: 'BOTH',
+    name: 'Frame',
+    items: [
+      { label: 'No Frame (Frameless)', extras: { id: 'no-frame', color: 'transparent' } },
+      { label: 'Modern Black Frame', flatPrice: 350, extras: { id: 'black-frame', color: '#18181b' } },
+      { label: 'Brushed Gold Frame', flatPrice: 450, extras: { id: 'gold-frame', color: '#d4af37' } },
+      { label: 'Gallery White Frame', flatPrice: 350, extras: { id: 'white-frame', color: '#ffffff' } },
+      { label: 'Natural Oak Frame', flatPrice: 490, extras: { id: 'wood-frame', color: '#92400e' } },
+    ],
+  },
+  {
+    baseKey: 'finish',
+    materialScope: 'BOTH',
+    name: 'Finish',
+    description: 'No live picker renders this today (verified — same situation as Backgrounds); seeded ready for when one exists.',
+    items: [
+      { label: 'High Gloss Clear', description: 'Direct optical crystal finish with unmatched vibrancy & 3D depth.', extras: { id: 'high-gloss' } },
+      { label: 'Anti-Glare Matte', description: 'Velvet soft matte surface reducing reflection from bright lights & windows.', flatPrice: 180, extras: { id: 'anti-glare' } },
+      { label: 'Frosted Backing', description: 'Soft diffused translucency for gentle light transmission.', flatPrice: 150, extras: { id: 'frosted-backing' } },
+      { label: 'Diamond Beveled Edge', description: 'Hand-polished 45-degree prism beveled luxury perimeter edge.', flatPrice: 220, extras: { id: 'diamond-bevel' } },
+    ],
+  },
 ];
 
 async function main() {
