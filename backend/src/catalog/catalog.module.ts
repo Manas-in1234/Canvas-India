@@ -6,6 +6,7 @@ import { CollectionsModule } from './collections/collections.module.js';
 import { OptionsModule } from './options/options.module.js';
 import { VariantsModule } from './variants/variants.module.js';
 import { PricingModule } from './pricing/pricing.module.js';
+import { OptionCategoriesModule } from './option-categories/option-categories.module.js';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { PricingModule } from './pricing/pricing.module.js';
     OptionsModule,
     VariantsModule,
     PricingModule,
+    OptionCategoriesModule,
   ],
   exports: [
     ProductsModule,
@@ -25,6 +27,7 @@ import { PricingModule } from './pricing/pricing.module.js';
     OptionsModule,
     VariantsModule,
     PricingModule,
+    OptionCategoriesModule,
   ],
 })
 export class CatalogModule {}

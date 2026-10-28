@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   Palette,
   IndianRupee,
+  SlidersHorizontal,
   BarChart3,
   Sparkles,
   UsersRound,
@@ -81,6 +82,17 @@ const NAV_SECTIONS: NavSection[] = [
       { href: '/production/machines', label: 'Machines', icon: Wrench, requiredPermissions: ['machines.view'] },
       { href: '/production/materials', label: 'Materials', icon: Layers, requiredPermissions: ['materials.view'] },
       { href: '/production/batches', label: 'Batches', icon: BatchIcon, requiredPermissions: ['production.view'] },
+    ],
+  },
+  {
+    label: 'Customizer',
+    links: [
+      {
+        href: '/option-categories',
+        label: 'Customize Page Options',
+        icon: SlidersHorizontal,
+        requiredPermissions: ['option_catalog.view'],
+      },
     ],
   },
   {
