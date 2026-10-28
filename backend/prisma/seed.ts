@@ -86,6 +86,15 @@ const PERMISSIONS = [
 const SHAPE_AREA_RATE_PER_SQIN_KEY = 'shape_area_rate_per_sqin';
 const SHAPE_AREA_RATE_PER_SQIN_DEFAULT = 1.65;
 
+// Rs. per sq. inch per acrylic sheet thickness (client pricing sheet) — the
+// 18mm tier has no rate in the sheet and stays a flat addon in frontend code.
+const ACRYLIC_THICKNESS_RATE_SETTINGS: Array<{ key: string; value: number; description: string }> = [
+  { key: 'acrylic_thickness_rate_3mm', value: 5.50, description: 'Rs. per sq. inch for 3mm acrylic sheet thickness' },
+  { key: 'acrylic_thickness_rate_5mm', value: 6.50, description: 'Rs. per sq. inch for 5mm acrylic sheet thickness' },
+  { key: 'acrylic_thickness_rate_6mm', value: 7.75, description: 'Rs. per sq. inch for 6mm acrylic sheet thickness' },
+  { key: 'acrylic_thickness_rate_8mm', value: 9.50, description: 'Rs. per sq. inch for 8mm acrylic sheet thickness' },
+];
+
 async function main() {
   // Seed permissions.
   for (const key of PERMISSIONS) {
@@ -286,6 +295,14 @@ async function main() {
       description: 'Rs. per sq. inch used to price non-rectangular shapes by their bounding-box area',
     },
   });
+
+  for (const setting of ACRYLIC_THICKNESS_RATE_SETTINGS) {
+    await prisma.pricingSetting.upsert({
+      where: { key: setting.key },
+      update: {},
+      create: { key: setting.key, value: setting.value, description: setting.description },
+    });
+  }
 
   // eslint-disable-next-line no-console
   console.log(
