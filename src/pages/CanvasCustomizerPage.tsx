@@ -3930,8 +3930,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       if (frame) price += frame.price;
     }
 
+    // Acrylic's hardware picker renders ACRYLIC_HARDWARE_OPTIONS (includes
+    // Chrome Standoffs), but this previously always priced against the
+    // canvas-only flat HARDWARE_OPTIONS list, which has no standoffs entry —
+    // selecting it showed "+Rs.199" on the card but silently added Rs.0.
     const hardwarePrice = selectedProductTypeId === 'canvas-banner'
       ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
+      : activeMaterial === 'acrylic'
+      ? (ACRYLIC_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
       : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0);
     price += hardwarePrice;
 
