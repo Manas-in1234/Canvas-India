@@ -305,6 +305,21 @@ model PricingRule {
   @@map("pricing_rules")
 }
 
+// Named, admin-editable numeric settings used directly in pricing formulas
+// (e.g. the Rs/sq.inch rate shapes are billed at) — a key/value row per
+// setting rather than a new table per rate, since these are expected to stay
+// few and simple. Distinct from PricingRule, which models flat
+// condition-matched adjustments, not a single global rate used in a formula.
+model PricingSetting {
+  key         String   @id
+  value       Decimal  @db.Decimal(12, 4)
+  description String?
+  updatedBy   String?  @map("updated_by")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("pricing_settings")
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // COMMERCE — cart & orders (scope §44–45, §89, §114, §87 Commerce)
 // ─────────────────────────────────────────────────────────────────────────

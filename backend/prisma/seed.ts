@@ -76,7 +76,15 @@ const PERMISSIONS = [
   'abandoned_carts.view',
   'abandoned_carts.manage',
   'analytics.view',
+  'pricing.view',
+  'pricing.manage',
 ];
+
+// Rs. per sq. inch — non-rectangular shapes (heart, hexagon, custom traced
+// shapes) are billed by their bounding rectangle's area at this rate (client
+// pricing sheet). Admin-editable via PricingSettingsController.
+const SHAPE_AREA_RATE_PER_SQIN_KEY = 'shape_area_rate_per_sqin';
+const SHAPE_AREA_RATE_PER_SQIN_DEFAULT = 1.65;
 
 async function main() {
   // Seed permissions.
@@ -266,6 +274,16 @@ async function main() {
       endsAt: new Date('2025-12-31T23:59:59Z'),
       isActive: true,
       campaignId: launchCampaign.id,
+    },
+  });
+
+  await prisma.pricingSetting.upsert({
+    where: { key: SHAPE_AREA_RATE_PER_SQIN_KEY },
+    update: {},
+    create: {
+      key: SHAPE_AREA_RATE_PER_SQIN_KEY,
+      value: SHAPE_AREA_RATE_PER_SQIN_DEFAULT,
+      description: 'Rs. per sq. inch used to price non-rectangular shapes by their bounding-box area',
     },
   });
 

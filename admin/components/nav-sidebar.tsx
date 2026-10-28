@@ -22,6 +22,7 @@ import {
   UserCog,
   ShieldCheck,
   Palette,
+  IndianRupee,
   BarChart3,
   Sparkles,
   UsersRound,
@@ -108,6 +109,7 @@ const NAV_SECTIONS: NavSection[] = [
     links: [
       { href: '/users', label: 'Admin Users', icon: UserCog, requiredPermissions: ['users.view'] },
       { href: '/roles', label: 'Roles', icon: ShieldCheck, requiredPermissions: ['roles.view'] },
+      { href: '/pricing', label: 'Pricing', icon: IndianRupee, requiredPermissions: ['pricing.view'] },
     ],
   },
   {
