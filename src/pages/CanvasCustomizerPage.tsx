@@ -3226,6 +3226,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // into panel 0, same as a real upload, so the user starts customizing it
   // immediately instead of an empty canvas. Runs once per page load only.
   const prefillAppliedRef = useRef(false);
+  // The exact aspect-matched size computed below, so "Reset Size" can
+  // return to it instead of the product's generic square default.
+  const prefillSizeRef = useRef<{ width: number; height: number } | null>(null);
   useEffect(() => {
     if (prefillAppliedRef.current) return;
     const prefillImage = searchParams.get('prefillImage');
@@ -3243,27 +3246,21 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         aspectRatio,
         name: searchParams.get('prefillName') || 'Design'
       };
-      // Switch to a custom canvas size that best matches the artwork's own
-      // aspect ratio, instead of cropping (fit 'cover') or letterboxing
-      // (fit 'contain') it into a generic square/rectangle. The Custom
-      // Size dropdowns only offer CUSTOM_SIZE_STEPS values, so pick the
-      // (width, height) pair from that exact list whose ratio is closest
-      // to the artwork's — anything else can't even be displayed there.
-      let bestW = CUSTOM_SIZE_STEPS[0];
-      let bestH = CUSTOM_SIZE_STEPS[0];
-      let bestErr = Infinity;
-      for (const stepW of CUSTOM_SIZE_STEPS) {
-        for (const stepH of CUSTOM_SIZE_STEPS) {
-          const err = Math.abs(Math.log(stepW / stepH) - Math.log(aspectRatio));
-          if (err < bestErr) {
-            bestErr = err;
-            bestW = stepW;
-            bestH = stepH;
-          }
-        }
-      }
-      setCustomWidth(bestW);
-      setCustomHeight(bestH);
+      // Switch to a custom canvas size that matches the artwork's own
+      // aspect ratio exactly, instead of cropping (fit 'cover') or
+      // letterboxing (fit 'contain') it into a generic square/rectangle.
+      // Kept continuous (not snapped to the Custom Size dropdowns' coarse
+      // CUSTOM_SIZE_STEPS list) so the canvas proportions are genuinely
+      // accurate — the dropdown options are extended below to include
+      // this exact value so it still renders as a real selection there.
+      const longSide = 16;
+      let w = aspectRatio >= 1 ? longSide : longSide * aspectRatio;
+      let h = aspectRatio >= 1 ? longSide / aspectRatio : longSide;
+      w = Math.max(4, Math.min(40, Math.round(w * 10) / 10));
+      h = Math.max(4, Math.min(40, Math.round(h * 10) / 10));
+      prefillSizeRef.current = { width: w, height: h };
+      setCustomWidth(w);
+      setCustomHeight(h);
       setIsCustomSize(true);
       setUploadedPhotos((prev) => (prev.includes(prefillImage) ? prev : [prefillImage, ...prev]));
       setPanelImages((prev) => ({
@@ -3862,6 +3859,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Reset Size to product default size option (Requirement 4)
   const handleResetSize = () => {
+    // In prefill mode, the "default" size IS the artwork's own aspect-matched
+    // custom size, not the product's generic square preset.
+    if (isPrefillMode && prefillSizeRef.current) {
+      setIsCustomSize(true);
+      setCustomWidth(prefillSizeRef.current.width);
+      setCustomHeight(prefillSizeRef.current.height);
+      return;
+    }
     const defaultSizeId = selectedProductType?.defaultSizeOptionId;
     const targetOpt = availableSizeOptions.find((opt) => opt.id === defaultSizeId) || availableSizeOptions[0];
     if (!targetOpt) return;
@@ -9249,7 +9254,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           }}
                           className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] appearance-none pr-6 cursor-pointer"
                         >
-                          {CUSTOM_SIZE_STEPS.map((n) => (
+                          {/* Current value merged in — a prefilled aspect-matched
+                              size (or any other exact value) renders as a real
+                              selection even when it isn't one of the coarse steps. */}
+                          {Array.from(new Set([...CUSTOM_SIZE_STEPS, customHeight])).sort((a, b) => a - b).map((n) => (
                             <option key={n} value={n}>{n}&quot;</option>
                           ))}
                         </select>
@@ -9276,7 +9284,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           }}
                           className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] appearance-none pr-6 cursor-pointer"
                         >
-                          {CUSTOM_SIZE_STEPS.map((n) => (
+                          {Array.from(new Set([...CUSTOM_SIZE_STEPS, customWidth])).sort((a, b) => a - b).map((n) => (
                             <option key={n} value={n}>{n}&quot;</option>
                           ))}
                         </select>
