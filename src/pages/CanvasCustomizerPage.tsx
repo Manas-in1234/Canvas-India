@@ -2618,6 +2618,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const location = useLocation();
   const { allProducts, onAddToCartCustomized } = useShop();
 
+  // Arrived from a catalogue design's "Customize this Product" button — the
+  // artwork is fixed, so there's nothing to upload: the Upload tab is
+  // hidden entirely rather than just pre-filled and still reachable.
+  const isPrefillMode = Boolean(searchParams.get('prefillImage'));
+
   const [isMobile, setIsMobile] = useState<boolean>(() =>
     typeof window !== 'undefined' ? window.innerWidth < 768 : false
   );
@@ -2686,6 +2691,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (initialPt.includes('digital') || initialPt.includes('painting')) return 'EFFECTS & OPTIONS';
     if (initialPt.includes('bus')) return 'CREATE BUS ROLL';
     if (initialPt.includes('banner')) return 'UPLOAD';
+    if (searchParams.get('prefillImage')) return 'SELECT SIZE';
     return 'UPLOAD';
   });
 
@@ -2873,7 +2879,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           : isQuotesProduct
           ? Quote
           : UploadCloud,
-        enabled: productCapabilities.upload !== false
+        enabled: productCapabilities.upload !== false && !isPrefillMode
       },
       { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: true },
       { id: 'EFFECTS & OPTIONS', label: 'EFFECTS & OPTIONS', icon: Palette, enabled: productCapabilities.effects === true },
@@ -2883,15 +2889,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false }
     ];
     return items.filter((item) => item.enabled);
-  }, [activeMaterial, productCapabilities, isSingleOrShapedCanvas, isBusRollProduct, isPopArtProduct, isLyricProduct, isWordArtProduct, isQuotesProduct]);
+  }, [activeMaterial, productCapabilities, isSingleOrShapedCanvas, isBusRollProduct, isPopArtProduct, isLyricProduct, isWordArtProduct, isQuotesProduct, isPrefillMode]);
 
   // Product tabs supported check
 
-  // If the active tab is not supported by the currently selected product, safely revert to UPLOAD
+  // If the active tab is not supported by the currently selected product,
+  // safely revert to the first available tab (UPLOAD is hidden entirely in
+  // prefill mode, so it may not be a valid fallback there).
   useEffect(() => {
     const isCurrentTabSupported = toolbarItems.some((item) => item.id === activeTab);
-    if (!isCurrentTabSupported) {
-      setActiveTab('UPLOAD');
+    if (!isCurrentTabSupported && toolbarItems.length > 0) {
+      setActiveTab(toolbarItems[0].id);
     }
   }, [toolbarItems, activeTab]);
 
@@ -3227,13 +3235,25 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     img.onload = () => {
       const width = img.naturalWidth || img.width || 1200;
       const height = img.naturalHeight || img.height || 1200;
+      const aspectRatio = width / height;
       const meta = {
         originalSrc: prefillImage,
         width,
         height,
-        aspectRatio: width / height,
+        aspectRatio,
         name: searchParams.get('prefillName') || 'Design'
       };
+      // Switch to a custom canvas size that matches the artwork's own
+      // aspect ratio exactly, instead of cropping (fit 'cover') or
+      // letterboxing (fit 'contain') it into a generic square/rectangle.
+      const longSide = 12;
+      let w = aspectRatio >= 1 ? longSide : longSide * aspectRatio;
+      let h = aspectRatio >= 1 ? longSide / aspectRatio : longSide;
+      w = Math.max(6, Math.min(30, Math.round(w * 2) / 2));
+      h = Math.max(6, Math.min(30, Math.round(h * 2) / 2));
+      setCustomWidth(w);
+      setCustomHeight(h);
+      setIsCustomSize(true);
       setUploadedPhotos((prev) => (prev.includes(prefillImage) ? prev : [prefillImage, ...prev]));
       setPanelImages((prev) => ({
         ...prev,
@@ -3245,9 +3265,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           rotation: 0,
           panX: 0,
           panY: 0,
-          // 'contain' (not 'cover') — this is a fixed catalogue design, not
-          // a user photo to crop-to-fill; the whole artwork must stay visible.
-          fitMode: 'contain'
+          fitMode: 'cover'
         }
       }));
     };
