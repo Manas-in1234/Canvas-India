@@ -112,6 +112,7 @@ import {
 } from '../data/lyricCanvasData';
 import { fetchApprovedCustomShapes, toShapeOption, type CustomShapeDto } from '../api/customShapesApi';
 import { fetchPricingRates, SHAPE_AREA_RATE_FALLBACK, ACRYLIC_THICKNESS_RATE_FALLBACKS } from '../api/pricingSettingsApi';
+import { fetchOptionCategoryItems, type OptionCategoryItemDto } from '../api/optionCategoriesApi';
 import {
   CANVAS_SHAPES,
   CanvasShapeOption,
@@ -1688,12 +1689,17 @@ const MATERIAL_VARIANTS = [
   { id: 'archival-cotton', name: 'Archival Museum Canvas', tag: '+₹450', desc: 'Acid-free archival canvas rated for 100+ years of fade resistance.' }
 ];
 
-const CLIPART_ITEMS = [
+// Fallbacks only — used when the admin-managed "clipart"/"font"/"text_color"
+// option categories have no items yet or the live fetch fails. Nothing in
+// this file reads these three constants directly; see liveOrFallbackClipart/
+// liveOrFallbackFonts/liveOrFallbackTextColors below, which merge these with
+// the live admin-managed data and are what any picker UI should consume.
+const CLIPART_ITEMS_FALLBACK = [
   '❤️', '⭐', '🎉', '🎁', '✨', '🌸', '😊', '🌿', '💎', '🎂', '💍', '🏆',
   '🌹', '🦋', '🌈', '☀️', '🌙', '🎈', '🕉️', '🪔', '🐾', '🎓', '🏡', '👑'
 ];
 
-const FONT_OPTIONS = [
+const FONT_OPTIONS_FALLBACK = [
   { id: 'manrope', label: 'Modern', family: 'Manrope, sans-serif' },
   { id: 'playfair', label: 'Elegant', family: '"Playfair Display", serif' },
   { id: 'cormorant', label: 'Classic', family: '"Cormorant Garamond", serif' },
@@ -1705,7 +1711,7 @@ const FONT_OPTIONS = [
   { id: 'mono', label: 'Typewriter', family: '"Courier New", monospace' }
 ];
 
-const TEXT_COLORS = ['#FFFFFF', '#000000', '#D4AF37', '#0E4A93', '#E8752A', '#DC2626', '#059669', '#7C3AED'];
+const TEXT_COLORS_FALLBACK = ['#FFFFFF', '#000000', '#D4AF37', '#0E4A93', '#E8752A', '#DC2626', '#059669', '#7C3AED'];
 
 interface TextItem {
   id: string;
@@ -2859,6 +2865,82 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     };
   }, []);
 
+  // Admin-managed customizer options (see admin "Customize Page Options"
+  // screen) — Border Width/Color, Font, Text Color, Clipart. Each falls back
+  // to the hardcoded list below if the category has no items yet or the
+  // fetch fails, so the picker is never left empty.
+  const [liveBorderWidths, setLiveBorderWidths] = useState<OptionCategoryItemDto[]>([]);
+  const [liveBorderColors, setLiveBorderColors] = useState<OptionCategoryItemDto[]>([]);
+  const [liveFonts, setLiveFonts] = useState<OptionCategoryItemDto[]>([]);
+  const [liveTextColors, setLiveTextColors] = useState<OptionCategoryItemDto[]>([]);
+  const [liveClipart, setLiveClipart] = useState<OptionCategoryItemDto[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      fetchOptionCategoryItems('border_width'),
+      fetchOptionCategoryItems('border_color'),
+      fetchOptionCategoryItems('font'),
+      fetchOptionCategoryItems('text_color'),
+      fetchOptionCategoryItems('clipart'),
+    ]).then(([borderWidths, borderColors, fonts, textColors, clipart]) => {
+      if (cancelled) return;
+      setLiveBorderWidths(borderWidths);
+      setLiveBorderColors(borderColors);
+      setLiveFonts(fonts);
+      setLiveTextColors(textColors);
+      setLiveClipart(clipart);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const liveOrFallbackBorderWidths = useMemo(() => {
+    if (liveBorderWidths.length === 0) return ACRYLIC_BORDER_WIDTHS;
+    return liveBorderWidths.map((item) => ({
+      id: (item.extras?.id as string) ?? item.id,
+      label: item.label,
+      widthPx: (item.extras?.widthPx as number) ?? 0,
+    }));
+  }, [liveBorderWidths]);
+
+  const liveOrFallbackBorderColors = useMemo(() => {
+    if (liveBorderColors.length === 0) return ACRYLIC_BORDER_COLORS;
+    return liveBorderColors.map((item) => ({
+      name: item.label,
+      hex: (item.extras?.hex as string) ?? '#000000',
+    }));
+  }, [liveBorderColors]);
+
+  const liveBorderWidthPrices = useMemo(() => {
+    if (liveBorderWidths.length === 0) return CANVAS_BORDER_WIDTH_PRICES;
+    const prices: Record<string, number> = {};
+    for (const item of liveBorderWidths) {
+      const id = (item.extras?.id as string) ?? item.id;
+      prices[id] = Number(item.flatPrice);
+    }
+    return prices;
+  }, [liveBorderWidths]);
+
+  const liveOrFallbackFonts = useMemo(() => {
+    if (liveFonts.length === 0) return FONT_OPTIONS_FALLBACK;
+    return liveFonts.map((item) => ({
+      id: item.id,
+      label: item.label,
+      family: (item.extras?.cssFontFamily as string) ?? 'sans-serif',
+    }));
+  }, [liveFonts]);
+
+  const liveOrFallbackTextColors = useMemo(() => {
+    if (liveTextColors.length === 0) return TEXT_COLORS_FALLBACK;
+    return liveTextColors.map((item) => (item.extras?.hex as string) ?? '#000000');
+  }, [liveTextColors]);
+
+  const liveOrFallbackClipart = useMemo(() => {
+    if (liveClipart.length === 0) return CLIPART_ITEMS_FALLBACK;
+    return liveClipart.map((item) => (item.extras?.emoji as string) ?? '');
+  }, [liveClipart]);
+
   const filteredShapes = useMemo(() => {
     let list = CANVAS_SHAPES;
     if (selectedProductType?.supportedShapeIds && selectedProductType.supportedShapeIds.length > 0) {
@@ -3843,7 +3925,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
 
     if (shapeApplies) {
-      price += CANVAS_BORDER_WIDTH_PRICES[selectedBorderWidthId] || 0;
+      price += liveBorderWidthPrices[selectedBorderWidthId] || 0;
       const frame = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
       if (frame) price += frame.price;
     }
@@ -3874,6 +3956,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     currentSizeOption,
     shapeAreaRate,
     acrylicThicknessRates,
+    liveBorderWidthPrices,
     activeMaterial,
     selectedWrapId,
     selectedThicknessId,
@@ -4944,7 +5027,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         sizeId: selectedSizeId,
         shape: shapeApplies ? currentShape.name : undefined,
         wrap: activeMaterial === 'canvas' ? WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label : undefined,
-        borderWidth: shapeApplies ? ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.label : undefined,
+        borderWidth: shapeApplies ? liveOrFallbackBorderWidths.find((b) => b.id === selectedBorderWidthId)?.label : undefined,
         borderColor: shapeApplies && selectedBorderWidthId !== 'none' ? selectedBorderColor : undefined,
         frame: shapeApplies && activeMaterial === 'canvas' ? FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name : undefined,
         mirrorImage,
@@ -7924,9 +8007,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 ) : (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {ACRYLIC_BORDER_WIDTHS.map((bw) => {
+                      {liveOrFallbackBorderWidths.map((bw) => {
                         const isSelected = selectedBorderWidthId === bw.id;
-                        const borderPrice = CANVAS_BORDER_WIDTH_PRICES[bw.id] || 0;
+                        const borderPrice = liveBorderWidthPrices[bw.id] || 0;
                         return (
                           <CustomizerOptionCard
                             key={bw.id}
@@ -7955,7 +8038,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       <div className="space-y-1.5 bg-stone-50 p-3 rounded-xl border border-stone-200">
                         <span className="text-[11px] font-bold text-stone-700 block">Select Border Colour:</span>
                         <div className="flex items-center gap-2.5 pt-0.5">
-                          {ACRYLIC_BORDER_COLORS.map((c) => (
+                          {liveOrFallbackBorderColors.map((c) => (
                             <button
                               key={c.hex}
                               type="button"
@@ -8620,7 +8703,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 !isHexagonProduct &&
                 (() => {
                 const frameOption = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
-                const borderWidthPx = ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0;
+                const borderWidthPx = liveOrFallbackBorderWidths.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0;
                 const thicknessOption = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId) || THICKNESS_OPTIONS[1];
                 const wrapDepthPx = thicknessOption?.depthPx || 26;
                 const visibleDepthPx =
@@ -9404,7 +9487,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         const hasOuterFrame = Boolean(shapeApplies && frameOption && frameOption.id !== 'no-frame');
         const frameColor = hasOuterFrame ? frameOption?.color : undefined;
         const borderWidthPx = shapeApplies
-          ? ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0
+          ? liveOrFallbackBorderWidths.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0
           : 0;
         const isRectangularShape =
           !activeClipPath &&
