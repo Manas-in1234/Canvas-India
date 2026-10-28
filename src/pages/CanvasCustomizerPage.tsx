@@ -3213,6 +3213,52 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Uploaded photo collection (all photos uploaded in this session)
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
 
+  // Arriving from a catalogue design's "Customize this Product" button: the
+  // design's own artwork is passed as ?prefillImage= and dropped straight
+  // into panel 0, same as a real upload, so the user starts customizing it
+  // immediately instead of an empty canvas. Runs once per page load only.
+  const prefillAppliedRef = useRef(false);
+  useEffect(() => {
+    if (prefillAppliedRef.current) return;
+    const prefillImage = searchParams.get('prefillImage');
+    if (!prefillImage) return;
+    prefillAppliedRef.current = true;
+    const img = new Image();
+    img.onload = () => {
+      const width = img.naturalWidth || img.width || 1200;
+      const height = img.naturalHeight || img.height || 1200;
+      const meta = {
+        originalSrc: prefillImage,
+        width,
+        height,
+        aspectRatio: width / height,
+        name: searchParams.get('prefillName') || 'Design'
+      };
+      setUploadedPhotos((prev) => (prev.includes(prefillImage) ? prev : [prefillImage, ...prev]));
+      setPanelImages((prev) => ({
+        ...prev,
+        0: {
+          ...createDefaultPanel(),
+          imageUrl: prefillImage,
+          uploadedImage: meta,
+          scale: 1,
+          rotation: 0,
+          panX: 0,
+          panY: 0,
+          fitMode: 'cover'
+        }
+      }));
+    };
+    img.onerror = () => {
+      setUploadedPhotos((prev) => (prev.includes(prefillImage) ? prev : [prefillImage, ...prev]));
+      setPanelImages((prev) => ({
+        ...prev,
+        0: { ...createDefaultPanel(), imageUrl: prefillImage, fitMode: 'cover' }
+      }));
+    };
+    img.src = prefillImage;
+  }, [searchParams]);
+
   // Mobile Upload & QR Code Sync State (matches Acrylic Customizer)
   const [uploadMode, setUploadMode] = useState<'computer' | 'mobile'>('computer');
   const [uploadSessionId] = useState<string>(() => 'ca-' + Math.random().toString(36).substring(2, 8).toUpperCase());

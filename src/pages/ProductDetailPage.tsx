@@ -109,6 +109,18 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     [product.categorySlug, product.material]
   );
 
+  // Pre-designed Print World catalogue art (Devotional Art, Line Art, etc.)
+  // has no real Size/Shape/Frame/Hook variants of its own — every size is
+  // the same fixed artwork — so instead of a buy-as-is flow it sends the
+  // shopper straight into the customizer with this exact design preloaded.
+  const isCatalogueDesign = [
+    'devotional-art',
+    'line-art',
+    'motivational-posters',
+    'scenery-landscape-art',
+    'tribal-ethnic-art'
+  ].includes(product.categorySlug);
+
   // In-page customization state
   const [customText, setCustomText] = useState<string>('');
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
@@ -578,6 +590,17 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 </div>
               )}
 
+              {isCatalogueDesign ? (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/customize/${product.material === 'acrylic' ? 'acrylic' : 'canvas'}/single?prefillImage=${encodeURIComponent(product.image)}&prefillName=${encodeURIComponent(product.name)}`)}
+                  className="w-full py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  <Pencil className="w-4 h-4" />
+                  <span>Customize this Product</span>
+                </button>
+              ) : (
+                <>
               {/* Size / Shape / Frame / Hook Tabs */}
               {((product.sizes && product.sizes.length > 0) || availableShapes.length > 0) && (
                 <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
@@ -790,6 +813,8 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                   <span>{isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}</span>
                 </button>
               </div>
+                </>
+              )}
             </div>
 
           </div>
