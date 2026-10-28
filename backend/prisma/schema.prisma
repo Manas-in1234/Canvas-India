@@ -321,6 +321,82 @@ model PricingSetting {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// ADMIN-MANAGED CUSTOMIZER OPTIONS — content the admin edits that the
+// storefront customize page (canvas/acrylic) live-fetches, replacing what
+// used to be hardcoded option lists in frontend data files. Distinct from
+// OptionGroup/OptionValue above, which drives sellable SKU/variant
+// combinations, not customizer-tab content — these are not the same concern
+// and must not be merged.
+//
+// Covers the ~12 categories that share one shape (Wrap Style, Hardware,
+// Display, Finish, Lamination, Material Grade, Frame, Border Width, Border
+// Color, Font, Text Color Presets, Clipart, Backgrounds). Shape and Size
+// are intentionally NOT here — Shape extends CustomShape (bespoke SVG/review
+// pipeline), Size gets its own SizePreset model (relationally scoped by
+// product type + layout). Special flows (Lyric/WordArt/Banner/PopArt) get
+// their own small dedicated models later for the same reason.
+// ─────────────────────────────────────────────────────────────────────────
+
+// One row per material-specific variant of a category (e.g. "Hardware" for
+// acrylic and "Hardware" for canvas are two rows sharing baseKey="hardware")
+// since in practice the whole option list differs by material, not just a
+// few items within a shared list. The admin UI groups rows by baseKey so
+// they read as one category with a material toggle, not unrelated entries.
+model OptionCategory {
+  id            String               @id @default(uuid())
+  baseKey       String // e.g. "hardware", "wrap_style", "clipart" — stable across material variants
+  materialScope MaterialScope        @default(BOTH) @map("material_scope")
+  name          String // display name, e.g. "Hardware (Acrylic)"
+  description   String?
+  sortOrder     Int                  @default(0) @map("sort_order")
+  isActive      Boolean              @default(true) @map("is_active")
+  items         OptionCategoryItem[]
+  createdAt     DateTime             @default(now()) @map("created_at")
+  updatedAt     DateTime             @updatedAt @map("updated_at")
+
+  @@unique([baseKey, materialScope])
+  @@map("option_categories")
+}
+
+enum MaterialScope {
+  ACRYLIC
+  CANVAS
+  BOTH
+}
+
+model OptionCategoryItem {
+  id              String          @id @default(uuid())
+  categoryId      String          @map("category_id")
+  category        OptionCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  label           String
+  description     String?
+  imageUrl        String?         @map("image_url")
+  sortOrder       Int             @default(0) @map("sort_order")
+  isActive        Boolean         @default(true) @map("is_active")
+  // Flat addon (most categories) or bounding-box-area rate (same pricing
+  // strategy already built for Shape and Acrylic Thickness) — per item, not
+  // per category, since THICKNESS_OPTIONS today already mixes both on
+  // different rows of the same list.
+  priceMode       OptionPriceMode @default(FLAT) @map("price_mode")
+  flatPrice       Decimal         @default(0) @map("flat_price") @db.Decimal(12, 2)
+  areaRatePerSqIn Decimal?        @map("area_rate_per_sqin") @db.Decimal(12, 4)
+  // Long-tail, category-specific fields that don't earn their own column
+  // (e.g. clipart's emoji/svg content, a color swatch hex, a CSS filter) —
+  // kept small and optional so the generic admin screen's typed fields above
+  // stay the primary editing surface, not a JSON textarea escape hatch.
+  extras          Json?
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  @@map("option_category_items")
+}
+
+enum OptionPriceMode {
+  FLAT
+  AREA_RATE
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // COMMERCE — cart & orders (scope §44–45, §89, §114, §87 Commerce)
 // ─────────────────────────────────────────────────────────────────────────
 

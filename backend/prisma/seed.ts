@@ -78,6 +78,8 @@ const PERMISSIONS = [
   'analytics.view',
   'pricing.view',
   'pricing.manage',
+  'option_catalog.view',
+  'option_catalog.manage',
 ];
 
 // Rs. per sq. inch — non-rectangular shapes (heart, hexagon, custom traced
@@ -93,6 +95,158 @@ const ACRYLIC_THICKNESS_RATE_SETTINGS: Array<{ key: string; value: number; descr
   { key: 'acrylic_thickness_rate_5mm', value: 6.50, description: 'Rs. per sq. inch for 5mm acrylic sheet thickness' },
   { key: 'acrylic_thickness_rate_6mm', value: 7.75, description: 'Rs. per sq. inch for 6mm acrylic sheet thickness' },
   { key: 'acrylic_thickness_rate_8mm', value: 9.50, description: 'Rs. per sq. inch for 8mm acrylic sheet thickness' },
+];
+
+// Admin-manageable customizer option catalog (scope: admin CRUD over
+// storefront customize-page options). First rollout batch covers the
+// lowest-risk, purely-cosmetic categories (no pricing-correctness risk) per
+// the agreed build order; price-bearing categories (Wrap, Hardware, Finish,
+// Frame, ...) follow in a later batch once this pattern is proven.
+//
+// Mirrors the exact current values in src/data/acrylicCustomizerData.ts so
+// seeding this does not change what customers see on day one — it only
+// moves the source of truth from a frontend data file to the database.
+interface SeedOptionItem {
+  label: string;
+  description?: string;
+  flatPrice?: number;
+  extras?: Record<string, unknown>;
+}
+
+interface SeedOptionCategory {
+  baseKey: string;
+  materialScope: 'ACRYLIC' | 'CANVAS' | 'BOTH';
+  name: string;
+  description?: string;
+  items: SeedOptionItem[];
+}
+
+const OPTION_CATEGORIES_SEED: SeedOptionCategory[] = [
+  {
+    baseKey: 'backgrounds',
+    materialScope: 'BOTH',
+    name: 'Backgrounds',
+    items: [
+      { label: 'Transparent (Clear Optical)', extras: { id: 'transparent', hex: 'transparent' } },
+      { label: 'Solid White Opaque Backing', extras: { id: 'white', hex: '#FFFFFF' } },
+      { label: 'Solid Black Opaque Backing', extras: { id: 'black', hex: '#000000' } },
+      { label: 'Frosted Translucent Backing', extras: { id: 'frosted', hex: 'rgba(255, 255, 255, 0.65)' } },
+    ],
+  },
+  {
+    baseKey: 'border_width',
+    materialScope: 'BOTH',
+    name: 'Border Width',
+    description: 'Previously two separate sources (data-file widthPx + a page-local price map) — now one row per option.',
+    items: [
+      { label: 'No Border', flatPrice: 0, extras: { id: 'none', widthPx: 0 } },
+      { label: 'Thin (3mm)', flatPrice: 49, extras: { id: 'thin', widthPx: 3 } },
+      { label: 'Medium (6mm)', flatPrice: 89, extras: { id: 'medium', widthPx: 6 } },
+      { label: 'Thick (12mm)', flatPrice: 149, extras: { id: 'thick', widthPx: 12 } },
+    ],
+  },
+  {
+    baseKey: 'border_color',
+    materialScope: 'BOTH',
+    name: 'Border Color',
+    items: [
+      { label: 'White', extras: { hex: '#FFFFFF' } },
+      { label: 'Black', extras: { hex: '#000000' } },
+      { label: 'Gold', extras: { hex: '#D4AF37' } },
+      { label: 'Silver', extras: { hex: '#94A3B8' } },
+    ],
+  },
+  {
+    baseKey: 'font',
+    materialScope: 'BOTH',
+    name: 'Typography / Font',
+    items: [
+      { label: 'Playfair Display (Elegant Serif)', extras: { cssFontFamily: '"Playfair Display", Georgia, serif' } },
+      { label: 'Montserrat (Modern Geometric)', extras: { cssFontFamily: 'Montserrat, sans-serif' } },
+      { label: 'Great Vibes (Romantic Script)', extras: { cssFontFamily: '"Great Vibes", cursive' } },
+      { label: 'Cinzel (Classic Roman)', extras: { cssFontFamily: 'Cinzel, serif' } },
+      { label: 'Dancing Script (Casual Script)', extras: { cssFontFamily: '"Dancing Script", cursive' } },
+      { label: 'Oswald (Bold Headline)', extras: { cssFontFamily: 'Oswald, sans-serif' } },
+      { label: 'Inter (Clean UI Sans)', extras: { cssFontFamily: 'Inter, sans-serif' } },
+      { label: 'Georgia (Classic Serif)', extras: { cssFontFamily: 'Georgia, serif' } },
+      { label: 'Times New Roman (Editorial)', extras: { cssFontFamily: '"Times New Roman", Times, serif' } },
+      { label: 'Arial (Modern Sans)', extras: { cssFontFamily: 'Arial, sans-serif' } },
+      { label: 'Courier New (Typewriter)', extras: { cssFontFamily: '"Courier New", Courier, monospace' } },
+      { label: 'Verdana (Clean Geometric)', extras: { cssFontFamily: 'Verdana, Geneva, sans-serif' } },
+    ],
+  },
+  {
+    baseKey: 'text_color',
+    materialScope: 'BOTH',
+    name: 'Text Color Presets',
+    items: [
+      { label: 'White', extras: { hex: '#FFFFFF' } },
+      { label: 'Black', extras: { hex: '#000000' } },
+      { label: 'Red', extras: { hex: '#DC2626' } },
+      { label: 'Blue', extras: { hex: '#0E4A93' } },
+      { label: 'Gold', extras: { hex: '#D4AF37' } },
+      { label: 'Orange', extras: { hex: '#E8752A' } },
+      { label: 'Green', extras: { hex: '#16A34A' } },
+    ],
+  },
+  {
+    baseKey: 'clipart',
+    materialScope: 'BOTH',
+    name: 'Clipart',
+    description: 'One item per emoji; extras.category groups them the way the storefront picker tabs them.',
+    items: [
+      { label: 'Party Popper', extras: { category: 'Celebration', emoji: '🎉' } },
+      { label: 'Champagne Bottle', extras: { category: 'Celebration', emoji: '🍾' } },
+      { label: 'Clinking Glasses', extras: { category: 'Celebration', emoji: '🥂' } },
+      { label: 'Birthday Cake', extras: { category: 'Celebration', emoji: '🎂' } },
+      { label: 'Balloon', extras: { category: 'Celebration', emoji: '🎈' } },
+      { label: 'Fireworks', extras: { category: 'Celebration', emoji: '🎆' } },
+      { label: 'Confetti Ball', extras: { category: 'Celebration', emoji: '🎊' } },
+      { label: 'Sparkler', extras: { category: 'Celebration', emoji: '🎇' } },
+      { label: 'Shortcake', extras: { category: 'Celebration', emoji: '🍰' } },
+      { label: 'Partying Face', extras: { category: 'Celebration', emoji: '🥳' } },
+      { label: 'Red Heart', extras: { category: 'Love & Wedding', emoji: '❤️' } },
+      { label: 'Sparkling Heart', extras: { category: 'Love & Wedding', emoji: '💖' } },
+      { label: 'Ring', extras: { category: 'Love & Wedding', emoji: '💍' } },
+      { label: 'Bouquet', extras: { category: 'Love & Wedding', emoji: '💐' } },
+      { label: 'Bride', extras: { category: 'Love & Wedding', emoji: '👰' } },
+      { label: 'Groom', extras: { category: 'Love & Wedding', emoji: '🤵' } },
+      { label: 'Love Letter', extras: { category: 'Love & Wedding', emoji: '💌' } },
+      { label: 'Rose', extras: { category: 'Love & Wedding', emoji: '🌹' } },
+      { label: 'Dove', extras: { category: 'Love & Wedding', emoji: '🕊️' } },
+      { label: 'Revolving Hearts', extras: { category: 'Love & Wedding', emoji: '💞' } },
+      { label: 'Family', extras: { category: 'Family & Kids', emoji: '👨‍👩‍👧' } },
+      { label: 'Baby', extras: { category: 'Family & Kids', emoji: '👶' } },
+      { label: 'Teddy Bear', extras: { category: 'Family & Kids', emoji: '🧸' } },
+      { label: 'Footprints', extras: { category: 'Family & Kids', emoji: '👣' } },
+      { label: 'House', extras: { category: 'Family & Kids', emoji: '🏡' } },
+      { label: 'Paw Prints', extras: { category: 'Family & Kids', emoji: '🐾' } },
+      { label: 'Cherry Blossom', extras: { category: 'Family & Kids', emoji: '🌸' } },
+      { label: 'Sun', extras: { category: 'Family & Kids', emoji: '☀️' } },
+      { label: 'Baby Bottle', extras: { category: 'Family & Kids', emoji: '🍼' } },
+      { label: 'Hatching Chick', extras: { category: 'Family & Kids', emoji: '🐣' } },
+      { label: 'Star', extras: { category: 'Decorative', emoji: '⭐' } },
+      { label: 'Sparkles', extras: { category: 'Decorative', emoji: '✨' } },
+      { label: 'Gem Stone', extras: { category: 'Decorative', emoji: '💎' } },
+      { label: 'Crown', extras: { category: 'Decorative', emoji: '👑' } },
+      { label: 'Herb', extras: { category: 'Decorative', emoji: '🌿' } },
+      { label: 'Crescent Moon', extras: { category: 'Decorative', emoji: '🌙' } },
+      { label: 'Butterfly', extras: { category: 'Decorative', emoji: '🦋' } },
+      { label: 'Four Leaf Clover', extras: { category: 'Decorative', emoji: '🍀' } },
+      { label: 'Candle', extras: { category: 'Decorative', emoji: '🕯️' } },
+      { label: 'Magic Wand', extras: { category: 'Decorative', emoji: '🪄' } },
+      { label: 'Trophy', extras: { category: 'Business', emoji: '🏆' } },
+      { label: 'Medal', extras: { category: 'Business', emoji: '🎖️' } },
+      { label: 'Briefcase', extras: { category: 'Business', emoji: '💼' } },
+      { label: 'Office Building', extras: { category: 'Business', emoji: '🏢' } },
+      { label: 'Label', extras: { category: 'Business', emoji: '🏷️' } },
+      { label: 'Glowing Star', extras: { category: 'Business', emoji: '🌟' } },
+      { label: 'Shield', extras: { category: 'Business', emoji: '🛡️' } },
+      { label: '100 Points', extras: { category: 'Business', emoji: '💯' } },
+      { label: 'Bookmark', extras: { category: 'Business', emoji: '🔖' } },
+      { label: 'Triangular Ruler', extras: { category: 'Business', emoji: '📐' } },
+    ],
+  },
 ];
 
 async function main() {
@@ -302,6 +456,39 @@ async function main() {
       update: {},
       create: { key: setting.key, value: setting.value, description: setting.description },
     });
+  }
+
+  for (const categorySeed of OPTION_CATEGORIES_SEED) {
+    const category = await prisma.optionCategory.upsert({
+      where: { baseKey_materialScope: { baseKey: categorySeed.baseKey, materialScope: categorySeed.materialScope } },
+      update: {},
+      create: {
+        baseKey: categorySeed.baseKey,
+        materialScope: categorySeed.materialScope,
+        name: categorySeed.name,
+        description: categorySeed.description,
+      },
+    });
+
+    const existingItems = await prisma.optionCategoryItem.findMany({
+      where: { categoryId: category.id },
+      select: { label: true },
+    });
+    const existingLabels = new Set(existingItems.map((i) => i.label));
+
+    const newItems = categorySeed.items.filter((item) => !existingLabels.has(item.label));
+    for (const [index, item] of newItems.entries()) {
+      await prisma.optionCategoryItem.create({
+        data: {
+          categoryId: category.id,
+          label: item.label,
+          description: item.description,
+          flatPrice: item.flatPrice ?? 0,
+          extras: item.extras as never,
+          sortOrder: existingLabels.size + index,
+        },
+      });
+    }
   }
 
   // eslint-disable-next-line no-console
