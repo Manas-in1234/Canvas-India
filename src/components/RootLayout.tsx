@@ -172,6 +172,7 @@ export const RootLayout: React.FC = () => {
         allProducts={allProducts}
         onOpenCustomize={onOpenCustomize}
         onOpenAccount={() => navigate('/account')}
+        onTrackOrder={() => setAccountModalOpen(true)}
       />
 
       {/* Main Routed Page Content */}
@@ -184,6 +185,7 @@ export const RootLayout: React.FC = () => {
         onSelectCategory={handleSelectCategory}
         onOpenQuote={() => setQuoteModalOpen(true)}
         onOpenAccount={() => navigate('/account')}
+        onTrackOrder={() => setAccountModalOpen(true)}
       />
 
       {/* MOBILE BOTTOM NAVIGATION BAR - padding-bottom adds the device's own

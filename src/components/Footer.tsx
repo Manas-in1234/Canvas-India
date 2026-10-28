@@ -12,10 +12,11 @@ interface FooterProps {
   onSelectCategory: (slug: string) => void;
   onOpenQuote: () => void;
   onOpenAccount?: () => void;
+  onTrackOrder?: () => void;
   variant?: string;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, onOpenAccount }) => {
+export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, onOpenAccount, onTrackOrder }) => {
   return (
     <footer className="bg-[#0B1727] text-stone-300 pt-12 pb-8 text-xs font-manrope">
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
@@ -117,6 +118,11 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
           <div className="space-y-2.5">
             <h4 className="font-bold text-xs uppercase tracking-wider text-white">Customer Support</h4>
             <ul className="space-y-2 text-stone-400 text-xs">
+              <li>
+                <button type="button" onClick={onTrackOrder} className="hover:text-white transition-colors text-left cursor-pointer">
+                  Track Your Order
+                </button>
+              </li>
               <li><Link to="/about-us" className="hover:text-white transition-colors">About Us</Link></li>
               <li><Link to="/shipping-policy" className="hover:text-white transition-colors">Shipping &amp; Delivery Timelines</Link></li>
               <li><Link to="/refund-policy" className="hover:text-white transition-colors">Returns &amp; Replacement Policy</Link></li>

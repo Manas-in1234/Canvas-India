@@ -54,6 +54,7 @@ interface HeaderProps {
   allProducts: Product[];
   onOpenCustomize: (product?: Product) => void;
   onOpenAccount?: () => void;
+  onTrackOrder?: () => void;
 }
 
 export interface AllCategoryMenuItem {
@@ -106,6 +107,7 @@ export const Header: React.FC<HeaderProps> = ({
   allProducts,
   onOpenCustomize,
   onOpenAccount,
+  onTrackOrder,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -471,7 +473,7 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            {/* 3. HEADER ACTIONS: Account, Wishlist, Cart, Bulk Order, Get a Quote */}
+            {/* 3. HEADER ACTIONS: Account, Wishlist, Cart, Track Your Order, Get a Quote */}
             <div className="flex items-center gap-3 lg:gap-3.5 xl:gap-5 shrink-0 text-xs sm:text-sm font-semibold">
               
               {/* Account Dropdown */}
@@ -606,15 +608,16 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </button>
 
-              {/* Bulk Order */}
-              <Link
-                to="/bulk-order"
+              {/* Track Your Order */}
+              <button
+                type="button"
+                onClick={onTrackOrder}
                 className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors cursor-pointer py-1 whitespace-nowrap"
-                title="Bulk & Corporate Orders"
+                title="Track Your Order"
               >
                 <Package className="w-4 h-4 text-white/90" strokeWidth={2} />
-                <span>Bulk Order</span>
-              </Link>
+                <span>Track Your Order</span>
+              </button>
 
               </div>
 
