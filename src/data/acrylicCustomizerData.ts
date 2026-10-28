@@ -1237,8 +1237,10 @@ export const HARDWARE_OPTIONS: HardwareOption[] = [
   },
   {
     id: 'standoff-mounts',
+    // Rs. 50/stud, 4-stud minimum (client pricing sheet) = Rs. 200 flat,
+    // since exactly 4 fixed mounting points are always used today.
     name: 'Chrome Standoffs',
-    price: 199.00,
+    price: 200.00,
     description: '4 architectural brushed chrome corner standoff bolts.',
     image: '/assets/customizer/acrylic/hardware/standoff-mounts.svg'
   }
@@ -1564,10 +1566,14 @@ export const ACRYLIC_BORDER_COLORS = [
   { name: 'Silver', hex: '#94A3B8' }
 ];
 
-export const THICKNESS_OPTIONS = [
-  { id: '3mm', label: '3mm Lightweight Cast Acrylic', price: 0 },
-  { id: '5mm', label: '5mm Standard Studio Acrylic', price: 150.00 },
-  { id: '8mm', label: '8mm Premium Optical Cast Acrylic', price: 250.00 },
+// Client pricing sheet: 3/5/6/8mm are billed by area (ratePerSqIn * width *
+// height) rather than a flat addon. `price` stays as a flat fallback for
+// tiers with no area rate (18mm) and as the pre-area-pricing legacy value.
+export const THICKNESS_OPTIONS: Array<{ id: string; label: string; price: number; ratePerSqIn?: number }> = [
+  { id: '3mm', label: '3mm Lightweight Cast Acrylic', price: 0, ratePerSqIn: 5.50 },
+  { id: '5mm', label: '5mm Standard Studio Acrylic', price: 150.00, ratePerSqIn: 6.50 },
+  { id: '6mm', label: '6mm Mid-Weight Cast Acrylic', price: 200.00, ratePerSqIn: 7.75 },
+  { id: '8mm', label: '8mm Premium Optical Cast Acrylic', price: 250.00, ratePerSqIn: 9.50 },
   { id: '18mm', label: '18mm Heavy Block Acrylic', price: 450.00 }
 ];
 

@@ -3818,8 +3818,24 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const wrap = WRAP_OPTIONS.find((w) => w.id === selectedWrapId);
     if (wrap) price += wrap.price;
 
-    const thickness = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId);
-    if (thickness) price += thickness.price;
+    if (activeMaterial === 'acrylic') {
+      // Client pricing sheet: acrylic sheet thickness (3/5/6/8mm) is billed
+      // by bounding-box area at its own per-mm rate, not a flat addon.
+      // Previously this lookup only checked the canvas thickness list, whose
+      // ids (canvas-lite, thin-gallery, ...) never match an acrylic
+      // thickness id, so acrylic thickness pricing silently applied nothing.
+      const acrylicThickness = ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId);
+      if (acrylicThickness?.ratePerSqIn) {
+        const boundingWidth = isCustomSize && canUseCustomSize ? customWidth : (currentSizeOption.widthInches ?? customWidth);
+        const boundingHeight = isCustomSize && canUseCustomSize ? customHeight : (currentSizeOption.heightInches ?? customHeight);
+        price += Math.round(boundingWidth * boundingHeight * acrylicThickness.ratePerSqIn);
+      } else if (acrylicThickness) {
+        price += acrylicThickness.price;
+      }
+    } else {
+      const thickness = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId);
+      if (thickness) price += thickness.price;
+    }
 
     if (shapeApplies) {
       price += CANVAS_BORDER_WIDTH_PRICES[selectedBorderWidthId] || 0;
@@ -3852,6 +3868,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     customHeight,
     currentSizeOption,
     shapeAreaRate,
+    activeMaterial,
     selectedWrapId,
     selectedThicknessId,
     selectedBorderWidthId,
