@@ -121,13 +121,7 @@ export const AcrylicProductShapeConfig: Record<string, string[]> = {
 };
 
 export const ALL_ACRYLIC_HARDWARE_IDS: string[] = [
-  'hooks-hanging',
-  'ready-to-hang',
-  'no-hooks',
-  'sawtooth-hanger',
-  'easel-back',
-  'nail-free-hook',
-  'standoff-mounts'
+  'acrylic-standoffs'
 ];
 
 /**
@@ -167,7 +161,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 1,
     description: 'Vibrant direct UV sub-surface print on optical crystal acrylic.',
     defaultSizeOptionId: 'rec-10x10',
-    defaultHardwareId: 'no-hooks',
+    defaultHardwareId: 'acrylic-standoffs',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-print'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-print'],
@@ -201,7 +195,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 3,
     description: 'Gallery wall display for striking home and office focal points on crystal acrylic.',
     defaultSizeOptionId: 'wall-display-3a',
-    defaultHardwareId: 'no-hooks',
+    defaultHardwareId: 'acrylic-standoffs',
     defaultThicknessId: '5mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-wall-art'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-wall-art'],
@@ -235,7 +229,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 4,
     description: 'Multiple cherished photographs printed together on crystal acrylic.',
     defaultSizeOptionId: 'collage-land-5p-pinwheel',
-    defaultHardwareId: 'no-hooks',
+    defaultHardwareId: 'acrylic-standoffs',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-collage'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-collage'],
@@ -269,7 +263,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 2,
     description: 'Photograph split seamlessly across multi-panel crystal acrylic display.',
     defaultSizeOptionId: 'split-2p-20x20',
-    defaultHardwareId: 'no-hooks',
+    defaultHardwareId: 'acrylic-standoffs',
     defaultThicknessId: '5mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-split'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-split'],
@@ -303,7 +297,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 16,
     description: 'Intricate mosaic photo grid arranged artistically on optical acrylic.',
     defaultSizeOptionId: 'mosaic2-4x4',
-    defaultHardwareId: 'no-hooks',
+    defaultHardwareId: 'acrylic-standoffs',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-mosaic'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-mosaic'],
@@ -337,7 +331,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 1,
     description: 'Your favorite song lyrics beautifully typeset over a photo on crystal-clear optical acrylic.',
     defaultSizeOptionId: 'lyric-8x8',
-    defaultHardwareId: 'no-hooks',
+    defaultHardwareId: 'acrylic-standoffs',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-lyric'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-lyric'],
@@ -371,7 +365,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 1,
     description: 'Turn your favorite memories and portraits into artistic digital oil, charcoal, and palette knife paintings on crystal acrylic.',
     defaultSizeOptionId: 'painting-10x10',
-    defaultHardwareId: 'no-hooks',
+    defaultHardwareId: 'acrylic-standoffs',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-digital'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-digital'],
@@ -406,7 +400,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 1,
     description: 'Inspirational quotes, typography, and life mantras rendered on optical crystal acrylic.',
     defaultSizeOptionId: 'quotes-8x8',
-    defaultHardwareId: 'no-hooks',
+    defaultHardwareId: 'acrylic-standoffs',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-quotes'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-quotes'],
@@ -440,7 +434,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 1,
     description: 'Vintage vintage-transit and destination subway scroll prints with custom places on sleek optical acrylic.',
     defaultSizeOptionId: 'bus-21x32',
-    defaultHardwareId: 'no-hooks',
+    defaultHardwareId: 'acrylic-standoffs',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-bus-roll'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-bus-roll'],
@@ -475,7 +469,7 @@ export const ACRYLIC_PRODUCT_TYPES: AcrylicProductType[] = [
     panelsCount: 1,
     description: 'Expressive word cloud silhouette art created from your custom names, dates, and meaningful phrases on optical acrylic.',
     defaultSizeOptionId: 'word-12x12',
-    defaultHardwareId: 'no-hooks',
+    defaultHardwareId: 'acrylic-standoffs',
     defaultThicknessId: '3mm',
     supportedShapeIds: AcrylicProductShapeConfig['acrylic-word-art'],
     supportedHardwareIds: AcrylicHardwareConfig['acrylic-word-art'],
@@ -1175,92 +1169,59 @@ export const DESIGN_TEMPLATES: DesignTemplate[] = [
   }
 ];
 
-export type AcrylicHardwareType =
-  | 'hooks-hanging'
-  | 'ready-to-hang'
-  | 'no-hooks'
-  | 'sawtooth-hanger'
-  | 'easel-back'
-  | 'nail-free-hook'
-  | 'standoff-mounts';
+export type AcrylicHardwareType = 'acrylic-standoffs';
 
-export interface HardwareOption {
+export interface AcrylicHardwareOption {
   id: string;
   name: string;
+  label?: string;
   price: number;
+  basePrice?: number;
+  baseQuantity?: number;
+  extraStudPrice?: number;
   description: string;
   image: string;
 }
 
-export const HARDWARE_OPTIONS: HardwareOption[] = [
+export type HardwareOption = AcrylicHardwareOption;
+
+export const ACRYLIC_HARDWARE_OPTIONS: AcrylicHardwareOption[] = [
   {
-    id: 'no-hooks',
-    name: 'Without Base / No Hooks',
-    price: 0,
-    description: 'Clean unmounted acrylic panel for custom installation.',
-    image: '/assets/customizer/acrylic/hardware/no-hooks.svg'
-  },
-  {
-    id: 'hooks-hanging',
-    name: 'Hooks for Hanging',
-    price: 0,
-    description: 'Twin self-levelling hanging hooks included at no charge.',
-    image: '/assets/customizer/acrylic/hardware/hooks-hanging.svg'
-  },
-  {
-    id: 'ready-to-hang',
-    name: 'Ready to Hang Cleat',
-    price: 0,
-    description: 'Pre-installed recessed French cleat wall hanger.',
-    image: '/assets/customizer/acrylic/hardware/ready-to-hang.svg'
-  },
-  {
-    id: 'sawtooth-hanger',
-    name: 'Sawtooth Hanger',
-    price: 25.00,
-    description: 'Heavy-duty brass sawtooth hanger attached to rear backing.',
-    image: '/assets/customizer/acrylic/hardware/sawtooth-hanger.svg'
-  },
-  {
-    id: 'easel-back',
-    name: 'Easel Back / Stand',
-    price: 49.00,
-    description: 'Foldable tabletop stand for desk, shelf, and mantle display.',
-    image: '/assets/customizer/acrylic/hardware/easel-back.svg'
-  },
-  {
-    id: 'nail-free-hook',
-    name: 'Nail Free Hook',
-    price: 49.00,
-    description: 'Damage-free adhesive wall hook with high weight capacity.',
-    image: '/assets/customizer/acrylic/hardware/nail-free-hook.svg'
-  },
-  {
-    id: 'standoff-mounts',
-    name: 'Chrome Standoffs',
-    price: 199.00,
-    description: '4 architectural brushed chrome corner standoff bolts.',
-    image: '/assets/customizer/acrylic/hardware/standoff-mounts.svg'
+    id: 'acrylic-standoffs',
+    name: 'Acrylic Standoffs',
+    label: 'Acrylic Standoffs',
+    price: 199,
+    basePrice: 199,
+    baseQuantity: 4,
+    extraStudPrice: 50,
+    description: 'Premium stainless steel standoff mounts for floating display',
+    image: '/assets/acrylic/acrylic-standoffs-panel.webp'
   }
 ];
 
+export const HARDWARE_OPTIONS: HardwareOption[] = ACRYLIC_HARDWARE_OPTIONS;
+
 const HARDWARE_ALIAS_MAP: Record<string, string> = {
-  'no-hardware': 'no-hooks',
-  'wall-mount': 'hooks-hanging',
-  'standoff-mount': 'standoff-mounts',
-  'floating-mount': 'ready-to-hang',
-  'adhesive-mount': 'nail-free-hook',
-  'stand-table-mount': 'easel-back',
-  'hanging-hardware': 'sawtooth-hanger'
+  'no-hardware': 'acrylic-standoffs',
+  'no-hooks': 'acrylic-standoffs',
+  'wall-mount': 'acrylic-standoffs',
+  'standoff-mount': 'acrylic-standoffs',
+  'standoff-mounts': 'acrylic-standoffs',
+  'display-standoff': 'acrylic-standoffs',
+  'floating-mount': 'acrylic-standoffs',
+  'adhesive-mount': 'acrylic-standoffs',
+  'stand-table-mount': 'acrylic-standoffs',
+  'hanging-hardware': 'acrylic-standoffs',
+  'chrome-standoffs': 'acrylic-standoffs'
 };
 
 export function normalizeAcrylicHardwareId(hardwareId?: string | null): string {
-  if (!hardwareId) return 'no-hooks';
+  if (!hardwareId) return 'acrylic-standoffs';
   const mapped = HARDWARE_ALIAS_MAP[hardwareId] || hardwareId;
   if (HARDWARE_OPTIONS.some((h) => h.id === mapped)) {
     return mapped;
   }
-  return 'no-hooks';
+  return 'acrylic-standoffs';
 }
 
 export const normalizeHardwareId = normalizeAcrylicHardwareId;
@@ -1571,11 +1532,10 @@ export const ACRYLIC_BORDER_COLORS = [
 ];
 
 export const THICKNESS_OPTIONS = [
-  { id: '3mm', label: '3mm Lightweight Cast Acrylic', name: '3mm Cast Acrylic', thicknessMm: 3, price: 0 },
-  { id: '5mm', label: '5mm Standard Studio Acrylic', name: '5mm Studio Acrylic', thicknessMm: 5, price: 150.00, badge: 'Recommended' },
-  { id: '8mm', label: '8mm Premium Optical Cast Acrylic', name: '8mm Optical Cast', thicknessMm: 8, price: 250.00, badge: 'Museum Quality' },
-  { id: 'custom-thickness', label: 'Custom Thickness', name: 'Custom Thickness', thicknessMm: 6, price: 200.00 },
-  { id: '18mm', label: '18mm Heavy Block Acrylic', name: '18mm Heavy Block', thicknessMm: 18, price: 450.00 }
+  { id: '3mm', label: '3MM Lightweight Cast Acrylic', name: '3MM Cast Acrylic', thicknessMm: 3, price: 0 },
+  { id: '5mm', label: '5MM Standard Studio Acrylic', name: '5MM Studio Acrylic', thicknessMm: 5, price: 150.00, badge: 'Recommended' },
+  { id: '6mm', label: '6MM Architectural Grade Acrylic', name: '6MM Architectural Grade', thicknessMm: 6, price: 200.00 },
+  { id: '8mm', label: '8MM Premium Optical Cast Acrylic', name: '8MM Optical Cast', thicknessMm: 8, price: 250.00, badge: 'Museum Quality' }
 ];
 
 export const PAPER_OPTIONS = [

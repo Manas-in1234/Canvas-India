@@ -445,7 +445,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       options: true,
       view3D: false,
       view360: false,
-      roomView: false
+      roomView: true
     }
   },
   {
@@ -713,8 +713,9 @@ export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProdu
   // Centralized view capabilities:
   // 1. 360 View: disabled for Wall Display, Hexagon Prints, Split Canvas, Canvas Banner
   const is360Disabled = ['canvas-wall-art', 'canvas-hexagon', 'canvas-split', 'canvas-banner'].includes(pt.id);
-  // 2. Room View: disabled for Hexagon Prints, Canvas Banner (Wall Display and Split Canvas retain Room View)
-  const isRoomViewDisabled = ['canvas-hexagon', 'canvas-banner'].includes(pt.id);
+  // 2. Room View: disabled for Canvas Banner (Wall Display, Split Canvas and
+  // Hexagon Prints all retain Room View)
+  const isRoomViewDisabled = ['canvas-banner'].includes(pt.id);
 
   const supportsRoomView = !isRoomViewDisabled;
   const supports3DView = isEdgeProduct;
@@ -975,6 +976,20 @@ export const CANVAS_THICKNESS_OPTIONS: CanvasThicknessOption[] = [
   { id: 'custom-thickness', label: 'Custom Thickness', name: 'Custom Thickness', thicknessInches: 1.0, price: 193.05, depthPx: 22, description: 'Specify custom canvas frame depth' },
   { id: 'hanging-canvas', label: 'Unframed Rolled Canvas', name: 'Unframed Rolled Canvas', thicknessInches: 0.25, price: 85.0, depthPx: 8, description: 'Flexible unmounted rolled canvas or hanging bar' }
 ];
+
+/**
+ * Configurable pricing calculator for Canvas stretcher bar thickness.
+ * For custom thickness, uses base fee (₹193.05) and applies ₹2/mm for depths beyond standard 25mm (~1 inch).
+ */
+export function getCanvasThicknessPrice(thicknessId: string, customMm: number = 25): number {
+  const opt = CANVAS_THICKNESS_OPTIONS.find((t) => t.id === thicknessId);
+  if (!opt) return 0;
+  if (thicknessId === 'custom-thickness') {
+    const extraDepthMm = Math.max(0, customMm - 25);
+    return Math.round((opt.price + extraDepthMm * 2) * 100) / 100;
+  }
+  return opt.price;
+}
 
 export const CANVAS_PAPER_OPTIONS = [
   { id: 'standard-cotton', label: 'Standard 280 GSM Poly-Cotton Canvas', price: 0 },

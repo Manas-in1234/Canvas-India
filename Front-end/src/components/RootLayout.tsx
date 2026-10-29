@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { CartDrawer } from './CartDrawer';
@@ -7,6 +7,7 @@ import { WishlistDrawer } from './WishlistDrawer';
 import { CustomizeModal } from './CustomizeModal';
 import { QuoteModal } from './QuoteModal';
 import { AccountModal } from './AccountModal';
+import { AddToCartConfirmationModal } from './AddToCartConfirmationModal';
 import { useShop } from '../context/ShopContext';
 import { Home, Layers, Sparkles, Heart, ShoppingBag } from 'lucide-react';
 
@@ -83,8 +84,10 @@ export const RootLayout: React.FC = () => {
     // Generic category page routes (from origin/main)
     const categoryRoutes = [
       'acrylic', 'posters', 'cork', 'yoga-fitness',
-      'home-decor', 'custom-prints', 'gifts', 'bulk-order', 'corporate-orders', 'designers-architects',
-      'wall-art', 'photo-frames'
+      'home-decor', 'custom-prints', 'bulk-order', 'designers-architects',
+      'wall-art', 'photo-frames',
+      'devotional-art', 'scenery-landscape-art', 'tribal-ethnic-art', 'line-art',
+      'motivational-posters', 'cork-art-patterns'
     ];
     if (categoryRoutes.includes(slug)) {
       navigate(`/${slug}`);
@@ -100,8 +103,16 @@ export const RootLayout: React.FC = () => {
       navigate('/cork');
       return;
     }
-    if (slug === 'corporate') {
-      navigate('/corporate-orders');
+    // Gifts & Occasions has no dedicated product listing — it goes to the
+    // "Shop by Occasion" hub instead.
+    if (slug === 'gifts') {
+      navigate('/occasions');
+      return;
+    }
+    // Corporate Orders has no dedicated product listing — it goes to the
+    // Bulk & Corporate Orders page instead.
+    if (slug === 'corporate' || slug === 'corporate-orders' || slug === 'corporate-printing') {
+      navigate('/bulk-order');
       return;
     }
     if (slug === 'bulk-orders') {
@@ -148,7 +159,7 @@ export const RootLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFDF9] text-stone-900 flex flex-col font-manrope selection:bg-[var(--accent-bg)] selection:text-[var(--accent)] pb-14 sm:pb-0">
+    <div className="min-h-screen bg-[#FFFDF9] text-stone-900 flex flex-col font-manrope selection:bg-[var(--accent-bg)] selection:text-[var(--accent)] pb-[calc(4rem_+_env(safe-area-inset-bottom))] sm:pb-0">
 
       {/* Royal Blue Header + White Category Nav */}
       <Header
@@ -176,30 +187,36 @@ export const RootLayout: React.FC = () => {
         onOpenAccount={() => navigate('/account')}
       />
 
-      {/* MOBILE BOTTOM NAVIGATION BAR */}
-      <nav aria-label="Mobile Navigation" className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-stone-200/90 shadow-lg px-2 py-1.5 flex items-center justify-around">
-        <button
-          type="button"
-          onClick={() => {
-            if (pathname !== '/') navigate('/');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          className="flex flex-col items-center gap-0.5 text-stone-600 hover:text-[#0E4A93] text-[10px] font-semibold py-1 px-2 cursor-pointer"
+      {/* MOBILE BOTTOM NAVIGATION BAR - padding-bottom adds the device's own
+          safe-area inset (notch/gesture-bar/home-indicator) on top of the
+          bar's own content height, so it's never cramped under the OS UI on
+          any phone. The page's own bottom padding (below) mirrors the same
+          calc so content clears the bar by the same amount everywhere. */}
+      <nav
+        aria-label="Mobile Navigation"
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-stone-200/90 shadow-lg px-2 pt-1.5 flex items-center justify-around"
+        style={{ paddingBottom: 'calc(0.375rem + env(safe-area-inset-bottom))' }}
+      >
+        <Link
+          to="/"
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-semibold py-1 px-2 cursor-pointer ${pathname === '/' ? 'text-[#0E4A93]' : 'text-stone-600 hover:text-[#0E4A93]'}`}
         >
-          <Home className="w-5 h-5 text-stone-700" />
+          <Home className="w-5 h-5" />
           <span>Home</span>
-        </button>
+        </Link>
 
-        <button
-          type="button"
-          onClick={() => handleSelectCategory('all')}
-          className="flex flex-col items-center gap-0.5 text-stone-600 hover:text-[#0E4A93] text-[10px] font-semibold py-1 px-2 cursor-pointer"
+        <Link
+          to="/categories"
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-semibold py-1 px-2 cursor-pointer ${pathname === '/categories' ? 'text-[#0E4A93]' : 'text-stone-600 hover:text-[#0E4A93]'}`}
         >
-          <Layers className="w-5 h-5 text-stone-700" />
+          <Layers className="w-5 h-5" />
           <span>Categories</span>
-        </button>
+        </Link>
 
-        {/* Center Customizer Highlight Button */}
+        {/* Center Customizer Highlight Button - opens the product-pick
+            customize modal, same as every other "Customize"/"Start Creating"
+            entry point sitewide (there's no single generic customize page to
+            link to; each product has its own /customize/:material/:id page) */}
         <button
           type="button"
           onClick={() => onOpenCustomize()}
@@ -211,33 +228,31 @@ export const RootLayout: React.FC = () => {
           <span className="mt-0.5 text-[10px] font-extrabold text-[#E8752A]">Customize</span>
         </button>
 
-        <button
-          type="button"
-          onClick={() => setWishlistDrawerOpen(true)}
-          className="flex flex-col items-center gap-0.5 text-stone-600 hover:text-[#0E4A93] text-[10px] font-semibold py-1 px-2 relative cursor-pointer"
+        <Link
+          to="/wishlist"
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-semibold py-1 px-2 relative cursor-pointer ${pathname === '/wishlist' ? 'text-[#0E4A93]' : 'text-stone-600 hover:text-[#0E4A93]'}`}
         >
-          <Heart className="w-5 h-5 text-stone-700" />
+          <Heart className="w-5 h-5" />
           <span>Wishlist</span>
           {wishlistIds.length > 0 && (
             <span className="absolute top-0.5 right-2 bg-[#E8752A] text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
               {wishlistIds.length}
             </span>
           )}
-        </button>
+        </Link>
 
-        <button
-          type="button"
-          onClick={() => setCartDrawerOpen(true)}
-          className="flex flex-col items-center gap-0.5 text-stone-600 hover:text-[#0E4A93] text-[10px] font-semibold py-1 px-2 relative cursor-pointer"
+        <Link
+          to="/cart"
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-semibold py-1 px-2 relative cursor-pointer ${pathname === '/cart' ? 'text-[#0E4A93]' : 'text-stone-600 hover:text-[#0E4A93]'}`}
         >
-          <ShoppingBag className="w-5 h-5 text-stone-700" />
+          <ShoppingBag className="w-5 h-5" />
           <span>Cart</span>
           {totalCartCount > 0 && (
             <span className="absolute top-0.5 right-2 bg-[#E8752A] text-white text-[9px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center">
               {totalCartCount}
             </span>
           )}
-        </button>
+        </Link>
       </nav>
 
       {/* Cart Drawer */}
@@ -282,6 +297,9 @@ export const RootLayout: React.FC = () => {
         isOpen={quoteModalOpen}
         onClose={() => setQuoteModalOpen(false)}
       />
+
+      {/* Add To Cart Confirmation Modal */}
+      <AddToCartConfirmationModal />
     </div>
   );
 };

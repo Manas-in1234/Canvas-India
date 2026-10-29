@@ -13,7 +13,8 @@ import {
   Layers,
   Pencil,
   Package,
-  ChevronDown
+  ChevronDown,
+  Sparkles
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
@@ -22,7 +23,7 @@ import { WallPreview } from '../components/WallPreview';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { Product } from '../types';
 import { FrameSwatch, HookIcon, HOOK_OPTIONS, FRAME_LOOK, getFrameCategory, FrameCategory } from '../components/FrameHookVisuals';
-import { QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
+import { getBulkItem, QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
 
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
@@ -100,8 +101,34 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   const [customSizeW, setCustomSizeW] = useState<string>('');
   const [customSizeH, setCustomSizeH] = useState<string>('');
   const [selectedHook, setSelectedHook] = useState<string>('Sawtooth Hanger');
-  const [bulkPanelOpen, setBulkPanelOpen] = useState<boolean>(false);
-  const [customBulkQty, setCustomBulkQty] = useState<string>('');
+
+  // The Bulk & Corporate Orders catalogue keys its items by material+slug —
+  // matches this exact style when it has one, so "Order this item in bulk"
+  // can jump straight to its dedicated bulk/customize flow instead of just
+  // a quantity-tier preview with nowhere to go.
+  const bulkItem = useMemo(
+    () => getBulkItem(product.material === 'acrylic' ? 'acrylic' : 'canvas', product.categorySlug),
+    [product.categorySlug, product.material]
+  );
+
+  // Pre-designed Print World catalogue art (Devotional Art, Line Art, etc.)
+  // has no real Size/Shape/Frame/Hook variants of its own — every size is
+  // the same fixed artwork — so instead of a buy-as-is flow it sends the
+  // shopper straight into the customizer with this exact design preloaded.
+  // These designs are also re-offered as plain Canvas/Acrylic products
+  // (catalogueCanvasAcrylicProducts.ts) with categorySlug just 'canvas' or
+  // 'acrylic' — those are identified by their id instead, e.g.
+  // "canvas-tribal-ethnic-art-a-a-001".
+  const CATALOGUE_DESIGN_SLUGS = [
+    'devotional-art',
+    'line-art',
+    'motivational-posters',
+    'scenery-landscape-art',
+    'tribal-ethnic-art'
+  ];
+  const isCatalogueDesign =
+    CATALOGUE_DESIGN_SLUGS.includes(product.categorySlug) ||
+    CATALOGUE_DESIGN_SLUGS.some((slug) => product.id.includes(slug));
 
   // In-page customization state
   const [customText, setCustomText] = useState<string>('');
@@ -225,14 +252,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
       setCustomHeight(8);
       const searchParams = new URLSearchParams(window.location.search);
       const urlQty = parseInt(searchParams.get('qty') || '', 10);
-      if (!isNaN(urlQty) && urlQty >= 50) {
-        setQuantity(urlQty);
-        setBulkPanelOpen(true);
-      } else {
-        setQuantity(1);
-        setBulkPanelOpen(false);
-      }
-      setCustomBulkQty('');
+      setQuantity(!isNaN(urlQty) && urlQty >= 50 ? urlQty : 1);
       setActiveImageIndex(0);
       setCustomText('');
       setUploadedFile(null);
@@ -352,12 +372,46 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
       customText,
       uploadedFile || undefined,
       selectedMaterial,
+      'Thin Gallery Wrap (0.75")',
       undefined,
       undefined,
       undefined,
-      undefined,
-      { hook: selectedHook }
+      { hook: selectedHook, shape: selectedShape }
     );
+  };
+
+  const handleCustomizeFirst = () => {
+    if (!product) return;
+    const material = product.categorySlug === 'acrylic' ? 'acrylic' : 'canvas';
+    const params = new URLSearchParams({
+      size: selectedSize || '',
+      finish: selectedFinish || '',
+      shape: selectedShape || '',
+      qty: quantity.toString(),
+    });
+    navigate(`/customize/${material}/${product.slug || product.id}?${params.toString()}`);
+  };
+
+  const handleOrderInBulk = () => {
+    if (!product) return;
+    const material = product.categorySlug === 'acrylic' ? 'acrylic' : 'canvas';
+    const slug = product.slug || product.id;
+    const targetBulkItem = getBulkItem(material, slug);
+    const targetQty = Math.max(MIN_BULK_QTY, quantity);
+    const params = new URLSearchParams({
+      qty: targetQty.toString(),
+      product: product.name,
+      slug: slug,
+      material: material,
+      size: selectedSize || '',
+      finish: selectedFinish || '',
+      shape: selectedShape || '',
+    });
+    if (targetBulkItem) {
+      navigate(`/bulk-order/${material}/${slug}?${params.toString()}`);
+    } else {
+      navigate(`/bulk-order?${params.toString()}`);
+    }
   };
 
   const categoryName = product.category || 'Prints';
@@ -579,6 +633,17 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 </div>
               )}
 
+              {isCatalogueDesign ? (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/customize/${product.material === 'acrylic' ? 'acrylic' : 'canvas'}/single?prefillImage=${encodeURIComponent(product.image)}&prefillName=${encodeURIComponent(product.name)}`)}
+                  className="w-full py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  <Pencil className="w-4 h-4" />
+                  <span>Customize this Product</span>
+                </button>
+              ) : (
+                <>
               {/* Size / Shape / Frame / Hook Tabs */}
               {((product.sizes && product.sizes.length > 0) || availableShapes.length > 0) && (
                 <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
@@ -760,75 +825,15 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 </div>
               </div>
 
-              <div>
+<div>
                 <button
                   type="button"
-                  onClick={() => setBulkPanelOpen((v) => !v)}
+                  onClick={handleOrderInBulk}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-[#0E4A93] text-sm font-bold text-[#0E4A93] hover:bg-blue-50/60 transition-colors cursor-pointer"
                 >
                   <Package className="w-5 h-5" />
                   <span>Order this item in bulk</span>
-                  <ChevronDown className={`w-5 h-5 transition-transform ${bulkPanelOpen ? 'rotate-180' : ''}`} />
                 </button>
-
-                {bulkPanelOpen && (
-                  <div className="mt-3 p-4 rounded-xl border border-stone-200 bg-stone-50 space-y-3">
-                    <div className="grid grid-cols-3 gap-2">
-                      {QTY_PRICE_TIERS.map((tier) => {
-                        const tierPrice = bulkUnitPriceFor(product.price, tier.qty);
-                        const isActive = quantity === tier.qty;
-                        return (
-                          <button
-                            key={tier.qty}
-                            type="button"
-                            onClick={() => { setQuantity(tier.qty); setCustomBulkQty(''); }}
-                            className={`px-2 py-2 rounded-lg border-2 text-center transition-all cursor-pointer ${
-                              isActive ? 'border-[#0E4A93] bg-blue-50/60' : 'border-stone-200 bg-white hover:border-stone-400'
-                            }`}
-                          >
-                            <div className={`text-xs font-extrabold ${isActive ? 'text-[#0E4A93]' : 'text-stone-900'}`}>{tier.qty} units</div>
-                            <div className="text-[10px] text-stone-500 mt-0.5">₹{tierPrice.toLocaleString('en-IN')} each</div>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div>
-                      <label htmlFor="custom-bulk-qty" className="text-[11px] font-bold text-stone-700 block mb-1">
-                        Or enter a custom quantity
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          id="custom-bulk-qty"
-                          type="number"
-                          min={MIN_BULK_QTY}
-                          value={customBulkQty}
-                          onChange={(e) => setCustomBulkQty(e.target.value)}
-                          placeholder={`${MIN_BULK_QTY}+`}
-                          className="w-28 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const n = Number(customBulkQty);
-                            if (n >= MIN_BULK_QTY) setQuantity(n);
-                          }}
-                          className="px-4 py-2 text-xs font-bold rounded-lg border-2 border-stone-300 text-stone-700 hover:border-stone-400 transition-colors cursor-pointer"
-                        >
-                          Apply
-                        </button>
-                      </div>
-                      <p className="text-[10px] text-stone-400 mt-1">Minimum bulk order: {MIN_BULK_QTY} units</p>
-                    </div>
-
-                    {quantity >= MIN_BULK_QTY && (
-                      <div className="pt-2 border-t border-stone-200 text-xs text-stone-700">
-                        <span className="font-bold text-[#0E4A93]">₹{bulkUnitPriceFor(product.price, quantity).toLocaleString('en-IN')} each</span>
-                        {' '}× {quantity} = <span className="font-bold">₹{(bulkUnitPriceFor(product.price, quantity) * quantity).toLocaleString('en-IN')}</span> total
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
@@ -842,15 +847,26 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 </button>
                 <button
                   type="button"
+                  onClick={handleCustomizeFirst}
+                  className="flex-1 py-3.5 px-6 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Customize First</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => onToggleWishlist(product.id)}
-                  className={`flex-1 py-3.5 px-6 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  className={`py-3.5 px-4 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
                     isWishlisted ? 'border-rose-300 bg-rose-50 text-rose-600' : 'border-stone-300 text-stone-700 hover:border-stone-400'
                   }`}
+                  title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
                 >
                   <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600' : ''}`} />
-                  <span>{isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}</span>
+                  <span className="sm:hidden">{isWishlisted ? 'In Wishlist' : 'Wishlist'}</span>
                 </button>
               </div>
+                </>
+              )}
             </div>
 
           </div>

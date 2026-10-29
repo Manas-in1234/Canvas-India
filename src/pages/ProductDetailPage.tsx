@@ -12,7 +12,9 @@ import {
   CheckCircle2,
   Layers,
   Pencil,
-  Package
+  Package,
+  ChevronDown,
+  Sparkles
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
@@ -21,7 +23,7 @@ import { WallPreview } from '../components/WallPreview';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { Product } from '../types';
 import { FrameSwatch, HookIcon, HOOK_OPTIONS, FRAME_LOOK, getFrameCategory, FrameCategory } from '../components/FrameHookVisuals';
-import { bulkUnitPriceFor, MIN_BULK_QTY, getBulkItem } from './BulkOrdersPage';
+import { getBulkItem, QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
 
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
@@ -370,12 +372,46 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
       customText,
       uploadedFile || undefined,
       selectedMaterial,
+      'Thin Gallery Wrap (0.75")',
       undefined,
       undefined,
       undefined,
-      undefined,
-      { hook: selectedHook }
+      { hook: selectedHook, shape: selectedShape }
     );
+  };
+
+  const handleCustomizeFirst = () => {
+    if (!product) return;
+    const material = product.categorySlug === 'acrylic' ? 'acrylic' : 'canvas';
+    const params = new URLSearchParams({
+      size: selectedSize || '',
+      finish: selectedFinish || '',
+      shape: selectedShape || '',
+      qty: quantity.toString(),
+    });
+    navigate(`/customize/${material}/${product.slug || product.id}?${params.toString()}`);
+  };
+
+  const handleOrderInBulk = () => {
+    if (!product) return;
+    const material = product.categorySlug === 'acrylic' ? 'acrylic' : 'canvas';
+    const slug = product.slug || product.id;
+    const targetBulkItem = getBulkItem(material, slug);
+    const targetQty = Math.max(MIN_BULK_QTY, quantity);
+    const params = new URLSearchParams({
+      qty: targetQty.toString(),
+      product: product.name,
+      slug: slug,
+      material: material,
+      size: selectedSize || '',
+      finish: selectedFinish || '',
+      shape: selectedShape || '',
+    });
+    if (targetBulkItem) {
+      navigate(`/bulk-order/${material}/${slug}?${params.toString()}`);
+    } else {
+      navigate(`/bulk-order?${params.toString()}`);
+    }
   };
 
   const categoryName = product.category || 'Prints';
@@ -789,10 +825,10 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 </div>
               </div>
 
-              <div>
+<div>
                 <button
                   type="button"
-                  onClick={() => navigate(bulkItem ? `/bulk-order/${bulkItem.material}/${bulkItem.slug}` : '/bulk-order')}
+                  onClick={handleOrderInBulk}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-[#0E4A93] text-sm font-bold text-[#0E4A93] hover:bg-blue-50/60 transition-colors cursor-pointer"
                 >
                   <Package className="w-5 h-5" />
@@ -811,13 +847,22 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 </button>
                 <button
                   type="button"
+                  onClick={handleCustomizeFirst}
+                  className="flex-1 py-3.5 px-6 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Customize First</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => onToggleWishlist(product.id)}
-                  className={`flex-1 py-3.5 px-6 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  className={`py-3.5 px-4 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
                     isWishlisted ? 'border-rose-300 bg-rose-50 text-rose-600' : 'border-stone-300 text-stone-700 hover:border-stone-400'
                   }`}
+                  title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
                 >
                   <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600' : ''}`} />
-                  <span>{isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}</span>
+                  <span className="sm:hidden">{isWishlisted ? 'In Wishlist' : 'Wishlist'}</span>
                 </button>
               </div>
                 </>

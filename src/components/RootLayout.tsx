@@ -7,6 +7,7 @@ import { WishlistDrawer } from './WishlistDrawer';
 import { CustomizeModal } from './CustomizeModal';
 import { QuoteModal } from './QuoteModal';
 import { AccountModal } from './AccountModal';
+import { AddToCartConfirmationModal } from './AddToCartConfirmationModal';
 import { useShop } from '../context/ShopContext';
 import { Home, Layers, Sparkles, Heart, ShoppingBag } from 'lucide-react';
 
@@ -298,6 +299,9 @@ export const RootLayout: React.FC = () => {
         isOpen={quoteModalOpen}
         onClose={() => setQuoteModalOpen(false)}
       />
+
+      {/* Add To Cart Confirmation Modal */}
+      <AddToCartConfirmationModal />
     </div>
   );
 };

@@ -977,6 +977,20 @@ export const CANVAS_THICKNESS_OPTIONS: CanvasThicknessOption[] = [
   { id: 'hanging-canvas', label: 'Unframed Rolled Canvas', name: 'Unframed Rolled Canvas', thicknessInches: 0.25, price: 85.0, depthPx: 8, description: 'Flexible unmounted rolled canvas or hanging bar' }
 ];
 
+/**
+ * Configurable pricing calculator for Canvas stretcher bar thickness.
+ * For custom thickness, uses base fee (₹193.05) and applies ₹2/mm for depths beyond standard 25mm (~1 inch).
+ */
+export function getCanvasThicknessPrice(thicknessId: string, customMm: number = 25): number {
+  const opt = CANVAS_THICKNESS_OPTIONS.find((t) => t.id === thicknessId);
+  if (!opt) return 0;
+  if (thicknessId === 'custom-thickness') {
+    const extraDepthMm = Math.max(0, customMm - 25);
+    return Math.round((opt.price + extraDepthMm * 2) * 100) / 100;
+  }
+  return opt.price;
+}
+
 export const CANVAS_PAPER_OPTIONS = [
   { id: 'standard-cotton', label: 'Standard 280 GSM Poly-Cotton Canvas', price: 0 },
   { id: 'premium-cotton', label: 'Premium 380 GSM Cotton Canvas', price: 250.0 },

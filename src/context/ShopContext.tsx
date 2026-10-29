@@ -3,8 +3,16 @@ import { Product, CartItem } from '../types';
 import { ALL_PRODUCTS } from '../data/productsData';
 import { fetchProductsFromApi } from '../api/productsApi';
 
+export interface AddToCartConfirmationState {
+  isOpen: boolean;
+  item: CartItem | null;
+}
+
 interface ShopContextType {
   cartItems: CartItem[];
+  addToCartConfirmation: AddToCartConfirmationState;
+  closeAddToCartConfirmation: () => void;
+  showAddToCartConfirmation: (item: CartItem) => void;
   wishlistIds: string[];
   cartDrawerOpen: boolean;
   wishlistDrawerOpen: boolean;
@@ -83,6 +91,18 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [customizeModalOpen, setCustomizeModalOpen] = useState(false);
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [selectedProductForCustomize, setSelectedProductForCustomize] = useState<Product | null>(null);
+  const [addToCartConfirmation, setAddToCartConfirmation] = useState<AddToCartConfirmationState>({
+    isOpen: false,
+    item: null,
+  });
+
+  const closeAddToCartConfirmation = () => {
+    setAddToCartConfirmation({ isOpen: false, item: null });
+  };
+
+  const showAddToCartConfirmation = (item: CartItem) => {
+    setAddToCartConfirmation({ isOpen: true, item });
+  };
   
   // Products state with initial fallback from productsData
   const [allProducts, setAllProducts] = useState<Product[]>(ALL_PRODUCTS);
@@ -215,6 +235,27 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         )
       );
 
+      const newItem: CartItem = {
+        id: itemKey,
+        product,
+        quantity,
+        size: selectedSize,
+        finish: selectedFinish,
+        material: material || (product as any).material,
+        thickness,
+        style,
+        base,
+        paper,
+        customText,
+        photoUrl: photoUrl || product.image,
+        customizationDetails,
+      };
+
+      setAddToCartConfirmation({
+        isOpen: true,
+        item: newItem,
+      });
+
       if (existingIndex > -1) {
         const updated = [...prev];
         updated[existingIndex] = {
@@ -224,26 +265,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return updated;
       }
 
-      return [
-        ...prev,
-        {
-          id: itemKey,
-          product,
-          quantity,
-          size: selectedSize,
-          finish: selectedFinish,
-          material: material || (product as any).material,
-          thickness,
-          style,
-          base,
-          paper,
-          customText,
-          photoUrl: photoUrl || product.image,
-          customizationDetails,
-        },
-      ];
+      return [...prev, newItem];
     });
-    setCartDrawerOpen(true);
   };
 
   const handleUpdateCartQuantity = (itemId: string, newQty: number) => {
@@ -300,28 +323,30 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     customizationDetails?: any;
   }) => {
     const itemKey = `custom-${item.product.id}-${item.size}-${item.thickness || ''}-${item.base || ''}-${Date.now()}`;
-    setCartItems((prev) => [
-      ...prev,
-      {
-        id: itemKey,
-        product: {
-          ...item.product,
-          price: item.calculatedPrice || item.product.price,
-        },
-        quantity: item.quantity,
-        size: item.size,
-        finish: item.finish || 'Standard Finish',
-        material: item.material || item.product.material,
-        thickness: item.thickness,
-        style: item.style,
-        base: item.base,
-        paper: item.paper,
-        customText: item.customText,
-        photoUrl: item.photoUrl || item.product.image,
-        customizationDetails: item.customizationDetails,
+    const newItem: CartItem = {
+      id: itemKey,
+      product: {
+        ...item.product,
+        price: item.calculatedPrice || item.product.price,
       },
-    ]);
-    setCartDrawerOpen(true);
+      quantity: item.quantity,
+      size: item.size,
+      finish: item.finish || 'Standard Finish',
+      material: item.material || item.product.material,
+      thickness: item.thickness,
+      style: item.style,
+      base: item.base,
+      paper: item.paper,
+      customText: item.customText,
+      photoUrl: item.photoUrl || item.product.image,
+      customizationDetails: item.customizationDetails,
+    };
+
+    setCartItems((prev) => [...prev, newItem]);
+    setAddToCartConfirmation({
+      isOpen: true,
+      item: newItem,
+    });
   };
 
   const handleAddToCartFromWorkbench = (customItem: {
@@ -398,6 +423,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCustomizeModalOpen,
         setQuoteModalOpen,
         setAccountModalOpen,
+        addToCartConfirmation,
+        closeAddToCartConfirmation,
+        showAddToCartConfirmation,
         onAddToCartCustomized: handleAddToCartCustomized,
         onAddToCartFromWorkbench: handleAddToCartFromWorkbench,
         clearCart: handleClearCart,

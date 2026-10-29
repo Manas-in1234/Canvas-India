@@ -37,7 +37,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
 
   const [selectedSize, setSelectedSize] = useState(product.availableSizes?.[0] || product.sizes?.[0] || '12x18 inch');
   const [selectedFinish, setSelectedFinish] = useState(product.availableFinishes?.[0] || product.finishes?.[0] || 'Standard Finish');
-  const [selectedThickness, setSelectedThickness] = useState(product.availableThicknesses?.[0] || '7mm');
+  const [selectedThickness, setSelectedThickness] = useState(isAcrylic ? '3mm' : (product.availableThicknesses?.[0] || '0.75"'));
   const [selectedStyle, setSelectedStyle] = useState(product.availableStyles?.[0] || 'Block');
   const [selectedBase, setSelectedBase] = useState(product.availableBases?.[0] || 'Without Base');
   const [selectedPaper, setSelectedPaper] = useState(product.availablePapers?.[0] || 'White Luster Photo Paper');
@@ -65,7 +65,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
     if (product) {
       setSelectedSize(product.availableSizes?.[0] || product.sizes?.[0] || '12x18 inch');
       setSelectedFinish(product.availableFinishes?.[0] || product.finishes?.[0] || 'Standard Finish');
-      setSelectedThickness(product.availableThicknesses?.[0] || '7mm');
+      setSelectedThickness(isAcrylic ? '3mm' : (product.availableThicknesses?.[0] || '0.75"'));
       setSelectedStyle(product.availableStyles?.[0] || 'Block');
       setSelectedBase(product.availableBases?.[0] || 'Without Base');
       setSelectedPaper(product.availablePapers?.[0] || 'White Luster Photo Paper');
@@ -115,10 +115,10 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
       else if (selectedSize.includes('20" x 30"') || selectedSize.includes('24" x 36"') || selectedSize.includes('Set of 3')) price += 1800;
       else if (selectedSize.includes('30" x 48"') || selectedSize.includes('36" x 60"')) price += 2600;
 
-      // Thickness pricing
-      if (selectedThickness === '18mm' || selectedThickness === '8mm' || selectedThickness === '10mm') {
-        price += 350;
-      }
+      // Thickness pricing (3mm: 0, 5mm: +150, 6mm: +200, 8mm: +250)
+      if (selectedThickness === '5mm') price += 150;
+      else if (selectedThickness === '6mm') price += 200;
+      else if (selectedThickness === '8mm') price += 250;
 
       // Base pricing
       if (selectedBase === 'Acrylic Base') price += 200;
@@ -363,25 +363,29 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
               )}
 
               {/* 2. SELECT THICKNESS */}
-              {product.availableThicknesses && product.availableThicknesses.length > 0 && (
+              {(isAcrylic || (product.availableThicknesses && product.availableThicknesses.length > 0)) && (
                 <div>
                   <label className="block font-bold text-stone-800 uppercase text-[11px] mb-1.5 flex items-center justify-between">
                     <span>Select Thickness</span>
-                    <span className="text-stone-500 font-normal">{selectedThickness === '18mm' ? 'Heavyweight 18mm crystal glass' : 'Slimline 7mm profile'}</span>
+                    <span className="text-stone-500 font-normal">
+                      {isAcrylic
+                        ? (selectedThickness === '8mm' ? 'Museum Grade 8mm Optical Cast' : selectedThickness === '6mm' ? 'Architectural 6mm Acrylic' : selectedThickness === '5mm' ? 'Standard 5mm Studio Acrylic' : 'Lightweight 3mm Acrylic')
+                        : 'Pine Stretcher Profile'}
+                    </span>
                   </label>
                   <div className="flex flex-wrap gap-2">
-                    {product.availableThicknesses.map((th) => (
+                    {(isAcrylic ? ['3mm', '5mm', '6mm', '8mm'] : product.availableThicknesses || []).map((th) => (
                       <button
                         key={th}
                         type="button"
                         onClick={() => setSelectedThickness(th)}
-                        className={`px-3.5 py-1.5 rounded-lg font-bold border transition-all cursor-pointer ${
-                          selectedThickness === th
+                        className={`px-3.5 py-1.5 rounded-lg font-bold border transition-all cursor-pointer text-xs ${
+                          selectedThickness.toLowerCase() === th.toLowerCase()
                             ? 'bg-[#0E4A93] text-white border-[#0E4A93] shadow-xs'
                             : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
                         }`}
                       >
-                        {th} {th === '18mm' && '(Premium 3D)'}
+                        {th.toUpperCase()} {th === '8mm' && '(Museum Quality)'} {th === '5mm' && '(Recommended)'}
                       </button>
                     ))}
                   </div>

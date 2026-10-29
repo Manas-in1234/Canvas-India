@@ -25,7 +25,7 @@ import { ProductImage } from '../components/ProductImage';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { WallPreview } from '../components/WallPreview';
 import { HookIcon, HOOK_OPTIONS } from '../components/FrameHookVisuals';
-import { bulkUnitPriceFor, MIN_BULK_QTY, getBulkItem } from './BulkOrdersPage';
+import { getBulkItem, QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import {
   AcrylicProductReview,
   getProductReviews,
@@ -137,7 +137,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
 
   // Configuration Selectors State
   const availableStyles = product.availableStyles || ['Block', 'Shapes'];
-  const availableThicknesses = product.availableThicknesses || ['7mm', '18mm'];
+  const availableThicknesses = ['3mm', '5mm', '6mm', '8mm'];
   const availableSizes = product.availableSizes || product.sizes || [
     '4" x 4"', '6" x 4"', '4" x 6"', '5" x 5"', '5" x 7"', '7" x 5"',
     '6" x 6"', '8" x 8"', '10" x 8"', '8" x 10"', '12" x 8"', '8" x 12"'
@@ -194,7 +194,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   // Reset variant state when product changes
   useEffect(() => {
     setSelectedStyle(availableStyles[0] || 'Block');
-    setSelectedThickness(availableThicknesses[0] || '7mm');
+    setSelectedThickness(availableThicknesses[0] || '3mm');
     const defaultShape = product.shape || availableShapes[0] || '';
     setSelectedSize(sizeForShape(defaultShape, availableSizes) || '4" x 4"');
     setSelectedPaper(availablePapers[0] || 'White Luster Photo Paper');
@@ -320,10 +320,10 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
     else if (selectedSize.includes('20" x 30"') || selectedSize.includes('24" x 36"') || selectedSize.includes('Set of 3')) price += 1800;
     else if (selectedSize.includes('30" x 48"') || selectedSize.includes('36" x 60"')) price += 2600;
 
-    // Thickness adjustment
-    if (selectedThickness === '18mm' || selectedThickness === '8mm' || selectedThickness === '10mm') {
-      price += 350;
-    }
+    // Thickness adjustment (3mm: 0, 5mm: +150, 6mm: +200, 8mm: +250)
+    if (selectedThickness === '5mm') price += 150;
+    else if (selectedThickness === '6mm') price += 200;
+    else if (selectedThickness === '8mm') price += 250;
 
     // Base adjustment
     if (selectedBase === 'Acrylic Base') price += 200;
@@ -379,6 +379,27 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
       qty: quantity.toString(),
     });
     navigate(`/customize/acrylic/${product.slug || product.id}?${params.toString()}`);
+  };
+
+  // Dedicated Bulk Order Navigation
+  const handleOrderInBulk = () => {
+    const slug = product.slug || product.id;
+    const targetBulkItem = getBulkItem('acrylic', slug);
+    const targetQty = Math.max(MIN_BULK_QTY, quantity);
+    const params = new URLSearchParams({
+      qty: targetQty.toString(),
+      product: product.name,
+      slug: slug,
+      material: 'acrylic',
+      size: selectedSize || '',
+      thickness: selectedThickness || '',
+      style: selectedStyle || '',
+    });
+    if (targetBulkItem) {
+      navigate(`/bulk-order/acrylic/${slug}?${params.toString()}`);
+    } else {
+      navigate(`/bulk-order?${params.toString()}`);
+    }
   };
 
   return (
@@ -568,6 +589,51 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
               <>
             <div className="space-y-4">
 
+              {/* ACRYLIC THICKNESS SELECTOR (Exactly 4 Options: 3MM, 5MM, 6MM, 8MM) */}
+              <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
+                    Acrylic Thickness: <span className="text-[#0E4A93] font-black">{selectedThickness.toUpperCase()}</span>
+                  </span>
+                  <span className="text-[11px] font-semibold text-stone-500">4 options</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: '3mm', label: '3MM', sub: 'Lightweight', price: 0, badge: 'Standard' },
+                    { id: '5mm', label: '5MM', sub: 'Studio Grade', price: 150, badge: 'Recommended' },
+                    { id: '6mm', label: '6MM', sub: 'Architectural', price: 200 },
+                    { id: '8mm', label: '8MM', sub: 'Optical Cast', price: 250, badge: 'Museum Quality' },
+                  ].map((th) => {
+                    const isSelected = selectedThickness.toLowerCase() === th.id;
+                    return (
+                      <button
+                        key={th.id}
+                        type="button"
+                        onClick={() => setSelectedThickness(th.id)}
+                        className={`relative p-2.5 rounded-xl border-2 text-center transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-[#0E4A93] bg-blue-50/60 shadow-xs'
+                            : 'border-stone-200 bg-white hover:border-stone-300'
+                        }`}
+                      >
+                        {th.badge && (
+                          <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-[#0E4A93] text-white text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full whitespace-nowrap">
+                            {th.badge}
+                          </span>
+                        )}
+                        <div className={`text-xs font-black ${isSelected ? 'text-[#0E4A93]' : 'text-stone-900'}`}>
+                          {th.label}
+                        </div>
+                        <div className="text-[10px] text-stone-500 font-medium">{th.sub}</div>
+                        <div className="text-[10px] font-bold text-stone-700 mt-1">
+                          {th.price === 0 ? 'Included' : `+₹${th.price}`}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* SIZE / SHAPE — matches the Canvas product page's tabbed card */}
               {(availableSizes.length > 0 || availableShapes.length > 0) && (
                 <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
@@ -712,10 +778,10 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
               </div>
             </div>
 
-            <div>
+<div>
               <button
                 type="button"
-                onClick={() => navigate(bulkItem ? `/bulk-order/${bulkItem.material}/${bulkItem.slug}` : '/bulk-order')}
+                onClick={handleOrderInBulk}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-[#0E4A93] text-sm font-bold text-[#0E4A93] hover:bg-blue-50/60 transition-colors cursor-pointer"
               >
                 <PackageCheck className="w-5 h-5" />
@@ -734,13 +800,22 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
               </button>
               <button
                 type="button"
+                onClick={handleOpenCustomizer}
+                className="flex-1 py-3.5 px-6 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Customize First</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => onToggleWishlist(product.id)}
-                className={`flex-1 py-3.5 px-6 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                className={`py-3.5 px-4 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
                   isWishlisted ? 'border-rose-300 bg-rose-50 text-rose-600' : 'border-stone-300 text-stone-700 hover:border-stone-400'
                 }`}
+                title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
               >
                 <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600' : ''}`} />
-                <span>{isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}</span>
+                <span className="sm:hidden">{isWishlisted ? 'In Wishlist' : 'Wishlist'}</span>
               </button>
             </div>
               </>

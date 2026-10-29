@@ -48,7 +48,9 @@ import {
   Palette,
   LayoutTemplate,
   Music,
-  Pipette
+  Pipette,
+  Minus,
+  Plus
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { QuotesTemplateSidebarPanel } from '../components/QuotesTemplateSidebarPanel';
@@ -104,6 +106,7 @@ import {
 } from '../data/popArtData';
 import { processPopArtImage } from '../utils/popArtProcessor';
 import { SelectLyricTemplateModal } from '../components/SelectLyricTemplateModal';
+import { AddToCartConfirmationModal } from '../components/AddToCartConfirmationModal';
 import { LyricStudioPanel } from '../components/LyricStudioPanel';
 import {
   type LyricCanvasConfig,
@@ -116,6 +119,7 @@ import {
 } from '../data/lyricCanvasData';
 import { fetchApprovedCustomShapes, toShapeOption, type CustomShapeDto } from '../api/customShapesApi';
 import {
+  getCanvasThicknessPrice,
   CANVAS_SHAPES,
   CanvasShapeOption,
   CANVAS_PRODUCT_TYPES,
@@ -2293,9 +2297,9 @@ const renderWrapPreview = (id: string) => {
   }
 
   // Acrylic Thickness Previews
-  if (id === '3mm' || id === '5mm' || id === '8mm' || id === '18mm') {
-    const mmVal = id === '3mm' ? '3mm' : id === '5mm' ? '5mm' : id === '8mm' ? '8mm' : '18mm';
-    const sideW = id === '3mm' ? 8 : id === '5mm' ? 14 : id === '8mm' ? 22 : 32;
+  if (id === '3mm' || id === '5mm' || id === '6mm' || id === '8mm' || id === '18mm') {
+    const mmVal = id === '3mm' ? '3mm' : id === '5mm' ? '5mm' : id === '6mm' ? '6mm' : id === '8mm' ? '8mm' : '18mm';
+    const sideW = id === '3mm' ? 8 : id === '5mm' ? 14 : id === '6mm' ? 18 : id === '8mm' ? 24 : 32;
     return (
       <div className="w-20 h-16 mx-auto relative flex items-center justify-center">
         <svg viewBox="0 0 120 90" className="w-full h-full drop-shadow-xs">
@@ -3488,26 +3492,29 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Thickness & Physical Depth Options (Canvas Stretcher & Acrylic Cast Depth)
   const [selectedThicknessId, setSelectedThicknessId] = useState<string>('thin-gallery');
   const [customThicknessInches, setCustomThicknessInches] = useState<number>(1.0);
+  const [customThicknessMm, setCustomThicknessMm] = useState<number>(25);
+  const [customThicknessInput, setCustomThicknessInput] = useState<string>('25');
+  const [customThicknessError, setCustomThicknessError] = useState<string>('');
   const [customAcrylicThicknessMm, setCustomAcrylicThicknessMm] = useState<number>(6.0);
 
   const effectiveThicknessInches = useMemo(() => {
     if (selectedThicknessId === 'canvas-lite') return 0.5;
     if (selectedThicknessId === 'thin-gallery') return 0.75;
     if (selectedThicknessId === 'thick-gallery') return 1.5;
-    if (selectedThicknessId === 'custom-thickness') return customThicknessInches;
+    if (selectedThicknessId === 'custom-thickness') return Number((customThicknessMm / 25.4).toFixed(2));
     if (selectedThicknessId === 'hanging-canvas') return 0.25;
     return 0.75;
-  }, [selectedThicknessId, customThicknessInches]);
+  }, [selectedThicknessId, customThicknessMm]);
 
   const effectiveAcrylicThicknessMm = useMemo(() => {
     if (selectedThicknessId === '3mm') return 3;
     if (selectedThicknessId === '5mm') return 5;
+    if (selectedThicknessId === '6mm') return 6;
     if (selectedThicknessId === '8mm') return 8;
-    if (selectedThicknessId === '18mm') return 18;
-    if (selectedThicknessId === 'custom-thickness') return customAcrylicThicknessMm;
     return 5;
-  }, [selectedThicknessId, customAcrylicThicknessMm]);
-  const [selectedHardwareId, setSelectedHardwareId] = useState<string>('no-hooks');
+  }, [selectedThicknessId]);
+  const [selectedHardwareId, setSelectedHardwareId] = useState<string>(routeMaterial === 'acrylic' ? 'acrylic-standoffs' : 'no-hooks');
+  const [acrylicStudQuantity, setAcrylicStudQuantity] = useState<number>(4);
   const [selectedDisplayOptionId, setSelectedDisplayOptionId] = useState<string>('open-back');
 
   // Select Size & Shape Modal State
@@ -4016,6 +4023,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
     if (!productChanged && !materialChanged) return;
 
+    if (activeMaterial === 'acrylic') {
+      setSelectedHardwareId('acrylic-standoffs');
+    }
+
     const list = activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES;
     const pt = list.find((p) => p.id === selectedProductTypeId);
     if (pt) {
@@ -4048,7 +4059,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setCustomHeight(wordArtSizeOption.heightInches);
       setActivePanelIndex(0);
       setSelectedShapeId('shape-square');
-      setSelectedHardwareId('no-hooks');
+      setSelectedHardwareId(activeMaterial === 'acrylic' ? 'acrylic-standoffs' : 'no-hooks');
       setSelectedThicknessId('thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
@@ -4697,15 +4708,23 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const wrap = WRAP_OPTIONS.find((w) => w.id === selectedWrapId);
     if (wrap) price += wrap.price;
 
-    const thickness = (activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS).find((t: any) => t.id === selectedThicknessId);
-    if (thickness && thickness.price) price += thickness.price;
+    const thicknessPrice = activeMaterial === 'acrylic'
+      ? (ACRYLIC_THICKNESS_OPTIONS.find((t: any) => t.id === selectedThicknessId)?.price || 0)
+      : getCanvasThicknessPrice(selectedThicknessId, customThicknessMm);
+    price += thicknessPrice;
 
     price += CANVAS_BORDER_WIDTH_PRICES[selectedBorderWidthId] || 0;
     const frame = FRAME_OPTIONS.find((f) => f.id === selectedFrameId);
     if (frame && frame.price) price += frame.price;
 
+    const acrylicHardwarePrice = selectedHardwareId === 'acrylic-standoffs'
+      ? (199 + Math.max(0, acrylicStudQuantity - 4) * 50)
+      : 0;
+
     const hardwarePrice = selectedProductTypeId === 'canvas-banner'
       ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
+      : activeMaterial === 'acrylic'
+      ? acrylicHardwarePrice
       : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0);
     price += hardwarePrice;
 
@@ -4735,6 +4754,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     selectedBorderWidthId,
     selectedFrameId,
     selectedHardwareId,
+    acrylicStudQuantity,
+    customThicknessMm,
+    activeMaterial,
     selectedDisplayOptionId,
     selectedLaminationId,
     selectedMaterialId,
@@ -4742,6 +4764,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   ]);
 
   const totalPrice = unitPrice * quantity;
+  const acrylicHardwarePrice = selectedHardwareId === 'acrylic-standoffs'
+    ? (199 + Math.max(0, acrylicStudQuantity - 4) * 50)
+    : 0;
 
   // Single source of truth for whether at least ONE valid customer image is currently uploaded
   const hasUploadedImage = useMemo(() => {
@@ -5824,7 +5849,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}`
         : isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary,
       finish: activeMaterial === 'acrylic'
-        ? (ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || '3mm Acrylic')
+        ? (ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || `${selectedThicknessId.toUpperCase()} Optical Acrylic`)
+        : selectedThicknessId === 'custom-thickness'
+        ? `Custom Thickness (${customThicknessMm}mm)`
         : (CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Thin Gallery Wrap (0.75")'),
       quantity,
       customText: customText || undefined,
@@ -5846,13 +5873,22 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         : selectedProductType.name,
       base: isBannerProduct
         ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware')
+        : activeMaterial === 'acrylic'
+        ? `Acrylic Standoffs (${acrylicStudQuantity} studs)`
         : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label || 'No Hooks'),
       customizationDetails: {
         material: activeMaterial,
         productTypeId: selectedProductTypeId,
         sizeId: selectedSizeId,
         shape: shapeApplies ? currentShape.name : undefined,
-        wrap: activeMaterial === 'canvas' ? (CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label) : undefined,
+        thickness: activeMaterial === 'acrylic'
+          ? (ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || `${selectedThicknessId.toUpperCase()} Optical Acrylic`)
+          : selectedThicknessId === 'custom-thickness'
+          ? `Custom Thickness (${customThicknessMm}mm)`
+          : (CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Thin Gallery Wrap (0.75")'),
+        wrap: activeMaterial === 'canvas' ? (selectedThicknessId === 'custom-thickness' ? `Custom Thickness (${customThicknessMm}mm)` : (CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.label)) : undefined,
+        customThicknessMm: activeMaterial === 'canvas' && selectedThicknessId === 'custom-thickness' ? customThicknessMm : undefined,
+        customThicknessInches: activeMaterial === 'canvas' && selectedThicknessId === 'custom-thickness' ? customThicknessInches : undefined,
         borderWidth: selectedBorderWidthId !== 'none' ? (selectedBorderWidthId === 'custom-color' ? 'Custom Border' : (ACRYLIC_BORDER_WIDTHS.find((b) => b.id === selectedBorderWidthId)?.label || 'Thin Border')) : 'No Border',
         borderColor: selectedBorderWidthId !== 'none' ? selectedBorderColor : undefined,
         frame: selectedFrameId !== 'no-frame' ? FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name : undefined,
@@ -5893,6 +5929,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         bannerHeightInches: isBannerProduct ? bannerConfig.heightInches : undefined,
         bannerBackgroundColor: isBannerProduct ? bannerConfig.backgroundColor : undefined,
         bannerHardware: isBannerProduct ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || 'No Hardware') : undefined,
+        hardware: activeMaterial === 'acrylic' ? 'Acrylic Standoffs' : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label || 'No Hooks'),
+        studQuantity: activeMaterial === 'acrylic' ? acrylicStudQuantity : undefined,
+        hardwarePrice: activeMaterial === 'acrylic' ? acrylicHardwarePrice : undefined,
         popArtStyleId: isPopArtProduct ? popArtConfig.selectedStyleId : undefined,
         popArtStyleName: isPopArtProduct ? getPopArtStyle(popArtConfig.selectedStyleId).name : undefined,
         popArtPriceAdjustment: isPopArtProduct ? getPopArtStyle(popArtConfig.selectedStyleId).priceAdjustment : undefined,
@@ -6062,8 +6101,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     ? 10
                     : selectedThicknessId === 'thick-gallery'
                     ? 28
-                    : selectedThicknessId === 'custom-thickness'
-                    ? Math.max(8, Math.min(36, Math.round(customThicknessInches * 18)))
+                    : selectedThicknessId === 'custom-thickness' ? Math.max(10, Math.min(48, Math.round((customThicknessMm / 25) * 18)))
                     : 18;
 
                 const isImageWrapped = (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (master.fitMode !== 'contain');
@@ -7207,7 +7245,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       }}
                     />
                     <div className="absolute inset-0 pointer-events-none z-15 rounded-[2px] shadow-[inset_0_1px_2px_rgba(255,255,255,0.7),inset_0_-1px_2px_rgba(0,0,0,0.25)]" />
-                    {(selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && (
+                    {(selectedHardwareId === 'acrylic-standoffs' || selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && (
                       <>
                         <div className="absolute top-2.5 left-2.5 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-300/80 z-20 pointer-events-none" />
                         <div className="absolute top-2.5 right-2.5 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-300/80 z-20 pointer-events-none" />
@@ -7561,8 +7599,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   ? 10
                   : selectedThicknessId === 'thick-gallery'
                   ? 28
-                  : selectedThicknessId === 'custom-thickness'
-                  ? Math.max(8, Math.min(36, Math.round(customThicknessInches * 18)))
+                  : selectedThicknessId === 'custom-thickness' ? Math.max(10, Math.min(48, Math.round((customThicknessMm / 25) * 18)))
                   : 18;
 
               const isImageWrapped = (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (panel.fitMode !== 'contain');
@@ -8242,13 +8279,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <span className="font-bold text-stone-900">+₹{(() => { const p = WRAP_OPTIONS.find((w) => w.id === selectedWrapId)?.price || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
                 </div>
               )}
-              {selectedHardwareId !== 'no-hooks' && (
+              {(selectedHardwareId !== 'no-hooks' || activeMaterial === 'acrylic') && (
                 <div className="flex justify-between">
-                  <span>Hardware:</span>
+                  <span>{activeMaterial === 'acrylic' ? `Hardware (${acrylicStudQuantity} studs):` : 'Hardware:'}</span>
                   <span className="font-bold text-stone-900">
                     +₹{(() => {
                       const p = selectedProductTypeId === 'canvas-banner'
                         ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
+                        : activeMaterial === 'acrylic'
+                        ? (199 + Math.max(0, acrylicStudQuantity - 4) * 50)
                         : (HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0);
                       return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0);
                     })()}
@@ -8338,7 +8377,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               : activeTab === 'HARDWARE & FINISH' && isBannerProduct
               ? `${CANVAS_BANNER_HARDWARE_OPTIONS.length} Options`
               : activeTab === 'HARDWARE & FINISH'
-              ? `${(activeMaterial === 'acrylic' ? ACRYLIC_HARDWARE_OPTIONS : HARDWARE_OPTIONS).length} Hardware`
+              ? (activeMaterial === 'acrylic' ? '1 Option' : `${HARDWARE_OPTIONS.length} Hardware`)
               : 'Specifications'
           }
         >
@@ -9590,8 +9629,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                   <div className="p-3 space-y-3">
                     {/* Thickness Options Grid */}
-                    <div className="grid grid-cols-3 gap-2">
-                      {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS.slice(0, 3) : CANVAS_THICKNESS_OPTIONS.slice(0, 3)).map((th: any) => {
+                    <div className={`grid gap-2 ${activeMaterial === 'acrylic' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
+                      {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS.slice(0, 3)).map((th: any) => {
                         const isSelected = selectedThicknessId === th.id;
                         const displayTitle = th.name || th.label.split('(')[0].trim();
                         const displaySub = th.thicknessInches ? `(${th.thicknessInches.toFixed(2)}")` : th.thicknessMm ? `(${th.thicknessMm}mm)` : '';
@@ -9603,7 +9642,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             badge={th.badge}
                             title={displayTitle}
                             subtitle={displaySub}
-                            priceText={`₹${th.price.toFixed(2)}`}
+                            priceText={th.price === 0 ? 'Included' : `+₹${th.price.toFixed(2)}`}
                             previewHeightClass="h-16 p-1"
                             preview={renderWrapPreview(th.id)}
                           />
@@ -9611,7 +9650,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       })}
                     </div>
 
-                    {/* Custom Thickness Toggle & Slider */}
+                    {/* Custom Thickness Toggle & Input */}
                     {activeMaterial === 'canvas' && (
                       <div className="pt-2 border-t border-stone-100">
                         <button
@@ -9625,39 +9664,51 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         >
                           <span>Custom Thickness</span>
                           <span className="text-[11px] font-semibold text-stone-500">
-                            {selectedThicknessId === 'custom-thickness' ? `${customThicknessInches.toFixed(2)}"` : 'Specify custom'}
+                            {selectedThicknessId === 'custom-thickness' ? `${customThicknessMm}mm (≈ ${(customThicknessMm / 25.4).toFixed(2)}″)` : 'Specify custom'}
                           </span>
                         </button>
 
                         {selectedThicknessId === 'custom-thickness' && (
                           <div className="mt-2.5 p-3 bg-blue-50/40 rounded-xl border border-blue-200 space-y-2">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-stone-800">Specify Custom Depth:</span>
+                              <span className="text-xs font-bold text-stone-800">Specify Custom Depth (mm):</span>
                               <div className="flex items-center gap-1.5 bg-white px-2 py-0.5 rounded-md border border-stone-300">
                                 <input
                                   type="number"
-                                  min={0.25}
-                                  max={3.0}
-                                  step={0.05}
-                                  value={customThicknessInches}
+                                  min={15}
+                                  max={100}
+                                  step={1}
+                                  value={customThicknessInput}
                                   onChange={(e) => {
-                                    const val = parseFloat(e.target.value);
-                                    if (!isNaN(val)) setCustomThicknessInches(Math.max(0.25, Math.min(3.0, Math.round(val * 100) / 100)));
+                                    const raw = e.target.value;
+                                    setCustomThicknessInput(raw);
+                                    const val = parseFloat(raw);
+                                    if (isNaN(val) || val <= 0) {
+                                      setCustomThicknessError('Please enter a valid positive number');
+                                    } else if (val < 15 || val > 100) {
+                                      setCustomThicknessError('Thickness must be between 15 mm and 100 mm');
+                                      const clamped = Math.max(15, Math.min(100, Math.round(val)));
+                                      setCustomThicknessMm(clamped);
+                                      setCustomThicknessInches(Number((clamped / 25.4).toFixed(2)));
+                                    } else {
+                                      setCustomThicknessError('');
+                                      const rounded = Math.round(val);
+                                      setCustomThicknessMm(rounded);
+                                      setCustomThicknessInches(Number((rounded / 25.4).toFixed(2)));
+                                    }
                                   }}
-                                  className="w-12 text-right font-bold text-xs text-[#0E4A93] outline-hidden"
+                                  className="w-14 text-right font-bold text-xs text-[#0E4A93] outline-hidden"
                                 />
-                                <span className="text-[11px] font-bold text-stone-500">inch</span>
+                                <span className="text-[11px] font-bold text-stone-500">mm</span>
                               </div>
                             </div>
-                            <input
-                              type="range"
-                              min={0.25}
-                              max={3.0}
-                              step={0.05}
-                              value={customThicknessInches}
-                              onChange={(e) => setCustomThicknessInches(Math.round(parseFloat(e.target.value) * 100) / 100)}
-                              className="w-full accent-[#0E4A93] cursor-pointer"
-                            />
+                            {customThicknessError && (
+                              <p className="text-[10px] text-rose-600 font-semibold">{customThicknessError}</p>
+                            )}
+                            <div className="flex items-center justify-between text-[11px] text-stone-500">
+                              <span>Converted depth:</span>
+                              <span className="font-bold text-[#0E4A93]">{(customThicknessMm / 25.4).toFixed(2)} inches</span>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -9965,20 +10016,111 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS).map((th: any) => {
                       const isSelected = selectedThicknessId === th.id;
+                      const cardTitle = activeMaterial === 'canvas' && th.id === 'custom-thickness' && selectedThicknessId === 'custom-thickness'
+                        ? `Custom (${customThicknessMm}mm)`
+                        : th.label;
+                      const cardPrice = activeMaterial === 'canvas' && th.id === 'custom-thickness'
+                        ? (getCanvasThicknessPrice('custom-thickness', customThicknessMm) === 0 ? 'Included' : `+₹${getCanvasThicknessPrice('custom-thickness', customThicknessMm).toFixed(2)}`)
+                        : (th.price === 0 ? 'Included' : `+₹${th.price}`);
                       return (
                         <CustomizerOptionCard
                           key={th.id}
                           selected={isSelected}
                           onClick={() => setSelectedThicknessId(th.id)}
                           badge={th.badge}
-                          title={th.label}
-                          priceText={th.price === 0 ? 'Included' : `+₹${th.price}`}
+                          title={cardTitle}
+                          priceText={cardPrice}
                           previewHeightClass="h-16 p-1.5"
                           preview={renderWrapPreview(th.id)}
                         />
                       );
                     })}
                   </div>
+
+                  {/* Canvas Custom Thickness Input Panel */}
+                  {activeMaterial === 'canvas' && selectedThicknessId === 'custom-thickness' && (
+                    <div className="p-3.5 bg-blue-50/50 rounded-xl border-2 border-[#0E4A93]/40 space-y-3 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-stone-900">Specify Custom Canvas Thickness:</span>
+                        <span className="text-[11px] font-semibold text-[#0E4A93] bg-white px-2 py-0.5 rounded border border-blue-200">
+                          {customThicknessMm} mm (≈ {(customThicknessMm / 25.4).toFixed(2)}″)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min={15}
+                              max={100}
+                              step={1}
+                              value={customThicknessInput}
+                              onChange={(e) => {
+                                const raw = e.target.value;
+                                setCustomThicknessInput(raw);
+                                const val = parseFloat(raw);
+                                if (isNaN(val) || val <= 0) {
+                                  setCustomThicknessError('Please enter a valid positive number');
+                                } else if (val < 15 || val > 100) {
+                                  setCustomThicknessError('Thickness must be between 15 mm and 100 mm');
+                                  const clamped = Math.max(15, Math.min(100, Math.round(val)));
+                                  setCustomThicknessMm(clamped);
+                                  setCustomThicknessInches(Number((clamped / 25.4).toFixed(2)));
+                                } else {
+                                  setCustomThicknessError('');
+                                  const rounded = Math.round(val);
+                                  setCustomThicknessMm(rounded);
+                                  setCustomThicknessInches(Number((rounded / 25.4).toFixed(2)));
+                                }
+                              }}
+                              placeholder="25"
+                              className="w-full pl-3 pr-10 py-2 text-sm font-bold rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93] bg-white text-stone-900"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400">
+                              mm
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      {customThicknessError && (
+                        <div className="text-[11px] font-bold text-rose-600 flex items-center gap-1">
+                          <span>•</span>
+                          <span>{customThicknessError}</span>
+                        </div>
+                      )}
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-blue-100">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 mr-1">Quick Presets:</span>
+                        {[
+                          { mm: 20, label: '20mm (~0.75″)' },
+                          { mm: 25, label: '25mm (1.0″)' },
+                          { mm: 38, label: '38mm (~1.5″)' },
+                          { mm: 50, label: '50mm (2.0″)' },
+                          { mm: 75, label: '75mm (3.0″)' },
+                        ].map((p) => (
+                          <button
+                            key={p.mm}
+                            type="button"
+                            onClick={() => {
+                              setCustomThicknessMm(p.mm);
+                              setCustomThicknessInput(String(p.mm));
+                              setCustomThicknessInches(Number((p.mm / 25.4).toFixed(2)));
+                              setCustomThicknessError('');
+                            }}
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
+                              customThicknessMm === p.mm
+                                ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
+                                : 'bg-white text-stone-700 border-stone-200 hover:border-stone-400'
+                            }`}
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-stone-500 leading-relaxed">
+                        Handcrafted solid pine stretcher frame made to your exact depth. Sensible range: 15 mm to 100 mm.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -9986,37 +10128,185 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               <div className={`space-y-2.5 ${selectedProductTypeId !== 'canvas-banner' ? 'pt-3 border-t border-stone-200' : ''}`}>
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">
-                    {selectedProductTypeId === 'canvas-banner' ? 'Hardware & Mounting Options' : '2. Hardware Option & Style'}
+                    {selectedProductTypeId === 'canvas-banner' ? 'Hardware & Mounting Options' : '2. HARDWARE OPTION & STYLE'}
                   </label>
                   {selectedProductTypeId === 'canvas-banner' && (
                     <span className="text-[11px] font-bold text-[#0E4A93]">{CANVAS_BANNER_HARDWARE_OPTIONS.length} options</span>
                   )}
                   {activeMaterial === 'acrylic' && (
-                    <span className="text-[11px] font-bold text-[#0E4A93]">{ACRYLIC_HARDWARE_OPTIONS.length} options</span>
+                    <span className="text-[11px] font-bold text-[#0E4A93]">1 option</span>
                   )}
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {(selectedProductTypeId === 'canvas-banner' ? CANVAS_BANNER_HARDWARE_OPTIONS : (activeMaterial === 'acrylic' ? ACRYLIC_HARDWARE_OPTIONS : HARDWARE_OPTIONS)).map((hw: any) => {
-                    const isSelected = selectedHardwareId === hw.id;
-                    const title = 'label' in hw ? hw.label : hw.name;
-                    return (
-                      <CustomizerOptionCard
-                        key={hw.id}
-                        selected={isSelected}
-                        onClick={() => {
-                          setSelectedHardwareId(hw.id);
-                          if (selectedProductTypeId === 'canvas-banner') {
-                            setBannerConfig((prev) => ({ ...prev, hardwareId: hw.id }));
-                          }
-                        }}
-                        title={title}
-                        priceText={hw.price === 0 ? 'Free' : `+₹${(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(hw.price, quantity) : hw.price).toFixed(0)}`}
-                        previewHeightClass="h-16 p-1.5"
-                        preview={renderHardwareIcon(hw.id)}
-                      />
-                    );
-                  })}
-                </div>
+
+                {activeMaterial === 'acrylic' ? (
+                  /* Acrylic Hardware Option matching reference screenshot */
+                  <div className="space-y-3">
+                    {/* Main Hardware Card: Acrylic Standoffs */}
+                    <div
+                      onClick={() => setSelectedHardwareId('acrylic-standoffs')}
+                      className={`relative rounded-xl border-2 transition-all p-3.5 space-y-3 cursor-pointer ${
+                        selectedHardwareId === 'acrylic-standoffs'
+                          ? 'border-[#0E4A93] bg-[#F2F9FE] shadow-xs'
+                          : 'border-stone-200 hover:border-stone-300 bg-white'
+                      }`}
+                    >
+                      {/* Card Header */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 rounded-full bg-[#0E4A93] text-white flex items-center justify-center shrink-0">
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          </div>
+                          <span className="text-sm font-bold text-stone-900">
+                            Acrylic Standoffs
+                          </span>
+                        </div>
+                        <span className="text-xs sm:text-sm font-bold text-[#0E4A93]">
+                          ₹199 for 4 studs
+                        </span>
+                      </div>
+
+                      {/* Side-by-side Illustrations */}
+                      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 divide-x divide-stone-200/90 bg-white rounded-lg p-2.5 sm:p-3 border border-blue-100/70">
+                        {/* Left Image: Acrylic panel with 4 standoffs */}
+                        <div className="flex flex-col items-center text-center space-y-2">
+                          <div className="h-24 sm:h-28 w-full flex items-center justify-center p-1 overflow-hidden">
+                            <img
+                              src="/assets/acrylic/acrylic-standoffs-panel.webp"
+                              alt="Set of 4 studs (Included)"
+                              className="max-h-full max-w-full w-auto h-auto object-contain rounded-md"
+                              style={{ objectFit: 'contain' }}
+                            />
+                          </div>
+                          <div className="space-y-0.5">
+                            <div className="text-xs font-bold text-stone-800 leading-tight">
+                              Set of 4 studs (Included)
+                            </div>
+                            <div className="text-[11px] font-semibold text-[#0E4A93]">
+                              ₹199 for 4 studs
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right Image: Individual metal standoff hardware components */}
+                        <div className="flex flex-col items-center text-center space-y-2 pl-2.5 sm:pl-3">
+                          <div className="h-24 sm:h-28 w-full flex items-center justify-center p-1 overflow-hidden">
+                            <img
+                              src="/assets/acrylic/acrylic-standoffs-stud.webp"
+                              alt="Additional stud (each)"
+                              className="max-h-full max-w-full w-auto h-auto object-contain rounded-md"
+                              style={{ objectFit: 'contain' }}
+                            />
+                          </div>
+                          <div className="space-y-0.5">
+                            <div className="text-xs font-bold text-stone-800 leading-tight">
+                              Additional stud (each)
+                            </div>
+                            <div className="text-[11px] font-semibold text-stone-600">
+                              +₹50 per extra stud
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Number of Studs Selector */}
+                    <div className="bg-white border border-stone-200/90 rounded-xl p-3 sm:p-3.5 flex items-center justify-between gap-2 shadow-2xs">
+                      {/* Left: Label & Helper text */}
+                      <div className="flex-1 min-w-0 pr-1">
+                        <div className="text-xs sm:text-sm font-bold text-stone-900 leading-tight">
+                          Number of studs
+                        </div>
+                        <div className="text-[11px] text-stone-500 leading-tight mt-0.5">
+                          Minimum 4 studs. Add extra studs if required.
+                        </div>
+                      </div>
+
+                      {/* Center: Stepper [-] count [+] */}
+                      <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 px-1 sm:px-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAcrylicStudQuantity((q) => Math.max(4, q - 1));
+                          }}
+                          disabled={acrylicStudQuantity <= 4}
+                          aria-label="Decrease studs"
+                          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                            acrylicStudQuantity <= 4
+                              ? 'bg-stone-100 text-stone-300 border border-stone-200 cursor-not-allowed'
+                              : 'bg-[#0E4A93] hover:bg-[#09356A] text-white cursor-pointer shadow-xs active:scale-95'
+                          }`}
+                        >
+                          <Minus className="w-4 h-4 stroke-[2.5]" />
+                        </button>
+
+                        <div className="text-center min-w-[34px]">
+                          <div className="text-base sm:text-lg font-black text-stone-900 leading-none">
+                            {acrylicStudQuantity}
+                          </div>
+                          <div className="text-[10px] font-semibold uppercase tracking-wider text-stone-500 leading-tight mt-0.5">
+                            studs
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAcrylicStudQuantity((q) => q + 1);
+                          }}
+                          aria-label="Increase studs"
+                          className="w-8 h-8 rounded-full bg-[#0E4A93] hover:bg-[#09356A] text-white flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
+                        >
+                          <Plus className="w-4 h-4 stroke-[2.5]" />
+                        </button>
+                      </div>
+
+                      {/* Right: Dynamic Hardware Price */}
+                      <div className="text-right shrink-0 pl-2 border-l border-stone-200 min-w-[85px]">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+                          Hardware Price
+                        </div>
+                        <div className="text-base sm:text-lg font-black text-[#0E4A93] leading-tight">
+                          ₹{acrylicHardwarePrice}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hardware Info Box */}
+                    <div className="p-3 bg-[#EBF5FE] border border-blue-200/80 rounded-xl flex items-start gap-2.5 text-[11px] text-stone-700 leading-relaxed shadow-2xs">
+                      <Info className="w-4 h-4 text-[#0E4A93] shrink-0 mt-0.5" />
+                      <div className="space-y-0.5 font-medium">
+                        <div>• 4 studs are included in the base price of ₹199.</div>
+                        <div>• Each additional stud costs ₹50.</div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* Standard Canvas / Banner Hardware options */
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {(selectedProductTypeId === 'canvas-banner' ? CANVAS_BANNER_HARDWARE_OPTIONS : HARDWARE_OPTIONS).map((hw: any) => {
+                      const isSelected = selectedHardwareId === hw.id;
+                      const title = 'label' in hw ? hw.label : hw.name;
+                      return (
+                        <CustomizerOptionCard
+                          key={hw.id}
+                          selected={isSelected}
+                          onClick={() => {
+                            setSelectedHardwareId(hw.id);
+                            if (selectedProductTypeId === 'canvas-banner') {
+                              setBannerConfig((prev) => ({ ...prev, hardwareId: hw.id }));
+                            }
+                          }}
+                          title={title}
+                          priceText={hw.price === 0 ? 'Free' : `+₹${(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(hw.price, quantity) : hw.price).toFixed(0)}`}
+                          previewHeightClass="h-16 p-1.5"
+                          preview={renderHardwareIcon(hw.id)}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
                 {selectedProductTypeId === 'canvas-banner' && (
                   <div className="p-3 bg-blue-50/70 rounded-xl border border-blue-100 text-[11px] text-[#0E4A93] font-medium leading-relaxed">
                     <strong>{CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name}: </strong>
@@ -10025,8 +10315,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 )}
               </div>
 
-              {/* 3. Display Option (Excludes Canvas Banner) */}
-              {selectedProductTypeId !== 'canvas-banner' && (
+              {/* 3. Display Option (Canvas only; Excludes Acrylic & Canvas Banner) */}
+              {selectedProductTypeId !== 'canvas-banner' && activeMaterial === 'canvas' && (
                 <div className="space-y-2.5 pt-3 border-t border-stone-200">
                   <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">3. Back Display Option</label>
                   <div className="space-y-2">
@@ -10463,7 +10753,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     <span>
                       Hardware:{' '}
                       <strong className="text-stone-900">
-                        {ACRYLIC_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.name || HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.label || 'No Hooks'}
+                        Acrylic Standoffs ({acrylicStudQuantity} studs)
                       </strong>
                     </span>
                   </>
@@ -10505,7 +10795,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       <>
                         <span>•</span>
                         <span>
-                          Thickness: <strong className="text-stone-900">{THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label}</strong>
+                          Thickness: <strong className="text-stone-900">
+                            {selectedThicknessId === 'custom-thickness'
+                              ? `Custom (${customThicknessMm}mm / ${(customThicknessMm / 25.4).toFixed(2)}")`
+                              : (THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Thin Gallery Wrap (0.75")')}
+                          </strong>
                         </span>
                         <span>•</span>
                         <span>
@@ -10572,8 +10866,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     ? 18
                     : selectedThicknessId === 'thick-gallery'
                     ? 28
-                    : selectedThicknessId === 'custom-thickness'
-                    ? Math.max(8, Math.min(36, Math.round(customThicknessInches * 18)))
+                    : selectedThicknessId === 'custom-thickness' ? Math.max(10, Math.min(48, Math.round((customThicknessMm / 25) * 18)))
                     : 18;
 
                 const displayWidthInches = isWordArtProduct
@@ -11200,7 +11493,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                       className="absolute inset-0 pointer-events-none z-24 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
                                       style={{ mixBlendMode: 'screen' }}
                                     />
-                                    {(selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && isRectangularShape && (
+                                    {(selectedHardwareId === 'acrylic-standoffs' || selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && isRectangularShape && (
                                       <>
                                         <div className="absolute top-2.5 left-2.5 w-4 h-4 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
                                           <div className="w-1.5 h-1.5 rounded-full bg-stone-700/60" />
@@ -11757,7 +12050,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                 }}
                               />
                               <div className="absolute inset-0 pointer-events-none z-15 rounded-xs shadow-[inset_0_1px_2px_rgba(255,255,255,0.7),inset_0_-1px_2px_rgba(0,0,0,0.25)]" />
-                              {(selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && (
+                              {(selectedHardwareId === 'acrylic-standoffs' || selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && (
                                 <>
                                   <div className="absolute top-2 left-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-300/80 z-20 pointer-events-none" />
                                   <div className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-300/80 z-20 pointer-events-none" />
@@ -12314,7 +12607,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                   }}
                                 />
                                 <div className="absolute inset-0 pointer-events-none z-15 rounded-xs shadow-[inset_0_1px_2px_rgba(255,255,255,0.7),inset_0_-1px_2px_rgba(0,0,0,0.25)]" />
-                                {(selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && (
+                                {(selectedHardwareId === 'acrylic-standoffs' || selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && (
                                   <>
                                     <div className="absolute top-2 left-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-300/80 z-20 pointer-events-none" />
                                     <div className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-300/80 z-20 pointer-events-none" />
@@ -12722,7 +13015,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     {activeMaterial === 'acrylic' && (
                       <>
                         {/* 4 corner metallic standoff mounts when standoff mounting is selected */}
-                        {(selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && !hasClip && (
+                        {(selectedHardwareId === 'acrylic-standoffs' || selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && !hasClip && (
                           <>
                             <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
                               <div className="w-1 h-1 rounded-full bg-stone-700/60" />
@@ -14241,6 +14534,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         selectedTemplateId={lyricConfig.selectedTemplateId}
         onSelectTemplate={handleSelectLyricTemplate}
       />
+
+      {/* Add To Cart Confirmation Modal */}
+      <AddToCartConfirmationModal />
     </div>
   );
 };
