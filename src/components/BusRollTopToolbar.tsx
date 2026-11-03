@@ -2,11 +2,6 @@ import React, { useState } from 'react';
 import {
   Save,
   RotateCcw,
-  Type,
-  Maximize2,
-  Sliders,
-  Check,
-  X,
   AlertTriangle
 } from 'lucide-react';
 import {
@@ -36,17 +31,17 @@ export const BusRollTopToolbar: React.FC<BusRollTopToolbarProps> = ({
 
   return (
     <>
-      {/* Top Controls Bar matching Screenshot 1 */}
-      <div className="bg-white border-b border-stone-200 px-3 py-2 flex flex-wrap items-center justify-between gap-2 shadow-2xs z-20">
+      {/* Compact single-row responsive header above preview */}
+      <div className="h-11 sm:h-12 bg-white border-b border-stone-200 px-2 sm:px-3 flex items-center justify-between gap-2 shadow-2xs z-20 shrink-0 overflow-x-auto no-scrollbar">
         {/* Left: Global Typography & Dimension Selectors */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 py-1">
           {/* 1. Line Spacing */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-black text-stone-600 whitespace-nowrap">Line Spacing</span>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[10px] font-black uppercase tracking-wider text-stone-500 whitespace-nowrap">Spacing</span>
             <select
               value={config.lineSpacing}
               onChange={(e) => onChangeConfig({ lineSpacing: parseFloat(e.target.value) })}
-              className="px-2 py-1 bg-stone-50 border border-stone-300 rounded-lg text-xs font-bold text-stone-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0E4A93]"
+              className="h-7 px-1.5 py-0 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-md text-[11px] font-bold text-stone-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0E4A93]"
             >
               {BUS_ROLL_LINE_SPACINGS.map((sp) => (
                 <option key={sp} value={sp}>
@@ -57,12 +52,12 @@ export const BusRollTopToolbar: React.FC<BusRollTopToolbarProps> = ({
           </div>
 
           {/* 2. Margin */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-black text-stone-600 whitespace-nowrap">Margin</span>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[10px] font-black uppercase tracking-wider text-stone-500 whitespace-nowrap">Margin</span>
             <select
               value={config.margin}
               onChange={(e) => onChangeConfig({ margin: parseFloat(e.target.value) })}
-              className="px-2 py-1 bg-stone-50 border border-stone-300 rounded-lg text-xs font-bold text-stone-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0E4A93]"
+              className="h-7 px-1.5 py-0 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-md text-[11px] font-bold text-stone-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0E4A93]"
             >
               {BUS_ROLL_MARGINS.map((m) => (
                 <option key={m} value={m}>
@@ -73,12 +68,12 @@ export const BusRollTopToolbar: React.FC<BusRollTopToolbarProps> = ({
           </div>
 
           {/* 3. Width */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-black text-stone-600 whitespace-nowrap">Width</span>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[10px] font-black uppercase tracking-wider text-stone-500 whitespace-nowrap">Width</span>
             <select
               value={config.widthInches}
               onChange={(e) => onChangeConfig({ widthInches: parseInt(e.target.value, 10) })}
-              className="px-2 py-1 bg-stone-50 border border-stone-300 rounded-lg text-xs font-bold text-stone-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0E4A93]"
+              className="h-7 px-1.5 py-0 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-md text-[11px] font-bold text-stone-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0E4A93]"
             >
               {BUS_ROLL_WIDTHS.map((w) => (
                 <option key={w} value={w}>
@@ -89,12 +84,12 @@ export const BusRollTopToolbar: React.FC<BusRollTopToolbarProps> = ({
           </div>
 
           {/* 4. Font Style */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-black text-stone-600 whitespace-nowrap">Font Style</span>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[10px] font-black uppercase tracking-wider text-stone-500 whitespace-nowrap">Style</span>
             <select
               value={config.fontStyle}
               onChange={(e) => onChangeConfig({ fontStyle: e.target.value as BusRollFontStyle })}
-              className="px-2 py-1 bg-stone-50 border border-stone-300 rounded-lg text-xs font-bold text-stone-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0E4A93]"
+              className="h-7 px-1.5 py-0 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-md text-[11px] font-bold text-stone-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0E4A93]"
             >
               {BUS_ROLL_FONT_STYLES.map((fs) => (
                 <option key={fs} value={fs}>
@@ -105,12 +100,12 @@ export const BusRollTopToolbar: React.FC<BusRollTopToolbarProps> = ({
           </div>
 
           {/* 5. Font Family */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-black text-stone-600 whitespace-nowrap">Font</span>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[10px] font-black uppercase tracking-wider text-stone-500 whitespace-nowrap">Font</span>
             <select
               value={config.fontFamily}
               onChange={(e) => onChangeConfig({ fontFamily: e.target.value })}
-              className="px-2 py-1 bg-stone-50 border border-stone-300 rounded-lg text-xs font-bold text-stone-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0E4A93]"
+              className="h-7 px-1.5 py-0 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-md text-[11px] font-bold text-stone-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0E4A93]"
             >
               {BUS_ROLL_FONTS.map((f) => (
                 <option key={f.id} value={f.fontFamily}>
@@ -122,23 +117,21 @@ export const BusRollTopToolbar: React.FC<BusRollTopToolbarProps> = ({
         </div>
 
         {/* Right: Save & Start Over Actions */}
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Save Action */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={onSave}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-stone-50 text-[#0E4A93] border border-stone-300 rounded-lg font-black text-xs transition-colors cursor-pointer shadow-2xs"
+            className="h-7 px-2.5 flex items-center gap-1 bg-white hover:bg-stone-50 text-[#0E4A93] border border-stone-200 rounded-md font-black text-[11px] transition-colors cursor-pointer shadow-2xs"
             title="Save your current design"
           >
             <Save className="w-3.5 h-3.5 text-[#0E4A93]" />
             <span>SAVE</span>
           </button>
 
-          {/* Start Over Action (Canvas India styling with circular arrow) */}
           <button
             type="button"
             onClick={() => setShowStartOverModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100/90 text-rose-700 border border-rose-200 rounded-lg font-black text-xs transition-colors cursor-pointer shadow-2xs"
+            className="h-7 px-2.5 flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-md font-black text-[11px] transition-colors cursor-pointer shadow-2xs"
             title="Start over and reset design"
           >
             <RotateCcw className="w-3.5 h-3.5 text-rose-600" />

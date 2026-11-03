@@ -187,11 +187,10 @@ export const CANVAS_EDGE_3D_PRODUCT_IDS = [
   'canvas-single',
   'canvas-classic',
   'canvas-lyric',
-  'canvas-digital-painting',
   'canvas-quotes',
   'canvas-pop-art',
-  'canvas-word-art',
-  'canvas-bus-roll'
+  'canvas-digital-painting',
+  'canvas-word-art'
 ] as const;
 
 export function isCanvasEdge3DProduct(productId?: string): boolean {
@@ -730,14 +729,14 @@ export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProdu
 
     products: true,
     upload: pt.id !== 'canvas-bus-roll',
-    sizes: !isSplit && !isCollageOrMosaic && pt.id !== 'canvas-hexagon' && pt.id !== 'canvas-bus-roll',
+    sizes: (!isSplit && !isCollageOrMosaic && pt.id !== 'canvas-hexagon' && pt.id !== 'canvas-bus-roll') || pt.id === 'canvas-banner',
     shapes: !isSplit && !isCollageOrMosaic && !['canvas-round', 'canvas-triangle', 'canvas-heart', 'canvas-oval', 'canvas-hexagon', 'canvas-bus-roll', 'canvas-lyric', 'canvas-quotes', 'canvas-word-art', 'canvas-banner'].includes(pt.id),
     layouts: pt.id === 'canvas-single' || pt.id === 'canvas-lyric',
     effects: pt.id === 'canvas-digital-painting' || pt.id === 'canvas-pop-art',
     busRoll: pt.id === 'canvas-bus-roll',
     wrap: pt.id !== 'canvas-banner',
     hardware: true,
-    options: true,
+    options: pt.id !== 'canvas-digital-painting',
     roomView: supportsRoomView,
     ...(pt.capabilities || {}),
     // Enforce strict invariants

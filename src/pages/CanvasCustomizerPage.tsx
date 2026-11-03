@@ -2751,7 +2751,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   useEffect(() => {
     if (productId) {
-      setSelectedProductTypeId(resolveCurrentProductId(activeMaterial, productId));
+      const resolved = resolveCurrentProductId(activeMaterial, productId);
+      setSelectedProductTypeId(resolved);
+      switchProductSession(activeMaterial, resolved);
     }
   }, [productId, activeMaterial]);
 
@@ -2891,12 +2893,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       // the moment the product is picked, and "Change Size"/"Change
       // Layout" buttons elsewhere still open the same modals either way;
       // this only hides the redundant sidebar entry, not the feature.
-      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSinglePrintCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct || isWordArtProduct },
+      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSinglePrintCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct || isWordArtProduct || isBannerProduct },
       { id: 'EFFECTS & OPTIONS', label: 'EFFECTS & OPTIONS', icon: Palette, enabled: productCapabilities.effects === true },
-      { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: isSinglePrintCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct || isWordArtProduct },
+      { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: (isSinglePrintCanvas || isPopArtProduct || isLyricProduct) && !isQuotesProduct && !isWordArtProduct && !isDigitalPaintingProduct },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
       { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal, enabled: productCapabilities.hardware !== false },
-      { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false }
+      { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false && !isDigitalPaintingProduct }
     ];
     return items.filter((item) => item.enabled);
   }, [activeMaterial, productCapabilities, isSingleOrShapedCanvas, isBusRollProduct, isPopArtProduct, isLyricProduct, isWordArtProduct, isQuotesProduct, isPrefillMode, isSinglePrintCanvas, isDigitalPaintingProduct]);
@@ -3189,6 +3191,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // (multi-panel collage / split / wall-art layouts stay rectangular slots).
   const shapeApplies = panels.length === 1 && selectedProductTypeId !== 'canvas-banner' && selectedProductTypeId !== 'canvas-bus-roll';
 
+  // Product-specific customization session store (Requirement 5)
+  // Maintains per-product panel images, uploaded photos, and active panel indices
+  const productCustomizationStore = useRef<Record<string, {
+    panelImages: Record<number, PanelImageState>;
+    uploadedPhotos: string[];
+    activePanelIndex: number;
+  }>>({});
+  const activeCustomizationKey = useRef<string>(`${routeMaterial}-${resolveCurrentProductId(routeMaterial, productId)}`);
+
   // Panel Images State
   const [panelImages, setPanelImages] = useState<Record<number, PanelImageState>>({
     0: createDefaultPanel(),
@@ -3196,6 +3207,37 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     2: createDefaultPanel(),
     3: createDefaultPanel()
   });
+
+  const switchProductSession = (newMaterial: string, newProductId: string) => {
+    const curKey = activeCustomizationKey.current;
+    const targetKey = `${newMaterial}-${newProductId}`;
+    if (curKey === targetKey) return;
+
+    // Save outgoing product customization
+    productCustomizationStore.current[curKey] = {
+      panelImages,
+      uploadedPhotos,
+      activePanelIndex
+    };
+    activeCustomizationKey.current = targetKey;
+
+    // Restore or initialize incoming product customization
+    const saved = productCustomizationStore.current[targetKey];
+    if (saved) {
+      setPanelImages(saved.panelImages);
+      setUploadedPhotos(saved.uploadedPhotos);
+      setActivePanelIndex(saved.activePanelIndex);
+    } else {
+      setPanelImages({
+        0: createDefaultPanel(),
+        1: createDefaultPanel(),
+        2: createDefaultPanel(),
+        3: createDefaultPanel()
+      });
+      setUploadedPhotos([]);
+      setActivePanelIndex(0);
+    }
+  };
 
   // When selected size or dimensions change: maintain 'cover' placement so the image covers edge-to-edge
   const prevSelectedSizeRef = useRef(`${selectedSizeId}-${customWidth}-${customHeight}`);
@@ -3671,16 +3713,25 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         if (savedWordArtConfigRef.current) {
           setWordArtConfig(savedWordArtConfigRef.current);
         }
+        const exportWidth = 1400;
+        const exportHeight = Math.round(exportWidth / (wordArtSizeOption.aspectRatio || 1));
         setPanelImages((prev) => ({
           ...prev,
           0: {
             ...createDefaultPanel(),
             imageUrl: restoredUrl,
-            fitMode: 'contain',
+            fitMode: 'cover',
             scale: 1,
             rotation: 0,
             panX: 0,
-            panY: 0
+            panY: 0,
+            uploadedImage: {
+              originalSrc: restoredUrl,
+              width: exportWidth,
+              height: exportHeight,
+              aspectRatio: exportWidth / exportHeight,
+              name: 'Word Art Design'
+            }
           }
         }));
       }
@@ -3704,7 +3755,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         ...prev,
         0: {
           ...prev[0],
-          imageUrl: dataUrl
+          imageUrl: dataUrl,
+          fitMode: 'cover',
+          uploadedImage: {
+            originalSrc: dataUrl,
+            width: exportWidth,
+            height: exportHeight,
+            aspectRatio: exportWidth / exportHeight,
+            name: 'Word Art Design'
+          }
         }
       }));
     }
@@ -3730,17 +3789,27 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     setWordArtConfig(config);
     savedWordArtConfigRef.current = config;
 
+    const exportWidth = 1400;
+    const exportHeight = Math.round(exportWidth / (wordArtSizeOption.aspectRatio || 1));
+
     // Apply high-res Word Art artwork directly into slot 0
     setPanelImages((prev) => ({
       ...prev,
       0: {
         ...createDefaultPanel(),
         imageUrl: dataUrl,
-        fitMode: 'contain',
+        fitMode: 'cover',
         scale: 1,
         rotation: 0,
         panX: 0,
-        panY: 0
+        panY: 0,
+        uploadedImage: {
+          originalSrc: dataUrl,
+          width: exportWidth,
+          height: exportHeight,
+          aspectRatio: exportWidth / exportHeight,
+          name: 'Word Art Design'
+        }
       }
     }));
 
@@ -4139,6 +4208,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const list = activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES;
     const pt = list.find((p) => p.id === productId);
     if (!pt) return;
+    switchProductSession(activeMaterial, productId);
 
     if (productId.includes('word')) {
       setSelectedProductTypeId(productId);
@@ -5031,7 +5101,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 rotation: 0,
                 panX: 0,
                 panY: 0,
-                fitMode: 'contain'
+                fitMode: 'cover'
               }
             }));
             if (isQuotesProduct && quotesPreference === 'create-own') {
@@ -5048,7 +5118,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               [target]: {
                 ...createDefaultPanel(),
                 imageUrl: result,
-                fitMode: 'contain'
+                fitMode: 'cover'
               }
             }));
             if (isQuotesProduct && quotesPreference === 'create-own') {
@@ -5762,8 +5832,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (isBannerProduct) {
       return bannerConfig.widthInches / Math.max(1, bannerConfig.heightInches);
     }
-    // Single print canvas: Authoritative aspect ratio directly from selected size (or layout preset if explicit)
-    if (isSinglePrintCanvas) {
+    // Single print canvas & Digital Painting: Authoritative aspect ratio directly from selected size (or layout preset if explicit)
+    if (isSinglePrintCanvas || isDigitalPaintingProduct) {
       if (selectedLayoutId === 'single-layout-landscape') return 1.5;
       if (selectedLayoutId === 'single-layout-portrait') return 2 / 3;
       if (selectedLayoutId === 'single-layout-square') return 1;
@@ -6124,8 +6194,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const N = splitPanels.length;
     const rawPanel0 = panelImages[0]?.imageUrl;
     const validPanelImg = (!isWordArtProduct && isWordArtArtwork(rawPanel0)) ? null : rawPanel0;
-    const validTrayImg = uploadedPhotos.find((p) => !isWordArtArtwork(p)) || null;
-    const masterImage = validPanelImg || validTrayImg || null;
+    const masterImage = validPanelImg || null;
     const master = panelImages[0] || createDefaultPanel();
 
     const displayWidthInches = layout.overallWidthInches || 36;
@@ -6183,22 +6252,26 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               {splitPanels.map((p, idx) => {
                 const isSelectedSlot = activePanelIndex === idx;
                 const isHovered = hoveredPanelIndex === idx;
-                const showPanelEdges = isHovered && activeMaterial === 'canvas' && selectedFrameId === 'no-frame';
-                const panelDepthPx =
-                  selectedThicknessId === 'canvas-lite'
-                    ? 10
-                    : selectedThicknessId === 'thick-gallery'
-                    ? 28
-                    : selectedThicknessId === 'custom-thickness' ? Math.max(10, Math.min(48, Math.round((customThicknessMm / 25) * 18)))
-                    : 18;
-
-                const isImageWrapped = (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (master.fitMode !== 'contain');
-                const effectiveEdgeColor = selectedWrapId === 'black-border' ? '#0F172A' : '#FFFFFF';
+                const hasImage = Boolean(masterImage);
+                const showPanelEdges = hasImage && isHovered && activeMaterial === 'canvas' && selectedFrameId === 'no-frame';
 
                 const totalW = workspaceBoxSize.width || 420;
                 const totalH = workspaceBoxSize.height || 320;
                 const panelW = p.w * totalW;
                 const panelH = p.h * totalH;
+
+                const baseDepth =
+                  selectedThicknessId === 'canvas-lite'
+                    ? 4
+                    : selectedThicknessId === 'thick-gallery'
+                    ? 9
+                    : selectedThicknessId === 'custom-thickness'
+                    ? Math.max(4, Math.min(10, Math.round((customThicknessMm / 25) * 6)))
+                    : 6;
+                const panelDepthPx = Math.max(3, Math.min(baseDepth, Math.round(Math.min(panelW, panelH) * 0.08)));
+
+                const isImageWrapped = (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (master.fitMode !== 'contain');
+                const effectiveEdgeColor = selectedWrapId === 'black-border' ? '#0F172A' : '#FFFFFF';
 
                 const splitPanelShadow = activeMaterial === 'acrylic'
                   ? (effectiveAcrylicThicknessMm >= 8
@@ -6500,7 +6573,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       <div
                         className="absolute inset-0 pointer-events-none z-20"
                         style={{
-                          boxShadow: 'inset 0 0 0 1.5px rgba(255, 255, 255, 0.95), 0 0 0 1px rgba(0, 0, 0, 0.35)'
+                          boxShadow: '0 0 0 1px rgba(0, 0, 0, 0.15)'
                         }}
                       />
                     )}
@@ -7177,8 +7250,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const count = layout.panelsCount || layout.panels.length;
     const rawPanel0 = panelImages[0]?.imageUrl;
     const validPanelImg = (!isWordArtProduct && isWordArtArtwork(rawPanel0)) ? null : rawPanel0;
-    const validTrayImg = uploadedPhotos.find((p) => !isWordArtArtwork(p)) || null;
-    const masterImage = validPanelImg || validTrayImg || null;
+    const masterImage = validPanelImg || null;
     const master = panelImages[0] || createDefaultPanel();
 
     const totalCols = layout.cols || (count === 16 ? 4 : count === 25 ? 5 : count === 36 ? 6 : count === 20 ? 4 : count === 15 ? 3 : count === 12 && layout.aspectRatio > 1 ? 4 : 3);
@@ -7370,11 +7442,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   </div>
                 ))}
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
-                  <div className="w-12 h-12 rounded-full bg-[#0E4A93] text-white flex items-center justify-center shadow-lg mb-2 pointer-events-auto">
-                    <Upload className="w-6 h-6 stroke-[2.2]" />
-                  </div>
-                  <span className="text-xs font-bold text-stone-700">Upload Photo for Continuous Mosaic</span>
-                  <span className="text-[10px] text-stone-500 mt-0.5">Click to choose image</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      uploadTargetRef.current = 0;
+                      fileInputRef.current?.click();
+                    }}
+                    className="px-5 py-2.5 bg-white hover:bg-stone-50 text-stone-800 hover:text-[#0E4A93] font-bold text-xs sm:text-sm rounded-xl shadow-md border border-stone-200 flex items-center gap-2 pointer-events-auto cursor-pointer transition-all hover:scale-105"
+                  >
+                    <Upload className="w-4 h-4 stroke-[2.2] text-[#0E4A93]" />
+                    <span>Upload Image</span>
+                  </button>
                 </div>
               </div>
             )}
@@ -7621,14 +7699,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     <div
                       onClick={() => {
                         setActivePanelIndex(idx);
+                        uploadTargetRef.current = idx;
                         fileInputRef.current?.click();
                       }}
-                      className="w-full h-full flex flex-col items-center justify-center bg-stone-50/90 hover:bg-stone-100 transition-colors p-2 text-center"
+                      className="w-full h-full flex flex-col items-center justify-center bg-stone-50/95 hover:bg-stone-100 transition-colors p-2 text-center select-none"
                     >
-                      <div className="w-7 h-7 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-1">
-                        <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
+                      <div className="w-8 h-8 rounded-full bg-white shadow-xs border border-stone-200 flex items-center justify-center text-[#0E4A93] group-hover:bg-[#0E4A93] group-hover:text-white group-hover:scale-105 transition-all mb-1.5">
+                        <Upload className="w-4 h-4 stroke-[2.2]" />
                       </div>
-                      <span className="text-[10px] font-bold text-stone-600">{pSpec.label || `Hexagon ${idx + 1}`}</span>
+                      <span className="text-[10px] font-black text-stone-700 group-hover:text-[#0E4A93]">
+                        {pSpec.label || `Hexagon ${idx + 1}`}
+                      </span>
+                      <span className="text-[9px] text-stone-400 font-semibold">Upload Photo</span>
                     </div>
                   );
                 })()}
@@ -7687,22 +7769,26 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               const panel = panelImages[idx] || createDefaultPanel();
               const isTarget = activePanelIndex === idx;
               const isHovered = hoveredPanelIndex === idx;
-              const showPanelEdges = isHovered && activeMaterial === 'canvas' && selectedFrameId === 'no-frame';
-              const panelDepthPx =
-                selectedThicknessId === 'canvas-lite'
-                  ? 10
-                  : selectedThicknessId === 'thick-gallery'
-                  ? 28
-                  : selectedThicknessId === 'custom-thickness' ? Math.max(10, Math.min(48, Math.round((customThicknessMm / 25) * 18)))
-                  : 18;
-
-              const isImageWrapped = (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (panel.fitMode !== 'contain');
-              const effectiveEdgeColor = selectedWrapId === 'black-border' ? '#0F172A' : '#FFFFFF';
+              const hasImage = Boolean(panel.imageUrl);
+              const showPanelEdges = hasImage && isHovered && activeMaterial === 'canvas' && selectedFrameId === 'no-frame';
 
               const totalW = workspaceBoxSize.width || 420;
               const totalH = workspaceBoxSize.height || 320;
               const panelW = pSpec.w * totalW;
               const panelH = pSpec.h * totalH;
+
+              const baseDepth =
+                selectedThicknessId === 'canvas-lite'
+                  ? 4
+                  : selectedThicknessId === 'thick-gallery'
+                  ? 9
+                  : selectedThicknessId === 'custom-thickness'
+                  ? Math.max(4, Math.min(10, Math.round((customThicknessMm / 25) * 6)))
+                  : 6;
+              const panelDepthPx = Math.max(3, Math.min(baseDepth, Math.round(Math.min(panelW, panelH) * 0.08)));
+
+              const isImageWrapped = (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && (panel.fitMode !== 'contain');
+              const effectiveEdgeColor = selectedWrapId === 'black-border' ? '#0F172A' : '#FFFFFF';
 
               const wallShadow = activeMaterial === 'acrylic'
                 ? (effectiveAcrylicThicknessMm >= 8
@@ -7965,7 +8051,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       <div
                         className="absolute inset-0 pointer-events-none z-20"
                         style={{
-                          boxShadow: 'inset 0 0 0 1.5px rgba(255, 255, 255, 0.95), 0 0 0 1px rgba(0, 0, 0, 0.35)'
+                          boxShadow: '0 0 0 1px rgba(0, 0, 0, 0.15)'
                         }}
                       />
                     )}
@@ -8068,14 +8154,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       <div
                         onClick={() => {
                           setActivePanelIndex(idx);
+                          uploadTargetRef.current = idx;
                           fileInputRef.current?.click();
                         }}
-                        className="w-full h-full flex flex-col items-center justify-center bg-stone-50/90 hover:bg-stone-100 transition-colors p-2 text-center"
+                        className="w-full h-full flex flex-col items-center justify-center bg-stone-50/95 hover:bg-stone-100 transition-colors p-2 text-center select-none"
                       >
-                        <div className="w-7 h-7 rounded-full bg-white shadow-2xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:scale-105 transition-all mb-1">
-                          <Upload className="w-3.5 h-3.5 stroke-[2.2]" />
+                        <div className="w-8 h-8 rounded-full bg-white shadow-xs border border-stone-200 flex items-center justify-center text-[#0E4A93] group-hover:bg-[#0E4A93] group-hover:text-white group-hover:scale-105 transition-all mb-1.5">
+                          <Upload className="w-4 h-4 stroke-[2.2]" />
                         </div>
-                        <span className="text-[10px] font-bold text-stone-600">{pSpec.label || `Panel ${idx + 1}`}</span>
+                        <span className="text-[10px] font-black text-stone-700 group-hover:text-[#0E4A93]">
+                          {pSpec.label || `Panel ${idx + 1}`}
+                        </span>
+                        <span className="text-[9px] text-stone-400 font-semibold">Upload Photo</span>
                       </div>
                     )}
 
@@ -9215,7 +9305,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                       ...prev,
                                       0: {
                                         ...prev[0],
-                                        imageUrl: dataUrl
+                                        imageUrl: dataUrl,
+                                        fitMode: 'cover',
+                                        uploadedImage: {
+                                          originalSrc: dataUrl,
+                                          width: exportWidth,
+                                          height: exportHeight,
+                                          aspectRatio: exportWidth / exportHeight,
+                                          name: 'Word Art Design'
+                                        }
                                       }
                                     }));
                                   }
@@ -11117,7 +11215,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                             objectPosition: 'center center',
                                             transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                             transformOrigin: 'center center',
-                                            filter: `${getFilterCss(panelImages[0].filter)} brightness(0.95)`,
+                                            filter: isDigitalPaintingProduct
+                                              ? `${getFilterCss(panelImages[0].filter) !== 'none' ? getFilterCss(panelImages[0].filter) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)} brightness(0.95)`
+                                              : `${getFilterCss(panelImages[0].filter)} brightness(0.95)`,
                                             transition: isDragging ? 'none' : 'transform 0.15s ease-out'
                                           }}
                                           className="pointer-events-none select-none max-w-none"
@@ -11164,7 +11264,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                             objectPosition: 'center center',
                                             transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                             transformOrigin: 'center center',
-                                            filter: `${getFilterCss(panelImages[0].filter)} brightness(0.9)`,
+                                            filter: isDigitalPaintingProduct
+                                              ? `${getFilterCss(panelImages[0].filter) !== 'none' ? getFilterCss(panelImages[0].filter) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)} brightness(0.9)`
+                                              : `${getFilterCss(panelImages[0].filter)} brightness(0.9)`,
                                             transition: isDragging ? 'none' : 'transform 0.15s ease-out'
                                           }}
                                           className="pointer-events-none select-none max-w-none"
@@ -11212,7 +11314,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                             objectPosition: 'center center',
                                             transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                             transformOrigin: 'center center',
-                                            filter: `${getFilterCss(panelImages[0].filter)} brightness(0.85)`,
+                                            filter: isDigitalPaintingProduct
+                                              ? `${getFilterCss(panelImages[0].filter) !== 'none' ? getFilterCss(panelImages[0].filter) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)} brightness(0.85)`
+                                              : `${getFilterCss(panelImages[0].filter)} brightness(0.85)`,
                                             transition: isDragging ? 'none' : 'transform 0.15s ease-out'
                                           }}
                                           className="pointer-events-none select-none max-w-none"
@@ -11259,7 +11363,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                             objectPosition: 'center center',
                                             transform: `translate(${panelImages[0].panX}px, ${panelImages[0].panY}px) scale(${panelImages[0].scale}) rotate(${panelImages[0].rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
                                             transformOrigin: 'center center',
-                                            filter: `${getFilterCss(panelImages[0].filter)} brightness(0.88)`,
+                                            filter: isDigitalPaintingProduct
+                                              ? `${getFilterCss(panelImages[0].filter) !== 'none' ? getFilterCss(panelImages[0].filter) + ' ' : ''}${getDigitalPaintingFilterCss(digitalPaintingConfig.selectedEffectId)} brightness(0.88)`
+                                              : `${getFilterCss(panelImages[0].filter)} brightness(0.88)`,
                                             transition: isDragging ? 'none' : 'transform 0.15s ease-out'
                                           }}
                                           className="pointer-events-none select-none max-w-none"
@@ -12007,7 +12113,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 (() => {
                   const layoutDef = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   const splitPanels = layoutDef.panels;
-                  const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
+                  const masterImage = panelImages[0]?.imageUrl || null;
                   const master = panelImages[0] || createDefaultPanel();
                   const panX = (master.panX || 0) * scaleFactor;
                   const panY = (master.panY || 0) * scaleFactor;
@@ -12060,7 +12166,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 (() => {
                   const layoutDef = activeMosaicLayout;
                   const count = layoutDef.panelsCount || layoutDef.panels.length;
-                  const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
+                  const masterImage = panelImages[0]?.imageUrl || null;
                   const master = panelImages[0] || createDefaultPanel();
                   const panX = (master.panX || 0) * scaleFactor;
                   const panY = (master.panY || 0) * scaleFactor;
@@ -12598,7 +12704,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   const count = layoutDef.panelsCount || layoutDef.panels.length;
                   const totalCols = layoutDef.cols || (count === 16 ? 4 : count === 25 ? 5 : count === 36 ? 6 : count === 20 ? 4 : count === 15 ? 3 : count === 12 && layoutDef.aspectRatio > 1 ? 4 : 3);
                   const totalRows = layoutDef.rows || Math.ceil(count / totalCols);
-                  const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
+                  const masterImage = panelImages[0]?.imageUrl || null;
                   const master = panelImages[0] || createDefaultPanel();
                   const roomScale = (productPixelSize?.width || 240) / Math.max(1, workspaceBoxSize.width || 420);
                   const scaledPanX = (master.panX || 0) * roomScale;
@@ -12805,7 +12911,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 if (isSplitProduct) {
                   const layoutDef = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   const splitPanels = layoutDef.panels;
-                  const masterImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || null;
+                  const masterImage = panelImages[0]?.imageUrl || null;
                   const master = panelImages[0] || createDefaultPanel();
 
                   const displayWidthInches = layoutDef.overallWidthInches || 36;
