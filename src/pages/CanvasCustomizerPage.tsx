@@ -2893,9 +2893,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       // the moment the product is picked, and "Change Size"/"Change
       // Layout" buttons elsewhere still open the same modals either way;
       // this only hides the redundant sidebar entry, not the feature.
-      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSingleOrShapedCanvas || isSinglePrintCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct || isWordArtProduct || isBannerProduct },
+      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSinglePrintCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct || isWordArtProduct || isBannerProduct },
       { id: 'EFFECTS & OPTIONS', label: 'EFFECTS & OPTIONS', icon: Palette, enabled: productCapabilities.effects === true },
-      { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: isLayoutProduct || ((isSinglePrintCanvas || isPopArtProduct || isLyricProduct) && !isQuotesProduct && !isWordArtProduct && !isDigitalPaintingProduct) },
+      { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: (isSinglePrintCanvas || isPopArtProduct || isLyricProduct) && !isQuotesProduct && !isWordArtProduct && !isDigitalPaintingProduct },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
       { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal, enabled: productCapabilities.hardware !== false },
       { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false && !isDigitalPaintingProduct }
@@ -3213,91 +3213,28 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const targetKey = `${newMaterial}-${newProductId}`;
     if (curKey === targetKey) return;
 
-    // Detect the primary active image and all uploaded photos across this entire session
-    const currentActiveImage =
-      panelImages[0]?.imageUrl ||
-      panelImages[activePanelIndex]?.imageUrl ||
-      uploadedPhotos[0] ||
-      searchParams.get('prefillImage') ||
-      '';
-
-    const currentActiveMeta =
-      panelImages[0]?.uploadedImage ||
-      panelImages[activePanelIndex]?.uploadedImage ||
-      (currentActiveImage ? {
-        originalSrc: currentActiveImage,
-        width: 1200,
-        height: 1200,
-        aspectRatio: 1,
-        name: searchParams.get('prefillName') || 'Design'
-      } : undefined);
-
-    const allSessionPhotos = uploadedPhotos.length > 0
-      ? uploadedPhotos
-      : (currentActiveImage ? [currentActiveImage] : []);
-
     // Save outgoing product customization
     productCustomizationStore.current[curKey] = {
       panelImages,
-      uploadedPhotos: allSessionPhotos,
+      uploadedPhotos,
       activePanelIndex
     };
     activeCustomizationKey.current = targetKey;
 
     // Restore or initialize incoming product customization
     const saved = productCustomizationStore.current[targetKey];
-    if (saved && saved.panelImages && Object.values(saved.panelImages).some((p) => p?.imageUrl)) {
+    if (saved) {
       setPanelImages(saved.panelImages);
-      setUploadedPhotos(saved.uploadedPhotos && saved.uploadedPhotos.length > 0 ? saved.uploadedPhotos : allSessionPhotos);
-      setActivePanelIndex(saved.activePanelIndex || 0);
+      setUploadedPhotos(saved.uploadedPhotos);
+      setActivePanelIndex(saved.activePanelIndex);
     } else {
-      // Carry over the current active image so switching products never loses user image
-      const initialPanels: Record<number, PanelImageState> = {
-        0: currentActiveImage ? {
-          ...createDefaultPanel(),
-          imageUrl: currentActiveImage,
-          uploadedImage: currentActiveMeta,
-          scale: 1,
-          rotation: 0,
-          panX: 0,
-          panY: 0,
-          fitMode: 'cover'
-        } : createDefaultPanel(),
+      setPanelImages({
+        0: createDefaultPanel(),
         1: createDefaultPanel(),
         2: createDefaultPanel(),
         3: createDefaultPanel()
-      };
-
-      const isMulti = newProductId.includes('wall') || newProductId.includes('collage') || (newMaterial === 'canvas' && newProductId.includes('hexagon'));
-      if (isMulti && allSessionPhotos.length > 1) {
-        allSessionPhotos.forEach((imgUrl, i) => {
-          initialPanels[i] = {
-            ...createDefaultPanel(),
-            imageUrl: imgUrl,
-            scale: 1,
-            rotation: 0,
-            panX: 0,
-            panY: 0,
-            fitMode: 'cover'
-          };
-        });
-      } else if (isMulti && currentActiveImage) {
-        [1, 2, 3].forEach((i) => {
-          initialPanels[i] = {
-            ...createDefaultPanel(),
-            imageUrl: currentActiveImage,
-            uploadedImage: currentActiveMeta,
-            scale: 1,
-            rotation: 0,
-            panX: 0,
-            panY: 0,
-            fitMode: 'cover'
-          };
-        });
-      }
-
-      setPanelImages(initialPanels);
-      setUploadedPhotos(allSessionPhotos);
+      });
+      setUploadedPhotos([]);
       setActivePanelIndex(0);
     }
   };
@@ -4272,17 +4209,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const list = activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES;
     const pt = list.find((p) => p.id === productId);
     if (!pt) return;
-
-    // Detect the current image before switching so it persists
-    const currentActiveImage =
-      panelImages[0]?.imageUrl ||
-      panelImages[activePanelIndex]?.imageUrl ||
-      uploadedPhotos[0] ||
-      searchParams.get('prefillImage') ||
-      '';
-    const hasActiveImage = Boolean(currentActiveImage);
-    const searchString = location.search;
-
     switchProductSession(activeMaterial, productId);
 
     if (productId.includes('word')) {
@@ -4297,10 +4223,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setIsWordArtSizeModalOpen(true);
-      if (!hasActiveImage && activeTab !== 'PRODUCTS') {
-        setActiveTab('UPLOAD');
-      }
-      navigate(`/customize/${activeMaterial}/${productId}${searchString}`, { replace: true });
+      setActiveTab('UPLOAD');
+      navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
 
@@ -4336,10 +4260,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       }
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
-      if (!hasActiveImage && activeTab !== 'PRODUCTS') {
-        setActiveTab('UPLOAD');
-      }
-      navigate(`/customize/${activeMaterial}/${productId}${searchString}`, { replace: true });
+      setActiveTab('UPLOAD');
+      navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
 
@@ -4354,10 +4276,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
-      if (activeTab !== 'PRODUCTS') {
-        setActiveTab('EFFECTS & OPTIONS');
-      }
-      navigate(`/customize/${activeMaterial}/${productId}${searchString}`, { replace: true });
+      setActiveTab('EFFECTS & OPTIONS');
+      navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
 
@@ -4371,10 +4291,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
-      if (activeTab !== 'PRODUCTS') {
-        setActiveTab('CREATE BUS ROLL');
-      }
-      navigate(`/customize/${activeMaterial}/${productId}${searchString}`, { replace: true });
+      setActiveTab('CREATE BUS ROLL');
+      navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
 
@@ -4388,10 +4306,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedThicknessId('canvas-lite');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
-      if (!hasActiveImage && activeTab !== 'PRODUCTS') {
-        setActiveTab('UPLOAD');
-      }
-      navigate(`/customize/${activeMaterial}/${productId}${searchString}`, { replace: true });
+      setActiveTab('UPLOAD');
+      navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
 
@@ -4406,10 +4322,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setIsPopArtStyleModalOpen(true);
-      if (!hasActiveImage && activeTab !== 'PRODUCTS') {
-        setActiveTab('UPLOAD');
-      }
-      navigate(`/customize/${activeMaterial}/${productId}${searchString}`, { replace: true });
+      setActiveTab('UPLOAD');
+      navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
 
@@ -4424,9 +4338,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setIsLyricTemplateModalOpen(true);
-      if (!hasActiveImage && activeTab !== 'PRODUCTS') {
-        setActiveTab('UPLOAD');
-      }
+      setActiveTab('UPLOAD');
       setPanelImages((prev) => ({
         ...prev,
         [0]: {
@@ -4434,7 +4346,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           fitMode: 'cover'
         }
       }));
-      navigate(`/customize/${activeMaterial}/${productId}${searchString}`, { replace: true });
+      navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
 
@@ -4501,16 +4413,28 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setExpandedLayoutId(pt.defaultLayoutId);
     }
 
-    setIsSizeShapeModalOpen(false);
-    setIsLayoutModalOpen(false);
-
-    if (!hasActiveImage && activeTab !== 'PRODUCTS') {
+    if (isSingleOrShaped) {
+      setIsSizeShapeModalOpen(true);
+      setIsLayoutModalOpen(false);
       setActiveTab('UPLOAD');
-    } else if (activeTab !== 'PRODUCTS') {
-      setActiveTab('SELECT SIZE');
+    } else if (isLayoutProduct) {
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(true);
+      setLayoutSubTab('LAYOUTS');
+      setActiveTab('UPLOAD');
+    } else {
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(false);
+      if (productId.includes('digital') || productId.includes('painting')) {
+        setActiveTab('EFFECTS & OPTIONS');
+      } else if (productId.includes('bus')) {
+        setActiveTab('CREATE BUS ROLL');
+      } else {
+        setActiveTab('UPLOAD');
+      }
     }
 
-    navigate(`/customize/${activeMaterial}/${productId}${searchString}`, { replace: true });
+    navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
   };
 
   const handleSwitchMaterial = () => {
@@ -4529,8 +4453,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       else if (selectedProductTypeId.includes('bus')) counterpartId = 'acrylic-bus-roll';
       else if (selectedProductTypeId.includes('word')) counterpartId = 'acrylic-word-art';
       else counterpartId = 'acrylic-print';
-      switchProductSession('acrylic', counterpartId);
-      navigate(`/customize/acrylic/${counterpartId}${location.search}`, { replace: true });
+      navigate(`/customize/acrylic/${counterpartId}`);
     } else {
       if (selectedProductTypeId === 'acrylic-print' || selectedProductTypeId === 'acrylic-single' || selectedProductTypeId === 'acrylic-photo-panel') counterpartId = 'canvas-single';
       else if (selectedProductTypeId.includes('wall') || selectedProductTypeId.includes('display')) counterpartId = 'canvas-wall-art';
@@ -4543,8 +4466,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       else if (selectedProductTypeId.includes('bus')) counterpartId = 'canvas-bus-roll';
       else if (selectedProductTypeId.includes('word')) counterpartId = 'canvas-word-art';
       else counterpartId = 'canvas-single';
-      switchProductSession('canvas', counterpartId);
-      navigate(`/customize/canvas/${counterpartId}${location.search}`, { replace: true });
+      navigate(`/customize/canvas/${counterpartId}`);
     }
   };
 
