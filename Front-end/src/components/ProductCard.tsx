@@ -151,14 +151,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               <span className="text-stone-400 font-normal leading-none">• Handcrafted</span>
             </div>
           )}
-
-          {/* Customizable Indicator */}
-          {(product as any).customizationAvailable && (
-            <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-[#E8752A] bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200/60 leading-none ml-auto">
-              <Sparkles className="w-2.5 h-2.5" />
-              <span>Customizable</span>
-            </span>
-          )}
         </div>
       </div>
 
@@ -182,12 +174,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
-            if (onCustomize) {
-              onCustomize(product);
-            } else {
-              const material = product.categorySlug === 'acrylic' ? 'acrylic' : 'canvas';
-              navigate(`/customize/${material}/${product.slug || product.id}`);
+            const material = (product.categorySlug === 'acrylic' || product.material === 'acrylic') ? 'acrylic' : 'canvas';
+            const queryParams = new URLSearchParams();
+            if (product.image) {
+              queryParams.set('prefillImage', product.image);
             }
+            if (product.name) {
+              queryParams.set('prefillName', product.name);
+            }
+            const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+            navigate(`/customize/${material}/single${queryString}`);
           }}
           className="flex-1 py-1.5 px-2 rounded-lg bg-orange-50 hover:bg-orange-100 text-[#E8752A] border border-orange-200 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs"
           title="Customize before ordering"

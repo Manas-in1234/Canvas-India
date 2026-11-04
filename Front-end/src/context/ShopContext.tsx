@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Product, CartItem } from '../types';
 import { ALL_PRODUCTS } from '../data/productsData';
 import { fetchProductsFromApi } from '../api/productsApi';
@@ -84,6 +85,7 @@ interface ShopContextType {
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
 
 export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const navigate = useNavigate();
   // State management
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
   const [wishlistDrawerOpen, setWishlistDrawerOpen] = useState(false);
@@ -303,8 +305,21 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleOpenCustomize = (product?: Product) => {
-    setSelectedProductForCustomize(product || ALL_PRODUCTS[0]);
-    setCustomizeModalOpen(true);
+    if (product) {
+      setSelectedProductForCustomize(product);
+      const material = (product.categorySlug === 'acrylic' || product.material === 'acrylic') ? 'acrylic' : 'canvas';
+      const queryParams = new URLSearchParams();
+      if (product.image) {
+        queryParams.set('prefillImage', product.image);
+      }
+      if (product.name) {
+        queryParams.set('prefillName', product.name);
+      }
+      const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+      navigate(`/customize/${material}/single${queryString}`);
+    } else {
+      navigate('/customize/canvas/single');
+    }
   };
 
   const handleAddToCartCustomized = (item: {

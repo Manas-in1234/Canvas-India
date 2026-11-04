@@ -3276,16 +3276,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Arriving from a catalogue design's "Customize this Product" button: the
   // design's own artwork is passed as ?prefillImage= and dropped straight
   // into panel 0, same as a real upload, so the user starts customizing it
-  // immediately instead of an empty canvas. Runs once per page load only.
-  const prefillAppliedRef = useRef(false);
+  // immediately instead of an empty canvas.
+  const lastPrefillImageRef = useRef<string | null>(null);
   // The exact aspect-matched size computed below, so "Reset Size" can
   // return to it instead of the product's generic square default.
   const prefillSizeRef = useRef<{ width: number; height: number } | null>(null);
   useEffect(() => {
-    if (prefillAppliedRef.current) return;
     const prefillImage = searchParams.get('prefillImage');
-    if (!prefillImage) return;
-    prefillAppliedRef.current = true;
+    if (!prefillImage || lastPrefillImageRef.current === prefillImage) return;
+    lastPrefillImageRef.current = prefillImage;
     const img = new Image();
     img.onload = () => {
       const width = img.naturalWidth || img.width || 1200;
@@ -3328,6 +3327,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           fitMode: 'cover'
         }
       }));
+      setActiveTab('SELECT SIZE');
     };
     img.onerror = () => {
       setUploadedPhotos((prev) => (prev.includes(prefillImage) ? prev : [prefillImage, ...prev]));
@@ -3335,6 +3335,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         ...prev,
         0: { ...createDefaultPanel(), imageUrl: prefillImage, fitMode: 'contain' }
       }));
+      setActiveTab('SELECT SIZE');
     };
     img.src = prefillImage;
   }, [searchParams]);
