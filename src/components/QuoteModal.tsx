@@ -22,6 +22,17 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const details = [
+      'Hi Canvas India, I would like to request a quote:',
+      `• Name: ${formData.name}`,
+      formData.company ? `• Company: ${formData.company}` : null,
+      `• Email: ${formData.email}`,
+      `• Phone: ${formData.phone}`,
+      `• Material: ${formData.material}`,
+      `• Quantity: ${formData.quantity}`,
+      formData.notes ? `• Notes: ${formData.notes}` : null,
+    ].filter(Boolean).join('\n');
+    window.open(`https://wa.me/917893051555?text=${encodeURIComponent(details)}`, '_blank', 'noopener,noreferrer');
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);

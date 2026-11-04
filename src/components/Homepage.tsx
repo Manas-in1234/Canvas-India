@@ -846,13 +846,14 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 Custom employee welcome kits, company branded T-shirts, uniform mugs, business cards &amp; promotional giveaways.
               </p>
               <div className="mt-6">
-                <button
-                  type="button"
-                  onClick={onOpenQuote}
+                <a
+                  href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-sm font-bold text-white bg-[#E8752A] hover:bg-[#D3631A] rounded-full px-6 py-3 shadow-lg shadow-orange-950/40 transition-colors cursor-pointer"
                 >
                   Get a Quote <ArrowRight className="w-4 h-4" />
-                </button>
+                </a>
               </div>
             </div>
           </div>

@@ -167,7 +167,7 @@ export const RootLayout: React.FC = () => {
         wishlistCount={wishlistIds.length}
         onOpenCart={() => setCartDrawerOpen(true)}
         onOpenWishlist={() => setWishlistDrawerOpen(true)}
-        onOpenQuote={() => setQuoteModalOpen(true)}
+        onOpenQuote={() => window.open('https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote', '_blank', 'noopener,noreferrer')}
         onSelectCategory={handleSelectCategory}
         onSearch={handleSearch}
         allProducts={allProducts}
@@ -183,7 +183,7 @@ export const RootLayout: React.FC = () => {
       {/* Indian E-Commerce Footer */}
       <Footer
         onSelectCategory={handleSelectCategory}
-        onOpenQuote={() => setQuoteModalOpen(true)}
+        onOpenQuote={() => window.open('https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote', '_blank', 'noopener,noreferrer')}
         onOpenAccount={() => navigate('/account')}
       />
 
