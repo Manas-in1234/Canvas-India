@@ -22,7 +22,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
         
         {/* Main Footer Columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 pb-10 border-b border-stone-800/80">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 xl:gap-12 pb-10 border-b border-stone-800/80">
           
           {/* Column 1: Brand & About */}
           <div className="space-y-3.5">
@@ -129,41 +129,6 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
               <li><Link to="/cancellation-policy" className="hover:text-white transition-colors">Cancellation Policy</Link></li>
               <li><Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               <li><Link to="/terms-and-conditions" className="hover:text-white transition-colors">Terms of Service</Link></li>
-            </ul>
-          </div>
-
-          {/* Column 5: Bulk & Corporate */}
-          <div className="space-y-2.5">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-white">Bulk & Corporate</h4>
-            <p className="text-stone-400 text-xs leading-relaxed">
-              Tailored solutions for businesses, interior designers, architects, and corporate gifting.
-            </p>
-            <ul className="space-y-2 text-stone-400 text-xs">
-              <li>
-                <button onClick={onOpenQuote} className="hover:text-white transition-colors text-left cursor-pointer">
-                  Corporate Gifting Solutions
-                </button>
-              </li>
-              <li>
-                <button onClick={onOpenQuote} className="hover:text-white transition-colors text-left cursor-pointer">
-                  Bulk Order Discounts (25+ units)
-                </button>
-              </li>
-              <li>
-                <button onClick={onOpenQuote} className="hover:text-white transition-colors text-left cursor-pointer">
-                  GST Invoicing & Input Credit
-                </button>
-              </li>
-              <li>
-                <button onClick={onOpenQuote} className="hover:text-white transition-colors text-left cursor-pointer">
-                  Artist & Creator Program
-                </button>
-              </li>
-              <li>
-                <Link to="/designers-architects" className="hover:text-white transition-colors">
-                  Designers &amp; Architects Solutions
-                </Link>
-              </li>
             </ul>
           </div>
 
