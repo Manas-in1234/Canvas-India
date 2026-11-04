@@ -6234,11 +6234,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 registerWheelRef(0)(node);
                 (workspaceCanvasBoxRef as any).current = node;
               }}
-              onClick={() => {
-                if (!masterImage) fileInputRef.current?.click();
-              }}
               className={`relative select-none ${
-                masterImage ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
+                masterImage ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
               }`}
               style={{
                 aspectRatio: String(layout.aspectRatio),
@@ -6300,17 +6297,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     top: `${p.y * 100}%`,
                     width: `${p.w * 100}%`,
                     height: `${p.h * 100}%`,
-                    boxShadow: isHovered
-                      ? (activeMaterial === 'acrylic'
-                          ? '0 20px 32px -4px rgba(15, 23, 42, 0.32), 0 0 0 1px rgba(255, 255, 255, 0.6) inset'
-                          : '0 20px 32px -4px rgba(15, 23, 42, 0.32), 0 8px 16px -4px rgba(15, 23, 42, 0.2)')
-                      : splitPanelShadow,
-                    zIndex: isHovered ? 35 : isSelectedSlot ? 20 : 10,
-                    transform: isHovered ? 'scale(1.018)' : 'none',
-                    transformOrigin: 'center center',
-                    transition: 'transform 0.18s ease-out, box-shadow 0.18s ease-out'
+                    boxShadow: splitPanelShadow,
+                    zIndex: 10,
+                    transform: 'none',
+                    transformOrigin: 'center center'
                   }}
-                  className="ci-slot-container relative rounded-[2px] overflow-visible select-none group cursor-pointer"
+                  className="ci-slot-container relative rounded-[2px] overflow-visible select-none group cursor-default"
                 >
                   {/* Hover-based physical canvas edges (Canvas only) */}
                   {showPanelEdges && (
@@ -6553,9 +6545,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   {/* Front Face Panel Surface */}
                   <div
                     className={`w-full h-full relative rounded-[2px] overflow-hidden bg-white transition-all ${
-                      isSelectedSlot
-                        ? 'ring-2 ring-[#0E4A93] shadow-lg'
-                        : activeMaterial === 'acrylic' ? 'border border-slate-200' : 'border border-stone-300/80'
+                      activeMaterial === 'acrylic' ? 'border border-slate-200' : 'border border-stone-300/80'
                     }`}
                   >
                     {/* 3D Canvas Edge highlight / Acrylic Polished Edge */}
@@ -6678,10 +6668,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
               {/* If empty, central single upload action overlay */}
               {!masterImage && (
-                <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
+                <div className="absolute inset-0 z-40 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
                   <button
                     type="button"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
                     className="px-5 py-2.5 bg-white hover:bg-stone-50 text-stone-800 hover:text-[#0E4A93] font-bold text-xs sm:text-sm rounded-xl shadow-md border border-stone-200 flex items-center gap-2 pointer-events-auto cursor-pointer transition-all hover:scale-105"
                   >
                     <Upload className="w-4 h-4 stroke-[2.4] text-[#0E4A93]" />
@@ -6767,8 +6760,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       'Cinzel': '"Cinzel", Georgia, serif'
     };
     const font = fontFamilies[lyricConfig.fontFamily] || fontFamilies['Playfair Display'];
+    const text = lyricConfig.lyrics !== undefined ? lyricConfig.lyrics : (lyricConfig.lyricsText ?? '');
+    const textLen = (text || '').length;
+    const lineCount = (text || '').split('\n').length;
+    // Responsive font scaling based on lyrics length so the entire composition stays unclipped
+    const dynamicScale = textLen > 240 || lineCount > 6 ? 0.72 : textLen > 160 || lineCount > 4 ? 0.82 : textLen > 100 ? 0.90 : 1;
     const s = (px: number) => Math.max(1, Math.round(px * scaleFactor));
-    const fs = (px: number, min = 7) => `${Math.max(min, Math.round(px * scaleFactor))}px`;
+    // Scaled font size with proportional scaling down in Room View
+    const fs = (px: number) => `${Math.max(3.5, Math.round(px * scaleFactor * dynamicScale * 10) / 10)}px`;
     const scrimAlpha = Math.min(0.9, Math.max(0, (lyricConfig.overlayDarkness ?? 35) / 100));
     const hasPhoto = Boolean(panelImages[0]?.imageUrl && !isWordArtArtwork(panelImages[0]?.imageUrl));
     const isLightColor = (hex: string) => {
@@ -6780,14 +6779,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       : (isLightColor(lyricConfig.textColor)
           ? (selectedLyricTemplate.defaultTypography.textColor && !isLightColor(selectedLyricTemplate.defaultTypography.textColor)
               ? selectedLyricTemplate.defaultTypography.textColor
-              : '#1E293B')
+              : selectedLyricTemplate.id === 'forever-young-lyrics' ? '#FFFBEB' : '#1E293B')
           : (lyricConfig.textColor || selectedLyricTemplate.defaultTypography.textColor || '#1E293B'));
     const textAlign = lyricConfig.alignment || lyricConfig.textAlign || 'center';
     const layout = lyricConfig.layout || selectedLyricTemplate.defaultLayout || 'photo-lyrics-overlay';
     const title = lyricConfig.title !== undefined ? lyricConfig.title : (lyricConfig.songTitle ?? selectedLyricTemplate.name);
     const artist = lyricConfig.artistOrSubtitle !== undefined ? lyricConfig.artistOrSubtitle : (lyricConfig.artistOrNames ?? '');
     const date = lyricConfig.dateOrNames !== undefined ? lyricConfig.dateOrNames : (lyricConfig.dateOrInscription ?? '');
-    const text = lyricConfig.lyrics !== undefined ? lyricConfig.lyrics : (lyricConfig.lyricsText ?? '');
     const textShadow = hasPhoto
       ? (scrimAlpha > 0.05
           ? '0 1px 3px rgba(0,0,0,0.85), 0 2px 6px rgba(0,0,0,0.6)'
@@ -6807,7 +6805,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           }}
         >
           <div
-            className={`w-full max-w-[88%] rounded-sm flex flex-col items-center text-center ${hasPhoto ? 'backdrop-blur-sm' : ''}`}
+            className={`w-full max-w-[88%] max-h-[92%] rounded-sm flex flex-col items-center text-center min-h-0 ${hasPhoto ? 'backdrop-blur-sm' : ''}`}
             style={{
               background: hasPhoto
                 ? `rgba(15, 23, 42, ${Math.max(0.45, scrimAlpha * 0.9)})`
@@ -6818,34 +6816,33 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               boxShadow: hasPhoto
                 ? '0 4px 14px rgba(0, 0, 0, 0.3)'
                 : '0 1px 3px rgba(15, 23, 42, 0.08)',
-              padding: `${s(14)}px ${s(16)}px`,
-              gap: `${s(6)}px`,
+              padding: `${s(12)}px ${s(16)}px`,
+              gap: `${s(4)}px`,
               color: hasPhoto ? (lyricConfig.textColor || '#FFFFFF') : effectiveTextColor
             }}
           >
             {Boolean(title && title.trim().length > 0) && (
-              <div className="flex items-center gap-1.5 opacity-90">
-                <span style={{ fontSize: fs(14) }}>♪</span>
-                <span className="font-extrabold uppercase tracking-widest" style={{ fontSize: fs(13) }}>
+              <div className="flex items-center gap-1.5 opacity-90 shrink-0">
+                <span style={{ fontSize: fs(13) }}>♪</span>
+                <span className="font-extrabold uppercase tracking-widest leading-tight" style={{ fontSize: fs(12) }}>
                   {title}
                 </span>
-                <span style={{ fontSize: fs(14) }}>♪</span>
+                <span style={{ fontSize: fs(13) }}>♪</span>
               </div>
             )}
             {Boolean(artist && artist.trim().length > 0) && (
-              <div className="italic opacity-85" style={{ fontSize: fs(10.5) }}>
+              <div className="italic opacity-85 shrink-0 leading-tight" style={{ fontSize: fs(10) }}>
                 {artist}
               </div>
             )}
             {(Boolean(title && title.trim().length > 0) || Boolean(artist && artist.trim().length > 0)) && Boolean(text && text.trim().length > 0) && (
-              <div className="w-16 h-px bg-current opacity-40 my-0.5" />
+              <div className="w-16 h-px bg-current opacity-40 my-0.5 shrink-0" />
             )}
             {Boolean(text && text.trim().length > 0) && (
               <div
-                className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden"
+                className="leading-snug whitespace-pre-line opacity-95 min-h-0 flex-1 flex flex-col justify-center"
                 style={{
                   fontSize: fs(10),
-                  maxHeight: `${s(120)}px`,
                   textAlign
                 }}
               >
@@ -6853,7 +6850,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               </div>
             )}
             {Boolean(date && date.trim().length > 0) && (
-              <div className="font-mono tracking-wider opacity-75 mt-1" style={{ fontSize: fs(9) }}>
+              <div className="font-mono tracking-wider opacity-75 mt-1 shrink-0" style={{ fontSize: fs(8.5) }}>
                 {date}
               </div>
             )}
@@ -6868,7 +6865,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         <div
           className="absolute inset-0 z-25 flex flex-col justify-between pointer-events-none select-none"
           style={{
-            padding: `${s(18)}px ${s(20)}px`,
+            padding: `${s(16)}px ${s(18)}px`,
             background: hasPhoto
               ? `linear-gradient(to bottom, rgba(0,0,0,${scrimAlpha * 0.85}) 0%, rgba(0,0,0,${scrimAlpha * 0.4}) 35%, rgba(0,0,0,${scrimAlpha * 0.4}) 65%, rgba(0,0,0,${scrimAlpha * 0.9}) 100%)`
               : undefined,
@@ -6878,20 +6875,20 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           }}
         >
           {(Boolean(title && title.trim().length > 0) || Boolean(artist && artist.trim().length > 0)) && (
-            <div className="text-center space-y-0.5">
+            <div className="text-center space-y-0.5 shrink-0">
               {Boolean(title && title.trim().length > 0) && (
-                <div className="font-serif tracking-widest uppercase font-bold" style={{ fontSize: fs(15) }}>
+                <div className="font-serif tracking-widest uppercase font-bold leading-tight" style={{ fontSize: fs(14) }}>
                   {title}
                 </div>
               )}
               {Boolean(artist && artist.trim().length > 0) && (
-                <div className="italic opacity-90" style={{ fontSize: fs(11) }}>
+                <div className="italic opacity-90 leading-tight" style={{ fontSize: fs(10.5) }}>
                   {artist}
                 </div>
               )}
               <div className="flex items-center justify-center gap-2 opacity-50 my-1">
                 <div className="w-10 h-px bg-current" />
-                <span style={{ fontSize: fs(9) }}>✦ • ✦</span>
+                <span style={{ fontSize: fs(8.5) }}>✦ • ✦</span>
                 <div className="w-10 h-px bg-current" />
               </div>
             </div>
@@ -6899,11 +6896,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
           {Boolean(text && text.trim().length > 0) && (
             <div
-              className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden my-auto"
+              className="leading-snug whitespace-pre-line opacity-95 min-h-0 flex-1 flex flex-col justify-center"
               style={{
-                fontSize: fs(10.5),
-                textAlign,
-                maxHeight: `${s(150)}px`
+                fontSize: fs(10),
+                textAlign
               }}
             >
               {text}
@@ -6911,8 +6907,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           )}
 
           {Boolean(date && date.trim().length > 0) && (
-            <div className="text-center pt-1 border-t border-current/25">
-              <span className="tracking-widest uppercase font-semibold" style={{ fontSize: fs(9.5) }}>
+            <div className="text-center pt-1 border-t border-current/25 shrink-0">
+              <span className="tracking-widest uppercase font-semibold" style={{ fontSize: fs(9) }}>
                 {date}
               </span>
             </div>
@@ -6921,52 +6917,77 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       );
     }
 
-    // 3. Split Side-by-Side (right side backdrop with text)
+    // 3. Split Side-by-Side (used for couples personalized art & anniversary gifts)
     if (layout === 'split-side-by-side') {
       return (
-        <div
-          className="absolute inset-y-0 right-0 w-1/2 z-25 flex flex-col justify-center pointer-events-none select-none"
-          style={{
-            padding: `${s(14)}px`,
-            background: hasPhoto
-              ? `rgba(15, 23, 42, ${Math.max(0.6, scrimAlpha * 0.95)})`
-              : 'rgba(248, 250, 252, 0.95)',
-            backdropFilter: 'blur(4px)',
-            color: hasPhoto ? (lyricConfig.textColor || '#FFFFFF') : effectiveTextColor,
-            fontFamily: font,
-            borderLeft: hasPhoto ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(15, 23, 42, 0.1)'
-          }}
-        >
-          {Boolean(title && title.trim().length > 0) && (
-            <div className="font-black uppercase tracking-wider mb-0.5" style={{ fontSize: fs(13) }}>
-              {title}
+        <div className="absolute inset-0 z-25 pointer-events-none select-none flex">
+          {/* Left half: Couple illustration when no photo is uploaded */}
+          {!hasPhoto && (
+            <div className="w-1/2 h-full flex flex-col items-center justify-center p-3 bg-gradient-to-br from-rose-50/70 via-amber-50/50 to-stone-100/70 border-r border-stone-200/60">
+              <div className="flex flex-col items-center justify-center text-[#BE123C] space-y-1.5">
+                <svg className="w-10 h-10 text-[#E11D48] drop-shadow-xs" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+                <span className="text-[9px] sm:text-[10px] font-serif italic text-stone-600 tracking-wider">
+                  Better Together
+                </span>
+              </div>
             </div>
           )}
-          {Boolean(artist && artist.trim().length > 0) && (
-            <div className="italic opacity-85 mb-1.5" style={{ fontSize: fs(10) }}>
-              {artist}
+
+          {/* Right half: Lyrics & Couple details */}
+          <div
+            className={`${hasPhoto ? 'absolute inset-y-0 right-0 w-1/2' : 'w-1/2'} h-full flex flex-col justify-center`}
+            style={{
+              padding: `${s(12)}px`,
+              background: hasPhoto
+                ? `rgba(15, 23, 42, ${Math.max(0.6, scrimAlpha * 0.95)})`
+                : (selectedLyricTemplate.id === 'couples-personalized-art' ? '#FEF9C3' : 'rgba(248, 250, 252, 0.95)'),
+              backdropFilter: hasPhoto ? 'blur(4px)' : undefined,
+              color: hasPhoto ? (lyricConfig.textColor || '#FFFFFF') : effectiveTextColor,
+              fontFamily: font,
+              borderLeft: hasPhoto ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(133, 77, 14, 0.15)'
+            }}
+          >
+            {/* Heart Motif for Couples Personalized Art */}
+            <div className="flex items-center gap-1 mb-1 text-[#BE123C] shrink-0">
+              <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+              <span className="text-[8px] font-bold uppercase tracking-widest opacity-80 font-sans">
+                Couples Art
+              </span>
             </div>
-          )}
-          {(Boolean(title && title.trim().length > 0) || Boolean(artist && artist.trim().length > 0)) && Boolean(text && text.trim().length > 0) && (
-            <div className="w-8 h-px bg-current opacity-50 mb-2" />
-          )}
-          {Boolean(text && text.trim().length > 0) && (
-            <div
-              className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden"
-              style={{
-                fontSize: fs(9.5),
-                textAlign,
-                maxHeight: `${s(150)}px`
-              }}
-            >
-              {text}
-            </div>
-          )}
-          {Boolean(date && date.trim().length > 0) && (
-            <div className="mt-2 pt-1 border-t border-current/20 font-mono tracking-wider opacity-80" style={{ fontSize: fs(8.5) }}>
-              {date}
-            </div>
-          )}
+            {Boolean(title && title.trim().length > 0) && (
+              <div className="font-black uppercase tracking-wider mb-0.5 leading-tight shrink-0" style={{ fontSize: fs(12) }}>
+                {title}
+              </div>
+            )}
+            {Boolean(artist && artist.trim().length > 0) && (
+              <div className="italic opacity-85 mb-1 leading-tight shrink-0" style={{ fontSize: fs(9.5) }}>
+                {artist}
+              </div>
+            )}
+            {(Boolean(title && title.trim().length > 0) || Boolean(artist && artist.trim().length > 0)) && Boolean(text && text.trim().length > 0) && (
+              <div className="w-8 h-px bg-current opacity-40 mb-1.5 shrink-0" />
+            )}
+            {Boolean(text && text.trim().length > 0) && (
+              <div
+                className="leading-snug whitespace-pre-line opacity-95 min-h-0 flex-1 flex flex-col justify-center"
+                style={{
+                  fontSize: fs(9),
+                  textAlign
+                }}
+              >
+                {text}
+              </div>
+            )}
+            {Boolean(date && date.trim().length > 0) && (
+              <div className="mt-1 pt-1 border-t border-current/20 font-mono tracking-wider opacity-80 shrink-0" style={{ fontSize: fs(8) }}>
+                {date}
+              </div>
+            )}
+          </div>
         </div>
       );
     }
@@ -6977,7 +6998,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         <div
           className="absolute inset-x-0 bottom-0 z-25 flex flex-col justify-end pointer-events-none select-none"
           style={{
-            padding: `${s(14)}px ${s(16)}px`,
+            padding: `${s(12)}px ${s(16)}px`,
             background: hasPhoto
               ? `linear-gradient(to top, rgba(0,0,0,${Math.max(0.85, scrimAlpha)}) 0%, rgba(0,0,0,${scrimAlpha * 0.8}) 65%, transparent 100%)`
               : undefined,
@@ -6987,14 +7008,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           }}
         >
           {(Boolean(title && title.trim().length > 0) || Boolean(artist && artist.trim().length > 0)) && (
-            <div className="flex items-baseline justify-between gap-2 border-b border-current/30 pb-1 mb-1.5">
+            <div className="flex items-baseline justify-between gap-2 border-b border-current/30 pb-1 mb-1 shrink-0">
               {Boolean(title && title.trim().length > 0) && (
-                <span className="font-black uppercase tracking-wider truncate" style={{ fontSize: fs(13) }}>
+                <span className="font-black uppercase tracking-wider truncate" style={{ fontSize: fs(12) }}>
                   {title}
                 </span>
               )}
               {Boolean(artist && artist.trim().length > 0) && (
-                <span className="italic opacity-85 shrink-0" style={{ fontSize: fs(10) }}>
+                <span className="italic opacity-85 shrink-0" style={{ fontSize: fs(9.5) }}>
                   {artist}
                 </span>
               )}
@@ -7002,18 +7023,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           )}
           {Boolean(text && text.trim().length > 0) && (
             <div
-              className="leading-relaxed whitespace-pre-line opacity-90 overflow-hidden"
+              className="leading-snug whitespace-pre-line opacity-90 min-h-0"
               style={{
-                fontSize: fs(10),
-                textAlign,
-                maxHeight: `${s(85)}px`
+                fontSize: fs(9.5),
+                textAlign
               }}
             >
               {text}
             </div>
           )}
           {Boolean(date && date.trim().length > 0) && (
-            <div className="text-right mt-1 opacity-70 font-mono" style={{ fontSize: fs(8.5) }}>
+            <div className="text-right mt-0.5 opacity-70 font-mono shrink-0" style={{ fontSize: fs(8) }}>
               {date}
             </div>
           )}
@@ -7027,7 +7047,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         <div
           className="absolute inset-0 z-25 flex flex-col items-center justify-center text-center pointer-events-none select-none"
           style={{
-            padding: `${s(20)}px`,
+            padding: `${s(16)}px`,
             background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.7})` : undefined,
             color: effectiveTextColor,
             fontFamily: font,
@@ -7035,36 +7055,35 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           }}
         >
           {Boolean(title && title.trim().length > 0) && (
-            <div className="font-serif tracking-widest uppercase font-black mb-0.5" style={{ fontSize: fs(16) }}>
+            <div className="font-serif tracking-widest uppercase font-black mb-0.5 leading-tight shrink-0" style={{ fontSize: fs(14) }}>
               {title}
             </div>
           )}
           {Boolean(artist && artist.trim().length > 0) && (
-            <div className="italic opacity-90 tracking-wide mb-1" style={{ fontSize: fs(11) }}>
+            <div className="italic opacity-90 tracking-wide mb-1 leading-tight shrink-0" style={{ fontSize: fs(10) }}>
               {artist}
             </div>
           )}
           {(Boolean(title && title.trim().length > 0) || Boolean(artist && artist.trim().length > 0)) && Boolean(text && text.trim().length > 0) && (
-            <div className="flex items-center gap-2 opacity-50 my-1.5">
+            <div className="flex items-center gap-2 opacity-50 my-1 shrink-0">
               <div className="w-8 h-px bg-current" />
-              <span style={{ fontSize: fs(10) }}>❦</span>
+              <span style={{ fontSize: fs(9) }}>❦</span>
               <div className="w-8 h-px bg-current" />
             </div>
           )}
           {Boolean(text && text.trim().length > 0) && (
             <div
-              className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden my-1 max-w-[92%]"
+              className="leading-snug whitespace-pre-line opacity-95 min-h-0 flex-1 flex flex-col justify-center max-w-[94%]"
               style={{
-                fontSize: fs(10.5),
-                textAlign,
-                maxHeight: `${s(150)}px`
+                fontSize: fs(10),
+                textAlign
               }}
             >
               {text}
             </div>
           )}
           {Boolean(date && date.trim().length > 0) && (
-            <div className="mt-2 font-mono tracking-widest opacity-80" style={{ fontSize: fs(9) }}>
+            <div className="mt-1 font-mono tracking-widest opacity-80 shrink-0" style={{ fontSize: fs(8.5) }}>
               {date}
             </div>
           )}
@@ -7076,38 +7095,49 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (layout === 'sheet-music-bg') {
       return (
         <div
-          className="absolute inset-0 z-25 flex flex-col justify-between text-center pointer-events-none select-none relative overflow-hidden"
+          className="absolute inset-0 z-25 flex flex-col justify-between text-center pointer-events-none select-none overflow-hidden"
           style={{
-            padding: `${s(18)}px`,
-            background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.75})` : '#FAFAF9',
-            color: effectiveTextColor,
+            padding: `${s(16)}px`,
+            background: hasPhoto
+              ? `rgba(0,0,0,${Math.max(0.65, scrimAlpha * 0.85)})`
+              : 'linear-gradient(to bottom, #FEF9C3 0%, #FEF3C7 50%, #FDE68A 100%)',
+            color: hasPhoto ? (lyricConfig.textColor || '#FFFFFF') : (effectiveTextColor === '#1E293B' ? '#78350F' : effectiveTextColor),
             fontFamily: font,
             textShadow
           }}
         >
-          {/* Subtle Musical Staff Lines Background SVG */}
-          <svg className="absolute inset-0 w-full h-full opacity-15 pointer-events-none" viewBox="0 0 400 300" preserveAspectRatio="none">
-            <line x1="0" y1="40" x2="400" y2="40" stroke="currentColor" strokeWidth="1" />
-            <line x1="0" y1="48" x2="400" y2="48" stroke="currentColor" strokeWidth="1" />
-            <line x1="0" y1="56" x2="400" y2="56" stroke="currentColor" strokeWidth="1" />
-            <line x1="0" y1="64" x2="400" y2="64" stroke="currentColor" strokeWidth="1" />
-            <line x1="0" y1="72" x2="400" y2="72" stroke="currentColor" strokeWidth="1" />
-            <line x1="0" y1="220" x2="400" y2="220" stroke="currentColor" strokeWidth="1" />
+          {/* Authentic Musical Staff Lines & Clefs SVG Background */}
+          <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" viewBox="0 0 400 300" preserveAspectRatio="none">
+            <line x1="0" y1="36" x2="400" y2="36" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="44" x2="400" y2="44" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="52" x2="400" y2="52" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="60" x2="400" y2="60" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="68" x2="400" y2="68" stroke="currentColor" strokeWidth="1" />
+            <text x="14" y="66" fontSize="32" fontFamily="serif" fill="currentColor" opacity="0.7">𝄞</text>
+            <text x="75" y="56" fontSize="18" fontFamily="serif" fill="currentColor" opacity="0.6">𝅘𝅥𝅯</text>
+            <text x="130" y="48" fontSize="18" fontFamily="serif" fill="currentColor" opacity="0.6">𝅘𝅥</text>
+            <text x="280" y="54" fontSize="18" fontFamily="serif" fill="currentColor" opacity="0.6">♫</text>
+            <text x="345" y="62" fontSize="18" fontFamily="serif" fill="currentColor" opacity="0.6">♩</text>
+
             <line x1="0" y1="228" x2="400" y2="228" stroke="currentColor" strokeWidth="1" />
             <line x1="0" y1="236" x2="400" y2="236" stroke="currentColor" strokeWidth="1" />
             <line x1="0" y1="244" x2="400" y2="244" stroke="currentColor" strokeWidth="1" />
             <line x1="0" y1="252" x2="400" y2="252" stroke="currentColor" strokeWidth="1" />
+            <line x1="0" y1="260" x2="400" y2="260" stroke="currentColor" strokeWidth="1" />
+            <text x="14" y="258" fontSize="32" fontFamily="serif" fill="currentColor" opacity="0.7">𝄞</text>
+            <text x="170" y="248" fontSize="18" fontFamily="serif" fill="currentColor" opacity="0.6">𝅘𝅥𝅮</text>
+            <text x="325" y="242" fontSize="18" fontFamily="serif" fill="currentColor" opacity="0.6">♬</text>
           </svg>
 
           {(Boolean(title && title.trim().length > 0) || Boolean(artist && artist.trim().length > 0)) && (
-            <div className="relative z-10 space-y-0.5">
+            <div className="relative z-10 space-y-0.5 shrink-0">
               {Boolean(title && title.trim().length > 0) && (
-                <div className="font-serif tracking-widest uppercase font-bold" style={{ fontSize: fs(16) }}>
+                <div className="font-serif tracking-widest uppercase font-bold leading-tight" style={{ fontSize: fs(14) }}>
                   {title}
                 </div>
               )}
               {Boolean(artist && artist.trim().length > 0) && (
-                <div className="italic opacity-85" style={{ fontSize: fs(11) }}>
+                <div className="italic opacity-85 leading-tight" style={{ fontSize: fs(10) }}>
                   {artist}
                 </div>
               )}
@@ -7116,11 +7146,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
           {Boolean(text && text.trim().length > 0) && (
             <div
-              className="relative z-10 leading-relaxed whitespace-pre-line opacity-95 overflow-hidden my-auto"
+              className="relative z-10 leading-snug whitespace-pre-line opacity-95 min-h-0 flex-1 flex flex-col justify-center"
               style={{
-                fontSize: fs(11),
-                textAlign,
-                maxHeight: `${s(160)}px`
+                fontSize: fs(10.5),
+                textAlign
               }}
             >
               {text}
@@ -7128,7 +7157,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           )}
 
           {Boolean(date && date.trim().length > 0) && (
-            <div className="relative z-10 opacity-75 font-mono tracking-wider" style={{ fontSize: fs(9) }}>
+            <div className="relative z-10 opacity-75 font-mono tracking-wider shrink-0" style={{ fontSize: fs(8.5) }}>
               {date}
             </div>
           )}
@@ -7140,44 +7169,43 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (layout === 'quote-solid-bg') {
       return (
         <div
-          className="absolute inset-0 z-25 flex flex-col justify-between items-center text-center pointer-events-none select-none relative"
+          className="absolute inset-0 z-25 flex flex-col justify-between items-center text-center pointer-events-none select-none overflow-hidden"
           style={{
-            padding: `${s(22)}px`,
-            background: hasPhoto ? `rgba(0,0,0,${scrimAlpha * 0.75})` : '#FFFFFF',
-            color: effectiveTextColor,
+            padding: `${s(16)}px`,
+            background: hasPhoto ? `rgba(0,0,0,${Math.max(0.65, scrimAlpha * 0.85)})` : '#FAF5FF',
+            color: hasPhoto ? (lyricConfig.textColor || '#FFFFFF') : (effectiveTextColor === '#1E293B' ? '#581C87' : effectiveTextColor),
             fontFamily: font,
             textShadow
           }}
         >
-          <div className="font-serif opacity-30 select-none" style={{ fontSize: fs(34), lineHeight: 1 }}>
+          <div className="font-serif opacity-35 select-none leading-none shrink-0" style={{ fontSize: fs(28) }}>
             &ldquo;
           </div>
           {Boolean(text && text.trim().length > 0) && (
             <div
-              className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden my-auto max-w-[90%]"
+              className="leading-snug whitespace-pre-line opacity-95 min-h-0 flex-1 flex flex-col justify-center max-w-[92%]"
               style={{
-                fontSize: fs(11.5),
-                textAlign,
-                maxHeight: `${s(160)}px`
+                fontSize: fs(10.5),
+                textAlign
               }}
             >
               {text}
             </div>
           )}
           {(Boolean(title && title.trim().length > 0) || Boolean(artist && artist.trim().length > 0) || Boolean(date && date.trim().length > 0)) && (
-            <div className="space-y-0.5 pt-1 border-t border-current/20 w-3/4">
+            <div className="space-y-0.5 pt-1 border-t border-current/20 w-3/4 shrink-0">
               {Boolean(title && title.trim().length > 0) && (
-                <div className="font-bold tracking-widest uppercase" style={{ fontSize: fs(11) }}>
+                <div className="font-bold tracking-widest uppercase leading-tight" style={{ fontSize: fs(10.5) }}>
                   {title}
                 </div>
               )}
               {Boolean(artist && artist.trim().length > 0) && (
-                <div className="italic opacity-80" style={{ fontSize: fs(9.5) }}>
+                <div className="italic opacity-80 leading-tight" style={{ fontSize: fs(9) }}>
                   {artist}
                 </div>
               )}
               {Boolean(date && date.trim().length > 0) && (
-                <div className="font-mono opacity-70" style={{ fontSize: fs(8.5) }}>
+                <div className="font-mono opacity-70 leading-tight" style={{ fontSize: fs(8) }}>
                   {date}
                 </div>
               )}
@@ -7192,7 +7220,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       <div
         className="absolute inset-0 z-25 flex flex-col justify-end pointer-events-none select-none overflow-hidden"
         style={{
-          padding: `${s(16)}px ${s(18)}px`,
+          padding: `${s(14)}px ${s(16)}px`,
           background: hasPhoto
             ? `linear-gradient(to top, rgba(0,0,0,${scrimAlpha}) 0%, rgba(0,0,0,${scrimAlpha * 0.7}) 50%, rgba(0,0,0,${scrimAlpha * 0.15}) 80%, transparent 100%)`
             : undefined,
@@ -7201,27 +7229,34 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           textShadow
         }}
       >
-        {/* flex-col with a maxHeight cap so, on a small Room View box, only
-            the lyrics line (flex-grow/shrink) gives up space — the title/
-            date/artist/divider above it (all shrink-0) always render in
-            full instead of being pushed off the top edge and clipped. */}
-        <div className="space-y-1 drop-shadow-md flex flex-col min-h-0" style={{ maxHeight: '100%' }}>
+        {/* Golden Hour Sunset Glow for Forever Young lyrics */}
+        {selectedLyricTemplate.id === 'forever-young-lyrics' && (
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: hasPhoto
+                ? 'radial-gradient(circle at 50% 25%, rgba(251, 191, 36, 0.28) 0%, rgba(180, 83, 9, 0.38) 60%, rgba(0, 0, 0, 0.65) 100%)'
+                : 'linear-gradient(135deg, #451a03 0%, #78350f 30%, #b45309 60%, #d97706 85%, #f59e0b 100%)'
+            }}
+          />
+        )}
+        <div className="relative z-10 space-y-1 drop-shadow-md flex flex-col min-h-0" style={{ maxHeight: '100%' }}>
           {(Boolean(title && title.trim().length > 0) || Boolean(date && date.trim().length > 0)) && (
             <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 shrink-0">
               {Boolean(title && title.trim().length > 0) && (
-                <span className="font-black uppercase tracking-wider" style={{ fontSize: fs(14) }}>
+                <span className="font-black uppercase tracking-wider leading-tight" style={{ fontSize: fs(13) }}>
                   {title}
                 </span>
               )}
               {Boolean(date && date.trim().length > 0) && (
-                <span className="font-mono opacity-75 shrink-0" style={{ fontSize: fs(9) }}>
+                <span className="font-mono opacity-75 shrink-0" style={{ fontSize: fs(8.5) }}>
                   {date}
                 </span>
               )}
             </div>
           )}
           {Boolean(artist && artist.trim().length > 0) && (
-            <div className="italic opacity-90 shrink-0" style={{ fontSize: fs(11) }}>
+            <div className="italic opacity-90 shrink-0 leading-tight" style={{ fontSize: fs(10) }}>
               {artist}
             </div>
           )}
@@ -7230,9 +7265,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           )}
           {Boolean(text && text.trim().length > 0) && (
             <div
-              className="leading-relaxed whitespace-pre-line opacity-95 overflow-hidden min-h-0 grow"
+              className="leading-snug whitespace-pre-line opacity-95 min-h-0 flex-1 flex flex-col justify-center"
               style={{
-                fontSize: fs(10.5),
+                fontSize: fs(10),
                 textAlign
               }}
             >
@@ -8199,7 +8234,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             width: `${pSpec.w * 100}%`,
             height: `${pSpec.h * 100}%`,
             boxSizing: 'border-box',
-            padding: isMobile ? '5px' : '7px'
+            padding: isMobile ? '2px' : '2.5px'
           }}
         >
           <div
@@ -8212,10 +8247,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 fileInputRef.current?.click();
               }
             }}
-            className={`ci-slot-container relative w-full h-full min-h-[50px] bg-stone-100 rounded-lg overflow-hidden transition-all cursor-pointer group ${
+            className={`ci-slot-container relative w-full h-full min-h-[50px] bg-[#737373] rounded-none overflow-hidden transition-all cursor-pointer group ${
               isTarget
                 ? 'ring-2 ring-inset ring-[#0E4A93] z-20 shadow-md'
-                : 'border border-stone-200 hover:border-stone-400'
+                : 'border border-stone-600/40'
             }`}
           >
             {dragOverPanel === panelIdx && (
@@ -8235,7 +8270,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
               return panel.imageUrl ? (
                 <>
-                  <div className="w-full h-full overflow-hidden relative flex items-center justify-center pointer-events-none select-none">
+                  <div className="w-full h-full overflow-hidden relative flex items-center justify-center pointer-events-none select-none rounded-none">
                     <img
                       src={panel.imageUrl}
                       alt={`Slot ${panelIdx + 1}`}
@@ -8277,7 +8312,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         filter: getFilterCss(panel.filter),
                         transition: isDragging ? 'none' : 'transform 0.15s ease-out'
                       }}
-                      className="pointer-events-none select-none max-w-none"
+                      className="pointer-events-none select-none max-w-none rounded-none"
                     />
                   </div>
                   {/* Slot quick overlay buttons */}
@@ -8308,14 +8343,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   </div>
                 </>
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-stone-100 hover:bg-stone-200/70 transition-colors p-2 text-center select-none">
-                  <div className="w-8 h-8 rounded-full bg-white shadow-xs border border-stone-200 flex items-center justify-center text-[#0E4A93] group-hover:bg-[#0E4A93] group-hover:text-white group-hover:scale-105 transition-all mb-1">
-                    <Upload className="w-4 h-4 stroke-[2.2]" />
-                  </div>
-                  <span className="text-[10px] font-black text-stone-700 group-hover:text-[#0E4A93]">
-                    {pSpec.label || `Slot ${panelIdx + 1}`}
-                  </span>
-                  <span className="text-[9px] text-stone-400 font-semibold">Upload Photo</span>
+                <div className="w-full h-full flex items-center justify-center bg-[#737373] hover:bg-[#686868] transition-colors select-none">
+                  <svg className="w-6 h-6 sm:w-7 sm:h-7 text-[#dc2626] fill-current drop-shadow-2xs" viewBox="0 0 24 24">
+                    <path d="M12 3l5 5h-3v6h-4V8H7l5-5z" />
+                    <path d="M4 17h16v3H4v-3zm3 1.5a.75.75 0 100 1.5.75.75 0 000-1.5zm2.5 0a.75.75 0 100 1.5.75.75 0 000-1.5z" />
+                  </svg>
                 </div>
               );
             })()}
@@ -8330,7 +8362,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         ref={(node) => {
           (workspaceCanvasBoxRef as any).current = node;
         }}
-        className="relative bg-[#d8dce2] rounded-[2px] overflow-hidden border border-stone-300/80 transition-all select-none shadow-xl mx-auto my-auto"
+        className="relative bg-white rounded-none overflow-hidden border border-stone-300 transition-all select-none shadow-xl mx-auto my-auto p-1.5 sm:p-2"
         style={{
           aspectRatio: String(layout.aspectRatio),
           width: isMobile
@@ -8351,7 +8383,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         {/* Border overlay for collage canvas */}
         {selectedBorderWidthId !== 'none' && (
           <div
-            className="absolute inset-0 pointer-events-none z-25 rounded-[2px]"
+            className="absolute inset-0 pointer-events-none z-25 rounded-none"
             style={{
               border: `${selectedBorderWidthId === 'thin' || selectedBorderWidthId === 'custom-color' ? 4 : selectedBorderWidthId === 'medium' ? 8 : 12}px solid ${selectedBorderColor}`
             }}
@@ -12037,9 +12069,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               className="w-full h-full relative overflow-hidden pointer-events-none select-none"
               style={{ backgroundColor: quoteBgColor }}
             />
+          ) : isCollageProduct ? (
+            <div className="w-full h-full bg-[#737373] flex items-center justify-center pointer-events-none select-none">
+              <svg className="w-4 h-4 text-[#dc2626] fill-current" viewBox="0 0 24 24">
+                <path d="M12 3l5 5h-3v6h-4V8H7l5-5z" />
+                <path d="M4 17h16v3H4v-3zm3 1.5a.75.75 0 100 1.5.75.75 0 000-1.5zm2.5 0a.75.75 0 100 1.5.75.75 0 000-1.5z" />
+              </svg>
+            </div>
           ) : (
             <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-[10px] font-bold pointer-events-none select-none">
-              {isCollageProduct ? `Slot ${idx + 1}` : `Panel ${idx + 1}`}
+              {`Panel ${idx + 1}`}
             </div>
           );
         };
@@ -12300,7 +12339,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 (() => {
                   const layout = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   return (
-                    <div className="relative w-full h-full bg-[#d8dce2] pointer-events-none select-none">
+                    <div className="relative w-full h-full bg-white rounded-none p-1 sm:p-1.5 pointer-events-none select-none">
                       <div className="relative w-full h-full overflow-hidden">
                         {layout.panels.map((pSpec, idx) => (
                           <div
@@ -12311,11 +12350,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                               top: `${pSpec.y * 100}%`,
                               width: `${pSpec.w * 100}%`,
                               height: `${pSpec.h * 100}%`,
-                              padding: '2px',
+                              padding: '1.5px',
                               boxSizing: 'border-box'
                             }}
                           >
-                            <div className="w-full h-full rounded-xs overflow-hidden bg-stone-200">
+                            <div className="w-full h-full rounded-none overflow-hidden bg-[#737373]">
                               {renderSlotPhoto(idx, scaleFactor)}
                             </div>
                           </div>
@@ -13061,7 +13100,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   const collageDef = getProductLayout(selectedProductTypeId, selectedLayoutId || currentSizeOption.diagramType || currentSizeOption.id);
                   const roomScale = (productPixelSize?.width || 240) / Math.max(1, workspaceBoxSize.width || 420);
                   const collageRoomContent = (
-                    <div className="relative w-full h-full rounded-xs bg-[#d8dce2] shadow-sm overflow-hidden">
+                    <div className="relative w-full h-full rounded-none bg-white shadow-sm overflow-hidden p-1 sm:p-1.5">
                       <div className="relative w-full h-full overflow-hidden">
                         {collageDef.panels.map((pSpec, idx) => {
                           const p = panelImages[idx];
@@ -13085,11 +13124,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                 top: `${pSpec.y * 100}%`,
                                 width: `${pSpec.w * 100}%`,
                                 height: `${pSpec.h * 100}%`,
-                                padding: '4px',
+                                padding: '1.5px',
                                 boxSizing: 'border-box'
                               }}
                             >
-                              <div className="w-full h-full rounded-xs overflow-hidden bg-stone-200 flex items-center justify-center relative">
+                              <div className="w-full h-full rounded-none overflow-hidden bg-[#737373] flex items-center justify-center relative">
                                 {url ? (
                                   <div className="w-full h-full overflow-hidden relative flex items-center justify-center pointer-events-none select-none">
                                     <img
@@ -13111,12 +13150,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                         transformOrigin: 'center center',
                                         filter: getFilterCss(p?.filter || 'original')
                                       }}
-                                      className="pointer-events-none select-none max-w-none"
+                                      className="pointer-events-none select-none max-w-none rounded-none"
                                     />
                                   </div>
                                 ) : (
-                                  <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 text-[10px] font-bold pointer-events-none select-none">
-                                    {pSpec.label || `Slot ${idx + 1}`}
+                                  <div className="w-full h-full bg-[#737373] flex items-center justify-center pointer-events-none select-none">
+                                    <svg className="w-3.5 h-3.5 text-[#dc2626] fill-current" viewBox="0 0 24 24">
+                                      <path d="M12 3l5 5h-3v6h-4V8H7l5-5z" />
+                                      <path d="M4 17h16v3H4v-3zm3 1.5a.75.75 0 100 1.5.75.75 0 000-1.5zm2.5 0a.75.75 0 100 1.5.75.75 0 000-1.5z" />
+                                    </svg>
                                   </div>
                                 )}
                                 {textElements

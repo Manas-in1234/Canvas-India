@@ -259,7 +259,7 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
     description: 'Inspirational Bob Dylan folk classic lyrics with golden hour glow over cherished family and couple photos.',
     defaultLayout: 'photo-lyrics-overlay',
     defaultBackground: {
-      color: '#FFFFFF',
+      color: '#78350F',
       overlayDarkness: 35
     },
     defaultTypography: {
