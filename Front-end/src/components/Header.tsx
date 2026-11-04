@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Search, 
+  Search,
+  MessageCircle, 
   ShoppingCart, 
   Heart, 
   User, 
@@ -1038,6 +1039,17 @@ export const Header: React.FC<HeaderProps> = ({
                   </React.Fragment>
                 );
               })}
+
+              {/* Category Bar: Get a Quote */}
+              <button
+                type="button"
+                onClick={onOpenQuote}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-[#E8752A] hover:text-white bg-orange-50 hover:bg-[#E8752A] border border-orange-200/80 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-2xs shrink-0 ml-1"
+                title="Get a Quote"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>Get a Quote</span>
+              </button>
             </div>
 
           </nav>
@@ -1077,6 +1089,15 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           );
         })}
+
+        <button
+          type="button"
+          onClick={onOpenQuote}
+          className="px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shrink-0 text-white bg-[#E8752A] hover:bg-[#D3631A] shadow-xs cursor-pointer"
+        >
+          <MessageCircle className="w-3 h-3" />
+          <span>Get a Quote</span>
+        </button>
       </div>
 
       {/* ========================================================================= */}
@@ -1153,7 +1174,7 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="text-[11px] uppercase tracking-wider font-bold text-stone-400 mb-2 px-1">
                 Explore Categories &amp; Products
               </div>
-              {[...PRIMARY_CATEGORIES, {
+              {[...PRIMARY_CATEGORIES.filter(cat => cat.slug !== 'corporate-orders'), {
                 id: 'cat-designers-architects',
                 name: 'Designers & Architects',
                 slug: 'designers-architects',
