@@ -852,7 +852,7 @@ export const MEGA_MENUS_DATA: Record<string, MegaMenuConfig> = {
           { name: 'Tiered Wholesale Rates', slug: 'bulk-order', description: 'Save up to 40% on orders above 20 units', actionType: 'category' },
           { name: 'Free Pre-Production Proofs', slug: 'bulk-order', description: 'Color-calibrated digital sample before production', actionType: 'category' },
           { name: 'Multi-Location Dispatch', slug: 'bulk-order', description: 'Split shipping to branches across India', actionType: 'category' },
-          { name: '100% GST Compliant', slug: 'bulk-order', description: 'Official tax invoices with B2B input credit', actionType: 'category' },
+          { name: 'Pan-India Freight', slug: 'bulk-order', description: 'Safe doorstep delivery across all PIN codes', actionType: 'category' },
           { name: 'Dedicated Support', slug: 'bulk-order', description: 'Assistance from production specialists', actionType: 'category' },
         ],
       },
@@ -934,7 +934,7 @@ export const MEGA_MENUS_DATA: Record<string, MegaMenuConfig> = {
     ],
     promo: {
       title: 'Bulk & Corporate Orders',
-      tagline: 'Canvas, acrylic, eco-friendly cork and every catalogue print category at volume pricing for offices, events and gifting programs. GST invoicing included.',
+      tagline: 'Canvas, acrylic, eco-friendly cork and every catalogue print category at volume pricing for offices, events and gifting programs.',
       badge: 'B2B Services',
       image: '/assets/canvas-india-branded-packaging.webp',
       buttonText: 'Browse Bulk Orders',
@@ -1026,7 +1026,7 @@ export const PRIMARY_CATEGORIES: PrimaryCategoryItem[] = [
     iconName: 'Building2',
     startingPrice: 499,
     image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80',
-    description: 'B2B office art, employee welcome kits and GST invoicing',
+    description: 'B2B office art, employee welcome kits and corporate gifting',
   },
   {
     id: 'cat-devotional',

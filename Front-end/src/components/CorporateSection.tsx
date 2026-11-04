@@ -12,7 +12,7 @@ export const CorporateSection: React.FC<CorporateSectionProps> = () => {
     'Employee Welcome Kits & Festive Keepsakes',
     'Architectural Paneling & Event Backdrop Boards',
     'Tiered Wholesale Rates for 20+ Units',
-    'GST Invoicing with 18% Input Tax Credit',
+    'Pan-India Doorstep Safe Delivery',
   ];
 
   return (
@@ -33,7 +33,7 @@ export const CorporateSection: React.FC<CorporateSectionProps> = () => {
 
             <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-xl">
               Equip your office, startup, clinic, hotel or retail space with custom printed displays. 
-              We assist from digital proofing and GST invoicing to pan-India multi-location dispatch.
+              We assist from digital proofing to pan-India multi-location dispatch.
             </p>
 
             {/* Clean Checkmark Bullets (No Boxed Cards) */}

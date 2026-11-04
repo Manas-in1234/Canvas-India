@@ -64,7 +64,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose }) => {
             </div>
             <h4 className="text-lg font-bold text-stone-900">Quote Request Received!</h4>
             <p className="text-xs text-stone-500 max-w-sm mx-auto">
-              Our corporate fulfillment team will review your specifications and send a GST-compliant quotation within 4 business hours.
+              Our corporate fulfillment team will review your specifications and send a customized quotation within 4 business hours.
             </p>
           </div>
         ) : (

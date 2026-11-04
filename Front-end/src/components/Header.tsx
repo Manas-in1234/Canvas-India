@@ -129,7 +129,7 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     slug: 'corporate-orders',
     route: '/corporate-orders',
     image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80',
-    description: 'Office branding, corporate kits & GST billing',
+    description: 'Office branding, corporate kits & custom printing',
   },
   {
     name: 'Designers & Architects',
@@ -892,7 +892,7 @@ export const Header: React.FC<HeaderProps> = ({
                             </div>
 
                             <p className="text-xs text-stone-600 leading-relaxed my-3.5">
-                              Custom employee welcome kits, company branded prints, uniform displays, and corporate gifting with 100% GST invoicing.
+                              Custom employee welcome kits, company branded prints, uniform displays, and corporate gifting.
                             </p>
 
                             <a
@@ -1248,7 +1248,7 @@ export const Header: React.FC<HeaderProps> = ({
                         {cat.slug === 'corporate-orders' ? (
                           <div className="space-y-3">
                             <p className="text-xs text-stone-600 leading-relaxed">
-                              Custom employee welcome kits, company branded prints, uniform displays, and corporate gifting with 100% GST invoicing.
+                              Custom employee welcome kits, company branded prints, uniform displays, and corporate gifting.
                             </p>
                             <a
                               href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"

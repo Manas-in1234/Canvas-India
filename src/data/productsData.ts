@@ -278,7 +278,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     ],
     features: [
       'Tiered wholesale pricing for 20+ units',
-      'Official GST invoicing with 18% input tax credit',
+      'Dedicated enterprise account manager',
       'Pan-India multi-location drop shipping',
       'Digital proof approval before mass printing'
     ],

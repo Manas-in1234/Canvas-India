@@ -712,14 +712,14 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     pageTitle: 'Wholesale Canvas Prints',
     heroTitle: 'What is Wholesale Canvas Printing?',
     heroSubtitle:
-      'Bulk printing for artists, studios & interior designers. Tiered pricing for 20+ units with official GST invoicing — built for galleries, decorators, and resellers who order in volume.',
+      'Bulk printing for artists, studios & interior designers. Tiered pricing for 20+ units — built for galleries, decorators, and resellers who order in volume.',
     stylesSectionTitle: 'How Wholesale Pricing Works',
     stepsTitle: 'How Wholesale Ordering Works',
     stepsSubtitle: 'Bulk orders go through our quote desk instead of the standard customizer.',
     steps: [
       { icon: 'upload', title: 'Request a Quote', desc: 'Tell us your order volume (20+ units) and the canvas sizes or formats you need.' },
       { icon: 'grid', title: 'Share Your Order Details', desc: 'Send over your artwork or photos, along with your preferred sizes, finishes, and delivery timeline.' },
-      { icon: 'sliders', title: 'Approve Your Quote', desc: "We'll send tiered pricing with GST invoicing — confirm your order once you're happy with it." },
+      { icon: 'sliders', title: 'Approve Your Quote', desc: "We'll send tiered pricing tailored to your quantity — confirm your order once you're happy with it." },
       { icon: 'eye', title: 'Production & Delivery', desc: 'Every piece is printed to the same archival standard and shipped together, pan-India.' }
     ],
     styles: [
@@ -727,7 +727,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         id: 'bulk-order',
         number: '01',
         name: 'Tiered Wholesale Pricing',
-        description: 'Tiered wholesale pricing for 20+ units with official GST invoicing and 18% input tax credit — request a custom quote for your order volume.',
+        description: 'Tiered wholesale pricing for 20+ units — request a custom quote for your order volume.',
         price: 0,
         image: PHOTO.galleryWallViewer,
         customizeHref: '/bulk-order'
@@ -743,7 +743,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     featuresTitle: 'Why order wholesale with us',
     features: [
       { icon: 'layers' as const, title: 'Volume Pricing', desc: 'Tiered discounts that scale with order size, starting at 20 units.' },
-      { icon: 'shield' as const, title: 'GST Invoicing', desc: 'Official tax invoices with 18% input tax credit for your business.' },
+      { icon: 'shield' as const, title: 'Quality Guarantee', desc: 'Museum-grade archival inks and premium materials guaranteed.' },
       { icon: 'sparkles' as const, title: 'Consistent Quality', desc: 'Every piece in your order held to the same archival print standard.' },
       { icon: 'clock' as const, title: 'Dedicated Support', desc: 'A quote and production timeline tailored to your order.' }
     ]
