@@ -323,8 +323,9 @@ export const Header: React.FC<HeaderProps> = ({
       clearTimeout(megaMenuTimeoutRef.current);
       megaMenuTimeoutRef.current = null;
     }
+    const isCorporate = slug === 'corporate-orders';
     const menuData = MEGA_MENUS_DATA[slug];
-    const targetWidth = menuData?.groups && menuData.groups[3] ? 1260 : menuData?.groups && menuData.groups[2] ? 1050 : 850;
+    const targetWidth = isCorporate ? 360 : menuData?.groups && menuData.groups[3] ? 1260 : menuData?.groups && menuData.groups[2] ? 1050 : 850;
     const estWidth = Math.min(targetWidth, window.innerWidth - 32);
     const left = Math.max(16, Math.min(rect.left, window.innerWidth - estWidth - 16));
     setMegaMenuPos({ top: rect.bottom + 2, left });
@@ -865,6 +866,48 @@ export const Header: React.FC<HeaderProps> = ({
 
                       {/* Mega-Menu Dropdown Panel */}
                       {isMenuOpen && menuData && megaMenuPos && createPortal(
+                        cat.slug === 'corporate-orders' ? (
+                          <div
+                            ref={megaMenuDropdownRef}
+                            data-header-portal="mega-menu"
+                            className="fixed w-[360px] max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-2xl border border-stone-200 z-50 p-5 transition-all duration-200 animate-in fade-in slide-in-from-top-2 text-left select-none whitespace-normal"
+                            style={{ top: megaMenuPos.top, left: Math.max(16, Math.min(megaMenuPos.left, window.innerWidth - 380)) }}
+                            onMouseEnter={() => {
+                              if (megaMenuTimeoutRef.current) {
+                                clearTimeout(megaMenuTimeoutRef.current);
+                                megaMenuTimeoutRef.current = null;
+                              }
+                              setActiveMegaMenu('corporate-orders');
+                            }}
+                            onMouseLeave={handleMegaMenuLeave}
+                          >
+                            <div className="flex items-center gap-3 pb-3 border-b border-stone-100">
+                              <div className="w-10 h-10 rounded-xl bg-[#0E4A93]/10 text-[#0E4A93] flex items-center justify-center shrink-0">
+                                <Building2 className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-sm text-stone-900">Corporate &amp; Bulk Orders</h4>
+                                <p className="text-[11px] text-stone-500">Volume pricing &amp; custom solutions</p>
+                              </div>
+                            </div>
+
+                            <p className="text-xs text-stone-600 leading-relaxed my-3.5">
+                              Custom employee welcome kits, company branded prints, uniform displays, and corporate gifting with 100% GST invoicing.
+                            </p>
+
+                            <a
+                              href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setActiveMegaMenu(null)}
+                              className="w-full py-3 bg-[#E8752A] hover:bg-[#D3631A] text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer group"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              <span>Get a Quote</span>
+                              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                            </a>
+                          </div>
+                        ) : (
                         <div
                           ref={megaMenuDropdownRef}
                           data-header-portal="mega-menu"
@@ -1032,7 +1075,8 @@ export const Header: React.FC<HeaderProps> = ({
                               </button>
                             </div>
                           </div>
-                        </div>,
+                        </div>
+                        ),
                         document.body
                       )}
                     </div>
@@ -1040,16 +1084,7 @@ export const Header: React.FC<HeaderProps> = ({
                 );
               })}
 
-              {/* Category Bar: Get a Quote */}
-              <button
-                type="button"
-                onClick={onOpenQuote}
-                className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-[#E8752A] hover:text-white bg-orange-50 hover:bg-[#E8752A] border border-orange-200/80 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-2xs shrink-0 ml-1"
-                title="Get a Quote"
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-                <span>Get a Quote</span>
-              </button>
+
             </div>
 
           </nav>
@@ -1090,14 +1125,6 @@ export const Header: React.FC<HeaderProps> = ({
           );
         })}
 
-        <button
-          type="button"
-          onClick={onOpenQuote}
-          className="px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shrink-0 text-white bg-[#E8752A] hover:bg-[#D3631A] shadow-xs cursor-pointer"
-        >
-          <MessageCircle className="w-3 h-3" />
-          <span>Get a Quote</span>
-        </button>
       </div>
 
       {/* ========================================================================= */}
@@ -1174,7 +1201,7 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="text-[11px] uppercase tracking-wider font-bold text-stone-400 mb-2 px-1">
                 Explore Categories &amp; Products
               </div>
-              {[...PRIMARY_CATEGORIES.filter(cat => cat.slug !== 'corporate-orders'), {
+              {[...PRIMARY_CATEGORIES, {
                 id: 'cat-designers-architects',
                 name: 'Designers & Architects',
                 slug: 'designers-architects',
@@ -1218,7 +1245,26 @@ export const Header: React.FC<HeaderProps> = ({
 
                     {isExpanded && menuData && (
                       <div className="p-3 bg-white space-y-3 border-t border-stone-100 text-xs">
-                        {menuData.groups.map((group, gIdx) => (
+                        {cat.slug === 'corporate-orders' ? (
+                          <div className="space-y-3">
+                            <p className="text-xs text-stone-600 leading-relaxed">
+                              Custom employee welcome kits, company branded prints, uniform displays, and corporate gifting with 100% GST invoicing.
+                            </p>
+                            <a
+                              href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="w-full py-2.5 bg-[#E8752A] hover:bg-[#D3631A] text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              <span>Get a Quote</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        ) : (
+                          <>
+                            {menuData.groups.map((group, gIdx) => (
                           <div key={group.title} className={gIdx > 0 ? 'pt-2 border-t border-stone-100' : ''}>
                             <div className="font-bold text-[11px] text-[#0E4A93] uppercase tracking-wider mb-1.5 flex items-center gap-1">
                               {renderGroupIcon(group.iconType)}
@@ -1250,6 +1296,8 @@ export const Header: React.FC<HeaderProps> = ({
                             <ArrowRight className="w-3.5 h-3.5" />
                           </button>
                         </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
