@@ -58,9 +58,9 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
 
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-[#E8752A] shrink-0" />
-                <span className="text-stone-400">Contact Number:</span>
-                <a href="tel:+917893051555" className="text-stone-200 hover:text-white transition-colors">
-                  78930 51555
+                <span className="text-stone-400">Landline Number:</span>
+                <a href="tel:040-29303344" className="text-stone-200 hover:text-white transition-colors">
+                  040-29303344
                 </a>
               </div>
 

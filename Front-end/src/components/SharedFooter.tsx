@@ -151,7 +151,9 @@ export const SharedFooter: React.FC<SharedFooterProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
-                <span>+91 78930 51555</span>
+                <a href="tel:040-29303344" className="hover:text-white transition-colors">
+                  040-29303344 (Landline)
+                </a>
               </div>
               
               {/* WhatsApp Quick Chat */}
