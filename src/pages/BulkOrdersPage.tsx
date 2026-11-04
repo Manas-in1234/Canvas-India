@@ -1,22 +1,25 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Heart } from 'lucide-react';
+import { 
+  ChevronRight, 
+  ArrowRight, 
+  MessageCircle, 
+  Building2, 
+  CheckCircle2, 
+  FileText, 
+  Truck, 
+  Award, 
+  Mail, 
+  Phone 
+} from 'lucide-react';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 import { ACRYLIC_STYLE_LANDING_DATA } from '../data/acrylicStyleLandingData';
 import { CORK_BULK_ITEMS } from '../data/corkBulkData';
-import { SHOP_CATEGORIES } from '../data/shopCategories';
-
-// Every Print World catalogue design (Devotional Art, Line Art, etc.)
-// starts at this price — pulled from catalogueProducts.ts.
-const CATALOGUE_BASE_PRICE = 249;
 
 const SERIF = '"Playfair Display", Georgia, serif';
 
-// Every bulk order, regardless of material, ships at this minimum run.
+// Preserved exports for backward compatibility across customize and product pages
 export const MIN_BULK_QTY = 50;
-
-// Genuine volume pricing — the more units, the lower the per-unit discount
-// factor (applied to the style's normal single-unit starting price).
 export const QTY_PRICE_TIERS: { qty: number; discount: number }[] = [
   { qty: 50, discount: 0.85 },
   { qty: 100, discount: 0.8 },
@@ -31,10 +34,6 @@ export function bulkUnitPriceFor(basePrice: number, qty: number): number {
   return Math.round(basePrice * tier.discount);
 }
 
-// One selectable variant within a bulk item's gallery — its own real photo,
-// name and customize link (with its own ?layout= when that style is a
-// specific panel/shape layout), so picking a thumbnail picks that exact
-// variant to customize, not just a different preview photo.
 export interface BulkVariant {
   name: string;
   image: string;
@@ -82,147 +81,237 @@ export function buildBulkItems(): BulkItem[] {
   return [...canvas, ...acrylic, ...CORK_BULK_ITEMS];
 }
 
-// Canvas and Acrylic style slugs overlap (e.g. both have "wall-display" and
-// "photo-collage"), so lookups are keyed on material + slug together.
 export function getBulkItem(material: string, slug: string): BulkItem | undefined {
   return buildBulkItems().find((item) => item.material === material && item.slug === slug);
 }
 
 const Container: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <div className={`w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 ${className}`}>{children}</div>
+  <div className={`w-full max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-12 ${className}`}>{children}</div>
 );
 
-const BulkSection: React.FC<{ title: string; items: BulkItem[] }> = ({ title, items }) => (
-  <section className="py-8 sm:py-10">
-    <Container>
-      <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight mb-5">{title}</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-        {items.map((item) => {
-          const bulkPrice = bulkUnitPriceFor(item.unitPrice, MIN_BULK_QTY);
-          return (
-            <Link
-              key={`${item.material}-${item.slug}`}
-              to={`/bulk-order/${item.material}/${item.slug}`}
-              className="group text-left cursor-pointer block"
-            >
-              <div className="relative aspect-square rounded-xl overflow-hidden bg-stone-100 border border-stone-200/70 group-hover:border-[#0E4A93]/40 group-hover:shadow-md transition-all">
-                <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
-                <span className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-xs">
-                  <Heart className="w-3.5 h-3.5 text-stone-500" />
-                </span>
-              </div>
-              <div className="mt-2.5 text-sm font-bold text-stone-900 group-hover:text-[#0E4A93] transition-colors">
-                Bulk {item.name}
-              </div>
-              <div className="text-xs font-semibold text-stone-700 mt-0.5">
-                From ₹{bulkPrice.toLocaleString('en-IN')} each
-              </div>
-              <div className="text-[11px] text-stone-400 mt-0.5">
-                Minimum quantity {MIN_BULK_QTY}
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-    </Container>
-  </section>
-);
+const CORPORATE_SOLUTIONS = [
+  {
+    title: 'Office Reception & Boardroom Art',
+    description: 'Commanding large-format canvas prints, panoramic office skyline installations, and acoustic wall art tailored to corporate interiors.',
+    icon: Building2,
+  },
+  {
+    title: 'Employee Welcome Kits & Gifting',
+    description: 'Curated onboarding merchandise, customized keepsake desk frames, and festive employee recognition awards with custom branding.',
+    icon: Award,
+  },
+  {
+    title: 'Custom Acrylic Displays & Signage',
+    description: 'Ultra-clear cast acrylic signs, standoff wall plaques, milestone blocks, and brand showcase panels with polished diamond edges.',
+    icon: CheckCircle2,
+  },
+  {
+    title: 'Eco-Friendly Cork Notice Boards',
+    description: 'High-density sustainable cork pinboards and bulletin displays for modern conference rooms, agile workspaces, and design studios.',
+    icon: FileText,
+  },
+];
 
-// Print World catalogue categories (Devotional Art, Line Art, etc.) — these
-// are pre-designed prints across many individual designs rather than one
-// customizable product, so bulk cards link straight to that category's
-// listing page instead of a single-product detail/customize flow.
-const CatalogueBulkSection: React.FC = () => (
-  <section className="py-8 sm:py-10">
-    <Container>
-      <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight mb-5">Other Bulk Categories</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-        {SHOP_CATEGORIES.map((cat) => {
-          const bulkPrice = bulkUnitPriceFor(CATALOGUE_BASE_PRICE, MIN_BULK_QTY);
-          return (
-            <Link
-              key={cat.categorySlug}
-              to={cat.path}
-              className="group text-left cursor-pointer block"
-            >
-              <div className="relative aspect-square rounded-xl overflow-hidden bg-stone-100 border border-stone-200/70 group-hover:border-[#0E4A93]/40 group-hover:shadow-md transition-all">
-                <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" loading="lazy" />
-                <span className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-xs">
-                  <Heart className="w-3.5 h-3.5 text-stone-500" />
-                </span>
-              </div>
-              <div className="mt-2.5 text-sm font-bold text-stone-900 group-hover:text-[#0E4A93] transition-colors">
-                Bulk {cat.name}
-              </div>
-              <div className="text-xs font-semibold text-stone-700 mt-0.5">
-                From ₹{bulkPrice.toLocaleString('en-IN')} each
-              </div>
-              <div className="text-[11px] text-stone-400 mt-0.5">
-                Minimum quantity {MIN_BULK_QTY}
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-    </Container>
-  </section>
-);
+const CORPORATE_PERKS = [
+  {
+    title: '100% GST Invoicing',
+    description: 'Official B2B tax invoice with 18% Input Tax Credit (ITC) for your company books.',
+    icon: FileText,
+  },
+  {
+    title: 'Tiered Volume Discounts',
+    description: 'Direct factory pricing with steep tiered discounts on quantities of 10 to 5,000+ units.',
+    icon: Award,
+  },
+  {
+    title: 'Safe Pan-India Freight',
+    description: 'Specialized reinforced foam-padded crate packaging with doorstep multi-office logistics.',
+    icon: Truck,
+  },
+  {
+    title: 'Dedicated Account Manager',
+    description: 'Direct WhatsApp & phone assistance for free mockups, custom sizing, and prompt order turnaround.',
+    icon: MessageCircle,
+  },
+];
 
 export const BulkOrdersPage: React.FC = () => {
   useEffect(() => {
     document.title = 'Bulk & Corporate Orders | Canvas India';
   }, []);
 
-  const allItems = useMemo(() => buildBulkItems(), []);
-  const canvasItems = useMemo(() => allItems.filter((i) => i.material === 'canvas'), [allItems]);
-  const acrylicItems = useMemo(() => allItems.filter((i) => i.material === 'acrylic'), [allItems]);
-  const corkItems = useMemo(() => allItems.filter((i) => i.material === 'cork'), [allItems]);
+  const whatsappQuoteUrl =
+    'https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Bulk%20%26%20Corporate%20Orders';
 
   return (
     <div className="w-full bg-[#FFFDF9] text-stone-900 font-manrope">
 
-      {/* HERO */}
-      <section className="relative overflow-hidden bg-[#F7F1E5] border-b border-stone-200/60">
+      {/* HERO SECTION */}
+      <section className="relative overflow-hidden bg-[#0A1C3D] text-white py-14 sm:py-20">
         <img
           src="/assets/canvas-india-branded-packaging.webp"
-          alt="Canvas India branded bulk order packaging"
-          className="hidden lg:block absolute right-0 top-0 h-full w-[55%] object-cover object-center"
+          alt="Canvas India bulk order packaging"
+          className="hidden lg:block absolute right-0 top-0 h-full w-[55%] object-cover object-center opacity-85"
           style={{
-            maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
-            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
+            maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 20%, #000 45%, #000 100%)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 20%, #000 45%, #000 100%)',
           }}
         />
-        <div className="hidden lg:block absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0A1C3D] via-[#0A1C3D]/95 lg:via-[#0A1C3D]/85 to-transparent pointer-events-none" />
 
-        <Container className="relative py-10 sm:py-14">
-          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-stone-500 mb-6">
-            <Link to="/" className="hover:text-[#0E4A93] transition-colors">Home</Link>
+        <Container className="relative z-10">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-stone-300 mb-6">
+            <Link to="/" className="hover:text-white transition-colors">Home</Link>
             <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
-            <span className="text-stone-900 font-semibold">Bulk &amp; Corporate Orders</span>
+            <span className="text-white font-semibold">Bulk &amp; Corporate Orders</span>
           </nav>
 
-          <div className="max-w-xl">
-            <span className="text-[11px] font-black uppercase tracking-[0.25em] text-[#E8752A]">B2B &amp; Bulk Solutions</span>
-            <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-stone-900" style={{ fontFamily: SERIF }}>
-              Bulk &amp; Corporate Orders
+          <div className="max-w-2xl">
+            <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-300">
+              B2B &amp; Commercial Solutions
+            </span>
+            <h1 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight" style={{ fontFamily: SERIF }}>
+              Corporate &amp; Bulk Orders
             </h1>
-            <p className="mt-3 text-sm sm:text-base text-stone-600 leading-relaxed">
-              Canvas, acrylic, sustainable cork and every catalogue print category at volume pricing for offices, studios, events, hotels and gifting programs — every size and style below ships as a bulk run.
+            <p className="mt-4 text-sm sm:text-base text-stone-200 leading-relaxed max-w-xl">
+              Elevate your workspace, hotel, startup or corporate gifting program. From custom employee welcome kits and boardroom canvas prints to acrylic brand signage — we provide tailored volume quotes, free digital proofs, and pan-India safe dispatch.
             </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <a
+                href={whatsappQuoteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 text-sm sm:text-base font-bold text-white bg-[#E8752A] hover:bg-[#D3631A] rounded-full px-7 py-3.5 shadow-xl shadow-orange-950/50 transition-all hover:scale-105 cursor-pointer"
+              >
+                <MessageCircle className="w-5 h-5" />
+                <span>Get a Quote on WhatsApp</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+
+              <a
+                href="mailto:info@canvassindia.com"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-stone-200 hover:text-white bg-white/10 hover:bg-white/15 border border-white/20 rounded-full px-6 py-3.5 transition-colors"
+              >
+                <Mail className="w-4 h-4" />
+                <span>info@canvassindia.com</span>
+              </a>
+            </div>
           </div>
         </Container>
       </section>
 
-      {canvasItems.length > 0 && <BulkSection title="Canvas Bulk Orders" items={canvasItems} />}
-      {acrylicItems.length > 0 && <BulkSection title="Acrylic Bulk Orders" items={acrylicItems} />}
-      {corkItems.length > 0 && <BulkSection title="Cork Bulk Orders" items={corkItems} />}
-      <CatalogueBulkSection />
-
-      <section className="py-8 sm:py-10 border-t border-stone-200/80">
+      {/* CORPORATE SOLUTIONS SECTION */}
+      <section className="py-14 sm:py-20 bg-white border-b border-stone-200/70">
         <Container>
-          <p className="text-xs text-stone-500 text-center">
-            Prices shown are indicative bulk starting prices per unit at {MIN_BULK_QTY}+ units — final pricing depends on size, finish and exact quantity.
-          </p>
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-[11px] font-black uppercase tracking-[0.25em] text-[#E8752A]">
+              What We Fabricate
+            </span>
+            <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900" style={{ fontFamily: SERIF }}>
+              B2B Custom Printing Capabilities
+            </h2>
+            <p className="mt-3 text-sm text-stone-600">
+              Every bulk run is precision-manufactured at our state-of-the-art facility to match your exact dimensions, substrates, and brand guidelines.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {CORPORATE_SOLUTIONS.map((sol, idx) => {
+              const Icon = sol.icon;
+              return (
+                <div
+                  key={idx}
+                  className="bg-[#FAF8F5] rounded-2xl p-6 sm:p-7 border border-stone-200/80 hover:border-[#0E4A93]/40 hover:shadow-lg transition-all flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="w-12 h-12 rounded-xl bg-[#0E4A93]/10 text-[#0E4A93] flex items-center justify-center mb-5">
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-base font-bold text-stone-900 mb-2">{sol.title}</h3>
+                    <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">{sol.description}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Container>
+      </section>
+
+      {/* WHY CHOOSE US / PERKS */}
+      <section className="py-14 sm:py-20 bg-[#FAF8F5] border-b border-stone-200/70">
+        <Container>
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-[11px] font-black uppercase tracking-[0.25em] text-[#0E4A93]">
+              Why Work With Us
+            </span>
+            <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900" style={{ fontFamily: SERIF }}>
+              Built for Enterprise Reliability
+            </h2>
+            <p className="mt-3 text-sm text-stone-600">
+              Trusted by commercial architects, interior designers, startups, corporate offices, and institutions across India.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {CORPORATE_PERKS.map((perk, idx) => {
+              const Icon = perk.icon;
+              return (
+                <div key={idx} className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-xs">
+                  <div className="w-10 h-10 rounded-lg bg-[#E8752A]/10 text-[#E8752A] flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-sm font-bold text-stone-900 mb-1.5">{perk.title}</h3>
+                  <p className="text-xs text-stone-600 leading-relaxed">{perk.description}</p>
+                </div>
+              );
+            })}
+          </div>
+        </Container>
+      </section>
+
+      {/* DIRECT INQUIRY / WHATSAPP BANNER */}
+      <section className="py-14 sm:py-20 bg-stone-900 text-white">
+        <Container>
+          <div className="max-w-3xl mx-auto text-center space-y-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold uppercase tracking-wider border border-emerald-500/30">
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>Instant WhatsApp Concierge</span>
+            </div>
+
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight" style={{ fontFamily: SERIF }}>
+              Ready for a Tailored Quotation?
+            </h2>
+
+            <p className="text-stone-300 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">
+              Share your dimensions, preferred material, volume, or artwork specifications. Our B2B concierge will reply with custom pricing and digital previews within 2 business hours.
+            </p>
+
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
+              <a
+                href={whatsappQuoteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm sm:text-base font-bold text-white bg-[#E8752A] hover:bg-[#D3631A] rounded-full px-8 py-4 shadow-xl shadow-orange-950/40 transition-all hover:scale-105 cursor-pointer"
+              >
+                <MessageCircle className="w-5 h-5" />
+                <span>Chat on WhatsApp (+91 78930 51555)</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
+
+            <div className="pt-6 border-t border-stone-800 flex flex-wrap items-center justify-center gap-6 text-xs text-stone-400">
+              <span className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-amber-400" />
+                <span>Direct Line: <strong>+91 78930 51555</strong></span>
+              </span>
+              <span className="hidden sm:inline text-stone-600">•</span>
+              <span className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-amber-400" />
+                <span>Email RFQ: <strong>info@canvassindia.com</strong></span>
+              </span>
+            </div>
+          </div>
         </Container>
       </section>
 
