@@ -24,6 +24,7 @@ import {
   Palette,
   IndianRupee,
   SlidersHorizontal,
+  Ruler,
   BarChart3,
   Sparkles,
   UsersRound,
@@ -93,6 +94,7 @@ const NAV_SECTIONS: NavSection[] = [
         icon: SlidersHorizontal,
         requiredPermissions: ['option_catalog.view'],
       },
+      { href: '/sizes', label: 'Sizes', icon: Ruler, requiredPermissions: ['size_presets.view'] },
     ],
   },
   {

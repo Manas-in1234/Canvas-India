@@ -11,4 +11,5 @@
 /artwork/*          /artwork/placeholder          200
 /shapes/*           /shapes/placeholder           200
 /option-categories/* /option-categories/placeholder 200
+/sizes/*            /sizes/placeholder            200
 /production/jobs/*  /production/jobs/placeholder  200
