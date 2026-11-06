@@ -113,6 +113,7 @@ import {
 import { fetchApprovedCustomShapes, filterToUnknownShapes, toShapeOption, type CustomShapeDto } from '../api/customShapesApi';
 import { fetchPricingRates, SHAPE_AREA_RATE_FALLBACK, ACRYLIC_THICKNESS_RATE_FALLBACKS } from '../api/pricingSettingsApi';
 import { fetchOptionCategoryItems, type OptionCategoryItemDto } from '../api/optionCategoriesApi';
+import { fetchSizePresets, SHAPE_GENERIC_PRODUCT_TYPE_ID, type SizePresetDto } from '../api/sizePresetsApi';
 import {
   CANVAS_SHAPES,
   CanvasShapeOption,
@@ -2323,8 +2324,104 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return CANVAS_SHAPES.find((s) => s.id === targetShapeId) || CANVAS_SHAPES[0];
   }, [activeMaterial, selectedProductTypeId, selectedShapeId]);
 
+  // Admin-managed size presets (see admin Size screen) — replaces what used
+  // to be five independent hardcoded systems. Resolves the same real
+  // productTypeId/shapeId each branch below already filters its hardcoded
+  // fallback by, so a live fetch and the fallback are always asking the
+  // same question; falls back to that branch's existing hardcoded logic
+  // untouched whenever the fetch returns nothing (unmigrated product,
+  // network hiccup, etc.) so a gap in seeded data degrades to "same as
+  // today" rather than a broken size picker.
+  const sizePresetQuery = useMemo((): { productTypeId: string; shapeId?: string } | null => {
+    if (isSinglePrintCanvas) {
+      return activeMaterial === 'acrylic' ? { productTypeId: 'acrylic-print' } : { productTypeId: 'canvas-single' };
+    }
+    if (isQuotesProduct) {
+      return { productTypeId: activeMaterial === 'acrylic' ? 'acrylic-quotes' : 'canvas-quotes' };
+    }
+    if (isDigitalPaintingProduct) {
+      return { productTypeId: activeMaterial === 'acrylic' ? 'acrylic-digital' : 'canvas-digital-painting' };
+    }
+    if (isBusRollProduct) {
+      return { productTypeId: activeMaterial === 'acrylic' ? 'acrylic-bus-roll' : 'canvas-bus-roll' };
+    }
+    if (isBannerProduct || isPopArtProduct || isWordArtProduct) {
+      return null; // these catalogs (banner/pop-art/word-art) aren't part of this migration batch
+    }
+    if (isLyricProduct) {
+      return { productTypeId: activeMaterial === 'acrylic' ? 'acrylic-lyric' : 'canvas-lyric' };
+    }
+    if (isLayoutProduct) {
+      return { productTypeId: selectedProductTypeId };
+    }
+    return { productTypeId: SHAPE_GENERIC_PRODUCT_TYPE_ID, shapeId: selectedShapeId };
+  }, [
+    isSinglePrintCanvas,
+    isQuotesProduct,
+    isDigitalPaintingProduct,
+    isBusRollProduct,
+    isBannerProduct,
+    isPopArtProduct,
+    isWordArtProduct,
+    isLyricProduct,
+    isLayoutProduct,
+    activeMaterial,
+    selectedProductTypeId,
+    selectedShapeId,
+  ]);
+
+  const [liveSizePresets, setLiveSizePresets] = useState<SizePresetDto[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    if (!sizePresetQuery) {
+      setLiveSizePresets([]);
+      return;
+    }
+    fetchSizePresets(sizePresetQuery.productTypeId, sizePresetQuery.shapeId).then((presets) => {
+      if (!cancelled) setLiveSizePresets(presets);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [sizePresetQuery]);
+
+  const liveSizeOptions = useMemo<SizeOption[]>(() => {
+    return liveSizePresets.map((p) => {
+      const widthInches = Number(p.widthInches);
+      const heightInches = Number(p.heightInches);
+      const price = activeMaterial === 'acrylic' ? Number(p.acrylicPrice) : Number(p.canvasPrice);
+      return {
+        id: p.id,
+        productTypeId: sizePresetQuery?.productTypeId ?? selectedProductTypeId,
+        label: p.label,
+        dimensionsSummary: p.dimensionsSummary,
+        price,
+        categories: [(p.category as SizeCategory) ?? ('RECOMMENDED' as SizeCategory)],
+        widthInches,
+        heightInches,
+        panelsCount: p.panelsCount ?? undefined,
+        arrangement: p.arrangement ?? undefined,
+        panels: p.panels ?? [
+          {
+            id: 'p0',
+            label: activeMaterial === 'acrylic' ? 'Acrylic' : 'Canvas',
+            dimension: p.dimensionsSummary,
+            widthRatio: widthInches,
+            heightRatio: heightInches,
+          },
+        ],
+      };
+    });
+  }, [liveSizePresets, activeMaterial, sizePresetQuery, selectedProductTypeId]);
+
   // Available size options for the current product type and active shape (from centralized productSizeShapeConfig)
   const availableSizeOptions = useMemo<SizeOption[]>(() => {
+    if (liveSizeOptions.length > 0) {
+      return isMosaicProduct
+        ? liveSizeOptions.filter((opt) => !(opt.widthInches === 9 && opt.heightInches === 9) && !(opt.widthInches === 16 && opt.heightInches === 16))
+        : liveSizeOptions;
+    }
+
     if (isSinglePrintCanvas) {
       if (activeMaterial === 'acrylic') {
         return SIZE_OPTIONS.filter((s) => s.productTypeId === 'acrylic-print' || s.productTypeId === 'acrylic-photo-panel');
@@ -2457,7 +2554,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       ? configOptions.filter((opt) => !(opt.widthInches === 9 && opt.heightInches === 9) && !(opt.widthInches === 16 && opt.heightInches === 16))
       : configOptions;
     return filteredOptions.length > 0 ? filteredOptions : SIZE_OPTIONS.filter((s) => s.productTypeId === selectedProductTypeId);
-  }, [activeMaterial, selectedProductTypeId, selectedShapeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isWordArtProduct, isLyricProduct, isWallArtProduct, isCollageProduct, isHexagonProduct, isSplitProduct, isMosaicProduct]);
+  }, [activeMaterial, selectedProductTypeId, selectedShapeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isWordArtProduct, isLyricProduct, isWallArtProduct, isCollageProduct, isHexagonProduct, isSplitProduct, isMosaicProduct, liveSizeOptions]);
 
   // Category filter state for single prints: 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL' (Default: 'RECOMMENDED')
   // A '?category=PANORAMIC' URL param (used by the Panoramic Canvas Prints
