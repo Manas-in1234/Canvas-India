@@ -81,17 +81,18 @@ export function mapBackendProductToFrontend(raw: any, fallbackCatalog: Product[]
     : (existing?.price ?? 999);
 
   const rawOriginalPrice = raw.originalPrice ?? raw.compareAtPrice;
-  const originalPrice = rawOriginalPrice !== undefined && rawOriginalPrice !== null && !isNaN(Number(rawOriginalPrice))
+  const parsedOriginal = rawOriginalPrice !== undefined && rawOriginalPrice !== null && !isNaN(Number(rawOriginalPrice))
     ? Math.round(Number(rawOriginalPrice))
-    : (existing?.originalPrice ?? Math.round(price * 1.33));
+    : (existing?.originalPrice ?? Math.round(price * 1.35));
+  const originalPrice = parsedOriginal > price ? parsedOriginal : Math.round(price * 1.35);
 
-  const compareAtPrice = raw.compareAtPrice !== undefined && !isNaN(Number(raw.compareAtPrice))
+  const compareAtPrice = raw.compareAtPrice !== undefined && !isNaN(Number(raw.compareAtPrice)) && Number(raw.compareAtPrice) > price
     ? Number(raw.compareAtPrice)
-    : (existing?.compareAtPrice ?? originalPrice);
+    : originalPrice;
 
-  const discountPercent = raw.discountPercent !== undefined && !isNaN(Number(raw.discountPercent))
+  const discountPercent = raw.discountPercent !== undefined && !isNaN(Number(raw.discountPercent)) && Number(raw.discountPercent) > 0
     ? Number(raw.discountPercent)
-    : (originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 25);
+    : Math.round(((originalPrice - price) / originalPrice) * 100);
 
   // Extract sizes from backend options or variants if present
   let extractedSizes: string[] = [];

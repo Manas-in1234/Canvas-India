@@ -31,7 +31,7 @@ export const TrustSection: React.FC = () => {
       icon: ShieldCheck,
       title: '100% Secure Payments',
       subtitle: 'Bank-Grade Security',
-      desc: 'UPI (GPay, PhonePe, Paytm), RuPay, NetBanking and GST invoicing supported.',
+      desc: 'UPI (GPay, PhonePe, Paytm), RuPay, NetBanking and major credit/debit cards supported.',
     },
     {
       icon: HeartHandshake,

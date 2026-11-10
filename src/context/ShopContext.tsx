@@ -1,10 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Product, CartItem } from '../types';
 import { ALL_PRODUCTS } from '../data/productsData';
 import { fetchProductsFromApi } from '../api/productsApi';
 
+export interface AddToCartConfirmationState {
+  isOpen: boolean;
+  item: CartItem | null;
+}
+
 interface ShopContextType {
   cartItems: CartItem[];
+  addToCartConfirmation: AddToCartConfirmationState;
+  closeAddToCartConfirmation: () => void;
+  showAddToCartConfirmation: (item: CartItem) => void;
   wishlistIds: string[];
   cartDrawerOpen: boolean;
   wishlistDrawerOpen: boolean;
@@ -76,6 +85,7 @@ interface ShopContextType {
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
 
 export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const navigate = useNavigate();
   // State management
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
   const [wishlistDrawerOpen, setWishlistDrawerOpen] = useState(false);
@@ -83,6 +93,18 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [customizeModalOpen, setCustomizeModalOpen] = useState(false);
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [selectedProductForCustomize, setSelectedProductForCustomize] = useState<Product | null>(null);
+  const [addToCartConfirmation, setAddToCartConfirmation] = useState<AddToCartConfirmationState>({
+    isOpen: false,
+    item: null,
+  });
+
+  const closeAddToCartConfirmation = () => {
+    setAddToCartConfirmation({ isOpen: false, item: null });
+  };
+
+  const showAddToCartConfirmation = (item: CartItem) => {
+    setAddToCartConfirmation({ isOpen: true, item });
+  };
   
   // Products state with initial fallback from productsData
   const [allProducts, setAllProducts] = useState<Product[]>(ALL_PRODUCTS);
@@ -215,6 +237,27 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         )
       );
 
+      const newItem: CartItem = {
+        id: itemKey,
+        product,
+        quantity,
+        size: selectedSize,
+        finish: selectedFinish,
+        material: material || (product as any).material,
+        thickness,
+        style,
+        base,
+        paper,
+        customText,
+        photoUrl: photoUrl || product.image,
+        customizationDetails,
+      };
+
+      setAddToCartConfirmation({
+        isOpen: true,
+        item: newItem,
+      });
+
       if (existingIndex > -1) {
         const updated = [...prev];
         updated[existingIndex] = {
@@ -224,26 +267,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return updated;
       }
 
-      return [
-        ...prev,
-        {
-          id: itemKey,
-          product,
-          quantity,
-          size: selectedSize,
-          finish: selectedFinish,
-          material: material || (product as any).material,
-          thickness,
-          style,
-          base,
-          paper,
-          customText,
-          photoUrl: photoUrl || product.image,
-          customizationDetails,
-        },
-      ];
+      return [...prev, newItem];
     });
-    setCartDrawerOpen(true);
   };
 
   const handleUpdateCartQuantity = (itemId: string, newQty: number) => {
@@ -280,8 +305,21 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleOpenCustomize = (product?: Product) => {
-    setSelectedProductForCustomize(product || ALL_PRODUCTS[0]);
-    setCustomizeModalOpen(true);
+    if (product) {
+      setSelectedProductForCustomize(product);
+      const material = (product.categorySlug === 'acrylic' || product.material === 'acrylic') ? 'acrylic' : 'canvas';
+      const queryParams = new URLSearchParams();
+      if (product.image) {
+        queryParams.set('prefillImage', product.image);
+      }
+      if (product.name) {
+        queryParams.set('prefillName', product.name);
+      }
+      const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+      navigate(`/customize/${material}/single${queryString}`);
+    } else {
+      navigate('/customize/canvas/single');
+    }
   };
 
   const handleAddToCartCustomized = (item: {
@@ -300,28 +338,30 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     customizationDetails?: any;
   }) => {
     const itemKey = `custom-${item.product.id}-${item.size}-${item.thickness || ''}-${item.base || ''}-${Date.now()}`;
-    setCartItems((prev) => [
-      ...prev,
-      {
-        id: itemKey,
-        product: {
-          ...item.product,
-          price: item.calculatedPrice || item.product.price,
-        },
-        quantity: item.quantity,
-        size: item.size,
-        finish: item.finish || 'Standard Finish',
-        material: item.material || item.product.material,
-        thickness: item.thickness,
-        style: item.style,
-        base: item.base,
-        paper: item.paper,
-        customText: item.customText,
-        photoUrl: item.photoUrl || item.product.image,
-        customizationDetails: item.customizationDetails,
+    const newItem: CartItem = {
+      id: itemKey,
+      product: {
+        ...item.product,
+        price: item.calculatedPrice || item.product.price,
       },
-    ]);
-    setCartDrawerOpen(true);
+      quantity: item.quantity,
+      size: item.size,
+      finish: item.finish || 'Standard Finish',
+      material: item.material || item.product.material,
+      thickness: item.thickness,
+      style: item.style,
+      base: item.base,
+      paper: item.paper,
+      customText: item.customText,
+      photoUrl: item.photoUrl || item.product.image,
+      customizationDetails: item.customizationDetails,
+    };
+
+    setCartItems((prev) => [...prev, newItem]);
+    setAddToCartConfirmation({
+      isOpen: true,
+      item: newItem,
+    });
   };
 
   const handleAddToCartFromWorkbench = (customItem: {
@@ -389,7 +429,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         onRemoveCartItem: handleRemoveCartItem,
         onToggleWishlist: handleToggleWishlist,
         onOpenCustomize: handleOpenCustomize,
-        onOpenQuote: () => setQuoteModalOpen(true),
+        onOpenQuote: (material?: string) => {
+        const text = material 
+          ? `Hi Canvas India, I would like to get a quote for ${material}`
+          : 'Hi Canvas India, I would like to get a quote';
+        window.open(`https://wa.me/917893051555?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+      },
         onOpenCart: () => setCartDrawerOpen(true),
         onOpenWishlist: () => setWishlistDrawerOpen(true),
         onOpenAccount: () => setAccountModalOpen(true),
@@ -398,6 +443,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCustomizeModalOpen,
         setQuoteModalOpen,
         setAccountModalOpen,
+        addToCartConfirmation,
+        closeAddToCartConfirmation,
+        showAddToCartConfirmation,
         onAddToCartCustomized: handleAddToCartCustomized,
         onAddToCartFromWorkbench: handleAddToCartFromWorkbench,
         clearCart: handleClearCart,

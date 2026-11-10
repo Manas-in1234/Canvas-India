@@ -82,7 +82,8 @@ export const CancellationPolicyPage: React.FC = () => {
       <PolicySection heading="9. How to Request Cancellation">
         <p>To request cancellation, contact:</p>
         <p>Email: info@canvassindia.com</p>
-        <p>Phone: 78930 51555</p>
+        <p>Landline: 040-29303344</p>
+        <p>WhatsApp: 78930 51555</p>
         <p>Please provide:</p>
         <ul className="list-disc pl-6 space-y-1">
           <li>Order number</li>

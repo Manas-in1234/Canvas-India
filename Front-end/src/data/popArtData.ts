@@ -260,7 +260,9 @@ export function getPopArtStyle(id: string): PopArtStyleOption {
   return POP_ART_STYLES.find((s) => s.id === id) || POP_ART_STYLES[0];
 }
 
-// Dedicated Pop Art Size Options (supporting Square, Portrait, and Rectangle)
+export type PopArtSizeCategory = 'RECOMMENDED' | 'SQUARE' | 'PORTRAIT' | 'PANORAMIC' | 'LARGE' | 'SMALL';
+
+// Dedicated Pop Art Size Options (supporting Recommended, Square, Panoramic, Large, and Small)
 export interface PopArtSizeOption {
   id: string;
   productTypeId: 'canvas-pop-art';
@@ -269,7 +271,7 @@ export interface PopArtSizeOption {
   widthInches: number;
   heightInches: number;
   price: number;
-  categories: Array<'RECOMMENDED' | 'SQUARE' | 'PORTRAIT' | 'PANORAMIC'>;
+  categories: PopArtSizeCategory[];
   panelsCount: number;
   diagramType?: string;
   panels: Array<{
@@ -291,8 +293,9 @@ export const POP_ART_SIZE_OPTIONS: PopArtSizeOption[] = [
     widthInches: 8,
     heightInches: 8,
     price: 399.0,
-    categories: ['SQUARE'],
+    categories: ['SQUARE', 'SMALL'],
     panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '8" × 8"', widthRatio: 8, heightRatio: 8 }]
   },
   {
@@ -303,8 +306,9 @@ export const POP_ART_SIZE_OPTIONS: PopArtSizeOption[] = [
     widthInches: 10,
     heightInches: 10,
     price: 449.0,
-    categories: ['SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE', 'SMALL'],
     panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }]
   },
   {
@@ -315,8 +319,9 @@ export const POP_ART_SIZE_OPTIONS: PopArtSizeOption[] = [
     widthInches: 12,
     heightInches: 12,
     price: 499.0,
-    categories: ['RECOMMENDED', 'SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE', 'SMALL'],
     panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '12" × 12"', widthRatio: 12, heightRatio: 12 }]
   },
   {
@@ -329,7 +334,21 @@ export const POP_ART_SIZE_OPTIONS: PopArtSizeOption[] = [
     price: 799.0,
     categories: ['RECOMMENDED', 'SQUARE'],
     panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
+  },
+  {
+    id: 'pop-sq-18x18',
+    productTypeId: 'canvas-pop-art',
+    label: '18" × 18"',
+    dimensionsSummary: '18" × 18"',
+    widthInches: 18,
+    heightInches: 18,
+    price: 999.0,
+    categories: ['SQUARE', 'LARGE'],
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '18" × 18"', widthRatio: 18, heightRatio: 18 }]
   },
   {
     id: 'pop-sq-20x20',
@@ -339,9 +358,116 @@ export const POP_ART_SIZE_OPTIONS: PopArtSizeOption[] = [
     widthInches: 20,
     heightInches: 20,
     price: 1199.0,
-    categories: ['SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE', 'LARGE'],
     panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '20" × 20"', widthRatio: 20, heightRatio: 20 }]
+  },
+
+  // PANORAMIC & RECTANGLE
+  {
+    id: 'pop-pan-12x8',
+    productTypeId: 'canvas-pop-art',
+    label: '12" × 8"',
+    dimensionsSummary: '12" × 8"',
+    widthInches: 12,
+    heightInches: 8,
+    price: 449.0,
+    categories: ['PANORAMIC', 'SMALL'],
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '12" × 8"', widthRatio: 12, heightRatio: 8 }]
+  },
+  {
+    id: 'pop-pan-12x18',
+    productTypeId: 'canvas-pop-art',
+    label: '12" × 18"',
+    dimensionsSummary: '12" × 18"',
+    widthInches: 12,
+    heightInches: 18,
+    price: 649.0,
+    categories: ['RECOMMENDED', 'PANORAMIC', 'SMALL'],
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '12" × 18"', widthRatio: 12, heightRatio: 18 }]
+  },
+  {
+    id: 'pop-pan-16x20',
+    productTypeId: 'canvas-pop-art',
+    label: '16" × 20"',
+    dimensionsSummary: '16" × 20"',
+    widthInches: 16,
+    heightInches: 20,
+    price: 899.0,
+    categories: ['RECOMMENDED', 'PANORAMIC'],
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '16" × 20"', widthRatio: 16, heightRatio: 20 }]
+  },
+  {
+    id: 'pop-pan-16x24',
+    productTypeId: 'canvas-pop-art',
+    label: '16" × 24"',
+    dimensionsSummary: '16" × 24"',
+    widthInches: 16,
+    heightInches: 24,
+    price: 1099.0,
+    categories: ['RECOMMENDED', 'PANORAMIC', 'LARGE'],
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '16" × 24"', widthRatio: 16, heightRatio: 24 }]
+  },
+  {
+    id: 'pop-pan-16x32',
+    productTypeId: 'canvas-pop-art',
+    label: '16" × 32"',
+    dimensionsSummary: '16" × 32"',
+    widthInches: 16,
+    heightInches: 32,
+    price: 1399.0,
+    categories: ['PANORAMIC', 'LARGE'],
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '16" × 32"', widthRatio: 16, heightRatio: 32 }]
+  },
+  {
+    id: 'pop-pan-18x24',
+    productTypeId: 'canvas-pop-art',
+    label: '18" × 24"',
+    dimensionsSummary: '18" × 24"',
+    widthInches: 18,
+    heightInches: 24,
+    price: 1299.0,
+    categories: ['PANORAMIC', 'LARGE'],
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '18" × 24"', widthRatio: 18, heightRatio: 24 }]
+  },
+  {
+    id: 'pop-pan-20x30',
+    productTypeId: 'canvas-pop-art',
+    label: '20" × 30"',
+    dimensionsSummary: '20" × 30"',
+    widthInches: 20,
+    heightInches: 30,
+    price: 1699.0,
+    categories: ['RECOMMENDED', 'PANORAMIC', 'LARGE'],
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '20" × 30"', widthRatio: 20, heightRatio: 30 }]
+  },
+  {
+    id: 'pop-pan-24x36',
+    productTypeId: 'canvas-pop-art',
+    label: '24" × 36"',
+    dimensionsSummary: '24" × 36"',
+    widthInches: 24,
+    heightInches: 36,
+    price: 1999.0,
+    categories: ['PANORAMIC', 'LARGE'],
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '24" × 36"', widthRatio: 24, heightRatio: 36 }]
   },
 
   // PORTRAIT & RECTANGLE (Ideal for Caricatures, Lichtenstein, Single-panel portraits)
@@ -353,8 +479,9 @@ export const POP_ART_SIZE_OPTIONS: PopArtSizeOption[] = [
     widthInches: 12,
     heightInches: 16,
     price: 649.0,
-    categories: ['RECOMMENDED', 'PORTRAIT'],
+    categories: ['RECOMMENDED', 'PORTRAIT', 'SMALL'],
     panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '12" × 16"', widthRatio: 12, heightRatio: 16 }]
   },
   {
@@ -367,6 +494,7 @@ export const POP_ART_SIZE_OPTIONS: PopArtSizeOption[] = [
     price: 899.0,
     categories: ['RECOMMENDED', 'PORTRAIT'],
     panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '16" × 20"', widthRatio: 16, heightRatio: 20 }]
   },
   {
@@ -377,8 +505,9 @@ export const POP_ART_SIZE_OPTIONS: PopArtSizeOption[] = [
     widthInches: 18,
     heightInches: 24,
     price: 1299.0,
-    categories: ['PORTRAIT'],
+    categories: ['PORTRAIT', 'LARGE'],
     panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '18" × 24"', widthRatio: 18, heightRatio: 24 }]
   },
   {
@@ -389,8 +518,9 @@ export const POP_ART_SIZE_OPTIONS: PopArtSizeOption[] = [
     widthInches: 24,
     heightInches: 36,
     price: 1999.0,
-    categories: ['PORTRAIT'],
+    categories: ['PORTRAIT', 'LARGE'],
     panelsCount: 1,
+    diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Pop Art Canvas', dimension: '24" × 36"', widthRatio: 24, heightRatio: 36 }]
   }
 ];

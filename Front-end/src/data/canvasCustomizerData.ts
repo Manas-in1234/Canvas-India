@@ -187,11 +187,10 @@ export const CANVAS_EDGE_3D_PRODUCT_IDS = [
   'canvas-single',
   'canvas-classic',
   'canvas-lyric',
-  'canvas-digital-painting',
   'canvas-quotes',
   'canvas-pop-art',
-  'canvas-word-art',
-  'canvas-bus-roll'
+  'canvas-digital-painting',
+  'canvas-word-art'
 ] as const;
 
 export function isCanvasEdge3DProduct(productId?: string): boolean {
@@ -383,7 +382,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       upload: true,
       sizes: false,
       shapes: false,
-      layouts: true,
+      layouts: false,
       wrap: true,
       hardware: true,
       options: true,
@@ -411,7 +410,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       upload: true,
       sizes: false,
       shapes: false,
-      layouts: true,
+      layouts: false,
       wrap: true,
       hardware: true,
       options: true,
@@ -439,13 +438,13 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       upload: true,
       sizes: false,
       shapes: false,
-      layouts: true,
+      layouts: false,
       wrap: true,
       hardware: true,
       options: true,
       view3D: false,
       view360: false,
-      roomView: false
+      roomView: true
     }
   },
   {
@@ -467,7 +466,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       upload: true,
       sizes: false,
       shapes: false,
-      layouts: true,
+      layouts: false,
       wrap: true,
       hardware: true,
       options: true,
@@ -495,7 +494,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
       upload: true,
       sizes: false,
       shapes: false,
-      layouts: true,
+      layouts: false,
       wrap: true,
       hardware: true,
       options: true,
@@ -713,8 +712,9 @@ export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProdu
   // Centralized view capabilities:
   // 1. 360 View: disabled for Wall Display, Hexagon Prints, Split Canvas, Canvas Banner
   const is360Disabled = ['canvas-wall-art', 'canvas-hexagon', 'canvas-split', 'canvas-banner'].includes(pt.id);
-  // 2. Room View: disabled for Hexagon Prints, Canvas Banner (Wall Display and Split Canvas retain Room View)
-  const isRoomViewDisabled = ['canvas-hexagon', 'canvas-banner'].includes(pt.id);
+  // 2. Room View: disabled for Canvas Banner (Wall Display, Split Canvas and
+  // Hexagon Prints all retain Room View)
+  const isRoomViewDisabled = ['canvas-banner'].includes(pt.id);
 
   const supportsRoomView = !isRoomViewDisabled;
   const supports3DView = isEdgeProduct;
@@ -729,14 +729,14 @@ export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProdu
 
     products: true,
     upload: pt.id !== 'canvas-bus-roll',
-    sizes: !isSplit && !isCollageOrMosaic && pt.id !== 'canvas-hexagon' && pt.id !== 'canvas-bus-roll',
+    sizes: (!isSplit && !isCollageOrMosaic && pt.id !== 'canvas-hexagon' && pt.id !== 'canvas-bus-roll') || pt.id === 'canvas-banner',
     shapes: !isSplit && !isCollageOrMosaic && !['canvas-round', 'canvas-triangle', 'canvas-heart', 'canvas-oval', 'canvas-hexagon', 'canvas-bus-roll', 'canvas-lyric', 'canvas-quotes', 'canvas-word-art', 'canvas-banner'].includes(pt.id),
-    layouts: isCollageOrMosaic || isSplit || pt.id === 'canvas-single' || pt.id === 'canvas-lyric',
+    layouts: pt.id === 'canvas-single' || pt.id === 'canvas-lyric',
     effects: pt.id === 'canvas-digital-painting' || pt.id === 'canvas-pop-art',
     busRoll: pt.id === 'canvas-bus-roll',
-    wrap: isEdgeProduct,
+    wrap: pt.id !== 'canvas-banner',
     hardware: true,
-    options: true,
+    options: pt.id !== 'canvas-digital-painting',
     roomView: supportsRoomView,
     ...(pt.capabilities || {}),
     // Enforce strict invariants
@@ -961,6 +961,7 @@ export interface CanvasThicknessOption {
   id: string;
   label: string;
   name?: string;
+  thicknessInches?: number;
   price: number;
   depthPx: number;
   description?: string;
@@ -968,11 +969,26 @@ export interface CanvasThicknessOption {
 }
 
 export const CANVAS_THICKNESS_OPTIONS: CanvasThicknessOption[] = [
-  { id: 'canvas-lite', label: '0.5" Canvas Lite (Slim Stretcher)', name: '0.5" Canvas Lite', price: 0, depthPx: 16, description: 'Ultra slim & lightweight, economical mount', badge: 'Popular' },
-  { id: 'thin-gallery', label: '0.75" Thin Gallery Wrap', name: '0.75" Thin Gallery Wrap', price: 130.0, depthPx: 26, description: 'Standard modern gallery profile' },
-  { id: 'thick-gallery', label: '1.5" Thick Gallery Wrap (Museum Quality)', name: '1.5" Thick Gallery Wrap', price: 155.0, depthPx: 44, description: 'Museum-grade premium deep projection', badge: 'Museum Depth' },
-  { id: 'hanging-canvas', label: 'Unframed Rolled Canvas', name: 'Unframed Rolled Canvas', price: 85.0, depthPx: 8, description: 'Flexible unmounted rolled canvas or hanging bar' }
+  { id: 'canvas-lite', label: 'Canvas Lite (0.50")', name: 'Canvas Lite', thicknessInches: 0.5, price: 148.50, depthPx: 12, description: 'Ultra slim & lightweight, economical mount' },
+  { id: 'thin-gallery', label: 'Thin Gallery Wrap (0.75")', name: 'Thin Gallery Wrap', thicknessInches: 0.75, price: 193.05, depthPx: 18, description: 'Standard modern gallery profile', badge: 'Recommended' },
+  { id: 'thick-gallery', label: 'Thick Gallery Wrap (1.5")', name: 'Thick Gallery Wrap', thicknessInches: 1.5, price: 231.66, depthPx: 30, description: 'Museum-grade premium deep projection', badge: 'Museum Quality' },
+  { id: 'custom-thickness', label: 'Custom Thickness', name: 'Custom Thickness', thicknessInches: 1.0, price: 193.05, depthPx: 22, description: 'Specify custom canvas frame depth' },
+  { id: 'hanging-canvas', label: 'Unframed Rolled Canvas', name: 'Unframed Rolled Canvas', thicknessInches: 0.25, price: 85.0, depthPx: 8, description: 'Flexible unmounted rolled canvas or hanging bar' }
 ];
+
+/**
+ * Configurable pricing calculator for Canvas stretcher bar thickness.
+ * For custom thickness, uses base fee (₹193.05) and applies ₹2/mm for depths beyond standard 25mm (~1 inch).
+ */
+export function getCanvasThicknessPrice(thicknessId: string, customMm: number = 25): number {
+  const opt = CANVAS_THICKNESS_OPTIONS.find((t) => t.id === thicknessId);
+  if (!opt) return 0;
+  if (thicknessId === 'custom-thickness') {
+    const extraDepthMm = Math.max(0, customMm - 25);
+    return Math.round((opt.price + extraDepthMm * 2) * 100) / 100;
+  }
+  return opt.price;
+}
 
 export const CANVAS_PAPER_OPTIONS = [
   { id: 'standard-cotton', label: 'Standard 280 GSM Poly-Cotton Canvas', price: 0 },

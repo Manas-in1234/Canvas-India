@@ -7,7 +7,6 @@ import {
   ChevronRight,
   FilterX,
   Sparkles,
-  CheckCircle2,
   ShoppingCart
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
@@ -193,25 +192,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Key Trust Badges */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-stone-200/70 text-xs text-stone-600">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Sub-Surface UV Inks</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Diamond Polished</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">100% Moisture Proof</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Pan-India Delivery</span>
-                </div>
-              </div>
+
 
             </div>
 
@@ -219,27 +200,12 @@ export const AcrylicCategoryPage: React.FC = () => {
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-3xl overflow-hidden border border-stone-200 shadow-xl bg-stone-100 group aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3]">
                 <img
-                  src="/assets/acrylic/acrylic-panel-living.webp"
-                  alt="Acrylic Prints and Wall Art in Living Room"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    if (target.src !== '/assets/acrylic/acrylic-custom-wall-art.webp') {
-                      target.src = '/assets/acrylic/acrylic-custom-wall-art.webp';
-                    }
-                  }}
+                  src="/assets/acrylic/acrylic-butterfly-art.webp"
+                  alt="Acrylic Prints and Wall Art"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/10 pointer-events-none" />
-
-                {/* Floating Highlight Badge */}
-                <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-md border border-stone-200/80 flex items-center gap-2.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <div>
-                    <div className="text-[11px] font-black text-stone-900 leading-tight">Crystal Clear Optical Acrylic</div>
-                    <div className="text-[10px] text-stone-500">Starting from ₹899 | Up to 60% OFF</div>
-                  </div>
-                </div>
 
               </div>
             </div>
@@ -455,22 +421,6 @@ export const AcrylicCategoryPage: React.FC = () => {
                 </span>
                 <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
                 <ShopByCategoryFilter selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
-              </div>
-
-              {/* Quality & Delivery Assurance Strip in Sidebar */}
-              <div className="pt-2 border-t border-stone-100 space-y-2 text-[11px] text-stone-500">
-                <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Crystal-Clear Optical Acrylic</span>
-                </div>
-                <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Ready to Hang with Hardware</span>
-                </div>
-                <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Free Insured Delivery on ₹999+</span>
-                </div>
               </div>
 
             </aside>

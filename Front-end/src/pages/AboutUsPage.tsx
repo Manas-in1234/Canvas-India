@@ -395,8 +395,14 @@ export const AboutUsPage: React.FC = () => {
               </a>
             </p>
             <p>
-              Contact number:{' '}
-              <a href="tel:+917893051555" className="text-[#0E4A93] font-semibold hover:underline">
+              Landline number:{' '}
+              <a href="tel:040-29303344" className="text-[#0E4A93] font-semibold hover:underline">
+                040-29303344
+              </a>
+            </p>
+            <p>
+              WhatsApp:{' '}
+              <a href="https://wa.me/917893051555" target="_blank" rel="noopener noreferrer" className="text-[#0E4A93] font-semibold hover:underline">
                 78930 51555
               </a>
             </p>

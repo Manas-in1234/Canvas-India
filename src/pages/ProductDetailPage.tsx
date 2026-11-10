@@ -11,7 +11,10 @@ import {
   ArrowRight,
   CheckCircle2,
   Layers,
-  Pencil
+  Pencil,
+  Package,
+  ChevronDown,
+  Sparkles
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
@@ -19,15 +22,13 @@ import { ProductImage } from '../components/ProductImage';
 import { WallPreview } from '../components/WallPreview';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { Product } from '../types';
-import { FrameSwatch, HookIcon, HOOK_OPTIONS, BackOfFrameView } from '../components/FrameHookVisuals';
+import { FrameSwatch, HookIcon, HOOK_OPTIONS, FRAME_LOOK, getFrameCategory, FrameCategory } from '../components/FrameHookVisuals';
+import { getBulkItem, QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
 
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
 // the "Room View" thumbnail renders a live WallPreview instead of a static image.
 const ROOM_VIEW_SENTINEL = '__ROOM_VIEW__';
-// Second gallery slot for wall-hangable categories — a static illustration
-// of the print's back, showing the currently selected Hook hardware.
-const BACK_VIEW_SENTINEL = '__BACK_VIEW__';
 
 // Default to the largest available size so the product — and its Room View
 // — looks substantial right away, instead of starting on the tiniest
@@ -56,8 +57,11 @@ function ShapeIcon({ shape, active }: { shape: string; active: boolean }) {
   );
 }
 
-export const ProductDetailPage: React.FC = () => {
-  const { productId } = useParams<{ productId: string }>();
+interface StandardProductDetailPageProps {
+  product: Product;
+}
+
+const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ product }) => {
   const navigate = useNavigate();
   const { 
     allProducts, 
@@ -67,12 +71,7 @@ export const ProductDetailPage: React.FC = () => {
     onOpenCustomize 
   } = useShop();
 
-  // Find product by id or slug
-  const product = useMemo(() => {
-    return allProducts.find((p) => p.id === productId || p.slug === productId);
-  }, [allProducts, productId]);
-
-  const isWishlisted = product ? wishlistIds.includes(product.id) : false;
+  const isWishlisted = wishlistIds.includes(product.id);
 
   // Catalogue designs are named "<Name> <code>" or "<Name> <code> - <Material>"
   // (e.g. "Tribal Art Print 001 - Canvas") — pull the numeric code out so it
@@ -89,6 +88,7 @@ export const ProductDetailPage: React.FC = () => {
   // Variant state
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedFinish, setSelectedFinish] = useState<string>('');
+  const [selectedFrame, setSelectedFrame] = useState<FrameCategory>('No Frame');
   const [selectedMaterial, setSelectedMaterial] = useState<string>('');
   const [selectedShape, setSelectedShape] = useState<string>('');
   const [customWidth, setCustomWidth] = useState<number>(8);
@@ -101,6 +101,34 @@ export const ProductDetailPage: React.FC = () => {
   const [customSizeW, setCustomSizeW] = useState<string>('');
   const [customSizeH, setCustomSizeH] = useState<string>('');
   const [selectedHook, setSelectedHook] = useState<string>('Sawtooth Hanger');
+
+  // The Bulk & Corporate Orders catalogue keys its items by material+slug —
+  // matches this exact style when it has one, so "Order this item in bulk"
+  // can jump straight to its dedicated bulk/customize flow instead of just
+  // a quantity-tier preview with nowhere to go.
+  const bulkItem = useMemo(
+    () => getBulkItem(product.material === 'acrylic' ? 'acrylic' : 'canvas', product.categorySlug),
+    [product.categorySlug, product.material]
+  );
+
+  // Pre-designed Print World catalogue art (Devotional Art, Line Art, etc.)
+  // has no real Size/Shape/Frame/Hook variants of its own — every size is
+  // the same fixed artwork — so instead of a buy-as-is flow it sends the
+  // shopper straight into the customizer with this exact design preloaded.
+  // These designs are also re-offered as plain Canvas/Acrylic products
+  // (catalogueCanvasAcrylicProducts.ts) with categorySlug just 'canvas' or
+  // 'acrylic' — those are identified by their id instead, e.g.
+  // "canvas-tribal-ethnic-art-a-a-001".
+  const CATALOGUE_DESIGN_SLUGS = [
+    'devotional-art',
+    'line-art',
+    'motivational-posters',
+    'scenery-landscape-art',
+    'tribal-ethnic-art'
+  ];
+  const isCatalogueDesign =
+    CATALOGUE_DESIGN_SLUGS.includes(product.categorySlug) ||
+    CATALOGUE_DESIGN_SLUGS.some((slug) => product.id.includes(slug));
 
   // In-page customization state
   const [customText, setCustomText] = useState<string>('');
@@ -134,6 +162,12 @@ export const ProductDetailPage: React.FC = () => {
   // picker, no Custom dimensions.
   const SIMPLE_VARIANT_CATEGORIES = ['cork', 'cork-art-patterns', 'yoga-fitness'];
 
+  // Yoga mats, bricks, rollers etc. don't hang on a wall — no hook/hanger
+  // options apply to them. Every cork-catalog product (corkCatalog.ts) is
+  // one of these wellness items and shares categorySlug 'cork' regardless —
+  // 'cork-art-patterns' is excluded here since those ARE framed wall prints.
+  const showHookTab = product ? !['cork', 'yoga-fitness'].includes(product.categorySlug) : true;
+
   // Shape options for this product. Every wall-hangable category gets the
   // same reduced shape range by default (Cork and yoga mats don't use
   // shapes); products can still override with their own explicit list.
@@ -146,29 +180,40 @@ export const ProductDetailPage: React.FC = () => {
 
   const showCustomSize = product ? !SIMPLE_VARIANT_CATEGORIES.includes(product.categorySlug) : true;
 
+  // Wellness / physical cork and fitness products (yoga mats, bricks, wedges, rollers, balls,
+  // massage sets, knee pads, yoga bags, etc.) are 3D fitness items and do NOT have picture frames.
+  // Cork print pattern images ('cork-art-patterns') ARE wall decor and retain the full frame options.
+  const isCorkWellnessProduct = useMemo(() => {
+    if (!product) return false;
+    if (product.categorySlug === 'cork-art-patterns') return false;
+    if (product.categorySlug === 'cork' || product.categorySlug === 'yoga-fitness') return true;
+    const text = `${product.name} ${product.subcategory || ''} ${product.category || ''}`.toLowerCase();
+    return /yoga|mat|brick|roller|ball|peanut|wedge|massage|knee pad|bag|fitness/.test(text);
+  }, [product]);
+
   // Frame picker — groups this product's real `finishes` values (which vary
   // a lot in wording across the catalogue) into the frame looks customers
   // actually choose between, using the same keyword matching as the live
   // preview's frame border (see finishStyle.ts), so a pick here always has
   // a matching real finish value to send to cart. Every category present in
   // the product's own finishes list is offered — nothing invented.
-  const FRAME_CATEGORY_ORDER: { label: string; test: (f: string) => boolean }[] = [
-    { label: 'No Frame', test: (f) => /print only|rolled|gallery wrap|satin|lustre|matte canvas/.test(f) },
+  const FRAME_CATEGORY_ORDER: { label: FrameCategory; test: (f: string) => boolean }[] = [
+    { label: 'No Frame', test: (f) => /print only|rolled|gallery wrap|satin|lustre|matte canvas|no frame/.test(f) },
     { label: 'Black Frame', test: (f) => /black/.test(f) },
-    { label: 'Wooden Frame', test: (f) => /wood|teak|oak/.test(f) },
+    { label: 'Wooden Frame', test: (f) => !/cork|eva|latex|rubber|foam/.test(f) && (/teak|oak|walnut|brown|rustic/.test(f) || (/wood/.test(f) && !/black|white|gold/.test(f)) || (/natural/.test(f) && /wood|frame|finish/.test(f))) },
     { label: 'White Frame', test: (f) => /white/.test(f) },
     { label: 'Gold Frame', test: (f) => /gold/.test(f) },
   ];
   const frameOptions = useMemo(() => {
-    if (!product?.finishes) return [];
+    if (!product?.finishes || isCorkWellnessProduct) return [];
     const lower = product.finishes.map((f) => ({ raw: f, l: f.toLowerCase() }));
     return FRAME_CATEGORY_ORDER
       .map((cat) => {
         const match = lower.find(({ l }) => cat.test(l));
         return match ? { label: cat.label, value: match.raw } : null;
       })
-      .filter((o): o is { label: string; value: string } => Boolean(o));
-  }, [product]);
+      .filter((o): o is { label: FrameCategory; value: string } => Boolean(o));
+  }, [product, isCorkWellnessProduct]);
 
   // Same catalogue design also offered as Canvas / Acrylic — siblings share a
   // base catalogue id, prefixed with 'canvas-' or 'acrylic-' for those
@@ -194,15 +239,20 @@ export const ProductDetailPage: React.FC = () => {
   useEffect(() => {
     if (product) {
       const defaultShape = product.shape || availableShapes[0] || '';
+      const initialFinish = product.finishes?.[0] || 'Standard Finish';
+      const initialFrameCat = isCorkWellnessProduct ? 'No Frame' : getFrameCategory(initialFinish);
       setSelectedSize(pickDefaultSize(product.availableSizes) || pickDefaultSize(product.sizes) || '12x18 inch');
-      setSelectedFinish(product.finishes?.[0] || 'Standard Finish');
+      setSelectedFinish(initialFinish);
+      setSelectedFrame(initialFrameCat);
       setSelectedMaterial(availableMaterials[0] || 'Standard');
       setSelectedShape(defaultShape);
       setSelectedHook('Sawtooth Hanger');
       setIsCustomSize(false);
       setCustomWidth(8);
       setCustomHeight(8);
-      setQuantity(1);
+      const searchParams = new URLSearchParams(window.location.search);
+      const urlQty = parseInt(searchParams.get('qty') || '', 10);
+      setQuantity(!isNaN(urlQty) && urlQty >= 50 ? urlQty : 1);
       setActiveImageIndex(0);
       setCustomText('');
       setUploadedFile(null);
@@ -223,20 +273,18 @@ export const ProductDetailPage: React.FC = () => {
     }
   }, [product, availableMaterials, availableShapes]);
 
-  // Gallery images (product primary + any secondary images). Wall-hangable
-  // categories get a leading "Room View" sentinel slot — shown first, like
-  // canvaschamp — rendered live via WallPreview, reacting to the selected
-  // shape/size instead of a static photo.
+  // Gallery images (product primary + any secondary images, plus a Room View slot
+  // rendered live via WallPreview reacting to selected size/frame).
   const galleryImages = useMemo(() => {
     if (!product) return [];
     const base = product.images && product.images.length > 0 ? product.images : [product.image];
-    if (product.categorySlug === 'yoga-fitness' || product.categorySlug === 'cork') return base;
-    return [ROOM_VIEW_SENTINEL, BACK_VIEW_SENTINEL, ...base];
-  }, [product]);
+    if (isCorkWellnessProduct || product.categorySlug === 'yoga-fitness' || product.categorySlug === 'cork') return base;
+    return [...base, ROOM_VIEW_SENTINEL];
+  }, [product, isCorkWellnessProduct]);
 
   // The real product photo used inside the live Room View preview (first non-sentinel image)
   const roomViewSourceImage = useMemo(() => {
-    const real = galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL && img !== BACK_VIEW_SENTINEL);
+    const real = galleryImages.find((img) => img !== ROOM_VIEW_SENTINEL);
     return real || product?.image || '';
   }, [galleryImages, product]);
 
@@ -311,59 +359,77 @@ export const ProductDetailPage: React.FC = () => {
 
   const handleAddToCartWithVariants = () => {
     if (!product) return;
+    // At bulk quantities, charge the same discounted per-unit price shown
+    // in the bulk panel — never show one price and charge another.
+    const cartProduct = quantity >= MIN_BULK_QTY
+      ? { ...product, price: bulkUnitPriceFor(product.price, quantity) }
+      : product;
     onAddToCart(
-      product,
+      cartProduct,
       selectedSize,
       selectedFinish,
       quantity,
       customText,
       uploadedFile || undefined,
       selectedMaterial,
+      'Thin Gallery Wrap (0.75")',
       undefined,
       undefined,
       undefined,
-      undefined,
-      { hook: selectedHook }
+      { hook: selectedHook, shape: selectedShape }
     );
   };
 
-  if (!product) {
-    return (
-      <div className="w-full bg-[#FFFDF9] py-20 text-center text-stone-900 font-manrope min-h-[65vh] flex items-center justify-center">
-        <div className="max-w-md mx-auto px-4 space-y-4">
-          <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto text-stone-400">
-            <Layers className="w-8 h-8" />
-          </div>
-          <h1 className="text-2xl font-bold text-stone-900">Product Not Found</h1>
-          <p className="text-xs sm:text-sm text-stone-500 leading-relaxed">
-            The requested product (<code className="text-stone-700 bg-stone-100 px-1.5 py-0.5 rounded font-mono text-xs">{productId}</code>) could not be found.
-          </p>
-          <div className="pt-2 flex justify-center gap-3">
-            <Link
-              to="/canvas"
-              className="px-5 py-2.5 bg-[#0E4A93] text-white text-xs font-bold rounded-lg shadow-sm hover:bg-[#09356A] transition-colors"
-            >
-              Browse Catalog
-            </Link>
-            <Link
-              to="/"
-              className="px-5 py-2.5 border border-stone-300 text-stone-800 text-xs font-bold rounded-lg hover:border-stone-400 transition-colors"
-            >
-              Go to Home
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
- 
-  // Dedicated Acrylic Product Detail Page with Reference 1 layout & customizer drawer
-  if (product.categorySlug === 'acrylic') {
-    return <AcrylicProductDetailPage product={product} />;
-  }
+  const handleCustomizeFirst = () => {
+    if (!product) return;
+    const material = product.categorySlug === 'acrylic' ? 'acrylic' : 'canvas';
+    const params = new URLSearchParams({
+      size: selectedSize || '',
+      finish: selectedFinish || '',
+      shape: selectedShape || '',
+      qty: quantity.toString(),
+    });
+    navigate(`/customize/${material}/${product.slug || product.id}?${params.toString()}`);
+  };
+
+  const handleOrderInBulk = () => {
+    if (!product) return;
+    const material = product.categorySlug === 'acrylic' ? 'acrylic' : 'canvas';
+    const slug = product.slug || product.id;
+    const targetBulkItem = getBulkItem(material, slug);
+    const targetQty = Math.max(MIN_BULK_QTY, quantity);
+    const params = new URLSearchParams({
+      qty: targetQty.toString(),
+      product: product.name,
+      slug: slug,
+      material: material,
+      size: selectedSize || '',
+      finish: selectedFinish || '',
+      shape: selectedShape || '',
+    });
+    if (targetBulkItem) {
+      navigate(`/bulk-order/${material}/${slug}?${params.toString()}`);
+    } else {
+      navigate(`/bulk-order?${params.toString()}`);
+    }
+  };
 
   const categoryName = product.category || 'Prints';
   const categoryLink = `/${product.categorySlug || 'canvas'}`;
+
+  // Ensure the striked-off original price is ALWAYS strictly higher than the current selling price
+  const rawCompare = (product.compareAtPrice && product.compareAtPrice > product.price)
+    ? product.compareAtPrice
+    : (product.originalPrice && product.originalPrice > product.price)
+    ? product.originalPrice
+    : Math.round(product.price * 1.35);
+  const effectiveOriginalPrice = rawCompare > product.price ? rawCompare : Math.round(product.price * 1.35);
+
+  const effectiveDiscount = (!effectiveOriginalPrice)
+    ? 0
+    : (product.discountPercent && product.discountPercent > 0)
+    ? product.discountPercent
+    : Math.max(15, Math.round(((effectiveOriginalPrice - product.price) / effectiveOriginalPrice) * 100));
 
   return (
     <div className="w-full bg-[#FFFDF9] py-6 sm:py-10 text-stone-900 font-manrope">
@@ -408,8 +474,6 @@ export const ProductDetailPage: React.FC = () => {
                 >
                   {img === ROOM_VIEW_SENTINEL ? (
                     <WallPreview imageSrc={roomViewSourceImage} shape={selectedShape} sizeLabel={selectedSize} finish={selectedFinish} className="w-full h-full" />
-                  ) : img === BACK_VIEW_SENTINEL ? (
-                    <BackOfFrameView hook={selectedHook} className="w-full h-full" />
                   ) : (
                     <ProductImage src={img} alt={`View ${idx + 1}`} categorySlug={product.categorySlug} className="w-full h-full object-cover" />
                   )}
@@ -419,58 +483,91 @@ export const ProductDetailPage: React.FC = () => {
 
             {/* Main Image */}
             <div className="order-1 lg:order-2 lg:col-span-5 min-w-0">
-              <div
-                className={`relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group mx-auto w-auto max-w-full ${
-                  galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL
-                    ? 'aspect-[16/9] h-[42vh] sm:h-[46vh] min-h-[260px] max-h-[420px]'
-                    : 'aspect-[4/5] h-[48vh] sm:h-[52vh] min-h-[300px] max-h-[500px]'
-                }`}
-              >
-                {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
-                  <WallPreview
-                    imageSrc={uploadedFile || roomViewSourceImage}
-                    shape={selectedShape}
-                    sizeLabel={selectedSize}
-                    finish={selectedFinish}
-                    className="w-full h-full"
-                  />
-                ) : galleryImages[activeImageIndex] === BACK_VIEW_SENTINEL ? (
-                  <BackOfFrameView hook={selectedHook} className="w-full h-full" />
-                ) : (
-                  <SmartCropImage
-                    src={uploadedFile || galleryImages[activeImageIndex] || product.image}
-                    alt={product.name}
-                    containerAspect={4 / 5}
-                    className="w-full h-full"
-                  />
-                )}
+              {(() => {
+                const currentFrameLook = FRAME_LOOK[selectedFrame] || FRAME_LOOK['No Frame'];
+                const hasSelectedFrame = !isCorkWellnessProduct && selectedFrame !== 'No Frame';
+                const containerAspectVal = selectedShape === 'Square' ? 1 : selectedShape === 'Panoramic' ? 16 / 9 : 4 / 5;
 
-                {!uploadedFile && product.discountPercent > 0 && (
-                  <div className="absolute top-4 left-4 bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider">
-                    {product.discountPercent}% OFF
+                return (
+                  <div
+                    className={`relative rounded-2xl overflow-hidden bg-stone-100 shadow-xs group mx-auto w-auto max-w-full flex items-center justify-center ${
+                      galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL
+                        ? 'aspect-[16/9] h-[42vh] sm:h-[46vh] min-h-[260px] max-h-[420px]'
+                        : 'aspect-[4/5] h-[48vh] sm:h-[52vh] min-h-[300px] max-h-[500px]'
+                    }`}
+                  >
+                    {galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL ? (
+                      <WallPreview
+                        imageSrc={uploadedFile || roomViewSourceImage}
+                        shape={selectedShape}
+                        sizeLabel={selectedSize}
+                        finish={selectedFinish}
+                        className="w-full h-full"
+                      />
+                    ) : hasSelectedFrame ? (
+                      <div className="relative w-full h-full flex items-center justify-center p-3 sm:p-5">
+                        <div
+                          className="relative max-w-full max-h-full rounded-[3px] transition-all duration-300 flex items-center justify-center shadow-2xl"
+                          style={{
+                            aspectRatio: containerAspectVal,
+                            padding: 'clamp(14px, 3.2vw, 24px)',
+                            background: currentFrameLook.frame,
+                            boxShadow: currentFrameLook.boxShadow,
+                            border: `1px solid ${currentFrameLook.borderColor}`,
+                          }}
+                        >
+                          <div className="relative w-full h-full overflow-hidden rounded-[1px] bg-stone-50 flex items-center justify-center">
+                            <SmartCropImage
+                              src={uploadedFile || galleryImages[activeImageIndex] || product.image}
+                              alt={product.name}
+                              containerAspect={containerAspectVal}
+                              className="w-full h-full"
+                            />
+                            {/* Realistic frame inner shadow cast onto the artwork */}
+                            <div
+                              className="absolute inset-0 pointer-events-none"
+                              style={{ boxShadow: currentFrameLook.innerShadow }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <SmartCropImage
+                        src={uploadedFile || galleryImages[activeImageIndex] || product.image}
+                        alt={product.name}
+                        containerAspect={containerAspectVal}
+                        className="w-full h-full"
+                      />
+                    )}
+
+                    {!uploadedFile && effectiveDiscount > 0 && (
+                      <div className="absolute top-4 left-4 bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider z-10">
+                        {effectiveDiscount}% OFF
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => onToggleWishlist(product.id)}
+                      className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-700 hover:text-rose-600 shadow-md flex items-center justify-center transition-all cursor-pointer z-10"
+                      title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+                    >
+                      <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
+                    </button>
+
+                    {galleryImages.length > 1 && (
+                      <>
+                        <button type="button" onClick={handlePrevImage} aria-label="Previous image" className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100 z-10">
+                          <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button type="button" onClick={handleNextImage} aria-label="Next image" className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100 z-10">
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
+                      </>
+                    )}
                   </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => onToggleWishlist(product.id)}
-                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-700 hover:text-rose-600 shadow-md flex items-center justify-center transition-all cursor-pointer"
-                  title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-                >
-                  <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
-                </button>
-
-                {galleryImages.length > 1 && (
-                  <>
-                    <button type="button" onClick={handlePrevImage} aria-label="Previous image" className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100">
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button type="button" onClick={handleNextImage} aria-label="Next image" className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 shadow-md flex items-center justify-center transition-all cursor-pointer opacity-0 group-hover:opacity-100">
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </>
-                )}
-              </div>
+                );
+              })()}
             </div>
 
             {/* Info + Purchase Card */}
@@ -491,11 +588,11 @@ export const ProductDetailPage: React.FC = () => {
               <div className="flex items-baseline gap-3">
                 <span className="text-2xl sm:text-3xl font-extrabold text-stone-950">₹{product.price.toLocaleString('en-IN')}</span>
                 <span className="text-base text-stone-400 line-through">
-                  ₹{(product.compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)).toLocaleString('en-IN')}
+                  ₹{effectiveOriginalPrice.toLocaleString('en-IN')}
                 </span>
-                {product.discountPercent > 0 && (
+                {effectiveDiscount > 0 && (
                   <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                    {product.discountPercent}% OFF
+                    {effectiveDiscount}% OFF
                   </span>
                 )}
               </div>
@@ -506,8 +603,8 @@ export const ProductDetailPage: React.FC = () => {
               </div>
 
               {productCode && (
-                <div className="text-sm text-stone-500 font-medium">
-                  Code: <span className="text-stone-700 font-bold">{productCode}</span>
+                <div className="text-base text-stone-500 font-medium">
+                  Code: <span className="text-stone-700 font-bold text-lg">{productCode}</span>
                 </div>
               )}
 
@@ -536,6 +633,17 @@ export const ProductDetailPage: React.FC = () => {
                 </div>
               )}
 
+              {isCatalogueDesign ? (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/customize/${product.material === 'acrylic' ? 'acrylic' : 'canvas'}/single?prefillImage=${encodeURIComponent(product.image)}&prefillName=${encodeURIComponent(product.name)}`)}
+                  className="w-full py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  <Pencil className="w-4 h-4" />
+                  <span>Customize this Product</span>
+                </button>
+              ) : (
+                <>
               {/* Size / Shape / Frame / Hook Tabs */}
               {((product.sizes && product.sizes.length > 0) || availableShapes.length > 0) && (
                 <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
@@ -565,13 +673,15 @@ export const ProductDetailPage: React.FC = () => {
                         Frame
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => setSizeShapeTab('hook')}
-                      className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'hook' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
-                    >
-                      Hook
-                    </button>
+                    {showHookTab && (
+                      <button
+                        type="button"
+                        onClick={() => setSizeShapeTab('hook')}
+                        className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'hook' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
+                      >
+                        Hook
+                      </button>
+                    )}
                   </div>
 
                   {sizeShapeTab === 'size' && product.sizes && product.sizes.length > 0 && (
@@ -655,25 +765,36 @@ export const ProductDetailPage: React.FC = () => {
 
                   {frameOptions.length > 0 && sizeShapeTab === 'frame' && (
                     <div className="grid grid-cols-3 gap-2">
-                      {frameOptions.map((opt) => (
-                        <button
-                          key={opt.label}
-                          type="button"
-                          onClick={() => setSelectedFinish(opt.value)}
-                          className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
-                            selectedFinish === opt.value
-                              ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
-                              : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
-                          }`}
-                        >
-                          <FrameSwatch category={opt.label} />
-                          <span className="text-[10px] font-semibold text-center leading-tight">{opt.label}</span>
-                        </button>
-                      ))}
+                      {frameOptions.map((opt) => {
+                        const isSelected = selectedFrame === opt.label;
+                        return (
+                          <button
+                            key={opt.label}
+                            type="button"
+                            onClick={() => {
+                              setSelectedFrame(opt.label);
+                              setSelectedFinish(opt.value);
+                              // Switch active image to artwork if on room view so the frame is directly visible on the artwork
+                              if (galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL) {
+                                const artIdx = galleryImages.findIndex((img) => img !== ROOM_VIEW_SENTINEL);
+                                if (artIdx !== -1) setActiveImageIndex(artIdx);
+                              }
+                            }}
+                            className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
+                              isSelected
+                                ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] ring-2 ring-[#0E4A93]/20 shadow-xs font-bold'
+                                : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
+                            }`}
+                          >
+                            <FrameSwatch category={opt.label} />
+                            <span className="text-[10px] font-semibold text-center leading-tight">{opt.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
 
-                  {sizeShapeTab === 'hook' && (
+                  {showHookTab && sizeShapeTab === 'hook' && (
                     <div className="grid grid-cols-4 gap-2">
                       {HOOK_OPTIONS.map((hookOpt) => (
                         <button
@@ -704,6 +825,17 @@ export const ProductDetailPage: React.FC = () => {
                 </div>
               </div>
 
+<div>
+                <button
+                  type="button"
+                  onClick={handleOrderInBulk}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-[#0E4A93] text-sm font-bold text-[#0E4A93] hover:bg-blue-50/60 transition-colors cursor-pointer"
+                >
+                  <Package className="w-5 h-5" />
+                  <span>Order this item in bulk</span>
+                </button>
+              </div>
+
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
@@ -715,15 +847,26 @@ export const ProductDetailPage: React.FC = () => {
                 </button>
                 <button
                   type="button"
+                  onClick={handleCustomizeFirst}
+                  className="flex-1 py-3.5 px-6 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Customize First</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => onToggleWishlist(product.id)}
-                  className={`flex-1 py-3.5 px-6 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  className={`py-3.5 px-4 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
                     isWishlisted ? 'border-rose-300 bg-rose-50 text-rose-600' : 'border-stone-300 text-stone-700 hover:border-stone-400'
                   }`}
+                  title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
                 >
                   <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600' : ''}`} />
-                  <span>{isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}</span>
+                  <span className="sm:hidden">{isWishlisted ? 'In Wishlist' : 'Wishlist'}</span>
                 </button>
               </div>
+                </>
+              )}
             </div>
 
           </div>
@@ -903,6 +1046,53 @@ export const ProductDetailPage: React.FC = () => {
       </div>
     </div>
   );
+};
+
+export const ProductDetailPage: React.FC = () => {
+  const { productId } = useParams<{ productId: string }>();
+  const { allProducts } = useShop();
+
+  // Find product by id or slug
+  const product = useMemo(() => {
+    return allProducts.find((p) => p.id === productId || p.slug === productId);
+  }, [allProducts, productId]);
+
+  if (!product) {
+    return (
+      <div className="w-full bg-[#FFFDF9] py-20 text-center text-stone-900 font-manrope min-h-[65vh] flex items-center justify-center">
+        <div className="max-w-md mx-auto px-4 space-y-4">
+          <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto text-stone-400">
+            <Layers className="w-8 h-8" />
+          </div>
+          <h1 className="text-2xl font-bold text-stone-900">Product Not Found</h1>
+          <p className="text-xs sm:text-sm text-stone-500 leading-relaxed">
+            The requested product (<code className="text-stone-700 bg-stone-100 px-1.5 py-0.5 rounded font-mono text-xs">{productId}</code>) could not be found.
+          </p>
+          <div className="pt-2 flex justify-center gap-3">
+            <Link
+              to="/canvas"
+              className="px-5 py-2.5 bg-[#0E4A93] text-white text-xs font-bold rounded-lg shadow-sm hover:bg-[#09356A] transition-colors"
+            >
+              Browse Catalog
+            </Link>
+            <Link
+              to="/"
+              className="px-5 py-2.5 border border-stone-300 text-stone-800 text-xs font-bold rounded-lg hover:border-stone-400 transition-colors"
+            >
+              Go to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Dedicated Acrylic Product Detail Page with Reference 1 layout & customizer drawer
+  if (product.categorySlug === 'acrylic') {
+    return <AcrylicProductDetailPage key={product.id} product={product} />;
+  }
+
+  return <StandardProductDetailPage key={product.id} product={product} />;
 };
 
 export default ProductDetailPage;

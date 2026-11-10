@@ -1,53 +1,58 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { ArrowLeft } from 'lucide-react';
-import { apiClient, ApiError } from '@/lib/api-client';
-import type { CreateProductInput, ProductType } from '@/lib/types/product';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
+import { apiClient, ApiError } from "@/lib/api-client";
+import type { CreateProductInput, ProductType } from "@/lib/types/product";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function slugify(value: string): string {
   return value
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 export default function NewProductPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
-  const [description, setDescription] = useState('');
-  const [productTypeId, setProductTypeId] = useState('');
-  const [basePrice, setBasePrice] = useState('');
-  const [costPrice, setCostPrice] = useState('');
+  const [description, setDescription] = useState("");
+  const [productTypeId, setProductTypeId] = useState("");
+  const [basePrice, setBasePrice] = useState("");
+  const [costPrice, setCostPrice] = useState("");
 
   const { data: productTypes, isLoading: typesLoading } = useQuery({
-    queryKey: ['product-types'],
-    queryFn: () => apiClient.get<ProductType[]>('/product-types'),
+    queryKey: ["product-types"],
+    queryFn: () => apiClient.get<ProductType[]>("/product-types"),
   });
 
   const createMutation = useMutation({
-    mutationFn: (input: CreateProductInput) => apiClient.post('/products', input),
+    mutationFn: (input: CreateProductInput) =>
+      apiClient.post("/products", input),
     onSuccess: (created: unknown) => {
-      toast.success('Product created');
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast.success("Product created");
+      queryClient.invalidateQueries({ queryKey: ["products"] });
       const id = (created as { id?: string })?.id;
-      router.push(id ? `/products/${id}` : '/products');
+      router.push(
+        id ? `/products/placeholder?id=${encodeURIComponent(id)}` : "/products",
+      );
     },
     onError: (err: unknown) => {
-      toast.error(err instanceof ApiError ? err.message : 'Failed to create product');
+      toast.error(
+        err instanceof ApiError ? err.message : "Failed to create product",
+      );
     },
   });
 
@@ -89,7 +94,12 @@ export default function NewProductPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" value={name} onChange={(e) => handleNameChange(e.target.value)} required />
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => handleNameChange(e.target.value)}
+                required
+              />
             </div>
 
             <div className="space-y-2">
@@ -116,7 +126,7 @@ export default function NewProductPage() {
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
                 <option value="" disabled>
-                  {typesLoading ? 'Loading…' : 'Select a type'}
+                  {typesLoading ? "Loading…" : "Select a type"}
                 </option>
                 {productTypes?.map((type) => (
                   <option key={type.id} value={type.id}>
@@ -128,7 +138,11 @@ export default function NewProductPage() {
 
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
+              <Input
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -158,7 +172,7 @@ export default function NewProductPage() {
             </div>
 
             <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? 'Creating…' : 'Create Product'}
+              {createMutation.isPending ? "Creating…" : "Create Product"}
             </Button>
           </form>
         </CardContent>

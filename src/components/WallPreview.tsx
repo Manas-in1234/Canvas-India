@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { getFinishStyle } from '../utils/finishStyle';
+import { FRAME_LOOK, getFrameCategory } from './FrameHookVisuals';
 
 interface WallBounds {
   minX: number;
@@ -208,17 +209,18 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
     return { widthPct: r * hFrac * 100, heightPct: hFrac * 100, align: 'end' as const };
   }, [isCircle, isTriangle, naturalAspect, dims]);
 
-  // A selected Frame (Black/Wooden/White/Gold) now shows as a real colored
-  // border around the artwork here, so picking one in the Frame tab is
-  // visible in the room preview. "No Frame" / wrap-style finishes keep
+  // A selected Frame (Black/Wooden/White/Gold) shows as a real frame moulding
+  // around the artwork here, matching FRAME_LOOK so picking one in the Frame tab is
+  // clearly visible in the room preview. "No Frame" / wrap-style finishes keep
   // border 0, so the sampled-corner-color sliver fallback still applies.
-  const hasFrame = finishStyle.border > 0;
-  // Percentage (not px) so the border stays a thin, proportional edge no
-  // matter how small the rendered frame box is (a tiny thumbnail vs. the
-  // large main preview) — a fixed px value swallowed most of the artwork
-  // on the thumbnail-sized room preview.
-  const framePadding = hasFrame ? `${Math.min(finishStyle.border * 0.6, 4)}%` : 0;
-  const frameBg = hasFrame ? finishStyle.color : (sampledBg || 'transparent');
+  const frameCategory = getFrameCategory(finish);
+  const frameLook = FRAME_LOOK[frameCategory] || FRAME_LOOK['No Frame'];
+  const hasSelectedFrame = frameCategory !== 'No Frame';
+  const hasFrame = hasSelectedFrame || finishStyle.border > 0;
+  // Proportional padding so the frame border stays visible and balanced
+  const framePadding = hasSelectedFrame ? 'clamp(3px, 2.2%, 8px)' : hasFrame ? `${Math.min(finishStyle.border * 0.6, 4)}%` : 0;
+  const frameBg = hasSelectedFrame ? frameLook.frame : hasFrame ? finishStyle.color : (sampledBg || 'transparent');
+  const frameBorderColor = hasSelectedFrame ? frameLook.borderColor : 'transparent';
 
   return (
     <div className={`relative w-full h-full flex items-center justify-center bg-stone-50 ${className}`}>
@@ -256,6 +258,7 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
             style={{
               padding: framePadding,
               background: frameBg,
+              border: hasFrame && frameBorderColor !== 'transparent' ? `1px solid ${frameBorderColor}` : undefined,
               boxShadow: '0 16px 26px -10px rgba(0,0,0,0.5), 0 3px 8px -3px rgba(0,0,0,0.3)',
               borderRadius: isCircle ? '50%' : 2,
               clipPath,
@@ -297,6 +300,9 @@ export const WallPreview: React.FC<WallPreviewProps> = ({
               />
               {finishStyle.overlay && (
                 <div className="absolute inset-0 pointer-events-none" style={{ background: finishStyle.overlay }} />
+              )}
+              {hasSelectedFrame && frameLook.innerShadow && frameLook.innerShadow !== 'none' && (
+                <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: frameLook.innerShadow }} />
               )}
             </div>
           </div>

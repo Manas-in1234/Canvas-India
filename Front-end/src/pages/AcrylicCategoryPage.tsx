@@ -8,7 +8,6 @@ import {
   FilterX,
   ArrowUpDown,
   Sparkles,
-  CheckCircle2,
   ShoppingCart
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
@@ -241,25 +240,7 @@ export const AcrylicCategoryPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Key Trust Badges */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-stone-200/70 text-xs text-stone-600">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Sub-Surface UV Inks</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Diamond Polished</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">100% Moisture Proof</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Pan-India Delivery</span>
-                </div>
-              </div>
+
 
             </div>
 
@@ -585,22 +566,6 @@ export const AcrylicCategoryPage: React.FC = () => {
                       </label>
                     );
                   })}
-                </div>
-              </div>
-
-              {/* Quality & Delivery Assurance Strip in Sidebar */}
-              <div className="pt-2 border-t border-stone-100 space-y-2 text-[11px] text-stone-500">
-                <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Crystal-Clear Optical Acrylic</span>
-                </div>
-                <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Ready to Hang with Hardware</span>
-                </div>
-                <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Free Insured Delivery on ₹999+</span>
                 </div>
               </div>
 

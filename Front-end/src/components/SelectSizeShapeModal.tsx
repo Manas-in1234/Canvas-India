@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { X, Check, ArrowRight } from 'lucide-react';
+import { X, Check, ArrowRight, RotateCcw } from 'lucide-react';
 import {
   SizeShapeOption,
   getProductSizeShapeOptions,
   getProductSupportedShapes
 } from '../data/productSizeShapeConfig';
+import { bulkUnitPriceFor, MIN_BULK_QTY } from '../pages/BulkOrdersPage';
 
 export interface SelectSizeShapeModalProps {
   isOpen: boolean;
@@ -29,6 +30,10 @@ export interface SelectSizeShapeModalProps {
     panelsCount?: number;
     panels?: any[];
   }) => void;
+  /** When set to a bulk quantity (>= MIN_BULK_QTY), every size's displayed
+   * price reflects the same volume discount shown on the Bulk Orders page. */
+  bulkQuantity?: number;
+  onResetSize?: () => void;
 }
 
 export type SinglePrintCategory = 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL';
@@ -44,13 +49,19 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   isCustomSize = false,
   customWidth = 10,
   customHeight = 10,
-  onSelectSizeAndShape
+  onSelectSizeAndShape,
+  bulkQuantity,
+  onResetSize
 }) => {
   if (!isOpen) return null;
+
+  const hasBulkDiscount = bulkQuantity !== undefined && bulkQuantity >= MIN_BULK_QTY;
+  const displayPrice = (price: number) => (hasBulkDiscount ? bulkUnitPriceFor(price, bulkQuantity!) : price);
 
   const isQuotes = productId.toLowerCase() === 'canvas-quotes';
   const isDigitalPainting = productId.toLowerCase() === 'canvas-digital-painting';
   const isLyric = productId.toLowerCase() === 'canvas-lyric' || productId.toLowerCase().includes('lyric');
+  const isPopArt = productId.toLowerCase().includes('pop');
 
   const isSinglePrint = useMemo(() => {
     const norm = productId.toLowerCase();
@@ -74,6 +85,246 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   // Single Print predefined sizes per category
   const singlePrintSizes = useMemo(() => {
     const isAcrylic = material === 'acrylic';
+
+    if (isPopArt) {
+      const squareSizes: SizeShapeOption[] = [
+        {
+          id: 'pop-sq-8x8',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '8" × 8"',
+          dimensionsSummary: '8" × 8"',
+          widthInches: 8,
+          heightInches: 8,
+          price: isAcrylic ? 599.0 : 399.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-sq-10x10',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '10" × 10"',
+          dimensionsSummary: '10" × 10"',
+          widthInches: 10,
+          heightInches: 10,
+          price: isAcrylic ? 674.0 : 449.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-12x12',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '12" × 12"',
+          dimensionsSummary: '12" × 12"',
+          widthInches: 12,
+          heightInches: 12,
+          price: isAcrylic ? 749.0 : 499.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-16x16',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '16" × 16"',
+          dimensionsSummary: '16" × 16"',
+          widthInches: 16,
+          heightInches: 16,
+          price: isAcrylic ? 1199.0 : 799.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-sq-18x18',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '18" × 18"',
+          dimensionsSummary: '18" × 18"',
+          widthInches: 18,
+          heightInches: 18,
+          price: isAcrylic ? 1499.0 : 999.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-sq-20x20',
+          shapeId: 'shape-square',
+          shapeName: 'Square',
+          label: '20" × 20"',
+          dimensionsSummary: '20" × 20"',
+          widthInches: 20,
+          heightInches: 20,
+          price: isAcrylic ? 1799.0 : 1199.0,
+          aspectRatio: 1,
+          category: 'SQUARE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        }
+      ];
+
+      const panoramicSizes: SizeShapeOption[] = [
+        {
+          id: 'pop-pan-12x8',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '12" × 8"',
+          dimensionsSummary: '12" × 8"',
+          widthInches: 12,
+          heightInches: 8,
+          price: isAcrylic ? 674.0 : 449.0,
+          aspectRatio: 12 / 8,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-pan-12x18',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '12" × 18"',
+          dimensionsSummary: '12" × 18"',
+          widthInches: 12,
+          heightInches: 18,
+          price: isAcrylic ? 974.0 : 649.0,
+          aspectRatio: 12 / 18,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-pan-16x20',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '16" × 20"',
+          dimensionsSummary: '16" × 20"',
+          widthInches: 16,
+          heightInches: 20,
+          price: isAcrylic ? 1349.0 : 899.0,
+          aspectRatio: 16 / 20,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-pan-16x24',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '16" × 24"',
+          dimensionsSummary: '16" × 24"',
+          widthInches: 16,
+          heightInches: 24,
+          price: isAcrylic ? 1649.0 : 1099.0,
+          aspectRatio: 16 / 24,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-pan-16x32',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '16" × 32"',
+          dimensionsSummary: '16" × 32"',
+          widthInches: 16,
+          heightInches: 32,
+          price: isAcrylic ? 2099.0 : 1399.0,
+          aspectRatio: 16 / 32,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-pan-18x24',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '18" × 24"',
+          dimensionsSummary: '18" × 24"',
+          widthInches: 18,
+          heightInches: 24,
+          price: isAcrylic ? 1949.0 : 1299.0,
+          aspectRatio: 18 / 24,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-pan-20x30',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '20" × 30"',
+          dimensionsSummary: '20" × 30"',
+          widthInches: 20,
+          heightInches: 30,
+          price: isAcrylic ? 2549.0 : 1699.0,
+          aspectRatio: 20 / 30,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        },
+        {
+          id: 'pop-pan-24x36',
+          shapeId: 'shape-rectangle',
+          shapeName: 'Panoramic',
+          label: '24" × 36"',
+          dimensionsSummary: '24" × 36"',
+          widthInches: 24,
+          heightInches: 36,
+          price: isAcrylic ? 2999.0 : 1999.0,
+          aspectRatio: 24 / 36,
+          category: 'LANDSCAPE',
+          panelsCount: 1,
+          diagramType: 'single-shape'
+        }
+      ];
+
+      const recommendedSizes: SizeShapeOption[] = [
+        squareSizes[1], // 10x10
+        squareSizes[2], // 12x12
+        squareSizes[3], // 16x16
+        panoramicSizes[1], // 12x18
+        panoramicSizes[2], // 16x20
+        panoramicSizes[3], // 16x24
+        panoramicSizes[6]  // 20x30
+      ];
+
+      const largeSizes: SizeShapeOption[] = [
+        squareSizes[4], // 18x18
+        squareSizes[5], // 20x20
+        panoramicSizes[3], // 16x24
+        panoramicSizes[4], // 16x32
+        panoramicSizes[5], // 18x24
+        panoramicSizes[6], // 20x30
+        panoramicSizes[7]  // 24x36
+      ];
+
+      const smallSizes: SizeShapeOption[] = [
+        squareSizes[0], // 8x8
+        squareSizes[1], // 10x10
+        squareSizes[2], // 12x12
+        panoramicSizes[0], // 12x8
+        panoramicSizes[1]  // 12x18
+      ];
+
+      return {
+        RECOMMENDED: recommendedSizes,
+        SQUARE: squareSizes,
+        PANORAMIC: panoramicSizes,
+        LARGE: largeSizes,
+        SMALL: smallSizes
+      };
+    }
 
     if (isLyric) {
       const squareSizes: SizeShapeOption[] = [
@@ -754,7 +1005,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
       LARGE: largeSizes,
       SMALL: smallSizes
     };
-  }, [material]);
+  }, [material, isLyric, isQuotes, isDigitalPainting, isPopArt]);
 
   // Options for shaped products (Round, Triangle, Heart, Oval)
   const shapedProductOptions = useMemo(() => {
@@ -771,7 +1022,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
 
   // Selected Option state
   const defaultOptionId = isSinglePrint
-    ? (isQuotes ? 'quotes-8x8' : isDigitalPainting ? 'painting-10x10' : material === 'acrylic' ? 'sq-10x10' : 'single-10x10')
+    ? (isQuotes ? 'quotes-8x8' : isDigitalPainting ? 'painting-10x10' : isPopArt ? 'pop-12x12' : material === 'acrylic' ? 'sq-10x10' : 'single-10x10')
     : (shapedProductOptions[0]?.id || '');
 
   const [selectedOptionId, setSelectedOptionId] = useState<string>(() => {
@@ -918,11 +1169,14 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
       );
     }
 
-    // 4. Oval Canvas
+    // 4. Oval Canvas (Horizontal vs Vertical distinct SVGs - Requirement 3)
     if (isOval) {
+      const isHorizontal = opt.widthInches >= opt.heightInches;
+      const rx = isHorizontal ? 55 : 36;
+      const ry = isHorizontal ? 36 : 48;
       return (
         <svg viewBox="0 0 160 110" className="w-full h-full max-h-24">
-          <ellipse cx="80" cy="55" rx="55" ry="38" fill={fillColor} stroke={strokeColor} strokeWidth="2" />
+          <ellipse cx="80" cy="55" rx={rx} ry={ry} fill={fillColor} stroke={strokeColor} strokeWidth="2" />
           <text x="80" y="58" fill="#0E4A93" fontSize="9.5" fontWeight="bold" textAnchor="middle">
             {opt.widthInches}&quot; × {opt.heightInches}&quot;
           </text>
@@ -979,23 +1233,39 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-white">
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg sm:text-xl font-black text-stone-900 tracking-tight">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-stone-200 bg-white">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <h2 className="text-base sm:text-xl font-black text-stone-900 tracking-tight truncate">
               Select Size
             </h2>
-            <span className="inline-block text-[11px] font-bold text-[#0E4A93] bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+            <span className="inline-block text-[10px] sm:text-[11px] font-bold text-[#0E4A93] bg-blue-50 px-2 sm:px-2.5 py-0.5 rounded-full border border-blue-100 truncate max-w-[120px] sm:max-w-none">
               {productName}
             </span>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center cursor-pointer transition-colors"
-            title="Close"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {onResetSize && (
+              <button
+                type="button"
+                onClick={() => {
+                  onResetSize();
+                  onClose();
+                }}
+                className="px-2.5 sm:px-3 py-1 sm:py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 hover:text-stone-900 text-[11px] sm:text-xs font-bold rounded-xl border border-stone-200 transition-colors flex items-center gap-1 sm:gap-1.5 cursor-pointer shadow-2xs"
+                title="Reset to default product size"
+              >
+                <RotateCcw className="w-3.5 h-3.5 stroke-[2.2]" />
+                <span className="hidden sm:inline">Reset Size</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center cursor-pointer transition-colors"
+              title="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Single Print Category Tabs: RECOMMENDED | SQUARE | PANORAMIC | LARGE | SMALL */}
@@ -1068,7 +1338,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
                       {opt.label}
                     </span>
                     <span className="text-sm font-extrabold text-[#0E4A93]">
-                      ₹{opt.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      ₹{displayPrice(opt.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
@@ -1147,7 +1417,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
         </div>
 
         {/* Footer / Action Bar */}
-        <div className="px-6 py-4 bg-stone-50 border-t border-stone-200 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-stone-50 border-t border-stone-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
           <div className="text-xs text-stone-500">
             Selected:{' '}
             <strong className="text-stone-900 font-black">
@@ -1158,24 +1428,26 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
             <span className="ml-2 font-bold text-[#0E4A93]">
               ₹
               {showCustomSize
-                ? Math.round(
-                    Math.max(8, localCustomW) * Math.max(8, localCustomH) * (material === 'acrylic' ? 4.5 : 2.5)
+                ? displayPrice(
+                    Math.round(
+                      Math.max(8, localCustomW) * Math.max(8, localCustomH) * (material === 'acrylic' ? 4.5 : 2.5)
+                    )
                   ).toLocaleString('en-IN', { minimumFractionDigits: 2 })
-                : currentSelectedOption?.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                : currentSelectedOption && displayPrice(currentSelectedOption.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </span>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition-colors cursor-pointer"
+              className="px-3 sm:px-4 py-2 rounded-xl text-xs font-bold text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleApply}
-              className="px-6 py-2.5 rounded-xl text-xs font-black text-white bg-[#0E4A93] hover:bg-[#0A366C] shadow-md transition-all hover:scale-102 cursor-pointer flex items-center gap-2"
+              className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs font-black text-white bg-[#0E4A93] hover:bg-[#0A366C] shadow-md transition-all hover:scale-102 cursor-pointer flex items-center gap-2 justify-center"
             >
               <span>Continue to Upload</span>
               <ArrowRight className="w-3.5 h-3.5" />

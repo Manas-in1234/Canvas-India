@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Search, 
+  Search,
+  MessageCircle, 
   ShoppingCart, 
   Heart, 
   User, 
@@ -64,7 +65,7 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     name: 'Canvas',
     slug: 'canvas',
     route: '/canvas',
-    image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=400&auto=format&fit=crop&q=80',
+    image: '/assets/canvas/canvas-promo-framed-art.jpg',
     description: 'Museum-grade 380 GSM cotton canvas prints',
   },
   {
@@ -128,7 +129,7 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     slug: 'corporate-orders',
     route: '/corporate-orders',
     image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80',
-    description: 'Office branding, corporate kits & GST billing',
+    description: 'Office branding, corporate kits & custom printing',
   },
   {
     name: 'Designers & Architects',
@@ -322,8 +323,11 @@ export const Header: React.FC<HeaderProps> = ({
       clearTimeout(megaMenuTimeoutRef.current);
       megaMenuTimeoutRef.current = null;
     }
-    const estWidth = Math.min(850, window.innerWidth * 0.9);
-    const left = Math.min(Math.max(rect.left, 16), window.innerWidth - estWidth - 16);
+    const isCorporate = slug === 'corporate-orders';
+    const menuData = MEGA_MENUS_DATA[slug];
+    const targetWidth = isCorporate ? 360 : menuData?.groups && menuData.groups[3] ? 1260 : menuData?.groups && menuData.groups[2] ? 1050 : 850;
+    const estWidth = Math.min(targetWidth, window.innerWidth - 32);
+    const left = Math.max(16, Math.min(rect.left, window.innerWidth - estWidth - 16));
     setMegaMenuPos({ top: rect.bottom + 2, left });
     setActiveMegaMenu(slug);
     setAllCategoriesOpen(false);
@@ -335,12 +339,14 @@ export const Header: React.FC<HeaderProps> = ({
     }, 120);
   };
 
-  const handleItemClick = (slug: string, actionType?: 'category' | 'quote' | 'customize') => {
+  const handleItemClick = (slug: string, actionType?: 'category' | 'quote' | 'customize', href?: string) => {
     if (actionType === 'quote') {
       onOpenQuote();
     } else if (actionType === 'customize') {
       onOpenCustomize();
       onSelectCategory(slug);
+    } else if (href) {
+      navigate(href);
     } else {
       handleNavClick(slug);
     }
@@ -860,10 +866,52 @@ export const Header: React.FC<HeaderProps> = ({
 
                       {/* Mega-Menu Dropdown Panel */}
                       {isMenuOpen && menuData && megaMenuPos && createPortal(
+                        cat.slug === 'corporate-orders' ? (
+                          <div
+                            ref={megaMenuDropdownRef}
+                            data-header-portal="mega-menu"
+                            className="fixed w-[360px] max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-2xl border border-stone-200 z-50 p-5 transition-all duration-200 animate-in fade-in slide-in-from-top-2 text-left select-none whitespace-normal"
+                            style={{ top: megaMenuPos.top, left: Math.max(16, Math.min(megaMenuPos.left, window.innerWidth - 380)) }}
+                            onMouseEnter={() => {
+                              if (megaMenuTimeoutRef.current) {
+                                clearTimeout(megaMenuTimeoutRef.current);
+                                megaMenuTimeoutRef.current = null;
+                              }
+                              setActiveMegaMenu('corporate-orders');
+                            }}
+                            onMouseLeave={handleMegaMenuLeave}
+                          >
+                            <div className="flex items-center gap-3 pb-3 border-b border-stone-100">
+                              <div className="w-10 h-10 rounded-xl bg-[#0E4A93]/10 text-[#0E4A93] flex items-center justify-center shrink-0">
+                                <Building2 className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-sm text-stone-900">Corporate &amp; Bulk Orders</h4>
+                                <p className="text-[11px] text-stone-500">Volume pricing &amp; custom solutions</p>
+                              </div>
+                            </div>
+
+                            <p className="text-xs text-stone-600 leading-relaxed my-3.5">
+                              Custom employee welcome kits, company branded prints, uniform displays, and corporate gifting.
+                            </p>
+
+                            <a
+                              href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setActiveMegaMenu(null)}
+                              className="w-full py-3 bg-[#E8752A] hover:bg-[#D3631A] text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer group"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              <span>Get a Quote</span>
+                              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                            </a>
+                          </div>
+                        ) : (
                         <div
                           ref={megaMenuDropdownRef}
                           data-header-portal="mega-menu"
-                          className="fixed w-[850px] max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-stone-200 z-50 p-5 lg:p-6 transition-all duration-200 animate-in fade-in slide-in-from-top-2 text-left select-none whitespace-normal"
+                          className={`fixed ${menuData.groups[3] ? 'w-[1260px]' : menuData.groups[2] ? 'w-[1050px]' : 'w-[850px]'} max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-2xl border border-stone-200 z-50 p-5 lg:p-6 transition-all duration-200 animate-in fade-in slide-in-from-top-2 text-left select-none whitespace-normal`}
                           style={{ top: megaMenuPos.top, left: megaMenuPos.left }}
                           onMouseEnter={() => {
                             if (megaMenuTimeoutRef.current) {
@@ -874,7 +922,7 @@ export const Header: React.FC<HeaderProps> = ({
                           }}
                           onMouseLeave={handleMegaMenuLeave}
                         >
-                          <div className="grid grid-cols-12 gap-5 items-start">
+                          <div className={`grid ${menuData.groups[3] ? 'grid-cols-[repeat(20,minmax(0,1fr))]' : menuData.groups[2] ? 'grid-cols-[repeat(16,minmax(0,1fr))]' : 'grid-cols-12'} gap-4 lg:gap-5 items-start`}>
                             {/* Column 1: Group 1 (4 cols) */}
                             {menuData.groups[0] && (
                               <div className="col-span-4 border-r border-stone-100 pr-4">
@@ -882,12 +930,12 @@ export const Header: React.FC<HeaderProps> = ({
                                   {renderGroupIcon(menuData.groups[0].iconType)}
                                   <span>{menuData.groups[0].title}</span>
                                 </div>
-                                <ul className="space-y-0.5">
+                                <ul className={`space-y-0.5 ${menuData.groups[0].items.length > 8 ? 'max-h-[350px] overflow-y-auto pr-1.5' : ''}`}>
                                   {menuData.groups[0].items.map((item) => (
                                     <li key={item.name}>
                                       <button
                                         type="button"
-                                        onClick={() => handleItemClick(item.slug, item.actionType)}
+                                        onClick={() => handleItemClick(item.slug, item.actionType, item.href)}
                                         className="w-full text-left px-2.5 py-1.5 text-xs text-stone-700 hover:text-[#0E4A93] hover:bg-blue-50/50 rounded-md transition-colors font-medium flex items-center justify-between group cursor-pointer"
                                       >
                                         <div>
@@ -911,12 +959,12 @@ export const Header: React.FC<HeaderProps> = ({
                                   {renderGroupIcon(menuData.groups[1].iconType)}
                                   <span>{menuData.groups[1].title}</span>
                                 </div>
-                                <ul className={`space-y-0.5 ${menuData.groups[1].items.length > 8 ? 'max-h-[350px] overflow-y-auto pr-1 scrollbar-none' : ''}`}>
+                                <ul className={`space-y-0.5 ${menuData.groups[1].items.length > 8 ? 'max-h-[350px] overflow-y-auto pr-1.5' : ''}`}>
                                   {menuData.groups[1].items.map((item) => (
                                     <li key={item.name}>
                                       <button
                                         type="button"
-                                        onClick={() => handleItemClick(item.slug, item.actionType)}
+                                        onClick={() => handleItemClick(item.slug, item.actionType, item.href)}
                                         className="w-full text-left px-2.5 py-1.5 text-xs text-stone-700 hover:text-[#0E4A93] hover:bg-blue-50/50 rounded-md transition-colors font-medium flex items-center justify-between group cursor-pointer"
                                       >
                                         <div>
@@ -933,7 +981,65 @@ export const Header: React.FC<HeaderProps> = ({
                               </div>
                             )}
 
-                            {/* Column 3: Promotional Panel (4 cols) */}
+                            {/* Column 3: Group 3 (4 cols) — only present for menus with a 3rd group */}
+                            {menuData.groups[2] && (
+                              <div className="col-span-4 border-r border-stone-100 pr-4">
+                                <div className="flex items-center gap-1.5 text-xs font-bold text-[#0E4A93] uppercase tracking-wider mb-2.5 pb-1.5 border-b border-stone-100">
+                                  {renderGroupIcon(menuData.groups[2].iconType)}
+                                  <span>{menuData.groups[2].title}</span>
+                                </div>
+                                <ul className={`space-y-0.5 ${menuData.groups[2].items.length > 8 ? 'max-h-[350px] overflow-y-auto pr-1.5' : ''}`}>
+                                  {menuData.groups[2].items.map((item) => (
+                                    <li key={item.name}>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleItemClick(item.slug, item.actionType, item.href)}
+                                        className="w-full text-left px-2.5 py-1.5 text-xs text-stone-700 hover:text-[#0E4A93] hover:bg-blue-50/50 rounded-md transition-colors font-medium flex items-center justify-between group cursor-pointer"
+                                      >
+                                        <div>
+                                          <span className="block font-semibold text-stone-900 group-hover:text-[#0E4A93]">{item.name}</span>
+                                          {item.description && (
+                                            <span className="block text-[10px] text-stone-500 font-normal leading-tight mt-0.5">{item.description}</span>
+                                          )}
+                                        </div>
+                                        <ArrowRight className="w-3 h-3 text-stone-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0 ml-1" />
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Column 4: Group 4 (4 cols) — only present for menus with a 4th group */}
+                            {menuData.groups[3] && (
+                              <div className="col-span-4 border-r border-stone-100 pr-4">
+                                <div className="flex items-center gap-1.5 text-xs font-bold text-[#0E4A93] uppercase tracking-wider mb-2.5 pb-1.5 border-b border-stone-100">
+                                  {renderGroupIcon(menuData.groups[3].iconType)}
+                                  <span>{menuData.groups[3].title}</span>
+                                </div>
+                                <ul className={`space-y-0.5 ${menuData.groups[3].items.length > 8 ? 'max-h-[350px] overflow-y-auto pr-1.5' : ''}`}>
+                                  {menuData.groups[3].items.map((item) => (
+                                    <li key={item.name}>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleItemClick(item.slug, item.actionType, item.href)}
+                                        className="w-full text-left px-2.5 py-1.5 text-xs text-stone-700 hover:text-[#0E4A93] hover:bg-blue-50/50 rounded-md transition-colors font-medium flex items-center justify-between group cursor-pointer"
+                                      >
+                                        <div>
+                                          <span className="block font-semibold text-stone-900 group-hover:text-[#0E4A93]">{item.name}</span>
+                                          {item.description && (
+                                            <span className="block text-[10px] text-stone-500 font-normal leading-tight mt-0.5">{item.description}</span>
+                                          )}
+                                        </div>
+                                        <ArrowRight className="w-3 h-3 text-stone-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0 ml-1" />
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Column 5: Promotional Panel (4 cols) */}
                             <div className="col-span-4 flex flex-col justify-between h-full bg-stone-50 rounded-xl p-3.5 border border-stone-200/80">
                               <div>
                                 <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-stone-200 mb-2.5 shadow-xs">
@@ -941,6 +1047,12 @@ export const Header: React.FC<HeaderProps> = ({
                                     src={menuData.promo.image}
                                     alt={menuData.promo.title}
                                     className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const target = e.currentTarget;
+                                      if (!target.src.includes('canvas-promo-framed-art')) {
+                                        target.src = '/assets/canvas/canvas-promo-framed-art.jpg';
+                                      }
+                                    }}
                                   />
                                   <div className="absolute top-2 left-2 bg-[#E8752A] text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
                                     {menuData.promo.badge}
@@ -955,7 +1067,7 @@ export const Header: React.FC<HeaderProps> = ({
                               </div>
                               <button
                                 type="button"
-                                onClick={() => handleItemClick(menuData.promo.slug, menuData.promo.actionType)}
+                                onClick={() => handleItemClick(menuData.promo.slug, menuData.promo.actionType, menuData.promo.href)}
                                 className="w-full py-2 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-2"
                               >
                                 <span>{menuData.promo.buttonText}</span>
@@ -963,13 +1075,16 @@ export const Header: React.FC<HeaderProps> = ({
                               </button>
                             </div>
                           </div>
-                        </div>,
+                        </div>
+                        ),
                         document.body
                       )}
                     </div>
                   </React.Fragment>
                 );
               })}
+
+
             </div>
 
           </nav>
@@ -1009,6 +1124,7 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           );
         })}
+
       </div>
 
       {/* ========================================================================= */}
@@ -1129,7 +1245,26 @@ export const Header: React.FC<HeaderProps> = ({
 
                     {isExpanded && menuData && (
                       <div className="p-3 bg-white space-y-3 border-t border-stone-100 text-xs">
-                        {menuData.groups.map((group, gIdx) => (
+                        {cat.slug === 'corporate-orders' ? (
+                          <div className="space-y-3">
+                            <p className="text-xs text-stone-600 leading-relaxed">
+                              Custom employee welcome kits, company branded prints, uniform displays, and corporate gifting.
+                            </p>
+                            <a
+                              href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="w-full py-2.5 bg-[#E8752A] hover:bg-[#D3631A] text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              <span>Get a Quote</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        ) : (
+                          <>
+                            {menuData.groups.map((group, gIdx) => (
                           <div key={group.title} className={gIdx > 0 ? 'pt-2 border-t border-stone-100' : ''}>
                             <div className="font-bold text-[11px] text-[#0E4A93] uppercase tracking-wider mb-1.5 flex items-center gap-1">
                               {renderGroupIcon(group.iconType)}
@@ -1161,6 +1296,8 @@ export const Header: React.FC<HeaderProps> = ({
                             <ArrowRight className="w-3.5 h-3.5" />
                           </button>
                         </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>

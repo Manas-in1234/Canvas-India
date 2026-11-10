@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Check, ChevronDown, ChevronRight, Type, Maximize2, Quote, Sparkles } from 'lucide-react';
+import { Check, ChevronDown, ChevronRight, Type, Maximize2, Quote, Sparkles, SlidersHorizontal } from 'lucide-react';
 import {
   QUOTE_CATEGORIES,
   QUOTE_FILTER_TAGS,
@@ -16,6 +16,7 @@ export interface QuotesTemplateSidebarPanelProps {
   currentSizeLabel?: string;
   currentPrice?: number;
   onOpenTextModal?: () => void;
+  onChangePreferenceClick?: () => void;
 }
 
 export const QuotesTemplateSidebarPanel: React.FC<QuotesTemplateSidebarPanelProps> = ({
@@ -24,7 +25,8 @@ export const QuotesTemplateSidebarPanel: React.FC<QuotesTemplateSidebarPanelProp
   onChangeSizeClick,
   currentSizeLabel = '8" × 8"',
   currentPrice = 999,
-  onOpenTextModal
+  onOpenTextModal,
+  onChangePreferenceClick
 }) => {
   // Top filter tag (Failure, Good, Better, Best, New Day, or 'ALL')
   const [activeFilterTag, setActiveFilterTag] = useState<string>('ALL');
@@ -78,9 +80,22 @@ export const QuotesTemplateSidebarPanel: React.FC<QuotesTemplateSidebarPanelProp
               Select Template
             </h3>
           </div>
-          <span className="text-[10px] font-bold text-stone-500 bg-stone-100 px-2 py-0.5 rounded-full">
-            {filteredTemplates.length} Designs
-          </span>
+          <div className="flex items-center gap-1.5">
+            {onChangePreferenceClick && (
+              <button
+                type="button"
+                onClick={onChangePreferenceClick}
+                className="text-[10px] font-black text-[#0E4A93] hover:text-[#09356A] bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-full transition-colors cursor-pointer flex items-center gap-1 border border-blue-200/60"
+                title="Change preference to Create Your Own"
+              >
+                <SlidersHorizontal className="w-2.5 h-2.5" />
+                <span>Preference</span>
+              </button>
+            )}
+            <span className="text-[10px] font-bold text-stone-500 bg-stone-100 px-2 py-0.5 rounded-full">
+              {filteredTemplates.length} Designs
+            </span>
+          </div>
         </div>
         <p className="text-[11px] text-stone-500">
           Choose a predesigned quote template to print directly on your canvas.

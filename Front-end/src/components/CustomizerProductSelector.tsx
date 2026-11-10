@@ -1,5 +1,6 @@
 import React from 'react';
 import { Check } from 'lucide-react';
+import { bulkUnitPriceFor, MIN_BULK_QTY } from '../pages/BulkOrdersPage';
 
 export type CustomizerProductIconType =
   | 'block'
@@ -43,33 +44,40 @@ export interface CustomizerProductCardProps {
   product: CustomizerProductItem;
   isSelected: boolean;
   onSelect: (productId: string) => void;
+  /** When set to a bulk quantity (>= MIN_BULK_QTY), the displayed starting
+   * price reflects the same volume discount shown on the Bulk Orders page. */
+  bulkQuantity?: number;
 }
 
 export const CustomizerProductCard: React.FC<CustomizerProductCardProps> = ({
   product: pt,
   isSelected,
-  onSelect
+  onSelect,
+  bulkQuantity
 }) => {
   const rawPrice = typeof pt.price === 'number' && !isNaN(pt.price) ? pt.price : pt.startingPrice;
-  const safePrice = typeof rawPrice === 'number' && !isNaN(rawPrice) ? rawPrice : 0;
+  const basePrice = typeof rawPrice === 'number' && !isNaN(rawPrice) ? rawPrice : 0;
+  const safePrice = bulkQuantity !== undefined && bulkQuantity >= MIN_BULK_QTY
+    ? bulkUnitPriceFor(basePrice, bulkQuantity)
+    : basePrice;
 
   return (
     <div
       onClick={() => onSelect(pt.id)}
-      className={`relative p-2 rounded-lg border transition-all cursor-pointer flex flex-col items-center text-center justify-between min-h-[118px] ${
+      className={`relative p-2 rounded-[10px] border transition-all cursor-pointer flex flex-col items-center text-center justify-between h-[126px] sm:h-[128px] overflow-hidden select-none ${
         isSelected
-          ? 'border-[#0E4A93] bg-blue-50/40 shadow-xs ring-1 ring-[#0E4A93]/25'
-          : 'border-stone-200 hover:border-[#0E4A93]/40 bg-white hover:shadow-2xs'
+          ? 'border-[#0E4A93] bg-blue-50/20 shadow-xs ring-1 ring-[#0E4A93]/20'
+          : 'border-stone-200 hover:border-stone-400 bg-white shadow-none'
       }`}
     >
       {isSelected && (
-        <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#0E4A93] text-white rounded flex items-center justify-center shadow-xs z-10">
+        <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#0E4A93] text-white rounded-[3px] flex items-center justify-center shadow-xs z-10">
           <Check className="w-3 h-3 stroke-[3]" />
         </div>
       )}
 
       {/* Product Icon Geometry matching Screenshot in Blue/Gray */}
-      <div className="w-10 h-10 flex items-center justify-center text-slate-500 my-0.5">
+      <div className="w-10 h-10 flex items-center justify-center text-slate-500 my-0.5 shrink-0">
         {pt.iconType === 'round' ? (
           <div className="w-8 h-8 rounded-full bg-slate-200 border border-slate-300 shadow-2xs" />
         ) : pt.iconType === 'triangle' ? (
@@ -202,16 +210,16 @@ export const CustomizerProductCard: React.FC<CustomizerProductCardProps> = ({
         )}
       </div>
 
-      <div className="w-full">
-        <div className="text-[11px] font-bold text-stone-900 leading-tight line-clamp-2 min-h-[26px] flex items-center justify-center" title={pt.name}>
+      <div className="w-full flex flex-col items-center justify-end pb-0.5">
+        <div className="text-[11px] font-bold text-stone-900 leading-tight line-clamp-2 h-[26px] flex items-center justify-center px-0.5" title={pt.name}>
           {pt.name}
         </div>
-        <div className="text-[10px] font-semibold text-stone-400 leading-none mt-1">
+        <div className="text-[10px] font-medium text-stone-400 leading-none mt-1">
           Starts at
         </div>
         <div
           className={`text-xs font-black leading-tight mt-0.5 ${
-            isSelected ? 'text-[#0E4A93]' : 'text-stone-800'
+            isSelected ? 'text-[#0E4A93]' : 'text-stone-900'
           }`}
         >
           ₹{safePrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -227,6 +235,10 @@ export interface CustomizerProductSelectorProps {
   selectedProductId: string;
   onSelectProduct: (productId: string) => void;
   onSwitchMaterial: () => void;
+  /** When set to a bulk quantity (>= MIN_BULK_QTY), every card's displayed
+   * starting price reflects the same volume discount shown on the Bulk
+   * Orders page. */
+  bulkQuantity?: number;
 }
 
 const MATERIAL_TABS = ['CANVAS', 'ACRYLIC'] as const;
@@ -236,14 +248,15 @@ export const CustomizerProductSelector: React.FC<CustomizerProductSelectorProps>
   products,
   selectedProductId,
   onSelectProduct,
-  onSwitchMaterial
+  onSwitchMaterial,
+  bulkQuantity
 }) => {
   const safeProducts = Array.isArray(products) ? products : [];
 
   return (
     <div className="flex flex-col h-full">
       {/* Material Toggle Bar: CANVAS & ACRYLIC only */}
-      <div className="grid grid-cols-2 border-b border-stone-200 text-xs font-black uppercase tracking-wider shrink-0 bg-stone-100">
+      <div className="grid grid-cols-2 border-b border-stone-200 text-xs font-black uppercase tracking-wider shrink-0 bg-[#F8F9FA]">
         {MATERIAL_TABS.map((tab) => {
           const isTabActive =
             (tab === 'CANVAS' && activeMaterial === 'canvas') ||
@@ -262,8 +275,8 @@ export const CustomizerProductSelector: React.FC<CustomizerProductSelectorProps>
               }}
               className={`text-center py-2.5 transition-colors font-extrabold flex items-center justify-center gap-1 cursor-pointer ${
                 isTabActive
-                  ? 'bg-white text-[#0E4A93] border-b-2 border-[#0E4A93] shadow-xs'
-                  : 'bg-stone-100 text-stone-500 hover:text-stone-800 hover:bg-stone-50 border-b-2 border-transparent'
+                  ? 'bg-white text-[#0E4A93] border-b-2 border-[#0E4A93]'
+                  : 'bg-[#F8F9FA] text-stone-500 hover:text-stone-800 border-b-2 border-transparent'
               }`}
             >
               {tab}
@@ -273,14 +286,15 @@ export const CustomizerProductSelector: React.FC<CustomizerProductSelectorProps>
       </div>
 
       {/* 4-column Product Grid matching Screenshot */}
-      <div className="p-3 overflow-y-auto flex-1">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="p-2 sm:p-2.5 overflow-y-auto flex-1 min-h-0 no-scrollbar">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-2.5 gap-y-2">
           {safeProducts.map((pt) => (
             <CustomizerProductCard
               key={pt.id}
               product={pt}
               isSelected={selectedProductId === pt.id}
               onSelect={onSelectProduct}
+              bulkQuantity={bulkQuantity}
             />
           ))}
         </div>
@@ -290,3 +304,4 @@ export const CustomizerProductSelector: React.FC<CustomizerProductSelectorProps>
 };
 
 export default CustomizerProductSelector;
+

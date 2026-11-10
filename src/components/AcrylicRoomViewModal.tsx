@@ -69,18 +69,19 @@ export const PRESET_ROOMS: RoomPreset[] = [
   {
     id: 'living',
     name: 'HOME / LIVING ROOM',
-    image: '/assets/acrylic/acrylic-panel-living.webp',
-    naturalAspect: 800 / 600,
-    // Main open living room wall above the sofa and left of the indoor plants/windows
+    image: '/assets/acrylic/acrylic-panel-living-room.webp',
+    naturalAspect: 772 / 472,
+    // Blank wall above the beige sofa, clear of the olive tree on the left
+    // and the curtain/window on the right
     wallBounds: {
-      minX: 0.08,
-      maxX: 0.77,
-      minY: 0.04,
-      maxY: 0.53
+      minX: 0.30,
+      maxX: 0.86,
+      minY: 0.03,
+      maxY: 0.56
     },
     defaultPosition: {
-      x: 0.46,
-      y: 0.18
+      x: 0.58,
+      y: 0.28
     }
   }
 ];
@@ -239,6 +240,15 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
       productId === 'canvas-panoramic';
     const maxInches = Math.max(effW, effH) * (isSplitProduct ? 1.08 : 1);
 
+    // Products that render real sentences (song lyrics, quotes) rather than
+    // just a photo need to stay legible even at a small real-world size —
+    // at true-to-scale proportions a 10x12" lyric canvas can shrink to a
+    // ~70px box, too small for its text overlay to read. Floor those
+    // specifically, instead of raising the floor for every product.
+    const isTextHeavyProduct =
+      (productId || '').includes('lyric') || (productId || '').includes('quote');
+    const minBoxPx = isTextHeavyProduct ? 190 : 48;
+
     // Room-scale mapping:
     // - Small sizes (4x4, 8x8, 8x10, 12x12) -> compact wall piece (~9% - 13% of room width)
     // - Medium sizes (12x18, 16x20, 18x24) -> medium wall piece (~14% - 18% of room width)
@@ -253,6 +263,15 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
 
     let widthPx = aspect >= 1 ? targetMaxPx : targetMaxPx * aspect;
     let heightPx = aspect >= 1 ? targetMaxPx / aspect : targetMaxPx;
+
+    // Scale a text-heavy product up (preserving aspect) if its realistic
+    // size would otherwise shrink below the legibility floor.
+    const largerSidePx = Math.max(widthPx, heightPx);
+    if (isTextHeavyProduct && largerSidePx < minBoxPx && largerSidePx > 0) {
+      const upRatio = minBoxPx / largerSidePx;
+      widthPx *= upRatio;
+      heightPx *= upRatio;
+    }
 
     // Ensure the product always fits cleanly inside the active wall bounds with draggable margin
     const wallWidthPx =
@@ -607,10 +626,10 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
         </div>
 
         {/* Bottom Status Pill */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-stone-900/90 backdrop-blur-md px-4 py-2 rounded-full border border-stone-800 shadow-xl flex items-center gap-2.5 text-white text-xs pointer-events-none">
-          <Move className="w-3.5 h-3.5 text-[#E8752A]" />
-          <span className="font-semibold text-stone-200">
-            Drag product on the wall • Locked scale ({productDimensionLabel})
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-stone-900/90 backdrop-blur-md px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-stone-800 shadow-xl flex items-center gap-2 text-white text-[10px] sm:text-xs pointer-events-none max-w-[calc(100vw-2rem)] truncate">
+          <Move className="w-3.5 h-3.5 text-[#E8752A] shrink-0" />
+          <span className="font-semibold text-stone-200 truncate">
+            Drag product on wall • Locked scale ({productDimensionLabel})
           </span>
         </div>
       </div>

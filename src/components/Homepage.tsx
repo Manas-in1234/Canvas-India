@@ -5,7 +5,8 @@ import { Product } from '../types';
 import { OCCASIONS } from '../data/occasionsData';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 import { ACRYLIC_PRODUCT_TYPES } from '../data/acrylicCustomizerData';
-import { ACRYLIC_STYLE_LANDING_DATA } from '../data/acrylicStyleLandingData';
+import { ACRYLIC_STYLE_LANDING_DATA, getAcrylicLandingDataByProductId } from '../data/acrylicStyleLandingData';
+import { CORK_PRODUCT_CARDS } from '../data/corkProductCards';
 
 export interface HomepageProps {
   onSelectCategory: (slug: string, sub?: string) => void;
@@ -59,11 +60,11 @@ const ACRYLIC_STYLE_ICONS: Record<string, React.ElementType> = {
   quotes: Quote,
 };
 const ACRYLIC_STYLE_CARDS = ACRYLIC_PRODUCT_TYPES.map((pt) => {
-  const landingData = Object.values(ACRYLIC_STYLE_LANDING_DATA).find((d) => d.styles[0]?.id === pt.id);
+  const landingData = getAcrylicLandingDataByProductId(pt.id);
   return {
     name: pt.name,
-    price: pt.startingPrice,
-    image: landingData?.styles[0]?.image,
+    price: landingData?.styles[0]?.price ?? pt.startingPrice,
+    image: landingData?.styles[0]?.image || pt.image,
     icon: ACRYLIC_STYLE_ICONS[pt.iconType || ''] || (pt.id === 'acrylic-bus-roll' ? Rows3 : pt.id === 'acrylic-word-art' ? Type : ImageIcon),
     href: landingData ? `/acrylic/${landingData.slug}` : `/customize/acrylic/${pt.id}`,
   };
@@ -80,63 +81,6 @@ const CANVAS_STYLE_CARDS = Object.values(CANVAS_STYLE_LANDING_DATA)
     price: data.styles[0]!.price,
     href: `/canvas/${data.slug}`,
   }));
-
-const CORK_PRODUCT_CARDS = [
-  {
-    name: 'Cork Pattern Print',
-    price: 249,
-    image: '/assets/catalogue/cork-art-patterns/C-A_003.webp',
-    href: '/cork-art-patterns',
-  },
-  {
-    name: 'Yoga Mats',
-    price: 999,
-    image: '/assets/products/cork/9C-YA1/9c-ya1(1).webp',
-    href: '/yoga-fitness?sub=Yoga%20Mats',
-  },
-  {
-    name: 'Yoga Bricks',
-    price: 999,
-    image: '/assets/products/cork/9C-YA5/9C-YA5(1).webp',
-    href: '/yoga-fitness?sub=Yoga%20Bricks',
-  },
-  {
-    name: 'Yoga Wedges',
-    price: 999,
-    image: '/assets/products/cork/9C-YA8/9C-YA8.webp',
-    href: '/yoga-fitness?sub=Yoga%20Wedges',
-  },
-  {
-    name: 'Yoga Rollers',
-    price: 999,
-    image: '/assets/products/cork/9C-YA6/9C-YA6(1).webp',
-    href: '/yoga-fitness?sub=Yoga%20Rollers',
-  },
-  {
-    name: 'Yoga Balls',
-    price: 999,
-    image: '/assets/products/cork/9C-YA7/9C-YA7(1).webp',
-    href: '/yoga-fitness?sub=Yoga%20Balls',
-  },
-  {
-    name: 'Massage Sets',
-    price: 999,
-    image: '/assets/products/cork/9C-YA9/9C-YA9.webp',
-    href: '/yoga-fitness?sub=Massage%20Sets',
-  },
-  {
-    name: 'Knee Pads',
-    price: 999,
-    image: '/assets/products/cork/9C-YA11/9C-YA11(1).webp',
-    href: '/yoga-fitness?sub=Knee%20Pads',
-  },
-  {
-    name: 'Yoga Bags',
-    price: 999,
-    image: '/assets/products/cork/9C-YB1/9C-YB1.webp',
-    href: '/yoga-fitness?sub=Yoga%20Bags',
-  },
-];
 
 const TESTIMONIALS = [
   { name: 'Asha S.', city: 'Bengaluru', text: 'Amazing quality and vibrant colours! My canvas turned out even better than I imagined!', img: 'https://randomuser.me/api/portraits/women/44.jpg' },
@@ -171,7 +115,7 @@ const Stars: React.FC = () => (
 const arrowBtn =
   'w-10 h-10 rounded-full bg-white border border-stone-200 shadow-md flex items-center justify-center text-[#0E4A93] hover:bg-[#E8752A] hover:text-white hover:border-[#E8752A] transition-colors cursor-pointer shrink-0';
 
-export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCart, allProducts, onCustomize, wishlistIds, onToggleWishlist }) => {
+export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCart, allProducts, onCustomize, onOpenQuote, wishlistIds, onToggleWishlist }) => {
   const navigate = useNavigate();
   const carouselRef = useRef<HTMLDivElement>(null);
   const testiRef = useRef<HTMLDivElement>(null);
@@ -213,8 +157,6 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       <style>{`
         @keyframes ci-float { 0%,100% { transform: translateY(0) rotate(var(--r,0deg)); } 50% { transform: translateY(-10px) rotate(var(--r,0deg)); } }
         .ci-float { animation: ci-float 5s ease-in-out infinite; }
-        @keyframes ci-glow { 0%,100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
-        .ci-glow { animation: ci-glow 2s ease-in-out infinite; }
       `}</style>
 
       {/* HERO */}
@@ -247,8 +189,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           <div className="font-bold text-white text-4xl leading-tight mt-1 drop-shadow-lg" style={{ fontFamily: SERIF }}>
             Up to 20% Off
           </div>
-          <p className="text-sm text-white/90 font-medium mt-2 drop-shadow">+ Free shipping on orders ₹999 and above</p>
-          <span className="inline-flex items-center gap-2 mt-5 text-sm font-bold text-white bg-[#E8752A] group-hover:bg-[#D3631A] rounded-full px-5 py-2.5 shadow-lg shadow-orange-950/40 transition-colors">
+          <span className="inline-flex items-center gap-2 mt-3.5 text-sm font-bold text-white bg-[#E8752A] group-hover:bg-[#D3631A] rounded-full px-5 py-2.5 shadow-lg shadow-orange-950/40 transition-colors">
             Customize Festive Gift <ArrowRight className="w-4 h-4" />
           </span>
         </button>
@@ -304,19 +245,78 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             <p className="mt-5 text-base sm:text-lg text-stone-700 max-w-md leading-relaxed">
               Premium canvas prints, acrylic paints, cork products and more — turn your ideas into art, your way.
             </p>
-            <div className="mt-7 flex flex-wrap items-center gap-3">
-              <div className="relative inline-block">
-                {/* Live pulsing orange glow behind the button */}
-                <span className="ci-glow absolute -inset-4 rounded-full bg-[#E8752A] blur-xl pointer-events-none" aria-hidden="true" />
-                <button
-                  type="button"
-                  onClick={handleStartCreatingCanvas}
-                  className="relative inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-gradient-to-r from-[#0E4A93] to-[#145DB8] hover:from-[#0B3B77] hover:to-[#0E4A93] text-white text-sm font-bold uppercase tracking-wide shadow-lg shadow-blue-900/30 transition-all hover:scale-105 cursor-pointer"
-                >
-                  <Palette className="w-4 h-4" />
-                  Create Your Canvas <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
+            <div className="mt-6 flex flex-wrap items-center">
+              {/* Shiny Glossy Pill Button */}
+              <button
+                type="button"
+                onClick={handleStartCreatingCanvas}
+                className="group relative inline-flex items-center justify-between gap-2.5 sm:gap-3 pl-4 sm:pl-5 pr-1.5 sm:pr-2 py-1.5 sm:py-2 rounded-full border-2 border-white bg-gradient-to-b from-[#1872E8] via-[#0D4AA8] to-[#062F7A] cta-shiny-glow transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] cursor-pointer overflow-hidden select-none"
+              >
+                {/* Top Gloss Arc (Curved Specular Reflection) */}
+                <div
+                  className="absolute inset-x-0 top-0 h-[50%] rounded-t-full pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.15) 60%, rgba(255, 255, 255, 0) 100%)',
+                  }}
+                />
+
+                {/* Top Center Specular Highlight Flare */}
+                <div
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-2.5 rounded-full pointer-events-none opacity-80"
+                  style={{
+                    background: 'radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.9) 0%, rgba(147, 197, 253, 0.4) 50%, transparent 80%)',
+                  }}
+                />
+
+                {/* Animated Light Sweep / Shimmer */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
+                  <div
+                    className="w-1/2 h-full animate-cta-shine"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0) 15%, rgba(255, 255, 255, 0.65) 50%, rgba(255, 255, 255, 0) 85%, transparent 100%)',
+                    }}
+                  />
+                </div>
+
+                {/* Inner subtle bottom amber bounce reflection */}
+                <div
+                  className="absolute inset-x-2 bottom-0 h-0.5 rounded-full pointer-events-none opacity-60"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(251, 191, 36, 0.4) 50%, transparent 100%)',
+                  }}
+                />
+
+                {/* Palette Icon on Left */}
+                <div className="relative z-10 flex items-center shrink-0">
+                  <svg
+                    className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-white drop-shadow-xs"
+                    viewBox="0 0 28 28"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M14 3.5C8.2 3.5 3.5 8.2 3.5 14c0 5.8 4.7 10.5 10.5 10.5 1.1 0 2-.9 2-2 0-.55-.22-1.05-.58-1.41-.36-.36-.58-.86-.58-1.41 0-1.1.9-2 2-2h2.5c3.04 0 5.5-2.46 5.5-5.5C24.84 7.44 19.8 3.5 14 3.5z"
+                      stroke="white"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <circle cx="9" cy="10" r="1.5" fill="white" />
+                    <circle cx="14" cy="7.5" r="1.5" fill="white" />
+                    <circle cx="8.5" cy="15" r="1.5" fill="white" />
+                  </svg>
+                </div>
+
+                {/* Button Label */}
+                <span className="relative z-10 text-[13px] sm:text-[14.5px] font-extrabold uppercase tracking-wide text-white drop-shadow-sm whitespace-nowrap px-1">
+                  CREATE YOUR CANVAS
+                </span>
+
+                {/* Circular Arrow Badge on Right */}
+                <div className="relative z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0 border border-white/30 shadow-inner group-hover:bg-white/30 group-hover:scale-105 transition-all">
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white stroke-[2.5] group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </button>
             </div>
 
             {/* Mobile/tablet only: single festive offers banner below the text */}
@@ -332,7 +332,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 <div className="font-bold text-white text-2xl leading-tight mt-0.5 drop-shadow-md" style={{ fontFamily: SERIF }}>
                   Up to 20% Off
                 </div>
-                <p className="text-xs text-amber-100/90 font-medium mt-1">+ Free shipping on orders ₹999+</p>
+                <span className="inline-flex items-center gap-1.5 mt-2.5 text-xs font-bold text-white bg-[#E8752A] rounded-full px-3.5 py-1.5 shadow-md self-start">
+                  Customize Festive Gift <ArrowRight className="w-3.5 h-3.5" />
+                </span>
               </div>
             </button>
 
@@ -494,7 +496,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           <div className="hidden sm:flex justify-end mt-4">
             <button
               type="button"
-              onClick={() => onSelectCategory('canvas')}
+              onClick={() => navigate('/canvas-styles')}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
             >
               View All <ArrowRight className="w-3.5 h-3.5" />
@@ -503,7 +505,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
           <button
             type="button"
-            onClick={() => onSelectCategory('canvas')}
+            onClick={() => navigate('/canvas-styles')}
             className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
           >
             View All Canvas &amp; Boards <ArrowRight className="w-3.5 h-3.5" />
@@ -571,7 +573,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           <div className="hidden sm:flex justify-end mt-4">
             <button
               type="button"
-              onClick={() => onSelectCategory('acrylic')}
+              onClick={() => navigate('/acrylic-styles')}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
             >
               View All <ArrowRight className="w-3.5 h-3.5" />
@@ -580,7 +582,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
           <button
             type="button"
-            onClick={() => onSelectCategory('acrylic')}
+            onClick={() => navigate('/acrylic-styles')}
             className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
           >
             View All Acrylic Prints <ArrowRight className="w-3.5 h-3.5" />
@@ -643,7 +645,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             <div className="hidden sm:flex justify-end mt-4">
               <button
                 type="button"
-                onClick={() => onSelectCategory('cork')}
+                onClick={() => navigate('/cork-products')}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
               >
                 View All <ArrowRight className="w-3.5 h-3.5" />
@@ -652,7 +654,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
             <button
               type="button"
-              onClick={() => onSelectCategory('cork')}
+              onClick={() => navigate('/cork-products')}
               className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
             >
               View All Cork Products <ArrowRight className="w-3.5 h-3.5" />
@@ -679,12 +681,21 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                   key={o.slug}
                   type="button"
                   onClick={() => navigate(`/occasions/${o.slug}`)}
-                  className="group snap-start shrink-0 w-[42%] sm:w-[23%] lg:w-[16%] relative aspect-[4/5] rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer text-left"
+                  className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
                 >
-                  <img src={o.bannerImage} alt={o.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${o.tint} via-transparent to-transparent`} />
-                  <span className="absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center text-lg shadow">{o.emoji}</span>
-                  <div className="absolute bottom-0 left-0 right-0 p-3 text-white font-bold text-sm" style={{ fontFamily: SERIF }}>{o.name}</div>
+                  <div className="relative w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
+                    <img src={o.bannerImage} alt={o.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <span className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-base shadow-sm">{o.emoji}</span>
+                  </div>
+                  <div className="flex items-start justify-between gap-2 px-1">
+                    <div className="min-w-0">
+                      <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1 truncate">{o.name}</h3>
+                      <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">Personalized gifts &amp; keepsakes</p>
+                    </div>
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
+                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </div>
+                  </div>
                 </button>
               ))}
             </div>
@@ -808,6 +819,43 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             >
               View All Products <ArrowRight className="w-4 h-4" />
             </button>
+          </div>
+        </Container>
+      </section>
+
+      {/* CORPORATE & BULK ORDERS */}
+      <section className="py-10 sm:py-14">
+        <Container>
+          <div className="relative overflow-hidden rounded-3xl bg-[#0A1C3D] text-white min-h-[380px] sm:min-h-[420px] flex items-center">
+            <img
+              src="/assets/canvas-india-branded-packaging.webp"
+              alt="Canvas India branded bulk order packaging"
+              className="hidden sm:block absolute right-0 top-0 h-full w-[55%] object-cover object-center opacity-90"
+              style={{
+                maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, #000 45%, #000 100%)',
+                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, #000 45%, #000 100%)',
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0A1C3D] via-[#0A1C3D]/90 sm:via-[#0A1C3D]/75 to-transparent pointer-events-none" />
+            <div className="relative px-6 sm:px-10 lg:px-14 py-10 sm:py-12 max-w-xl">
+              <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-300">B2B &amp; Bulk Solutions</span>
+              <h2 className="mt-3 text-3xl sm:text-4xl font-bold leading-tight" style={{ fontFamily: SERIF }}>
+                Corporate &amp; Bulk Orders
+              </h2>
+              <p className="mt-3 text-sm sm:text-base text-white/80 leading-relaxed max-w-md">
+                Custom employee welcome kits, company branded T-shirts, uniform mugs, business cards &amp; promotional giveaways.
+              </p>
+              <div className="mt-6">
+                <a
+                  href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-bold text-white bg-[#E8752A] hover:bg-[#D3631A] rounded-full px-6 py-3 shadow-lg shadow-orange-950/40 transition-colors cursor-pointer"
+                >
+                  Get a Quote <ArrowRight className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
           </div>
         </Container>
       </section>

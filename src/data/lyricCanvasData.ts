@@ -19,11 +19,13 @@ export type LyricTemplateId =
 
 export type LyricTemplateCategory =
   | 'all'
+  | 'artwork'
+  | 'sheet_music'
+  | 'quote_art'
   | 'wedding'
   | 'first_dance'
   | 'vows'
   | 'anniversary'
-  | 'sheet_music'
   | 'couples';
 
 export type LyricTemplateLayout =
@@ -96,12 +98,9 @@ export interface LyricCanvasConfig {
 
 export const LYRIC_CANVAS_CATEGORIES: { id: LyricTemplateCategory; label: string }[] = [
   { id: 'all', label: 'All Templates' },
-  { id: 'wedding', label: 'Wedding & Gifts' },
-  { id: 'first_dance', label: 'First Dance' },
-  { id: 'vows', label: 'Wedding Vows' },
-  { id: 'anniversary', label: 'Anniversary' },
+  { id: 'artwork', label: 'Artwork' },
   { id: 'sheet_music', label: 'Sheet Music' },
-  { id: 'couples', label: 'Couples Art' }
+  { id: 'quote_art', label: 'Quote Art' }
 ];
 
 // All 12 templates matching the reference screenshots
@@ -109,7 +108,7 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
   {
     id: 'wedding-song-lyrics',
     name: 'Personalized Wedding Picture Canvas Prints With Song Lyrics',
-    category: 'wedding',
+    category: 'artwork',
     previewImage: '/assets/lyric-canvas/wedding-song-lyrics.svg',
     description: 'Cherish your wedding moments with flowing romantic song lyrics softly layered over your couple portrait.',
     defaultLayout: 'photo-lyrics-overlay',
@@ -138,7 +137,7 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
   {
     id: 'wedding-first-dance',
     name: 'Wedding First Dance Song Lyrics',
-    category: 'first_dance',
+    category: 'artwork',
     previewImage: '/assets/lyric-canvas/wedding-first-dance.svg',
     description: 'Capture the magic of your first dance with romantic song lyrics framed in a modern frosted plaque.',
     defaultLayout: 'first-dance-card',
@@ -167,7 +166,7 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
   {
     id: 'wedding-vows-wall-art',
     name: 'Turn Wedding Vows into Wall Art',
-    category: 'vows',
+    category: 'quote_art',
     previewImage: '/assets/lyric-canvas/wedding-vows-wall-art.svg',
     description: 'Timeless split canvas layout featuring your wedding ceremony photo paired with your personal vows.',
     defaultLayout: 'wedding-vows-photo',
@@ -197,7 +196,7 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
   {
     id: 'first-marriage-anniversary',
     name: 'First Marriage Anniversary Songs on Canvas',
-    category: 'anniversary',
+    category: 'artwork',
     previewImage: '/assets/lyric-canvas/first-marriage-anniversary.svg',
     description: 'Celebrate 365 days of love with your anniversary song and couple portrait in sleek editorial typography.',
     defaultLayout: 'split-side-by-side',
@@ -226,7 +225,7 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
   {
     id: 'personalized-wedding-gift',
     name: 'Personalized Wedding Gift Canvas Prints',
-    category: 'wedding',
+    category: 'artwork',
     previewImage: '/assets/lyric-canvas/personalized-wedding-gift.svg',
     description: 'An unforgettable gift featuring the newlyweds photo with an elegant lower-third lyric banner.',
     defaultLayout: 'bottom-third-lyrics',
@@ -255,12 +254,12 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
   {
     id: 'forever-young-lyrics',
     name: 'Forever Young — Song Lyrics on Canvas',
-    category: 'wedding',
+    category: 'artwork',
     previewImage: '/assets/lyric-canvas/forever-young-lyrics.svg',
     description: 'Inspirational Bob Dylan folk classic lyrics with golden hour glow over cherished family and couple photos.',
     defaultLayout: 'photo-lyrics-overlay',
     defaultBackground: {
-      color: '#FFFFFF',
+      color: '#78350F',
       overlayDarkness: 35
     },
     defaultTypography: {
@@ -284,7 +283,7 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
   {
     id: 'wedding-vows-canvas',
     name: 'Canvas Wall Art — Wedding Vows Canvas',
-    category: 'vows',
+    category: 'quote_art',
     previewImage: '/assets/lyric-canvas/wedding-vows-canvas.svg',
     description: 'Sacred wedding promises crafted in romantic cursive script with decorative double-line border detailing.',
     defaultLayout: 'classic-centered-lyrics',
@@ -343,7 +342,7 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
   {
     id: 'first-anniversary-gift',
     name: 'First Wedding Anniversary Gift',
-    category: 'anniversary',
+    category: 'quote_art',
     previewImage: '/assets/lyric-canvas/first-anniversary-gift.svg',
     description: 'Statement quote design with large decorative quotation marks on blush canvas for him or her.',
     defaultLayout: 'quote-solid-bg',
@@ -372,7 +371,7 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
   {
     id: 'couples-personalized-art',
     name: 'Personalized Canvas Art Couples Gifts',
-    category: 'couples',
+    category: 'artwork',
     previewImage: '/assets/lyric-canvas/couples-personalized-art.svg',
     description: 'Split modern layout pairing your favorite couple snapshot with a sweet song lyric and heart emblem.',
     defaultLayout: 'split-side-by-side',
@@ -401,7 +400,7 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
   {
     id: 'first-dance-lyrics',
     name: 'First Dance Canvas — Your Wedding Song Lyrics on Canvas',
-    category: 'first_dance',
+    category: 'quote_art',
     previewImage: '/assets/lyric-canvas/first-dance-lyrics.svg',
     description: 'Large calligraphic "Love" headline with biblical 1 Corinthians love poem or your wedding song lyrics.',
     defaultLayout: 'classic-centered-lyrics',
@@ -431,7 +430,7 @@ export const LYRIC_CANVAS_TEMPLATES: LyricCanvasTemplate[] = [
   {
     id: 'wedding-vows-1st-anniversary',
     name: 'Wedding Vows on Canvas — Anniversary Gift',
-    category: 'vows',
+    category: 'quote_art',
     previewImage: '/assets/lyric-canvas/wedding-vows-1st-anniversary.svg',
     description: 'Golden hour sunset couple photo with anniversary vow renewal typography along the lower third.',
     defaultLayout: 'bottom-third-lyrics',
@@ -522,7 +521,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 1498.50,
     widthInches: 8,
     heightInches: 8,
-    categories: ['RECOMMENDED', 'SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE', 'SMALL'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '8" × 8"', widthRatio: 8, heightRatio: 8 }]
   },
   {
@@ -533,7 +532,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 1699.00,
     widthInches: 10,
     heightInches: 10,
-    categories: ['SQUARE'],
+    categories: ['SQUARE', 'SMALL'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }]
   },
   {
@@ -544,7 +543,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 1899.00,
     widthInches: 12,
     heightInches: 12,
-    categories: ['RECOMMENDED', 'SQUARE'],
+    categories: ['RECOMMENDED', 'SQUARE', 'SMALL'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '12" × 12"', widthRatio: 12, heightRatio: 12 }]
   },
   {
@@ -555,7 +554,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 2299.00,
     widthInches: 16,
     heightInches: 16,
-    categories: ['SQUARE'],
+    categories: ['SQUARE', 'SMALL'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
   },
   {
@@ -566,7 +565,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 2799.00,
     widthInches: 20,
     heightInches: 20,
-    categories: ['SQUARE'],
+    categories: ['SQUARE', 'LARGE'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '20" × 20"', widthRatio: 20, heightRatio: 20 }]
   },
   {
@@ -577,7 +576,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 1999.00,
     widthInches: 12,
     heightInches: 18,
-    categories: ['RECOMMENDED'],
+    categories: ['RECOMMENDED', 'SMALL'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '12" × 18"', widthRatio: 12, heightRatio: 18 }]
   },
   {
@@ -588,7 +587,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 2499.00,
     widthInches: 16,
     heightInches: 20,
-    categories: ['RECOMMENDED'],
+    categories: ['RECOMMENDED', 'LARGE'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '16" × 20"', widthRatio: 16, heightRatio: 20 }]
   },
   {
@@ -599,7 +598,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 2999.00,
     widthInches: 18,
     heightInches: 24,
-    categories: ['PANORAMIC'],
+    categories: ['PANORAMIC', 'LARGE'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '18" × 24"', widthRatio: 18, heightRatio: 24 }]
   },
   {
@@ -610,7 +609,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 3499.00,
     widthInches: 20,
     heightInches: 30,
-    categories: ['PANORAMIC'],
+    categories: ['PANORAMIC', 'LARGE'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '20" × 30"', widthRatio: 20, heightRatio: 30 }]
   },
   {
@@ -621,7 +620,7 @@ export const LYRIC_CANVAS_SIZE_OPTIONS = [
     price: 4299.00,
     widthInches: 24,
     heightInches: 36,
-    categories: ['PANORAMIC'],
+    categories: ['PANORAMIC', 'LARGE'],
     panels: [{ id: 'p0', label: 'Lyric Canvas', dimension: '24" × 36"', widthRatio: 24, heightRatio: 36 }]
   }
 ];

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, UploadCloud, Check, ShoppingCart, SlidersHorizontal, Sparkles, Layers, Box, CheckCircle2, ZoomIn, ZoomOut, RotateCw, RefreshCw, AlignStartVertical, AlignCenterVertical, AlignEndVertical } from 'lucide-react';
 import { Product } from '../types';
+import { FRAME_LOOK, getFrameCategory } from './FrameHookVisuals';
 
 type TextPosition = 'top' | 'center' | 'bottom';
 
@@ -36,7 +37,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
 
   const [selectedSize, setSelectedSize] = useState(product.availableSizes?.[0] || product.sizes?.[0] || '12x18 inch');
   const [selectedFinish, setSelectedFinish] = useState(product.availableFinishes?.[0] || product.finishes?.[0] || 'Standard Finish');
-  const [selectedThickness, setSelectedThickness] = useState(product.availableThicknesses?.[0] || '7mm');
+  const [selectedThickness, setSelectedThickness] = useState(isAcrylic ? '3mm' : (product.availableThicknesses?.[0] || '0.75"'));
   const [selectedStyle, setSelectedStyle] = useState(product.availableStyles?.[0] || 'Block');
   const [selectedBase, setSelectedBase] = useState(product.availableBases?.[0] || 'Without Base');
   const [selectedPaper, setSelectedPaper] = useState(product.availablePapers?.[0] || 'White Luster Photo Paper');
@@ -64,7 +65,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
     if (product) {
       setSelectedSize(product.availableSizes?.[0] || product.sizes?.[0] || '12x18 inch');
       setSelectedFinish(product.availableFinishes?.[0] || product.finishes?.[0] || 'Standard Finish');
-      setSelectedThickness(product.availableThicknesses?.[0] || '7mm');
+      setSelectedThickness(isAcrylic ? '3mm' : (product.availableThicknesses?.[0] || '0.75"'));
       setSelectedStyle(product.availableStyles?.[0] || 'Block');
       setSelectedBase(product.availableBases?.[0] || 'Without Base');
       setSelectedPaper(product.availablePapers?.[0] || 'White Luster Photo Paper');
@@ -114,10 +115,10 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
       else if (selectedSize.includes('20" x 30"') || selectedSize.includes('24" x 36"') || selectedSize.includes('Set of 3')) price += 1800;
       else if (selectedSize.includes('30" x 48"') || selectedSize.includes('36" x 60"')) price += 2600;
 
-      // Thickness pricing
-      if (selectedThickness === '18mm' || selectedThickness === '8mm' || selectedThickness === '10mm') {
-        price += 350;
-      }
+      // Thickness pricing (3mm: 0, 5mm: +150, 6mm: +200, 8mm: +250)
+      if (selectedThickness === '5mm') price += 150;
+      else if (selectedThickness === '6mm') price += 200;
+      else if (selectedThickness === '8mm') price += 250;
 
       // Base pricing
       if (selectedBase === 'Acrylic Base') price += 200;
@@ -179,41 +180,78 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
           
           {/* Top Row: Live Interactive Preview & Image Upload */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-            {/* Live Visual Preview Frame with Realistic Acrylic Glass Effect */}
+            {/* Live Visual Preview Frame with Realistic Acrylic Glass or Frame Effect */}
             <div className="space-y-2">
-              <div className="relative aspect-[4/3] bg-stone-100 rounded-xl overflow-hidden border-2 border-stone-200 shadow-md flex items-center justify-center">
-                <img
-                  src={photoPreview}
-                  alt="Customized Preview"
-                  className="w-full h-full object-contain transition-transform duration-150 ease-out"
-                  style={{ transform: `scale(${zoom}) rotate(${rotation}deg)` }}
-                />
+              {(() => {
+                const modalFrameCat = !isAcrylic ? getFrameCategory(selectedFinish) : 'No Frame';
+                const modalFrameLook = FRAME_LOOK[modalFrameCat] || FRAME_LOOK['No Frame'];
+                const hasModalFrame = modalFrameCat !== 'No Frame';
 
-                {/* Gloss Acrylic Reflection Overlay */}
-                {isAcrylic && (
-                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/15 to-white/30 pointer-events-none" />
-                )}
-
-                {customText && (
+                return (
                   <div
-                    className={`absolute left-2 right-2 bg-black/75 backdrop-blur-xs text-white text-[11px] font-semibold py-1 px-2 rounded text-center truncate ${
-                      textPosition === 'top' ? 'top-2' : textPosition === 'center' ? 'top-1/2 -translate-y-1/2' : 'bottom-2'
+                    className={`relative aspect-[4/3] bg-stone-100 rounded-xl overflow-hidden border-2 border-stone-200 shadow-md flex items-center justify-center ${
+                      hasModalFrame ? 'p-2.5 sm:p-3' : ''
                     }`}
                   >
-                    {customText}
-                  </div>
-                )}
+                    {hasModalFrame ? (
+                      <div
+                        className="relative max-w-full max-h-full aspect-[4/3] rounded-[2px] flex items-center justify-center shadow-lg"
+                        style={{
+                          padding: '10px',
+                          background: modalFrameLook.frame,
+                          boxShadow: modalFrameLook.boxShadow,
+                          border: `1px solid ${modalFrameLook.borderColor}`,
+                        }}
+                      >
+                        <div className="relative w-full h-full overflow-hidden rounded-[1px] bg-stone-50 flex items-center justify-center">
+                          <img
+                            src={photoPreview}
+                            alt="Customized Preview"
+                            className="w-full h-full object-contain transition-transform duration-150 ease-out"
+                            style={{ transform: `scale(${zoom}) rotate(${rotation}deg)` }}
+                          />
+                          <div
+                            className="absolute inset-0 pointer-events-none"
+                            style={{ boxShadow: modalFrameLook.innerShadow }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <img
+                        src={photoPreview}
+                        alt="Customized Preview"
+                        className="w-full h-full object-contain transition-transform duration-150 ease-out"
+                        style={{ transform: `scale(${zoom}) rotate(${rotation}deg)` }}
+                      />
+                    )}
 
-                <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-xs text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                  {selectedSize} {isAcrylic && selectedThickness && `• ${selectedThickness}`}
-                </div>
+                    {/* Gloss Acrylic Reflection Overlay */}
+                    {isAcrylic && (
+                      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/15 to-white/30 pointer-events-none" />
+                    )}
 
-                {isAcrylic && selectedBase && selectedBase !== 'Without Base' && (
-                  <div className="absolute bottom-2 left-2 bg-[#0E4A93]/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                    {selectedBase}
+                    {customText && (
+                      <div
+                        className={`absolute left-2 right-2 bg-black/75 backdrop-blur-xs text-white text-[11px] font-semibold py-1 px-2 rounded text-center truncate ${
+                          textPosition === 'top' ? 'top-2' : textPosition === 'center' ? 'top-1/2 -translate-y-1/2' : 'bottom-2'
+                        }`}
+                      >
+                        {customText}
+                      </div>
+                    )}
+
+                    <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-xs text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                      {selectedSize} {isAcrylic && selectedThickness && `• ${selectedThickness}`}
+                    </div>
+
+                    {isAcrylic && selectedBase && selectedBase !== 'Without Base' && (
+                      <div className="absolute bottom-2 left-2 bg-[#0E4A93]/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                        {selectedBase}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })()}
 
               {/* Image Zoom / Rotate / Reset Controls */}
               <div className="flex items-center justify-center gap-1.5">
@@ -325,25 +363,29 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
               )}
 
               {/* 2. SELECT THICKNESS */}
-              {product.availableThicknesses && product.availableThicknesses.length > 0 && (
+              {(isAcrylic || (product.availableThicknesses && product.availableThicknesses.length > 0)) && (
                 <div>
                   <label className="block font-bold text-stone-800 uppercase text-[11px] mb-1.5 flex items-center justify-between">
                     <span>Select Thickness</span>
-                    <span className="text-stone-500 font-normal">{selectedThickness === '18mm' ? 'Heavyweight 18mm crystal glass' : 'Slimline 7mm profile'}</span>
+                    <span className="text-stone-500 font-normal">
+                      {isAcrylic
+                        ? (selectedThickness === '8mm' ? 'Museum Grade 8mm Optical Cast' : selectedThickness === '6mm' ? 'Architectural 6mm Acrylic' : selectedThickness === '5mm' ? 'Standard 5mm Studio Acrylic' : 'Lightweight 3mm Acrylic')
+                        : 'Pine Stretcher Profile'}
+                    </span>
                   </label>
                   <div className="flex flex-wrap gap-2">
-                    {product.availableThicknesses.map((th) => (
+                    {(isAcrylic ? ['3mm', '5mm', '6mm', '8mm'] : product.availableThicknesses || []).map((th) => (
                       <button
                         key={th}
                         type="button"
                         onClick={() => setSelectedThickness(th)}
-                        className={`px-3.5 py-1.5 rounded-lg font-bold border transition-all cursor-pointer ${
-                          selectedThickness === th
+                        className={`px-3.5 py-1.5 rounded-lg font-bold border transition-all cursor-pointer text-xs ${
+                          selectedThickness.toLowerCase() === th.toLowerCase()
                             ? 'bg-[#0E4A93] text-white border-[#0E4A93] shadow-xs'
                             : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
                         }`}
                       >
-                        {th} {th === '18mm' && '(Premium 3D)'}
+                        {th.toUpperCase()} {th === '8mm' && '(Museum Quality)'} {th === '5mm' && '(Recommended)'}
                       </button>
                     ))}
                   </div>

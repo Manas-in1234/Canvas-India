@@ -382,25 +382,7 @@ export const ReadymadeOffersPage: React.FC = () => {
         </div>
       )}
 
-      {/* TRUST STRIP */}
-      <section className="py-6 sm:py-8">
-        <Container>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs text-stone-600">
-            <div className="flex items-center gap-2 justify-center">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-semibold">Ready-Made, No Upload Needed</span>
-            </div>
-            <div className="flex items-center gap-2 justify-center">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-semibold">Premium Archival Printing</span>
-            </div>
-            <div className="flex items-center gap-2 justify-center">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-semibold">Free Insured Delivery on ₹999+</span>
-            </div>
-          </div>
-        </Container>
-      </section>
+
 
     </div>
   );

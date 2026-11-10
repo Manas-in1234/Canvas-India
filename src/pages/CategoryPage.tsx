@@ -9,7 +9,6 @@ import {
   X,
   SlidersHorizontal,
   RotateCcw,
-  CheckCircle2,
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
@@ -283,57 +282,32 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
             </div>
 
             {/* Quick Action CTA based on Category */}
-            <div className="flex items-center gap-3 shrink-0">
-              {activeSlug === 'bulk-order' || activeSlug === 'corporate-orders' ? (
-                <button
-                  type="button"
-                  onClick={onOpenQuote}
-                  className="px-5 py-3 rounded-xl bg-[#E8752A] hover:bg-[#D3631A] text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition-all cursor-pointer"
-                >
-                  <Package className="w-4 h-4" />
-                  <span>{activeSlug === 'bulk-order' ? 'Request Bulk Quote →' : 'Request Corporate Quote →'}</span>
-                </button>
-              ) : activeSlug === 'custom-prints' ? (
-                <button
-                  type="button"
-                  onClick={() => onOpenCustomize()}
-                  className="px-5 py-3 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition-all cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-300" />
-                  <span>Start Custom Project →</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onOpenQuote}
-                  className="px-4 py-2.5 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-100 font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <span>Need Custom Dimensions?</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
+            {activeSlug !== 'bulk-order' && activeSlug !== 'corporate-orders' && (
+              <div className="flex items-center gap-3 shrink-0">
+                {activeSlug === 'custom-prints' ? (
+                  <button
+                    type="button"
+                    onClick={() => onOpenCustomize()}
+                    className="px-5 py-3 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-300" />
+                    <span>Start Custom Project →</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onOpenQuote}
+                    className="px-4 py-2.5 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-100 font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <span>Need Custom Dimensions?</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Quality checkmarks */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 mt-6 border-t border-stone-200/70 text-xs text-stone-600">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-semibold">Museum Quality Prints</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-semibold">Fade-Resistant Inks</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-semibold">Ready to Hang</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-semibold">Pan-India Delivery</span>
-            </div>
-          </div>
+
 
           {/* Special Custom Prints 5-Step Workflow Banner */}
           {activeSlug === 'custom-prints' && (
@@ -645,22 +619,6 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
               </span>
               <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
               <ShopByCategoryFilter categories={filterCategories} selectedSlugs={extraCategorySlugs} onChange={handleCategoryFilterChange} />
-            </div>
-
-            {/* Quality & Delivery Assurance Strip in Sidebar */}
-            <div className="pt-2 border-t border-stone-100 space-y-2 text-[11px] text-stone-500">
-              <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <span>{activeSlug === 'acrylic' ? 'Crystal-Clear Optical Acrylic' : activeSlug === 'cork' || activeSlug === 'yoga-fitness' ? '100% Natural Organic Cork' : '100% Cotton Canvas (380 GSM)'}</span>
-              </div>
-              <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <span>Ready to Hang with Hardware</span>
-              </div>
-              <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <span>Free Insured Delivery on ₹999+</span>
-              </div>
             </div>
 
           </aside>

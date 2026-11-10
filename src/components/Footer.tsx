@@ -12,16 +12,17 @@ interface FooterProps {
   onSelectCategory: (slug: string) => void;
   onOpenQuote: () => void;
   onOpenAccount?: () => void;
+  onTrackOrder?: () => void;
   variant?: string;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, onOpenAccount }) => {
+export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, onOpenAccount, onTrackOrder }) => {
   return (
     <footer className="bg-[#0B1727] text-stone-300 pt-12 pb-8 text-xs font-manrope">
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
         
         {/* Main Footer Columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 pb-10 border-b border-stone-800/80">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 xl:gap-12 pb-10 border-b border-stone-800/80">
           
           {/* Column 1: Brand & About */}
           <div className="space-y-3.5">
@@ -57,9 +58,9 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
 
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-[#E8752A] shrink-0" />
-                <span className="text-stone-400">Contact Number:</span>
-                <a href="tel:+917893051555" className="text-stone-200 hover:text-white transition-colors">
-                  78930 51555
+                <span className="text-stone-400">Landline Number:</span>
+                <a href="tel:040-29303344" className="text-stone-200 hover:text-white transition-colors">
+                  040-29303344
                 </a>
               </div>
 
@@ -93,8 +94,8 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
               <li><Link to="/canvas" className="hover:text-white transition-colors">Canvas Frames</Link></li>
               <li><Link to="/acrylic" className="hover:text-white transition-colors">Acrylic Wall Art</Link></li>
               <li><Link to="/cork" className="hover:text-white transition-colors">Natural Cork Prints &amp; Yoga Mats</Link></li>
-              <li><Link to="/gifts" className="hover:text-white transition-colors">Gifts &amp; Celebrations</Link></li>
-              <li><Link to="/corporate-orders" className="hover:text-white transition-colors">Corporate Branding</Link></li>
+              <li><Link to="/occasions" className="hover:text-white transition-colors">Gifts &amp; Celebrations</Link></li>
+              <li><Link to="/bulk-order" className="hover:text-white transition-colors">Corporate Branding</Link></li>
             </ul>
           </div>
 
@@ -102,14 +103,14 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
           <div className="space-y-2.5">
             <h4 className="font-bold text-xs uppercase tracking-wider text-white">Occasions & Gifting</h4>
             <ul className="space-y-2 text-stone-400 text-xs">
-              <li><Link to="/gifts?sub=Birthday" className="hover:text-white transition-colors">Birthday Gifts</Link></li>
-              <li><Link to="/gifts?sub=Anniversary" className="hover:text-white transition-colors">Anniversary Frames</Link></li>
-              <li><Link to="/gifts?sub=Wedding" className="hover:text-white transition-colors">Wedding Keepsakes</Link></li>
-              <li><Link to="/gifts?sub=Valentine's%20Day" className="hover:text-white transition-colors">Valentine's Day Gifts</Link></li>
-              <li><Link to="/gifts?sub=Housewarming" className="hover:text-white transition-colors">Housewarming Art</Link></li>
-              <li><Link to="/gifts?sub=Festivals" className="hover:text-white transition-colors">Festive &amp; Diwali Specials</Link></li>
-              <li><Link to="/gifts?sub=Mother's%20Day" className="hover:text-white transition-colors">Mother's &amp; Father's Day</Link></li>
-              <li><Link to="/gifts?sub=Corporate%20Gifts" className="hover:text-white transition-colors">Corporate Hampers</Link></li>
+              <li><Link to="/occasions/birthday" className="hover:text-white transition-colors">Birthday Gifts</Link></li>
+              <li><Link to="/occasions/anniversary" className="hover:text-white transition-colors">Anniversary Frames</Link></li>
+              <li><Link to="/occasions/wedding" className="hover:text-white transition-colors">Wedding Keepsakes</Link></li>
+              <li><Link to="/occasions/valentines-day" className="hover:text-white transition-colors">Valentine's Day Gifts</Link></li>
+              <li><Link to="/occasions/housewarming" className="hover:text-white transition-colors">Housewarming Art</Link></li>
+              <li><Link to="/occasions/festive-offers" className="hover:text-white transition-colors">Festive &amp; Diwali Specials</Link></li>
+              <li><Link to="/occasions/mothers-day" className="hover:text-white transition-colors">Mother's &amp; Father's Day</Link></li>
+              <li><Link to="/bulk-order" className="hover:text-white transition-colors">Corporate Hampers</Link></li>
             </ul>
           </div>
 
@@ -117,47 +118,17 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
           <div className="space-y-2.5">
             <h4 className="font-bold text-xs uppercase tracking-wider text-white">Customer Support</h4>
             <ul className="space-y-2 text-stone-400 text-xs">
+              <li>
+                <button type="button" onClick={onTrackOrder} className="hover:text-white transition-colors text-left cursor-pointer">
+                  Track Your Order
+                </button>
+              </li>
               <li><Link to="/about-us" className="hover:text-white transition-colors">About Us</Link></li>
               <li><Link to="/shipping-policy" className="hover:text-white transition-colors">Shipping &amp; Delivery Timelines</Link></li>
               <li><Link to="/refund-policy" className="hover:text-white transition-colors">Returns &amp; Replacement Policy</Link></li>
               <li><Link to="/cancellation-policy" className="hover:text-white transition-colors">Cancellation Policy</Link></li>
               <li><Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               <li><Link to="/terms-and-conditions" className="hover:text-white transition-colors">Terms of Service</Link></li>
-            </ul>
-          </div>
-
-          {/* Column 5: Bulk & Corporate */}
-          <div className="space-y-2.5">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-white">Bulk & Corporate</h4>
-            <p className="text-stone-400 text-xs leading-relaxed">
-              Tailored solutions for businesses, interior designers, architects, and corporate gifting.
-            </p>
-            <ul className="space-y-2 text-stone-400 text-xs">
-              <li>
-                <button onClick={onOpenQuote} className="hover:text-white transition-colors text-left cursor-pointer">
-                  Corporate Gifting Solutions
-                </button>
-              </li>
-              <li>
-                <button onClick={onOpenQuote} className="hover:text-white transition-colors text-left cursor-pointer">
-                  Bulk Order Discounts (25+ units)
-                </button>
-              </li>
-              <li>
-                <button onClick={onOpenQuote} className="hover:text-white transition-colors text-left cursor-pointer">
-                  GST Invoicing & Input Credit
-                </button>
-              </li>
-              <li>
-                <button onClick={onOpenQuote} className="hover:text-white transition-colors text-left cursor-pointer">
-                  Artist & Creator Program
-                </button>
-              </li>
-              <li>
-                <Link to="/designers-architects" className="hover:text-white transition-colors">
-                  Designers &amp; Architects Solutions
-                </Link>
-              </li>
             </ul>
           </div>
 

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   SlidersHorizontal,
   X,
@@ -7,7 +7,6 @@ import {
   ChevronRight,
   FilterX,
   Sparkles,
-  CheckCircle2,
   ShoppingCart
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
@@ -31,6 +30,12 @@ export const CorkCategoryPage: React.FC = () => {
     onToggleWishlist
   } = useShop();
 
+  const location = useLocation();
+  // Landing directly on /cork-art-patterns (the "Cork Pattern Print" card's
+  // link) should show only that subcategory by default, not every cork
+  // product — /cork and /cork-prints keep showing the full cork listing.
+  const isCorkPatternsOnlyRoute = location.pathname === '/cork-art-patterns';
+
   const [minPrice, setMinPrice] = useState<number>(PRICE_MIN_DEFAULT);
   const [maxPrice, setMaxPrice] = useState<number>(PRICE_MAX_DEFAULT);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
@@ -38,7 +43,9 @@ export const CorkCategoryPage: React.FC = () => {
   // listing with just the checked categories' products, shown on this same
   // page instead of navigating elsewhere. With none checked, Cork's own
   // products show as usual.
-  const [extraCategorySlugs, setExtraCategorySlugs] = useState<string[]>([]);
+  const [extraCategorySlugs, setExtraCategorySlugs] = useState<string[]>(
+    isCorkPatternsOnlyRoute ? ['cork-art-patterns'] : []
+  );
 
   const allCork = useMemo(
     () =>
@@ -63,7 +70,7 @@ export const CorkCategoryPage: React.FC = () => {
   const handleResetFilters = () => {
     setMinPrice(PRICE_MIN_DEFAULT);
     setMaxPrice(PRICE_MAX_DEFAULT);
-    setExtraCategorySlugs([]);
+    setExtraCategorySlugs(isCorkPatternsOnlyRoute ? ['cork-art-patterns'] : []);
   };
 
   const isFiltered =
@@ -93,7 +100,7 @@ export const CorkCategoryPage: React.FC = () => {
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-stone-500 mb-6">
             <Link to="/" className="hover:text-[#0E4A93] transition-colors">Home</Link>
             <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
-            <span className="font-semibold text-stone-900">Cork Art Patterns</span>
+            <span className="font-semibold text-stone-900">{isCorkPatternsOnlyRoute ? 'Cork Pattern Prints' : 'Cork Products'}</span>
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
@@ -110,10 +117,12 @@ export const CorkCategoryPage: React.FC = () => {
                   className="text-3xl sm:text-4xl lg:text-5xl font-black text-stone-950 tracking-tight leading-tight"
                   style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
                 >
-                  Cork Art Patterns
+                  {isCorkPatternsOnlyRoute ? 'Cork Pattern Prints' : 'Cork Products'}
                 </h1>
                 <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-2xl">
-                  Textured, eco-friendly cork-finish prints — from geometric motifs to natural wood-grain designs. Lightweight, durable and ready to hang in any room.
+                  {isCorkPatternsOnlyRoute
+                    ? 'Textured, eco-friendly cork-finish prints in geometric motifs and natural wood-grain designs. Lightweight, durable and ready to hang in any room.'
+                    : 'Textured, eco-friendly cork-finish prints — from geometric motifs to natural wood-grain designs. Lightweight, durable and ready to hang in any room.'}
                 </p>
               </div>
 
@@ -133,44 +142,19 @@ export const CorkCategoryPage: React.FC = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-stone-200/70 text-xs text-stone-600">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Natural Cork Texture</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Lightweight &amp; Durable</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Ready to Hang</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Pan-India Delivery</span>
-                </div>
-              </div>
+
 
             </div>
 
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-3xl overflow-hidden border border-stone-200 shadow-xl bg-stone-100 group aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3]">
                 <img
-                  src="https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=1200&auto=format&fit=crop&q=80"
+                  src="/assets/cork/cork-coastal-scenery.webp"
                   alt="Cork Art Patterns and Wall Decor"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/10 pointer-events-none" />
-
-                <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-md border border-stone-200/80 flex items-center gap-2.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <div>
-                    <div className="text-[11px] font-black text-stone-900 leading-tight">Eco-Friendly Cork Prints</div>
-                    <div className="text-[10px] text-stone-500">Starting from ₹249 | Up to 29% OFF</div>
-                  </div>
-                </div>
 
               </div>
             </div>
@@ -371,21 +355,6 @@ export const CorkCategoryPage: React.FC = () => {
                 </span>
                 <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
                 <ShopByCategoryFilter categories={CORK_FILTER_CATEGORIES} selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
-              </div>
-
-              <div className="pt-2 border-t border-stone-100 space-y-2 text-[11px] text-stone-500">
-                <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Natural Portuguese Cork Finish</span>
-                </div>
-                <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Ready to Hang with Hardware</span>
-                </div>
-                <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Free Insured Delivery on ₹999+</span>
-                </div>
               </div>
 
             </aside>

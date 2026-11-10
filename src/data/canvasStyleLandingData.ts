@@ -28,9 +28,12 @@ const PHOTO = {
   officeWorkspace: u('1497215728101-856f4ea42174'), // office desk with plants, city view
   officeHallway: u('1497366216548-37526070297c'), // office interior hallway
   weddingGalleryWall: '/assets/canvas-styles/wall-display-wedding-gallery.webp', // user-supplied: 6-panel asymmetric wedding photo gallery over a sofa
-  wallDisplayRainyStreet: '/assets/canvas-styles/wall-display-rainy-street-couple.webp', // user-supplied: painted couple under umbrella on rainy city street
-  wallDisplayOceanSunset: '/assets/canvas-styles/wall-display-ocean-sunset.webp', // user-supplied: painted ocean sunset with gold clouds
-  wallDisplay3PanelLivingRoom: '/assets/canvas-styles/wall-display-3panel-living-room-boho.webp', // user-supplied: real 3-equal-panel boho arch/sun canvas set over a green sofa
+  wallDisplay3PanelLivingRoom: '/assets/canvas-styles/wall-display-3panel-living-room.webp', // 3-panel multi-photo gallery display with 3 distinct lifestyle photos
+  wallDisplay4PanelLivingRoom: '/assets/canvas-styles/wall-display-4panel-living-room.webp', // 4-panel living room gallery display with 4 distinct photos
+  wallDisplay5PanelLivingRoom: '/assets/canvas-styles/wall-display-5panel-living-room.webp', // 5-panel stepped pyramid living room gallery display with 5 distinct photos
+  wallDisplay7PanelLivingRoom: '/assets/canvas-styles/wall-display-7panel-living-room.webp', // 7-panel centerpiece halo living room gallery display with 7 distinct photos
+  wallDisplayHeartEyesCouple: '/assets/canvas-styles/wall-display-heart-eyes-couple.webp', // user-supplied: couple holding paper hearts over their eyes, single-panel canvas on yellow background
+  wallDisplay6PanelBohoArt: '/assets/canvas-styles/wall-display-6panel-boho-art.webp', // user-supplied: 6-panel (3x2) terracotta/boho abstract art grid — face, moon, sun motifs
   hexagon3PanelMomDaughter: '/assets/canvas-styles/hexagon-3panel-mom-daughter.webp', // user-supplied: 3 real hexagon panels, mother/daughter photos
   hexagon4PanelAutumnWedding: '/assets/canvas-styles/hexagon-4panel-autumn-wedding.webp', // user-supplied: 4 real hexagon panels in diamond arrangement, autumn/wedding photos
   hexagon7PanelFamily: '/assets/canvas-styles/hexagon-7panel-family.webp', // user-supplied: 6 real hexagon panels honeycomb cluster, family photos on dark green (user-confirmed count)
@@ -61,7 +64,11 @@ const PHOTO = {
   popArtWarholZebra: '/assets/canvas-styles/pop-art-warhol-zebra.webp', // user-supplied: Warhol-style zebra painting
   popArtCaricature: '/assets/canvas-styles/pop-art-caricature-takeabreak.webp', // user-supplied: illustrated "Take a Break" portrait
   popArtLichtenstein: '/assets/canvas-styles/pop-art-lichtenstein-crying.webp', // user-supplied: Lichtenstein-style crying girl
-  popArtPixel: '/assets/canvas-styles/pop-art-pixel-mario.webp' // user-supplied: pixel-art Mario painting
+  popArtPixel: '/assets/canvas-styles/pop-art-pixel-mario.webp', // user-supplied: pixel-art Mario painting
+  caricatureWedding: '/assets/canvas-styles/caricature-wedding-couple.webp',
+  caricatureKidsPets: '/assets/canvas-styles/caricature-kids-pets.webp',
+  caricatureFamily: '/assets/canvas-styles/caricature-family-group.webp',
+  caricatureProfession: '/assets/canvas-styles/caricature-profession-hobby.webp'
 };
 
 // The customizer's real tab order is Upload -> Size/Layout -> Wrap & Border
@@ -152,13 +159,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         customizeHref: '/customize/canvas/canvas-oval'
       }
     ],
-    galleryTitle: 'Shapes for every wall',
-    galleryItems: [
-      { label: 'Round', image: PHOTO.shapedCanvasRound },
-      { label: 'Triangle', image: PHOTO.shapedCanvasTriangle },
-      { label: 'Heart', image: PHOTO.shapedCanvasHeart },
-      { label: 'Oval', image: PHOTO.shapedCanvasOval }
-    ],
     historyTitle: 'The History of Shaped Canvas',
     historyParagraphs: [
       'Painting on a non-rectangular surface is older than it looks. Renaissance masters like Raphael, Michelangelo, and Botticelli painted on round wooden panels called tondos, breaking from the standard rectangle centuries before it became a modern art movement.',
@@ -184,40 +184,40 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     }),
     styles: [
       {
-        id: 'canvas-wall-art',
+        id: 'wall-display-3panel',
         number: '01',
-        name: 'Asymmetric Gallery Wall Display',
-        description: 'Varied-size panels arranged asymmetrically — a large central photo flanked by smaller accent panels — for a striking, editorial-style focal point above a sofa or bed.',
+        name: '3-Panel Living Room Gallery Set',
+        description: 'A harmonious 3-panel multi-photo gallery display (18" × 24" overall) featuring 3 distinct photos — a 12"×18" tall centerpiece canvas balanced by dual 10"×8" accent photo panels.',
         price: 856.9,
-        image: PHOTO.weddingGalleryWall,
-        customizeHref: '/customize/canvas/canvas-wall-art'
-      },
-      {
-        id: 'canvas-living-room-set',
-        number: '02',
-        name: 'Living Room Gallery Canvas Set (3 Panels)',
-        description: 'Triptych 3-panel split wall art set for modern living rooms and master bedrooms.',
-        price: 2299,
         image: PHOTO.wallDisplay3PanelLivingRoom,
-        customizeHref: '/customize/canvas/canvas-wall-art'
+        customizeHref: '/customize/canvas/canvas-wall-art?layout=wall-display-3a'
       },
       {
-        id: 'canvas-rainy-street-romance',
+        id: 'wall-display-4panel',
+        number: '02',
+        name: '4-Panel Gallery Showcase',
+        description: 'An architectural 4-panel layout (34" × 24" overall) with 4 individual photos — featuring a 24"×16" portrait canvas, an 11"×17" horizontal header, and dual 12"×8" side-by-side bases.',
+        price: 1693.85,
+        image: PHOTO.wallDisplay4PanelLivingRoom,
+        customizeHref: '/customize/canvas/canvas-wall-art?layout=wall-display-4a'
+      },
+      {
+        id: 'wall-display-5panel',
         number: '03',
-        name: 'Rainy Street Romance Canvas',
-        description: 'A couple sharing an umbrella on a glowing, rain-slicked street — rich impasto color perfect as a statement piece above a sofa or bed.',
-        price: 899,
-        image: PHOTO.wallDisplayRainyStreet,
-        customizeHref: '/customize/canvas/canvas-wall-art'
+        name: '5-Panel Stepped Pyramid Wall Display',
+        description: 'A dramatic 5-panel layout (62" × 36" overall) where each panel holds a separate picture — anchored by a commanding 20"×16" center apex canvas flanked by stepped 14"×11" and 10"×8" side panels.',
+        price: 1772.7,
+        image: PHOTO.wallDisplay5PanelLivingRoom,
+        customizeHref: '/customize/canvas/canvas-wall-art?layout=wall-display-5a'
       },
       {
-        id: 'canvas-ocean-sunset',
+        id: 'wall-display-7panel',
         number: '04',
-        name: 'Ocean Sunset Canvas',
-        description: 'A sweeping painted sunset over the ocean, clouds lit gold against deep blue — a calm, large-format centerpiece for any wall display.',
-        price: 999,
-        image: PHOTO.wallDisplayOceanSunset,
-        customizeHref: '/customize/canvas/canvas-wall-art'
+        name: '7-Panel Centerpiece Halo Wall Display',
+        description: 'A breathtaking 7-panel story wall (44" × 26" overall) showcasing 7 different photos — a prominent 26"×26" square hero canvas encircled by six 8"×8" mini satellite canvases.',
+        price: 1999,
+        image: PHOTO.wallDisplay7PanelLivingRoom,
+        customizeHref: '/customize/canvas/canvas-wall-art?layout=wall-display-7a'
       }
     ],
     infoTitle: 'Choose Your Panel Count',
@@ -524,13 +524,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         customizeHref: '/customize/canvas/canvas-lyric'
       }
     ],
-    galleryTitle: 'A template for every milestone',
-    galleryItems: [
-      { label: 'Weddings', image: '/assets/lyric-canvas/wedding-vows-canvas.svg' },
-      { label: 'Anniversaries', image: '/assets/lyric-canvas/first-anniversary-gift.svg' },
-      { label: 'Couples', image: '/assets/lyric-canvas/couples-personalized-art.svg' },
-      { label: 'Forever Young', image: '/assets/lyric-canvas/forever-young-lyrics.svg' }
-    ],
     historyTitle: 'A Modern Twist on an Old Tradition',
     historyParagraphs: [
       "Turning words into wall art is far from new — illuminated manuscripts and hand-lettered calligraphy have decorated walls and pages for centuries, long before printing presses existed.",
@@ -591,13 +584,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         customizeHref: '/customize/canvas/canvas-single?category=PANORAMIC'
       }
     ],
-    galleryTitle: 'Moments wide enough to fill a wall',
-    galleryItems: [
-      { label: 'Weddings', image: PHOTO.weddingCouple },
-      { label: 'Skylines', icon: 'mountain' },
-      { label: 'Landscapes', icon: 'mountain' },
-      { label: 'Group Shots', icon: 'users' }
-    ],
     historyTitle: 'The History of the Panorama',
     historyParagraphs: [
       'Immersive, wide-format art is older than photography itself — murals designed to wrap around a viewer have been found in Pompeii, dating back to around 20 AD.',
@@ -649,13 +635,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         image: PHOTO.split5PanelBeachSunset,
         customizeHref: '/customize/canvas/canvas-split?layout=split-5p-57-75-97-stepped'
       }
-    ],
-    galleryTitle: 'Panel counts for every wall',
-    galleryItems: [
-      { label: '3 Panels', icon: 'columns' },
-      { label: '5 Panels', icon: 'columns' },
-      { label: 'Landscape', icon: 'mountain' },
-      { label: 'Portrait', icon: 'frame' }
     ],
     historyTitle: 'The History of the Multi-Panel Format',
     historyParagraphs: [
@@ -718,13 +697,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         customizeHref: '/customize/canvas/canvas-hexagon?layout=hex-horizontal-bundle-5'
       }
     ],
-    galleryTitle: 'Cluster ideas',
-    galleryItems: [
-      { label: 'Single Hexagon', icon: 'hexagon' },
-      { label: 'Honeycomb Cluster', icon: 'hexagon' },
-      { label: 'Mixed Grid', visual: 'mosaic-grid' },
-      { label: 'Office Wall', image: PHOTO.officeHallway }
-    ],
     historyTitle: 'Why the Hexagon?',
     historyParagraphs: [
       "The hexagon's place in art and design isn't an accident — it's math. Roman scholar Marcus Terentius Varro first posed the question, in the 1st century BC, of why bees build their honeycomb in hexagons rather than any other shape.",
@@ -740,14 +712,14 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     pageTitle: 'Wholesale Canvas Prints',
     heroTitle: 'What is Wholesale Canvas Printing?',
     heroSubtitle:
-      'Bulk printing for artists, studios & interior designers. Tiered pricing for 20+ units with official GST invoicing — built for galleries, decorators, and resellers who order in volume.',
+      'Bulk printing for artists, studios & interior designers. Tiered pricing for 20+ units — built for galleries, decorators, and resellers who order in volume.',
     stylesSectionTitle: 'How Wholesale Pricing Works',
     stepsTitle: 'How Wholesale Ordering Works',
     stepsSubtitle: 'Bulk orders go through our quote desk instead of the standard customizer.',
     steps: [
       { icon: 'upload', title: 'Request a Quote', desc: 'Tell us your order volume (20+ units) and the canvas sizes or formats you need.' },
       { icon: 'grid', title: 'Share Your Order Details', desc: 'Send over your artwork or photos, along with your preferred sizes, finishes, and delivery timeline.' },
-      { icon: 'sliders', title: 'Approve Your Quote', desc: "We'll send tiered pricing with GST invoicing — confirm your order once you're happy with it." },
+      { icon: 'sliders', title: 'Approve Your Quote', desc: "We'll send tiered pricing tailored to your quantity — confirm your order once you're happy with it." },
       { icon: 'eye', title: 'Production & Delivery', desc: 'Every piece is printed to the same archival standard and shipped together, pan-India.' }
     ],
     styles: [
@@ -755,7 +727,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         id: 'bulk-order',
         number: '01',
         name: 'Tiered Wholesale Pricing',
-        description: 'Tiered wholesale pricing for 20+ units with official GST invoicing and 18% input tax credit — request a custom quote for your order volume.',
+        description: 'Tiered wholesale pricing for 20+ units — request a custom quote for your order volume.',
         price: 0,
         image: PHOTO.galleryWallViewer,
         customizeHref: '/bulk-order'
@@ -771,7 +743,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     featuresTitle: 'Why order wholesale with us',
     features: [
       { icon: 'layers' as const, title: 'Volume Pricing', desc: 'Tiered discounts that scale with order size, starting at 20 units.' },
-      { icon: 'shield' as const, title: 'GST Invoicing', desc: 'Official tax invoices with 18% input tax credit for your business.' },
+      { icon: 'shield' as const, title: 'Quality Guarantee', desc: 'Museum-grade archival inks and premium materials guaranteed.' },
       { icon: 'sparkles' as const, title: 'Consistent Quality', desc: 'Every piece in your order held to the same archival print standard.' },
       { icon: 'clock' as const, title: 'Dedicated Support', desc: 'A quote and production timeline tailored to your order.' }
     ]
@@ -783,7 +755,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     heroTitle: 'What is a Custom Caricature?',
     heroSubtitle:
       'Digital caricature portraits printed on canvas. Our digital artists turn your photo into a playful, exaggerated hand-drawn-style portrait, then print it on gallery-wrapped canvas.',
-    stylesSectionTitle: 'Explore Our Caricature Style',
+    stylesSectionTitle: 'Explore Our Caricature Styles',
     stepsTitle: 'How to Customize Your Caricature',
     stepsSubtitle: 'From upload to finish in 5 simple steps.',
     steps: buildCustomizeSteps({
@@ -792,21 +764,41 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
     }),
     styles: [
       {
-        id: 'caricatures',
+        id: 'wedding-caricature',
         number: '01',
-        name: 'Caricatures',
-        description: 'Playful cartoon caricature styling with bold hand-drawn contours, comic cel shading, and warm tones.',
+        name: 'Wedding Caricature',
+        description: 'Turn your wedding or anniversary photo into a funny, sweet caricature on gallery-wrapped canvas with customized attire, romantic garden themes, and personalized touches.',
         price: 599,
-        image: '/assets/pop-art/caricatures.svg',
-        customizeHref: '/customize/canvas/canvas-pop-art'
+        image: PHOTO.caricatureWedding,
+        customizeHref: '/customize/canvas/canvas-single'
+      },
+      {
+        id: 'kids-pets-caricature',
+        number: '02',
+        name: 'For the Kids & Pets',
+        description: 'Kids love cartoons and would love to have their cartoon made which will definitely cheer them up instantly. Have one made with their pets or one with their best friend.',
+        price: 599,
+        image: PHOTO.caricatureKidsPets,
+        customizeHref: '/customize/canvas/canvas-single'
+      },
+      {
+        id: 'family-group-caricature',
+        number: '03',
+        name: 'Family & Group Caricatures',
+        description: 'Bring the whole family or friend circle together in a heartwarming cartoon portrait — capturing everyone’s smiles, unique quirks, and personalities on archival canvas.',
+        price: 799,
+        image: PHOTO.caricatureFamily,
+        customizeHref: '/customize/canvas/canvas-single'
+      },
+      {
+        id: 'profession-hobby-caricature',
+        number: '04',
+        name: 'Profession & Hobby Caricatures',
+        description: 'Celebrate careers, milestones, and passions — depicted as doctors, pilots, musicians, or caped superheroes with fun work props and energetic comic pop art backdrops.',
+        price: 599,
+        image: PHOTO.caricatureProfession,
+        customizeHref: '/customize/canvas/canvas-single'
       }
-    ],
-    galleryTitle: 'Great for any occasion',
-    galleryItems: [
-      { label: 'Solo Portraits', icon: 'users' },
-      { label: 'Couples', icon: 'heart' },
-      { label: 'Family', icon: 'images' },
-      { label: 'Pets', icon: 'paw' }
     ],
     historyTitle: 'The History of Caricature',
     historyParagraphs: [
@@ -850,13 +842,6 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         image: PHOTO.bannerBlueGoldAbstract,
         customizeHref: '/customize/canvas/canvas-banner'
       }
-    ],
-    galleryTitle: 'Finish options',
-    galleryItems: [
-      { label: 'Grommets', icon: 'scroll' },
-      { label: 'Pole Pockets', icon: 'scroll' },
-      { label: 'Wood Rails', icon: 'scroll' },
-      { label: 'Twine Hanging', icon: 'scroll' }
     ],
     historyTitle: 'The History of the Banner',
     historyParagraphs: [

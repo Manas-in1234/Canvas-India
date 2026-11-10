@@ -119,6 +119,7 @@ export const CustomizerHeader: React.FC<CustomizerHeaderProps> = ({
         >
           <ShoppingCart className="w-4 h-4 shrink-0" />
           <span className="hidden sm:inline">Add to Cart</span>
+          <span className="sm:hidden text-xs">Add</span>
         </button>
       </div>
     </header>
@@ -146,10 +147,22 @@ export function CustomizerSidebar<T extends string = string>({
   activeTab,
   onSelectTab
 }: CustomizerSidebarProps<T>) {
+  const activeTabRef = React.useRef<HTMLButtonElement>(null);
+
+  React.useEffect(() => {
+    if (activeTabRef.current) {
+      activeTabRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+  }, [activeTab]);
+
   return (
     <aside
       aria-label="Customizer Tools"
-      className="bg-[#1E293B] text-stone-300 w-full md:w-20 md:min-w-[80px] shrink-0 flex flex-row md:flex-col items-center justify-around md:justify-start md:py-2 z-20 border-b md:border-b-0 md:border-r border-slate-700 overflow-x-auto md:overflow-y-auto no-scrollbar"
+      className="bg-[#1E293B] text-stone-300 w-full md:w-[84px] xl:w-[86px] shrink-0 flex flex-row md:flex-col items-center justify-start md:py-2 z-20 border-b md:border-b-0 md:border-r border-slate-700 overflow-x-auto md:overflow-y-auto no-scrollbar scroll-smooth px-1.5 md:px-0 gap-1 md:gap-0"
     >
       {items.map((item) => {
         const Icon = item.icon;
@@ -157,16 +170,17 @@ export function CustomizerSidebar<T extends string = string>({
         return (
           <button
             key={item.id}
+            ref={isActive ? activeTabRef : null}
             type="button"
             onClick={() => onSelectTab(item.id)}
-            className={`flex flex-col items-center justify-center w-full py-3 px-1 text-center transition-all cursor-pointer ${
+            className={`flex flex-col items-center justify-center shrink-0 min-w-[66px] sm:min-w-[72px] md:min-w-0 md:w-full py-2.5 md:py-3.5 px-2 md:px-1 text-center rounded-xl md:rounded-none transition-all cursor-pointer ${
               isActive
-                ? 'bg-white text-[#0E4A93] shadow-md font-extrabold'
+                ? 'bg-white text-[#0E4A93] shadow-md font-extrabold ring-1 ring-[#0E4A93]/20'
                 : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium'
             }`}
           >
             <Icon className={`w-5 h-5 mb-1 stroke-[1.8] ${isActive ? 'text-[#0E4A93]' : 'text-slate-300'}`} />
-            <span className="text-[9px] leading-tight tracking-tight uppercase px-0.5">
+            <span className="text-[9px] leading-tight tracking-tight uppercase px-0.5 whitespace-nowrap md:whitespace-normal">
               {item.label}
             </span>
           </button>
@@ -190,7 +204,7 @@ export const CustomizerSectionHeader: React.FC<CustomizerSectionHeaderProps> = (
   metaText
 }) => {
   return (
-    <div className="p-3.5 border-b border-stone-200 bg-stone-50/80 flex items-center justify-between shrink-0">
+    <div className="px-4 py-3 border-b border-stone-200 bg-white flex items-center justify-between shrink-0">
       <h2 className="text-xs font-black tracking-wider text-stone-800 uppercase flex items-center gap-1.5">
         <span>{title}</span>
       </h2>
@@ -216,9 +230,9 @@ export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
 }) => {
   const resolvedMeta = metaText || badge;
   return (
-    <section className="w-full md:w-[440px] lg:w-[480px] bg-white border-b md:border-b-0 md:border-r border-stone-200 flex flex-col z-10 shrink-0 h-72 md:h-full min-h-0 overflow-hidden shadow-sm">
+    <section className="w-full md:w-[480px] lg:w-[500px] xl:w-[515px] bg-white border-b md:border-b-0 md:border-r border-stone-200 flex flex-col z-10 shrink-0 min-h-0 md:h-full overflow-hidden shadow-sm">
       {title && <CustomizerSectionHeader title={title} metaText={resolvedMeta} />}
-      <div className="flex-1 overflow-y-auto min-h-0 flex flex-col">
+      <div className="flex-1 overflow-y-auto min-h-0 flex flex-col pb-[max(1rem,env(safe-area-inset-bottom,16px))]">
         {children}
       </div>
     </section>
@@ -409,17 +423,17 @@ export const CustomizerTopToolbar: React.FC<CustomizerTopToolbarProps> = ({
   const allExtraActions = [...builtInPreviewActions, ...extraActions];
 
   return (
-    <div className="h-12 bg-white border-b border-stone-200 px-3 sm:px-4 flex items-center justify-between shrink-0 z-20 overflow-x-auto">
+    <div className="h-10 sm:h-12 bg-white border-b border-stone-200 px-2 sm:px-4 flex items-center justify-between shrink-0 z-20 overflow-x-auto no-scrollbar">
       {/* Left Spacer (No Zoom/Rotate or duplicate product info in top toolbar) */}
       <div className="flex items-center gap-1.5 shrink-0" />
 
       {/* Right: [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW, 3D VIEW, 360° VIEW] */}
-      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto">
         {/* SAVE */}
         <button
           type="button"
           onClick={onSave}
-          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 rounded-lg text-xs font-bold transition-all shadow-2xs hover:border-stone-400 cursor-pointer"
+          className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 rounded-lg text-[11px] sm:text-xs font-bold transition-all shadow-2xs hover:border-stone-400 cursor-pointer"
           title="Save design to browser"
         >
           <Save className="w-3.5 h-3.5 text-[#0E4A93]" />
@@ -430,7 +444,7 @@ export const CustomizerTopToolbar: React.FC<CustomizerTopToolbarProps> = ({
         <button
           type="button"
           onClick={onToggleText}
-          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
+          className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
             textActive
               ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
               : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
@@ -445,7 +459,7 @@ export const CustomizerTopToolbar: React.FC<CustomizerTopToolbarProps> = ({
         <button
           type="button"
           onClick={onToggleClipart}
-          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
+          className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
             clipartActive
               ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
               : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
@@ -466,7 +480,7 @@ export const CustomizerTopToolbar: React.FC<CustomizerTopToolbarProps> = ({
               if (isRoomViewDisabled) return;
               handleRoomView();
             }}
-            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold border transition-all shadow-2xs ${
               isRoomViewDisabled
                 ? 'bg-stone-100 text-stone-400 border-stone-200 opacity-50 cursor-not-allowed'
                 : isRoomViewActive
@@ -495,7 +509,7 @@ export const CustomizerTopToolbar: React.FC<CustomizerTopToolbarProps> = ({
                 act.onClick();
               }}
               title={isDisabled ? `Upload an image first to enable ${act.label}` : act.title || act.label}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all shadow-2xs ${
+              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold border transition-all shadow-2xs ${
                 isDisabled
                   ? 'bg-stone-100 text-stone-400 border-stone-200 opacity-50 cursor-not-allowed'
                   : act.active
@@ -514,10 +528,10 @@ export const CustomizerTopToolbar: React.FC<CustomizerTopToolbarProps> = ({
           <button
             type="button"
             onClick={onDeleteSelectedItem}
-            className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors cursor-pointer ml-1"
+            className="p-1 sm:p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors cursor-pointer ml-1"
             title="Delete Selected Item"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         )}
       </div>
@@ -539,6 +553,9 @@ export interface CustomizerPreviewControlsProps {
   onRotateRight: () => void;
   extraControls?: React.ReactNode;
   bottomSlot?: React.ReactNode;
+  isContain?: boolean;
+  onToggleFit?: () => void;
+  onReset?: () => void;
 }
 
 export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps> = ({
@@ -548,22 +565,25 @@ export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps>
   onRotateLeft,
   onRotateRight,
   extraControls,
-  bottomSlot
+  bottomSlot,
+  isContain,
+  onToggleFit,
+  onReset
 }) => {
   return (
     <div className="flex flex-col items-center justify-center w-full select-none">
       {/* Dynamic Size Indicator directly below the Product Preview */}
       <div
         data-testid="customizer-size-indicator"
-        className="mt-3 inline-flex items-center justify-center px-3 py-1 rounded-full border border-stone-300 bg-white text-xs font-extrabold text-stone-700 shadow-xs"
+        className="mt-1.5 sm:mt-3 inline-flex items-center justify-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-stone-300 bg-white text-[11px] sm:text-xs font-extrabold text-stone-700 shadow-xs"
       >
         {sizeLabel}
       </div>
 
-      {/* Image Controls: [ − ] [ + ] [ ↶ ] [ ↷ ] directly below the Size Indicator */}
+      {/* Image Controls: [ − ] [ + ] [ ↶ ] [ ↷ ] [ Fit/Fill ] [ Reset ] directly below the Size Indicator */}
       <div
         data-testid="customizer-preview-controls"
-        className="mt-2 inline-flex items-center justify-center gap-1.5 bg-white/95 backdrop-blur-xs px-2.5 py-1.5 rounded-xl shadow-xs border border-stone-200"
+        className="mt-1 sm:mt-2 inline-flex items-center justify-center gap-1 sm:gap-1.5 bg-white/95 backdrop-blur-xs px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl shadow-xs border border-stone-200"
       >
         <button
           type="button"
@@ -571,11 +591,11 @@ export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps>
             e.stopPropagation();
             onZoomOut();
           }}
-          className="p-1.5 rounded-lg hover:bg-stone-100 active:bg-stone-200 text-stone-700 hover:text-[#0E4A93] border border-stone-200 transition-colors cursor-pointer"
+          className="p-1 sm:p-1.5 rounded-lg hover:bg-stone-100 active:bg-stone-200 text-stone-700 hover:text-[#0E4A93] border border-stone-200 transition-colors cursor-pointer"
           title="Zoom Out"
           aria-label="Zoom Out"
         >
-          <ZoomOut className="w-4 h-4" />
+          <ZoomOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
         <button
           type="button"
@@ -583,11 +603,11 @@ export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps>
             e.stopPropagation();
             onZoomIn();
           }}
-          className="p-1.5 rounded-lg hover:bg-stone-100 active:bg-stone-200 text-stone-700 hover:text-[#0E4A93] border border-stone-200 transition-colors cursor-pointer"
+          className="p-1 sm:p-1.5 rounded-lg hover:bg-stone-100 active:bg-stone-200 text-stone-700 hover:text-[#0E4A93] border border-stone-200 transition-colors cursor-pointer"
           title="Zoom In"
           aria-label="Zoom In"
         >
-          <ZoomIn className="w-4 h-4" />
+          <ZoomIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
         <button
           type="button"
@@ -595,11 +615,11 @@ export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps>
             e.stopPropagation();
             onRotateLeft();
           }}
-          className="p-1.5 rounded-lg hover:bg-stone-100 active:bg-stone-200 text-stone-700 hover:text-[#0E4A93] border border-stone-200 transition-colors cursor-pointer"
+          className="p-1 sm:p-1.5 rounded-lg hover:bg-stone-100 active:bg-stone-200 text-stone-700 hover:text-[#0E4A93] border border-stone-200 transition-colors cursor-pointer"
           title="Rotate Left"
           aria-label="Rotate Left"
         >
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
         <button
           type="button"
@@ -607,17 +627,51 @@ export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps>
             e.stopPropagation();
             onRotateRight();
           }}
-          className="p-1.5 rounded-lg hover:bg-stone-100 active:bg-stone-200 text-stone-700 hover:text-[#0E4A93] border border-stone-200 transition-colors cursor-pointer"
+          className="p-1 sm:p-1.5 rounded-lg hover:bg-stone-100 active:bg-stone-200 text-stone-700 hover:text-[#0E4A93] border border-stone-200 transition-colors cursor-pointer"
           title="Rotate Right"
           aria-label="Rotate Right"
         >
-          <RotateCw className="w-4 h-4" />
+          <RotateCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
+
+        {onToggleFit && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFit();
+            }}
+            className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-extrabold border transition-colors cursor-pointer flex items-center gap-1 ${
+              isContain
+                ? 'bg-blue-50 text-[#0E4A93] border-blue-200 hover:bg-blue-100'
+                : 'bg-stone-100 text-stone-700 border-stone-200 hover:bg-stone-200'
+            }`}
+            title={isContain ? 'Switch to Fill (cover complete canvas)' : 'Switch to Fit (fit complete photo without crop)'}
+          >
+            <span>{isContain ? 'Fit' : 'Fill'}</span>
+          </button>
+        )}
+
+        {onReset && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onReset();
+            }}
+            className="p-1 sm:p-1.5 rounded-lg hover:bg-stone-100 active:bg-stone-200 text-stone-500 hover:text-stone-800 border border-stone-200 transition-colors cursor-pointer"
+            title="Reset image position, zoom and rotation"
+            aria-label="Reset image position, zoom and rotation"
+          >
+            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          </button>
+        )}
+
         {extraControls}
       </div>
 
       {/* Optional Bottom Status / Material / Remove Photo Slot */}
-      {bottomSlot && <div className="mt-2.5 flex justify-center w-full">{bottomSlot}</div>}
+      {bottomSlot && <div className="mt-1.5 sm:mt-2.5 flex justify-center w-full">{bottomSlot}</div>}
     </div>
   );
 };
@@ -635,6 +689,9 @@ export interface CustomizerPreviewAreaProps {
   onRotateRight: () => void;
   extraControls?: React.ReactNode;
   bottomSlot?: React.ReactNode;
+  isContain?: boolean;
+  onToggleFit?: () => void;
+  onReset?: () => void;
   prevStep?: { label: string; disabled: boolean; onClick: () => void };
   nextStep?: { label: string; disabled: boolean; onClick: () => void };
   onPointerMove?: (e: React.PointerEvent<HTMLDivElement>) => void;
@@ -654,6 +711,9 @@ export const CustomizerPreviewArea: React.FC<CustomizerPreviewAreaProps> = ({
   onRotateRight,
   extraControls,
   bottomSlot,
+  isContain,
+  onToggleFit,
+  onReset,
   prevStep,
   nextStep,
   onPointerMove,
@@ -665,7 +725,7 @@ export const CustomizerPreviewArea: React.FC<CustomizerPreviewAreaProps> = ({
 }) => {
   return (
     <div
-      className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-x-hidden overflow-y-auto"
+      className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 relative overflow-x-hidden overflow-y-auto"
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onClick={onClick}
@@ -735,8 +795,12 @@ export const CustomizerPreviewArea: React.FC<CustomizerPreviewAreaProps> = ({
           onRotateRight={onRotateRight}
           extraControls={extraControls}
           bottomSlot={bottomSlot}
+          isContain={isContain}
+          onToggleFit={onToggleFit}
+          onReset={onReset}
         />
       </div>
     </div>
   );
 };
+

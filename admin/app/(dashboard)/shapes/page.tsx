@@ -1,24 +1,29 @@
-'use client';
+"use client";
 
-import { useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { Upload } from 'lucide-react';
-import { apiClient, ApiError } from '@/lib/api-client';
-import type { CustomShapeListItem } from '@/lib/types/shape';
-import { DataTable, type DataTableColumn } from '@/components/data-table';
-import { StatusBadge } from '@/components/status-badge';
-import { Badge } from '@/components/ui/badge';
-import { usePermission } from '@/lib/auth/use-permission';
-import { formatDate } from '@/lib/format';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Skeleton } from '@/components/ui/skeleton';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api/v1';
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Upload, ScanLine } from "lucide-react";
+import { apiClient, ApiError } from "@/lib/api-client";
+import type { CustomShapeListItem } from "@/lib/types/shape";
+import { DataTable, type DataTableColumn } from "@/components/data-table";
+import { StatusBadge } from "@/components/status-badge";
+import { Badge } from "@/components/ui/badge";
+import { usePermission } from "@/lib/auth/use-permission";
+import { formatDate } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ShapesPage() {
   const router = useRouter();
@@ -26,90 +31,97 @@ export default function ShapesPage() {
   const { hasPermission } = usePermission();
 
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
+  const [status, setStatus] = useState("ALL");
+  const [name, setName] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['shapes'],
-    queryFn: () => apiClient.get<CustomShapeListItem[]>('/admin/shapes'),
+    queryKey: ["shapes"],
+    queryFn: () => apiClient.get<CustomShapeListItem[]>("/admin/shapes"),
   });
 
   const createShapeMutation = useMutation({
     mutationFn: async () => {
       if (!file || !name.trim()) {
-        throw new Error('Name and image are both required');
+        throw new Error("Name and image are both required");
       }
 
-      const { assetId, uploadUrl } = await apiClient.post<{ assetId: string; uploadUrl: string }>(
-        '/customization/assets/upload-url',
-        { ownerType: 'CustomShape', ownerId: 'admin-upload', fileName: file.name, mimeType: file.type, fileSize: file.size },
+      if (file.size > 1024 * 1024)
+        throw new Error("Image must be 1 MB or smaller");
+      const form = new FormData();
+      form.set("name", name.trim());
+      form.set("file", file);
+      return apiClient.upload<CustomShapeListItem>(
+        "/admin/shapes/upload",
+        form,
       );
-
-      // Raw binary PUT straight to object storage — bypasses apiClient since
-      // this must not carry JSON headers or the admin's bearer token.
-      const putResponse = await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
-      if (!putResponse.ok) {
-        throw new Error('Upload to storage failed');
-      }
-
-      await apiClient.post(`/customization/assets/${assetId}/confirm`);
-
-      return apiClient.post<CustomShapeListItem>('/admin/shapes', { name: name.trim(), sourceAssetId: assetId });
     },
     onSuccess: (shape) => {
-      toast.success('Shape uploaded — tracing an outline now awaiting review');
-      queryClient.invalidateQueries({ queryKey: ['shapes'] });
+      toast.success("Shape uploaded — tracing an outline now awaiting review");
+      queryClient.invalidateQueries({ queryKey: ["shapes"] });
       setOpen(false);
-      setName('');
+      setName("");
       setFile(null);
-      router.push(`/shapes/${shape.id}`);
+      router.push(`/shapes/placeholder?id=${encodeURIComponent(shape.id)}`);
     },
     onError: (err: unknown) => {
-      toast.error(err instanceof ApiError || err instanceof Error ? err.message : 'Failed to upload shape');
+      toast.error(
+        err instanceof ApiError || err instanceof Error
+          ? err.message
+          : "Failed to upload shape",
+      );
     },
     onSettled: () => setIsUploading(false),
   });
 
   const columns: DataTableColumn<CustomShapeListItem>[] = [
     {
-      header: 'Preview',
+      header: "Preview",
       cell: (row) =>
-        row.previewAssetId ? (
+        row.previewUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={`${API_BASE_URL}/customization/assets/${row.previewAssetId}/download-url`}
+            src={row.previewUrl}
             alt={row.name}
             className="h-10 w-10 rounded object-contain bg-muted"
           />
+        ) : row.clipPathType === "CSS_FUNCTION" ? (
+          <div className="h-10 w-10 rounded bg-slate-800" style={{ clipPath: row.clipPathValue }} />
         ) : (
-          <svg viewBox="0 0 1 1" className="h-10 w-10 rounded bg-muted p-1">
-            {row.clipPathType === 'SVG_PATH' && <path d={row.clipPathValue} fill="currentColor" className="text-slate-600" />}
-          </svg>
+          <div className="h-10 w-10 rounded bg-muted" />
         ),
     },
-    { header: 'Name', cell: (row) => row.name },
+    { header: "Name", cell: (row) => row.name },
     {
-      header: 'Origin',
-      cell: (row) => <Badge variant="outline">{row.origin === 'BUILT_IN' ? 'Built-in' : 'Uploaded'}</Badge>,
+      header: "Origin",
+      cell: (row) => <Badge variant="outline">{row.origin === "BUILT_IN" ? "Built-in" : "Uploaded"}</Badge>,
     },
-    { header: 'Price', cell: (row) => (row.priceMode === 'AREA_RATE' ? `Rs.${row.areaRatePerSqIn}/sq.in` : `Rs.${row.flatPrice}`) },
-    { header: 'Status', cell: (row) => <StatusBadge status={row.status} /> },
-    { header: 'Updated', cell: (row) => formatDate(row.createdAt) },
+    {
+      header: "Price",
+      cell: (row) => (row.priceMode === "AREA_RATE" ? `Rs.${row.areaRatePerSqIn}/sq.in` : `Rs.${row.flatPrice}`),
+    },
+    { header: "Status", cell: (row) => <StatusBadge status={row.status} /> },
+    { header: "Updated", cell: (row) => formatDate(row.createdAt) },
   ];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Custom Shapes</h1>
+          <div className="page-eyebrow">CUSTOMIZATION STUDIO</div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Shape detection
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Upload a photo of a shape to auto-trace an outline customers can pick in the customizer.
+            Built-in shapes and uploaded photos traced into outlines — all of it selectable in the
+            customizer once approved. Turn a photo into a custom shape; every detected outline stays
+            private until you approve it.
           </p>
         </div>
 
-        {hasPermission('shapes.create') && (
+        {hasPermission("shapes.create") && (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger
               render={
@@ -126,10 +138,17 @@ export default function ShapesPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="shape-name">Shape name</Label>
-                  <Input id="shape-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Dog Silhouette" />
+                  <Input
+                    id="shape-name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Dog Silhouette"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="shape-file">Image (plain/solid background works best)</Label>
+                  <Label htmlFor="shape-file">
+                    PNG or JPEG, up to 1 MB (plain background works best)
+                  </Label>
                   <Input
                     id="shape-file"
                     type="file"
@@ -141,18 +160,70 @@ export default function ShapesPage() {
               </div>
               <DialogFooter>
                 <Button
-                  disabled={!file || !name.trim() || createShapeMutation.isPending}
+                  disabled={
+                    !file || !name.trim() || createShapeMutation.isPending
+                  }
                   onClick={() => {
                     setIsUploading(true);
                     createShapeMutation.mutate();
                   }}
                 >
-                  {isUploading ? 'Uploading…' : 'Upload & Trace'}
+                  {isUploading ? "Uploading…" : "Upload & Trace"}
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         )}
+      </div>
+
+      <div className="shape-steps">
+        <div className="shape-step">
+          <span>01</span>
+          <div>
+            <strong>Upload a shape</strong>
+            <small>PNG or JPEG · up to 1 MB</small>
+          </div>
+        </div>
+        <div className="shape-step">
+          <span>
+            <ScanLine size={17} />
+          </span>
+          <div>
+            <strong>Detect the outline</strong>
+            <small>A silhouette traced automatically</small>
+          </div>
+        </div>
+        <div className="shape-step">
+          <span>03</span>
+          <div>
+            <strong>Review & publish</strong>
+            <small>Approved shapes appear in the customizer</small>
+          </div>
+        </div>
+      </div>
+      <div className="status-filters" aria-label="Filter custom shapes">
+        {[
+          ["ALL", "All shapes"],
+          ["PENDING", "Awaiting review"],
+          ["APPROVED", "Approved"],
+          ["REJECTED", "Rejected"],
+        ].map(([value, label]) => (
+          <button
+            key={value}
+            className={status === value ? "active" : ""}
+            aria-pressed={status === value}
+            onClick={() => setStatus(value)}
+          >
+            {label}
+            <span>
+              {
+                (data || []).filter(
+                  (shape) => value === "ALL" || shape.status === value,
+                ).length
+              }
+            </span>
+          </button>
+        ))}
       </div>
 
       {isLoading ? (
@@ -165,9 +236,13 @@ export default function ShapesPage() {
       ) : (
         <DataTable
           columns={columns}
-          data={data ?? []}
+          data={(data ?? []).filter(
+            (shape) => status === "ALL" || shape.status === status,
+          )}
           getRowKey={(row) => row.id}
-          onRowClick={(row) => router.push(`/shapes/${row.id}`)}
+          onRowClick={(row) =>
+            router.push(`/shapes/placeholder?id=${encodeURIComponent(row.id)}`)
+          }
           emptyMessage="No shapes uploaded yet."
         />
       )}

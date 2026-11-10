@@ -7,6 +7,7 @@ import { WishlistDrawer } from './WishlistDrawer';
 import { CustomizeModal } from './CustomizeModal';
 import { QuoteModal } from './QuoteModal';
 import { AccountModal } from './AccountModal';
+import { AddToCartConfirmationModal } from './AddToCartConfirmationModal';
 import { useShop } from '../context/ShopContext';
 import { Home, Layers, Sparkles, Heart, ShoppingBag } from 'lucide-react';
 
@@ -83,7 +84,7 @@ export const RootLayout: React.FC = () => {
     // Generic category page routes (from origin/main)
     const categoryRoutes = [
       'acrylic', 'posters', 'cork', 'yoga-fitness',
-      'home-decor', 'custom-prints', 'gifts', 'bulk-order', 'corporate-orders', 'designers-architects',
+      'home-decor', 'custom-prints', 'bulk-order', 'designers-architects',
       'wall-art', 'photo-frames',
       'devotional-art', 'scenery-landscape-art', 'tribal-ethnic-art', 'line-art',
       'motivational-posters', 'cork-art-patterns'
@@ -102,8 +103,16 @@ export const RootLayout: React.FC = () => {
       navigate('/cork');
       return;
     }
-    if (slug === 'corporate') {
-      navigate('/corporate-orders');
+    // Gifts & Occasions has no dedicated product listing — it goes to the
+    // "Shop by Occasion" hub instead.
+    if (slug === 'gifts') {
+      navigate('/occasions');
+      return;
+    }
+    // Corporate Orders has no dedicated product listing — it goes to the
+    // Bulk & Corporate Orders page instead.
+    if (slug === 'corporate' || slug === 'corporate-orders' || slug === 'corporate-printing') {
+      navigate('/bulk-order');
       return;
     }
     if (slug === 'bulk-orders') {
@@ -158,12 +167,13 @@ export const RootLayout: React.FC = () => {
         wishlistCount={wishlistIds.length}
         onOpenCart={() => setCartDrawerOpen(true)}
         onOpenWishlist={() => setWishlistDrawerOpen(true)}
-        onOpenQuote={() => setQuoteModalOpen(true)}
+        onOpenQuote={() => window.open('https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote', '_blank', 'noopener,noreferrer')}
         onSelectCategory={handleSelectCategory}
         onSearch={handleSearch}
         allProducts={allProducts}
         onOpenCustomize={onOpenCustomize}
         onOpenAccount={() => navigate('/account')}
+        onTrackOrder={() => setAccountModalOpen(true)}
       />
 
       {/* Main Routed Page Content */}
@@ -174,8 +184,9 @@ export const RootLayout: React.FC = () => {
       {/* Indian E-Commerce Footer */}
       <Footer
         onSelectCategory={handleSelectCategory}
-        onOpenQuote={() => setQuoteModalOpen(true)}
+        onOpenQuote={() => window.open('https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote', '_blank', 'noopener,noreferrer')}
         onOpenAccount={() => navigate('/account')}
+        onTrackOrder={() => setAccountModalOpen(true)}
       />
 
       {/* MOBILE BOTTOM NAVIGATION BAR - padding-bottom adds the device's own
@@ -288,6 +299,9 @@ export const RootLayout: React.FC = () => {
         isOpen={quoteModalOpen}
         onClose={() => setQuoteModalOpen(false)}
       />
+
+      {/* Add To Cart Confirmation Modal */}
+      <AddToCartConfirmationModal />
     </div>
   );
 };

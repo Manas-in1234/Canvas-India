@@ -766,6 +766,11 @@ enum MovementType {
 // distinguished by assetType. ownerType/ownerId is a polymorphic pair
 // (e.g. "Customer"/customerId) rather than a hard FK, matching the doc.
 model Asset {
+  // Set when stored as raw bytes in Postgres instead of S3/MinIO — used by
+  // the Cloudflare Workers deployment, which has no S3 client/filesystem
+  // access; storageKey is still required/unique there as a logical key,
+  // it just doesn't point at a real object when contentBytes is set.
+  contentBytes Bytes?            @map("content_bytes")
   id           String            @id @default(uuid())
   ownerType    String            @map("owner_type") // e.g. "Customer"
   ownerId      String            @map("owner_id")
@@ -819,6 +824,11 @@ enum AssetUploadStatus {
 // hardcoded SVG def (heart). clipPathType/clipPathValue is a generic pair
 // that can hold either, since forcing every shape into svgPathData's
 // normalized-SVG-path assumption doesn't fit the CSS-function ones.
+//
+// The Cloudflare Workers deployment (worker-shapes.ts) still writes/reads
+// this table under the original field name svgPathData for compatibility —
+// see that file's note on why clipPathValue is the one true column and
+// svgPathData is kept as an alias in the Workers-side query shape only.
 model CustomShape {
   id                String            @id @default(uuid())
   name              String

@@ -193,7 +193,7 @@ export const DesignersArchitectsPage: React.FC = () => {
               <ShieldCheck className="w-6 h-6 text-emerald-600" />
               <div className="font-bold text-sm text-stone-900">Dedicated Account Manager</div>
               <p className="text-xs text-stone-500 leading-relaxed">
-                Single point of contact for pre-production color proofs, CAD scaling, site deliveries, and GST invoicing.
+                Single point of contact for pre-production color proofs, CAD scaling, site deliveries, and dedicated account support.
               </p>
             </div>
 

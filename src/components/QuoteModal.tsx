@@ -22,6 +22,17 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const details = [
+      'Hi Canvas India, I would like to request a quote:',
+      `• Name: ${formData.name}`,
+      formData.company ? `• Company: ${formData.company}` : null,
+      `• Email: ${formData.email}`,
+      `• Phone: ${formData.phone}`,
+      `• Material: ${formData.material}`,
+      `• Quantity: ${formData.quantity}`,
+      formData.notes ? `• Notes: ${formData.notes}` : null,
+    ].filter(Boolean).join('\n');
+    window.open(`https://wa.me/917893051555?text=${encodeURIComponent(details)}`, '_blank', 'noopener,noreferrer');
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
@@ -53,7 +64,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose }) => {
             </div>
             <h4 className="text-lg font-bold text-stone-900">Quote Request Received!</h4>
             <p className="text-xs text-stone-500 max-w-sm mx-auto">
-              Our corporate fulfillment team will review your specifications and send a GST-compliant quotation within 4 business hours.
+              Our corporate fulfillment team will review your specifications and send a customized quotation within 4 business hours.
             </p>
           </div>
         ) : (

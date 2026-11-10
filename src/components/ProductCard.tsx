@@ -1,6 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Star, Heart, ArrowRight, Sparkles } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Star, Heart, ArrowRight, Sparkles, ShoppingCart } from 'lucide-react';
 import { Product } from '../types';
 
 interface MaterialOption {
@@ -31,6 +31,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   variant,
   materialOptions,
 }) => {
+  const navigate = useNavigate();
   return (
     <div className={`group flex flex-col justify-between text-left select-none ${variant === 'listing' ? 'p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-stone-200/70 hover:border-[#0E4A93]/40 hover:shadow-md transition-all duration-300' : ''}`}>
       <div>
@@ -110,19 +111,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* Pricing Row */}
-        <div className="flex items-baseline gap-1.5 mt-1">
-          <span className="text-sm sm:text-base font-extrabold text-stone-900">
-            ₹{product.price.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[11px] text-stone-400 line-through">
-            ₹{((product as any).compareAtPrice || product.originalPrice || Math.round(product.price * 1.3)).toLocaleString('en-IN')}
-          </span>
-          {product.discountPercent > 0 && (
-            <span className="text-[10px] font-bold text-emerald-700 hidden sm:inline">
-              {product.discountPercent}% off
-            </span>
-          )}
-        </div>
+        {(() => {
+          const rawCompare = (product as any).compareAtPrice || product.originalPrice;
+          const displayOriginalPrice = rawCompare && rawCompare > product.price
+            ? rawCompare
+            : Math.round(product.price * 1.35);
+          const displayDiscount = product.discountPercent && product.discountPercent > 0
+            ? product.discountPercent
+            : Math.max(15, Math.round(((displayOriginalPrice - product.price) / displayOriginalPrice) * 100));
+
+          return (
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className="text-sm sm:text-base font-extrabold text-stone-900">
+                ₹{product.price.toLocaleString('en-IN')}
+              </span>
+              <span className="text-[11px] text-stone-400 line-through">
+                ₹{displayOriginalPrice.toLocaleString('en-IN')}
+              </span>
+              {displayDiscount > 0 && (
+                <span className="text-[10px] font-bold text-emerald-700 hidden sm:inline">
+                  {displayDiscount}% off
+                </span>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Rating or New badge */}
         <div className="flex items-center gap-1.5 mt-1">
@@ -138,35 +151,45 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               <span className="text-stone-400 font-normal leading-none">• Handcrafted</span>
             </div>
           )}
-
-          {/* Customizable Indicator */}
-          {(product as any).customizationAvailable && (
-            <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-[#E8752A] bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200/60 leading-none ml-auto">
-              <Sparkles className="w-2.5 h-2.5" />
-              <span>Customizable</span>
-            </span>
-          )}
         </div>
       </div>
 
-      {/* Small Clean Action CTA */}
-      <div className="mt-2.5 pt-1.5 border-t border-stone-100 flex items-center justify-between">
-        <Link
-          to={`/products/${product.id}`}
-          className="text-[11px] font-bold text-[#0E4A93] hover:text-[#E8752A] flex items-center gap-1 transition-colors cursor-pointer"
-        >
-          <span>View Product</span>
-          <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-        </Link>
+      {/* Action CTA: Add to Cart & Customize First */}
+      <div className="mt-2.5 pt-1.5 border-t border-stone-100 flex items-center gap-1.5">
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
+            e.preventDefault();
             onAddToCart(product);
           }}
-          className="text-[11px] font-bold text-stone-700 hover:text-white hover:bg-[#E8752A] px-2 py-0.5 rounded transition-colors cursor-pointer"
+          className="flex-1 py-1.5 px-2 rounded-lg bg-[#0E4A93] hover:bg-[#09356A] text-white text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs"
+          title="Add directly to cart"
         >
-          + Add
+          <ShoppingCart className="w-3 h-3 shrink-0" />
+          <span className="truncate">Add to Cart</span>
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            const material = (product.categorySlug === 'acrylic' || product.material === 'acrylic') ? 'acrylic' : 'canvas';
+            const queryParams = new URLSearchParams();
+            if (product.image) {
+              queryParams.set('prefillImage', product.image);
+            }
+            if (product.name) {
+              queryParams.set('prefillName', product.name);
+            }
+            const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+            navigate(`/customize/${material}/single${queryString}`);
+          }}
+          className="flex-1 py-1.5 px-2 rounded-lg bg-orange-50 hover:bg-orange-100 text-[#E8752A] border border-orange-200 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs"
+          title="Customize before ordering"
+        >
+          <Sparkles className="w-3 h-3 text-[#E8752A] shrink-0" />
+          <span className="truncate">Customize</span>
         </button>
       </div>
     </div>

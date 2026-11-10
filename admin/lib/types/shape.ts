@@ -9,6 +9,11 @@ export interface CustomShapeListItem {
   origin: ShapeOrigin;
   sourceAssetId: string | null;
   previewAssetId: string | null;
+  // Set by the Workers-side WorkerShapes.present() as a base64 data: URI
+  // from Asset.contentBytes — the NestJS/S3 deployment instead serves the
+  // preview via GET /customization/assets/:id/download-url using
+  // previewAssetId, so this stays optional.
+  previewUrl?: string | null;
   clipPathType: ShapeClipPathType;
   clipPathValue: string;
   shapeType: string | null;

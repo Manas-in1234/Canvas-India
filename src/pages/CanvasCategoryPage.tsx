@@ -8,7 +8,6 @@ import {
   FilterX,
   Sparkles,
   Check,
-  CheckCircle2,
   ShoppingCart
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
@@ -142,25 +141,7 @@ export const CanvasCategoryPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Key Trust Badges */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-stone-200/70 text-xs text-stone-600">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">380 GSM Cotton Canvas</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Ready to Hang</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Fade-Resistant Inks</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-semibold">Pan-India Delivery</span>
-                </div>
-              </div>
+
 
             </div>
 
@@ -168,21 +149,12 @@ export const CanvasCategoryPage: React.FC = () => {
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-3xl overflow-hidden border border-stone-200 shadow-xl bg-stone-100 group aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3]">
                 <img
-                  src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1200&auto=format&fit=crop&q=80"
-                  alt="Canvas Prints and Wall Art in Living Room"
+                  src="/assets/canvas/canvas-gold-teal-leaves.webp"
+                  alt="Canvas Prints and Wall Art"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/10 pointer-events-none" />
-
-                {/* Floating Highlight Badge */}
-                <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-md border border-stone-200/80 flex items-center gap-2.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <div>
-                    <div className="text-[11px] font-black text-stone-900 leading-tight">Museum Cotton Canvas</div>
-                    <div className="text-[10px] text-stone-500">Starting from ₹499 | Up to 38% OFF</div>
-                  </div>
-                </div>
 
               </div>
             </div>
@@ -398,22 +370,6 @@ export const CanvasCategoryPage: React.FC = () => {
                 </span>
                 <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
                 <ShopByCategoryFilter selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
-              </div>
-
-              {/* Quality & Delivery Assurance Strip in Sidebar */}
-              <div className="pt-2 border-t border-stone-100 space-y-2 text-[11px] text-stone-500">
-                <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>100% Cotton Canvas (380 GSM)</span>
-                </div>
-                <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Ready to Hang with Hardware</span>
-                </div>
-                <div className="flex items-center gap-2 text-stone-700 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Free Insured Delivery on ₹999+</span>
-                </div>
               </div>
 
             </aside>

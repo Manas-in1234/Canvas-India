@@ -9,12 +9,12 @@ const BLUE = '#0E4A93';
 const ORANGE = '#E8752A';
 
 const FESTIVALS = [
-  { name: 'Diwali', emoji: '🪔' },
-  { name: 'Christmas', emoji: '🎄' },
-  { name: 'New Year', emoji: '🎉' },
-  { name: 'Anniversary', emoji: '💞' },
-  { name: 'Wedding', emoji: '💍' },
-  { name: 'Birthday', emoji: '🎂' },
+  { name: 'Diwali', emoji: '🪔', slug: 'diwali' },
+  { name: 'Christmas', emoji: '🎄', slug: 'christmas' },
+  { name: 'New Year', emoji: '🎉', slug: 'new-year' },
+  { name: 'Anniversary', emoji: '💞', slug: 'anniversary' },
+  { name: 'Wedding', emoji: '💍', slug: 'wedding' },
+  { name: 'Birthday', emoji: '🎂', slug: 'birthday' },
 ];
 
 const Container: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
@@ -99,7 +99,7 @@ export const FestiveOffersPage: React.FC = () => {
               <button
                 key={f.name}
                 type="button"
-                onClick={() => navigate(`/gifts?sub=${encodeURIComponent(f.name)}`)}
+                onClick={() => navigate(`/occasions/${f.slug}`)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white border border-stone-200 hover:border-[#0E4A93]/40 hover:shadow-md transition-all cursor-pointer"
               >
                 <span className="text-lg leading-none">{f.emoji}</span>

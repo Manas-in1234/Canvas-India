@@ -57,7 +57,15 @@ export const SelectLyricTemplateModal: React.FC<SelectLyricTemplateModalProps> =
 
   const filteredTemplates = activeCategory === 'all'
     ? LYRIC_CANVAS_TEMPLATES
-    : LYRIC_CANVAS_TEMPLATES.filter((t) => t.category === activeCategory);
+    : LYRIC_CANVAS_TEMPLATES.filter((t) => {
+        if (activeCategory === 'artwork') {
+          return t.category === 'artwork' || (t.category as string) === 'wedding' || (t.category as string) === 'first_dance' || (t.category as string) === 'couples';
+        }
+        if (activeCategory === 'quote_art') {
+          return t.category === 'quote_art' || (t.category as string) === 'vows' || (t.category as string) === 'anniversary';
+        }
+        return t.category === activeCategory;
+      });
 
   return (
     <div
@@ -178,6 +186,11 @@ export const SelectLyricTemplateModal: React.FC<SelectLyricTemplateModalProps> =
                       src={template.previewImage}
                       alt={template.name}
                       loading="lazy"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.onerror = null;
+                        target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="100%" height="100%" fill="%23f8fafc"/><rect x="16" y="16" width="368" height="268" rx="8" fill="%23ffffff" stroke="%23cbd5e1" stroke-width="1.5"/><text x="200" y="140" font-family="sans-serif" font-size="13" font-weight="bold" fill="%230E4A93" text-anchor="middle">${encodeURIComponent(template.name.slice(0, 35))}</text><text x="200" y="165" font-family="sans-serif" font-size="11" fill="%2364748b" text-anchor="middle">Lyric on Canvas</text></svg>`;
+                      }}
                       className="w-full h-full object-contain p-2 group-hover:scale-103 transition-transform duration-200"
                     />
                   </div>

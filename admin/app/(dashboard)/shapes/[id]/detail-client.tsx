@@ -17,8 +17,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api/v1';
-
 function ShapePreview({ shape }: { shape: CustomShapeListItem }) {
   if (shape.clipPathType === 'SVG_PATH') {
     return (
@@ -27,19 +25,26 @@ function ShapePreview({ shape }: { shape: CustomShapeListItem }) {
       </svg>
     );
   }
-  // CSS_FUNCTION shapes (inset()/circle()/polygon()/ellipse()) can't be
-  // rendered as an SVG <path> — apply them as an actual CSS clip-path on a
-  // filled block instead, which renders identically to how the storefront does it.
+  // CSS_FUNCTION shapes (inset()/circle()/polygon()/ellipse() — most
+  // built-ins) can't be rendered as an SVG <path>; apply the CSS clip-path
+  // directly on a filled block instead, same as the storefront does.
   return <div className="aspect-square w-full rounded-md border bg-slate-800" style={{ clipPath: shape.clipPathValue }} />;
 }
 
-export function ShapeDetailClient({ id }: { id: string }) {
+export function ShapeDetailClient({ id: initialId }: { id: string }) {
+  const [id, setId] = useState(initialId);
+  useEffect(() => {
+    const queryId = new URLSearchParams(window.location.search).get('id');
+    const pathId = window.location.pathname.split('/').filter(Boolean).pop();
+    setId(queryId || (pathId !== 'placeholder' ? pathId : '') || initialId);
+  }, [initialId]);
   const { hasPermission } = usePermission();
-  const queryClient = useQueryClient();
   const canManage = hasPermission('shapes.create');
+  const queryClient = useQueryClient();
 
   const { data: shape, isLoading, isError } = useQuery({
     queryKey: ['shapes', id],
+    enabled: !!id && id !== 'placeholder',
     queryFn: () => apiClient.get<CustomShapeListItem>(`/admin/shapes/${id}`),
   });
 
@@ -142,10 +147,10 @@ export function ShapeDetailClient({ id }: { id: string }) {
               <CardTitle className="text-base">Source photo</CardTitle>
             </CardHeader>
             <CardContent>
-              {shape.previewAssetId ? (
+              {shape.previewUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={`${API_BASE_URL}/customization/assets/${shape.previewAssetId}/download-url`}
+                  src={shape.previewUrl}
                   alt={shape.name}
                   className="w-full rounded-md border bg-muted object-contain"
                 />
