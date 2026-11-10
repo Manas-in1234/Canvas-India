@@ -3865,6 +3865,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [liveMaterialGrades, setLiveMaterialGrades] = useState<OptionCategoryItemDto[]>([]);
   const [liveLaminations, setLiveLaminations] = useState<OptionCategoryItemDto[]>([]);
   const [liveFrames, setLiveFrames] = useState<OptionCategoryItemDto[]>([]);
+  // Acrylic-only: backing color behind the clear sheet, and surface finish
+  // (gloss/matte) coating — admin-managed via the "Backgrounds"/"Finish"
+  // option categories. "Frosted Backing" and "Diamond Beveled Edge" rows
+  // under 'finish' are excluded here: the former duplicates a backgrounds
+  // item, the latter is an edge treatment, not a surface finish — both stay
+  // in the admin catalog for now, just not surfaced in this picker.
+  const [liveBacking, setLiveBacking] = useState<OptionCategoryItemDto[]>([]);
+  const [liveFinish, setLiveFinish] = useState<OptionCategoryItemDto[]>([]);
   useEffect(() => {
     let cancelled = false;
     const material = activeMaterial === 'acrylic' ? 'ACRYLIC' : 'CANVAS';
@@ -3875,7 +3883,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       fetchOptionCategoryItems('material_grade'),
       fetchOptionCategoryItems('lamination'),
       fetchOptionCategoryItems('frame'),
-    ]).then(([wrapStyles, hardware, displayOptions, materialGrades, laminations, frames]) => {
+      fetchOptionCategoryItems('backgrounds', 'ACRYLIC'),
+      fetchOptionCategoryItems('finish', 'ACRYLIC'),
+    ]).then(([wrapStyles, hardware, displayOptions, materialGrades, laminations, frames, backing, finish]) => {
       if (cancelled) return;
       setLiveWrapStyles(wrapStyles);
       setLiveHardware(hardware);
@@ -3883,6 +3893,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setLiveMaterialGrades(materialGrades);
       setLiveLaminations(laminations);
       setLiveFrames(frames);
+      setLiveBacking(backing);
+      setLiveFinish(finish.filter((item) => {
+        const extraId = item.extras?.id as string | undefined;
+        return extraId !== 'frosted-backing' && extraId !== 'diamond-bevel';
+      }));
     });
     return () => {
       cancelled = true;
@@ -3957,6 +3972,39 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }));
   }, [liveFrames]);
 
+  // Inline fallback for the two brand-new acrylic categories — matches the
+  // real seeded admin data, used only if the live fetch comes back empty.
+  const liveOrFallbackBacking = useMemo(() => {
+    if (liveBacking.length === 0) {
+      return [
+        { id: 'transparent', label: 'Transparent (Clear Optical)', hex: 'transparent', price: 0 },
+        { id: 'white', label: 'Solid White Opaque Backing', hex: '#FFFFFF', price: 0 },
+        { id: 'black', label: 'Solid Black Opaque Backing', hex: '#000000', price: 0 },
+        { id: 'frosted', label: 'Frosted Translucent Backing', hex: 'rgba(255, 255, 255, 0.65)', price: 0 },
+      ];
+    }
+    return liveBacking.map((item) => ({
+      id: (item.extras?.id as string) ?? item.id,
+      label: item.label,
+      hex: (item.extras?.hex as string) ?? '#FFFFFF',
+      price: Number(item.flatPrice),
+    }));
+  }, [liveBacking]);
+
+  const liveOrFallbackFinish = useMemo(() => {
+    if (liveFinish.length === 0) {
+      return [
+        { id: 'high-gloss', label: 'High Gloss Clear', price: 0 },
+        { id: 'anti-glare', label: 'Anti-Glare Matte', price: 180 },
+      ];
+    }
+    return liveFinish.map((item) => ({
+      id: (item.extras?.id as string) ?? item.id,
+      label: item.label,
+      price: Number(item.flatPrice),
+    }));
+  }, [liveFinish]);
+
   const filteredShapes = useMemo(() => {
     let list = CANVAS_SHAPES;
     if (selectedProductType?.supportedShapeIds && selectedProductType.supportedShapeIds.length > 0) {
@@ -3978,6 +4026,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [borderHexInput, setBorderHexInput] = useState<string>('#FFFFFF');
   const [selectedFrameId, setSelectedFrameId] = useState<string>('no-frame');
   const [expandedFrameCategory, setExpandedFrameCategory] = useState<'standard' | 'premium' | 'floating'>('floating');
+
+  // Acrylic-only: backing color behind the clear sheet, and surface finish.
+  const [selectedBackingId, setSelectedBackingId] = useState<string>('transparent');
+  const [selectedFinishId, setSelectedFinishId] = useState<string>('high-gloss');
 
   // Thickness & Physical Depth Options (Canvas Stretcher & Acrylic Cast Depth)
   const [selectedThicknessId, setSelectedThicknessId] = useState<string>('thin-gallery');
@@ -5247,6 +5299,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         selectedHardwareId,
         selectedDisplayOptionId,
         selectedLaminationId,
+        selectedBackingId,
+        selectedFinishId,
         selectedMaterialId,
         quantity,
         textElements: textElements.filter((t) => Boolean(t.text && t.text.trim())),
@@ -5304,6 +5358,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       }
       if (saved?.selectedThicknessId) {
         setSelectedThicknessId(saved.selectedThicknessId);
+      }
+      if (saved?.selectedBackingId) {
+        setSelectedBackingId(saved.selectedBackingId);
+      }
+      if (saved?.selectedFinishId) {
+        setSelectedFinishId(saved.selectedFinishId);
       }
       if (saved?.customThicknessInches !== undefined) {
         setCustomThicknessInches(saved.customThicknessInches);
@@ -5417,6 +5477,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const lamination = liveOrFallbackLaminations.find((l) => l.id === selectedLaminationId);
     if (lamination) price += lamination.price;
 
+    if (activeMaterial === 'acrylic') {
+      const backing = liveOrFallbackBacking.find((b) => b.id === selectedBackingId);
+      if (backing) price += backing.price;
+      const finish = liveOrFallbackFinish.find((f) => f.id === selectedFinishId);
+      if (finish) price += finish.price;
+    }
+
     if (selectedMaterialId === 'premium-cotton') price += 250;
     else if (selectedMaterialId === 'archival-cotton') price += 450;
 
@@ -5445,6 +5512,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     liveOrFallbackHardware,
     liveOrFallbackDisplayOptions,
     liveOrFallbackLaminations,
+    liveOrFallbackBacking,
+    liveOrFallbackFinish,
     activeMaterial,
     selectedWrapId,
     selectedThicknessId,
@@ -5455,6 +5524,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     customThicknessMm,
     selectedDisplayOptionId,
     selectedLaminationId,
+    selectedBackingId,
+    selectedFinishId,
     selectedMaterialId,
     quantity
   ]);
@@ -6594,6 +6665,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         mirrorImage,
         display: activeMaterial === 'canvas' ? liveOrFallbackDisplayOptions.find((d) => d.id === selectedDisplayOptionId)?.label : undefined,
         lamination: activeMaterial === 'canvas' ? liveOrFallbackLaminations.find((l) => l.id === selectedLaminationId)?.label : undefined,
+        backing: activeMaterial === 'acrylic' ? liveOrFallbackBacking.find((b) => b.id === selectedBackingId)?.label : undefined,
+        surfaceFinish: activeMaterial === 'acrylic' ? liveOrFallbackFinish.find((f) => f.id === selectedFinishId)?.label : undefined,
         retouching: retouchLabels,
         majorRetouchText: majorRetouchText || undefined,
         proofRequested,
@@ -10491,6 +10564,59 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </div>
               )}
 
+              {/* ==================== EDGE WRAP (admin-managed via wrap_style, canvas only) ==================== */}
+              {activeMaterial === 'canvas' && selectedProductTypeId !== 'canvas-banner' && (
+                <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
+                  <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider">Edge Wrap</span>
+                    <span className="text-[11px] font-semibold text-stone-200">{liveOrFallbackWrapStyles.length} options</span>
+                  </div>
+                  <div className="p-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {liveOrFallbackWrapStyles.map((w) => (
+                        <CustomizerOptionCard
+                          key={w.id}
+                          selected={selectedWrapId === w.id}
+                          onClick={() => setSelectedWrapId(w.id)}
+                          title={w.name}
+                          priceText={w.price === 0 ? 'Included' : `+₹${w.price}`}
+                          previewHeightClass="h-16 p-1.5"
+                          preview={
+                            <div className="w-12 h-12 mx-auto relative flex items-center justify-center">
+                              <div className="w-10 h-10 rounded border border-stone-300 relative overflow-hidden bg-stone-100 flex items-center justify-center">
+                                {w.id === 'full-bleed' && (
+                                  <div className="w-full h-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500" />
+                                )}
+                                {w.id === 'clear-edge' && (
+                                  <div className="w-full h-full p-1 bg-stone-200">
+                                    <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 rounded-xs border border-dashed border-white" />
+                                  </div>
+                                )}
+                                {w.id === 'white-border' && (
+                                  <div className="w-full h-full p-1.5 bg-white border border-stone-300">
+                                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
+                                  </div>
+                                )}
+                                {w.id === 'black-border' && (
+                                  <div className="w-full h-full p-1.5 bg-[#0F172A]">
+                                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
+                                  </div>
+                                )}
+                                {w.id === 'no-wrap' && (
+                                  <div className="w-full h-full p-1 bg-stone-300">
+                                    <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xs" />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          }
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* ==================== 2. BORDER SECTION (Matching Screenshot 1 & 3) ==================== */}
               <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
                 {/* Dark Section Header Bar */}
@@ -10546,38 +10672,35 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     />
                   </div>
 
-                  {/* Border Width Selection: Thin vs No Border */}
+                  {/* Border Width Selection (admin-managed via border_width) */}
                   <div className="grid grid-cols-2 gap-2">
-                    <CustomizerOptionCard
-                      selected={selectedBorderWidthId === 'thin'}
-                      onClick={() => setSelectedBorderWidthId('thin')}
-                      title="Thin"
-                      subtitle="4mm border"
-                      priceText="Free"
-                      previewHeightClass="h-12 p-1"
-                      preview={
-                        <div
-                          className="w-8 h-8 rounded mx-auto p-0.5 shadow-2xs"
-                          style={{ backgroundColor: selectedBorderColor }}
-                        >
-                          <div className="w-full h-full rounded-2xs bg-stone-200" />
-                        </div>
-                      }
-                    />
-
-                    <CustomizerOptionCard
-                      selected={selectedBorderWidthId === 'none'}
-                      onClick={() => setSelectedBorderWidthId('none')}
-                      title="No Border"
-                      subtitle="Border-free edge"
-                      priceText="Free"
-                      previewHeightClass="h-12 p-1"
-                      preview={
-                        <div className="w-8 h-8 rounded border border-dashed border-stone-300 mx-auto bg-stone-50 flex items-center justify-center">
-                          <div className="w-6 h-6 rounded-2xs bg-stone-200" />
-                        </div>
-                      }
-                    />
+                    {liveOrFallbackBorderWidths.map((bw) => {
+                      const price = liveBorderWidthPrices[bw.id] || 0;
+                      return (
+                        <CustomizerOptionCard
+                          key={bw.id}
+                          selected={selectedBorderWidthId === bw.id}
+                          onClick={() => setSelectedBorderWidthId(bw.id)}
+                          title={bw.label}
+                          priceText={price === 0 ? 'Free' : `+₹${price}`}
+                          previewHeightClass="h-12 p-1"
+                          preview={
+                            bw.id === 'none' ? (
+                              <div className="w-8 h-8 rounded border border-dashed border-stone-300 mx-auto bg-stone-50 flex items-center justify-center">
+                                <div className="w-6 h-6 rounded-2xs bg-stone-200" />
+                              </div>
+                            ) : (
+                              <div
+                                className="w-8 h-8 rounded mx-auto shadow-2xs"
+                                style={{ backgroundColor: selectedBorderColor, padding: Math.max(1, Math.min(4, bw.widthPx / 3)) }}
+                              >
+                                <div className="w-full h-full rounded-2xs bg-stone-200" />
+                              </div>
+                            )
+                          }
+                        />
+                      );
+                    })}
                   </div>
 
                   {/* Flexible Custom Color Selection: Native Picker + Hex + Swatches */}
@@ -10628,19 +10751,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         </div>
                       </div>
 
-                      {/* Quick Preset Swatches Palette */}
+                      {/* Quick Preset Swatches Palette (admin-managed via border_color) */}
                       <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                        {[
-                          { name: 'White', hex: '#FFFFFF' },
-                          { name: 'Black', hex: '#000000' },
-                          { name: 'Charcoal', hex: '#334155' },
-                          { name: 'Warm Cream', hex: '#FDF8F0' },
-                          { name: 'Royal Gold', hex: '#D4AF37' },
-                          { name: 'Silver Slate', hex: '#94A3B8' },
-                          { name: 'Navy Blue', hex: '#1E3A8A' },
-                          { name: 'Crimson Red', hex: '#DC2626' },
-                          { name: 'Forest Green', hex: '#16A34A' }
-                        ].map((c) => (
+                        {liveOrFallbackBorderColors.map((c) => (
                           <button
                             key={c.hex}
                             type="button"
@@ -10670,7 +10783,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
                     <span className="text-xs font-bold uppercase tracking-wider">Frames</span>
                     <span className="text-[11px] font-semibold text-stone-200">
-                      {FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name || 'No Frame'}
+                      {liveOrFallbackFrames.find((f) => f.id === selectedFrameId)?.name || 'No Frame'}
                     </span>
                   </div>
 
@@ -10734,13 +10847,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                       {expandedFrameCategory === 'floating' && (
                         <div className="p-3 space-y-2.5">
+                          {/* Admin-managed via the 'frame' option category */}
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                            {[
-                              { id: 'black-frame', name: 'Black Floating Frame', price: 1798.00 },
-                              { id: 'wood-frame', name: 'Brown Floating Frame', price: 1798.00 },
-                              { id: 'white-frame', name: 'White Floating Frame', price: 1798.00 },
-                              { id: 'gold-frame', name: 'Metal Floating Frame', price: 1798.00 }
-                            ].map((ff) => {
+                            {liveOrFallbackFrames.filter((ff) => ff.id !== 'no-frame').map((ff) => {
                               const isSelected = selectedFrameId === ff.id;
                               return (
                                 <CustomizerOptionCard
@@ -10898,11 +11007,71 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </div>
               )}
 
-              {/* 2. Hardware Option & Style */}
+              {/* 2. Acrylic Backing & Surface Finish (admin-managed) */}
+              {activeMaterial === 'acrylic' && (
+                <div className="space-y-2.5 pt-3 border-t border-stone-200">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">2. Backing</label>
+                    <span className="text-[11px] font-bold text-[#0E4A93]">{liveOrFallbackBacking.length} options</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {liveOrFallbackBacking.map((b) => {
+                      const isSelected = selectedBackingId === b.id;
+                      return (
+                        <CustomizerOptionCard
+                          key={b.id}
+                          selected={isSelected}
+                          onClick={() => setSelectedBackingId(b.id)}
+                          title={b.label}
+                          priceText={b.price === 0 ? 'Included' : `+₹${b.price.toFixed(2)}`}
+                          previewHeightClass="h-16 p-1.5"
+                          preview={
+                            <div
+                              className="w-10 h-10 rounded-full mx-auto border border-stone-300 shadow-2xs"
+                              style={{
+                                backgroundColor: b.hex === 'transparent' ? undefined : b.hex,
+                                backgroundImage: b.hex === 'transparent'
+                                  ? 'repeating-conic-gradient(#d6d3d1 0% 25%, #f5f5f4 0% 50%)'
+                                  : undefined,
+                                backgroundSize: b.hex === 'transparent' ? '8px 8px' : undefined,
+                              }}
+                            />
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">Surface Finish</label>
+                    <span className="text-[11px] font-bold text-[#0E4A93]">{liveOrFallbackFinish.length} options</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {liveOrFallbackFinish.map((f) => {
+                      const isSelected = selectedFinishId === f.id;
+                      return (
+                        <CustomizerOptionCard
+                          key={f.id}
+                          selected={isSelected}
+                          onClick={() => setSelectedFinishId(f.id)}
+                          title={f.label}
+                          priceText={f.price === 0 ? 'Included' : `+₹${f.price.toFixed(2)}`}
+                          previewHeightClass="h-14 p-1.5"
+                          preview={
+                            <div className="w-10 h-10 rounded mx-auto bg-gradient-to-br from-sky-100 to-slate-200 border border-stone-300" />
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 3. Hardware Option & Style */}
               <div className={`space-y-2.5 ${selectedProductTypeId !== 'canvas-banner' ? 'pt-3 border-t border-stone-200' : ''}`}>
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">
-                    {selectedProductTypeId === 'canvas-banner' ? 'Hardware & Mounting Options' : '2. HARDWARE OPTION & STYLE'}
+                    {selectedProductTypeId === 'canvas-banner' ? 'Hardware & Mounting Options' : activeMaterial === 'acrylic' ? '3. HARDWARE OPTION & STYLE' : '2. HARDWARE OPTION & STYLE'}
                   </label>
                   {selectedProductTypeId === 'canvas-banner' && (
                     <span className="text-[11px] font-bold text-[#0E4A93]">{CANVAS_BANNER_HARDWARE_OPTIONS.length} options</span>
