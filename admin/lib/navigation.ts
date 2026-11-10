@@ -94,10 +94,16 @@ export const NAV_SECTIONS = [
     label: "Customization studio",
     links: [
       {
-        href: "/shapes",
-        label: "Shape detection",
-        icon: ScanLine,
-        permissions: ["shapes.view"],
+        href: "/customizer-products",
+        label: "Customizer products",
+        icon: Layers,
+        permissions: ["option_catalog.view"],
+      },
+      {
+        href: "/sizes",
+        label: "Select size",
+        icon: Ruler,
+        permissions: ["size_presets.view"],
       },
       {
         href: "/option-categories",
@@ -106,10 +112,10 @@ export const NAV_SECTIONS = [
         permissions: ["option_catalog.view"],
       },
       {
-        href: "/sizes",
-        label: "Size presets",
-        icon: Ruler,
-        permissions: ["size_presets.view"],
+        href: "/shapes",
+        label: "Shape detection",
+        icon: ScanLine,
+        permissions: ["shapes.view"],
       },
       {
         href: "/pricing",

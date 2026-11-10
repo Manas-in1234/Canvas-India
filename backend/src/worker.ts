@@ -605,6 +605,9 @@ export default {
           if (err?.code === 'P2025') {
             return jsonResponse({ statusCode: 404, message: 'Record not found' }, 404, request);
           }
+          if (err?.code === 'P2002') {
+            return jsonResponse({ statusCode: 409, message: 'A style with that identifier already exists for this material' }, 409, request);
+          }
           throw err;
         }
         return jsonResponse({ message: 'Not found' }, 404, request);

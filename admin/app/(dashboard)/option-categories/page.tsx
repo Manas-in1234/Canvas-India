@@ -51,9 +51,10 @@ const TABS: TabBlock[] = [
         heading: 'Product styles',
         entries: [
           {
-            kind: 'fixed',
-            title: 'Canvas and Acrylic styles (Single Print, Wall Display, Split, ...)',
-            note: 'Still fixed in code, so styles cannot be added or removed from here yet.',
+            kind: 'link',
+            title: 'Customizer products',
+            href: '/customizer-products',
+            note: 'Add, hide, remove and reorder the Canvas and Acrylic style cards (Single Print, Wall Display, Split, ...).',
           },
         ],
       },
@@ -67,7 +68,7 @@ const TABS: TabBlock[] = [
         entries: [
           {
             kind: 'link',
-            title: 'Size presets',
+            title: 'Select size',
             href: '/sizes',
             note: 'Every size, its price and its panel layout, per product style.',
           },

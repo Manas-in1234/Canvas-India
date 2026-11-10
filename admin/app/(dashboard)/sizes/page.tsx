@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import type { SizePresetListItem } from '@/lib/types/size-preset';
+import type { CustomizerProductType } from '@/lib/types/customizer-product-type';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,22 +40,35 @@ export default function SizesPage() {
     queryFn: () => apiClient.get<SizePresetListItem[]>('/admin/size-presets'),
   });
 
+  // Style names come from the customizer's PRODUCTS tab data, so a style added
+  // there shows its real name here instead of a reconstructed identifier.
+  const { data: styles } = useQuery({
+    queryKey: ['customizer-product-types'],
+    queryFn: () => apiClient.get<CustomizerProductType[]>('/admin/customizer-product-types'),
+  });
+  const styleBySlug = new Map((styles ?? []).map((s) => [s.slug, s]));
+  const labelFor = (productTypeId: string) => {
+    const style = styleBySlug.get(productTypeId);
+    return style ? `${style.name} (${style.material === 'CANVAS' ? 'Canvas' : 'Acrylic'})` : humanizeProductTypeId(productTypeId);
+  };
+
   const groups = groupByProductType(data ?? []);
   const filteredEntries = Array.from(groups.entries()).filter(([productTypeId]) =>
-    humanizeProductTypeId(productTypeId).toLowerCase().includes(search.toLowerCase()),
+    labelFor(productTypeId).toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Sizes</h1>
+        <div className="page-eyebrow">CUSTOMIZER</div>
+        <h1 className="text-2xl font-semibold tracking-tight">Select Size</h1>
         <p className="text-sm text-muted-foreground">
-          Every size/panel preset a customer can pick on the customize page, grouped by product type.
+          The sizes a customer can pick in the customizer&apos;s SELECT SIZE tab, grouped by product style.
           Changes here show up on the storefront immediately.
         </p>
       </div>
 
-      <Input placeholder="Search product type..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
+      <Input placeholder="Search style..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
 
       {isLoading ? (
         <div className="space-y-2">
@@ -74,7 +88,7 @@ export default function SizesPage() {
               onClick={() => router.push(`/sizes/placeholder?id=${encodeURIComponent(productTypeId)}`)}
             >
               <CardHeader>
-                <CardTitle className="text-base">{humanizeProductTypeId(productTypeId)}</CardTitle>
+                <CardTitle className="text-base">{labelFor(productTypeId)}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Badge variant="outline">{presets.length} sizes</Badge>
