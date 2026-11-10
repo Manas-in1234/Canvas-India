@@ -67,6 +67,9 @@ export function mapBackendProductToFrontend(raw: any, fallbackCatalog: Product[]
       description: raw.description ?? '', price, originalPrice, compareAtPrice: originalPrice,
       discountPercent: originalPrice > 0 ? Math.round((originalPrice - price) / originalPrice * 100) : 0,
       status: raw.status, rating: raw.storefront.rating ?? null,
+      availableSizes: raw.storefront.sizes ?? [], availableFinishes: raw.storefront.finishes ?? [],
+      customizationAvailable: raw.storefront.customizable ?? raw.storefront.customizationAvailable,
+      images: [raw.storefront.image, ...(raw.storefront.images ?? []).filter((url: string) => url !== raw.storefront.image)].filter(Boolean),
     };
   }
 
