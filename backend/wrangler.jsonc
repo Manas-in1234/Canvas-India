@@ -3,11 +3,15 @@
   "name": "canvas-india-backend",
   "main": "src/worker.ts",
   "compatibility_date": "2026-01-01",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "rules": [
     {
       "type": "CompiledWasm",
-      "globs": ["**/*.wasm"],
+      "globs": [
+        "**/*.wasm"
+      ],
       "fallthrough": true
     }
   ],
@@ -22,5 +26,11 @@
     "@nestjs/microservices/microservices-module.js": "./src/common/shims/empty.ts",
     "@nestjs/websockets": "./src/common/shims/empty.ts",
     "@nestjs/websockets/socket-module.js": "./src/common/shims/empty.ts"
-  }
+  },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "9ad33f28ae1b4c28bca0198e28052d60"
+    }
+  ]
 }

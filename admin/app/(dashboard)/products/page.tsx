@@ -25,6 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 export default function ProductsPage() {
+  const [category, setCategory] = useState("ALL");
   const [status, setStatus] = useState("ALL");
   const [pendingDelete, setPendingDelete] = useState<ProductListItem | null>(null);
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function ProductsPage() {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["products"],
-    queryFn: () => apiClient.get<ProductListItem[]>("/products"),
+    queryFn: () => apiClient.get<ProductListItem[]>("/products?admin=1"),
   });
 
   const deleteMutation = useMutation({
@@ -54,7 +55,7 @@ export default function ProductsPage() {
   const columns: DataTableColumn<ProductListItem>[] = [
     {
       header: "Name",
-      cell: (row) => <span className="font-medium">{row.name}</span>,
+      cell: (row) => <span className="flex items-center gap-3">{row.storefront?.image && <img src={row.storefront.image.startsWith("/") ? `https://canvassindia.com${row.storefront.image}` : row.storefront.image} alt="" className="h-12 w-12 rounded object-cover" />}<span className="font-medium">{row.name}</span></span>,
     },
     { header: "Type", cell: (row) => row.productType?.name ?? "—" },
     {
@@ -141,10 +142,13 @@ export default function ProductsPage() {
               </button>
             ))}
           </div>
+          <div className="status-filters" aria-label="Product category">
+            {['ALL', ...Array.from(new Set((data ?? []).map(p => p.storefront?.category ?? p.categories?.[0]?.category?.name ?? 'Other')))].map(value => <button key={value} className={category === value ? 'active' : ''} onClick={() => setCategory(value)}>{value === 'ALL' ? 'All categories' : value}</button>)}
+          </div>
           <DataTable
             columns={columns}
             data={(data ?? []).filter(
-              (row) => status === "ALL" || row.status === status,
+              (row) => (status === "ALL" || row.status === status) && (category === "ALL" || (row.storefront?.category ?? row.categories?.[0]?.category?.name ?? "Other") === category),
             )}
             getRowKey={(row) => row.id}
             onRowClick={(row) =>

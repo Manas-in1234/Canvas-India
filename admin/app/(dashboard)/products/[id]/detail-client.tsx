@@ -51,6 +51,8 @@ export function ProductDetailClient({ id: initialId }: { id: string }) {
     queryFn: () => apiClient.get<ProductDetail>(`/products/${id}`),
   });
 
+  const [storefront, setStorefront] = useState<Record<string, any>>({});
+  const [status, setStatus] = useState("DRAFT");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [basePrice, setBasePrice] = useState("");
@@ -58,6 +60,8 @@ export function ProductDetailClient({ id: initialId }: { id: string }) {
 
   useEffect(() => {
     if (product) {
+      setStorefront(product.storefront ?? {});
+      setStatus(product.status);
       setName(product.name);
       setDescription(product.description ?? "");
       setBasePrice(product.basePrice);
@@ -120,6 +124,8 @@ export function ProductDetailClient({ id: initialId }: { id: string }) {
       name,
       description: description || undefined,
       basePrice,
+      storefront,
+      status,
       costPrice: costPrice || undefined,
     });
   };
@@ -162,6 +168,12 @@ export function ProductDetailClient({ id: initialId }: { id: string }) {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSave} className="space-y-4">
+              <Label>Visibility</Label><select className="w-full rounded border p-2" value={status} disabled={!canEdit} onChange={e => setStatus(e.target.value)}><option value="ACTIVE">Live</option><option value="DRAFT">Draft (hidden)</option></select>
+              {['category', 'categorySlug', 'subcategory', 'image', 'shortDescription', 'material', 'badge', 'stockStatus', 'shape', 'finish'].map(key => <div key={key} className="space-y-2"><Label>{key.replace(/([A-Z])/g, ' $1')}</Label><Input value={storefront[key] ?? ''} disabled={!hasPermission('products.edit')} onChange={e => setStorefront({...storefront, [key]: e.target.value})} /></div>)}
+              <div className="space-y-2"><Label>Original price</Label><Input type="number" min="0" step="0.01" value={storefront.originalPrice ?? ''} onChange={e => setStorefront({...storefront, originalPrice: Number(e.target.value)})} /></div>
+              {['images', 'sizes', 'finishes', 'features', 'tags', 'occasions', 'availableThicknesses', 'availableStyles', 'availableBases', 'availablePapers', 'applications'].map(key => <div key={key} className="space-y-2"><Label>{key.replace(/([A-Z])/g, ' $1')} (one per line)</Label><textarea className="w-full rounded border p-2" rows={3} value={(storefront[key] ?? []).join('\n')} disabled={!hasPermission('products.edit')} onChange={e => setStorefront({...storefront, [key]: e.target.value.split('\n').filter(Boolean)})} /></div>)}
+              {['customizable', 'uploadRequired', 'featured', 'bestseller'].map(key => <label key={key} className="flex gap-2"><input type="checkbox" checked={!!storefront[key]} disabled={!hasPermission('products.edit')} onChange={e => setStorefront({...storefront, [key]: e.target.checked})} />{key}</label>)}
+
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
                 <Input

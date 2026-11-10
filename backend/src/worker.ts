@@ -871,7 +871,13 @@ export default {
       // -------------------------------------------------------------
       if (pathname === '/api/v1/products') {
         if (method === 'GET') {
-          return jsonResponse(await services.products.findAll(), 200, request);
+          if (query.admin === '1') {
+            const { user, error } = await authenticate(request, env, prisma);
+            if (error) return error;
+            const denied = checkPermission(user, ['products.view'], request);
+            if (denied) return denied;
+          }
+          return jsonResponse(await services.products.findAll(query.admin === '1'), 200, request);
         }
         if (method === 'POST') {
           const { user, error } = await authenticate(request, env, prisma);

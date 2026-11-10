@@ -172,6 +172,7 @@ model Collection {
 }
 
 model Product {
+  storefront Json?
   id              String              @id @default(uuid())
   name            String
   slug            String              @unique

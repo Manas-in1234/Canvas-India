@@ -11,6 +11,7 @@ export interface ProductCategoryLink {
 }
 
 export interface ProductListItem {
+  storefront?: Record<string, any>;
   id: string;
   name: string;
   slug: string;
