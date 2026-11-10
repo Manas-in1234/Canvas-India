@@ -916,11 +916,19 @@ export default {
       // -------------------------------------------------------------
       if (pathname === '/api/v1/products') {
         if (method === 'GET') {
-          // The admin and the public website share this URL. A signed-in admin
-          // sees every product (hidden and archived ones included, so they can
-          // be managed); everyone else only sees what is live on the website.
+          // Admin list: the admin app asks for it explicitly with ?admin=1, which
+          // needs a login with products.view. A signed-in admin who calls without
+          // the flag gets the same (so an older cached admin page keeps working).
+          // Everyone else only sees what is live on the website.
+          if (query.admin === '1') {
+            const { user, error } = await authenticate(request, env, prisma);
+            if (error) return error;
+            const denied = checkPermission(user, ['products.view'], request);
+            if (denied) return denied;
+            return jsonResponse(await services.products.findAll(true), 200, request);
+          }
           if (await isSignedInAdmin(request, env, prisma)) {
-            return jsonResponse(await services.products.findAll(), 200, request);
+            return jsonResponse(await services.products.findAll(true), 200, request);
           }
           return jsonResponse(await findPublicProducts(prisma), 200, request);
         }

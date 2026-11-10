@@ -86,6 +86,19 @@ describe('public website vs admin product list', () => {
     expect(prisma.product.findMany).not.toHaveBeenCalled();
   });
 
+  it('serves the explicit admin list (?admin=1) only to a signed-in admin with products.view', async () => {
+    expect((await call('/products?admin=1')).status).toBe(401);
+
+    permissions = ['orders.view'];
+    expect((await call('/products?admin=1', { admin: true })).status).toBe(403);
+
+    permissions = ['products.view'];
+    const response = await call('/products?admin=1', { admin: true });
+    expect(response.status).toBe(200);
+    expect(services.products.findAll).toHaveBeenCalledWith(true);
+    expect(prisma.product.findMany).not.toHaveBeenCalled();
+  });
+
   it('treats an invalid token as a visitor, not an admin', async () => {
     const response = await call('/products', { headers: { Authorization: 'Bearer not.a.token' } });
     expect(response.status).toBe(200);

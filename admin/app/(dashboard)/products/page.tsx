@@ -38,7 +38,7 @@ export default function ProductsPage() {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["products"],
-    queryFn: () => apiClient.get<ProductListItem[]>("/products"),
+    queryFn: () => apiClient.get<ProductListItem[]>("/products?admin=1"),
   });
 
   // Categories (product types) tell us which products are hidden because their
@@ -84,7 +84,7 @@ export default function ProductsPage() {
   const columns: DataTableColumn<ProductListItem>[] = [
     {
       header: "Name",
-      cell: (row) => <span className="font-medium">{row.name}</span>,
+      cell: (row) => <span className="flex items-center gap-3">{row.storefront?.image && <img src={row.storefront.image.startsWith("/") ? `https://canvassindia.com${row.storefront.image}` : row.storefront.image} alt="" className="h-12 w-12 rounded object-cover" />}<span className="font-medium">{row.name}</span></span>,
     },
     { header: "Category", cell: (row) => row.productType?.name ?? "—" },
     {

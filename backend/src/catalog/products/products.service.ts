@@ -11,9 +11,9 @@ export class ProductsService {
     private readonly auditService: AuditService,
   ) {}
 
-  findAll() {
+  findAll(admin = false) {
     return this.prisma.product.findMany({
-      where: { deletedAt: null },
+      where: { deletedAt: null, ...(admin ? {} : { status: 'ACTIVE' as const }) },
       include: { productType: true, categories: { include: { category: true } } },
       orderBy: { createdAt: 'desc' },
     });
@@ -46,6 +46,7 @@ export class ProductsService {
         productTypeId: dto.productTypeId,
         basePrice: dto.basePrice,
         costPrice: dto.costPrice,
+        storefront: dto.storefront,
       },
     });
   }
