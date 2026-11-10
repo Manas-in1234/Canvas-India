@@ -61,7 +61,10 @@ export default function OptionCategoriesPage() {
                   <button
                     key={variant.id}
                     className="flex w-full items-center justify-between rounded-md border p-3 text-left text-sm hover:bg-muted"
-                    onClick={() => hasPermission('option_catalog.view') && router.push(`/option-categories/${variant.id}`)}
+                    onClick={() =>
+                      hasPermission('option_catalog.view') &&
+                      router.push(`/option-categories/placeholder?id=${encodeURIComponent(variant.id)}`)
+                    }
                   >
                     <span className="flex items-center gap-2">
                       <Badge variant="outline">{variant.materialScope}</Badge>

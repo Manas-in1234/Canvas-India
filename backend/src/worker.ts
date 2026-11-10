@@ -401,6 +401,87 @@ export default {
         return jsonResponse({ message: 'Not found' }, 404, request);
       }
       // -------------------------------------------------------------
+      // Size presets — admin-managed size/panel options the storefront
+      // customize page live-fetches per product type.
+      // -------------------------------------------------------------
+      if (pathname === '/api/v1/size-presets' && method === 'GET') {
+        const productTypeId = query.productTypeId;
+        const shapeId = query.shapeId;
+        if (!productTypeId) return jsonResponse({ statusCode: 400, message: 'productTypeId is required' }, 400, request);
+        const presets = await prisma.sizePreset.findMany({
+          where: { productTypeId, isActive: true, ...(shapeId ? { shapeId } : {}) },
+          orderBy: { sortOrder: 'asc' },
+        });
+        return jsonResponse(presets, 200, request);
+      }
+      if (pathname === '/api/v1/admin/size-presets' || pathname.startsWith('/api/v1/admin/size-presets/')) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const isManage = method === 'POST' || method === 'PATCH' || method === 'PUT' || method === 'DELETE';
+        const denied = checkPermission(user, [isManage ? 'size_presets.manage' : 'size_presets.view'], request);
+        if (denied) return denied;
+
+        try {
+          if (method === 'PUT' && pathname === '/api/v1/admin/size-presets/reorder') {
+            const body = (await request.json()) as any;
+            const itemIds: string[] = body.itemIds || [];
+            await prisma.$transaction(
+              itemIds.map((presetId, index) =>
+                prisma.sizePreset.update({ where: { id: presetId, productTypeId: body.productTypeId }, data: { sortOrder: index } }),
+              ),
+            );
+            await services.audit.record({ adminUserId: user.id, action: 'SIZE_PRESETS_REORDERED', entityType: 'SizePreset', entityId: body.productTypeId });
+            const presets = await prisma.sizePreset.findMany({
+              where: { productTypeId: body.productTypeId },
+              orderBy: { sortOrder: 'asc' },
+            });
+            return jsonResponse(presets, 200, request);
+          }
+          if (method === 'GET' && pathname === '/api/v1/admin/size-presets') {
+            const presets = await prisma.sizePreset.findMany({
+              where: query.productTypeId ? { productTypeId: query.productTypeId } : undefined,
+              orderBy: [{ productTypeId: 'asc' }, { sortOrder: 'asc' }],
+            });
+            return jsonResponse(presets, 200, request);
+          }
+          if (method === 'POST' && pathname === '/api/v1/admin/size-presets') {
+            const body = (await request.json()) as any;
+            const maxSortOrder = await prisma.sizePreset.aggregate({
+              where: { productTypeId: body.productTypeId },
+              _max: { sortOrder: true },
+            });
+            const preset = await prisma.sizePreset.create({
+              data: { ...body, sortOrder: (maxSortOrder._max.sortOrder ?? -1) + 1 },
+            });
+            await services.audit.record({ adminUserId: user.id, action: 'SIZE_PRESET_CREATED', entityType: 'SizePreset', entityId: preset.id });
+            return jsonResponse(preset, 201, request);
+          }
+          const detailMatch = pathname.match(/^\/api\/v1\/admin\/size-presets\/([^/]+)$/);
+          if (detailMatch && method === 'GET') {
+            const preset = await prisma.sizePreset.findUnique({ where: { id: detailMatch[1] } });
+            if (!preset) return jsonResponse({ statusCode: 404, message: `Size preset ${detailMatch[1]} not found` }, 404, request);
+            return jsonResponse(preset, 200, request);
+          }
+          if (detailMatch && method === 'PATCH') {
+            const body = (await request.json()) as any;
+            const updated = await prisma.sizePreset.update({ where: { id: detailMatch[1] }, data: body });
+            await services.audit.record({ adminUserId: user.id, action: 'SIZE_PRESET_UPDATED', entityType: 'SizePreset', entityId: detailMatch[1] });
+            return jsonResponse(updated, 200, request);
+          }
+          if (detailMatch && method === 'DELETE') {
+            await prisma.sizePreset.delete({ where: { id: detailMatch[1] } });
+            await services.audit.record({ adminUserId: user.id, action: 'SIZE_PRESET_DELETED', entityType: 'SizePreset', entityId: detailMatch[1] });
+            return jsonResponse({ success: true }, 200, request);
+          }
+        } catch (err: any) {
+          if (err?.code === 'P2025') {
+            return jsonResponse({ statusCode: 404, message: 'Record not found' }, 404, request);
+          }
+          throw err;
+        }
+        return jsonResponse({ message: 'Not found' }, 404, request);
+      }
+      // -------------------------------------------------------------
       // 1. Health check
       // -------------------------------------------------------------
       if (pathname === '/api/v1/health' || pathname === '/health' || pathname === '/') {

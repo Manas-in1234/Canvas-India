@@ -12,6 +12,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const SHAPE_GENERIC_PRODUCT_TYPE_ID = '__shape_generic__';
 
+function humanizeProductTypeId(productTypeId: string): string {
+  if (productTypeId === SHAPE_GENERIC_PRODUCT_TYPE_ID) return 'Standard Shape Sizes';
+  return productTypeId
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 function groupByProductType(presets: SizePresetListItem[]) {
   const groups = new Map<string, SizePresetListItem[]>();
   for (const preset of presets) {
@@ -33,7 +41,7 @@ export default function SizesPage() {
 
   const groups = groupByProductType(data ?? []);
   const filteredEntries = Array.from(groups.entries()).filter(([productTypeId]) =>
-    productTypeId.toLowerCase().includes(search.toLowerCase()),
+    humanizeProductTypeId(productTypeId).toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -63,12 +71,10 @@ export default function SizesPage() {
             <Card
               key={productTypeId}
               className="cursor-pointer hover:bg-muted/50"
-              onClick={() => router.push(`/sizes/${encodeURIComponent(productTypeId)}`)}
+              onClick={() => router.push(`/sizes/placeholder?id=${encodeURIComponent(productTypeId)}`)}
             >
               <CardHeader>
-                <CardTitle className="text-base font-mono">
-                  {productTypeId === SHAPE_GENERIC_PRODUCT_TYPE_ID ? 'Standard Shape Sizes' : productTypeId}
-                </CardTitle>
+                <CardTitle className="text-base">{humanizeProductTypeId(productTypeId)}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Badge variant="outline">{presets.length} sizes</Badge>

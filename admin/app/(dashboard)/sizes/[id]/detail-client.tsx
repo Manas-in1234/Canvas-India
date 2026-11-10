@@ -8,6 +8,7 @@ import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import { apiClient, ApiError } from '@/lib/api-client';
 import type { SizePresetListItem } from '@/lib/types/size-preset';
 import { usePermission } from '@/lib/auth/use-permission';
+import { useRecordId } from '@/lib/use-record-id';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,13 +39,15 @@ const EMPTY_FORM: SizeFormState = {
   category: '',
 };
 
-export function SizesDetailClient({ productTypeId }: { productTypeId: string }) {
+export function SizesDetailClient({ productTypeId: initialProductTypeId }: { productTypeId: string }) {
+  const productTypeId = useRecordId(initialProductTypeId);
   const queryClient = useQueryClient();
   const { hasPermission } = usePermission();
   const canManage = hasPermission('size_presets.manage');
 
   const { data: allPresets, isLoading, isError } = useQuery({
     queryKey: ['size-presets', productTypeId],
+    enabled: !!productTypeId && productTypeId !== 'placeholder',
     queryFn: () => apiClient.get<SizePresetListItem[]>(`/admin/size-presets?productTypeId=${encodeURIComponent(productTypeId)}`),
   });
 

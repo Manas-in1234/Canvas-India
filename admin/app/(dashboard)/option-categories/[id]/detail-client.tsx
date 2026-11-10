@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import { apiClient, ApiError } from '@/lib/api-client';
 import type { OptionCategoryItem, OptionCategoryListItem, OptionPriceMode } from '@/lib/types/option-category';
 import { usePermission } from '@/lib/auth/use-permission';
+import { useRecordId } from '@/lib/use-record-id';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,13 +28,15 @@ interface ItemFormState {
 
 const EMPTY_FORM: ItemFormState = { label: '', description: '', imageUrl: '', priceMode: 'FLAT', flatPrice: '0', areaRatePerSqIn: '' };
 
-export function OptionCategoryDetailClient({ id }: { id: string }) {
+export function OptionCategoryDetailClient({ id: initialId }: { id: string }) {
+  const id = useRecordId(initialId);
   const queryClient = useQueryClient();
   const { hasPermission } = usePermission();
   const canManage = hasPermission('option_catalog.manage');
 
   const { data: category, isLoading, isError } = useQuery({
     queryKey: ['option-categories', id],
+    enabled: !!id && id !== 'placeholder',
     queryFn: () => apiClient.get<OptionCategoryListItem>(`/admin/option-categories/${id}`),
   });
 
