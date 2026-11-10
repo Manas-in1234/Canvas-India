@@ -50,10 +50,28 @@ export const SearchPage: React.FC = () => {
 
   // Perform search
   const searchResults = useMemo(() => {
-    // Keep only real products of the website that have valid images
-    const websiteProducts = allProducts.filter(
-      (p) => p.image && !p.image.includes('/products/placeholders/')
-    );
+    // Keep only real products of the website that have valid images.
+    // Exclude repeated "Artistic Reproductions" variants (canvas-* / acrylic-* catalogue duplicates)
+    // so every artwork design and image is displayed exactly once.
+    const seenImages = new Set<string>();
+    const websiteProducts: Product[] = [];
+
+    for (const p of allProducts) {
+      if (!p.image || p.image.includes('/products/placeholders/')) continue;
+      // Skip the duplicate "Artistic Reproductions" variants
+      if (
+        p.subcategory === 'Artistic Reproductions' ||
+        p.id.startsWith('canvas-') ||
+        p.id.startsWith('acrylic-')
+      ) {
+        continue;
+      }
+      // Ensure strict image uniqueness so no artwork is ever repeated
+      const normalizedImg = p.image.toLowerCase().trim();
+      if (seenImages.has(normalizedImg)) continue;
+      seenImages.add(normalizedImg);
+      websiteProducts.push(p);
+    }
 
     const q = query.toLowerCase().trim();
     if (!q) return websiteProducts;
