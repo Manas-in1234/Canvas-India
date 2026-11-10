@@ -2691,6 +2691,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Active step in the left toolbar
   const [activeTab, setActiveTab] = useState<ToolbarTab>(() => {
+    const requestedTab = searchParams.get('tab')?.toUpperCase();
+    if (requestedTab === 'PRODUCTS') return 'PRODUCTS';
+    if (requestedTab === 'UPLOAD') return 'UPLOAD';
+    if (requestedTab === 'SIZE' || requestedTab === 'SELECT SIZE') return 'SELECT SIZE';
     const initialPt = resolveCurrentProductId(routeMaterial, productId);
     if (initialPt.includes('digital') || initialPt.includes('painting')) return 'EFFECTS & OPTIONS';
     if (initialPt.includes('bus')) return 'CREATE BUS ROLL';
@@ -2698,6 +2702,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (searchParams.get('prefillImage')) return 'SELECT SIZE';
     return 'UPLOAD';
   });
+
+  useEffect(() => {
+    const requestedTab = searchParams.get('tab')?.toUpperCase();
+    if (requestedTab === 'PRODUCTS') {
+      setActiveTab('PRODUCTS');
+    } else if (requestedTab === 'UPLOAD') {
+      setActiveTab('UPLOAD');
+    } else if (requestedTab === 'SIZE' || requestedTab === 'SELECT SIZE') {
+      setActiveTab('SELECT SIZE');
+    }
+  }, [searchParams]);
 
   // Preloader overlay: visible for real async work (image reads) for however
   // long that actually takes, plus a short minimum so the brief, instant
