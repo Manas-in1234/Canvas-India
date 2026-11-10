@@ -482,6 +482,89 @@ export default {
         return jsonResponse({ message: 'Not found' }, 404, request);
       }
       // -------------------------------------------------------------
+      // Customizer product types — the cards on the customizer's PRODUCTS
+      // tab (Single Print, Wall Display, ...), per material.
+      // -------------------------------------------------------------
+      if (pathname === '/api/v1/customizer-product-types' && method === 'GET') {
+        const material = query.material as 'ACRYLIC' | 'CANVAS' | undefined;
+        const types = await prisma.customizerProductType.findMany({
+          where: { isActive: true, ...(material ? { material } : {}) },
+          orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+        });
+        return jsonResponse(types, 200, request);
+      }
+      if (pathname === '/api/v1/admin/customizer-product-types' || pathname.startsWith('/api/v1/admin/customizer-product-types/')) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const isManage = method === 'POST' || method === 'PATCH' || method === 'PUT' || method === 'DELETE';
+        const denied = checkPermission(user, [isManage ? 'option_catalog.manage' : 'option_catalog.view'], request);
+        if (denied) return denied;
+
+        try {
+          if (method === 'PUT' && pathname === '/api/v1/admin/customizer-product-types/reorder') {
+            const body = (await request.json()) as any;
+            const ids: string[] = body.itemIds || [];
+            await prisma.$transaction(
+              ids.map((typeId, index) =>
+                prisma.customizerProductType.update({ where: { id: typeId }, data: { sortOrder: index } }),
+              ),
+            );
+            await services.audit.record({ adminUserId: user.id, action: 'CUSTOMIZER_PRODUCT_TYPES_REORDERED', entityType: 'CustomizerProductType', entityId: body.material ?? 'all' });
+            const types = await prisma.customizerProductType.findMany({
+              where: body.material ? { material: body.material } : undefined,
+              orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+            });
+            return jsonResponse(types, 200, request);
+          }
+          if (method === 'GET' && pathname === '/api/v1/admin/customizer-product-types') {
+            const types = await prisma.customizerProductType.findMany({
+              where: query.material ? { material: query.material as 'ACRYLIC' | 'CANVAS' } : undefined,
+              orderBy: [{ material: 'asc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
+            });
+            return jsonResponse(types, 200, request);
+          }
+          if (method === 'POST' && pathname === '/api/v1/admin/customizer-product-types') {
+            const body = (await request.json()) as any;
+            if (body.material !== 'ACRYLIC' && body.material !== 'CANVAS') {
+              return jsonResponse({ statusCode: 400, message: 'material must be ACRYLIC or CANVAS' }, 400, request);
+            }
+            const maxSort = await prisma.customizerProductType.aggregate({
+              where: { material: body.material },
+              _max: { sortOrder: true },
+            });
+            const created = await prisma.customizerProductType.create({
+              data: { ...body, sortOrder: (maxSort._max.sortOrder ?? -1) + 1 },
+            });
+            await services.audit.record({ adminUserId: user.id, action: 'CUSTOMIZER_PRODUCT_TYPE_CREATED', entityType: 'CustomizerProductType', entityId: created.id });
+            return jsonResponse(created, 201, request);
+          }
+          const detailMatch = pathname.match(/^\/api\/v1\/admin\/customizer-product-types\/([^/]+)$/);
+          if (detailMatch && method === 'GET') {
+            const found = await prisma.customizerProductType.findUnique({ where: { id: detailMatch[1] } });
+            if (!found) return jsonResponse({ statusCode: 404, message: `Product type ${detailMatch[1]} not found` }, 404, request);
+            return jsonResponse(found, 200, request);
+          }
+          if (detailMatch && method === 'PATCH') {
+            const body = (await request.json()) as any;
+            const { material: _ignored, ...rest } = body;
+            const updated = await prisma.customizerProductType.update({ where: { id: detailMatch[1] }, data: rest });
+            await services.audit.record({ adminUserId: user.id, action: 'CUSTOMIZER_PRODUCT_TYPE_UPDATED', entityType: 'CustomizerProductType', entityId: detailMatch[1] });
+            return jsonResponse(updated, 200, request);
+          }
+          if (detailMatch && method === 'DELETE') {
+            await prisma.customizerProductType.delete({ where: { id: detailMatch[1] } });
+            await services.audit.record({ adminUserId: user.id, action: 'CUSTOMIZER_PRODUCT_TYPE_DELETED', entityType: 'CustomizerProductType', entityId: detailMatch[1] });
+            return jsonResponse({ success: true }, 200, request);
+          }
+        } catch (err: any) {
+          if (err?.code === 'P2025') {
+            return jsonResponse({ statusCode: 404, message: 'Record not found' }, 404, request);
+          }
+          throw err;
+        }
+        return jsonResponse({ message: 'Not found' }, 404, request);
+      }
+      // -------------------------------------------------------------
       // 1. Health check
       // -------------------------------------------------------------
       if (pathname === '/api/v1/health' || pathname === '/health' || pathname === '/') {

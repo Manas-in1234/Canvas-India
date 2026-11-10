@@ -364,6 +364,52 @@ enum MaterialScope {
   BOTH
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// CUSTOMIZER PRODUCT TYPES — the product-type cards a customer picks on the
+// customizer's PRODUCTS tab (Single Print, Wall Display, Split Canvas, ...).
+// Distinct from the catalog's ProductType model above, which classifies
+// sellable Product rows (Canvas/Mug/Photo Print) for production/SLA
+// purposes — this is customizer UI content, not a sales catalog concept.
+//
+// supportedShapeIds/supportedHardwareIds/supportedLayoutIds and
+// capabilities stay JSON because they reference other still-hardcoded
+// frontend id systems (CANVAS_SHAPES, hardware option ids, layout presets)
+// that have no admin-backed table of their own yet — a real foreign key
+// isn't possible until those exist too. Treat these as opaque to the admin
+// UI for now (editable as raw JSON) rather than a false promise of
+// validation this schema can't actually provide.
+model CustomizerProductType {
+  id                 String        @id @default(uuid())
+  material           MaterialScope // ACRYLIC or CANVAS only for this model — never BOTH
+  // Stable identifier the storefront already uses everywhere (e.g.
+  // 'canvas-single', 'acrylic-print') — referenced by SizePreset.productTypeId,
+  // customizer routes, and capability checks, so it must survive the move
+  // from hardcoded arrays to database rows. Unique per material.
+  slug               String
+  name               String
+  startingPrice      Decimal       @map("starting_price") @db.Decimal(12, 2)
+  image              String?
+  iconType           String?       @map("icon_type")
+  panelsCount        Int?          @map("panels_count")
+  description        String?
+  defaultSizeOptionId String?      @map("default_size_option_id")
+  defaultShapeId     String?       @map("default_shape_id")
+  defaultLayoutId    String?       @map("default_layout_id")
+  defaultHardwareId  String?       @map("default_hardware_id")
+  defaultThicknessId String?       @map("default_thickness_id")
+  supportedShapeIds    Json?       @map("supported_shape_ids")
+  supportedHardwareIds Json?       @map("supported_hardware_ids")
+  supportedLayoutIds   Json?       @map("supported_layout_ids")
+  capabilities       Json?
+  sortOrder          Int           @default(0) @map("sort_order")
+  isActive           Boolean       @default(true) @map("is_active")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+
+  @@unique([material, slug])
+  @@map("customizer_product_types")
+}
+
 model OptionCategoryItem {
   id              String          @id @default(uuid())
   categoryId      String          @map("category_id")
