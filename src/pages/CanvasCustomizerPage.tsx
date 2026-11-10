@@ -2932,7 +2932,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const prevTab = toolbarItems[Math.max(0, activeTabIndex - 1)] || toolbarItems[0];
   const nextTab = toolbarItems[Math.min(toolbarItems.length - 1, activeTabIndex + 1)] || toolbarItems[toolbarItems.length - 1];
 
-  // SHAPE tab state
+  // SHAPE tab state — admin-uploaded, auto-traced shapes (approved only)
+  // layered on top of the built-in shape list. Built-in shapes also exist in
+  // the backend's shape catalog (so they're admin-manageable), but the
+  // hardcoded CANVAS_SHAPES list stays the real source of truth for anything
+  // it already knows — only fetched shapes with an id outside that list
+  // (uploaded ones) actually get added, so this never changes how an
+  // existing shape renders or prices today. See src/api/customShapesApi.ts.
   const [customShapes, setCustomShapes] = useState<CustomShapeDto[]>([]);
   useEffect(() => {
     let cancelled = false;
@@ -2941,7 +2947,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     });
     return () => { cancelled = true; };
   }, []);
-  const customShapeOptions = useMemo(() => customShapes.map(toShapeOption), [customShapes]);
+  const knownShapeIds = useMemo(() => new Set(CANVAS_SHAPES.map((s) => s.id)), []);
+  const customShapeOptions = useMemo(
+    () => filterToUnknownShapes(customShapes, knownShapeIds).map(toShapeOption),
+    [customShapes, knownShapeIds],
+  );
   const [selectedShapeId, setSelectedShapeId] = useState<string>(() => {
     const initialPt = resolveCurrentProductId(routeMaterial, productId);
     if (initialPt === 'canvas-single' || initialPt === 'canvas-classic') {
@@ -3696,29 +3706,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
     return LAYOUT_PRESETS;
   }, [selectedProductType]);
-
-  // Admin-uploaded, auto-traced shapes (approved only) layered on top of the
-  // built-in shape list — see src/api/customShapesApi.ts.
-  const [customShapes, setCustomShapes] = useState<CustomShapeDto[]>([]);
-  useEffect(() => {
-    let cancelled = false;
-    fetchApprovedCustomShapes().then((shapes) => {
-      if (!cancelled) setCustomShapes(shapes);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-  // Built-in shapes now also exist in the backend's shape catalog (so
-  // they're admin-manageable), but the hardcoded CANVAS_SHAPES list stays
-  // the real source of truth for anything it already knows — only fetched
-  // shapes with an id outside that list (uploaded ones) actually get added,
-  // so this never changes how an existing shape renders or prices today.
-  const knownShapeIds = useMemo(() => new Set(CANVAS_SHAPES.map((s) => s.id)), []);
-  const customShapeOptions = useMemo(
-    () => filterToUnknownShapes(customShapes, knownShapeIds).map(toShapeOption),
-    [customShapes, knownShapeIds],
-  );
 
   // Admin-editable rates (see admin Pricing screen) used to bill non-rectangular
   // shapes and acrylic sheet thickness by bounding-box area — falls back to

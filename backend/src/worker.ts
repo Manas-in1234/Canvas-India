@@ -1187,8 +1187,11 @@ export default {
           return jsonResponse({ statusCode: 400, message: 'Valid amount is required' }, 400, request);
         }
 
-        const keyId = (env.RAZORPAY_KEY_ID || 'rzp_live_TecyaExpRewIqU').trim();
-        const keySecret = (env.RAZORPAY_KEY_SECRET || '3TloecMTBNgL4883iMCDlAjC').trim();
+        if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET) {
+          return jsonResponse({ statusCode: 500, message: 'Razorpay credentials are not configured' }, 500, request);
+        }
+        const keyId = env.RAZORPAY_KEY_ID.trim();
+        const keySecret = env.RAZORPAY_KEY_SECRET.trim();
         const auth = btoa(`${keyId}:${keySecret}`);
 
         try {
@@ -1252,7 +1255,10 @@ export default {
           );
         }
 
-        const keySecret = (env.RAZORPAY_KEY_SECRET || '3TloecMTBNgL4883iMCDlAjC').trim();
+        if (!env.RAZORPAY_KEY_SECRET) {
+          return jsonResponse({ statusCode: 500, message: 'Razorpay credentials are not configured' }, 500, request);
+        }
+        const keySecret = env.RAZORPAY_KEY_SECRET.trim();
         const generatedSignature = createHmac('sha256', keySecret)
           .update(`${razorpay_order_id}|${razorpay_payment_id}`)
           .digest('hex');
@@ -1285,7 +1291,10 @@ export default {
           return jsonResponse({ statusCode: 400, message: 'Valid 6-digit pincode is required' }, 400, request);
         }
 
-        const token = (env.DELHIVERY_API_TOKEN || '8b9a6b2b5237882de89e113919e4eb59fff100cc').trim();
+        if (!env.DELHIVERY_API_TOKEN) {
+          return jsonResponse({ statusCode: 500, message: 'Delhivery credentials are not configured' }, 500, request);
+        }
+        const token = env.DELHIVERY_API_TOKEN.trim();
         try {
           const res = await fetch(`https://track.delhivery.com/c/api/pin-codes/json/?filter_codes=${pin}`, {
             headers: { Authorization: `Token ${token}`, Accept: 'application/json' },
@@ -1324,7 +1333,10 @@ export default {
       const trackMatch = pathname.match(/^\/api\/v1\/shipping\/track\/([^/]+)$/);
       if (trackMatch && method === 'GET') {
         const awb = trackMatch[1];
-        const token = (env.DELHIVERY_API_TOKEN || '8b9a6b2b5237882de89e113919e4eb59fff100cc').trim();
+        if (!env.DELHIVERY_API_TOKEN) {
+          return jsonResponse({ statusCode: 500, message: 'Delhivery credentials are not configured' }, 500, request);
+        }
+        const token = env.DELHIVERY_API_TOKEN.trim();
 
         try {
           const res = await fetch(`https://track.delhivery.com/api/v1/packages/json/?waybill=${awb}`, {

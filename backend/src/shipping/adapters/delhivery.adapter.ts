@@ -21,10 +21,11 @@ export class DelhiveryAdapter implements CourierProviderAdapter {
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {
-    this.apiToken = (
-      this.configService.get<string>('DELHIVERY_API_TOKEN') ||
-      '8b9a6b2b5237882de89e113919e4eb59fff100cc'
-    ).trim();
+    const apiToken = this.configService.get<string>('DELHIVERY_API_TOKEN');
+    if (!apiToken) {
+      throw new Error('DELHIVERY_API_TOKEN is not configured');
+    }
+    this.apiToken = apiToken.trim();
 
     const mode = this.configService.get<string>('DELHIVERY_MODE') || 'production';
     this.baseUrl =

@@ -39,17 +39,22 @@ export async function traceShape(bytes: Buffer) {
     (error: Error | null, result: string) => error ? reject(error) : resolve(result)));
   const path = /<path[^>]*\sd="([^"]+)"/.exec(svg)?.[1];
   if (!path?.trim()) badRequest('No outline found. Use a contrasting shape on a plain background');
-  const svgPathData = svgpath(path).scale(1/w, 1/h).round(4).toString();
+  const clipPathValue = svgpath(path).scale(1/w, 1/h).round(4).toString();
   const preview = await image.scaleToFit(200, 200).getBufferAsync(Jimp.MIME_PNG);
-  return { svgPathData, preview, width, height };
+  return { clipPathValue, preview, width, height };
 }
 
 export class WorkerShapes {
   constructor(private prisma: any) {}
 
+  // Built-in shapes (square, heart, hexagon, ...) are seeded directly as
+  // APPROVED/BUILT_IN rows in the same table, so they come back here
+  // alongside admin-uploaded ones without any extra query logic — same
+  // unified-catalog design as the NestJS-side ShapesService.
   async approved() {
     return this.prisma.customShape.findMany({ where: { status: 'APPROVED' },
-      select: { id: true, name: true, svgPathData: true }, orderBy: { createdAt: 'desc' } });
+      select: { id: true, name: true, clipPathValue: true, clipPathType: true, origin: true },
+      orderBy: { createdAt: 'desc' } });
   }
 
   private present(shape: any) {
@@ -92,7 +97,8 @@ export class WorkerShapes {
         storageKey: `custom-shapes/${asset.id}/preview`, fileName: 'preview.png', mimeType: 'image/png',
         fileSize: traced.preview.length, contentBytes: traced.preview, assetType: 'PREVIEW', uploadStatus: 'READY' } });
       return tx.customShape.create({ data: { name, sourceAssetId: asset.id, previewAssetId: preview.id,
-        svgPathData: traced.svgPathData, createdBy: userId, status: 'PENDING' } });
+        origin: 'ADMIN_UPLOADED', clipPathType: 'SVG_PATH', clipPathValue: traced.clipPathValue,
+        createdBy: userId, status: 'PENDING' } });
     });
     return this.get(shape.id);
   }

@@ -10,8 +10,8 @@ describe('Worker custom shapes', () => {
     });
     const traced = await traceShape(await image.getBufferAsync(Jimp.MIME_PNG));
     expect(traced.width).toBe(80);
-    expect(traced.svgPathData).toMatch(/^M/);
-    const coordinates = traced.svgPathData.match(/-?\d*\.?\d+/g)!.map(Number);
+    expect(traced.clipPathValue).toMatch(/^M/);
+    const coordinates = traced.clipPathValue.match(/-?\d*\.?\d+/g)!.map(Number);
     expect(coordinates.every(n => n >= 0 && n <= 1)).toBe(true);
     expect(traced.preview.length).toBeGreaterThan(50);
   });
@@ -26,7 +26,7 @@ describe('Worker custom shapes', () => {
     const findMany = vi.fn().mockResolvedValue([]);
     await new WorkerShapes({customShape: {findMany}}).approved();
     expect(findMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: {status: 'APPROVED'}, select: {id:true, name:true, svgPathData:true}
+      where: {status: 'APPROVED'}, select: {id:true, name:true, clipPathValue:true, clipPathType:true, origin:true}
     }));
   });
 

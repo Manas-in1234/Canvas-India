@@ -22,6 +22,9 @@ import {
   UsersRound,
   Settings,
   RotateCcw,
+  SlidersHorizontal,
+  Ruler,
+  IndianRupee,
 } from "lucide-react";
 export const NAV_SECTIONS = [
   {
@@ -85,6 +88,24 @@ export const NAV_SECTIONS = [
         label: "Shape detection",
         icon: ScanLine,
         permissions: ["shapes.view"],
+      },
+      {
+        href: "/option-categories",
+        label: "Customize page options",
+        icon: SlidersHorizontal,
+        permissions: ["option_catalog.view"],
+      },
+      {
+        href: "/sizes",
+        label: "Size presets",
+        icon: Ruler,
+        permissions: ["size_presets.view"],
+      },
+      {
+        href: "/pricing",
+        label: "Pricing",
+        icon: IndianRupee,
+        permissions: ["pricing.view"],
       },
       {
         href: "/artwork",
