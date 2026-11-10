@@ -31,18 +31,27 @@ export const AddToCartConfirmationModal: React.FC = () => {
   const isCork =
     product.categorySlug === 'cork' ||
     product.categorySlug === 'cork-art-patterns' ||
-    (product.category && product.category.toLowerCase().includes('cork')) ||
+    product.categorySlug === 'yoga-fitness' ||
+    product.category === 'Cork' ||
+    product.category === 'Cork Art Patterns' ||
     (product.name && product.name.toLowerCase().includes('cork')) ||
-    (item.material && item.material.toLowerCase().includes('cork'));
+    (item.material && item.material.toLowerCase().includes('cork')) ||
+    (product.material && product.material.toLowerCase().includes('cork')) ||
+    product.id.includes('cork') ||
+    (product.slug && product.slug.includes('cork'));
   const materialType = isAcrylic ? 'acrylic' : isCork ? 'cork' : 'canvas';
   const targetId = product.slug || product.id;
 
-  const isCorkPattern =
+  const isCorkProduct =
+    isCork ||
+    product.categorySlug === 'cork' ||
     product.categorySlug === 'cork-art-patterns' ||
+    product.categorySlug === 'yoga-fitness' ||
+    product.category === 'Cork' ||
     product.category === 'Cork Art Patterns' ||
-    product.id.includes('cork-art-patterns') ||
-    product.slug.includes('cork-art-patterns') ||
-    (product.name && product.name.toLowerCase().includes('cork pattern')) ||
+    product.id.includes('cork') ||
+    (product.slug && product.slug.includes('cork')) ||
+    (product.name && product.name.toLowerCase().includes('cork')) ||
     product.customizationAvailable === false;
 
   const unitPrice = product.price || 0;
@@ -158,7 +167,7 @@ export const AddToCartConfirmationModal: React.FC = () => {
                     Size: <strong>{item.size}</strong>
                   </span>
                 )}
-                {!isCorkPattern && item.thickness && (
+                {!isCorkProduct && item.thickness && (
                   <span className="px-2 py-0.5 rounded bg-white border border-stone-200 text-stone-700 font-semibold">
                     Depth: <strong>{item.thickness}</strong>
                   </span>
@@ -182,7 +191,7 @@ export const AddToCartConfirmationModal: React.FC = () => {
 
           {/* Action Buttons Row */}
           <div className="space-y-2 pt-1">
-            <div className={isCorkPattern ? "flex flex-col gap-2.5" : "grid grid-cols-1 sm:grid-cols-2 gap-2.5"}>
+            <div className={isCorkProduct ? "flex flex-col gap-2.5" : "grid grid-cols-1 sm:grid-cols-2 gap-2.5"}>
               {/* 1. View Cart */}
               <button
                 type="button"
@@ -194,8 +203,8 @@ export const AddToCartConfirmationModal: React.FC = () => {
                 <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
               </button>
 
-              {/* 2. Customize This Item - hidden for cork art patterns */}
-              {!isCorkPattern && (
+              {/* 2. Customize This Item - hidden for all cork products */}
+              {!isCorkProduct && (
                 <button
                   type="button"
                   onClick={handleCustomizeThisItem}

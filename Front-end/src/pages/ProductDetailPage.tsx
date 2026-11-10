@@ -138,6 +138,19 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     product.slug.includes('cork-art-patterns') ||
     (product.name && product.name.toLowerCase().includes('cork pattern'));
 
+  const isCorkProduct =
+    isCorkPattern ||
+    product.categorySlug === 'cork' ||
+    product.categorySlug === 'cork-art-patterns' ||
+    product.categorySlug === 'yoga-fitness' ||
+    product.category === 'Cork' ||
+    product.category === 'Cork Art Patterns' ||
+    product.material === 'cork' ||
+    product.id.includes('cork') ||
+    (product.slug && product.slug.includes('cork')) ||
+    (product.name && product.name.toLowerCase().includes('cork')) ||
+    product.customizationAvailable === false;
+
   // In-page customization state
   const [customText, setCustomText] = useState<string>('');
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
@@ -372,7 +385,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     const cartProduct = quantity >= MIN_BULK_QTY
       ? { ...product, price: bulkUnitPriceFor(product.price, quantity) }
       : product;
-    const defaultThickness = isCorkPattern ? undefined : 'Thin Gallery Wrap (0.75")';
+    const defaultThickness = isCorkProduct ? undefined : 'Thin Gallery Wrap (0.75")';
     onAddToCart(
       cartProduct,
       selectedSize,
@@ -856,7 +869,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 </div>
               </div>
 
-              {!isCorkPattern && (
+              {!isCorkProduct && (
                 <div>
                   <button
                     type="button"
@@ -869,7 +882,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 </div>
               )}
 
-              {isCorkPattern ? (
+              {isCorkProduct ? (
                 <div className="flex items-center gap-3">
                   <div className="grid grid-cols-2 gap-3 flex-1">
                     <button

@@ -169,7 +169,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <ShoppingCart className="w-3 h-3 shrink-0" />
           <span className="truncate">Add to Cart</span>
         </button>
-        {product.categorySlug === 'cork-art-patterns' || product.category === 'Cork Art Patterns' || product.id.includes('cork-art-patterns') ? (
+        {product.categorySlug === 'cork' ||
+        product.categorySlug === 'cork-art-patterns' ||
+        product.categorySlug === 'yoga-fitness' ||
+        product.category === 'Cork' ||
+        product.category === 'Cork Art Patterns' ||
+        product.material === 'cork' ||
+        product.id.includes('cork') ||
+        (product.slug && product.slug.includes('cork')) ||
+        (product.name && product.name.toLowerCase().includes('cork')) ||
+        product.customizationAvailable === false ? (
           <a
             href={`https://wa.me/917893051555?text=${encodeURIComponent(`Hi Canvas India, I would like to get a quote / order in bulk for ${product.name}`)}`}
             target="_blank"
