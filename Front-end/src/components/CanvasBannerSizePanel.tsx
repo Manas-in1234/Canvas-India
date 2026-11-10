@@ -19,6 +19,7 @@ export interface CanvasBannerSizePanelProps {
   activeCategory: BannerSizeCategory;
   onChangeCategory: (category: BannerSizeCategory) => void;
   currentPrice: number;
+  sizes?: CanvasBannerSizeOption[];
 }
 
 const CATEGORIES: BannerSizeCategory[] = ['RECOMMENDED', 'SQUARE', 'PANORAMIC', 'LARGE', 'SMALL'];
@@ -28,7 +29,8 @@ export const CanvasBannerSizePanel: React.FC<CanvasBannerSizePanelProps> = ({
   onChangeConfig,
   activeCategory,
   onChangeCategory,
-  currentPrice
+  currentPrice,
+  sizes = CANVAS_BANNER_SIZE_OPTIONS,
 }) => {
   const [customHInput, setCustomHInput] = useState<string>(() =>
     String(convertFromInches(config.heightInches, config.unit))
@@ -39,7 +41,7 @@ export const CanvasBannerSizePanel: React.FC<CanvasBannerSizePanelProps> = ({
   const [validationError, setValidationError] = useState<string | null>(null);
 
   // Filter preset sizes by category
-  const filteredSizes = CANVAS_BANNER_SIZE_OPTIONS.filter((s) =>
+  const filteredSizes = sizes.filter((s) =>
     s.categories.includes(activeCategory)
   );
 

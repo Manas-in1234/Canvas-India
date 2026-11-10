@@ -26,7 +26,7 @@ const PRICE_MAX_DEFAULT = 700;
 // size/material, as opposed to a custom photo-upload Canvas/Acrylic order.
 // All 850 currently carry a real discount (25-29% off), so this whole set
 // doubles as "products on offer".
-const READYMADE_PRODUCTS: Product[] = [...CATALOGUE_PRODUCTS, ...CATALOGUE_CANVAS_ACRYLIC_PRODUCTS];
+const READYMADE_IDS = new Set([...CATALOGUE_PRODUCTS, ...CATALOGUE_CANVAS_ACRYLIC_PRODUCTS].map(p => p.id));
 
 interface ReadymadeCategory {
   label: string;
@@ -64,7 +64,7 @@ const Container: React.FC<{ children: React.ReactNode; className?: string }> = (
 // Dedicated listing for ready-to-ship, pre-designed products on offer — the
 // counterpart to the "Create Your Canvas" custom-photo flow.
 export const ReadymadeOffersPage: React.FC = () => {
-  const { wishlistIds, onAddToCart, onOpenCustomize, onToggleWishlist } = useShop();
+  const { allProducts, wishlistIds, onAddToCart, onOpenCustomize, onToggleWishlist } = useShop();
 
   useEffect(() => {
     document.title = 'Special Price Offers — Ready-Made Prints | Canvas India';
@@ -92,12 +92,12 @@ export const ReadymadeOffersPage: React.FC = () => {
 
   const filteredProducts = useMemo(() => {
     const activeCategoryMatchers = READYMADE_CATEGORIES.filter((c) => selectedCategories.includes(c.label));
-    return READYMADE_PRODUCTS.filter((p) => {
+    return allProducts.filter(p => READYMADE_IDS.has(p.id)).filter((p) => {
       if (p.price < minPrice || p.price > maxPrice) return false;
       if (activeCategoryMatchers.length > 0 && !activeCategoryMatchers.some((c) => c.match(p))) return false;
       return true;
     });
-  }, [minPrice, maxPrice, selectedCategories]);
+  }, [allProducts, minPrice, maxPrice, selectedCategories]);
 
   // Collapse Canvas/Acrylic pairs of the same design into one card with a
   // material picker, so the grid doesn't show visually-duplicate entries.

@@ -32,19 +32,21 @@ export interface OptionCategoryDto {
 export async function fetchOptionCategoryItems(
   baseKey: string,
   material?: 'ACRYLIC' | 'CANVAS',
+  strict = false,
 ): Promise<OptionCategoryItemDto[]> {
   try {
     const params = new URLSearchParams({ baseKey });
     if (material) params.set('material', material);
     const response = await fetch(buildApiUrl(`/option-categories?${params.toString()}`));
-    if (!response.ok) return [];
+    if (!response.ok) throw new Error('Unable to load catalog');
     const categories = (await response.json()) as OptionCategoryDto[];
     if (!Array.isArray(categories) || categories.length === 0) return [];
     // material-scoped categories: prefer the exact material match over BOTH
     const exact = categories.find((c) => c.materialScope === material);
     const chosen = exact ?? categories[0];
     return [...chosen.items].sort((a, b) => a.sortOrder - b.sortOrder);
-  } catch {
+  } catch (error) {
+    if (strict) throw error;
     return [];
   }
 }

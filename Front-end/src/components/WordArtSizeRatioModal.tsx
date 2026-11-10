@@ -17,6 +17,7 @@ export interface WordArtSizeRatioModalProps {
   /** When set to a bulk quantity (>= MIN_BULK_QTY), every size's displayed
    * price reflects the same volume discount shown on the Bulk Orders page. */
   bulkQuantity?: number;
+  sizes?: typeof WORD_ART_SIZE_CATALOG;
 }
 
 const TABS: WordArtRatioTab[] = ['Square', '3:2 Ratio', '4:3 Ratio', '16:9 Ratio'];
@@ -28,7 +29,8 @@ export const WordArtSizeRatioModal: React.FC<WordArtSizeRatioModalProps> = ({
   onCreateWordArt,
   currentSelectedSizeId,
   selectedSizeId: initialSelectedSizeId = 'word-sq-8x8',
-  bulkQuantity
+  bulkQuantity,
+  sizes = WORD_ART_SIZE_CATALOG,
 }) => {
   const initialId = currentSelectedSizeId || initialSelectedSizeId || 'word-sq-8x8';
   const hasBulkDiscount = bulkQuantity !== undefined && bulkQuantity >= MIN_BULK_QTY;
@@ -41,26 +43,27 @@ export const WordArtSizeRatioModal: React.FC<WordArtSizeRatioModalProps> = ({
     if (idToUse) {
       setSelectedSizeId(idToUse);
       for (const tab of TABS) {
-        if (WORD_ART_SIZE_CATALOG[tab].some((s) => s.id === idToUse)) {
+        if (sizes[tab].some((s) => s.id === idToUse)) {
           setActiveTab(tab);
           break;
         }
       }
     }
-  }, [currentSelectedSizeId, initialSelectedSizeId, isOpen]);
+  }, [currentSelectedSizeId, initialSelectedSizeId, isOpen, sizes]);
 
   if (!isOpen) return null;
 
-  const currentOptions = WORD_ART_SIZE_CATALOG[activeTab] || WORD_ART_SIZE_CATALOG.Square;
+  const currentOptions = sizes[activeTab];
 
   // Resolve currently selected option object
   const allSizes = [
-    ...WORD_ART_SIZE_CATALOG.Square,
-    ...WORD_ART_SIZE_CATALOG['3:2 Ratio'],
-    ...WORD_ART_SIZE_CATALOG['4:3 Ratio'],
-    ...WORD_ART_SIZE_CATALOG['16:9 Ratio']
+    ...sizes.Square,
+    ...sizes['3:2 Ratio'],
+    ...sizes['4:3 Ratio'],
+    ...sizes['16:9 Ratio']
   ];
-  const selectedOption = allSizes.find((s) => s.id === selectedSizeId) || currentOptions[0];
+  const selectedOption = currentOptions.find((size) => size.id === selectedSizeId)
+    ?? currentOptions[0] ?? allSizes[0] ?? WORD_ART_SIZE_CATALOG.Square[0];
 
   const handleCardClick = (size: WordArtSizeOption) => {
     setSelectedSizeId(size.id);
@@ -121,7 +124,7 @@ export const WordArtSizeRatioModal: React.FC<WordArtSizeRatioModalProps> = ({
               >
                 {tab}
                 <span className="ml-1.5 text-[11px] opacity-75 font-semibold">
-                  ({WORD_ART_SIZE_CATALOG[tab].length})
+                  ({sizes[tab].length})
                 </span>
               </button>
             );

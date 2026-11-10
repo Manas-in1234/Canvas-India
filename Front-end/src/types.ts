@@ -68,7 +68,7 @@ export interface CategoryConfig {
   subcategories: string[];
   features?: string[];
   ctaText?: string;
-  ctaType?: 'quote' | 'customize' | 'shop';
+  ctaType?: 'quote' | 'customize' | 'shop' | 'category';
 }
 
 export interface CategoryItem {

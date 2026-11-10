@@ -1,9 +1,10 @@
+import { useCatalogOptions } from '../api/useCatalogOptions';
 import React, { useState, useEffect } from 'react';
 import { X, Check, Info, Sparkles, ArrowRight } from 'lucide-react';
 import {
   PopArtStyleOption,
   PopArtStyleId,
-  POP_ART_STYLES
+  POP_ART_STYLES as DEFAULT_POP_ART_STYLES
 } from '../data/popArtData';
 
 export interface PopArtStyleModalProps {
@@ -19,6 +20,7 @@ export const PopArtStyleModal: React.FC<PopArtStyleModalProps> = ({
   selectedStyleId,
   onSelectStyle
 }) => {
+  const POP_ART_STYLES = useCatalogOptions('pop_art_styles', DEFAULT_POP_ART_STYLES, 'priceAdjustment');
   const [activeInfoStyle, setActiveInfoStyle] = useState<PopArtStyleOption | null>(null);
 
   // Close modal on Escape key press

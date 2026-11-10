@@ -1,12 +1,13 @@
+import { useCatalogOptions } from '../api/useCatalogOptions';
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Sparkles, RefreshCw, Palette, Type, Sliders, ArrowLeft, Check } from 'lucide-react';
 import {
   type WordArtConfig,
   type WordArtSizeOption,
-  WORD_ART_FONT_OPTIONS,
+  WORD_ART_FONT_OPTIONS as DEFAULT_WORD_ART_FONT_OPTIONS,
   WORD_ART_SHAPE_OPTIONS,
-  WORD_ART_COLOR_SCHEMES,
-  WORD_ART_TEXT_DIRECTION_OPTIONS,
+  WORD_ART_COLOR_SCHEMES as DEFAULT_WORD_ART_COLOR_SCHEMES,
+  WORD_ART_TEXT_DIRECTION_OPTIONS as DEFAULT_WORD_ART_TEXT_DIRECTION_OPTIONS,
   DEFAULT_WORD_ART_CONFIG,
   renderWordArtToCanvas
 } from '../data/wordArtData';
@@ -33,6 +34,9 @@ export const WordArtPersonalizeModal: React.FC<WordArtPersonalizeModalProps> = (
   onAddToProduct,
   bulkQuantity
 }) => {
+  const WORD_ART_FONT_OPTIONS = useCatalogOptions('word_art_fonts', DEFAULT_WORD_ART_FONT_OPTIONS);
+  const WORD_ART_COLOR_SCHEMES = useCatalogOptions('word_art_colors', DEFAULT_WORD_ART_COLOR_SCHEMES);
+  const WORD_ART_TEXT_DIRECTION_OPTIONS = useCatalogOptions('word_art_directions', DEFAULT_WORD_ART_TEXT_DIRECTION_OPTIONS);
   const displayPrice = bulkQuantity !== undefined && bulkQuantity >= MIN_BULK_QTY
     ? bulkUnitPriceFor(selectedSize.price, bulkQuantity)
     : selectedSize.price;
@@ -57,8 +61,8 @@ export const WordArtPersonalizeModal: React.FC<WordArtPersonalizeModalProps> = (
     const canvas = canvasRef.current;
     const baseW = 800;
     const baseH = Math.round(baseW / (selectedSize.aspectRatio || 1));
-    renderWordArtToCanvas(canvas, config, baseW, baseH);
-  }, [isOpen, config, selectedSize]);
+    renderWordArtToCanvas(canvas, config, baseW, baseH, WORD_ART_COLOR_SCHEMES);
+  }, [isOpen, config, selectedSize, WORD_ART_COLOR_SCHEMES]);
 
   if (!isOpen) return null;
 
@@ -93,7 +97,7 @@ export const WordArtPersonalizeModal: React.FC<WordArtPersonalizeModalProps> = (
     const offscreen = document.createElement('canvas');
     const exportWidth = 1400;
     const exportHeight = Math.round(exportWidth / (selectedSize.aspectRatio || 1));
-    renderWordArtToCanvas(offscreen, config, exportWidth, exportHeight);
+    renderWordArtToCanvas(offscreen, config, exportWidth, exportHeight, WORD_ART_COLOR_SCHEMES);
     const dataUrl = offscreen.toDataURL('image/png', 0.95);
     onAddToProduct(dataUrl, config);
   };
