@@ -16,6 +16,7 @@ import {
   SlidersHorizontal,
   ArrowRight,
   PackageCheck,
+  Package,
   Info,
   Pencil
 } from 'lucide-react';
@@ -577,14 +578,36 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
             {/* PRODUCT CONFIGURATION SELECTORS                                     */}
             {/* =================================================================== */}
             {isCatalogueDesign ? (
-              <button
-                type="button"
-                onClick={() => navigate(`/customize/acrylic/single?prefillImage=${encodeURIComponent(product.image)}&prefillName=${encodeURIComponent(product.name)}`)}
-                className="w-full py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
-              >
-                <Pencil className="w-4 h-4" />
-                <span>Customize this Product</span>
-              </button>
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/customize/acrylic/single?prefillImage=${encodeURIComponent(product.image)}&prefillName=${encodeURIComponent(product.name)}`)}
+                  className="w-full py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  <Pencil className="w-4 h-4" />
+                  <span>Customize this Product</span>
+                </button>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    className="py-3 px-3 sm:px-4 rounded-xl border-2 border-[#0E4A93] bg-white hover:bg-blue-50 text-[#0E4A93] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                  >
+                    <ShoppingCart className="w-4 h-4 shrink-0 text-[#0E4A93]" />
+                    <span>Add to cart</span>
+                  </button>
+                  <a
+                    href={`https://wa.me/917893051555?text=${encodeURIComponent(`Hi Canvas India, I would like to get a quote / order in bulk for ${product.name}${productCode ? ` (Code: ${productCode})` : ''}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-3 px-3 sm:px-4 rounded-xl border-2 border-[#0E4A93] bg-white hover:bg-blue-50 text-[#0E4A93] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer text-center"
+                  >
+                    <Package className="w-4 h-4 shrink-0 text-[#0E4A93]" />
+                    <span>Order this item in bulk</span>
+                  </a>
+                </div>
+              </div>
             ) : (
               <>
             <div className="space-y-4">
