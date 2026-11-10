@@ -10564,74 +10564,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </div>
               )}
 
-              {/* ============== ACRYLIC BACKING & SURFACE FINISH ============== */}
-              {activeMaterial === 'acrylic' && (
-                <>
-                  <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
-                    <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider">Backing</span>
-                      <span className="text-[11px] font-semibold text-stone-200">{liveOrFallbackBacking.length} options</span>
-                    </div>
-                    <div className="p-3">
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {liveOrFallbackBacking.map((b) => {
-                          const isSelected = selectedBackingId === b.id;
-                          return (
-                            <CustomizerOptionCard
-                              key={b.id}
-                              selected={isSelected}
-                              onClick={() => setSelectedBackingId(b.id)}
-                              title={b.label}
-                              priceText={b.price === 0 ? 'Included' : `+₹${b.price.toFixed(2)}`}
-                              previewHeightClass="h-16 p-1.5"
-                              preview={
-                                <div
-                                  className="w-10 h-10 rounded-full mx-auto border border-stone-300 shadow-2xs"
-                                  style={{
-                                    backgroundColor: b.hex === 'transparent' ? undefined : b.hex,
-                                    backgroundImage: b.hex === 'transparent'
-                                      ? 'repeating-conic-gradient(#d6d3d1 0% 25%, #f5f5f4 0% 50%)'
-                                      : undefined,
-                                    backgroundSize: b.hex === 'transparent' ? '8px 8px' : undefined,
-                                  }}
-                                />
-                              }
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
-                    <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider">Surface Finish</span>
-                      <span className="text-[11px] font-semibold text-stone-200">{liveOrFallbackFinish.length} options</span>
-                    </div>
-                    <div className="p-3">
-                      <div className="grid grid-cols-2 gap-2">
-                        {liveOrFallbackFinish.map((f) => {
-                          const isSelected = selectedFinishId === f.id;
-                          return (
-                            <CustomizerOptionCard
-                              key={f.id}
-                              selected={isSelected}
-                              onClick={() => setSelectedFinishId(f.id)}
-                              title={f.label}
-                              priceText={f.price === 0 ? 'Included' : `+₹${f.price.toFixed(2)}`}
-                              previewHeightClass="h-14 p-1.5"
-                              preview={
-                                <div className="w-10 h-10 rounded mx-auto bg-gradient-to-br from-sky-100 to-slate-200 border border-stone-300" />
-                              }
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
               {/* ==================== 2. BORDER SECTION (Matching Screenshot 1 & 3) ==================== */}
               <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
                 {/* Dark Section Header Bar */}
@@ -11039,11 +10971,71 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </div>
               )}
 
-              {/* 2. Hardware Option & Style */}
+              {/* 2. Acrylic Backing & Surface Finish (admin-managed) */}
+              {activeMaterial === 'acrylic' && (
+                <div className="space-y-2.5 pt-3 border-t border-stone-200">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">2. Backing</label>
+                    <span className="text-[11px] font-bold text-[#0E4A93]">{liveOrFallbackBacking.length} options</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {liveOrFallbackBacking.map((b) => {
+                      const isSelected = selectedBackingId === b.id;
+                      return (
+                        <CustomizerOptionCard
+                          key={b.id}
+                          selected={isSelected}
+                          onClick={() => setSelectedBackingId(b.id)}
+                          title={b.label}
+                          priceText={b.price === 0 ? 'Included' : `+₹${b.price.toFixed(2)}`}
+                          previewHeightClass="h-16 p-1.5"
+                          preview={
+                            <div
+                              className="w-10 h-10 rounded-full mx-auto border border-stone-300 shadow-2xs"
+                              style={{
+                                backgroundColor: b.hex === 'transparent' ? undefined : b.hex,
+                                backgroundImage: b.hex === 'transparent'
+                                  ? 'repeating-conic-gradient(#d6d3d1 0% 25%, #f5f5f4 0% 50%)'
+                                  : undefined,
+                                backgroundSize: b.hex === 'transparent' ? '8px 8px' : undefined,
+                              }}
+                            />
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">Surface Finish</label>
+                    <span className="text-[11px] font-bold text-[#0E4A93]">{liveOrFallbackFinish.length} options</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {liveOrFallbackFinish.map((f) => {
+                      const isSelected = selectedFinishId === f.id;
+                      return (
+                        <CustomizerOptionCard
+                          key={f.id}
+                          selected={isSelected}
+                          onClick={() => setSelectedFinishId(f.id)}
+                          title={f.label}
+                          priceText={f.price === 0 ? 'Included' : `+₹${f.price.toFixed(2)}`}
+                          previewHeightClass="h-14 p-1.5"
+                          preview={
+                            <div className="w-10 h-10 rounded mx-auto bg-gradient-to-br from-sky-100 to-slate-200 border border-stone-300" />
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 3. Hardware Option & Style */}
               <div className={`space-y-2.5 ${selectedProductTypeId !== 'canvas-banner' ? 'pt-3 border-t border-stone-200' : ''}`}>
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">
-                    {selectedProductTypeId === 'canvas-banner' ? 'Hardware & Mounting Options' : '2. HARDWARE OPTION & STYLE'}
+                    {selectedProductTypeId === 'canvas-banner' ? 'Hardware & Mounting Options' : activeMaterial === 'acrylic' ? '3. HARDWARE OPTION & STYLE' : '2. HARDWARE OPTION & STYLE'}
                   </label>
                   {selectedProductTypeId === 'canvas-banner' && (
                     <span className="text-[11px] font-bold text-[#0E4A93]">{CANVAS_BANNER_HARDWARE_OPTIONS.length} options</span>
