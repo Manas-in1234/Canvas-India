@@ -215,21 +215,35 @@ export async function fetchProductsFromApi(): Promise<Product[]> {
 
   inFlightProductsPromise = (async () => {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      // The backend occasionally answers 502/503/504 under load. Falling back to
+      // the built-in catalogue on the first hiccup would also bring back any
+      // product the admin has hidden, so a few quick retries come first.
+      const MAX_ATTEMPTS = 3;
+      let response: Response | undefined;
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+        try {
+          response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+            },
+            signal: controller.signal,
+          });
+        } catch (err) {
+          if (attempt === MAX_ATTEMPTS) throw err;
+          response = undefined;
+        } finally {
+          clearTimeout(timeoutId);
+        }
+        const transient = !response || response.status === 502 || response.status === 503 || response.status === 504;
+        if (!transient || attempt === MAX_ATTEMPTS) break;
+        await new Promise((resolve) => setTimeout(resolve, 400 * attempt));
+      }
 
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`);
+      if (!response || !response.ok) {
+        throw new Error(`Failed to fetch products: ${response?.status ?? 'no response'} ${response?.statusText ?? ''}`.trim());
       }
 
       const json = await response.json();

@@ -204,6 +204,51 @@ function checkPermission(user: any, required: string[], request: Request): Respo
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// Public website visibility. The website only shows products that are ACTIVE
+// and whose category (product type) has not been hidden; the admin sees all.
+// ---------------------------------------------------------------------------
+
+const PRODUCT_LIST_INCLUDE = { productType: true, categories: { include: { category: true } } } as const;
+
+/** True when the database has not been migrated to include product_types.is_active yet. */
+function isMissingColumnError(err: any): boolean {
+  return err?.code === 'P2022' || /column .* does not exist/i.test(String(err?.message ?? ''));
+}
+
+async function isSignedInAdmin(request: Request, env: Env, prisma: PrismaClient): Promise<boolean> {
+  const header = request.headers.get('Authorization');
+  if (!header || !header.startsWith('Bearer ')) return false;
+  const { user, error } = await authenticate(request, env, prisma);
+  return !error && Boolean(user?.permissions?.includes('products.view'));
+}
+
+async function findPublicProducts(prisma: PrismaClient) {
+  const live = { deletedAt: null, status: 'ACTIVE' as const };
+  const list = (where: any) =>
+    prisma.product.findMany({ where, include: PRODUCT_LIST_INCLUDE, orderBy: { createdAt: 'desc' } });
+  try {
+    return await list({ ...live, productType: { isActive: true } });
+  } catch (err: any) {
+    // Deployed before the visibility migration was applied: hide by status only.
+    if (isMissingColumnError(err)) return list(live);
+    throw err;
+  }
+}
+
+function isPubliclyVisible(product: { status?: string; productType?: { isActive?: boolean } | null }): boolean {
+  return product.status === 'ACTIVE' && product.productType?.isActive !== false;
+}
+
+async function findPublicProductTypes(prisma: PrismaClient) {
+  try {
+    return await prisma.productType.findMany({ where: { isActive: true }, orderBy: { name: 'asc' } });
+  } catch (err: any) {
+    if (isMissingColumnError(err)) return prisma.productType.findMany({ orderBy: { name: 'asc' } });
+    throw err;
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: any): Promise<Response> {
     if (request.method === 'OPTIONS') {
@@ -871,7 +916,13 @@ export default {
       // -------------------------------------------------------------
       if (pathname === '/api/v1/products') {
         if (method === 'GET') {
-          return jsonResponse(await services.products.findAll(), 200, request);
+          // The admin and the public website share this URL. A signed-in admin
+          // sees every product (hidden and archived ones included, so they can
+          // be managed); everyone else only sees what is live on the website.
+          if (await isSignedInAdmin(request, env, prisma)) {
+            return jsonResponse(await services.products.findAll(), 200, request);
+          }
+          return jsonResponse(await findPublicProducts(prisma), 200, request);
         }
         if (method === 'POST') {
           const { user, error } = await authenticate(request, env, prisma);
@@ -887,7 +938,11 @@ export default {
       if (productMatch) {
         const id = productMatch[1];
         if (method === 'GET') {
-          return jsonResponse(await services.products.findOne(id), 200, request);
+          const product: any = await services.products.findOne(id);
+          if (!(await isSignedInAdmin(request, env, prisma)) && !isPubliclyVisible(product)) {
+            return jsonResponse({ statusCode: 404, message: `Product ${id} not found` }, 404, request);
+          }
+          return jsonResponse(product, 200, request);
         }
         if (method === 'PATCH') {
           const { user, error } = await authenticate(request, env, prisma);
@@ -931,7 +986,53 @@ export default {
       }
 
       if (pathname === '/api/v1/product-types') {
-        if (method === 'GET') return jsonResponse(await services.productTypes.findAll(), 200, request);
+        if (method === 'GET') {
+          if (!(await isSignedInAdmin(request, env, prisma))) {
+            return jsonResponse(await findPublicProductTypes(prisma), 200, request);
+          }
+          const [types, counts] = await Promise.all([
+            services.productTypes.findAll(),
+            prisma.product.groupBy({ by: ['productTypeId', 'status'], where: { deletedAt: null }, _count: { _all: true } }),
+          ]);
+          return jsonResponse(
+            types.map((type: any) => {
+              const own = counts.filter((c) => c.productTypeId === type.id);
+              return {
+                ...type,
+                productCount: own.reduce((sum, c) => sum + c._count._all, 0),
+                liveCount: own.filter((c) => c.status === 'ACTIVE').reduce((sum, c) => sum + c._count._all, 0),
+              };
+            }),
+            200,
+            request,
+          );
+        }
+      }
+
+      const productTypeMatch = pathname.match(/^\/api\/v1\/product-types\/([^/]+)$/);
+      if (productTypeMatch && method === 'PATCH') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, ['products.edit'], request);
+        if (permError) return permError;
+        const body = (await request.json()) as any;
+        if (typeof body.isActive !== 'boolean') {
+          return jsonResponse({ statusCode: 400, message: 'isActive (true or false) is required' }, 400, request);
+        }
+        try {
+          const updated = await prisma.productType.update({ where: { id: productTypeMatch[1] }, data: { isActive: body.isActive } });
+          await services.audit.record({
+            adminUserId: user.id,
+            action: body.isActive ? 'CATEGORY_SHOWN_ON_WEBSITE' : 'CATEGORY_HIDDEN_FROM_WEBSITE',
+            entityType: 'ProductType',
+            entityId: updated.id,
+            reason: updated.name,
+          });
+          return jsonResponse(updated, 200, request);
+        } catch (err: any) {
+          if (err?.code === 'P2025') return jsonResponse({ statusCode: 404, message: 'Category not found' }, 404, request);
+          throw err;
+        }
       }
 
       const variantsMatch = pathname.match(/^\/api\/v1\/products\/([^/]+)\/variants$/);

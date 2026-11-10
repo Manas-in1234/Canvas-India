@@ -71,6 +71,17 @@ export class ProductsService {
       });
     }
 
+    // Showing or hiding a product on the website is a status change worth tracing.
+    if (dto.status !== undefined && dto.status !== existing.status) {
+      await this.auditService.record({
+        adminUserId: actingAdminId,
+        action: 'PRODUCT_STATUS_CHANGED',
+        entityType: 'Product',
+        entityId: id,
+        changes: { status: { old: existing.status, new: dto.status } },
+      });
+    }
+
     return updated;
   }
 

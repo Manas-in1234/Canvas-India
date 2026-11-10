@@ -72,6 +72,12 @@ export const NAV_SECTIONS: NavSection[] = [
         permissions: ["products.view"],
       },
       {
+        href: "/categories",
+        label: "Categories",
+        icon: Boxes,
+        permissions: ["products.view"],
+      },
+      {
         href: "/hero-images",
         label: "Hero Images",
         icon: ImageIcon,

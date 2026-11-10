@@ -35,6 +35,7 @@ import {
   Shapes,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useShop } from '../context/ShopContext';
 import { Product } from '../types';
 import { ProductImage } from './ProductImage';
 import { 
@@ -112,6 +113,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isCategoryVisible } = useShop();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -173,8 +175,8 @@ export const Header: React.FC<HeaderProps> = ({
       'motivational-posters',
       'cork-art-patterns',
     ]);
-    return PRIMARY_CATEGORIES.filter((cat) => !excluded.has(cat.slug));
-  }, []);
+    return PRIMARY_CATEGORIES.filter((cat) => !excluded.has(cat.slug) && isCategoryVisible(cat.slug));
+  }, [isCategoryVisible]);
 
   // Close open dropdown menus on scroll or resize to prevent detached floating elements
   useEffect(() => {
@@ -1210,7 +1212,7 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="text-[11px] uppercase tracking-wider font-bold text-stone-400 mb-2 px-1">
                 Explore Categories &amp; Products
               </div>
-              {[...PRIMARY_CATEGORIES, {
+              {[...PRIMARY_CATEGORIES.filter((cat) => isCategoryVisible(cat.slug)), {
                 id: 'cat-designers-architects',
                 name: 'Designers & Architects',
                 slug: 'designers-architects',
