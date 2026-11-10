@@ -1,13 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Phone, 
-  Mail, 
-  MapPin, 
-  ShieldCheck, 
-  Truck, 
-  MessageCircle, 
-  Receipt,
+import {
+  Phone,
+  Mail,
+  MapPin,
+  MessageCircle,
   ArrowRight
 } from 'lucide-react';
 
@@ -15,66 +12,15 @@ interface FooterProps {
   onSelectCategory: (slug: string) => void;
   onOpenQuote: () => void;
   onOpenAccount?: () => void;
+  onTrackOrder?: () => void;
   variant?: string;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, onOpenAccount }) => {
+export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, onOpenAccount, onTrackOrder }) => {
   return (
     <footer className="bg-[#0B1727] text-stone-300 pt-12 pb-8 text-xs font-manrope">
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
         
-        {/* Top Trust & Value Proposition Strip (Unboxed) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pb-8 mb-8 border-b border-stone-800/80">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[#E8752A]/20 text-[#E8752A] flex items-center justify-center shrink-0">
-              <Truck className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="font-bold text-white text-xs sm:text-sm">Free Delivery on ₹999+</div>
-              <div className="text-[11px] text-stone-400">Insured shipping across 19,000+ pin codes</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-              <Receipt className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="font-bold text-white text-xs sm:text-sm">GST Invoicing Available</div>
-              <div className="text-[11px] text-stone-400">Claim 18% input tax credit on business orders</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[#0E4A93]/40 text-blue-400 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="font-bold text-white text-xs sm:text-sm">100% Safe Payments</div>
-              <div className="text-[11px] text-stone-400">Encrypted UPI, Cards, NetBanking & EMI</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-              <MessageCircle className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="font-bold text-white text-xs sm:text-sm">Instant WhatsApp Support</div>
-              <div className="text-[11px] text-stone-400">
-                <a
-                  href="https://wa.me/917893051555"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-emerald-400 transition-colors"
-                >
-                  +91 78930 51555 (Mon-Sat 9am - 8pm)
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Main Footer Columns */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 xl:gap-12 pb-10 border-b border-stone-800/80">
           
@@ -82,7 +28,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
           <div className="space-y-3.5">
             <div className="py-1">
               <img
-                src="/canvas-india-official-logo.png"
+                src="/canvas-india-official-logo.webp"
                 alt="Canvas India"
                 className="w-[125px] sm:w-[135px] h-auto object-contain block select-none"
               />
@@ -147,14 +93,9 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
             <ul className="space-y-2 text-stone-400 text-xs">
               <li><Link to="/canvas" className="hover:text-white transition-colors">Canvas Frames</Link></li>
               <li><Link to="/acrylic" className="hover:text-white transition-colors">Acrylic Wall Art</Link></li>
-              <li><Link to="/posters" className="hover:text-white transition-colors">Posters &amp; Wall Graphics</Link></li>
-              <li><Link to="/cork" className="hover:text-white transition-colors">Natural Cork Prints</Link></li>
-              <li><Link to="/yoga-fitness" className="hover:text-white transition-colors">Custom Yoga Mats</Link></li>
-              <li><Link to="/home-decor" className="hover:text-white transition-colors">Designer Home Décor</Link></li>
-              <li><Link to="/custom-prints" className="hover:text-white transition-colors">Custom Photo Prints</Link></li>
-              <li><Link to="/gifts" className="hover:text-white transition-colors">Gifts &amp; Celebrations</Link></li>
-              <li><Link to="/bulk-order" className="hover:text-white transition-colors">Bulk Orders &amp; Wholesale</Link></li>
-              <li><Link to="/corporate-orders" className="hover:text-white transition-colors">Corporate Branding</Link></li>
+              <li><Link to="/cork" className="hover:text-white transition-colors">Natural Cork Prints &amp; Yoga Mats</Link></li>
+              <li><Link to="/occasions" className="hover:text-white transition-colors">Gifts &amp; Celebrations</Link></li>
+              <li><Link to="/bulk-order" className="hover:text-white transition-colors">Corporate Branding</Link></li>
             </ul>
           </div>
 
@@ -162,14 +103,14 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
           <div className="space-y-2.5">
             <h4 className="font-bold text-xs uppercase tracking-wider text-white">Occasions & Gifting</h4>
             <ul className="space-y-2 text-stone-400 text-xs">
-              <li><Link to="/gifts?sub=Birthday" className="hover:text-white transition-colors">Birthday Gifts</Link></li>
-              <li><Link to="/gifts?sub=Anniversary" className="hover:text-white transition-colors">Anniversary Frames</Link></li>
-              <li><Link to="/gifts?sub=Wedding" className="hover:text-white transition-colors">Wedding Keepsakes</Link></li>
-              <li><Link to="/gifts?sub=Valentine's%20Day" className="hover:text-white transition-colors">Valentine's Day Gifts</Link></li>
-              <li><Link to="/gifts?sub=Housewarming" className="hover:text-white transition-colors">Housewarming Art</Link></li>
-              <li><Link to="/gifts?sub=Festivals" className="hover:text-white transition-colors">Festive &amp; Diwali Specials</Link></li>
-              <li><Link to="/gifts?sub=Mother's%20Day" className="hover:text-white transition-colors">Mother's &amp; Father's Day</Link></li>
-              <li><Link to="/gifts?sub=Corporate%20Gifts" className="hover:text-white transition-colors">Corporate Hampers</Link></li>
+              <li><Link to="/occasions/birthday" className="hover:text-white transition-colors">Birthday Gifts</Link></li>
+              <li><Link to="/occasions/anniversary" className="hover:text-white transition-colors">Anniversary Frames</Link></li>
+              <li><Link to="/occasions/wedding" className="hover:text-white transition-colors">Wedding Keepsakes</Link></li>
+              <li><Link to="/occasions/valentines-day" className="hover:text-white transition-colors">Valentine's Day Gifts</Link></li>
+              <li><Link to="/occasions/housewarming" className="hover:text-white transition-colors">Housewarming Art</Link></li>
+              <li><Link to="/occasions/festive-offers" className="hover:text-white transition-colors">Festive &amp; Diwali Specials</Link></li>
+              <li><Link to="/occasions/mothers-day" className="hover:text-white transition-colors">Mother's &amp; Father's Day</Link></li>
+              <li><Link to="/bulk-order" className="hover:text-white transition-colors">Corporate Hampers</Link></li>
             </ul>
           </div>
 
@@ -177,6 +118,11 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
           <div className="space-y-2.5">
             <h4 className="font-bold text-xs uppercase tracking-wider text-white">Customer Support</h4>
             <ul className="space-y-2 text-stone-400 text-xs">
+              <li>
+                <button type="button" onClick={onTrackOrder} className="hover:text-white transition-colors text-left cursor-pointer">
+                  Track Your Order
+                </button>
+              </li>
               <li><Link to="/about-us" className="hover:text-white transition-colors">About Us</Link></li>
               <li><Link to="/shipping-policy" className="hover:text-white transition-colors">Shipping &amp; Delivery Timelines</Link></li>
               <li><Link to="/refund-policy" className="hover:text-white transition-colors">Returns &amp; Replacement Policy</Link></li>

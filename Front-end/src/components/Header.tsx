@@ -28,6 +28,11 @@ import {
   Activity,
   LogOut,
   MapPin,
+  Mountain,
+  Globe,
+  PenTool,
+  Quote,
+  Shapes,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Product } from '../types';
@@ -50,6 +55,7 @@ interface HeaderProps {
   allProducts: Product[];
   onOpenCustomize: (product?: Product) => void;
   onOpenAccount?: () => void;
+  onTrackOrder?: () => void;
 }
 
 export interface AllCategoryMenuItem {
@@ -76,13 +82,6 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     description: 'High-gloss 5mm crystal clear acrylic glass prints',
   },
   {
-    name: 'Posters & Custom Wall Graphics',
-    slug: 'posters',
-    route: '/posters',
-    image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&auto=format&fit=crop&q=80',
-    description: 'Custom posters and commercial wall graphics',
-  },
-  {
     name: 'Cork',
     slug: 'cork',
     route: '/cork',
@@ -90,53 +89,11 @@ export const ALL_CATEGORIES_MENU_ITEMS: AllCategoryMenuItem[] = [
     description: 'Natural 8mm eco-friendly cork pinboards',
   },
   {
-    name: 'Yoga & Fitness',
-    slug: 'yoga-fitness',
-    route: '/yoga-fitness',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&auto=format&fit=crop&q=80',
-    description: 'Customized yoga mats and wellness gear',
-  },
-  {
-    name: 'Home Décor',
-    slug: 'home-decor',
-    route: '/home-decor',
-    image: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=400&auto=format&fit=crop&q=80',
-    description: 'Curated decorative and interior wall collections',
-  },
-  {
-    name: 'Custom Prints',
-    slug: 'custom-prints',
-    route: '/custom-prints',
-    image: 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=400&auto=format&fit=crop&q=80',
-    description: 'Personalized prints with custom sizes & photos',
-  },
-  {
-    name: 'Gifts & Occasions',
-    slug: 'gifts',
-    route: '/gifts',
-    image: 'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?w=400&auto=format&fit=crop&q=80',
-    description: 'Special photo gifts for birthdays & celebrations',
-  },
-  {
-    name: 'Bulk Order',
+    name: 'Corporate Orders',
     slug: 'bulk-order',
     route: '/bulk-order',
-    image: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?w=400&auto=format&fit=crop&q=80',
-    description: 'Volume discounts for events, schools & resellers',
-  },
-  {
-    name: 'Corporate Orders',
-    slug: 'corporate-orders',
-    route: '/corporate-orders',
     image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=400&auto=format&fit=crop&q=80',
-    description: 'Office branding, corporate kits & custom printing',
-  },
-  {
-    name: 'Designers & Architects',
-    slug: 'designers-architects',
-    route: '/designers-architects',
-    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&auto=format&fit=crop&q=80',
-    description: 'Turnkey interior wall solutions for trade professionals',
+    description: 'Corporate kits, bulk & volume discounts for events, schools & resellers',
   },
 ];
 
@@ -151,6 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
   allProducts,
   onOpenCustomize,
   onOpenAccount,
+  onTrackOrder,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -159,20 +117,30 @@ export const Header: React.FC<HeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [allCategoriesOpen, setAllCategoriesOpen] = useState(false);
 
+  // "Gifts & Occasions" opens the dedicated "Shop by Occasion" listing page.
+  const goToShopOccasions = () => {
+    navigate('/occasions');
+  };
+
   // Dynamic active category state derived from current pathname
   const activeNav = useMemo(() => {
     const path = location.pathname.toLowerCase();
-    if (path === '/canvas' || path === '/canvas-prints' || path.startsWith('/customize/canvas')) return 'canvas';
-    if (path === '/acrylic' || path === '/acrylic-prints' || path.startsWith('/customize/acrylic')) return 'acrylic';
+    if (path.startsWith('/canvas') || path.startsWith('/customize/canvas')) return 'canvas';
+    if (path.startsWith('/acrylic') || path.startsWith('/customize/acrylic')) return 'acrylic';
     if (path === '/posters') return 'posters';
-    if (path === '/cork' || path === '/cork-prints') return 'cork';
+    if (path === '/cork' || path === '/cork-prints' || path === '/cork-art-patterns') return 'cork';
     if (path === '/yoga-fitness') return 'yoga-fitness';
     if (path === '/home-decor') return 'home-decor';
     if (path === '/custom-prints') return 'custom-prints';
-    if (path === '/gifts') return 'gifts';
-    if (path === '/corporate-orders' || path === '/corporate') return 'corporate-orders';
+    if (path === '/occasions' || path.startsWith('/occasions/')) return 'gifts';
     if (path === '/bulk-order' || path === '/bulk-orders') return 'bulk-order';
     if (path === '/designers-architects') return 'designers-architects';
+    if (path === '/devotional-art') return 'devotional-art';
+    if (path === '/scenery-landscape-art') return 'scenery-landscape-art';
+    if (path === '/tribal-ethnic-art') return 'tribal-ethnic-art';
+    if (path === '/line-art') return 'line-art';
+    if (path === '/motivational-posters') return 'motivational-posters';
+    if (path === '/cork-art-patterns') return 'cork-art-patterns';
     return '';
   }, [location.pathname]);
   const [activeMegaMenu, setActiveMegaMenu] = useState<string | null>(null);
@@ -193,9 +161,19 @@ export const Header: React.FC<HeaderProps> = ({
   const [allCatMenuPos, setAllCatMenuPos] = useState<{ top: number; left: number } | null>(null);
   const [megaMenuPos, setMegaMenuPos] = useState<{ top: number; left: number } | null>(null);
 
-  // Category bar shopping categories (Excludes Bulk Order, which sits in the main header after Cart)
+  // Category bar shopping categories (Excludes Bulk Order, Posters, Custom Prints, Home Decor, and Yoga & Fitness which sits inside Cork)
   const CATEGORY_BAR_ITEMS = useMemo(() => {
-    return PRIMARY_CATEGORIES.filter((cat) => cat.slug !== 'bulk-order');
+    const excluded = new Set([
+      // Print World catalogue categories live in the "Shop by Category"
+      // homepage section, not the navbar
+      'devotional-art',
+      'scenery-landscape-art',
+      'tribal-ethnic-art',
+      'line-art',
+      'motivational-posters',
+      'cork-art-patterns',
+    ]);
+    return PRIMARY_CATEGORIES.filter((cat) => !excluded.has(cat.slug));
   }, []);
 
   // Close open dropdown menus on scroll or resize to prevent detached floating elements
@@ -226,6 +204,12 @@ export const Header: React.FC<HeaderProps> = ({
       case 'Image': return ImageIcon;
       case 'Activity': return Activity;
       case 'Home': return HomeIcon;
+      case 'Sparkles': return Sparkles;
+      case 'Mountain': return Mountain;
+      case 'Globe': return Globe;
+      case 'PenTool': return PenTool;
+      case 'Quote': return Quote;
+      case 'Shapes': return Shapes;
       default: return Sliders;
     }
   };
@@ -300,7 +284,13 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const handleNavClick = (slug: string) => {
-    onSelectCategory(slug);
+    if (slug === 'corporate-orders') {
+      navigate('/bulk-order');
+    } else if (slug === 'gifts') {
+      goToShopOccasions();
+    } else {
+      onSelectCategory(slug);
+    }
     setActiveMegaMenu(null);
     setAllCategoriesOpen(false);
     setMobileMenuOpen(false);
@@ -346,6 +336,8 @@ export const Header: React.FC<HeaderProps> = ({
       onOpenCustomize();
       onSelectCategory(slug);
     } else if (href) {
+      // Dedicated landing page for this specific dropdown item, rather than
+      // the generic category listing every item used to fall back to.
       navigate(href);
     } else {
       handleNavClick(slug);
@@ -362,6 +354,7 @@ export const Header: React.FC<HeaderProps> = ({
       case 'palette': return <Palette className="w-3.5 h-3.5 text-[#0E4A93]" />;
       case 'layers': return <Layers className="w-3.5 h-3.5 text-[#0E4A93]" />;
       case 'circleDot': return <CircleDot className="w-3.5 h-3.5 text-[#0E4A93]" />;
+      case 'activity': return <Activity className="w-3.5 h-3.5 text-[#0E4A93]" />;
       case 'printer': return <Printer className="w-3.5 h-3.5 text-[#0E4A93]" />;
       case 'package': return <Package className="w-3.5 h-3.5 text-[#0E4A93]" />;
       case 'building': return <Building2 className="w-3.5 h-3.5 text-[#0E4A93]" />;
@@ -390,7 +383,7 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Canvas India - Personalized Canvas, Acrylic & Cork Prints"
               >
                 <img
-                  src="/canvas-india-official-logo.png"
+                  src="/canvas-india-official-logo.webp"
                   alt="Canvas India"
                   className="w-[130px] lg:w-[140px] xl:w-[148px] h-auto object-contain block select-none"
                 />
@@ -482,7 +475,7 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            {/* 3. HEADER ACTIONS: Account, Wishlist, Cart, Bulk Order, Get a Quote */}
+            {/* 3. HEADER ACTIONS: Account, Wishlist, Cart, Track Your Order, Get a Quote */}
             <div className="flex items-center gap-3 lg:gap-3.5 xl:gap-5 shrink-0 text-xs sm:text-sm font-semibold">
               
               {/* Account Dropdown */}
@@ -617,15 +610,27 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </button>
 
-              {/* Bulk Order */}
-              <Link
-                to="/bulk-order"
+              {/* Track Your Order */}
+              <button
+                type="button"
+                onClick={onTrackOrder}
                 className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors cursor-pointer py-1 whitespace-nowrap"
-                title="Bulk & Corporate Orders"
+                title="Track Your Order"
               >
                 <Package className="w-4 h-4 text-white/90" strokeWidth={2} />
-                <span>Bulk Order</span>
-              </Link>
+                <span>Track Your Order</span>
+              </button>
+
+              {/* Get a Quote */}
+              <button
+                type="button"
+                onClick={onOpenQuote}
+                className="hidden xl:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#E8752A] hover:bg-[#D3631A] text-white text-xs font-bold shadow-sm transition-all hover:scale-105 cursor-pointer whitespace-nowrap ml-1"
+                title="Get a Quote on WhatsApp"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>Get a Quote</span>
+              </button>
 
               </div>
 
@@ -653,7 +658,7 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Canvas India"
               >
                 <img
-                  src="/canvas-india-official-logo.png"
+                  src="/canvas-india-official-logo.webp"
                   alt="Canvass India"
                   className="h-7 sm:h-8 md:h-9 w-auto object-contain block select-none"
                 />
@@ -727,15 +732,15 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* ========================================================================= */}
       {/* LAYER 3: WHITE CATEGORY NAVIGATION BAR (52–60px High)                     */}
-      {/* With "All Categories ↓" at far left and 7 primary categories               */}
+      {/* With "All Categories ↓" at far left and primary categories               */}
       {/* ========================================================================= */}
-      <div className="hidden lg:block w-full bg-white border-b border-stone-200 shadow-2xs">
+      <div className="hidden lg:block w-full bg-white border-b border-stone-200/80 shadow-2xs">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10">
-          <nav className="flex items-center justify-between h-[54px] w-full text-xs font-semibold text-[#111827]">
+          <nav className="flex items-center justify-center h-[50px] w-full text-xs font-semibold text-[#111827]">
             
-            <div className="flex items-center gap-1 xl:gap-2 overflow-x-auto scrollbar-none py-1">
+            <div className="flex items-center justify-center gap-1.5 sm:gap-2 lg:gap-3 xl:gap-4 overflow-x-auto scrollbar-none py-1">
               
-              {/* 1. "ALL CATEGORIES" DROPDOWN BUTTON (Far Left) */}
+              {/* 1. "ALL CATEGORIES" DROPDOWN BUTTON */}
               <div
                 ref={allCatRef}
                 className="relative shrink-0"
@@ -743,17 +748,17 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   type="button"
                   onClick={handleToggleAllCategories}
-                  className={`px-3.5 py-2 font-bold rounded-lg transition-colors flex items-center gap-2 cursor-pointer whitespace-nowrap shadow-2xs border ${
+                  className={`px-3 py-1.5 font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap text-xs border ${
                     allCategoriesOpen 
-                      ? 'bg-stone-200 text-[#0E4A93] border-blue-300/70' 
-                      : 'bg-stone-100 hover:bg-stone-200/90 text-[#0E4A93] border-stone-200/80'
+                      ? 'bg-[#0E4A93] text-white border-[#0E4A93] shadow-xs' 
+                      : 'bg-stone-100/90 hover:bg-stone-200/80 text-[#0E4A93] border-stone-200/70'
                   }`}
                   aria-expanded={allCategoriesOpen}
                   aria-haspopup="true"
                 >
-                  <Grid className="w-4 h-4 text-[#0E4A93]" />
-                  <span>All Categories</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-[#0E4A93] transition-transform duration-200 ${allCategoriesOpen ? 'rotate-180' : ''}`} />
+                  <Grid className={`w-3.5 h-3.5 ${allCategoriesOpen ? 'text-white' : 'text-[#0E4A93]'}`} />
+                  <span>Print Categories</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${allCategoriesOpen ? 'rotate-180 text-white' : 'text-[#0E4A93]'}`} />
                 </button>
 
                 {/* All Categories Dropdown Menu */}
@@ -767,9 +772,9 @@ export const Header: React.FC<HeaderProps> = ({
                     <div className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-stone-500 border-b border-stone-100 flex items-center justify-between">
                       <span className="flex items-center gap-1.5 text-[#0E4A93]">
                         <Grid className="w-3.5 h-3.5 text-[#0E4A93]" />
-                        <span>All Categories</span>
+                        <span>Print Categories</span>
                       </span>
-                      <span className="text-[10px] font-semibold text-stone-400">11 Categories</span>
+                      <span className="text-[10px] font-semibold text-stone-400">{ALL_CATEGORIES_MENU_ITEMS.length} Categories</span>
                     </div>
                     
                     <div className="py-1 space-y-0.5 max-h-[420px] overflow-y-auto scrollbar-none">
@@ -819,11 +824,8 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
 
-              {/* Separator */}
-              <div className="h-5 w-[1px] bg-stone-200 mx-1" />
-
-              {/* 2. SHOPPING CATEGORIES (Exact 9 Categories, Bulk Order moved to main header) */}
-              {CATEGORY_BAR_ITEMS.map((cat, idx) => {
+              {/* 2. SHOPPING CATEGORIES */}
+              {CATEGORY_BAR_ITEMS.map((cat) => {
                 const Icon = getCategoryIcon(cat.iconName);
                 const isActive = activeNav === cat.slug;
                 const isMenuOpen = activeMegaMenu === cat.slug;
@@ -831,10 +833,6 @@ export const Header: React.FC<HeaderProps> = ({
 
                 return (
                   <React.Fragment key={cat.slug}>
-                    {idx > 0 && (
-                      <div className="hidden xl:block h-4 w-[1px] bg-stone-200/80 shrink-0" />
-                    )}
-
                     <div
                       data-mega-menu-trigger={cat.slug}
                       className="relative"
@@ -846,16 +844,27 @@ export const Header: React.FC<HeaderProps> = ({
                     >
                       <button
                         type="button"
-                        onClick={() => handleNavClick(cat.slug)}
-                        className={`px-2 xl:px-2.5 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap border ${
+                        onClick={() => {
+                          // Gifts & Occasions has no dedicated listing page —
+                          // clicking it jumps straight to the homepage's
+                          // "Shop by Occasion" section. The dropdown with
+                          // individual occasions still opens on hover.
+                          if (cat.slug === 'gifts') {
+                            setActiveMegaMenu(null);
+                            goToShopOccasions();
+                            return;
+                          }
+                          handleNavClick(cat.slug);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap border ${
                           isActive
-                            ? 'text-[#0E4A93] font-bold bg-blue-50/70 border-blue-200/60 shadow-2xs'
+                            ? 'text-[#0E4A93] font-bold bg-blue-50/80 border-blue-200/60 shadow-2xs'
                             : isMenuOpen
-                              ? 'text-[#0E4A93] font-bold bg-stone-100 border-transparent'
-                              : 'text-[#111827] hover:text-[#0E4A93] hover:bg-stone-50 font-semibold border-transparent'
+                              ? 'text-[#0E4A93] font-bold bg-stone-100/80 border-stone-200/60'
+                              : 'text-stone-700 hover:text-[#0E4A93] hover:bg-stone-100/70 border-transparent'
                         }`}
                       >
-                        <Icon className={`w-3.5 h-3.5 ${
+                        <Icon className={`w-3.5 h-3.5 transition-colors ${
                           isActive || isMenuOpen ? 'text-[#0E4A93]' : 'text-stone-500'
                         }`} strokeWidth={1.9} />
                         <span>{cat.name}</span>
@@ -1067,7 +1076,7 @@ export const Header: React.FC<HeaderProps> = ({
                               </div>
                               <button
                                 type="button"
-                                onClick={() => handleItemClick(menuData.promo.slug, menuData.promo.actionType, menuData.promo.href)}
+                                onClick={() => handleItemClick(menuData.promo.slug, menuData.promo.actionType)}
                                 className="w-full py-2 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-2"
                               >
                                 <span>{menuData.promo.buttonText}</span>
@@ -1135,7 +1144,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="w-80 bg-white h-full shadow-2xl flex flex-col">
             <div className="p-4 bg-[#0E4A93] text-white flex items-center justify-between">
               <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center">
-                <img src="/canvas-india-official-logo.png" alt="Canvas India" className="w-[125px] h-auto object-contain" />
+                <img src="/canvas-india-official-logo.webp" alt="Canvas India" className="w-[125px] h-auto object-contain" />
               </Link>
               <button type="button" onClick={() => setMobileMenuOpen(false)} className="p-1 text-white hover:text-stone-300">
                 <X className="w-6 h-6" />
@@ -1275,7 +1284,7 @@ export const Header: React.FC<HeaderProps> = ({
                                 <button
                                   key={item.name}
                                   type="button"
-                                  onClick={() => handleItemClick(item.slug, item.actionType)}
+                                  onClick={() => handleItemClick(item.slug, item.actionType, item.href)}
                                   className="text-left py-1 text-xs text-stone-600 hover:text-[#0E4A93] font-medium flex items-center justify-between"
                                 >
                                   <span>{item.name}</span>

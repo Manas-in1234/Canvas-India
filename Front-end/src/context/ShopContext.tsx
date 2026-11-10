@@ -119,7 +119,16 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const apiProducts = await fetchProductsFromApi();
 
       if (apiProducts && apiProducts.length > 0) {
-        setAllProducts(apiProducts);
+        // Merge API products with static ALL_PRODUCTS catalogue.
+        // API products take precedence by ID and slug.
+        // Local catalogue products (devotional art, line art, motivational posters, cork patterns, etc.)
+        // that do not exist in the remote database are preserved so catalogue pages never lose their items.
+        const apiIds = new Set(apiProducts.map((p) => String(p.id)));
+        const apiSlugs = new Set(apiProducts.map((p) => p.slug).filter(Boolean));
+        const remainingStatic = ALL_PRODUCTS.filter(
+          (p) => !apiIds.has(String(p.id)) && !apiSlugs.has(p.slug)
+        );
+        setAllProducts([...apiProducts, ...remainingStatic]);
       }
     } catch (err: any) {
       setProductsError(err?.message || 'Failed to fetch products from backend');
@@ -318,7 +327,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
       navigate(`/customize/${material}/single${queryString}`);
     } else {
-      navigate('/customize/canvas/single');
+      navigate('/customize/canvas/single?tab=products');
     }
   };
 

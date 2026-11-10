@@ -3,6 +3,20 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { Search, ChevronRight, SlidersHorizontal, ArrowRight, Sparkles } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
+import { Product } from '../types';
+
+// Catalogue designs offered in both Canvas and Acrylic share an id like
+// "canvas-<design-key>" / "acrylic-<design-key>". Grouping on that key lets
+// search results show one card per design with a material picker, instead
+// of two near-identical cards back to back.
+const MATERIAL_VARIANT_RE = /^(canvas|acrylic)-(.+)$/;
+
+interface SearchDisplayGroup {
+  key: string;
+  canvas?: Product;
+  acrylic?: Product;
+  single?: Product;
+}
 
 export const SearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -10,6 +24,7 @@ export const SearchPage: React.FC = () => {
   const [inputValue, setInputValue] = useState(query);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [sortBy, setSortBy] = useState<'recommended' | 'price-asc' | 'price-desc' | 'newest'>('recommended');
+  const [materialChoice, setMaterialChoice] = useState<Record<string, 'canvas' | 'acrylic'>>({});
 
   const {
     allProducts,
@@ -74,6 +89,32 @@ export const SearchPage: React.FC = () => {
     return list;
   }, [searchResults, selectedCategory, sortBy]);
 
+  // Collapse Canvas/Acrylic pairs of the same design into one card with a
+  // material picker, so search results don't show visually-duplicate entries.
+  const displayGroups = useMemo(() => {
+    const groups: SearchDisplayGroup[] = [];
+    const byDesignKey = new Map<string, SearchDisplayGroup>();
+
+    filteredAndSorted.forEach((p) => {
+      const match = p.id.match(MATERIAL_VARIANT_RE);
+      if (match) {
+        const material = match[1] as 'canvas' | 'acrylic';
+        const designKey = match[2];
+        let group = byDesignKey.get(designKey);
+        if (!group) {
+          group = { key: designKey };
+          byDesignKey.set(designKey, group);
+          groups.push(group);
+        }
+        group[material] = p;
+      } else {
+        groups.push({ key: p.id, single: p });
+      }
+    });
+
+    return groups;
+  }, [filteredAndSorted]);
+
   return (
     <div className="w-full bg-[#FFFDF9] py-8 sm:py-12 text-stone-900 font-manrope min-h-[70vh]">
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
@@ -121,7 +162,7 @@ export const SearchPage: React.FC = () => {
               {query ? `Search Results for "${query}"` : 'All Products Catalog'}
             </h1>
             <p className="text-xs sm:text-sm text-stone-500 mt-1">
-              Found {searchResults.length} {searchResults.length === 1 ? 'product' : 'products'} matching your query.
+              Found {displayGroups.length} {displayGroups.length === 1 ? 'product' : 'products'} matching your query.
             </p>
           </div>
 
@@ -199,16 +240,50 @@ export const SearchPage: React.FC = () => {
         ) : (
           <div className="pt-6">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
-              {filteredAndSorted.map((prod) => (
-                <ProductCard
-                  key={prod.id}
-                  product={prod}
-                  isWishlisted={wishlistIds.includes(prod.id)}
-                  onToggleWishlist={onToggleWishlist}
-                  onAddToCart={onAddToCart}
-                  onCustomize={onOpenCustomize}
-                />
-              ))}
+              {displayGroups.map((group) => {
+                if (group.single) {
+                  return (
+                    <ProductCard
+                      key={group.key}
+                      product={group.single}
+                      isWishlisted={wishlistIds.includes(group.single.id)}
+                      onToggleWishlist={onToggleWishlist}
+                      onAddToCart={onAddToCart}
+                      onCustomize={onOpenCustomize}
+                      variant="listing"
+                    />
+                  );
+                }
+
+                const choice = materialChoice[group.key] || (group.canvas ? 'canvas' : 'acrylic');
+                const activeProduct = (choice === 'canvas' ? group.canvas : group.acrylic) || group.canvas || group.acrylic!;
+
+                const materialOptions = [
+                  group.canvas && {
+                    label: 'Canvas',
+                    active: choice === 'canvas',
+                    onSelect: () => setMaterialChoice((prev) => ({ ...prev, [group.key]: 'canvas' })),
+                  },
+                  group.acrylic && {
+                    label: 'Acrylic',
+                    active: choice === 'acrylic',
+                    onSelect: () => setMaterialChoice((prev) => ({ ...prev, [group.key]: 'acrylic' })),
+                  },
+                ].filter(Boolean) as { label: string; active: boolean; onSelect: () => void }[];
+
+                return (
+                  <ProductCard
+                    key={group.key}
+                    product={activeProduct}
+                    isWishlisted={wishlistIds.includes(activeProduct.id)}
+                    onToggleWishlist={onToggleWishlist}
+                    onAddToCart={onAddToCart}
+                    onCustomize={onOpenCustomize}
+                    variant="listing"
+                    materialOptions={materialOptions}
+                  />
+                );
+              })}
             </div>
           </div>
         )}

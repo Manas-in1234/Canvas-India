@@ -135,7 +135,16 @@ export const BusRollBackgroundPanel: React.FC<BusRollBackgroundPanelProps> = ({
                 <button
                   key={pat.id}
                   type="button"
-                  onClick={() => onChangeConfig({ patternId: pat.id })}
+                  onClick={() =>
+                    onChangeConfig({
+                      patternId: pat.id,
+                      // Picking a pattern while opacity is at 0% would
+                      // otherwise select it but render it fully invisible —
+                      // give it a sensible visible default unless the
+                      // shopper already dialled in their own opacity.
+                      ...(pat.id !== 'solid' && config.patternOpacity <= 0 ? { patternOpacity: 0.22 } : {})
+                    })
+                  }
                   className={`group relative p-1.5 rounded-xl border flex flex-col items-center justify-between transition-all cursor-pointer aspect-square ${
                     isSelected
                       ? 'border-2 border-[#0E4A93] bg-blue-50/30 shadow-xs ring-1 ring-[#0E4A93]/20'

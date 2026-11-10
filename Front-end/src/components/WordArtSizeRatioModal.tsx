@@ -5,6 +5,7 @@ import {
   type WordArtRatioTab,
   type WordArtSizeOption
 } from '../data/wordArtData';
+import { bulkUnitPriceFor, MIN_BULK_QTY } from '../pages/BulkOrdersPage';
 
 export interface WordArtSizeRatioModalProps {
   isOpen: boolean;
@@ -13,6 +14,9 @@ export interface WordArtSizeRatioModalProps {
   onCreateWordArt: (size: WordArtSizeOption) => void;
   currentSelectedSizeId?: string;
   selectedSizeId?: string;
+  /** When set to a bulk quantity (>= MIN_BULK_QTY), every size's displayed
+   * price reflects the same volume discount shown on the Bulk Orders page. */
+  bulkQuantity?: number;
 }
 
 const TABS: WordArtRatioTab[] = ['Square', '3:2 Ratio', '4:3 Ratio', '16:9 Ratio'];
@@ -23,9 +27,12 @@ export const WordArtSizeRatioModal: React.FC<WordArtSizeRatioModalProps> = ({
   onSelectSize,
   onCreateWordArt,
   currentSelectedSizeId,
-  selectedSizeId: initialSelectedSizeId = 'word-sq-8x8'
+  selectedSizeId: initialSelectedSizeId = 'word-sq-8x8',
+  bulkQuantity
 }) => {
   const initialId = currentSelectedSizeId || initialSelectedSizeId || 'word-sq-8x8';
+  const hasBulkDiscount = bulkQuantity !== undefined && bulkQuantity >= MIN_BULK_QTY;
+  const displayPrice = (price: number) => (hasBulkDiscount ? bulkUnitPriceFor(price, bulkQuantity!) : price);
   const [activeTab, setActiveTab] = useState<WordArtRatioTab>('Square');
   const [selectedSizeId, setSelectedSizeId] = useState<string>(initialId);
 
@@ -167,7 +174,7 @@ export const WordArtSizeRatioModal: React.FC<WordArtSizeRatioModalProps> = ({
                       {opt.label}
                     </p>
                     <p className="text-[11px] font-black text-[#0E4A93] mt-0.5">
-                      ₹{opt.price.toFixed(2)}
+                      ₹{displayPrice(opt.price).toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -180,7 +187,7 @@ export const WordArtSizeRatioModal: React.FC<WordArtSizeRatioModalProps> = ({
         <div className="px-6 py-4 bg-stone-50 border-t border-stone-200 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-xs text-stone-500 text-center sm:text-left">
             Selected: <span className="font-extrabold text-stone-800">{selectedOption.label}</span> —{' '}
-            <span className="font-black text-[#0E4A93]">₹{selectedOption.price.toFixed(2)}</span>
+            <span className="font-black text-[#0E4A93]">₹{displayPrice(selectedOption.price).toFixed(2)}</span>
             <span className="hidden sm:inline text-stone-400 ml-2">| Double-click a card or press button below</span>
           </div>
           <button

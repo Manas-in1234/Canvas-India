@@ -6,19 +6,18 @@ import {
   RotateCcw,
   ChevronRight,
   FilterX,
-  ArrowUpDown,
   Sparkles,
   Check,
   ShoppingCart
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
-import { CANVAS_FILTER_OCCASIONS } from '../data/storeData';
+import { ShopByCategoryFilter } from '../components/ShopByCategoryFilter';
 import { Product } from '../types';
 
-type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'discount';
-
-const PRICE_MIN_DEFAULT = 400;
+// Low enough to include the ₹249 catalogue designs shown here when a Shop by
+// Category pick is active, not just Canvas's own ~₹549+ products.
+const PRICE_MIN_DEFAULT = 200;
 const PRICE_MAX_DEFAULT = 4000;
 
 export const CanvasCategoryPage: React.FC = () => {
@@ -34,88 +33,41 @@ export const CanvasCategoryPage: React.FC = () => {
   // Filter States
   const [minPrice, setMinPrice] = useState<number>(PRICE_MIN_DEFAULT);
   const [maxPrice, setMaxPrice] = useState<number>(PRICE_MAX_DEFAULT);
-  const [selectedOccasions, setSelectedOccasions] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
+  // Shop by Category picks — when any are checked, they REPLACE Canvas's own
+  // listing with just the checked categories' products, shown on this same
+  // page instead of navigating elsewhere. With none checked, Canvas's own
+  // products show as usual.
+  const [extraCategorySlugs, setExtraCategorySlugs] = useState<string[]>([]);
 
   // Source of truth for Canvas category products — pulled from the shared
   // catalog (same as Acrylic) so product cards link to real, working detail pages
   const products: Product[] = useMemo(
-    () => allProducts.filter((p) => p.categorySlug === 'canvas'),
-    [allProducts]
+    () =>
+      extraCategorySlugs.length > 0
+        ? allProducts.filter((p) => extraCategorySlugs.includes(p.categorySlug))
+        : allProducts.filter((p) => p.categorySlug === 'canvas'),
+    [allProducts, extraCategorySlugs]
   );
-
-  // Matches an occasion against a product's occasions list, falling back to tags
-  const productMatchesOccasion = (product: Product, occ: string) =>
-    !!product.occasions?.includes(occ) ||
-    !!product.tags?.some((t) => t.toLowerCase() === occ.toLowerCase());
-
-  // Occasion count helper
-  const occasionCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    CANVAS_FILTER_OCCASIONS.forEach((occ) => {
-      counts[occ] = products.filter((p) => productMatchesOccasion(p, occ)).length;
-    });
-    return counts;
-  }, [products]);
-
-  // Toggle occasion filter
-  const handleToggleOccasion = (occ: string) => {
-    setSelectedOccasions((prev) => 
-      prev.includes(occ) ? prev.filter((o) => o !== occ) : [...prev, occ]
-    );
-  };
 
   // Reset all filters
   const handleResetFilters = () => {
     setMinPrice(PRICE_MIN_DEFAULT);
     setMaxPrice(PRICE_MAX_DEFAULT);
-    setSelectedOccasions([]);
-    setSortBy('featured');
+    setExtraCategorySlugs([]);
   };
 
   // Check if any filter is active
-  const isFiltered = 
-    minPrice > PRICE_MIN_DEFAULT || 
-    maxPrice < PRICE_MAX_DEFAULT || 
-    selectedOccasions.length > 0;
+  const isFiltered =
+    minPrice > PRICE_MIN_DEFAULT ||
+    maxPrice < PRICE_MAX_DEFAULT;
 
-  // Filtered and sorted products
+  // Filtered products
   const filteredProducts = useMemo(() => {
-    let result = products.filter((product) => {
-      // Price range check
-      const matchesPrice = product.price >= minPrice && product.price <= maxPrice;
-
-      // Occasion check
-      const matchesOccasion =
-        selectedOccasions.length === 0 ||
-        selectedOccasions.some((occ) => productMatchesOccasion(product, occ));
-
-      return matchesPrice && matchesOccasion;
+    return products.filter((product) => {
+      return product.price >= minPrice && product.price <= maxPrice;
     });
-
-    // Sorting
-    switch (sortBy) {
-      case 'price-low':
-        result = [...result].sort((a, b) => a.price - b.price);
-        break;
-      case 'price-high':
-        result = [...result].sort((a, b) => b.price - a.price);
-        break;
-      case 'rating':
-        result = [...result].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-        break;
-      case 'discount':
-        result = [...result].sort((a, b) => b.discountPercent - a.discountPercent);
-        break;
-      case 'featured':
-      default:
-        // Default ordering
-        break;
-    }
-
-    return result;
-  }, [products, minPrice, maxPrice, selectedOccasions, sortBy]);
+  }, [products, minPrice, maxPrice]);
 
   // Price presets
   const applyPricePreset = (min: number, max: number) => {
@@ -181,7 +133,7 @@ export const CanvasCategoryPage: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => navigate(`/customize/canvas/${products[0]?.slug || products[0]?.id || 'canvas-classic'}`)}
+                  onClick={() => navigate(`/customize/canvas/${products[0]?.slug || products[0]?.id || 'canvas-single'}?tab=products`)}
                   className="px-6 py-3.5 bg-[#E8752A] hover:bg-[#d6651d] active:scale-[0.99] text-white text-xs sm:text-sm font-black rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4 text-amber-200" />
@@ -197,21 +149,12 @@ export const CanvasCategoryPage: React.FC = () => {
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-3xl overflow-hidden border border-stone-200 shadow-xl bg-stone-100 group aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3]">
                 <img
-                  src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=1200&auto=format&fit=crop&q=80"
-                  alt="Canvas Prints and Wall Art in Living Room"
+                  src="/assets/canvas/canvas-gold-teal-leaves.webp"
+                  alt="Canvas Prints and Wall Art"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/10 pointer-events-none" />
-
-                {/* Floating Highlight Badge */}
-                <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-md border border-stone-200/80 flex items-center gap-2.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <div>
-                    <div className="text-[11px] font-black text-stone-900 leading-tight">Museum Cotton Canvas</div>
-                    <div className="text-[10px] text-stone-500">Starting from ₹499 | Up to 38% OFF</div>
-                  </div>
-                </div>
 
               </div>
             </div>
@@ -227,46 +170,20 @@ export const CanvasCategoryPage: React.FC = () => {
       <section id="canvas-catalog-section" className="w-full py-8 sm:py-12 border-b border-stone-200/80">
         <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
 
-          {/* Section Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-6 mb-6 border-b border-stone-200">
-            {/* Results Count & Controls */}
-            <div className="flex items-center gap-3 shrink-0 self-start md:self-end">
-              {/* Mobile Filter Trigger */}
-              <button
-                type="button"
-                onClick={() => setMobileFiltersOpen(true)}
-                className="lg:hidden flex items-center gap-2 px-3.5 py-2 rounded-lg border border-stone-300 bg-white text-xs font-bold text-stone-800 hover:border-[#0E4A93] shadow-2xs cursor-pointer"
-                aria-label="Open filter sidebar"
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5 text-[#0E4A93]" />
-                <span>Filters</span>
-                {isFiltered && (
-                  <span className="w-2 h-2 rounded-full bg-[#E8752A]"></span>
-                )}
-              </button>
-
-              {/* Sort By Dropdown */}
-              <div className="flex items-center gap-2 text-xs">
-                <label htmlFor="sort-dropdown" className="font-semibold text-stone-500 hidden sm:inline">
-                  Sort:
-                </label>
-                <div className="relative">
-                  <select
-                    id="sort-dropdown"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as SortOption)}
-                    className="appearance-none bg-white border border-stone-300 hover:border-[#0E4A93] text-stone-800 font-semibold text-xs rounded-lg px-3 py-2 pr-7 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0E4A93]/20 shadow-2xs"
-                  >
-                    <option value="featured">Featured</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="rating">Customer Rating</option>
-                    <option value="discount">Biggest Discount</option>
-                  </select>
-                  <ArrowUpDown className="w-3 h-3 text-stone-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
-            </div>
+          {/* Mobile Filter Trigger — only control left here, so the whole bar is mobile-only */}
+          <div className="lg:hidden flex items-center justify-end pb-6 mb-6 border-b border-stone-200">
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen(true)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-stone-300 bg-white text-xs font-bold text-stone-800 hover:border-[#0E4A93] shadow-2xs cursor-pointer"
+              aria-label="Open filter sidebar"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 text-[#0E4A93]" />
+              <span>Filters</span>
+              {isFiltered && (
+                <span className="w-2 h-2 rounded-full bg-[#E8752A]"></span>
+              )}
+            </button>
           </div>
 
           {/* Active Filter Badges Bar */}
@@ -287,23 +204,6 @@ export const CanvasCategoryPage: React.FC = () => {
                   </button>
                 </span>
               )}
-
-              {selectedOccasions.map((occ) => (
-                <span 
-                  key={occ}
-                  className="inline-flex items-center gap-1.5 bg-white border border-orange-200 text-stone-800 px-2.5 py-1 rounded-md font-semibold text-[11px] shadow-2xs"
-                >
-                  <span>{occ}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleOccasion(occ)}
-                    className="text-stone-400 hover:text-stone-700 cursor-pointer"
-                    aria-label={`Remove ${occ} filter`}
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
 
               <button
                 type="button"
@@ -462,54 +362,14 @@ export const CanvasCategoryPage: React.FC = () => {
               </div>
 
               {/* ------------------------------------------------------------- */}
-              {/* FILTER B: SHOP BY OCCASION                                     */}
+              {/* FILTER B: SHOP BY CATEGORY                                     */}
               {/* ------------------------------------------------------------- */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs uppercase tracking-wide text-stone-900">
-                    Shop by Occasion
-                  </span>
-                  {selectedOccasions.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedOccasions([])}
-                      className="text-[10px] font-bold text-stone-500 hover:text-stone-800"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-
-                <div className="space-y-1.5">
-                  {CANVAS_FILTER_OCCASIONS.map((occasion) => {
-                    const isChecked = selectedOccasions.includes(occasion);
-                    const count = occasionCounts[occasion] || 0;
-
-                    return (
-                      <label
-                        key={occasion}
-                        className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
-                          isChecked 
-                            ? 'bg-blue-50/70 text-[#0E4A93]' 
-                            : 'hover:bg-stone-50 text-stone-700'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => handleToggleOccasion(occasion)}
-                            className="w-4 h-4 rounded text-[#0E4A93] focus:ring-[#0E4A93] cursor-pointer"
-                          />
-                          <span>{occasion}</span>
-                        </div>
-                        <span className={`text-[11px] font-medium ${isChecked ? 'text-[#0E4A93]' : 'text-stone-400'}`}>
-                          ({count})
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
+                <span className="font-bold text-xs uppercase tracking-wide text-stone-900 block">
+                  Shop by Category
+                </span>
+                <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
+                <ShopByCategoryFilter selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
               </div>
 
             </aside>
@@ -522,7 +382,7 @@ export const CanvasCategoryPage: React.FC = () => {
               {/* Results status indicator */}
               <div className="flex items-center justify-between pb-4 mb-4 text-xs font-semibold text-stone-600 border-b border-stone-100">
                 <div>
-                  Showing <span className="text-stone-900 font-bold">{filteredProducts.length}</span> of {products.length} Canvas Prints
+                  Showing <span className="text-stone-900 font-bold">{filteredProducts.length}</span> of {products.length} {extraCategorySlugs.length > 0 ? 'Products' : 'Canvas Prints'}
                 </div>
                 {isFiltered && (
                   <div className="text-[11px] text-[#0E4A93] font-bold">
@@ -554,7 +414,7 @@ export const CanvasCategoryPage: React.FC = () => {
                   </div>
                   <div className="space-y-1">
                     <h3 className="text-lg font-bold text-stone-900">
-                      No Canvas Prints Match Filters
+                      No {extraCategorySlugs.length > 0 ? 'Products' : 'Canvas Prints'} Match Filters
                     </h3>
                     <p className="text-xs text-stone-500 leading-relaxed">
                       We couldn't find any products in your selected price range or occasion criteria.
@@ -702,37 +562,13 @@ export const CanvasCategoryPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Shop by Occasion */}
+              {/* Shop by Category */}
               <div className="space-y-3 pt-4 border-t border-stone-100">
                 <span className="font-bold text-xs uppercase tracking-wide text-stone-900 block">
-                  Shop by Occasion
+                  Shop by Category
                 </span>
-                <div className="space-y-2">
-                  {CANVAS_FILTER_OCCASIONS.map((occasion) => {
-                    const isChecked = selectedOccasions.includes(occasion);
-                    const count = occasionCounts[occasion] || 0;
-
-                    return (
-                      <label
-                        key={occasion}
-                        className={`flex items-center justify-between p-2 rounded-lg text-xs font-semibold cursor-pointer ${
-                          isChecked ? 'bg-blue-50 text-[#0E4A93]' : 'bg-stone-50 text-stone-700'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => handleToggleOccasion(occasion)}
-                            className="w-4 h-4 rounded text-[#0E4A93] cursor-pointer"
-                          />
-                          <span>{occasion}</span>
-                        </div>
-                        <span className="text-[11px] text-stone-400">({count})</span>
-                      </label>
-                    );
-                  })}
-                </div>
+                <p className="text-[10px] text-stone-400 -mt-1.5">Check more than one to view them together.</p>
+                <ShopByCategoryFilter selectedSlugs={extraCategorySlugs} onChange={setExtraCategorySlugs} />
               </div>
 
             </div>

@@ -3,7 +3,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Mail,
-  Phone,
   AlertCircle,
   ArrowRight,
   ShieldCheck,
@@ -15,8 +14,6 @@ import {
 export const LoginPage: React.FC = () => {
   const {
     signInWithGoogle,
-    signInWithPhone,
-    verifyPhoneOtp,
     signInWithEmailOtp,
     verifyEmailOtp,
   } = useAuth();
@@ -24,15 +21,6 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '/account';
-
-  // Active Login Method: 'phone' | 'email'
-  const [activeTab, setActiveTab] = useState<'phone' | 'email'>('phone');
-
-  // Phone form state
-  const [phone, setPhone] = useState('');
-  const [phoneOtp, setPhoneOtp] = useState('');
-  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
-  const [phoneTimer, setPhoneTimer] = useState(0);
 
   // Email form state (Pure OTP flow, no passwords)
   const [email, setEmail] = useState('');
@@ -45,17 +33,6 @@ export const LoginPage: React.FC = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  // Countdown timer for Phone OTP resend
-  useEffect(() => {
-    let interval: any = null;
-    if (phoneTimer > 0) {
-      interval = setInterval(() => {
-        setPhoneTimer((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [phoneTimer]);
 
   // Countdown timer for Email OTP resend
   useEffect(() => {
@@ -77,57 +54,6 @@ export const LoginPage: React.FC = () => {
 
     if (googleError) {
       setError(googleError.message || 'Google sign-in failed. Please try again.');
-    }
-  };
-
-  // -------------------------------------------------------------
-  // PHONE OTP FLOW
-  // -------------------------------------------------------------
-  const handleSendPhoneOtp = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setError(null);
-    setSuccess(null);
-
-    const cleanPhone = phone.replace(/\D/g, '');
-    if (cleanPhone.length !== 10) {
-      setError('Please enter a valid 10-digit mobile number.');
-      return;
-    }
-
-    setLoading(true);
-    const { error: phoneError } = await signInWithPhone(cleanPhone);
-    setLoading(false);
-
-    if (phoneError) {
-      setError(phoneError.message || 'Unable to send OTP to this mobile number. Please check the number or use Email/Google.');
-    } else {
-      setPhoneOtpSent(true);
-      setPhoneTimer(30);
-      setSuccess(`OTP sent successfully to +91 ${cleanPhone}`);
-    }
-  };
-
-  const handleVerifyPhoneOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-
-    if (!phoneOtp || phoneOtp.trim().length < 4) {
-      setError('Please enter the verification code sent to your mobile.');
-      return;
-    }
-
-    setLoading(true);
-    const { error: verifyError } = await verifyPhoneOtp(phone, phoneOtp);
-    setLoading(false);
-
-    if (verifyError) {
-      setError(verifyError.message || 'Invalid or expired OTP code. Please try again.');
-    } else {
-      setSuccess('Verification successful! Logging you in...');
-      setTimeout(() => {
-        navigate(redirectUrl);
-      }, 600);
     }
   };
 
@@ -242,45 +168,9 @@ export const LoginPage: React.FC = () => {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-white px-3 text-gray-500 font-semibold tracking-wider">
-                Or continue with OTP
+                Or continue with Email OTP
               </span>
             </div>
-          </div>
-
-          {/* 2 TABS: MOBILE OTP OR EMAIL OTP */}
-          <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-xl mb-6">
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('phone');
-                setError(null);
-                setSuccess(null);
-              }}
-              className={`flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg transition cursor-pointer ${
-                activeTab === 'phone'
-                  ? 'bg-white text-[#002B49] shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Phone className="w-3.5 h-3.5" />
-              <span>Mobile OTP</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('email');
-                setError(null);
-                setSuccess(null);
-              }}
-              className={`flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg transition cursor-pointer ${
-                activeTab === 'email'
-                  ? 'bg-white text-[#002B49] shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Mail className="w-3.5 h-3.5" />
-              <span>Email OTP</span>
-            </button>
           </div>
 
           {/* ALERT MESSAGES */}
@@ -298,249 +188,123 @@ export const LoginPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 1: MOBILE OTP LOGIN */}
-          {activeTab === 'phone' && (
-            <div>
-              {!phoneOtpSent ? (
-                <form className="space-y-4" onSubmit={handleSendPhoneOtp}>
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1.5">
-                      Mobile Number
-                    </label>
-                    <div className="relative rounded-lg shadow-xs flex">
-                      <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-600 text-sm font-semibold select-none">
-                        🇮🇳 +91
-                      </span>
-                      <input
-                        type="tel"
-                        maxLength={10}
-                        required
-                        value={phone}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, '');
-                          setPhone(val);
-                        }}
-                        placeholder="Enter 10-digit mobile number"
-                        className="block w-full px-3 py-2.5 border border-gray-300 rounded-r-lg text-sm focus:ring-2 focus:ring-[#002B49] focus:border-transparent outline-none transition"
-                      />
+          {/* EMAIL OTP LOGIN (NO PASSWORD) */}
+          <div>
+            {!emailOtpSent ? (
+              <form className="space-y-4" onSubmit={handleSendEmailOtp}>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1.5">
+                    Email Address
+                  </label>
+                  <div className="relative rounded-lg shadow-xs">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                      <Mail className="h-5 w-5" />
                     </div>
-                    <p className="mt-1.5 text-[11px] text-gray-500">
-                      We will send a 6-digit verification code to your phone.
-                    </p>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#002B49] focus:border-transparent outline-none transition"
+                    />
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-gray-500">
+                    We will send a 6-digit verification code to your email. No password needed.
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading || !email.includes('@')}
+                  className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#002B49] hover:bg-[#001f35] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#002B49] disabled:opacity-50 transition cursor-pointer"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Sending OTP...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Send Email OTP</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              <form className="space-y-4" onSubmit={handleVerifyEmailOtp}>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700">
+                      Enter Email OTP Code
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmailOtpSent(false);
+                        setEmailOtp('');
+                        setError(null);
+                      }}
+                      className="text-xs text-[#002B49] font-medium hover:underline cursor-pointer"
+                    >
+                      Change email
+                    </button>
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading || phone.replace(/\D/g, '').length !== 10}
-                    className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#002B49] hover:bg-[#001f35] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#002B49] disabled:opacity-50 transition cursor-pointer"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Sending OTP...</span>
-                      </>
+                  <div className="relative rounded-lg shadow-xs">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                      <KeyRound className="h-5 w-5" />
+                    </div>
+                    <input
+                      type="text"
+                      maxLength={8}
+                      autoFocus
+                      required
+                      value={emailOtp}
+                      onChange={(e) => setEmailOtp(e.target.value)}
+                      placeholder="Enter 6-digit OTP"
+                      className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm tracking-widest font-mono focus:ring-2 focus:ring-[#002B49] focus:border-transparent outline-none transition"
+                    />
+                  </div>
+
+                  <div className="mt-2 flex items-center justify-between text-xs">
+                    <span className="text-gray-500 truncate max-w-[200px]">Sent to {email}</span>
+                    {emailTimer > 0 ? (
+                      <span className="text-gray-500">Resend in {emailTimer}s</span>
                     ) : (
-                      <>
-                        <span>Get OTP</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              ) : (
-                <form className="space-y-4" onSubmit={handleVerifyPhoneOtp}>
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700">
-                        Enter 6-Digit OTP
-                      </label>
                       <button
                         type="button"
-                        onClick={() => {
-                          setPhoneOtpSent(false);
-                          setPhoneOtp('');
-                          setError(null);
-                        }}
-                        className="text-xs text-[#002B49] font-medium hover:underline cursor-pointer"
+                        onClick={() => handleSendEmailOtp()}
+                        className="text-[#002B49] font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
                       >
-                        Change number
+                        <RotateCw className="w-3 h-3" />
+                        <span>Resend Code</span>
                       </button>
-                    </div>
-
-                    <div className="relative rounded-lg shadow-xs">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                        <KeyRound className="h-5 w-5" />
-                      </div>
-                      <input
-                        type="text"
-                        maxLength={8}
-                        autoFocus
-                        required
-                        value={phoneOtp}
-                        onChange={(e) => setPhoneOtp(e.target.value)}
-                        placeholder="Enter OTP code"
-                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm tracking-widest font-mono focus:ring-2 focus:ring-[#002B49] focus:border-transparent outline-none transition"
-                      />
-                    </div>
-
-                    <div className="mt-2 flex items-center justify-between text-xs">
-                      <span className="text-gray-500">Sent to +91 {phone}</span>
-                      {phoneTimer > 0 ? (
-                        <span className="text-gray-500">Resend in {phoneTimer}s</span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleSendPhoneOtp()}
-                          className="text-[#002B49] font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
-                        >
-                          <RotateCw className="w-3 h-3" />
-                          <span>Resend OTP</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading || phoneOtp.trim().length === 0}
-                    className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#002B49] hover:bg-[#001f35] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#002B49] disabled:opacity-50 transition cursor-pointer"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Verifying...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Verify &amp; Sign In</span>
-                        <CheckCircle className="w-4 h-4" />
-                      </>
                     )}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
-
-          {/* TAB 2: EMAIL OTP LOGIN (NO PASSWORD) */}
-          {activeTab === 'email' && (
-            <div>
-              {!emailOtpSent ? (
-                <form className="space-y-4" onSubmit={handleSendEmailOtp}>
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1.5">
-                      Email Address
-                    </label>
-                    <div className="relative rounded-lg shadow-xs">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                        <Mail className="h-5 w-5" />
-                      </div>
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="you@example.com"
-                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#002B49] focus:border-transparent outline-none transition"
-                      />
-                    </div>
-                    <p className="mt-1.5 text-[11px] text-gray-500">
-                      We will send a 6-digit verification code to your email. No password needed.
-                    </p>
                   </div>
+                </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading || !email.includes('@')}
-                    className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#002B49] hover:bg-[#001f35] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#002B49] disabled:opacity-50 transition cursor-pointer"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Sending OTP...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Send Email OTP</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              ) : (
-                <form className="space-y-4" onSubmit={handleVerifyEmailOtp}>
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700">
-                        Enter Email OTP Code
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEmailOtpSent(false);
-                          setEmailOtp('');
-                          setError(null);
-                        }}
-                        className="text-xs text-[#002B49] font-medium hover:underline cursor-pointer"
-                      >
-                        Change email
-                      </button>
-                    </div>
-
-                    <div className="relative rounded-lg shadow-xs">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                        <KeyRound className="h-5 w-5" />
-                      </div>
-                      <input
-                        type="text"
-                        maxLength={8}
-                        autoFocus
-                        required
-                        value={emailOtp}
-                        onChange={(e) => setEmailOtp(e.target.value)}
-                        placeholder="Enter 6-digit OTP"
-                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm tracking-widest font-mono focus:ring-2 focus:ring-[#002B49] focus:border-transparent outline-none transition"
-                      />
-                    </div>
-
-                    <div className="mt-2 flex items-center justify-between text-xs">
-                      <span className="text-gray-500 truncate max-w-[200px]">Sent to {email}</span>
-                      {emailTimer > 0 ? (
-                        <span className="text-gray-500">Resend in {emailTimer}s</span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleSendEmailOtp()}
-                          className="text-[#002B49] font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
-                        >
-                          <RotateCw className="w-3 h-3" />
-                          <span>Resend Code</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading || emailOtp.trim().length === 0}
-                    className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#002B49] hover:bg-[#001f35] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#002B49] disabled:opacity-50 transition cursor-pointer"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Verifying...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Verify &amp; Sign In</span>
-                        <CheckCircle className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
+                <button
+                  type="submit"
+                  disabled={loading || emailOtp.trim().length === 0}
+                  className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#002B49] hover:bg-[#001f35] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#002B49] disabled:opacity-50 transition cursor-pointer"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Verifying...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Verify &amp; Sign In</span>
+                      <CheckCircle className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+          </div>
 
           {/* QUICK GUEST CHECKOUT LINK IF ARRIVING FROM CART */}
           {redirectUrl.includes('checkout') && (

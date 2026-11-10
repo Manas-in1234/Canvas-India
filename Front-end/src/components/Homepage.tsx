@@ -1,7 +1,12 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight, Truck, BadgeCheck, Headphones, ShieldCheck, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Tag, Copy, Check, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote, Image as ImageIcon, LayoutGrid, Grid2x2, Columns3, Grid3x3, Music, Type, Rows3 } from 'lucide-react';
 import { Product } from '../types';
+import { OCCASIONS } from '../data/occasionsData';
+import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
+import { ACRYLIC_PRODUCT_TYPES } from '../data/acrylicCustomizerData';
+import { ACRYLIC_STYLE_LANDING_DATA, getAcrylicLandingDataByProductId } from '../data/acrylicStyleLandingData';
+import { CORK_PRODUCT_CARDS } from '../data/corkProductCards';
 
 export interface HomepageProps {
   onSelectCategory: (slug: string, sub?: string) => void;
@@ -29,20 +34,53 @@ const ORANGE = '#E8752A';
 const u = (id: string, w = 1200) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=90`;
 
 const CATEGORY_CARDS = [
-  { name: 'Acrylic Paints', sub: 'Vibrant Colors | Endless Possibilities', price: 499, slug: 'acrylic', image: u('photo-1513364776144-60967b0f800f'), grad: 'from-[#0E4A93]/90', chip: 'bg-[#E8752A]' },
-  { name: 'Canvas & Boards', sub: 'For Every Art Idea', price: 399, slug: 'canvas', image: u('photo-1579783902614-a3fb3927b675'), grad: 'from-[#7C3AED]/90', chip: 'bg-[#EC4899]' },
-  { name: 'Cork Products', sub: 'Natural | Durable | Stylish', price: 449, slug: 'cork', image: u('photo-1586075010923-2dd4570fb338'), grad: 'from-[#B45309]/90', chip: 'bg-[#F59E0B]' },
-  { name: 'Personalized Gifts', sub: 'Make it Uniquely Yours', price: 299, slug: 'gifts', image: u('photo-1513151233558-d860c5398176'), grad: 'from-[#BE185D]/90', chip: 'bg-[#0E4A93]' },
+  { name: 'Devotional Art', sub: 'Spiritual Prints for Every Home', price: 249, slug: 'devotional-art', image: '/assets/catalogue/devotional-art/G-A_001.webp', grad: 'from-[#9A3412]/90', chip: 'bg-[#EA580C]' },
+  { name: 'Scenery & Landscape Art', sub: 'Bring the Outdoors In', price: 249, slug: 'scenery-landscape-art', image: '/assets/catalogue/scenery-landscape-art/S-A_010.webp', grad: 'from-[#0F766E]/90', chip: 'bg-[#059669]' },
+  { name: 'Tribal & Ethnic Art', sub: 'Bold, Earthy Statement Pieces', price: 249, slug: 'tribal-ethnic-art', image: '/assets/catalogue/tribal-ethnic-art/A-A_006.webp', grad: 'from-[#7C2D12]/90', chip: 'bg-[#B45309]' },
+  { name: 'Line Art', sub: 'Minimal Monochrome Prints', price: 249, slug: 'line-art', image: '/assets/catalogue/line-art/L-A_010.webp', grad: 'from-[#1F2937]/90', chip: 'bg-[#374151]' },
+  { name: 'Motivational Posters', sub: 'Quotes That Keep You Going', price: 249, slug: 'motivational-posters', image: '/assets/catalogue/motivational-posters/M-A_030.webp', grad: 'from-[#B91C1C]/90', chip: 'bg-[#DC2626]' },
+  { name: 'Cork Art Patterns', sub: 'Textured Natural Finishes', price: 249, slug: 'cork-art-patterns', image: '/assets/catalogue/cork-art-patterns/C-A_003.webp', grad: 'from-[#92400E]/90', chip: 'bg-[#B45309]' },
 ];
 
-const OCCASIONS = [
-  { name: 'Birthday', emoji: '🎂', image: u('photo-1513151233558-d860c5398176', 800), tint: 'from-[#EC4899]/85' },
-  { name: 'Anniversary', emoji: '💞', image: u('photo-1518199266791-5375a83190b7', 800), tint: 'from-[#E11D48]/85' },
-  { name: 'Wedding', emoji: '💍', image: u('photo-1519741497674-611481863552', 800), tint: 'from-[#7C3AED]/85' },
-  { name: 'Housewarming', emoji: '🏡', image: u('photo-1560448204-e02f11c3d0e2', 800), tint: 'from-[#0E4A93]/85' },
-  { name: 'Diwali', emoji: '🪔', image: u('photo-1605721911519-3dfeb3be25e7', 800), tint: 'from-[#EA580C]/85' },
-  { name: 'Corporate Gifts', emoji: '🎁', image: u('photo-1497215728101-856f4ea42174', 800), tint: 'from-[#0F766E]/85' },
-];
+
+// One card per real acrylic product type (same ids/prices the customizer's
+// own "Select Product" screen uses), linking straight into that product
+// type's customizer instead of a flat catalogue product grid. These product
+// types have no distinct real photos anywhere in the app (the customizer
+// itself just uses generic shape placeholders), so each card uses a plain
+// icon instead of a stock/mismatched photo.
+const ACRYLIC_STYLE_ICONS: Record<string, React.ElementType> = {
+  print: ImageIcon,
+  wall: LayoutGrid,
+  collage: Grid2x2,
+  split: Columns3,
+  mosaic: Grid3x3,
+  lyric: Music,
+  painting: Palette,
+  quotes: Quote,
+};
+const ACRYLIC_STYLE_CARDS = ACRYLIC_PRODUCT_TYPES.map((pt) => {
+  const landingData = getAcrylicLandingDataByProductId(pt.id);
+  return {
+    name: pt.name,
+    price: landingData?.styles[0]?.price ?? pt.startingPrice,
+    image: landingData?.styles[0]?.image || pt.image,
+    icon: ACRYLIC_STYLE_ICONS[pt.iconType || ''] || (pt.id === 'acrylic-bus-roll' ? Rows3 : pt.id === 'acrylic-word-art' ? Type : ImageIcon),
+    href: landingData ? `/acrylic/${landingData.slug}` : `/customize/acrylic/${pt.id}`,
+  };
+});
+
+// One card per real Canvas style landing page (same slugs/images/pricing as
+// /canvas/<slug>), so "Canvas & Boards" on the homepage shows the actual
+// formats from the header's Canvas dropdown instead of a flat product grid.
+const CANVAS_STYLE_CARDS = Object.values(CANVAS_STYLE_LANDING_DATA)
+  .filter((data) => Boolean(data.styles[0]?.image))
+  .map((data) => ({
+    name: data.pageTitle,
+    image: data.styles[0]!.image as string,
+    price: data.styles[0]!.price,
+    href: `/canvas/${data.slug}`,
+  }));
 
 const TESTIMONIALS = [
   { name: 'Asha S.', city: 'Bengaluru', text: 'Amazing quality and vibrant colours! My canvas turned out even better than I imagined!', img: 'https://randomuser.me/api/portraits/women/44.jpg' },
@@ -56,7 +94,7 @@ const Container: React.FC<{ children: React.ReactNode; className?: string }> = (
 );
 
 const SectionTitle: React.FC<{ title: string; sub: string; light?: boolean }> = ({ title, sub, light }) => (
-  <div className="text-center mb-8">
+  <div className="text-center mb-5 sm:mb-6">
     <div className="flex items-center justify-center gap-4">
       <span className="hidden sm:block h-[3px] w-14 rounded-full bg-gradient-to-r from-transparent to-[#E8752A]" />
       <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: SERIF, color: light ? '#fff' : BLUE }}>{title}</h2>
@@ -77,14 +115,34 @@ const Stars: React.FC = () => (
 const arrowBtn =
   'w-10 h-10 rounded-full bg-white border border-stone-200 shadow-md flex items-center justify-center text-[#0E4A93] hover:bg-[#E8752A] hover:text-white hover:border-[#E8752A] transition-colors cursor-pointer shrink-0';
 
-export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCart, allProducts }) => {
+export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCart, allProducts, onCustomize, onOpenQuote, wishlistIds, onToggleWishlist }) => {
   const navigate = useNavigate();
   const carouselRef = useRef<HTMLDivElement>(null);
   const testiRef = useRef<HTMLDivElement>(null);
+  const categoryRowRef = useRef<HTMLDivElement>(null);
+  const occasionRowRef = useRef<HTMLDivElement>(null);
+  const canvasStyleRowRef = useRef<HTMLDivElement>(null);
+  const acrylicRowRef = useRef<HTMLDivElement>(null);
+  const corkRowRef = useRef<HTMLDivElement>(null);
+  const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
+  const [bestsellerFormat, setBestsellerFormat] = useState<Record<string, 'canvas' | 'acrylic'>>({});
+
+  const handleCopyCoupon = (code: string) => {
+    navigator.clipboard.writeText(code).catch(() => {});
+    setCopiedCoupon(code);
+    setTimeout(() => setCopiedCoupon((c) => (c === code ? null : c)), 2000);
+  };
 
   const handleStartCreatingCanvas = () => {
     const first = allProducts.find((p) => p.categorySlug === 'canvas');
-    navigate(`/customize/canvas/${first?.slug || first?.id || 'canvas-photo-panel'}`);
+    navigate(`/customize/canvas/${first?.slug || first?.id || 'canvas-single'}?tab=products`);
+  };
+
+  const handleCustomizeFestiveGift = () => {
+    // Dedicated "Festive Offers" landing page (its own occasion entry,
+    // separate from Diwali) with format tiles — each tile's own "Shop Now"
+    // is what opens the customizer.
+    navigate('/occasions/festive-offers');
   };
 
   const scrollRow = (ref: React.RefObject<HTMLDivElement>, dir: 1 | -1) => {
@@ -103,17 +161,78 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#F7F1E5] border-b border-stone-200/60">
+        {/* Desktop/tablet: full-bleed festive image, fading into the cream
+            background on the left — same treatment the original lifestyle
+            photo used, no card/box, just one continuous scene. */}
         <img
-          src="/hero-scene.jpg"
-          alt="Canvas painting, frame, cork coaster and paints on a sunlit table"
-          className="absolute right-0 top-0 h-full w-full lg:w-[60%] object-cover object-left lg:object-center"
+          src={u('photo-1577083753695-e010191bacb5', 2200)}
+          alt="Festive diya oil lamps with flower petals"
+          className="hidden lg:block absolute right-0 top-0 h-full w-[60%] object-cover object-center"
           style={{
             maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
             WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
           }}
         />
-        <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent" />
-        <Container className="relative py-14 sm:py-16 lg:py-20 lg:min-h-[540px] flex items-center">
+        <div className="hidden lg:block absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#F7F1E5] via-[#F7F1E5]/80 to-transparent pointer-events-none" />
+        {/* Darken only behind the text, bottom-right — not the whole photo, so the image stays bright and clear */}
+        <div
+          className="hidden lg:block absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse 480px 320px at 88% 85%, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 45%, transparent 75%)' }}
+        />
+
+        <button
+          type="button"
+          onClick={handleCustomizeFestiveGift}
+          className="hidden lg:flex absolute right-14 bottom-12 z-20 flex-col items-start text-left cursor-pointer group"
+        >
+          <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-300 drop-shadow">Festive Sale</span>
+          <div className="font-bold text-white text-4xl leading-tight mt-1 drop-shadow-lg" style={{ fontFamily: SERIF }}>
+            Up to 20% Off
+          </div>
+          <span className="inline-flex items-center gap-2 mt-3.5 text-sm font-bold text-white bg-[#E8752A] group-hover:bg-[#D3631A] rounded-full px-5 py-2.5 shadow-lg shadow-orange-950/40 transition-colors">
+            Customize Festive Gift <ArrowRight className="w-4 h-4" />
+          </span>
+        </button>
+
+        {/* Hanging Stitched Leather Special Price Tag (Top Center) */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center select-none">
+          {/* Wall Pin / Nail */}
+          <div className="w-3.5 h-3.5 rounded-full bg-stone-800 shadow-md border-2 border-stone-400 z-20 flex items-center justify-center pointer-events-none">
+            <div className="w-1 h-1 rounded-full bg-stone-300" />
+          </div>
+
+          {/* Hanging String Lines */}
+          <div className="relative w-10 h-9 -mt-1 z-10 pointer-events-none">
+            <svg className="w-full h-full" viewBox="0 0 40 36" fill="none">
+              <path d="M20 0 L5 36" stroke="#5C3214" strokeWidth="2" strokeLinecap="round" />
+              <path d="M20 0 L35 36" stroke="#5C3214" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          {/* Stitched Circular Orange Leather Badge */}
+          <button
+            type="button"
+            onClick={() => navigate('/offers')}
+            aria-label="View ready-made products on offer"
+            className="ci-float -mt-1.5 w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#EA580C] via-[#DC2626] to-[#9A3412] text-white flex flex-col items-center justify-center p-2 shadow-2xl shadow-orange-950/50 border-4 border-[#78350F] relative overflow-hidden cursor-pointer hover:scale-105 hover:shadow-orange-900/60 transition-transform duration-300"
+          >
+            {/* Metal Grommet Hole */}
+            <div className="absolute top-1.5 w-3 h-3 rounded-full bg-stone-300 border-2 border-stone-600 shadow-inner z-10" />
+
+            {/* Dashed Stitched Inner Ring */}
+            <div className="absolute inset-1.5 rounded-full border-2 border-dashed border-amber-200/60 pointer-events-none" />
+
+            {/* Badge Text Content */}
+            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-amber-200 mt-2 sm:mt-2.5 leading-none drop-shadow-xs">
+              SPECIAL PRICE
+            </span>
+            <span className="text-lg sm:text-2xl font-black tracking-tight text-white drop-shadow-md mt-0.5 leading-none">
+              20% OFF
+            </span>
+          </button>
+        </div>
+
+        <Container className="relative pt-28 pb-14 sm:pt-16 sm:pb-16 lg:py-20 lg:min-h-[540px] flex items-center">
           <div className="max-w-xl">
             <div className="flex items-center gap-3 text-[11px] sm:text-xs tracking-[0.3em] text-stone-600 font-semibold uppercase">
               <span>ART / CRAFT / HOME DECOR</span>
@@ -126,38 +245,133 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             <p className="mt-5 text-base sm:text-lg text-stone-700 max-w-md leading-relaxed">
               Premium canvas prints, acrylic paints, cork products and more — turn your ideas into art, your way.
             </p>
-            <div className="mt-7 flex flex-wrap items-center gap-3">
+            <div className="mt-6 flex flex-wrap items-center">
+              {/* Shiny Glossy Pill Button */}
               <button
                 type="button"
                 onClick={handleStartCreatingCanvas}
-                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#0E4A93] hover:bg-[#0B3B77] text-white text-sm font-bold shadow-lg shadow-blue-900/20 transition cursor-pointer"
+                className="group relative inline-flex items-center justify-between gap-2.5 sm:gap-3 pl-4 sm:pl-5 pr-1.5 sm:pr-2 py-1.5 sm:py-2 rounded-full border-2 border-white bg-gradient-to-b from-[#1872E8] via-[#0D4AA8] to-[#062F7A] cta-shiny-glow transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] cursor-pointer overflow-hidden select-none"
               >
-                Create your Canvas <ArrowRight className="w-4 h-4" />
+                {/* Top Gloss Arc (Curved Specular Reflection) */}
+                <div
+                  className="absolute inset-x-0 top-0 h-[50%] rounded-t-full pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.15) 60%, rgba(255, 255, 255, 0) 100%)',
+                  }}
+                />
+
+                {/* Top Center Specular Highlight Flare */}
+                <div
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-2.5 rounded-full pointer-events-none opacity-80"
+                  style={{
+                    background: 'radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.9) 0%, rgba(147, 197, 253, 0.4) 50%, transparent 80%)',
+                  }}
+                />
+
+                {/* Animated Light Sweep / Shimmer */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
+                  <div
+                    className="w-1/2 h-full animate-cta-shine"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0) 15%, rgba(255, 255, 255, 0.65) 50%, rgba(255, 255, 255, 0) 85%, transparent 100%)',
+                    }}
+                  />
+                </div>
+
+                {/* Inner subtle bottom amber bounce reflection */}
+                <div
+                  className="absolute inset-x-2 bottom-0 h-0.5 rounded-full pointer-events-none opacity-60"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(251, 191, 36, 0.4) 50%, transparent 100%)',
+                  }}
+                />
+
+                {/* Palette Icon on Left */}
+                <div className="relative z-10 flex items-center shrink-0">
+                  <svg
+                    className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-white drop-shadow-xs"
+                    viewBox="0 0 28 28"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M14 3.5C8.2 3.5 3.5 8.2 3.5 14c0 5.8 4.7 10.5 10.5 10.5 1.1 0 2-.9 2-2 0-.55-.22-1.05-.58-1.41-.36-.36-.58-.86-.58-1.41 0-1.1.9-2 2-2h2.5c3.04 0 5.5-2.46 5.5-5.5C24.84 7.44 19.8 3.5 14 3.5z"
+                      stroke="white"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <circle cx="9" cy="10" r="1.5" fill="white" />
+                    <circle cx="14" cy="7.5" r="1.5" fill="white" />
+                    <circle cx="8.5" cy="15" r="1.5" fill="white" />
+                  </svg>
+                </div>
+
+                {/* Button Label */}
+                <span className="relative z-10 text-[13px] sm:text-[14.5px] font-extrabold uppercase tracking-wide text-white drop-shadow-sm whitespace-nowrap px-1">
+                  CREATE YOUR CANVAS
+                </span>
+
+                {/* Circular Arrow Badge on Right */}
+                <div className="relative z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0 border border-white/30 shadow-inner group-hover:bg-white/30 group-hover:scale-105 transition-all">
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white stroke-[2.5] group-hover:translate-x-0.5 transition-transform" />
+                </div>
               </button>
             </div>
 
-            {/* In-hero feature highlights */}
-            <div className="mt-10 pt-6 border-t border-stone-300/60 grid grid-cols-2 sm:grid-cols-4 gap-3 text-[#0E4A93]">
-              {[
-                { icon: Truck, t: 'Free Delivery' },
-                { icon: BadgeCheck, t: 'Quality Products' },
-                { icon: Headphones, t: 'Satisfaction & Support' },
-                { icon: ShieldCheck, t: 'Secure Payments' },
-              ].map(({ icon: Icon, t }) => (
-                <div key={t} className="flex items-center gap-2">
-                  <Icon className="w-4 h-4 shrink-0 text-[#0E4A93]" strokeWidth={2} />
-                  <span className="text-xs font-semibold text-stone-800 leading-tight">{t}</span>
+            {/* Mobile/tablet only: single festive offers banner below the text */}
+            <button
+              type="button"
+              onClick={handleCustomizeFestiveGift}
+              className="lg:hidden mt-8 relative w-full aspect-[16/9] rounded-2xl text-left shadow-md overflow-hidden cursor-pointer"
+            >
+              <img src={u('photo-1577083753695-e010191bacb5', 1200)} alt="Festive diya oil lamps with flower petals" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#7C2D12]/95 via-[#9A3412]/60 to-[#9A3412]/10" />
+              <div className="relative h-full flex flex-col justify-end p-5">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">Festive Sale</span>
+                <div className="font-bold text-white text-2xl leading-tight mt-0.5 drop-shadow-md" style={{ fontFamily: SERIF }}>
+                  Up to 20% Off
                 </div>
-              ))}
+                <span className="inline-flex items-center gap-1.5 mt-2.5 text-xs font-bold text-white bg-[#E8752A] rounded-full px-3.5 py-1.5 shadow-md self-start">
+                  Customize Festive Gift <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
+            </button>
+
+            {/* In-hero coupon codes */}
+            <div className="mt-8 lg:mt-10 pt-6 border-t border-stone-300/60 flex flex-wrap items-center gap-2.5">
+              {[
+                { code: 'CANVAS10', desc: '10% OFF' },
+                { code: 'FIRSTPRINT', desc: 'Up to ₹250 OFF' },
+              ].map(({ code, desc }) => {
+                const isCopied = copiedCoupon === code;
+                return (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => handleCopyCoupon(code)}
+                    className="group flex items-center gap-2 pl-3 pr-2.5 py-2 rounded-xl bg-white border border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Tag className="w-3.5 h-3.5 shrink-0 text-[#E8752A]" strokeWidth={2} />
+                    <span className="text-xs font-black text-[#0E4A93] tracking-wide">{code}</span>
+                    <span className="text-[11px] text-stone-500 font-medium hidden sm:inline">{desc}</span>
+                    {isCopied ? (
+                      <Check className="w-3.5 h-3.5 shrink-0 text-emerald-600" strokeWidth={2.5} />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5 shrink-0 text-stone-400 group-hover:text-[#0E4A93]" strokeWidth={2} />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </Container>
       </section>
 
       {/* SHOP BY CATEGORY */}
-      <section id="shop-categories" className="py-12 sm:py-16 bg-[#FDFCF8]">
+      <section id="shop-categories" className="py-8 sm:py-10 bg-[#FDFCF8]">
         <Container>
-          <div className="text-center mb-10">
+          <div className="text-center mb-5 sm:mb-6">
             <div className="flex items-center justify-center gap-4">
               <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
               <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Shop by Category</h2>
@@ -165,191 +379,351 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             </div>
             <p className="text-sm mt-2 text-[#567477]">Explore our wide range of creative handmade products</p>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {CATEGORY_CARDS.map((c) => (
-              <button
-                key={c.slug}
-                type="button"
-                onClick={() => onSelectCategory(c.slug)}
-                className="group flex flex-col text-left cursor-pointer focus:outline-none"
+        </Container>
+
+        <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
+            {/* Nav arrows: desktop/tablet only - mobile scrolls by swipe, and
+                hiding these frees up width so cards aren't cramped. Wrapped
+                (rather than adding `hidden` next to arrowBtn's own `flex`)
+                so there's no same-breakpoint display-utility conflict. */}
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Previous categories" onClick={() => scrollRow(categoryRowRef, -1)} className={arrowBtn}>
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+            </div>
+            <div ref={categoryRowRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+              {CATEGORY_CARDS.map((c) => (
+                <button
+                  key={c.slug}
+                  type="button"
+                  onClick={() => onSelectCategory(c.slug)}
+                  className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
+                >
+                  <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm">
+                    <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                  <div className="flex items-start justify-between gap-2 px-1">
+                    <div className="min-w-0">
+                      <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1 truncate">{c.name}</h3>
+                      <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">{c.sub}</p>
+                    </div>
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
+                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Next categories" onClick={() => scrollRow(categoryRowRef, 1)} className={arrowBtn}>
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+        </div>
+
+        <Container>
+          <div className="hidden sm:flex justify-end mt-4">
+            <button
+              type="button"
+              onClick={() => navigate('/categories')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
+            >
+              View All <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate('/categories')}
+            className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+          >
+            View All Categories <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </Container>
+      </section>
+
+      {/* CANVAS & BOARDS */}
+      <section id="shop-format-canvas" className="py-8 sm:py-10">
+        <Container>
+          <div className="text-center mb-5 sm:mb-6">
+            <div className="flex items-center justify-center gap-4">
+              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Canvas &amp; Boards</h2>
+              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+            </div>
+            <p className="text-sm mt-2 text-[#567477]">For Every Art Idea</p>
+          </div>
+        </Container>
+
+        <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
+          <div className="hidden sm:block">
+            <button type="button" aria-label="Previous canvas styles" onClick={() => scrollRow(canvasStyleRowRef, -1)} className={arrowBtn}>
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          </div>
+          <div ref={canvasStyleRowRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+            {CANVAS_STYLE_CARDS.map((c) => (
+              <Link
+                key={c.href}
+                to={c.href}
+                className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
               >
-                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-4 bg-stone-100 shadow-sm">
+                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
                   <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <div className="flex items-start justify-between gap-2 px-1">
-                  <div>
-                    <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1">{c.name}</h3>
-                    <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">{c.sub}</p>
+                  <div className="min-w-0">
+                    <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1 truncate">{c.name}</h3>
+                    <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">
+                      {c.price ? `Starts at ₹${c.price.toLocaleString('en-IN')}` : 'Custom Sizes Available'}
+                    </p>
                   </div>
                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
                     <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
                 </div>
-              </button>
+              </Link>
             ))}
           </div>
+          <div className="hidden sm:block">
+            <button type="button" aria-label="Next canvas styles" onClick={() => scrollRow(canvasStyleRowRef, 1)} className={arrowBtn}>
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <Container>
+          <div className="hidden sm:flex justify-end mt-4">
+            <button
+              type="button"
+              onClick={() => navigate('/canvas-styles')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
+            >
+              View All <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate('/canvas-styles')}
+            className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+          >
+            View All Canvas &amp; Boards <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </Container>
       </section>
 
-      {/* SPECIAL OFFER LIFESTYLE BANNER WITH HANGING LEATHER TAG */}
-      <section id="deals-section" className="relative overflow-hidden bg-[#F6F0E5] text-stone-900 border-y border-stone-300/70 py-12 lg:py-16">
-        {/* Background Soft Sunlit Wall Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FDFBF7] via-[#F4EDE2] to-[#E9DEC9] pointer-events-none" />
-        <div className="absolute -left-20 -top-20 w-96 h-96 rounded-full bg-amber-400/10 blur-3xl pointer-events-none" />
-
-        <Container className="relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-
-            {/* Left Column: Realistic Interior Mockup with Canvas Art, Plant & Hanging Stitched Leather Tag */}
-            <div className="lg:col-span-7 relative">
-              
-              {/* Wall & Wooden Shelf Container */}
-              <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] rounded-2xl overflow-hidden shadow-2xl border border-stone-300/80 bg-[#F2EADB] flex flex-col justify-end group">
-                
-                {/* Wall Backdrop with Warm Soft Sun Lighting */}
-                <div className="absolute inset-0 bg-gradient-to-b from-[#FAF6F0] via-[#F3EBDD] to-[#E5D7C2]" />
-
-                {/* Leaf Shadow Overlay */}
-                <div className="absolute inset-0 opacity-15 bg-[radial-gradient(ellipse_at_top_right,#000_0%,transparent_70%)] pointer-events-none" />
-                
-                {/* Potted Green Plant on Wooden Tabletop (Left Side) */}
-                <div className="absolute bottom-6 left-3 sm:left-7 z-10 w-24 sm:w-36 aspect-[3/4] flex items-end pointer-events-none">
-                  <img
-                    src="https://images.unsplash.com/photo-1545241047-6083a3684587?w=500&auto=format&fit=crop&q=80"
-                    alt="Potted Green Plant"
-                    className="w-full h-full object-contain drop-shadow-xl"
-                  />
-                </div>
-
-                {/* Main Coastal Sunset Canvas Painting Resting on Wooden Shelf */}
-                <div className="absolute bottom-6 right-3 sm:right-8 z-10 w-[64%] sm:w-[60%] aspect-[4/3] rounded-sm overflow-hidden shadow-2xl border-4 border-white bg-stone-900 transform -rotate-1 group-hover:rotate-0 transition-transform duration-500">
-                  <img
-                    src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=900&auto=format&fit=crop&q=90"
-                    alt="Vibrant Coastal Sunset Canvas Painting"
-                    className="w-full h-full object-cover"
-                  />
-                  {/* Canvas Subtle Gloss Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/20 pointer-events-none" />
-                </div>
-
-                {/* Acrylic / Paint Jars on Right Edge of Table */}
-                <div className="absolute bottom-6 right-1 sm:right-2 z-20 flex gap-1 items-end pointer-events-none">
-                  <div className="w-3.5 h-6 sm:w-4 sm:h-7 rounded-xs bg-emerald-600 shadow-md border border-emerald-800" />
-                  <div className="w-3.5 h-7 sm:w-4 sm:h-8 rounded-xs bg-blue-600 shadow-md border border-blue-800" />
-                </div>
-
-                {/* Wooden Tabletop Surface at Bottom */}
-                <div className="relative z-20 w-full h-6 sm:h-8 bg-gradient-to-r from-[#8B5A2B] via-[#A0522D] to-[#7A451F] border-t-2 border-[#5C3214] shadow-inner flex items-center px-4">
-                  <div className="w-full h-px bg-amber-200/20" />
-                </div>
-
-                {/* ========================================================================= */}
-                {/* HANGING STITCHED LEATHER SPECIAL PRICE TAG / BADGE */}
-                {/* ========================================================================= */}
-                <div className="absolute top-4 left-16 sm:top-6 sm:left-24 z-30 flex flex-col items-center select-none group/tag cursor-pointer">
-                  {/* Wall Pin / Nail */}
-                  <div className="w-3.5 h-3.5 rounded-full bg-stone-800 shadow-md border-2 border-stone-400 z-20 flex items-center justify-center">
-                    <div className="w-1 h-1 rounded-full bg-stone-300" />
-                  </div>
-                  
-                  {/* Hanging String Lines */}
-                  <div className="relative w-10 h-9 -mt-1 pointer-events-none z-10">
-                    <svg className="w-full h-full" viewBox="0 0 40 36" fill="none">
-                      <path d="M20 0 L5 36" stroke="#5C3214" strokeWidth="2" strokeLinecap="round" />
-                      <path d="M20 0 L35 36" stroke="#5C3214" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  </div>
-
-                  {/* Stitched Circular Orange Leather Badge */}
-                  <div className="-mt-1.5 w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#EA580C] via-[#DC2626] to-[#9A3412] text-white flex flex-col items-center justify-center p-2 shadow-2xl shadow-orange-950/50 border-4 border-[#78350F] relative overflow-hidden group-hover/tag:rotate-6 group-hover/tag:scale-105 transition-all duration-300">
-                    {/* Metal Grommet Hole */}
-                    <div className="absolute top-1.5 w-3 h-3 rounded-full bg-stone-300 border-2 border-stone-600 shadow-inner z-10" />
-                    
-                    {/* Dashed Stitched Inner Ring */}
-                    <div className="absolute inset-1.5 rounded-full border-2 border-dashed border-amber-200/60 pointer-events-none" />
-                    
-                    {/* Badge Text Content */}
-                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-amber-200 mt-2.5 leading-none drop-shadow-xs">
-                      SPECIAL PRICE
-                    </span>
-                    <span className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-md mt-0.5 leading-none">
-                      20% OFF
-                    </span>
-                  </div>
-                </div>
-
-              </div>
-
+      {/* ACRYLIC PRINTS */}
+      <section id="shop-format-acrylic" className="py-8 sm:py-10 bg-[#FDFCF8]">
+        <Container>
+          <div className="text-center mb-5 sm:mb-6">
+            <div className="flex items-center justify-center gap-4">
+              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Acrylic Prints</h2>
+              <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
             </div>
-
-            {/* Right Column: Copy & Interactive CTAs */}
-            <div className="lg:col-span-5 space-y-5">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EA580C]/10 border border-[#EA580C]/30 text-[#EA580C] text-xs font-black uppercase tracking-widest">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Festive Season Offer • Limited Time</span>
-              </div>
-
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight text-[#0E4A93]" style={{ fontFamily: SERIF }}>
-                Handcrafted Canvas for Your Walls
-              </h2>
-
-              <p className="text-sm sm:text-base text-stone-700 leading-relaxed">
-                Transform your favorite memories into museum-grade canvas prints &amp; glossy acrylic float frames. Printed with 12-color archival pigment inks on kiln-dried pine wood.
-              </p>
-
-              <div className="p-4 rounded-2xl bg-white/90 border border-stone-200 shadow-sm flex items-center justify-between gap-4">
-                <div>
-                  <div className="text-[11px] text-stone-500 font-bold uppercase tracking-wider">Use Coupon Code</div>
-                  <div className="text-lg font-black text-[#EA580C] tracking-widest font-mono">CANVAS20</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-[11px] text-stone-500 font-bold uppercase tracking-wider">Discount</div>
-                  <div className="text-base font-extrabold text-[#0E4A93]">Flat 20% OFF</div>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={handleStartCreatingCanvas}
-                  className="px-7 py-3.5 rounded-full bg-[#0E4A93] hover:bg-[#0B3B77] text-white text-sm font-extrabold shadow-lg shadow-blue-900/20 flex items-center gap-2 transition cursor-pointer"
-                >
-                  <span>Claim 20% OFF &amp; Customize</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate('/search')}
-                  className="px-6 py-3.5 rounded-full bg-white hover:bg-stone-100 text-stone-800 border border-stone-300 text-sm font-bold shadow-xs transition cursor-pointer"
-                >
-                  Shop All Deals
-                </button>
-              </div>
-            </div>
-
+            <p className="text-sm mt-2 text-[#567477]">Vibrant Colors | Endless Possibilities</p>
           </div>
         </Container>
+
+        <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
+          <div className="hidden sm:block">
+            <button type="button" aria-label="Previous acrylic styles" onClick={() => scrollRow(acrylicRowRef, -1)} className={arrowBtn}>
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          </div>
+          <div ref={acrylicRowRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+            {ACRYLIC_STYLE_CARDS.map((c) => (
+              <Link
+                key={c.href}
+                to={c.href}
+                className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
+              >
+                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
+                  {c.image ? (
+                    <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-stone-100">
+                      <ImageIcon className="w-12 h-12 text-[#1A4F53]/40" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-start justify-between gap-2 px-1">
+                  <div className="min-w-0">
+                    <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1 truncate">{c.name}</h3>
+                    <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">
+                      {c.price ? `Starts at ₹${c.price.toLocaleString('en-IN')}` : 'Custom Sizes Available'}
+                    </p>
+                  </div>
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
+                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="hidden sm:block">
+            <button type="button" aria-label="Next acrylic styles" onClick={() => scrollRow(acrylicRowRef, 1)} className={arrowBtn}>
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <Container>
+          <div className="hidden sm:flex justify-end mt-4">
+            <button
+              type="button"
+              onClick={() => navigate('/acrylic-styles')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
+            >
+              View All <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate('/acrylic-styles')}
+            className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+          >
+            View All Acrylic Prints <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </Container>
       </section>
+
+      {/* CORK PRODUCTS */}
+      {CORK_PRODUCT_CARDS.length > 0 && (
+        <section id="shop-format-cork" className="py-8 sm:py-10">
+          <Container>
+            <div className="text-center mb-5 sm:mb-6">
+              <div className="flex items-center justify-center gap-4">
+                <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+                <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Cork Products</h2>
+                <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
+              </div>
+              <p className="text-sm mt-2 text-[#567477]">Natural | Durable | Stylish</p>
+            </div>
+          </Container>
+
+          <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Previous cork products" onClick={() => scrollRow(corkRowRef, -1)} className={arrowBtn}>
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+            </div>
+            <div ref={corkRowRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+              {CORK_PRODUCT_CARDS.map((c) => (
+                <Link
+                  key={c.name}
+                  to={c.href}
+                  className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
+                >
+                  <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
+                    <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                  <div className="flex items-start justify-between gap-2 px-1">
+                    <div className="min-w-0">
+                      <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1 truncate">{c.name}</h3>
+                      <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">
+                        {c.price ? `Starts at ₹${c.price.toLocaleString('en-IN')}` : 'Eco-Friendly'}
+                      </p>
+                    </div>
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
+                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Next cork products" onClick={() => scrollRow(corkRowRef, 1)} className={arrowBtn}>
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <Container>
+            <div className="hidden sm:flex justify-end mt-4">
+              <button
+                type="button"
+                onClick={() => navigate('/cork-products')}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold hover:bg-[#1A4F53] hover:text-white transition-colors cursor-pointer"
+              >
+                View All <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate('/cork-products')}
+              className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#1A4F53]/30 text-[#1A4F53] text-xs font-bold cursor-pointer"
+            >
+              View All Cork Products <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </Container>
+        </section>
+      )}
 
       {/* SHOP BY OCCASION */}
-      <section id="shop-occasions" className="py-12 sm:py-16">
+      <section id="shop-occasions" className="py-8 sm:py-10">
         <Container>
           <SectionTitle title="Shop by Occasion" sub="Thoughtful personalized gifts for life's most precious celebrations" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {OCCASIONS.map((o) => (
-              <button
-                key={o.name}
-                type="button"
-                onClick={() => onSelectCategory('gifts', o.name)}
-                className="group relative aspect-[4/5] rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer text-left"
-              >
-                <img src={o.image} alt={o.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                <div className={`absolute inset-0 bg-gradient-to-t ${o.tint} via-transparent to-transparent`} />
-                <span className="absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center text-lg shadow">{o.emoji}</span>
-                <div className="absolute bottom-0 left-0 right-0 p-3 text-white font-bold text-sm" style={{ fontFamily: SERIF }}>{o.name}</div>
+        </Container>
+
+        <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Previous occasions" onClick={() => scrollRow(occasionRowRef, -1)} className={arrowBtn}>
+                <ChevronLeft className="w-5 h-5" />
               </button>
-            ))}
+            </div>
+            <div ref={occasionRowRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+              {OCCASIONS.map((o) => (
+                <button
+                  key={o.slug}
+                  type="button"
+                  onClick={() => navigate(`/occasions/${o.slug}`)}
+                  className="group snap-start shrink-0 w-[75%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
+                >
+                  <div className="relative w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
+                    <img src={o.bannerImage} alt={o.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <span className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-base shadow-sm">{o.emoji}</span>
+                  </div>
+                  <div className="flex items-start justify-between gap-2 px-1">
+                    <div className="min-w-0">
+                      <h3 className="text-[#1A4F53] font-bold text-[15px] sm:text-[17px] leading-tight mb-1 truncate">{o.name}</h3>
+                      <p className="text-[11px] sm:text-[13px] text-[#567477] truncate">Personalized gifts &amp; keepsakes</p>
+                    </div>
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
+                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Next occasions" onClick={() => scrollRow(occasionRowRef, 1)} className={arrowBtn}>
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+        </div>
+
+        <Container>
+          <div className="hidden sm:flex justify-end mt-4">
+            <button
+              type="button"
+              onClick={() => navigate('/occasions')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#0E4A93]/30 text-[#0E4A93] text-xs font-bold hover:bg-[#0E4A93] hover:text-white transition-colors cursor-pointer"
+            >
+              View All <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
+
+          <button
+            type="button"
+            onClick={() => navigate('/occasions')}
+            className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-[#0E4A93]/30 text-[#0E4A93] text-xs font-bold cursor-pointer"
+          >
+            View All Occasions <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </Container>
       </section>
 
@@ -357,50 +731,86 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       <section id="bestsellers-unboxed" className="pb-12 sm:pb-16">
         <Container>
           <SectionTitle title="Best Sellers" sub="Loved by artists, creators and home decorators" />
-          <div className="flex items-center gap-3">
+        </Container>
+        <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
             <button type="button" aria-label="Previous" onClick={() => scrollRow(carouselRef, -1)} className={arrowBtn}>
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div ref={carouselRef} className="flex gap-5 overflow-x-auto scroll-smooth py-3 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
-              {bestsellers.map((p) => (
-                <div key={p.id} className="snap-start shrink-0 w-[62%] sm:w-[36%] lg:w-[23.5%] bg-white rounded-2xl border border-orange-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all p-3">
-                  <Link to={`/products/${p.id}`} className="relative block aspect-[4/3] rounded-xl overflow-hidden bg-stone-100">
-                    <img
-                      src={p.image}
-                      alt={p.name}
-                      loading="lazy"
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
-                    />
-                    <span className="absolute top-2 left-2 bg-gradient-to-r from-[#E8752A] to-[#EC4899] text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow">Bestseller</span>
-                  </Link>
-                  <Link to={`/products/${p.id}`} className="block mt-3 text-sm font-semibold text-stone-800 line-clamp-1 hover:text-[#0E4A93]">
-                    {p.name}
-                  </Link>
-                  <div className="flex items-end justify-between mt-1.5">
-                    <div>
-                      <div className="text-lg font-extrabold" style={{ color: BLUE }}>₹{p.price.toLocaleString('en-IN')}</div>
-                      <div className="flex items-center gap-1 text-[10px] text-stone-500">
-                        <Stars />
-                        {p.reviewsCount ? <span>({p.reviewsCount})</span> : null}
+              {bestsellers.map((p) => {
+                // Same catalogue design is often also sold as both Canvas and
+                // Acrylic (see catalogueCanvasAcrylicProducts.ts) — let the
+                // card switch between the two without leaving the carousel.
+                const baseId = p.id.startsWith('canvas-')
+                  ? p.id.slice('canvas-'.length)
+                  : p.id.startsWith('acrylic-')
+                  ? p.id.slice('acrylic-'.length)
+                  : p.id;
+                const canvasVariant = allProducts.find((x) => x.id === `canvas-${baseId}`);
+                const acrylicVariant = allProducts.find((x) => x.id === `acrylic-${baseId}`);
+                const hasBothFormats = Boolean(canvasVariant && acrylicVariant);
+                const activeFormat = bestsellerFormat[baseId] || (p.id.startsWith('acrylic-') ? 'acrylic' : 'canvas');
+                const d = hasBothFormats ? (activeFormat === 'acrylic' ? acrylicVariant! : canvasVariant!) : p;
+
+                return (
+                  <div key={p.id} className="snap-start shrink-0 w-[62%] sm:w-[36%] lg:w-[23.5%] bg-white rounded-2xl border border-orange-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all p-3">
+                    <Link to={`/products/${d.id}`} className="relative block aspect-[4/3] rounded-xl overflow-hidden bg-stone-100">
+                      <img
+                        src={d.image}
+                        alt={d.name}
+                        loading="lazy"
+                        className="w-full h-full object-contain hover:scale-105 transition-transform duration-500"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
+                      />
+                      <span className="absolute top-2 left-2 bg-gradient-to-r from-[#E8752A] to-[#EC4899] text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow">Bestseller</span>
+                    </Link>
+                    {hasBothFormats && (
+                      <div className="flex items-center gap-1.5 mt-2">
+                        {(['canvas', 'acrylic'] as const).map((fmt) => (
+                          <button
+                            key={fmt}
+                            type="button"
+                            onClick={() => setBestsellerFormat((prev) => ({ ...prev, [baseId]: fmt }))}
+                            className={`flex-1 py-1 rounded-md text-[10px] font-bold capitalize transition-colors cursor-pointer ${
+                              activeFormat === fmt
+                                ? 'bg-[#0E4A93] text-white'
+                                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                            }`}
+                          >
+                            {fmt}
+                          </button>
+                        ))}
                       </div>
+                    )}
+                    <Link to={`/products/${d.id}`} className="block mt-3 text-sm font-semibold text-stone-800 line-clamp-1 hover:text-[#0E4A93]">
+                      {d.name}
+                    </Link>
+                    <div className="flex items-end justify-between mt-1.5">
+                      <div>
+                        <div className="text-lg font-extrabold" style={{ color: BLUE }}>₹{d.price.toLocaleString('en-IN')}</div>
+                        <div className="flex items-center gap-1 text-[10px] text-stone-500">
+                          <Stars />
+                          {d.reviewsCount ? <span>({d.reviewsCount})</span> : null}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        aria-label="Add to cart"
+                        onClick={() => onAddToCart(d)}
+                        className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0E4A93] to-[#5B2BB8] hover:from-[#E8752A] hover:to-[#EC4899] text-white flex items-center justify-center shadow-md transition cursor-pointer"
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      aria-label="Add to cart"
-                      onClick={() => onAddToCart(p)}
-                      className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0E4A93] to-[#5B2BB8] hover:from-[#E8752A] hover:to-[#EC4899] text-white flex items-center justify-center shadow-md transition cursor-pointer"
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                    </button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <button type="button" aria-label="Next" onClick={() => scrollRow(carouselRef, 1)} className={arrowBtn}>
               <ChevronRight className="w-5 h-5" />
             </button>
-          </div>
+        </div>
+        <Container>
           <div className="text-center mt-5">
             <button
               type="button"
@@ -409,6 +819,43 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             >
               View All Products <ArrowRight className="w-4 h-4" />
             </button>
+          </div>
+        </Container>
+      </section>
+
+      {/* CORPORATE & BULK ORDERS */}
+      <section className="py-10 sm:py-14">
+        <Container>
+          <div className="relative overflow-hidden rounded-3xl bg-[#0A1C3D] text-white min-h-[380px] sm:min-h-[420px] flex items-center">
+            <img
+              src="/assets/canvas-india-branded-packaging.webp"
+              alt="Canvas India branded bulk order packaging"
+              className="hidden sm:block absolute right-0 top-0 h-full w-[55%] object-cover object-center opacity-90"
+              style={{
+                maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, #000 45%, #000 100%)',
+                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, #000 45%, #000 100%)',
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0A1C3D] via-[#0A1C3D]/90 sm:via-[#0A1C3D]/75 to-transparent pointer-events-none" />
+            <div className="relative px-6 sm:px-10 lg:px-14 py-10 sm:py-12 max-w-xl">
+              <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-300">B2B &amp; Bulk Solutions</span>
+              <h2 className="mt-3 text-3xl sm:text-4xl font-bold leading-tight" style={{ fontFamily: SERIF }}>
+                Corporate &amp; Bulk Orders
+              </h2>
+              <p className="mt-3 text-sm sm:text-base text-white/80 leading-relaxed max-w-md">
+                Custom employee welcome kits, company branded T-shirts, uniform mugs, business cards &amp; promotional giveaways.
+              </p>
+              <div className="mt-6">
+                <a
+                  href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-bold text-white bg-[#E8752A] hover:bg-[#D3631A] rounded-full px-6 py-3 shadow-lg shadow-orange-950/40 transition-colors cursor-pointer"
+                >
+                  Get a Quote <ArrowRight className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
           </div>
         </Container>
       </section>

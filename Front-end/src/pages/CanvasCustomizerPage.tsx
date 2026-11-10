@@ -2691,6 +2691,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Active step in the left toolbar
   const [activeTab, setActiveTab] = useState<ToolbarTab>(() => {
+    const requestedTab = searchParams.get('tab')?.toUpperCase();
+    if (requestedTab === 'PRODUCTS') return 'PRODUCTS';
+    if (requestedTab === 'UPLOAD') return 'UPLOAD';
+    if (requestedTab === 'SIZE' || requestedTab === 'SELECT SIZE') return 'SELECT SIZE';
     const initialPt = resolveCurrentProductId(routeMaterial, productId);
     if (initialPt.includes('digital') || initialPt.includes('painting')) return 'EFFECTS & OPTIONS';
     if (initialPt.includes('bus')) return 'CREATE BUS ROLL';
@@ -2698,6 +2702,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (searchParams.get('prefillImage')) return 'SELECT SIZE';
     return 'UPLOAD';
   });
+
+  useEffect(() => {
+    const requestedTab = searchParams.get('tab')?.toUpperCase();
+    if (requestedTab === 'PRODUCTS') {
+      setActiveTab('PRODUCTS');
+    } else if (requestedTab === 'UPLOAD') {
+      setActiveTab('UPLOAD');
+    } else if (requestedTab === 'SIZE' || requestedTab === 'SELECT SIZE') {
+      setActiveTab('SELECT SIZE');
+    }
+  }, [searchParams]);
 
   // Preloader overlay: visible for real async work (image reads) for however
   // long that actually takes, plus a short minimum so the brief, instant
@@ -3213,28 +3228,68 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const targetKey = `${newMaterial}-${newProductId}`;
     if (curKey === targetKey) return;
 
+    // Detect the primary active image and all uploaded photos across this entire session
+    const currentActiveImage =
+      panelImages[0]?.imageUrl ||
+      panelImages[activePanelIndex]?.imageUrl ||
+      uploadedPhotos[0] ||
+      searchParams.get('prefillImage') ||
+      '';
+
+    const currentActiveMeta =
+      panelImages[0]?.uploadedImage ||
+      panelImages[activePanelIndex]?.uploadedImage ||
+      (currentActiveImage ? {
+        originalSrc: currentActiveImage,
+        width: 1200,
+        height: 1200,
+        aspectRatio: 1,
+        name: searchParams.get('prefillName') || 'Design'
+      } : undefined);
+
+    const allSessionPhotos = uploadedPhotos.length > 0
+      ? uploadedPhotos
+      : (currentActiveImage ? [currentActiveImage] : []);
+
     // Save outgoing product customization
     productCustomizationStore.current[curKey] = {
       panelImages,
-      uploadedPhotos,
+      uploadedPhotos: allSessionPhotos,
       activePanelIndex
     };
     activeCustomizationKey.current = targetKey;
 
     // Restore or initialize incoming product customization
     const saved = productCustomizationStore.current[targetKey];
-    if (saved) {
+    if (saved && saved.panelImages && Object.values(saved.panelImages).some((p) => p?.imageUrl)) {
       setPanelImages(saved.panelImages);
-      setUploadedPhotos(saved.uploadedPhotos);
-      setActivePanelIndex(saved.activePanelIndex);
+      setUploadedPhotos(saved.uploadedPhotos && saved.uploadedPhotos.length > 0 ? saved.uploadedPhotos : allSessionPhotos);
+      setActivePanelIndex(saved.activePanelIndex || 0);
     } else {
-      setPanelImages({
-        0: createDefaultPanel(),
-        1: createDefaultPanel(),
-        2: createDefaultPanel(),
-        3: createDefaultPanel()
-      });
-      setUploadedPhotos([]);
+      // Carry over the current active image so switching products never loses user image
+      const initialPanels: Record<number, PanelImageState> = {};
+      for (let i = 0; i < 20; i++) {
+        const photoToUse = allSessionPhotos[i % allSessionPhotos.length] || currentActiveImage;
+        initialPanels[i] = photoToUse ? {
+          ...createDefaultPanel(),
+          imageUrl: photoToUse,
+          uploadedImage: currentActiveMeta || {
+            originalSrc: photoToUse,
+            width: 1200,
+            height: 1200,
+            aspectRatio: 1,
+            name: searchParams.get('prefillName') || 'Design'
+          },
+          scale: 1,
+          rotation: 0,
+          panX: 0,
+          panY: 0,
+          fitMode: 'cover'
+        } : createDefaultPanel();
+      }
+
+      setPanelImages(initialPanels);
+      setUploadedPhotos(allSessionPhotos);
       setActivePanelIndex(0);
     }
   };
@@ -4413,15 +4468,26 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setExpandedLayoutId(pt.defaultLayoutId);
     }
 
+    const currentActiveImage =
+      panelImages[0]?.imageUrl ||
+      panelImages[activePanelIndex]?.imageUrl ||
+      uploadedPhotos[0] ||
+      searchParams.get('prefillImage') ||
+      '';
+
     if (isSingleOrShaped) {
       setIsSizeShapeModalOpen(true);
       setIsLayoutModalOpen(false);
-      setActiveTab('UPLOAD');
+      if (!currentActiveImage) {
+        setActiveTab('UPLOAD');
+      }
     } else if (isLayoutProduct) {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(true);
       setLayoutSubTab('LAYOUTS');
-      setActiveTab('UPLOAD');
+      if (!currentActiveImage) {
+        setActiveTab('UPLOAD');
+      }
     } else {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
@@ -4429,17 +4495,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         setActiveTab('EFFECTS & OPTIONS');
       } else if (productId.includes('bus')) {
         setActiveTab('CREATE BUS ROLL');
-      } else {
+      } else if (!currentActiveImage) {
         setActiveTab('UPLOAD');
       }
     }
 
-    navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
+    const searchString = location.search ? location.search : '';
+    navigate(`/customize/${activeMaterial}/${productId}${searchString}`, { replace: true });
   };
 
   const handleSwitchMaterial = () => {
     const nextMaterial = activeMaterial === 'canvas' ? 'acrylic' : 'canvas';
     setActiveMaterial(nextMaterial);
+    const searchString = location.search ? location.search : '';
     let counterpartId = 'acrylic-print';
     if (nextMaterial === 'acrylic') {
       if (selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-classic') counterpartId = 'acrylic-print';
@@ -4453,7 +4521,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       else if (selectedProductTypeId.includes('bus')) counterpartId = 'acrylic-bus-roll';
       else if (selectedProductTypeId.includes('word')) counterpartId = 'acrylic-word-art';
       else counterpartId = 'acrylic-print';
-      navigate(`/customize/acrylic/${counterpartId}`);
+      switchProductSession('acrylic', counterpartId);
+      navigate(`/customize/acrylic/${counterpartId}${searchString}`, { replace: true });
     } else {
       if (selectedProductTypeId === 'acrylic-print' || selectedProductTypeId === 'acrylic-single' || selectedProductTypeId === 'acrylic-photo-panel') counterpartId = 'canvas-single';
       else if (selectedProductTypeId.includes('wall') || selectedProductTypeId.includes('display')) counterpartId = 'canvas-wall-art';
@@ -4466,7 +4535,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       else if (selectedProductTypeId.includes('bus')) counterpartId = 'canvas-bus-roll';
       else if (selectedProductTypeId.includes('word')) counterpartId = 'canvas-word-art';
       else counterpartId = 'canvas-single';
-      navigate(`/customize/canvas/${counterpartId}`);
+      switchProductSession('canvas', counterpartId);
+      navigate(`/customize/canvas/${counterpartId}${searchString}`, { replace: true });
     }
   };
 
@@ -4550,8 +4620,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       return next;
     });
 
-    // Automatically switch to UPLOAD section after size confirmation
-    setActiveTab('UPLOAD');
+    // If an image is already active, stay on size or wrap tab instead of prompting to upload
+    const activeImg =
+      panelImages[0]?.imageUrl ||
+      uploadedPhotos[0] ||
+      searchParams.get('prefillImage') ||
+      '';
+    if (!activeImg) {
+      setActiveTab('UPLOAD');
+    } else if (toolbarItems.some((t) => t.id === 'WRAP & BORDER')) {
+      setActiveTab('WRAP & BORDER');
+    } else {
+      setActiveTab('SELECT SIZE');
+    }
   };
 
   // Handler for highlighted preview from SelectLayoutModal (live workspace updates)
@@ -4565,6 +4646,50 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       if (activePanelIndex >= layout.panelsCount) {
         setActivePanelIndex(0);
       }
+    }
+
+    const activeImg =
+      panelImages[0]?.imageUrl ||
+      uploadedPhotos[0] ||
+      searchParams.get('prefillImage') ||
+      '';
+    if (activeImg) {
+      setPanelImages((prev) => {
+        let hasMissing = false;
+        for (let i = 0; i < layout.panelsCount; i++) {
+          if (!prev[i]?.imageUrl) {
+            hasMissing = true;
+            break;
+          }
+        }
+        if (!hasMissing) return prev;
+        const next = { ...prev };
+        const allPhotos = uploadedPhotos.length > 0 ? uploadedPhotos : [activeImg];
+        const imgMeta =
+          prev[0]?.uploadedImage || {
+            originalSrc: activeImg,
+            width: 1200,
+            height: 1200,
+            aspectRatio: 1,
+            name: searchParams.get('prefillName') || 'Design'
+          };
+        for (let i = 0; i < layout.panelsCount; i++) {
+          if (!next[i]?.imageUrl) {
+            const photoToUse = allPhotos[i % allPhotos.length] || activeImg;
+            next[i] = {
+              ...createDefaultPanel(),
+              imageUrl: photoToUse,
+              uploadedImage: imgMeta,
+              scale: 1,
+              rotation: 0,
+              panX: 0,
+              panY: 0,
+              fitMode: 'cover'
+            };
+          }
+        }
+        return next;
+      });
     }
   };
 
@@ -4581,7 +4706,55 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       }
     }
     setIsLayoutModalOpen(false);
-    setActiveTab('UPLOAD');
+
+    const activeImg =
+      panelImages[0]?.imageUrl ||
+      uploadedPhotos[0] ||
+      searchParams.get('prefillImage') ||
+      '';
+
+    if (activeImg) {
+      const allPhotos = uploadedPhotos.length > 0 ? uploadedPhotos : [activeImg];
+      const imgMeta =
+        panelImages[0]?.uploadedImage ||
+        (activeImg ? {
+          originalSrc: activeImg,
+          width: 1200,
+          height: 1200,
+          aspectRatio: 1,
+          name: searchParams.get('prefillName') || 'Design'
+        } : undefined);
+
+      setPanelImages((prev) => {
+        const next = { ...prev };
+        for (let i = 0; i < Math.max(layout.panelsCount, 4); i++) {
+          if (!next[i]?.imageUrl) {
+            const photoToUse = allPhotos[i % allPhotos.length] || activeImg;
+            next[i] = {
+              ...createDefaultPanel(),
+              imageUrl: photoToUse,
+              uploadedImage: imgMeta,
+              scale: 1,
+              rotation: 0,
+              panX: 0,
+              panY: 0,
+              fitMode: 'cover'
+            };
+          }
+        }
+        return next;
+      });
+      if (uploadedPhotos.length === 0) {
+        setUploadedPhotos([activeImg]);
+      }
+      if (toolbarItems.some((t) => t.id === 'WRAP & BORDER')) {
+        setActiveTab('WRAP & BORDER');
+      } else if (toolbarItems.some((t) => t.id === 'SELECT SIZE')) {
+        setActiveTab('SELECT SIZE');
+      }
+    } else {
+      setActiveTab('UPLOAD');
+    }
   };
 
   // OPTIONS tab

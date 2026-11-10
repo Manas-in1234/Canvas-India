@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ShopProvider } from './context/ShopContext';
 import { RootLayout } from './components/RootLayout';
@@ -22,10 +22,22 @@ import { CancellationPolicyPage } from './pages/CancellationPolicyPage';
 import { RefundReturnPage } from './pages/RefundReturnPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { CanvasCategoryPage } from './pages/CanvasCategoryPage';
+import { CanvasStylePage } from './pages/CanvasStylePage';
+import { AcrylicStylePage } from './pages/AcrylicStylePage';
+import { CorkCategoryPage } from './pages/CorkCategoryPage';
+import { CanvasStylesPage } from './pages/CanvasStylesPage';
+import { AcrylicStylesPage } from './pages/AcrylicStylesPage';
+import { CorkProductsPage } from './pages/CorkProductsPage';
 import { AcrylicCustomizerPage } from './pages/AcrylicCustomizerPage';
 import { AllCategoriesPage } from './pages/AllCategoriesPage';
+import { AllOccasionsPage } from './pages/AllOccasionsPage';
 import { CanvasCustomizerPage } from './pages/CanvasCustomizerPage';
 import { MobileUploadPage } from './pages/MobileUploadPage';
+import { FestiveOffersPage } from './pages/FestiveOffersPage';
+import { ReadymadeOffersPage } from './pages/ReadymadeOffersPage';
+import { BulkOrdersPage } from './pages/BulkOrdersPage';
+import { BulkProductDetailPage } from './pages/BulkProductDetailPage';
+import { OccasionPage } from './pages/OccasionPage';
 
 // Auth & Checkout Pages
 import { SignUpPage } from './pages/SignUpPage';
@@ -84,30 +96,58 @@ export function App() {
 
             {/* Canvas — dedicated product listing page (feature/canvas-category-page) */}
             <Route path="/categories" element={<AllCategoriesPage />} />
+            <Route path="/occasions" element={<AllOccasionsPage />} />
             <Route path="/canvas" element={<CanvasCategoryPage />} />
             {/* /canvas-prints is an alias that uses the generic CategoryPage for SEO parity */}
             <Route path="/canvas-prints" element={<CategoryPage categorySlug="canvas" />} />
+            {/* "View All" grid of every Canvas style/format card (homepage's Canvas & Boards row) */}
+            <Route path="/canvas-styles" element={<CanvasStylesPage />} />
+            {/* Dedicated landing page per Canvas dropdown style (Pop Art, Wall Display, etc.) */}
+            <Route path="/canvas/:styleSlug" element={<CanvasStylePage />} />
             {/* Acrylic — dedicated category page */}
             <Route path="/acrylic" element={<AcrylicCategoryPage />} />
             <Route path="/acrylic-prints" element={<AcrylicCategoryPage />} />
+            {/* "View All" grid of every Acrylic style/format card (homepage's Acrylic Prints row) */}
+            <Route path="/acrylic-styles" element={<AcrylicStylesPage />} />
+            {/* Dedicated landing page per Acrylic product type (Wall Display, Split Acrylic, etc.) */}
+            <Route path="/acrylic/:styleSlug" element={<AcrylicStylePage />} />
             <Route path="/posters" element={<CategoryPage categorySlug="posters" />} />
 
-            <Route path="/cork" element={<CategoryPage categorySlug="cork" />} />
-            <Route path="/cork-prints" element={<CategoryPage categorySlug="cork" />} />
+            <Route path="/cork" element={<CorkCategoryPage />} />
+            <Route path="/cork-prints" element={<CorkCategoryPage />} />
+            {/* "View All" grid of every Cork format card (homepage's Cork Products row) */}
+            <Route path="/cork-products" element={<CorkProductsPage />} />
 
             <Route path="/yoga-fitness" element={<CategoryPage categorySlug="yoga-fitness" />} />
             <Route path="/home-decor" element={<CategoryPage categorySlug="home-decor" />} />
             <Route path="/custom-prints" element={<CategoryPage categorySlug="custom-prints" />} />
-            <Route path="/gifts" element={<CategoryPage categorySlug="gifts" />} />
+            {/* /gifts had no products of its own (always "No Products Found") — redirect to the real Gifts & Occasions hub */}
+            <Route path="/gifts" element={<Navigate to="/occasions" replace />} />
 
-            <Route path="/bulk-order" element={<CategoryPage categorySlug="bulk-order" />} />
-            <Route path="/bulk-orders" element={<CategoryPage categorySlug="bulk-order" />} />
+            {/* Festive Offers landing page */}
+            <Route path="/festive-offers" element={<FestiveOffersPage />} />
+            {/* Ready-made products on offer (pre-designed, no photo upload) */}
+            <Route path="/offers" element={<ReadymadeOffersPage />} />
+            <Route path="/occasions/:slug" element={<OccasionPage />} />
 
-            <Route path="/corporate-orders" element={<CategoryPage categorySlug="corporate-orders" />} />
-            <Route path="/corporate" element={<CategoryPage categorySlug="corporate-orders" />} />
+            <Route path="/bulk-order" element={<BulkOrdersPage />} />
+            <Route path="/bulk-orders" element={<BulkOrdersPage />} />
+            <Route path="/bulk-order/:material/:slug" element={<BulkProductDetailPage />} />
+
+            {/* /corporate-orders had no products of its own (always "No Products Found") — redirect to the real Bulk & Corporate Orders page */}
+            <Route path="/corporate-orders" element={<Navigate to="/bulk-order" replace />} />
+            <Route path="/corporate" element={<Navigate to="/bulk-order" replace />} />
 
             <Route path="/wall-art" element={<CategoryPage categorySlug="wall-art" />} />
             <Route path="/photo-frames" element={<CategoryPage categorySlug="photo-frames" />} />
+
+            {/* New print-design categories from Print World catalogue */}
+            <Route path="/devotional-art" element={<CategoryPage categorySlug="devotional-art" />} />
+            <Route path="/scenery-landscape-art" element={<CategoryPage categorySlug="scenery-landscape-art" />} />
+            <Route path="/tribal-ethnic-art" element={<CategoryPage categorySlug="tribal-ethnic-art" />} />
+            <Route path="/line-art" element={<CategoryPage categorySlug="line-art" />} />
+            <Route path="/motivational-posters" element={<CategoryPage categorySlug="motivational-posters" />} />
+            <Route path="/cork-art-patterns" element={<CorkCategoryPage />} />
 
             {/* Solutions for Designers & Architects */}
             <Route path="/designers-architects" element={<DesignersArchitectsPage />} />
