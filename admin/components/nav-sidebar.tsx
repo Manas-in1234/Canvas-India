@@ -77,7 +77,6 @@ const NAV_SECTIONS: NavSection[] = [
     label: 'Production',
     links: [
       { href: '/artwork', label: 'Artwork Review', icon: Palette, requiredPermissions: ['artwork.view'] },
-      { href: '/shapes', label: 'Custom Shapes', icon: Sparkles, requiredPermissions: ['shapes.view'] },
       { href: '/production/board', label: 'Board', icon: LayoutGrid, requiredPermissions: ['production.view'] },
       { href: '/production/jobs', label: 'Jobs', icon: Factory, requiredPermissions: ['production.view'] },
       { href: '/production/machines', label: 'Machines', icon: Wrench, requiredPermissions: ['machines.view'] },
@@ -86,8 +85,14 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    // Everything that configures the storefront customize page
+    // (CanvasCustomizerPage.tsx) lives here — shapes, options, sizes, and
+    // the pricing rates that price them. Kept separate from Production
+    // (physical manufacturing floor) and Administration (access control),
+    // which it was previously split across.
     label: 'Customizer',
     links: [
+      { href: '/shapes', label: 'Custom Shapes', icon: Sparkles, requiredPermissions: ['shapes.view'] },
       {
         href: '/option-categories',
         label: 'Customize Page Options',
@@ -95,6 +100,7 @@ const NAV_SECTIONS: NavSection[] = [
         requiredPermissions: ['option_catalog.view'],
       },
       { href: '/sizes', label: 'Sizes', icon: Ruler, requiredPermissions: ['size_presets.view'] },
+      { href: '/pricing', label: 'Pricing', icon: IndianRupee, requiredPermissions: ['pricing.view'] },
     ],
   },
   {
@@ -113,7 +119,7 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    label: null,
+    label: 'Insights',
     links: [
       { href: '/analytics', label: 'Analytics', icon: BarChart3, requiredPermissions: ['analytics.view'] },
     ],
@@ -123,7 +129,6 @@ const NAV_SECTIONS: NavSection[] = [
     links: [
       { href: '/users', label: 'Admin Users', icon: UserCog, requiredPermissions: ['users.view'] },
       { href: '/roles', label: 'Roles', icon: ShieldCheck, requiredPermissions: ['roles.view'] },
-      { href: '/pricing', label: 'Pricing', icon: IndianRupee, requiredPermissions: ['pricing.view'] },
     ],
   },
   {
