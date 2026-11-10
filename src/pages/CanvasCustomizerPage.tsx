@@ -10619,38 +10619,35 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     />
                   </div>
 
-                  {/* Border Width Selection: Thin vs No Border */}
+                  {/* Border Width Selection (admin-managed via border_width) */}
                   <div className="grid grid-cols-2 gap-2">
-                    <CustomizerOptionCard
-                      selected={selectedBorderWidthId === 'thin'}
-                      onClick={() => setSelectedBorderWidthId('thin')}
-                      title="Thin"
-                      subtitle="4mm border"
-                      priceText="Free"
-                      previewHeightClass="h-12 p-1"
-                      preview={
-                        <div
-                          className="w-8 h-8 rounded mx-auto p-0.5 shadow-2xs"
-                          style={{ backgroundColor: selectedBorderColor }}
-                        >
-                          <div className="w-full h-full rounded-2xs bg-stone-200" />
-                        </div>
-                      }
-                    />
-
-                    <CustomizerOptionCard
-                      selected={selectedBorderWidthId === 'none'}
-                      onClick={() => setSelectedBorderWidthId('none')}
-                      title="No Border"
-                      subtitle="Border-free edge"
-                      priceText="Free"
-                      previewHeightClass="h-12 p-1"
-                      preview={
-                        <div className="w-8 h-8 rounded border border-dashed border-stone-300 mx-auto bg-stone-50 flex items-center justify-center">
-                          <div className="w-6 h-6 rounded-2xs bg-stone-200" />
-                        </div>
-                      }
-                    />
+                    {liveOrFallbackBorderWidths.map((bw) => {
+                      const price = liveBorderWidthPrices[bw.id] || 0;
+                      return (
+                        <CustomizerOptionCard
+                          key={bw.id}
+                          selected={selectedBorderWidthId === bw.id}
+                          onClick={() => setSelectedBorderWidthId(bw.id)}
+                          title={bw.label}
+                          priceText={price === 0 ? 'Free' : `+₹${price}`}
+                          previewHeightClass="h-12 p-1"
+                          preview={
+                            bw.id === 'none' ? (
+                              <div className="w-8 h-8 rounded border border-dashed border-stone-300 mx-auto bg-stone-50 flex items-center justify-center">
+                                <div className="w-6 h-6 rounded-2xs bg-stone-200" />
+                              </div>
+                            ) : (
+                              <div
+                                className="w-8 h-8 rounded mx-auto shadow-2xs"
+                                style={{ backgroundColor: selectedBorderColor, padding: Math.max(1, Math.min(4, bw.widthPx / 3)) }}
+                              >
+                                <div className="w-full h-full rounded-2xs bg-stone-200" />
+                              </div>
+                            )
+                          }
+                        />
+                      );
+                    })}
                   </div>
 
                   {/* Flexible Custom Color Selection: Native Picker + Hex + Swatches */}
@@ -10701,19 +10698,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         </div>
                       </div>
 
-                      {/* Quick Preset Swatches Palette */}
+                      {/* Quick Preset Swatches Palette (admin-managed via border_color) */}
                       <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                        {[
-                          { name: 'White', hex: '#FFFFFF' },
-                          { name: 'Black', hex: '#000000' },
-                          { name: 'Charcoal', hex: '#334155' },
-                          { name: 'Warm Cream', hex: '#FDF8F0' },
-                          { name: 'Royal Gold', hex: '#D4AF37' },
-                          { name: 'Silver Slate', hex: '#94A3B8' },
-                          { name: 'Navy Blue', hex: '#1E3A8A' },
-                          { name: 'Crimson Red', hex: '#DC2626' },
-                          { name: 'Forest Green', hex: '#16A34A' }
-                        ].map((c) => (
+                        {liveOrFallbackBorderColors.map((c) => (
                           <button
                             key={c.hex}
                             type="button"
@@ -10743,7 +10730,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
                     <span className="text-xs font-bold uppercase tracking-wider">Frames</span>
                     <span className="text-[11px] font-semibold text-stone-200">
-                      {FRAME_OPTIONS.find((f) => f.id === selectedFrameId)?.name || 'No Frame'}
+                      {liveOrFallbackFrames.find((f) => f.id === selectedFrameId)?.name || 'No Frame'}
                     </span>
                   </div>
 
@@ -10807,13 +10794,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                       {expandedFrameCategory === 'floating' && (
                         <div className="p-3 space-y-2.5">
+                          {/* Admin-managed via the 'frame' option category */}
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                            {[
-                              { id: 'black-frame', name: 'Black Floating Frame', price: 1798.00 },
-                              { id: 'wood-frame', name: 'Brown Floating Frame', price: 1798.00 },
-                              { id: 'white-frame', name: 'White Floating Frame', price: 1798.00 },
-                              { id: 'gold-frame', name: 'Metal Floating Frame', price: 1798.00 }
-                            ].map((ff) => {
+                            {liveOrFallbackFrames.filter((ff) => ff.id !== 'no-frame').map((ff) => {
                               const isSelected = selectedFrameId === ff.id;
                               return (
                                 <CustomizerOptionCard
