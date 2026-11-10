@@ -122,6 +122,12 @@ import {
 import { fetchApprovedCustomShapes, filterToUnknownShapes, toShapeOption, type CustomShapeDto } from '../api/customShapesApi';
 import { fetchPricingRates, SHAPE_AREA_RATE_FALLBACK, ACRYLIC_THICKNESS_RATE_FALLBACKS } from '../api/pricingSettingsApi';
 import { fetchOptionCategoryItems, type OptionCategoryItemDto } from '../api/optionCategoriesApi';
+import {
+  fetchCustomizerProductTypes,
+  toAcrylicProductType,
+  toCanvasProductType,
+} from '../api/customizerProductTypesApi';
+import type { AcrylicProductType } from '../data/acrylicCustomizerData';
 import { fetchSizePresets, SHAPE_GENERIC_PRODUCT_TYPE_ID, type SizePresetDto } from '../api/sizePresetsApi';
 import {
   getCanvasThicknessPrice,
@@ -2607,6 +2613,18 @@ export const PRESET_3D_ANGLES: Preset3DAngleOption[] = [
 // 2. MAIN UNIFIED CUSTOMIZER COMPONENT (CANVAS & ACRYLIC)
 // ============================================================================
 
+// Styles that ship with special editors keyed by their id (Lyric Studio, Bus
+// Roll, collage grids, ...). Anything else came from the admin dashboard and
+// is treated as a standard single-panel style: its own name, price, shapes,
+// defaults and feature toggles, using the same editor as Single Print.
+const BUILT_IN_STYLE_IDS = new Set<string>([
+  ...CANVAS_PRODUCT_TYPES.map((p) => p.id),
+  ...ACRYLIC_PRODUCT_TYPES.map((p) => p.id),
+  'canvas-classic',
+  'acrylic-single',
+  'acrylic-photo-panel',
+]);
+
 export function resolveAcrylicProductTypeId(
   rawId?: string,
   catProd?: { slug?: string; id?: string; name?: string } | null
@@ -2810,15 +2828,44 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const isWordArtProduct = selectedProductTypeId.includes('word');
   const isPopArtProduct = selectedProductTypeId.includes('pop');
   const isBannerProduct = selectedProductTypeId.includes('banner');
-  const isSinglePrintCanvas = (activeMaterial === 'canvas' && (selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-classic')) ||
+  // A style added from the admin dashboard has no special editor, so it uses
+  // the standard single-panel one, same as Single Print.
+  const isAdminAddedStyle = Boolean(selectedProductTypeId) && !BUILT_IN_STYLE_IDS.has(selectedProductTypeId);
+  const isSinglePrintCanvas = isAdminAddedStyle || (activeMaterial === 'canvas' && (selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-classic')) ||
     (activeMaterial === 'acrylic' && (selectedProductTypeId === 'acrylic-print' || selectedProductTypeId === 'acrylic-single' || selectedProductTypeId === 'acrylic-photo-panel'));
   const isLayoutProduct = isWallArtProduct || isCollageProduct || isHexagonProduct || isSplitProduct || isMosaicProduct;
   const isMultiFrameProduct = isWallArtProduct || isCollageProduct || isHexagonProduct || isSplitProduct || isMosaicProduct;
 
+  // Product styles (the PRODUCTS tab cards) managed from the admin dashboard.
+  // The built-in lists stay as the fallback, so the picker is never empty if
+  // the fetch fails or the table has no rows yet.
+  const [liveCanvasStyles, setLiveCanvasStyles] = useState<CanvasProductType[] | null>(null);
+  const [liveAcrylicStyles, setLiveAcrylicStyles] = useState<AcrylicProductType[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([fetchCustomizerProductTypes('CANVAS'), fetchCustomizerProductTypes('ACRYLIC')]).then(
+      ([canvasRows, acrylicRows]) => {
+        if (cancelled) return;
+        if (canvasRows.length > 0) setLiveCanvasStyles(canvasRows.map(toCanvasProductType));
+        if (acrylicRows.length > 0) setLiveAcrylicStyles(acrylicRows.map(toAcrylicProductType));
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const productTypeList = useMemo<Array<CanvasProductType | AcrylicProductType>>(
+    () =>
+      activeMaterial === 'acrylic'
+        ? liveAcrylicStyles ?? ACRYLIC_PRODUCT_TYPES
+        : liveCanvasStyles ?? CANVAS_PRODUCT_TYPES,
+    [activeMaterial, liveAcrylicStyles, liveCanvasStyles],
+  );
+
   const selectedProductType = useMemo(() => {
-    const list = activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES;
-    return list.find((pt) => pt.id === selectedProductTypeId) || list[0];
-  }, [activeMaterial, selectedProductTypeId]);
+    return productTypeList.find((pt) => pt.id === selectedProductTypeId) || productTypeList[0];
+  }, [productTypeList, selectedProductTypeId]);
 
   // Product capabilities for dynamic sidebar tabs
   const productCapabilities = useMemo(() => {
@@ -2992,15 +3039,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [shapeFilterCategory, setShapeFilterCategory] = useState<'ALL' | 'BASIC' | 'SPECIAL' | 'DECORATIVE'>('ALL');
 
   const currentShape = useMemo<CanvasShapeOption>(() => {
-    const list = activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES;
-    const pt = list.find((p) => p.id === selectedProductTypeId);
+    const pt = productTypeList.find((p) => p.id === selectedProductTypeId);
     const targetShapeId =
       !selectedShapeId.startsWith('custom-') && pt?.supportedShapeIds && pt.supportedShapeIds.length === 1
         ? pt.supportedShapeIds[0]
         : selectedShapeId;
     return customShapeOptions.find((s) => s.id === targetShapeId)
       || CANVAS_SHAPES.find((s) => s.id === targetShapeId) || CANVAS_SHAPES[0];
-  }, [activeMaterial, selectedProductTypeId, selectedShapeId, customShapeOptions]);
+  }, [productTypeList, selectedProductTypeId, selectedShapeId, customShapeOptions]);
 
   // Admin-managed size presets (see admin Size screen) — replaces what used
   // to be five independent hardcoded systems. Resolves the same real
@@ -4619,8 +4665,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedHardwareId('acrylic-standoffs');
     }
 
-    const list = activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES;
-    const pt = list.find((p) => p.id === selectedProductTypeId);
+    const pt = productTypeList.find((p) => p.id === selectedProductTypeId);
     if (pt) {
       if (pt.defaultShape) setSelectedShapeId(pt.defaultShape);
       if (pt.defaultHardwareId) setSelectedHardwareId(pt.defaultHardwareId);
@@ -4640,8 +4685,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Master selection handler for all products across Canvas & Acrylic
   const selectProduct = (productId: string) => {
-    const list = activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES;
-    const pt = list.find((p) => p.id === productId);
+    const pt = productTypeList.find((p) => p.id === productId);
     if (!pt) return;
     switchProductSession(activeMaterial, productId);
 
@@ -9208,7 +9252,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               : isWordArtProduct && activeTab === 'UPLOAD'
               ? `${wordArtSizeOption.label} (${wordArtSizeOption.ratioTab})`
               : activeTab === 'PRODUCTS'
-              ? `${activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES.length : CANVAS_PRODUCT_TYPES.length} Styles`
+              ? `${productTypeList.length} Styles`
               : activeTab === 'UPLOAD'
               ? `${uploadedPhotos.length} Photos`
               : activeTab === 'SELECT SIZE' && isBannerProduct
@@ -9236,7 +9280,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           {activeTab === 'PRODUCTS' && (
             <CustomizerProductSelector
               activeMaterial={activeMaterial}
-              products={activeMaterial === 'acrylic' ? ACRYLIC_PRODUCT_TYPES : CANVAS_PRODUCT_TYPES}
+              products={productTypeList}
               selectedProductId={selectedProductTypeId}
               onSelectProduct={selectProduct}
               onSwitchMaterial={handleSwitchMaterial}
