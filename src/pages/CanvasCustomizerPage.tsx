@@ -3788,6 +3788,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [liveFonts, setLiveFonts] = useState<OptionCategoryItemDto[]>([]);
   const [liveTextColors, setLiveTextColors] = useState<OptionCategoryItemDto[]>([]);
   const [liveClipart, setLiveClipart] = useState<OptionCategoryItemDto[]>([]);
+  const [liveRetouching, setLiveRetouching] = useState<OptionCategoryItemDto[]>([]);
+  const [liveColorFinish, setLiveColorFinish] = useState<OptionCategoryItemDto[]>([]);
   useEffect(() => {
     let cancelled = false;
     Promise.all([
@@ -3796,13 +3798,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       fetchOptionCategoryItems('font'),
       fetchOptionCategoryItems('text_color'),
       fetchOptionCategoryItems('clipart'),
-    ]).then(([borderWidths, borderColors, fonts, textColors, clipart]) => {
+      fetchOptionCategoryItems('retouching'),
+      fetchOptionCategoryItems('color_finishing'),
+    ]).then(([borderWidths, borderColors, fonts, textColors, clipart, retouching, colorFinish]) => {
       if (cancelled) return;
       setLiveBorderWidths(borderWidths);
       setLiveBorderColors(borderColors);
       setLiveFonts(fonts);
       setLiveTextColors(textColors);
       setLiveClipart(clipart);
+      setLiveRetouching(retouching);
+      setLiveColorFinish(colorFinish);
     });
     return () => {
       cancelled = true;
@@ -3849,6 +3855,28 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (liveTextColors.length === 0) return TEXT_COLORS_FALLBACK;
     return liveTextColors.map((item) => (item.extras?.hex as string) ?? '#000000');
   }, [liveTextColors]);
+
+  // Minor Photo Retouching checklist (OPTIONS tab). Checkbox state is keyed
+  // by id, so admin-added items work without any other change.
+  const liveOrFallbackRetouching = useMemo(() => {
+    if (liveRetouching.length === 0) return RETOUCH_CHECKS;
+    return liveRetouching.map((item) => ({
+      id: (item.extras?.id as string) ?? item.id,
+      label: item.label,
+    }));
+  }, [liveRetouching]);
+
+  // Optional Color Finishing. The filters themselves (original / sepia /
+  // grayscale) are CSS built into the photo editor, so the admin can rename,
+  // reorder or hide them; an id the editor doesn't know is dropped here
+  // rather than showing a picker card that does nothing.
+  const liveOrFallbackColorFinish = useMemo(() => {
+    const known = new Set<string>(COLOR_FINISH_OPTIONS.map((o) => o.id));
+    const mapped = liveColorFinish
+      .map((item) => ({ id: item.extras?.id as ColorFilterType, label: item.label }))
+      .filter((o) => known.has(o.id));
+    return mapped.length > 0 ? mapped : COLOR_FINISH_OPTIONS;
+  }, [liveColorFinish]);
 
   const liveOrFallbackClipart = useMemo(() => {
     if (liveClipart.length === 0) return CLIPART_ITEMS_FALLBACK;
@@ -6585,7 +6613,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
 
     const firstImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || catalogProduct.image;
-    const retouchLabels = RETOUCH_CHECKS.filter((r) => retouchChecks[r.id]).map((r) => r.label);
+    const retouchLabels = liveOrFallbackRetouching.filter((r) => retouchChecks[r.id]).map((r) => r.label);
 
     onAddToCartCustomized({
       product: {
@@ -11300,7 +11328,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <span className="text-[10px] font-bold text-stone-400">Free</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2.5">
-                  {COLOR_FINISH_OPTIONS.map((cf) => {
+                  {liveOrFallbackColorFinish.map((cf) => {
                     const activePanelFilter = panelImages[activePanelIndex]?.filter || 'original';
                     const isSelected = activePanelFilter === cf.id;
                     const previewImage = panelImages[activePanelIndex]?.imageUrl || panelImages[0]?.imageUrl || uploadedPhotos[0];
@@ -11366,7 +11394,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               <div className="space-y-2.5 pt-3 border-t border-stone-200">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">2. Minor Photo Retouching</label>
                 <div className="grid grid-cols-2 gap-2.5 bg-stone-50 p-3 rounded-xl border border-stone-200">
-                  {RETOUCH_CHECKS.map((rc) => (
+                  {liveOrFallbackRetouching.map((rc) => (
                     <label key={rc.id} className="flex items-center gap-2 text-xs font-bold text-stone-700 cursor-pointer">
                       <input
                         type="checkbox"
