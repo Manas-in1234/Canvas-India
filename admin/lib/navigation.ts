@@ -22,6 +22,7 @@ import {
   SlidersHorizontal,
   Ruler,
   IndianRupee,
+  ImageIcon,
 } from "lucide-react";
 export const NAV_SECTIONS = [
   {
@@ -56,6 +57,12 @@ export const NAV_SECTIONS = [
         label: "Products",
         icon: Package,
         permissions: ["products.view"],
+      },
+      {
+        href: "/hero-images",
+        label: "Hero Images",
+        icon: ImageIcon,
+        permissions: ["products.edit"],
       },
       {
         href: "/customers",

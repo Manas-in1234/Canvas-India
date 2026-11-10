@@ -6,6 +6,8 @@ import { hashPassword, verifyPassword, sha256Hex } from './common/crypto/passwor
 import { randomBytes, createHmac } from 'node:crypto';
 import { WorkerShapes } from './customization/shapes/worker-shapes.js';
 import { resolveAdminRead } from './common/admin-read-routes.js';
+import { HeroImages } from './catalog/hero-images.js';
+import { HERO_IMAGE_SLOTS, isHeroImageSlot } from './catalog/hero-image-slots.js';
 
 export interface Env {
   DATABASE_URL: string;
@@ -216,6 +218,49 @@ export default {
     const { prisma, services } = await getServices(env);
 
     try {
+      const heroImage = pathname.match(/^\/api\/v1\/(admin\/)?hero-images(?:\/([^/]+))?$/);
+      if (heroImage) {
+        const [, admin, requestedSlot] = heroImage;
+        const slot = isHeroImageSlot(requestedSlot) ? requestedSlot : null;
+        const images = new HeroImages(prisma);
+        if (requestedSlot && !slot) {
+          return jsonResponse({ message: 'Unknown hero image page.' }, 404, request);
+        }
+        if (!admin && slot && method === 'GET') {
+          const image = await images.get(slot);
+          if (!image?.contentBytes?.length) {
+            const fallback = new URL(HERO_IMAGE_SLOTS[slot].fallback, 'https://canvassindia.com');
+            if (slot === 'home' && query.mobile === '1') fallback.searchParams.set('w', '1200');
+            return new Response(null, {
+              status: 307,
+              headers: { ...corsHeaders(request), Location: fallback.href, 'Cache-Control': 'no-store' },
+            });
+          }
+          const etag = `"${image.checksum}"`;
+          const headers = {
+            ...corsHeaders(request),
+            'Content-Type': image.mimeType,
+            'X-Content-Type-Options': 'nosniff',
+            'Cache-Control': 'public, no-cache',
+            ETag: etag,
+          };
+          if (request.headers.get('If-None-Match') === etag) return new Response(null, { status: 304, headers });
+          return new Response(new Uint8Array(image.contentBytes), { headers });
+        }
+        if (admin) {
+          const { user, error } = await authenticate(request, env, prisma);
+          if (error) return error;
+          const denied = checkPermission(user, ['products.edit'], request);
+          if (denied) return denied;
+          if (!slot && method === 'GET') return jsonResponse(await images.list(), 200, request);
+          if (slot && method === 'POST') return jsonResponse(await images.upload(slot, request, user.id), 200, request);
+          if (slot && method === 'DELETE') {
+            await images.reset(slot, user.id);
+            return new Response(null, { status: 204, headers: corsHeaders(request) });
+          }
+        }
+        return jsonResponse({ message: 'Hero image route not found.' }, 404, request);
+      }
       const adminRead = method === 'GET' ? resolveAdminRead(pathname, prisma, services, query.status) : null;
       if (adminRead) {
         const { user, error } = await authenticate(request, env, prisma);

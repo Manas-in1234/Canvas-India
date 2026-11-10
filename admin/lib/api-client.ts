@@ -1,5 +1,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api/v1';
 
+export const buildAdminApiUrl = (path: string) => `${API_BASE_URL}${path}`;
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -24,7 +26,7 @@ export function configureApiClient(getters: { getAccessToken: () => string | nul
 async function request<T>(path: string, options: RequestInit = {}, isRetry = false): Promise<T> {
   const token = accessTokenGetter();
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(buildAdminApiUrl(path), {
     ...options,
     headers: {
       ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),

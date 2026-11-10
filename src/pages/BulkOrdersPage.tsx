@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { StorefrontHeroImage } from '../components/StorefrontHeroImage';
 import { Link } from 'react-router-dom';
 import { ChevronRight, ArrowRight, MessageCircle } from 'lucide-react';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
@@ -90,8 +91,8 @@ export const BulkOrdersPage: React.FC = () => {
     <div className="w-full min-h-[70vh] bg-[#FFFDF9] text-stone-900 font-manrope flex flex-col justify-center">
       {/* HERO SECTION */}
       <section className="relative overflow-hidden bg-[#F7F1E5] border-b border-stone-200/60 py-12 sm:py-20">
-        <img
-          src="/assets/canvas-india-branded-packaging.webp"
+        <StorefrontHeroImage
+          slot="corporate"
           alt="Canvas India branded bulk order packaging"
           className="hidden lg:block absolute right-0 top-0 h-full w-[55%] object-cover object-center"
           style={{
