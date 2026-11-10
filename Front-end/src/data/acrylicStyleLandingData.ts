@@ -1,0 +1,503 @@
+// ============================================================================
+// ACRYLIC STYLE LANDING PAGES
+// One entry per real acrylic product type (same ids/prices/descriptions as
+// ACRYLIC_PRODUCT_TYPES in acrylicCustomizerData.ts, and the homepage's
+// Acrylic Prints cards) — mirrors the Canvas style landing page system so
+// each format opens its own page instead of jumping straight into the
+// customizer, exactly like Canvas does.
+// ============================================================================
+
+import { CanvasStyleLandingData } from '../components/CanvasStyleLandingPage';
+import { ACRYLIC_PRODUCT_TYPES } from './acrylicCustomizerData';
+
+const buildAcrylicSteps = (step2: { title: string; desc: string }) => [
+  {
+    icon: 'upload' as const,
+    title: 'Upload Your Photo(s)',
+    desc: 'Upload high-resolution photos straight from your device, or scan the QR code to send them from your phone — no app needed.'
+  },
+  { icon: 'grid' as const, ...step2 },
+  {
+    icon: 'crop' as const,
+    title: 'Choose Your Size & Shape',
+    desc: 'Pick the size and shape that fits your wall or desk — every acrylic piece is cut and polished to order.'
+  },
+  {
+    icon: 'sliders' as const,
+    title: 'Select Hardware & Finish',
+    desc: 'Choose your acrylic thickness and hanging or standoff hardware — every piece ships ready to display.'
+  },
+  {
+    icon: 'eye' as const,
+    title: 'Preview & Order',
+    desc: "See exactly how it'll look on your wall with our live Room View preview, then add it to your cart and check out."
+  }
+];
+
+const STANDARD_ACRYLIC_FEATURES = [
+  { icon: 'layers' as const, title: 'Premium Materials', desc: 'Crystal-clear cast acrylic with diamond-polished, beveled edges.' },
+  { icon: 'sparkles' as const, title: 'Archival UV Inks', desc: 'Sub-surface UV printing seals every pigment against moisture and fading.' },
+  { icon: 'shield' as const, title: 'Built to Last', desc: 'Hand-inspected and quality-tested before it ever leaves our workshop.' },
+  { icon: 'clock' as const, title: 'Ready to Hang', desc: 'Arrives with hardware pre-attached — no framing needed.' }
+];
+
+// Maps each acrylic product type's id to a distinct landing-page slug, a
+// friendly intro, a step-2 title/desc, an icon, and real encyclopedic
+// history. Only Single Print has a verified real photo (user-supplied); the
+// rest have no distinct real photos anywhere in the app — the customizer
+// itself only ever used generic shape placeholders — so they use a plain,
+// accurate icon instead of a mismatched stock photo.
+export const STYLE_META: Record<string, {
+  slug: string;
+  intro: string;
+  step2: { title: string; desc: string };
+  icon: import('../components/CanvasStyleLandingPage').CanvasStyleIcon;
+  image?: string;
+  /** Direct styles override when a format has dedicated panel-wise styles with custom prices and links */
+  styles?: import('../components/CanvasStyleLandingPage').CanvasStyleHighlight[];
+  /** For multi-panel formats (collage/split/wall-art/mosaic), the real
+   * layout id (from productGeometry.tsx) that matches what the main style
+   * card's own image actually shows, deep-linked via ?layout= so
+   * "Customize This Style" opens the matching panel configuration instead
+   * of the customizer's unrelated default. */
+  layoutId?: string;
+  historyTitle: string;
+  historyParagraphs: string[];
+  tipsTitle?: string;
+  tipsSubtitle?: string;
+  tipsItems?: { title: string; desc: string }[];
+  infoTitle?: string;
+  infoSubtitle?: string;
+  infoItems?: { title: string; desc: string }[];
+  /** Additional real-photo style cards shown after the main one, for
+   * formats with more than one verified real example — each deep-linking
+   * to its own matching layout the same way. */
+  extraStyles?: { name: string; description: string; image: string; layoutId?: string }[];
+}> = {
+  'acrylic-print': {
+    slug: 'single-print',
+    intro: 'One photo, printed edge-to-edge on crystal-clear optical acrylic for a vivid, glass-like glow.',
+    step2: { title: 'Pick Your Size', desc: 'Choose a size from our standard range, or set a custom width and height.' },
+    icon: 'print',
+    image: '/assets/canvas-styles/acrylic-single-print-peacock.webp',
+    historyTitle: 'The History of Acrylic Glass',
+    historyParagraphs: [
+      'Acrylic glass (polymethyl methacrylate) was patented in 1933 by German chemists at Rohm and Haas, who marketed it under the name Plexiglas — a shatter-resistant, lightweight alternative to glass that was soon used everywhere from aircraft canopies in World War II to dental prosthetics.',
+      "Photographers and galleries began mounting prints directly behind acrylic sheets from the 1980s onward, prized for how the material's optical clarity makes colors appear to glow with extra depth and saturation compared to printing on paper alone.",
+      "Today's acrylic photo print carries that same idea forward — a direct UV print sealed beneath (or printed sub-surface onto) crystal-clear cast acrylic, giving photographs a luminous, almost three-dimensional quality that a standard paper print can't match."
+    ]
+  },
+  'acrylic-wall-art': {
+    slug: 'wall-display',
+    intro: 'A cluster of acrylic panels arranged together as one striking gallery-wall display.',
+    step2: { title: 'Pick Your Panel Layout', desc: 'Choose a multi-panel gallery arrangement, then fine-tune individual panel sizes.' },
+    icon: 'wall',
+    image: '/assets/canvas-styles/acrylic-wall-display-3panel.webp',
+    styles: [
+      {
+        id: 'acrylic-wall-display-3panel',
+        number: '01',
+        name: '3-Panel Acrylic Gallery Wall Display',
+        description: 'A luminous 3-panel multi-photo acrylic gallery (18" × 24" overall) featuring 3 distinct photos across a 12"×18" tall centerpiece balanced by dual 10"×8" accent panels — floating on polished stainless steel standoffs with crystal glass clarity.',
+        price: 1050,
+        image: '/assets/canvas-styles/acrylic-wall-display-3panel.webp',
+        customizeHref: '/customize/acrylic/acrylic-wall-art?layout=wall-display-3a'
+      },
+      {
+        id: 'acrylic-wall-display-4panel',
+        number: '02',
+        name: '4-Panel Acrylic Showcase Display',
+        description: 'An architectural 4-piece acrylic wall display (34" × 24" overall) featuring 4 separate photos on a 24"×16" portrait panel, an 11"×17" horizontal header, and dual 12"×8" companion bases — high-gloss optical acrylic that adds depth to modern interiors.',
+        price: 1990,
+        image: '/assets/canvas-styles/acrylic-wall-display-4panel.webp',
+        customizeHref: '/customize/acrylic/acrylic-wall-art?layout=wall-display-4a'
+      },
+      {
+        id: 'acrylic-wall-display-5panel',
+        number: '03',
+        name: '5-Panel Stepped Acrylic Pyramid Display',
+        description: 'A dramatic 5-panel layout (62" × 36" overall) where each panel presents an individual photo — with a commanding 20"×16" center apex panel flanked by stepped 14"×11" and 10"×8" panels with sleek chrome standoff mounting.',
+        price: 2150,
+        image: '/assets/canvas-styles/acrylic-wall-display-5panel.webp',
+        customizeHref: '/customize/acrylic/acrylic-wall-art?layout=wall-display-5a'
+      },
+      {
+        id: 'acrylic-wall-display-7panel',
+        number: '04',
+        name: '7-Panel Acrylic Centerpiece Halo Display',
+        description: 'A grand 7-panel acrylic gallery cluster (44" × 26" overall) displaying 7 unique photos — featuring a 26"×26" square hero center encircled by six 8"×8" satellite acrylic prints with diamond-polished beveled edges.',
+        price: 2490,
+        image: '/assets/canvas-styles/acrylic-wall-display-7panel.webp',
+        customizeHref: '/customize/acrylic/acrylic-wall-art?layout=wall-display-7a'
+      }
+    ],
+    infoTitle: 'Choose Your Acrylic Panel Count',
+    infoSubtitle: 'Every layout below is a real multi-panel acrylic configuration available in the customizer — pick one to start, then customize sizes, standoff hardware, and acrylic thickness.',
+    infoItems: [
+      { title: '3-Piece Acrylic Display', desc: '(1) 12"×18" Tall + (2) 10"×8" Mini panels on standoff mounts' },
+      { title: '4-Piece Acrylic Showcase', desc: '(1) 24"×16" + (1) 11"×17" + (2) 12"×8" Standoff-mounted panels' },
+      { title: '5-Piece Stepped Acrylic Pyramid', desc: '(2) 10"×8" + (2) 14"×11" + (1) 20"×16" Stepped gallery set' },
+      { title: '6-Piece Panoramic Horizon', desc: '(1) 10"×10" + (1) 18"×12" + (1) 28"×18" + (2) 11"×16" + (1) 10"×12"' },
+      { title: '7-Piece Centerpiece Halo', desc: '(1) 26"×26" Hero + (6) 8"×8" Mini satellite panels' },
+      { title: '9-Piece Matrix Grid', desc: '(9) 12"×12" Equal Squares in a 3×3 Grid' },
+      { title: '10-Piece Grand Pantheon Wall', desc: '(1) 24"×32" + (2) 16"×20" + (2) 12"×16" + (2) 10"×12" + (3) 8"×10"' }
+    ],
+    historyTitle: 'The History of the Gallery Wall',
+    historyParagraphs: [
+      'The densely packed "gallery wall" look traces back to the Paris Salon, which from 1667 accepted far more paintings than its walls could comfortably hold, so organizers covered every inch floor to ceiling with little regard for matching styles.',
+      'That "salon-style hang" had its own hierarchy — prized works hung "on the line" at eye level, lesser ones pushed toward the ceiling or floor — a practice London\'s Royal Academy soon adopted too.',
+      'The look eventually left the gallery altogether, becoming a deliberate home-decorating style in its own right — and a cluster of acrylic panels is simply that same arrangement, made modern with a glossy, glass-like finish.'
+    ]
+  },
+  'acrylic-collage': {
+    slug: 'photo-collage',
+    intro: 'Several of your favorite photos arranged into one cohesive acrylic grid.',
+    step2: { title: 'Pick Your Collage Grid', desc: 'Choose from multiple photo layouts, then slot in your photos.' },
+    icon: 'grid',
+    image: '/assets/canvas-styles/acrylic-collage-wedding-3panel.webp',
+    layoutId: 'collage-land-3p-left2-right1',
+    historyTitle: 'The History of Collage',
+    historyParagraphs: [
+      'The word "collage" comes from the French coller, "to glue." The earliest known paper collage dates to 10th-century Japan, where calligraphers glued paper onto surfaces when writing poems.',
+      'Collage became a recognized fine-art technique in 1912, when Georges Braque began attaching cut wallpaper to his drawings and Pablo Picasso quickly followed — the two are credited with coining the term papier collé, "pasted paper."',
+      "A photo collage on acrylic carries that same idea forward — several photographs arranged into one piece — just printed edge-to-edge on crystal-clear acrylic instead of glued paper."
+    ],
+    extraStyles: [
+      {
+        name: '4-Photo Grid Acrylic Collage',
+        description: 'A clean 2×2 grid pairing everyday moments with your favorite close-ups.',
+        image: '/assets/canvas-styles/acrylic-collage-couple-4panel.webp',
+        layoutId: 'collage-sq-4p-grid'
+      },
+      {
+        name: '9-Photo Family Acrylic Collage',
+        description: 'A full 3×3 grid for a big family collection spanning every generation.',
+        image: '/assets/canvas-styles/acrylic-collage-family-9panel.webp',
+        layoutId: 'collage-land-9p-feature'
+      },
+      {
+        name: 'Feature Photo Acrylic Collage',
+        description: 'One large feature photo paired with smaller accent shots for an editorial-style layout.',
+        image: '/assets/canvas-styles/acrylic-collage-bride-feature.webp',
+        layoutId: 'collage-land-5p-left-tall-right-grid'
+      }
+    ]
+  },
+  'acrylic-split': {
+    slug: 'split-acrylic',
+    intro: 'One photo, seamlessly split across separate acrylic panels for a dramatic centerpiece.',
+    step2: { title: 'Pick Your Panel Count', desc: "Choose a multi-piece split layout, and we'll divide your photo seamlessly across each panel." },
+    icon: 'columns',
+    image: '/assets/canvas-styles/acrylic-split-couple-sunset.webp',
+    layoutId: 'split-3p-75x50-triptych',
+    historyTitle: 'The History of the Multi-Panel Format',
+    historyParagraphs: [
+      'Splitting an image across multiple hinged panels dates back to early Christian art, where the three-panel "triptych" became the standard format for altarpieces from the Middle Ages onward.',
+      "During World War II, a U.S. citizens' committee commissioned nearly 460 portable triptych altarpieces for troops of different faiths — proof the multi-panel format has always been practical, not just decorative.",
+      "Split acrylic reframes that same structure — one image divided across separate panels — as a deliberate, modern design choice, finished with a glossy acrylic surface instead of painted wood."
+    ],
+    extraStyles: [
+      {
+        name: '5-Panel Beach Pier Split Acrylic',
+        description: 'A wide panoramic jetty view stretched across 5 stepped acrylic panels.',
+        image: '/assets/canvas-styles/acrylic-split-beach-pier.webp',
+        layoutId: 'split-5p-57-75-97-stepped'
+      },
+      {
+        name: 'Sailboat Painting Split Acrylic',
+        description: 'A warm painted seascape split across 4 panels — one large feature panel plus 3 accent panels.',
+        image: '/assets/canvas-styles/acrylic-split-sailboat-painting.webp',
+        layoutId: 'split-4p-85x50-stacked-right'
+      },
+      {
+        name: 'Marble Abstract Split Acrylic',
+        description: 'Flowing blue and gold abstract marbling split evenly across 4 equal panels.',
+        image: '/assets/canvas-styles/acrylic-split-marble-abstract.webp',
+        layoutId: 'split-4p-50x50-grid'
+      }
+    ]
+  },
+  'acrylic-mosaic': {
+    slug: 'photo-mosaic',
+    intro: 'Dozens of your smaller photographs blended together into one intricate acrylic mosaic.',
+    step2: { title: 'Set Your Mosaic Size', desc: 'Choose your panel size — more photos uploaded means a richer, more detailed mosaic.' },
+    icon: 'mosaic',
+    image: '/assets/canvas-styles/acrylic-mosaic-couple.webp',
+    layoutId: 'mosaic2-4x4',
+    historyTitle: 'The History of Mosaic',
+    historyParagraphs: [
+      'Mosaic is one of the oldest art forms in the world — the earliest known examples, made from colored stones, shells, and ivory, were found at a temple in Mesopotamia dating to the 3rd millennium BC.',
+      'The Greeks developed figural mosaics by the 4th century BC, and the Romans took the technique across their empire, decorating villa floors from Britain to Syria with intricate tesserae work.',
+      "Today's photo mosaic reinvents that ancient technique with hundreds of individual photographs instead of stone or glass tiles — many small pieces combining into one larger picture, now printed on acrylic."
+    ],
+    tipsTitle: 'Tips for a Stunning Photo Mosaic',
+    tipsSubtitle: 'A few things to know before you upload your photos.',
+    tipsItems: [
+      { title: 'Choose a strong main image', desc: 'Pick a clear, close-up photo with bold shapes and good contrast — busy, cluttered scenes lose the mosaic effect once broken into tiles.' },
+      { title: 'Use plenty of photos', desc: 'Most photo mosaics use anywhere from 100 to several hundred smaller photos — the more you upload, the richer and more recognizable the final piece.' },
+      { title: 'Keep your cell photos varied', desc: 'Aim for a mix of colors and subjects among your smaller photos — more variety gives the design more to work with when matching tones.' },
+      { title: 'Design at full resolution', desc: "Upload your highest-resolution files from the start — scaling a low-resolution image up to canvas size afterward is where detail gets lost." }
+    ],
+    extraStyles: [
+      {
+        name: 'Star Portrait Acrylic Mosaic',
+        description: 'A bold, high-contrast hero portrait formed from hundreds of micro-moments, encased in optical acrylic.',
+        image: '/assets/canvas-styles/acrylic-mosaic-star-portrait.webp',
+        layoutId: 'mosaic5-4x5'
+      },
+      {
+        name: 'Baby Milestone Acrylic Mosaic',
+        description: 'Celebrate your child’s precious memories in a luminous, diamond-polished acrylic mosaic display.',
+        image: '/assets/canvas-styles/acrylic-mosaic-baby-room.webp',
+        layoutId: 'mosaic1-3x4'
+      },
+      {
+        name: 'Classic Tonal Acrylic Mosaic',
+        description: 'An elegant black-and-white tonal portrait crafted from dozens of micro memories, sealed with a glossy depth.',
+        image: '/assets/canvas-styles/acrylic-mosaic-gentleman-portrait.webp',
+        layoutId: 'mosaic4-5x5'
+      }
+    ]
+  },
+  'acrylic-lyric': {
+    slug: 'lyric-on-acrylic',
+    intro: 'Pair your favorite photo with the song lyrics, vows, or quote that means the most, rendered in elegant typography on acrylic.',
+    step2: { title: 'Add Your Lyrics & Template', desc: 'Type your song lyrics, vows, or quote, choose a template, then pick your size.' },
+    icon: 'music',
+    image: '/assets/canvas-styles/acrylic-lyric-vinyl-record.webp',
+    historyTitle: 'The History of Lyric Art',
+    historyParagraphs: [
+      'Pairing handwritten text with an image has roots in illuminated manuscripts, where medieval scribes wove decorated lettering directly into the artwork surrounding sacred texts.',
+      'The specific idea of pairing a couple\'s own wedding song lyrics with their portrait grew out of the custom wedding-gift market that expanded alongside affordable digital printing in the 2000s and 2010s.',
+      'Lyric on acrylic continues that tradition on crystal-clear acrylic, letting the typography and photo sit together with the same glossy depth as a gallery print.'
+    ],
+    extraStyles: [
+      {
+        name: 'Gold Script Acrylic Lyric Block',
+        description: 'Shimmering gold script names and milestone date layered over custom song lyrics on a freestanding obsidian black acrylic block.',
+        image: '/assets/canvas-styles/acrylic-lyric-gold-black-block.webp'
+      },
+      {
+        name: 'Sheet Music Acrylic Lyric Block',
+        description: 'Classical stave and musical notation backdrop paired with couple names, anniversary date, and song lyrics on crystal-clear acrylic.',
+        image: '/assets/canvas-styles/acrylic-lyric-sheet-music-block.webp'
+      },
+      {
+        name: 'Heart Line Art Acrylic Lyric Block',
+        description: 'Romantic minimalist line art hands with a vibrant red heart, wreathed in the words of your special melody.',
+        image: '/assets/canvas-styles/acrylic-lyric-heart-line-art.webp'
+      }
+    ]
+  },
+  'acrylic-digital': {
+    slug: 'digital-painting',
+    intro: 'Turn your favorite photo into an artistic digital oil, charcoal, or palette-knife painting, printed on acrylic.',
+    step2: { title: 'Pick Your Painting Effect', desc: 'Choose a digital painting style and subject, and we\'ll transform your photo into artwork.' },
+    icon: 'painting',
+    image: '/assets/canvas-styles/acrylic-digital-wildlife-oil.webp',
+    historyTitle: 'The History of Photo-to-Painting Art',
+    historyParagraphs: [
+      'Simulating painterly brushwork from a photograph dates back to early image-editing software in the 1990s, when programs like Adobe Photoshop first shipped built-in "oil paint" and "watercolor" filters.',
+      'The style went mainstream with mobile apps like Prisma in 2016, which used neural-network style transfer to turn ordinary phone photos into convincing paintings in seconds — introducing the effect to a mass audience.',
+      "A digital painting print carries that same transformation onto physical wall art, turning a favorite photo into an oil, charcoal, or palette-knife-style portrait on acrylic."
+    ],
+    tipsTitle: 'Tips for a Stunning Digital Painting',
+    tipsSubtitle: 'How to get the most dramatic brushstrokes from your photos.',
+    tipsItems: [
+      { title: 'Focus on clear facial features', desc: 'Portraits with clear eyes and expressive expressions translate into the most striking oil and charcoal paintings.' },
+      { title: 'Good lighting and contrast', desc: 'Dynamic highlights and deep shadows give our digital artists and filters the tonal range needed for dramatic texture.' },
+      { title: 'Rich, vivid colors', desc: 'Photos with warm tones or bold contrasts produce rich, layered impasto brushwork that glows behind optical acrylic.' },
+      { title: 'Start with high resolution', desc: 'Upload the original uncompressed photo so every stroke and canvas texture can be rendered with maximum crispness.' }
+    ],
+    extraStyles: [
+      {
+        name: 'Radiant Botanical Acrylic Painting',
+        description: 'Luminous layered brushstrokes capturing the vibrant warmth and delicate petals of a botanical blossom.',
+        image: '/assets/canvas-styles/acrylic-digital-dahlia-bloom.webp'
+      },
+      {
+        name: 'Classic Pet Portrait Oil Painting',
+        description: 'Turn your beloved pet into a distinguished gallery-grade oil portrait with authentic canvas easel depth.',
+        image: '/assets/canvas-styles/acrylic-digital-cat-portrait.webp'
+      },
+      {
+        name: 'Divine Lotus Buddha Acrylic Painting',
+        description: 'Serene spiritual portraiture in rich jade and emerald tones, accented by glowing red lotus blossoms.',
+        image: '/assets/canvas-styles/acrylic-digital-buddha-lotus.webp'
+      }
+    ]
+  },
+  'acrylic-quotes': {
+    slug: 'quotes-on-acrylic',
+    intro: 'Your favorite quote, rendered in bold custom typography on crystal-clear acrylic.',
+    step2: { title: 'Pick Your Template', desc: 'Choose a quote template and typography style, then personalize the text.' },
+    icon: 'quote',
+    image: '/assets/canvas-styles/acrylic-quote-wildflower-plaque.webp',
+    historyTitle: 'The History of Typographic Wall Art',
+    historyParagraphs: [
+      'Using bold lettering alone as the subject of a poster traces back to the WPA-era public information posters of the 1930s-40s, which relied on strong typography to deliver a message at a glance.',
+      'The modern "motivational quote" wall art trend took off in the 2000s and 2010s alongside the rise of home-decor retailers and platforms like Pinterest, which popularized short, shareable phrases as standalone decor.',
+      'Quotes on acrylic brings that same typographic tradition to a glossy, gallery-like surface — the words alone, printed crisp and bold.'
+    ],
+    tipsTitle: 'Tips for Custom Quote Art',
+    tipsSubtitle: 'How to make your words make the biggest impact.',
+    tipsItems: [
+      { title: 'Keep it punchy', desc: 'Shorter quotes leave room for larger, more impactful typography that reads cleanly from across the room.' },
+      { title: 'Match font to feeling', desc: 'Choose graceful script for romantic vows, bold sans-serif for daily motivation, or classic serif for scripture.' },
+      { title: 'Consider placement', desc: 'Choose a high-contrast background that complements your room’s natural lighting and wall color.' },
+      { title: 'Check spelling and spacing', desc: 'Review your punctuation, line breaks, and names before checkout for a flawless final print.' }
+    ],
+    extraStyles: [
+      {
+        name: 'Sunset Wreath Acrylic Quote',
+        description: 'A vibrant sunset rainbow color wash framing hand-lettered inspirational wisdom within a botanical laurel.',
+        image: '/assets/canvas-styles/acrylic-quote-sunset-wreath.webp'
+      },
+      {
+        name: 'Minimalist Monograph Acrylic Plaque',
+        description: 'Clean modern editorial typography on crystal-clear optical acrylic, perfect for personalized scriptures and vows.',
+        image: '/assets/canvas-styles/acrylic-quote-minimalist-plaque.webp'
+      },
+      {
+        name: 'Starry Pine Forest Acrylic Quote',
+        description: 'Deep midnight starry skies over an evergreen forest silhouette, illuminated with bold white brush calligraphy.',
+        image: '/assets/canvas-styles/acrylic-quote-starry-forest.webp'
+      }
+    ]
+  },
+  'acrylic-bus-roll': {
+    slug: 'bus-roll',
+    intro: 'A tall vertical acrylic strip styled after classic destination bus rolls — a fun, retro statement piece.',
+    step2: { title: 'Create Your Bus Roll', desc: 'Type your destination lines and pick a background style for your roll.' },
+    icon: 'bus',
+    image: '/assets/canvas-styles/acrylic-bus-roll-destination.webp',
+    historyTitle: 'The History of the Destination Roll Blind',
+    historyParagraphs: [
+      'Mechanical roller-blind destination signs were fitted to buses and trams from the early 20th century onward, each roll printed with a long list of routes that the driver wound into place by hand.',
+      "London's classic Routemaster buses made the format especially iconic through the mid-20th century, and original canvas destination rolls are now sought after by transport collectors and decorators alike.",
+      'A bus roll print borrows that same tall, hand-wound format purely for its nostalgic look — a personalized destination list printed on acrylic instead of canvas.'
+    ],
+    tipsTitle: 'Tips for Custom Bus Roll Art',
+    tipsSubtitle: 'How to curate your favorite places and memories.',
+    tipsItems: [
+      { title: 'Choose meaningful places', desc: 'List your favorite travel destinations, hometown stops, memorable date spots, or family vacation memories.' },
+      { title: 'Vary line lengths', desc: 'Mix short and long town or stop names to give the classic staggered transit roll typography cadence.' },
+      { title: 'Keep the order intentional', desc: 'Arrange chronologically from top to bottom (like your travel journey) or rank by significance.' },
+      { title: 'Pick the right contrast', desc: 'Crisp white typography on dark backgrounds provides the highest readability and authentic vintage charm.' }
+    ],
+    extraStyles: [
+      {
+        name: 'Classroom & Family Rules Bus Roll',
+        description: 'Warm golden fish-scale background pattern featuring multi-color family and classroom rules typography.',
+        image: '/assets/canvas-styles/acrylic-bus-roll-classroom-rules.webp'
+      },
+      {
+        name: 'Argyle Typography Acrylic Roll',
+        description: 'Timeless charcoal diamond argyle motif with elegant serif lettering for an inspiring life statement.',
+        image: '/assets/canvas-styles/acrylic-bus-roll-argyle-quote.webp'
+      }
+    ]
+  },
+  'acrylic-word-art': {
+    slug: 'word-art',
+    intro: 'Your name, a favorite word, or a short phrase, shaped into bold typographic wall art on acrylic.',
+    step2: { title: 'Design Your Word Art', desc: 'Type your word or phrase and choose a layout, then pick your size.' },
+    icon: 'type',
+    image: '/assets/canvas-styles/acrylic-word-art-family-name.webp',
+    historyTitle: 'The History of Word Art',
+    historyParagraphs: [
+      'Decorative lettering as a standalone art object has roots in illuminated manuscripts and hand-lettered signage, where a single word or initial could carry as much visual weight as a full illustration.',
+      'The modern "word art" home-decor trend — a name, family word, or short phrase displayed as the entire artwork — became especially popular through home-decor retailers in the early 2000s.',
+      'Word art on acrylic brings that same single-word focus to a glossy, gallery-style finish, letting the lettering itself be the centerpiece.'
+    ],
+    tipsTitle: 'Tips for Custom Word Art',
+    tipsSubtitle: 'How to create a stunning typographic masterpiece.',
+    tipsItems: [
+      { title: 'Pick a focal centerpiece', desc: 'Choose a primary surname, anniversary milestone, or main subject to stand out as the anchor word.' },
+      { title: 'Layer in meaningful memories', desc: 'Include family member names, important dates, favorite hobbies, or shared memories for the cloud.' },
+      { title: 'Choose complementary shapes', desc: 'Pick from hearts for love and anniversaries, stars for achievements, or classic rectangles for modern decor.' },
+      { title: 'Check spelling carefully', desc: 'Double-check every name and custom word before finalizing your design for a clean, error-free print.' }
+    ],
+    extraStyles: [
+      {
+        name: 'Heart Silhouette Acrylic Word Art',
+        description: 'Dozens of meaningful family names, virtues, and memories tightly nested into an affectionate heart shape.',
+        image: '/assets/canvas-styles/acrylic-word-art-heart-silhouette.webp'
+      },
+      {
+        name: 'Butterfly Silhouette Acrylic Word Art',
+        description: 'Warm golden typography flowing gracefully into the contours of an open-wing butterfly silhouette.',
+        image: '/assets/canvas-styles/acrylic-word-art-butterfly.webp'
+      },
+      {
+        name: 'Star Silhouette Acrylic Word Art',
+        description: 'An inspiring five-point star shaped from celebration words, teacher milestones, and words of gratitude.',
+        image: '/assets/canvas-styles/acrylic-word-art-star.webp'
+      }
+    ]
+  },
+};
+
+export const ACRYLIC_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> = Object.fromEntries(
+  ACRYLIC_PRODUCT_TYPES.map((pt) => {
+    const meta = STYLE_META[pt.id];
+    const data: CanvasStyleLandingData = {
+      slug: meta.slug,
+      pageTitle: pt.name,
+      heroTitle: `What is ${pt.name}?`,
+      heroSubtitle: `${pt.description} ${meta.intro}`,
+      stylesSectionTitle: `Explore ${pt.name}`,
+      stepsTitle: `How to Customize Your ${pt.name}`,
+      stepsSubtitle: 'From upload to finish in 5 simple steps.',
+      steps: buildAcrylicSteps(meta.step2),
+      styles: meta.styles ?? [
+        {
+          id: pt.id,
+          number: '01',
+          name: pt.name,
+          description: pt.description,
+          price: pt.startingPrice,
+          ...(meta.image ? { image: meta.image } : { icon: meta.icon }),
+          customizeHref: `/customize/acrylic/${pt.id}${meta.layoutId ? `?layout=${meta.layoutId}` : ''}`
+        },
+        ...(meta.extraStyles || []).map((extra, i) => ({
+          id: `${pt.id}-${i + 2}`,
+          number: String(i + 2).padStart(2, '0'),
+          name: extra.name,
+          description: extra.description,
+          price: pt.startingPrice,
+          image: extra.image,
+          customizeHref: `/customize/acrylic/${pt.id}${extra.layoutId ? `?layout=${extra.layoutId}` : ''}`
+        }))
+      ],
+      ...(meta.infoTitle && meta.infoItems
+        ? {
+            infoTitle: meta.infoTitle,
+            infoSubtitle: meta.infoSubtitle,
+            infoItems: meta.infoItems
+          }
+        : {}),
+      ...(meta.tipsTitle && meta.tipsItems
+        ? {
+            tipsTitle: meta.tipsTitle,
+            tipsSubtitle: meta.tipsSubtitle,
+            tipsItems: meta.tipsItems
+          }
+        : {}),
+      historyTitle: meta.historyTitle,
+      historyParagraphs: meta.historyParagraphs,
+      featuresTitle: 'Made to display',
+      features: STANDARD_ACRYLIC_FEATURES
+    };
+    return [meta.slug, data];
+  })
+);
+
+export function getAcrylicStyleLandingData(slug: string): CanvasStyleLandingData | undefined {
+  return ACRYLIC_STYLE_LANDING_DATA[slug];
+}
+
+export function getAcrylicLandingDataByProductId(productId: string): CanvasStyleLandingData | undefined {
+  const meta = STYLE_META[productId];
+  return meta ? ACRYLIC_STYLE_LANDING_DATA[meta.slug] : undefined;
+}
