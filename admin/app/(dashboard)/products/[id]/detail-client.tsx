@@ -18,6 +18,14 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -31,6 +39,7 @@ export function ProductDetailClient({ id: initialId }: { id: string }) {
   const { hasPermission } = usePermission();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false);
 
   const {
     data: product,
@@ -138,7 +147,7 @@ export function ProductDetailClient({ id: initialId }: { id: string }) {
               variant="destructive"
               size="sm"
               disabled={archiveMutation.isPending}
-              onClick={() => archiveMutation.mutate()}
+              onClick={() => setConfirmArchiveOpen(true)}
             >
               {archiveMutation.isPending ? "Archiving…" : "Archive Product"}
             </Button>
@@ -265,6 +274,30 @@ export function ProductDetailClient({ id: initialId }: { id: string }) {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={confirmArchiveOpen} onOpenChange={setConfirmArchiveOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Archive this product?</DialogTitle>
+            <DialogDescription>
+              {product.name} will be removed from the storefront and hidden
+              from active listings. This can&apos;t be undone from here.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmArchiveOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={archiveMutation.isPending}
+              onClick={() => archiveMutation.mutate()}
+            >
+              {archiveMutation.isPending ? "Archiving…" : "Archive Product"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

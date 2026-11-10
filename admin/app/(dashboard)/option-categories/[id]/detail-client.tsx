@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface ItemFormState {
   label: string;
@@ -40,6 +40,7 @@ export function OptionCategoryDetailClient({ id }: { id: string }) {
   const [addOpen, setAddOpen] = useState(false);
   const [form, setForm] = useState<ItemFormState>(EMPTY_FORM);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['option-categories', id] });
@@ -82,6 +83,7 @@ export function OptionCategoryDetailClient({ id }: { id: string }) {
     onSuccess: () => {
       toast.success('Item deleted');
       invalidate();
+      setPendingDeleteId(null);
     },
     onError: (err: unknown) => toast.error(err instanceof ApiError ? err.message : 'Failed to delete item'),
   });
@@ -228,7 +230,7 @@ export function OptionCategoryDetailClient({ id }: { id: string }) {
                         <Button size="sm" variant="ghost" onClick={() => startEdit(item)}>
                           Edit
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(item.id)}>
+                        <Button size="sm" variant="ghost" onClick={() => setPendingDeleteId(item.id)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -240,6 +242,30 @@ export function OptionCategoryDetailClient({ id }: { id: string }) {
           ))
         )}
       </div>
+
+      <Dialog open={!!pendingDeleteId} onOpenChange={(open) => !open && setPendingDeleteId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete this item?</DialogTitle>
+            <DialogDescription>
+              {category.items.find((i) => i.id === pendingDeleteId)?.label} will be removed and
+              disappear from the storefront customizer immediately. This can&apos;t be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingDeleteId(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={() => pendingDeleteId && deleteMutation.mutate(pendingDeleteId)}
+            >
+              {deleteMutation.isPending ? 'Deleting…' : 'Delete Item'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -257,7 +283,29 @@ function ItemForm({ form, onChange }: { form: ItemFormState; onChange: (f: ItemF
       </div>
       <div className="space-y-2">
         <Label>Image URL</Label>
-        <Input value={form.imageUrl} onChange={(e) => onChange({ ...form, imageUrl: e.target.value })} />
+        <div className="flex items-center gap-3">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
+            {form.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={form.imageUrl}
+                alt="Preview"
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <span className="text-[10px] text-muted-foreground">No image</span>
+            )}
+          </div>
+          <Input
+            className="flex-1"
+            placeholder="https://..."
+            value={form.imageUrl}
+            onChange={(e) => onChange({ ...form, imageUrl: e.target.value })}
+          />
+        </div>
       </div>
       <div className="flex gap-2">
         <Button
