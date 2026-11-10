@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiClient, buildAdminApiUrl } from '@/lib/api-client';
 import { usePermission } from '@/lib/auth/use-permission';
-import { HERO_IMAGE_MAX_BYTES, HERO_IMAGE_SLOTS, type HeroImageSlot } from '../../../../backend/src/catalog/hero-image-slots';
+import { HERO_IMAGE_MAX_BYTES, HERO_IMAGE_SLOTS, type HeroImageSlot } from '@/lib/hero-image-slots';
 
 type HeroImage = { ownerId: string; fileName: string; checksum: string };
 const queryKey = ['hero-images'];
