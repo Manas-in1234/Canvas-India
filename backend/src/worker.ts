@@ -409,6 +409,12 @@ export default {
       // Pricing settings — admin-editable rates used directly in storefront
       // pricing formulas (shape area rate, acrylic thickness rates, etc.).
       // -------------------------------------------------------------
+      if (pathname === '/api/v1/pricing-settings' && method === 'GET') {
+        const settings = await prisma.pricingSetting.findMany({
+          select: { key: true, value: true }, orderBy: { key: 'asc' },
+        });
+        return jsonResponse(settings, 200, request);
+      }
       if (pathname === '/api/v1/admin/pricing-settings' || pathname.startsWith('/api/v1/admin/pricing-settings/')) {
         const { user, error } = await authenticate(request, env, prisma);
         if (error) return error;
@@ -424,10 +430,19 @@ export default {
           const keyMatch = pathname.match(/^\/api\/v1\/admin\/pricing-settings\/([^/]+)$/);
           if (keyMatch && method === 'PATCH') {
             const body = (await request.json()) as any;
-            const updated = await prisma.pricingSetting.update({
-              where: { key: keyMatch[1] },
-              data: { value: body.value, updatedBy: user.id },
-            });
+            if ((typeof body.value !== 'string' && typeof body.value !== 'number') || String(body.value).trim() === '' || !Number.isFinite(Number(body.value)) || Number(body.value) < 0) {
+              return jsonResponse({ message: 'Rate must be a non-negative number' }, 400, request);
+            }
+            const key = keyMatch[1];
+            const data = { value: String(body.value), updatedBy: user.id };
+            const material = key === 'canvas_shape_area_rate_per_sqin' ? 'Canvas'
+              : key === 'acrylic_shape_area_rate_per_sqin' ? 'Acrylic' : null;
+            const updated = material
+              ? await prisma.pricingSetting.upsert({
+                  where: { key }, update: data,
+                  create: { key, ...data, description: `${material} non-rectangular shape surcharge per square inch` },
+                })
+              : await prisma.pricingSetting.update({ where: { key }, data });
             await services.audit.record({
               adminUserId: user.id,
               action: 'PRICING_SETTING_UPDATED',

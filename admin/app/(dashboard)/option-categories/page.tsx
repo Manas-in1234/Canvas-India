@@ -44,6 +44,16 @@ interface TabBlock {
 
 const TABS: TabBlock[] = [
   {
+    tab: 'SPECIALTY PRODUCTS',
+    note: 'Existing Lyric Canvas, Word Art, Canvas Banner and Pop Art pickers.',
+    sections: [
+      { heading: 'Lyric Canvas', entries: [{ kind: 'category', baseKey: 'lyric_templates', title: 'Templates' }, { kind: 'category', baseKey: 'lyric_sizes', title: 'Sizes' }] },
+      { heading: 'Word Art', entries: ['sizes', 'fonts', 'colors', 'directions'].map((key) => ({ kind: 'category' as const, baseKey: `word_art_${key}`, title: key })) },
+      { heading: 'Canvas Banner', entries: ['sizes', 'hardware', 'backgrounds'].map((key) => ({ kind: 'category' as const, baseKey: `banner_${key}`, title: key })) },
+      { heading: 'Pop Art', entries: [{ kind: 'category', baseKey: 'pop_art_styles', title: 'Styles' }, { kind: 'category', baseKey: 'pop_art_sizes', title: 'Sizes' }] },
+    ],
+  },
+  {
     tab: 'PRODUCTS',
     note: 'The product style cards a customer picks first.',
     sections: [
@@ -274,7 +284,7 @@ export default function OptionCategoriesPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Customize Page Options</h1>
         <p className="text-sm text-muted-foreground">
           Laid out exactly like the storefront customizer: each block is a sidebar tab, and each heading
-          under it is the section a customer sees there. Changes show up on the storefront immediately.
+          under it is the section a customer sees there. Changes show up when the storefront is refreshed.
         </p>
       </div>
 
