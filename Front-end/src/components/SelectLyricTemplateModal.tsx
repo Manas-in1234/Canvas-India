@@ -1,7 +1,8 @@
+import { useCatalogOptions } from '../api/useCatalogOptions';
 import React, { useState, useEffect } from 'react';
 import { X, Check, Info, Sparkles, Music } from 'lucide-react';
 import {
-  LYRIC_CANVAS_TEMPLATES,
+  LYRIC_CANVAS_TEMPLATES as DEFAULT_LYRIC_CANVAS_TEMPLATES,
   LYRIC_CANVAS_CATEGORIES,
   LyricCanvasTemplate,
   LyricTemplateCategory,
@@ -21,6 +22,7 @@ export const SelectLyricTemplateModal: React.FC<SelectLyricTemplateModalProps> =
   selectedTemplateId,
   onSelectTemplate
 }) => {
+  const LYRIC_CANVAS_TEMPLATES = useCatalogOptions('lyric_templates', DEFAULT_LYRIC_CANVAS_TEMPLATES, 'priceAdjustment');
   const [activeCategory, setActiveCategory] = useState<LyricTemplateCategory>('all');
   const [activeInfoTemplate, setActiveInfoTemplate] = useState<LyricCanvasTemplate | null>(null);
 

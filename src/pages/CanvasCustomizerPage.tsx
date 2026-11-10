@@ -1,3 +1,4 @@
+import { useCatalogItems, useCatalogOptions } from '../api/useCatalogOptions';
 import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import QRCode from 'qrcode';
@@ -76,7 +77,8 @@ import {
   generateBusRollSvgDataUrl
 } from '../data/busRollData';
 import {
-  WORD_ART_SIZE_CATALOG,
+  WORD_ART_SIZE_CATALOG as DEFAULT_WORD_ART_SIZE_CATALOG,
+  WORD_ART_COLOR_SCHEMES as DEFAULT_WORD_ART_COLOR_SCHEMES,
   DEFAULT_WORD_ART_CONFIG,
   type WordArtSizeOption,
   type WordArtConfig,
@@ -87,9 +89,9 @@ import {
   type CanvasBannerConfig,
   type BannerSizeCategory,
   DEFAULT_CANVAS_BANNER_CONFIG,
-  CANVAS_BANNER_SIZE_OPTIONS,
-  CANVAS_BANNER_HARDWARE_OPTIONS,
-  BANNER_BACKGROUND_PRESETS,
+  CANVAS_BANNER_SIZE_OPTIONS as DEFAULT_CANVAS_BANNER_SIZE_OPTIONS,
+  CANVAS_BANNER_HARDWARE_OPTIONS as DEFAULT_CANVAS_BANNER_HARDWARE_OPTIONS,
+  BANNER_BACKGROUND_PRESETS as DEFAULT_BANNER_BACKGROUND_PRESETS,
   calculateBannerPrice,
   formatDimension,
   convertToInches,
@@ -99,8 +101,8 @@ import {
   type PopArtConfig,
   type PopArtStyleId,
   type PopArtStyleOption,
-  POP_ART_STYLES,
-  POP_ART_SIZE_OPTIONS,
+  POP_ART_STYLES as DEFAULT_POP_ART_STYLES,
+  POP_ART_SIZE_OPTIONS as DEFAULT_POP_ART_SIZE_OPTIONS,
   getPopArtStyle,
   DEFAULT_POP_ART_CONFIG
 } from '../data/popArtData';
@@ -112,8 +114,8 @@ import {
   type LyricCanvasConfig,
   type LyricCanvasTemplate,
   type LyricTemplateId,
-  LYRIC_CANVAS_TEMPLATES,
-  LYRIC_CANVAS_SIZE_OPTIONS,
+  LYRIC_CANVAS_TEMPLATES as DEFAULT_LYRIC_CANVAS_TEMPLATES,
+  LYRIC_CANVAS_SIZE_OPTIONS as DEFAULT_LYRIC_CANVAS_SIZE_OPTIONS,
   DEFAULT_LYRIC_CONFIG,
   getLyricTemplate
 } from '../data/lyricCanvasData';
@@ -2162,6 +2164,7 @@ const MATERIAL_VARIANTS = [
 // this file reads these three constants directly; see liveOrFallbackClipart/
 // liveOrFallbackFonts/liveOrFallbackTextColors below, which merge these with
 // the live admin-managed data and are what any picker UI should consume.
+const DEFAULT_WORD_ART_SIZES = Object.values(DEFAULT_WORD_ART_SIZE_CATALOG).flat();
 const CLIPART_ITEMS_FALLBACK = [
   '❤️', '⭐', '🎉', '🎁', '✨', '🌸', '😊', '🌿', '💎', '🎂', '💍', '🏆',
   '🌹', '🦋', '🌈', '☀️', '🌙', '🎈', '🕉️', '🪔', '🐾', '🎓', '🏡', '👑'
@@ -2659,6 +2662,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return 'canvas';
   }, [materialProp, location.pathname]);
 
+  const LYRIC_CANVAS_TEMPLATES = useCatalogOptions('lyric_templates', DEFAULT_LYRIC_CANVAS_TEMPLATES, 'priceAdjustment');
+  const LYRIC_CANVAS_SIZE_OPTIONS = useCatalogOptions('lyric_sizes', DEFAULT_LYRIC_CANVAS_SIZE_OPTIONS, 'price');
+  const POP_ART_STYLES = useCatalogOptions('pop_art_styles', DEFAULT_POP_ART_STYLES, 'priceAdjustment');
+  const POP_ART_SIZE_OPTIONS = useCatalogOptions('pop_art_sizes', DEFAULT_POP_ART_SIZE_OPTIONS, 'price');
+  const CANVAS_BANNER_SIZE_OPTIONS = useCatalogOptions('banner_sizes', DEFAULT_CANVAS_BANNER_SIZE_OPTIONS, 'price');
+  const CANVAS_BANNER_HARDWARE_OPTIONS = useCatalogOptions('banner_hardware', DEFAULT_CANVAS_BANNER_HARDWARE_OPTIONS, 'price');
+  const BANNER_BACKGROUND_PRESETS = useCatalogOptions('banner_backgrounds', DEFAULT_BANNER_BACKGROUND_PRESETS);
+  const wordArtSizes = useCatalogOptions('word_art_sizes', DEFAULT_WORD_ART_SIZES, 'price');
+  const wordArtColorSchemes = useCatalogOptions('word_art_colors', DEFAULT_WORD_ART_COLOR_SCHEMES);
+  const WORD_ART_SIZE_CATALOG = useMemo(() => Object.fromEntries(Object.keys(DEFAULT_WORD_ART_SIZE_CATALOG).map((key) => [key, wordArtSizes.filter((size) => size.ratioTab === key)])) as typeof DEFAULT_WORD_ART_SIZE_CATALOG, [wordArtSizes]);
   const [activeMaterial, setActiveMaterial] = useState<'canvas' | 'acrylic'>(routeMaterial);
 
   useEffect(() => {
@@ -3226,7 +3239,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       ? configOptions.filter((opt) => !(opt.widthInches === 9 && opt.heightInches === 9) && !(opt.widthInches === 16 && opt.heightInches === 16))
       : configOptions;
     return filteredOptions.length > 0 ? filteredOptions : SIZE_OPTIONS.filter((s) => s.productTypeId === selectedProductTypeId);
-  }, [activeMaterial, selectedProductTypeId, selectedShapeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isWordArtProduct, isLyricProduct, isWallArtProduct, isCollageProduct, isHexagonProduct, isSplitProduct, isMosaicProduct, liveSizeOptions]);
+  }, [activeMaterial, selectedProductTypeId, selectedShapeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isWordArtProduct, isLyricProduct, isWallArtProduct, isCollageProduct, isHexagonProduct, isSplitProduct, isMosaicProduct, liveSizeOptions, CANVAS_BANNER_SIZE_OPTIONS, POP_ART_SIZE_OPTIONS, WORD_ART_SIZE_CATALOG, LYRIC_CANVAS_SIZE_OPTIONS]);
 
   // Category filter state for single prints: 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL' (Default: 'RECOMMENDED')
   // A '?category=PANORAMIC' URL param (used by the Panoramic Canvas Prints
@@ -3765,13 +3778,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Admin-editable rates (see admin Pricing screen) used to bill non-rectangular
   // shapes and acrylic sheet thickness by bounding-box area — falls back to
   // the seeded defaults if the fetch fails.
-  const [shapeAreaRate, setShapeAreaRate] = useState<number>(SHAPE_AREA_RATE_FALLBACK);
+  const [shapeAreaRates, setShapeAreaRates] = useState({ canvas: SHAPE_AREA_RATE_FALLBACK, acrylic: SHAPE_AREA_RATE_FALLBACK });
+  const shapeAreaRate = shapeAreaRates[activeMaterial];
   const [acrylicThicknessRates, setAcrylicThicknessRates] = useState<Record<string, number>>(ACRYLIC_THICKNESS_RATE_FALLBACKS);
   useEffect(() => {
     let cancelled = false;
     fetchPricingRates().then((rates) => {
       if (cancelled) return;
-      setShapeAreaRate(rates.shapeAreaRate);
+      setShapeAreaRates(rates.shapeAreaRates);
       setAcrylicThicknessRates(rates.acrylicThicknessRates);
     });
     return () => {
@@ -4076,9 +4090,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Word Art Flow State (Size + Ratio -> Details / Personalization -> Product Workspace)
   const [isWordArtSizeModalOpen, setIsWordArtSizeModalOpen] = useState<boolean>(false);
   const [isWordArtPersonalizeModalOpen, setIsWordArtPersonalizeModalOpen] = useState<boolean>(false);
-  const [wordArtSizeOption, setWordArtSizeOption] = useState<WordArtSizeOption>(
-    WORD_ART_SIZE_CATALOG.Square[0]
+  const [storedWordArtSize, setWordArtSizeOption] = useState<WordArtSizeOption>(
+    WORD_ART_SIZE_CATALOG.Square[0] ?? DEFAULT_WORD_ART_SIZE_CATALOG.Square[0]
   );
+  const wordArtSizeOption = wordArtSizes.find((size) => size.id === storedWordArtSize.id) ?? storedWordArtSize;
   const [wordArtConfig, setWordArtConfig] = useState<WordArtConfig>(DEFAULT_WORD_ART_CONFIG);
   const [activeWordArtDataUrl, setActiveWordArtDataUrl] = useState<string | null>(null);
   const savedWordArtDataUrlRef = useRef<string | null>(null);
@@ -4167,7 +4182,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       const offscreen = document.createElement('canvas');
       const exportWidth = 1400;
       const exportHeight = Math.round(exportWidth / (size.aspectRatio || 1));
-      renderWordArtToCanvas(offscreen, wordArtConfig, exportWidth, exportHeight);
+      renderWordArtToCanvas(offscreen, wordArtConfig, exportWidth, exportHeight, wordArtColorSchemes);
       const dataUrl = offscreen.toDataURL('image/png', 0.95);
       setActiveWordArtDataUrl(dataUrl);
       savedWordArtDataUrlRef.current = dataUrl;
@@ -5156,8 +5171,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   });
 
   const selectedLyricTemplate = useMemo(() => {
-    return getLyricTemplate(lyricConfig.selectedTemplateId);
-  }, [lyricConfig.selectedTemplateId]);
+    return (LYRIC_CANVAS_TEMPLATES.find((template) => template.id === lyricConfig.selectedTemplateId) ?? getLyricTemplate(lyricConfig.selectedTemplateId));
+  }, [lyricConfig.selectedTemplateId, LYRIC_CANVAS_TEMPLATES]);
 
   const handleSelectLyricTemplate = (tpl: LyricCanvasTemplate) => {
     setLyricConfig({
@@ -5389,15 +5404,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [storageKey]);
 
   // Dynamic Price Calculation
-  const selectedPopStyle = getPopArtStyle(popArtConfig.selectedStyleId);
+  const selectedPopStyle = (POP_ART_STYLES.find((style) => style.id === popArtConfig.selectedStyleId) ?? getPopArtStyle(popArtConfig.selectedStyleId));
   const popStyleAdjustment = isPopArtProduct ? (selectedPopStyle?.priceAdjustment || 0) : 0;
   const lyricPriceAdjustment = isLyricProduct ? (selectedLyricTemplate?.priceAdjustment || 0) : 0;
   const sizePrice = isWordArtProduct
-    ? (isCustomSize && canUseCustomSize ? customSizePrice : (wordArtSizeOption.price || currentSizeOption?.price || 198))
+    ? (isCustomSize && canUseCustomSize ? customSizePrice : wordArtSizeOption.price)
     : isBannerProduct
     ? (bannerConfig.isCustom
         ? calculateBannerPrice(bannerConfig.widthInches, bannerConfig.heightInches)
-        : (CANVAS_BANNER_SIZE_OPTIONS.find((s) => s.id === bannerConfig.selectedSizeId)?.price || calculateBannerPrice(bannerConfig.widthInches, bannerConfig.heightInches)))
+        : (CANVAS_BANNER_SIZE_OPTIONS.find((s) => s.id === bannerConfig.selectedSizeId)?.price ?? calculateBannerPrice(bannerConfig.widthInches, bannerConfig.heightInches)))
     : isPopArtProduct
     ? ((isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price) + popStyleAdjustment)
     : isLyricProduct
@@ -6603,7 +6618,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           : isBannerProduct
           ? `${selectedProductType.name} - ${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}${bannerConfig.isCustom ? ' (Custom)' : ''}`
           : isPopArtProduct
-          ? `${selectedProductType.name} (${getPopArtStyle(popArtConfig.selectedStyleId).name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
+          ? `${selectedProductType.name} (${(POP_ART_STYLES.find((style) => style.id === popArtConfig.selectedStyleId) ?? getPopArtStyle(popArtConfig.selectedStyleId)).name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
           : isLyricProduct
           ? `${selectedProductType.name} (${selectedLyricTemplate.name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
           : `${selectedProductType.name} - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
@@ -6634,7 +6649,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       calculatedPrice: totalPrice,
       material: activeMaterial === 'acrylic' ? 'Premium 3mm/5mm Optical Acrylic' : (liveOrFallbackMaterialGrades.find((m) => m.id === selectedMaterialId)?.name || 'Standard 280 GSM Cotton Canvas'),
       style: isPopArtProduct
-        ? `Pop Art (${getPopArtStyle(popArtConfig.selectedStyleId).name})`
+        ? `Pop Art (${(POP_ART_STYLES.find((style) => style.id === popArtConfig.selectedStyleId) ?? getPopArtStyle(popArtConfig.selectedStyleId)).name})`
         : isLyricProduct
         ? (activeMaterial === 'acrylic' ? `Lyric on Acrylic (${selectedLyricTemplate.name})` : `Lyric on Canvas (${selectedLyricTemplate.name})`)
         : selectedProductType.name,
@@ -9834,6 +9849,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           {activeTab === 'SELECT SIZE' && (
             selectedProductTypeId === 'canvas-banner' ? (
               <CanvasBannerSizePanel
+                sizes={CANVAS_BANNER_SIZE_OPTIONS}
                 config={bannerConfig}
                 onChangeConfig={handleUpdateBannerConfig}
                 activeCategory={bannerCategory}
@@ -9950,7 +9966,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                     const offscreen = document.createElement('canvas');
                                     const exportWidth = 1400;
                                     const exportHeight = Math.round(exportWidth / (matchingWordSize.aspectRatio || 1));
-                                    renderWordArtToCanvas(offscreen, wordArtConfig, exportWidth, exportHeight);
+                                    renderWordArtToCanvas(offscreen, wordArtConfig, exportWidth, exportHeight, wordArtColorSchemes);
                                     const dataUrl = offscreen.toDataURL('image/png', 0.95);
                                     setActiveWordArtDataUrl(dataUrl);
                                     setPanelImages((prev) => ({
@@ -15444,6 +15460,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
       {/* Word Art Size + Ratio Modal */}
       <WordArtSizeRatioModal
+        sizes={WORD_ART_SIZE_CATALOG}
         isOpen={isWordArtSizeModalOpen}
         onClose={() => setIsWordArtSizeModalOpen(false)}
         selectedSizeId={wordArtSizeOption.id}

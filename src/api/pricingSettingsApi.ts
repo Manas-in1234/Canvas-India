@@ -18,12 +18,12 @@ interface PricingSettingDto {
 }
 
 export interface PricingRates {
-  shapeAreaRate: number;
+  shapeAreaRates: Record<'canvas' | 'acrylic', number>;
   acrylicThicknessRates: Record<string, number>;
 }
 
 const FALLBACK_RATES: PricingRates = {
-  shapeAreaRate: SHAPE_AREA_RATE_FALLBACK,
+  shapeAreaRates: { canvas: SHAPE_AREA_RATE_FALLBACK, acrylic: SHAPE_AREA_RATE_FALLBACK },
   acrylicThicknessRates: ACRYLIC_THICKNESS_RATE_FALLBACKS,
 };
 
@@ -43,7 +43,11 @@ export async function fetchPricingRates(): Promise<PricingRates> {
 
     const byKey = new Map(settings.map((s) => [s.key, Number(s.value)]));
 
-    const shapeAreaRate = byKey.get(SHAPE_AREA_RATE_SETTING_KEY);
+    const nonnegativeRate = (key: string) => {
+      const rate = byKey.get(key);
+      return rate !== undefined && Number.isFinite(rate) && rate >= 0 ? rate : undefined;
+    };
+    const sharedRate = nonnegativeRate(SHAPE_AREA_RATE_SETTING_KEY) ?? SHAPE_AREA_RATE_FALLBACK;
 
     const acrylicThicknessRates: Record<string, number> = { ...ACRYLIC_THICKNESS_RATE_FALLBACKS };
     for (const mm of Object.keys(ACRYLIC_THICKNESS_RATE_FALLBACKS)) {
@@ -52,7 +56,10 @@ export async function fetchPricingRates(): Promise<PricingRates> {
     }
 
     return {
-      shapeAreaRate: Number.isFinite(shapeAreaRate) && shapeAreaRate! > 0 ? shapeAreaRate! : SHAPE_AREA_RATE_FALLBACK,
+      shapeAreaRates: {
+        canvas: nonnegativeRate('canvas_shape_area_rate_per_sqin') ?? sharedRate,
+        acrylic: nonnegativeRate('acrylic_shape_area_rate_per_sqin') ?? sharedRate,
+      },
       acrylicThicknessRates,
     };
   } catch {
