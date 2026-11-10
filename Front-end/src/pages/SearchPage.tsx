@@ -50,10 +50,15 @@ export const SearchPage: React.FC = () => {
 
   // Perform search
   const searchResults = useMemo(() => {
-    const q = query.toLowerCase().trim();
-    if (!q) return allProducts;
+    // Keep only real products of the website that have valid images
+    const websiteProducts = allProducts.filter(
+      (p) => p.image && !p.image.includes('/products/placeholders/')
+    );
 
-    return allProducts.filter((product) => {
+    const q = query.toLowerCase().trim();
+    if (!q) return websiteProducts;
+
+    return websiteProducts.filter((product) => {
       const matchName = product.name.toLowerCase().includes(q);
       const matchCategory = product.category.toLowerCase().includes(q) || product.categorySlug.toLowerCase().includes(q);
       const matchSub = product.subcategory?.toLowerCase().includes(q);
@@ -67,7 +72,9 @@ export const SearchPage: React.FC = () => {
   // Available categories in results
   const resultCategories = useMemo(() => {
     const cats = new Set<string>();
-    searchResults.forEach((p) => cats.add(p.category));
+    searchResults.forEach((p) => {
+      if (p.category) cats.add(p.category);
+    });
     return ['All', ...Array.from(cats)];
   }, [searchResults]);
 
