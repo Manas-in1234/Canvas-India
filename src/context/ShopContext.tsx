@@ -119,20 +119,27 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const apiProducts = await fetchProductsFromApi();
 
       if (apiProducts && apiProducts.length > 0) {
-        // Merge API products with static ALL_PRODUCTS catalogue.
-        // API products take precedence by ID and slug.
-        // Local catalogue products (devotional art, line art, motivational posters, cork patterns, etc.)
-        // that do not exist in the remote database are preserved so catalogue pages never lose their items.
-        const apiIds = new Set(apiProducts.map((p) => String(p.id)));
-        const apiSlugs = new Set(apiProducts.map((p) => p.slug).filter(Boolean));
-        const remainingStatic = ALL_PRODUCTS.filter(
-          (p) => !apiIds.has(String(p.id)) && !apiSlugs.has(p.slug)
-        );
-        setAllProducts([...apiProducts, ...remainingStatic]);
+        // Only update products that exist in the real website catalogue (ALL_PRODUCTS)
+        // and have a valid non-placeholder image. Never inject dummy or orphaned demo items.
+        const updatedProducts = ALL_PRODUCTS.map((staticProd) => {
+          const apiMatch = apiProducts.find(
+            (p) =>
+              (String(p.id) === String(staticProd.id) || (p.slug && p.slug === staticProd.slug)) &&
+              p.image &&
+              !p.image.includes('/products/placeholders/')
+          );
+          if (apiMatch) {
+            return { ...staticProd, ...apiMatch };
+          }
+          return staticProd;
+        });
+        setAllProducts(updatedProducts);
+      } else {
+        setAllProducts(ALL_PRODUCTS);
       }
     } catch (err: any) {
       setProductsError(err?.message || 'Failed to fetch products from backend');
-      // Keep ALL_PRODUCTS as fallback if the backend is unavailable.
+      setAllProducts(ALL_PRODUCTS);
     } finally {
       setIsLoadingProducts(false);
     }

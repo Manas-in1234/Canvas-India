@@ -214,6 +214,10 @@ export interface CanvasProductType {
   defaultThicknessId: string;
   supportedShapeIds?: string[];
   capabilities?: CanvasProductCapabilities;
+  /** Set only for styles loaded from the admin database: the complete,
+   * already-resolved capability set, used instead of the per-id checks in
+   * getCanvasProductCapabilities. */
+  resolvedCapabilities?: CanvasProductCapabilities;
   supportedLayoutIds?: string[];
 }
 
@@ -704,6 +708,22 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
 ];
 
 export function getCanvasProductCapabilities(pt: CanvasProductType): CanvasProductCapabilities {
+  // A style loaded from the admin database carries its complete capability
+  // set already (the seed stored exactly what the code below computes for the
+  // built-in styles), so use it as is: otherwise a style added from the admin
+  // would fall through every per-id check below and lose 3D/360 view, edges,
+  // and whatever else those lists gate. Name/defaults are refreshed from the
+  // style itself so a rename or default change takes effect immediately.
+  if (pt.resolvedCapabilities) {
+    return {
+      ...pt.resolvedCapabilities,
+      productId: pt.id,
+      displayName: pt.name,
+      defaultShape: pt.defaultShape,
+      defaultSize: pt.defaultSizeOptionId,
+    };
+  }
+
   const isEdgeProduct = isCanvasEdge3DProduct(pt.id);
   const isSplit = pt.id === 'canvas-split';
   const isCollageOrMosaic = pt.id === 'canvas-collage' || pt.id === 'canvas-mosaic' || pt.id === 'canvas-wall-art';

@@ -131,6 +131,26 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     CATALOGUE_DESIGN_SLUGS.includes(product.categorySlug) ||
     CATALOGUE_DESIGN_SLUGS.some((slug) => product.id.includes(slug));
 
+  const isCorkPattern =
+    product.categorySlug === 'cork-art-patterns' ||
+    product.category === 'Cork Art Patterns' ||
+    product.id.includes('cork-art-patterns') ||
+    product.slug.includes('cork-art-patterns') ||
+    (product.name && product.name.toLowerCase().includes('cork pattern'));
+
+  const isCorkProduct =
+    isCorkPattern ||
+    product.categorySlug === 'cork' ||
+    product.categorySlug === 'cork-art-patterns' ||
+    product.categorySlug === 'yoga-fitness' ||
+    product.category === 'Cork' ||
+    product.category === 'Cork Art Patterns' ||
+    product.material === 'cork' ||
+    product.id.includes('cork') ||
+    (product.slug && product.slug.includes('cork')) ||
+    (product.name && product.name.toLowerCase().includes('cork')) ||
+    product.customizationAvailable === false;
+
   // In-page customization state
   const [customText, setCustomText] = useState<string>('');
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
@@ -365,6 +385,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     const cartProduct = quantity >= MIN_BULK_QTY
       ? { ...product, price: bulkUnitPriceFor(product.price, quantity) }
       : product;
+    const defaultThickness = isCorkProduct ? undefined : 'Thin Gallery Wrap (0.75")';
     onAddToCart(
       cartProduct,
       selectedSize,
@@ -373,7 +394,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
       customText,
       uploadedFile || undefined,
       selectedMaterial,
-      'Thin Gallery Wrap (0.75")',
+      defaultThickness,
       undefined,
       undefined,
       undefined,
@@ -848,46 +869,83 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 </div>
               </div>
 
-<div>
-                <button
-                  type="button"
-                  onClick={handleOrderInBulk}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-[#0E4A93] text-sm font-bold text-[#0E4A93] hover:bg-blue-50/60 transition-colors cursor-pointer"
-                >
-                  <Package className="w-5 h-5" />
-                  <span>Order this item in bulk</span>
-                </button>
-              </div>
+              {!isCorkProduct && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={handleOrderInBulk}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-[#0E4A93] text-sm font-bold text-[#0E4A93] hover:bg-blue-50/60 transition-colors cursor-pointer"
+                  >
+                    <Package className="w-5 h-5" />
+                    <span>Order this item in bulk</span>
+                  </button>
+                </div>
+              )}
 
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  type="button"
-                  onClick={handleAddToCartWithVariants}
-                  className="flex-1 py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  <span>Add to Cart</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCustomizeFirst}
-                  className="flex-1 py-3.5 px-6 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Customize First</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onToggleWishlist(product.id)}
-                  className={`py-3.5 px-4 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                    isWishlisted ? 'border-rose-300 bg-rose-50 text-rose-600' : 'border-stone-300 text-stone-700 hover:border-stone-400'
-                  }`}
-                  title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
-                >
-                  <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600' : ''}`} />
-                  <span className="sm:hidden">{isWishlisted ? 'In Wishlist' : 'Wishlist'}</span>
-                </button>
-              </div>
+              {isCorkProduct ? (
+                <div className="flex items-center gap-3">
+                  <div className="grid grid-cols-2 gap-3 flex-1">
+                    <button
+                      type="button"
+                      onClick={handleAddToCartWithVariants}
+                      className="py-3 px-3 sm:px-4 rounded-xl border-2 border-[#0E4A93] bg-white hover:bg-blue-50 text-[#0E4A93] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                    >
+                      <ShoppingCart className="w-4 h-4 shrink-0 text-[#0E4A93]" />
+                      <span>Add to cart</span>
+                    </button>
+                    <a
+                      href={`https://wa.me/917893051555?text=${encodeURIComponent(`Hi Canvas India, I would like to get a quote / order in bulk for ${product.name}${productCode ? ` (Code: ${productCode})` : ''}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-3 px-3 sm:px-4 rounded-xl border-2 border-[#0E4A93] bg-white hover:bg-blue-50 text-[#0E4A93] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer text-center"
+                    >
+                      <Package className="w-4 h-4 shrink-0 text-[#0E4A93]" />
+                      <span>Order this item in bulk</span>
+                    </a>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onToggleWishlist(product.id)}
+                    className={`py-3 px-3.5 sm:px-4 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 ${
+                      isWishlisted ? 'border-rose-300 bg-rose-50 text-rose-600' : 'border-stone-300 text-stone-700 hover:border-stone-400'
+                    }`}
+                    title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                  >
+                    <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600' : ''}`} />
+                    <span className="sr-only">Wishlist</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={handleAddToCartWithVariants}
+                    className="flex-1 py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                  >
+                    <ShoppingBag className="w-4 h-4" />
+                    <span>Add to Cart</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCustomizeFirst}
+                    className="flex-1 py-3.5 px-6 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Customize First</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onToggleWishlist(product.id)}
+                    className={`py-3.5 px-4 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      isWishlisted ? 'border-rose-300 bg-rose-50 text-rose-600' : 'border-stone-300 text-stone-700 hover:border-stone-400'
+                    }`}
+                    title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                  >
+                    <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600' : ''}`} />
+                    <span className="sm:hidden">{isWishlisted ? 'In Wishlist' : 'Wishlist'}</span>
+                  </button>
+                </div>
+              )}
                 </>
               )}
             </div>

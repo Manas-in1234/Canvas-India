@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Star, Heart, ArrowRight, Sparkles, ShoppingCart } from 'lucide-react';
+import { Star, Heart, ArrowRight, Sparkles, ShoppingCart, Package } from 'lucide-react';
 import { Product } from '../types';
 
 interface MaterialOption {
@@ -154,7 +154,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
       </div>
 
-      {/* Action CTA: Add to Cart & Customize First */}
+      {/* Action CTA: Add to Cart & Customize First / Order in bulk */}
       <div className="mt-2.5 pt-1.5 border-t border-stone-100 flex items-center gap-1.5">
         <button
           type="button"
@@ -169,28 +169,51 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <ShoppingCart className="w-3 h-3 shrink-0" />
           <span className="truncate">Add to Cart</span>
         </button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            const material = (product.categorySlug === 'acrylic' || product.material === 'acrylic') ? 'acrylic' : 'canvas';
-            const queryParams = new URLSearchParams();
-            if (product.image) {
-              queryParams.set('prefillImage', product.image);
-            }
-            if (product.name) {
-              queryParams.set('prefillName', product.name);
-            }
-            const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-            navigate(`/customize/${material}/single${queryString}`);
-          }}
-          className="flex-1 py-1.5 px-2 rounded-lg bg-orange-50 hover:bg-orange-100 text-[#E8752A] border border-orange-200 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs"
-          title="Customize before ordering"
-        >
-          <Sparkles className="w-3 h-3 text-[#E8752A] shrink-0" />
-          <span className="truncate">Customize</span>
-        </button>
+        {product.categorySlug === 'cork' ||
+        product.categorySlug === 'cork-art-patterns' ||
+        product.categorySlug === 'yoga-fitness' ||
+        product.category === 'Cork' ||
+        product.category === 'Cork Art Patterns' ||
+        product.material === 'cork' ||
+        product.id.includes('cork') ||
+        (product.slug && product.slug.includes('cork')) ||
+        (product.name && product.name.toLowerCase().includes('cork')) ||
+        product.customizationAvailable === false ? (
+          <a
+            href={`https://wa.me/917893051555?text=${encodeURIComponent(`Hi Canvas India, I would like to get a quote / order in bulk for ${product.name}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 py-1.5 px-2 rounded-lg bg-white hover:bg-blue-50 text-[#0E4A93] border border-[#0E4A93] text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs text-center"
+            title="Order this item in bulk"
+          >
+            <Package className="w-3 h-3 text-[#0E4A93] shrink-0" />
+            <span className="truncate">Bulk Order</span>
+          </a>
+        ) : (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              const material = (product.categorySlug === 'acrylic' || product.material === 'acrylic') ? 'acrylic' : 'canvas';
+              const queryParams = new URLSearchParams();
+              if (product.image) {
+                queryParams.set('prefillImage', product.image);
+              }
+              if (product.name) {
+                queryParams.set('prefillName', product.name);
+              }
+              const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+              navigate(`/customize/${material}/single${queryString}`);
+            }}
+            className="flex-1 py-1.5 px-2 rounded-lg bg-orange-50 hover:bg-orange-100 text-[#E8752A] border border-orange-200 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs"
+            title="Customize before ordering"
+          >
+            <Sparkles className="w-3 h-3 text-[#E8752A] shrink-0" />
+            <span className="truncate">Customize</span>
+          </button>
+        )}
       </div>
     </div>
   );

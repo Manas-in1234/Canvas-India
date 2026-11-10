@@ -28,8 +28,31 @@ export const AddToCartConfirmationModal: React.FC = () => {
     (item.material && item.material.toLowerCase().includes('acrylic')) ||
     (product.categorySlug === 'acrylic') ||
     (product.category && product.category.toLowerCase().includes('acrylic'));
-  const materialType = isAcrylic ? 'acrylic' : 'canvas';
+  const isCork =
+    product.categorySlug === 'cork' ||
+    product.categorySlug === 'cork-art-patterns' ||
+    product.categorySlug === 'yoga-fitness' ||
+    product.category === 'Cork' ||
+    product.category === 'Cork Art Patterns' ||
+    (product.name && product.name.toLowerCase().includes('cork')) ||
+    (item.material && item.material.toLowerCase().includes('cork')) ||
+    (product.material && product.material.toLowerCase().includes('cork')) ||
+    product.id.includes('cork') ||
+    (product.slug && product.slug.includes('cork'));
+  const materialType = isAcrylic ? 'acrylic' : isCork ? 'cork' : 'canvas';
   const targetId = product.slug || product.id;
+
+  const isCorkProduct =
+    isCork ||
+    product.categorySlug === 'cork' ||
+    product.categorySlug === 'cork-art-patterns' ||
+    product.categorySlug === 'yoga-fitness' ||
+    product.category === 'Cork' ||
+    product.category === 'Cork Art Patterns' ||
+    product.id.includes('cork') ||
+    (product.slug && product.slug.includes('cork')) ||
+    (product.name && product.name.toLowerCase().includes('cork')) ||
+    product.customizationAvailable === false;
 
   const unitPrice = product.price || 0;
   const totalPrice = unitPrice * item.quantity;
@@ -144,7 +167,7 @@ export const AddToCartConfirmationModal: React.FC = () => {
                     Size: <strong>{item.size}</strong>
                   </span>
                 )}
-                {item.thickness && (
+                {!isCorkProduct && item.thickness && (
                   <span className="px-2 py-0.5 rounded bg-white border border-stone-200 text-stone-700 font-semibold">
                     Depth: <strong>{item.thickness}</strong>
                   </span>
@@ -168,7 +191,7 @@ export const AddToCartConfirmationModal: React.FC = () => {
 
           {/* Action Buttons Row */}
           <div className="space-y-2 pt-1">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className={isCorkProduct ? "flex flex-col gap-2.5" : "grid grid-cols-1 sm:grid-cols-2 gap-2.5"}>
               {/* 1. View Cart */}
               <button
                 type="button"
@@ -180,15 +203,17 @@ export const AddToCartConfirmationModal: React.FC = () => {
                 <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
               </button>
 
-              {/* 2. Customize This Item */}
-              <button
-                type="button"
-                onClick={handleCustomizeThisItem}
-                className="w-full py-3 px-4 rounded-xl bg-orange-50 hover:bg-orange-100 text-[#E8752A] border-2 border-orange-200 hover:border-orange-300 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4 text-[#E8752A]" />
-                <span>Customize This Item</span>
-              </button>
+              {/* 2. Customize This Item - hidden for all cork products */}
+              {!isCorkProduct && (
+                <button
+                  type="button"
+                  onClick={handleCustomizeThisItem}
+                  className="w-full py-3 px-4 rounded-xl bg-orange-50 hover:bg-orange-100 text-[#E8752A] border-2 border-orange-200 hover:border-orange-300 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-[#E8752A]" />
+                  <span>Customize This Item</span>
+                </button>
+              )}
             </div>
 
             {/* 3. Continue Shopping */}

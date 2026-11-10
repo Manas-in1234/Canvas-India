@@ -580,7 +580,8 @@ export function renderWordArtToCanvas(
   canvas: HTMLCanvasElement,
   config: WordArtConfig,
   renderWidth = 1000,
-  renderHeight = 1000
+  renderHeight = 1000,
+  colorSchemes = WORD_ART_COLOR_SCHEMES,
 ) {
   canvas.width = renderWidth;
   canvas.height = renderHeight;
@@ -595,7 +596,7 @@ export function renderWordArtToCanvas(
   ctx.fillRect(0, 0, renderWidth, renderHeight);
 
   // 2. Setup Palette & Color Helper
-  const scheme = WORD_ART_COLOR_SCHEMES.find((s) => s.id === config.colorScheme);
+  const scheme = colorSchemes.find((s) => s.id === config.colorScheme);
   const rawPalette = scheme ? scheme.colors : [config.fontColor || '#FFFFFF'];
   const palette = rawPalette.map((c) => ensureColorContrast(c, bgColor));
   const primaryColor = ensureColorContrast(config.fontColor || '#FFFFFF', bgColor);
