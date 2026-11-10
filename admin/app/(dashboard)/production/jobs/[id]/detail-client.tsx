@@ -169,11 +169,11 @@ export function ProductionJobDetailClient({ id: initialId }: { id: string }) {
       <div className="flex items-center justify-between">
         <div>
           <Link
-            href="/production/jobs"
+            href="/production/board"
             className="mb-1 flex items-center gap-1 text-sm text-muted-foreground hover:underline"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back to Production Jobs
+            Back to Production Board
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight font-mono">
             {job.id.slice(0, 8)}

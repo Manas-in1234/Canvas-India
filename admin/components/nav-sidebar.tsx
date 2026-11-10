@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { usePermission } from "@/lib/auth/use-permission";
 import { useAuth } from "@/lib/auth/auth-context";
-import { NAV_SECTIONS } from "@/lib/navigation";
+import { NAV_SECTIONS, isNavLinkActive } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 export function NavSidebar({
   open = false,
@@ -66,11 +66,7 @@ export function NavSidebar({
                 </summary>
                 <div>
                   {links.map((link) => {
-                    const active =
-                      link.href === "/"
-                        ? pathname === "/"
-                        : pathname === link.href ||
-                          pathname.startsWith(link.href + "/");
+                    const active = isNavLinkActive(link, pathname);
                     const Icon = link.icon;
                     return (
                       <Link

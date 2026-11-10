@@ -6,7 +6,6 @@ import {
   Warehouse,
   Truck,
   AlertTriangle,
-  Factory,
   LayoutGrid,
   Wrench,
   Layers,
@@ -23,8 +22,22 @@ import {
   Ruler,
   IndianRupee,
   ImageIcon,
+  type LucideIcon,
 } from "lucide-react";
-export const NAV_SECTIONS = [
+export interface NavLink {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  permissions: string[];
+  /** Other path prefixes that should highlight this entry, e.g. detail pages
+   * that live outside its own folder. */
+  alsoMatches?: string[];
+}
+export interface NavSection {
+  label: string;
+  links: NavLink[];
+}
+export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Workspace",
     links: [
@@ -139,12 +152,7 @@ export const NAV_SECTIONS = [
         label: "Production board",
         icon: LayoutGrid,
         permissions: ["production.view"],
-      },
-      {
-        href: "/production/jobs",
-        label: "Print jobs",
-        icon: Factory,
-        permissions: ["production.view"],
+        alsoMatches: ["/production/jobs"],
       },
       {
         href: "/production/machines",
@@ -197,13 +205,15 @@ export const NAV_SECTIONS = [
     ],
   },
 ];
+export function isNavLinkActive(link: NavLink, pathname: string) {
+  if (link.href === "/") return pathname === "/";
+  return [link.href, ...(link.alsoMatches ?? [])].some(
+    (base) => pathname === base || pathname.startsWith(base + "/"),
+  );
+}
 export function currentNavigation(pathname: string) {
   for (const section of NAV_SECTIONS) {
-    const entry = section.links.find((link) =>
-      link.href === "/"
-        ? pathname === "/"
-        : pathname === link.href || pathname.startsWith(link.href + "/"),
-    );
+    const entry = section.links.find((link) => isNavLinkActive(link, pathname));
     if (entry) return { ...entry, section: section.label };
   }
   return { label: "Workspace", section: "Canvas India", href: "/" };
