@@ -60,6 +60,16 @@ export function buildApiUrl(endpoint: string): string {
  * guarantees safe fallback values for all frontend-specific properties.
  */
 export function mapBackendProductToFrontend(raw: any, fallbackCatalog: Product[] = ALL_PRODUCTS): Product {
+  if (raw.storefront) {
+    const price = Number(raw.basePrice);
+    const originalPrice = Math.max(price, Number(raw.storefront.originalPrice ?? price));
+    return { ...raw.storefront, id: raw.id, slug: raw.slug, name: raw.name,
+      description: raw.description ?? '', price, originalPrice, compareAtPrice: originalPrice,
+      discountPercent: originalPrice > 0 ? Math.round((originalPrice - price) / originalPrice * 100) : 0,
+      status: raw.status, rating: raw.storefront.rating ?? null,
+    };
+  }
+
   // Check if there is an existing product in the catalog matching slug or id
   const existing = fallbackCatalog.find(
     (p) => (raw.slug && p.slug === raw.slug) || p.id === raw.id
