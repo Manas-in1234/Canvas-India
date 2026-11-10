@@ -6,7 +6,9 @@ let accessToken;
 async function api(path, method='GET', body) {
   const response = await fetch(base.replace(/\/$/, '') + path, { method, signal: AbortSignal.timeout(30000), headers: { 'Content-Type': 'application/json', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
   if (!response.ok) throw Error(`${method} ${path}: ${response.status}`);
-  return response.json();
+  const text = await response.text();
+  if (!text && method === 'GET') throw Error(`${method} ${path}: empty response`);
+  return text ? JSON.parse(text) : null;
 }
 const session = await api('/auth/login','POST',{email:process.env.ADMIN_EMAIL,password:process.env.ADMIN_PASSWORD});
 accessToken = session.accessToken;
