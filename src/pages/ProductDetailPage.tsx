@@ -372,6 +372,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     const cartProduct = quantity >= MIN_BULK_QTY
       ? { ...product, price: bulkUnitPriceFor(product.price, quantity) }
       : product;
+    const defaultThickness = isCorkPattern ? undefined : 'Thin Gallery Wrap (0.75")';
     onAddToCart(
       cartProduct,
       selectedSize,
@@ -380,7 +381,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
       customText,
       uploadedFile || undefined,
       selectedMaterial,
-      'Thin Gallery Wrap (0.75")',
+      defaultThickness,
       undefined,
       undefined,
       undefined,
