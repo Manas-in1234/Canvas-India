@@ -249,6 +249,158 @@ export default {
         return jsonResponse({ message: 'Not found' }, 404, request);
       }
       // -------------------------------------------------------------
+      // Customize page options — admin-managed customizer tab content
+      // (wrap style, hardware, clipart, etc.) the storefront live-fetches.
+      // -------------------------------------------------------------
+      if (pathname === '/api/v1/option-categories' && method === 'GET') {
+        const baseKey = query.baseKey;
+        const materialScope = query.material as 'ACRYLIC' | 'CANVAS' | undefined;
+        if (!baseKey) return jsonResponse({ statusCode: 400, message: 'baseKey is required' }, 400, request);
+        const categories = await prisma.optionCategory.findMany({
+          where: {
+            baseKey,
+            isActive: true,
+            ...(materialScope ? { materialScope: { in: [materialScope, 'BOTH'] } } : {}),
+          },
+          include: { items: { where: { isActive: true }, orderBy: { sortOrder: 'asc' } } },
+        });
+        return jsonResponse(categories, 200, request);
+      }
+      if (pathname === '/api/v1/admin/option-categories' || pathname.startsWith('/api/v1/admin/option-categories/')) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+
+        const itemMatch = pathname.match(/^\/api\/v1\/admin\/option-categories\/items\/([^/]+)$/);
+        const reorderMatch = pathname.match(/^\/api\/v1\/admin\/option-categories\/([^/]+)\/items\/reorder$/);
+        const createItemMatch = pathname.match(/^\/api\/v1\/admin\/option-categories\/([^/]+)\/items$/);
+        const detailMatch = pathname.match(/^\/api\/v1\/admin\/option-categories\/([^/]+)$/);
+
+        const isManage = method === 'POST' || method === 'PATCH' || method === 'PUT' || method === 'DELETE';
+        const denied = checkPermission(user, [isManage ? 'option_catalog.manage' : 'option_catalog.view'], request);
+        if (denied) return denied;
+
+        try {
+          // Literal "items/..." routes must be checked before the ":id" pattern
+          // below, since "items" would otherwise be greedily captured as an id.
+          if (itemMatch && method === 'PATCH') {
+            const body = (await request.json()) as any;
+            const updated = await prisma.optionCategoryItem.update({ where: { id: itemMatch[1] }, data: body });
+            await services.audit.record({ adminUserId: user.id, action: 'OPTION_CATEGORY_ITEM_UPDATED', entityType: 'OptionCategoryItem', entityId: itemMatch[1] });
+            return jsonResponse(updated, 200, request);
+          }
+          if (itemMatch && method === 'DELETE') {
+            await prisma.optionCategoryItem.delete({ where: { id: itemMatch[1] } });
+            await services.audit.record({ adminUserId: user.id, action: 'OPTION_CATEGORY_ITEM_DELETED', entityType: 'OptionCategoryItem', entityId: itemMatch[1] });
+            return jsonResponse({ success: true }, 200, request);
+          }
+          if (reorderMatch && method === 'PUT') {
+            const body = (await request.json()) as any;
+            const itemIds: string[] = body.itemIds || [];
+            await prisma.$transaction(
+              itemIds.map((itemId, index) =>
+                prisma.optionCategoryItem.update({ where: { id: itemId, categoryId: reorderMatch[1] }, data: { sortOrder: index } }),
+              ),
+            );
+            await services.audit.record({ adminUserId: user.id, action: 'OPTION_CATEGORY_ITEMS_REORDERED', entityType: 'OptionCategory', entityId: reorderMatch[1] });
+            const category = await prisma.optionCategory.findUnique({
+              where: { id: reorderMatch[1] },
+              include: { items: { orderBy: { sortOrder: 'asc' } } },
+            });
+            return jsonResponse(category, 200, request);
+          }
+          if (createItemMatch && method === 'POST') {
+            const body = (await request.json()) as any;
+            const maxSortOrder = await prisma.optionCategoryItem.aggregate({
+              where: { categoryId: createItemMatch[1] },
+              _max: { sortOrder: true },
+            });
+            const item = await prisma.optionCategoryItem.create({
+              data: { ...body, categoryId: createItemMatch[1], sortOrder: (maxSortOrder._max.sortOrder ?? -1) + 1 },
+            });
+            await services.audit.record({ adminUserId: user.id, action: 'OPTION_CATEGORY_ITEM_CREATED', entityType: 'OptionCategoryItem', entityId: item.id });
+            return jsonResponse(item, 201, request);
+          }
+          if (method === 'GET' && pathname === '/api/v1/admin/option-categories') {
+            const categories = await prisma.optionCategory.findMany({
+              orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+              include: { items: { orderBy: { sortOrder: 'asc' } } },
+            });
+            return jsonResponse(categories, 200, request);
+          }
+          if (method === 'POST' && pathname === '/api/v1/admin/option-categories') {
+            const body = (await request.json()) as any;
+            const category = await prisma.optionCategory.create({ data: body });
+            await services.audit.record({ adminUserId: user.id, action: 'OPTION_CATEGORY_CREATED', entityType: 'OptionCategory', entityId: category.id });
+            return jsonResponse(category, 201, request);
+          }
+          if (detailMatch && method === 'GET') {
+            const category = await prisma.optionCategory.findUnique({
+              where: { id: detailMatch[1] },
+              include: { items: { orderBy: { sortOrder: 'asc' } } },
+            });
+            if (!category) return jsonResponse({ statusCode: 404, message: `Option category ${detailMatch[1]} not found` }, 404, request);
+            return jsonResponse(category, 200, request);
+          }
+          if (detailMatch && method === 'PATCH') {
+            const body = (await request.json()) as any;
+            const updated = await prisma.optionCategory.update({ where: { id: detailMatch[1] }, data: body });
+            await services.audit.record({ adminUserId: user.id, action: 'OPTION_CATEGORY_UPDATED', entityType: 'OptionCategory', entityId: detailMatch[1] });
+            return jsonResponse(updated, 200, request);
+          }
+          if (detailMatch && method === 'DELETE') {
+            await prisma.optionCategory.delete({ where: { id: detailMatch[1] } });
+            await services.audit.record({ adminUserId: user.id, action: 'OPTION_CATEGORY_DELETED', entityType: 'OptionCategory', entityId: detailMatch[1] });
+            return jsonResponse({ success: true }, 200, request);
+          }
+        } catch (err: any) {
+          if (err?.code === 'P2025') {
+            return jsonResponse({ statusCode: 404, message: 'Record not found' }, 404, request);
+          }
+          throw err;
+        }
+        return jsonResponse({ message: 'Not found' }, 404, request);
+      }
+      // -------------------------------------------------------------
+      // Pricing settings — admin-editable rates used directly in storefront
+      // pricing formulas (shape area rate, acrylic thickness rates, etc.).
+      // -------------------------------------------------------------
+      if (pathname === '/api/v1/admin/pricing-settings' || pathname.startsWith('/api/v1/admin/pricing-settings/')) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const isManage = method === 'PATCH';
+        const denied = checkPermission(user, [isManage ? 'pricing.manage' : 'pricing.view'], request);
+        if (denied) return denied;
+
+        try {
+          if (method === 'GET' && pathname === '/api/v1/admin/pricing-settings') {
+            const settings = await prisma.pricingSetting.findMany({ orderBy: { key: 'asc' } });
+            return jsonResponse(settings, 200, request);
+          }
+          const keyMatch = pathname.match(/^\/api\/v1\/admin\/pricing-settings\/([^/]+)$/);
+          if (keyMatch && method === 'PATCH') {
+            const body = (await request.json()) as any;
+            const updated = await prisma.pricingSetting.update({
+              where: { key: keyMatch[1] },
+              data: { value: body.value, updatedBy: user.id },
+            });
+            await services.audit.record({
+              adminUserId: user.id,
+              action: 'PRICING_SETTING_UPDATED',
+              entityType: 'PricingSetting',
+              entityId: keyMatch[1],
+              reason: `Set to ${body.value}`,
+            });
+            return jsonResponse(updated, 200, request);
+          }
+        } catch (err: any) {
+          if (err?.code === 'P2025') {
+            return jsonResponse({ statusCode: 404, message: 'Record not found' }, 404, request);
+          }
+          throw err;
+        }
+        return jsonResponse({ message: 'Not found' }, 404, request);
+      }
+      // -------------------------------------------------------------
       // 1. Health check
       // -------------------------------------------------------------
       if (pathname === '/api/v1/health' || pathname === '/health' || pathname === '/') {

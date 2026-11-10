@@ -22,11 +22,5 @@
     "@nestjs/microservices/microservices-module.js": "./src/common/shims/empty.ts",
     "@nestjs/websockets": "./src/common/shims/empty.ts",
     "@nestjs/websockets/socket-module.js": "./src/common/shims/empty.ts"
-  },
-  "hyperdrive": [
-    {
-      "binding": "HYPERDRIVE",
-      "id": "82de29464acc4e84892d106380eb62ec"
-    }
-  ]
+  }
 }
