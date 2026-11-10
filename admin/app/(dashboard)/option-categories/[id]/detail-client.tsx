@@ -153,7 +153,7 @@ export function OptionCategoryDetailClient({ id: initialId }: { id: string }) {
       priceMode: f.priceMode,
       flatPrice: f.priceMode === 'FLAT' ? (f.flatPrice || '0') : '0',
       areaRatePerSqIn: f.priceMode === 'AREA_RATE' ? (f.areaRatePerSqIn || '0') : undefined,
-      ...(extras ? { extras } : {}),
+      ...(extras ? { extras: { ...category?.items.find((item) => item.id === editingItemId)?.extras, ...extras } } : {}),
     };
   };
 

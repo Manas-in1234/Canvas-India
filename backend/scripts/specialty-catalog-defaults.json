@@ -1,0 +1,3751 @@
+[
+  {
+    "baseKey": "lyric_templates",
+    "id": "wedding-song-lyrics",
+    "label": "Personalized Wedding Picture Canvas Prints With Song Lyrics",
+    "description": "Cherish your wedding moments with flowing romantic song lyrics softly layered over your couple portrait.",
+    "flatPrice": "0",
+    "sortOrder": 0,
+    "extras": {
+      "id": "wedding-song-lyrics",
+      "name": "Personalized Wedding Picture Canvas Prints With Song Lyrics",
+      "category": "artwork",
+      "previewImage": "/assets/lyric-canvas/wedding-song-lyrics.svg",
+      "description": "Cherish your wedding moments with flowing romantic song lyrics softly layered over your couple portrait.",
+      "defaultLayout": "photo-lyrics-overlay",
+      "defaultBackground": {
+        "color": "#FFFFFF",
+        "overlayDarkness": 35
+      },
+      "defaultTypography": {
+        "fontFamily": "Playfair Display",
+        "fontSize": "base",
+        "fontStyle": "normal",
+        "textColor": "#FFFFFF",
+        "alignment": "center"
+      },
+      "supportsPhoto": true,
+      "defaultText": {
+        "title": "A THOUSAND YEARS",
+        "artistOrSubtitle": "CHRISTINA PERRI",
+        "lyrics": "Heart beats fast, colors and promises\nHow to be brave? How can I love when I'm afraid to fall?\nI have died every day waiting for you\nDarling, don't be afraid\nI have loved you for a thousand years\nI'll love you for a thousand more",
+        "dateOrNames": "SARAH & DAVID • OCTOBER 14, 2024"
+      },
+      "priceAdjustment": 0,
+      "available": true,
+      "themeNote": "Designer will harmonize typography placement with your photo composition."
+    }
+  },
+  {
+    "baseKey": "lyric_templates",
+    "id": "wedding-first-dance",
+    "label": "Wedding First Dance Song Lyrics",
+    "description": "Capture the magic of your first dance with romantic song lyrics framed in a modern frosted plaque.",
+    "flatPrice": "0",
+    "sortOrder": 1,
+    "extras": {
+      "id": "wedding-first-dance",
+      "name": "Wedding First Dance Song Lyrics",
+      "category": "artwork",
+      "previewImage": "/assets/lyric-canvas/wedding-first-dance.svg",
+      "description": "Capture the magic of your first dance with romantic song lyrics framed in a modern frosted plaque.",
+      "defaultLayout": "first-dance-card",
+      "defaultBackground": {
+        "color": "#FFFFFF",
+        "overlayDarkness": 35
+      },
+      "defaultTypography": {
+        "fontFamily": "Dancing Script",
+        "fontSize": "base",
+        "fontStyle": "italic",
+        "textColor": "#FFFFFF",
+        "alignment": "center"
+      },
+      "supportsPhoto": true,
+      "defaultText": {
+        "title": "CAN'T HELP FALLING IN LOVE",
+        "artistOrSubtitle": "OUR FIRST DANCE SONG",
+        "lyrics": "Wise men say only fools rush in\nBut I can't help falling in love with you\nLike a river flows surely to the sea\nDarling, so it goes, some things are meant to be\nTake my hand, take my whole life too\nFor I can't help falling in love with you",
+        "dateOrNames": "EMMA & NOAH • ESTABLISHED 2024"
+      },
+      "priceAdjustment": 0,
+      "available": true,
+      "themeNote": "Includes modern frosted glass card treatment over the first dance photograph."
+    }
+  },
+  {
+    "baseKey": "lyric_templates",
+    "id": "wedding-vows-wall-art",
+    "label": "Turn Wedding Vows into Wall Art",
+    "description": "Timeless split canvas layout featuring your wedding ceremony photo paired with your personal vows.",
+    "flatPrice": "0",
+    "sortOrder": 2,
+    "extras": {
+      "id": "wedding-vows-wall-art",
+      "name": "Turn Wedding Vows into Wall Art",
+      "category": "quote_art",
+      "previewImage": "/assets/lyric-canvas/wedding-vows-wall-art.svg",
+      "description": "Timeless split canvas layout featuring your wedding ceremony photo paired with your personal vows.",
+      "defaultLayout": "wedding-vows-photo",
+      "defaultBackground": {
+        "color": "#FEFCE8",
+        "texture": "parchment",
+        "overlayDarkness": 0
+      },
+      "defaultTypography": {
+        "fontFamily": "Cormorant Garamond",
+        "fontSize": "base",
+        "fontStyle": "italic",
+        "textColor": "#1C1917",
+        "alignment": "center"
+      },
+      "supportsPhoto": true,
+      "defaultText": {
+        "title": "OUR SACRED WEDDING VOWS",
+        "artistOrSubtitle": "PROMISES FOR A LIFETIME",
+        "lyrics": "I take you to be my partner for life.\nTo laugh with you in joy, to comfort you in sorrow,\nTo encourage you in your dreams and cherish you through every season.\nThrough sunshine and through storm, in sickness and in health,\nAs long as we both shall live,\nMy heart is forever your home.",
+        "dateOrNames": "MICHAEL & JESSICA • JUNE 22, 2024"
+      },
+      "priceAdjustment": 0,
+      "available": true,
+      "themeNote": "Displays photo on left and vows in crisp calligraphic typography on right."
+    }
+  },
+  {
+    "baseKey": "lyric_templates",
+    "id": "first-marriage-anniversary",
+    "label": "First Marriage Anniversary Songs on Canvas",
+    "description": "Celebrate 365 days of love with your anniversary song and couple portrait in sleek editorial typography.",
+    "flatPrice": "0",
+    "sortOrder": 3,
+    "extras": {
+      "id": "first-marriage-anniversary",
+      "name": "First Marriage Anniversary Songs on Canvas",
+      "category": "artwork",
+      "previewImage": "/assets/lyric-canvas/first-marriage-anniversary.svg",
+      "description": "Celebrate 365 days of love with your anniversary song and couple portrait in sleek editorial typography.",
+      "defaultLayout": "split-side-by-side",
+      "defaultBackground": {
+        "color": "#FFFFFF",
+        "overlayDarkness": 35
+      },
+      "defaultTypography": {
+        "fontFamily": "Cinzel",
+        "fontSize": "base",
+        "fontStyle": "normal",
+        "textColor": "#F4F4F5",
+        "alignment": "center"
+      },
+      "supportsPhoto": true,
+      "defaultText": {
+        "title": "1ST ANNIVERSARY",
+        "artistOrSubtitle": "365 DAYS OF HAPPINESS",
+        "lyrics": "Every single day with you is a gift.\nYou are my today and all of my tomorrows.\nThrough every laughter and every journey,\nLoving you has been the easiest and most beautiful choice\nI have ever made.",
+        "dateOrNames": "SOPHIA & JAMES • ONE YEAR DOWN, FOREVER TO GO"
+      },
+      "priceAdjustment": 0,
+      "available": true,
+      "themeNote": "Editorial anniversary edition with high-contrast monochrome typography."
+    }
+  },
+  {
+    "baseKey": "lyric_templates",
+    "id": "personalized-wedding-gift",
+    "label": "Personalized Wedding Gift Canvas Prints",
+    "description": "An unforgettable gift featuring the newlyweds photo with an elegant lower-third lyric banner.",
+    "flatPrice": "0",
+    "sortOrder": 4,
+    "extras": {
+      "id": "personalized-wedding-gift",
+      "name": "Personalized Wedding Gift Canvas Prints",
+      "category": "artwork",
+      "previewImage": "/assets/lyric-canvas/personalized-wedding-gift.svg",
+      "description": "An unforgettable gift featuring the newlyweds photo with an elegant lower-third lyric banner.",
+      "defaultLayout": "bottom-third-lyrics",
+      "defaultBackground": {
+        "color": "#FFFFFF",
+        "overlayDarkness": 35
+      },
+      "defaultTypography": {
+        "fontFamily": "Playfair Display",
+        "fontSize": "base",
+        "fontStyle": "normal",
+        "textColor": "#FEF08A",
+        "alignment": "center"
+      },
+      "supportsPhoto": true,
+      "defaultText": {
+        "title": "ALL OF ME LOVES ALL OF YOU",
+        "artistOrSubtitle": "JOHN LEGEND",
+        "lyrics": "'Cause all of me loves all of you\nLove your curves and all your edges\nAll your perfect imperfections\nGive your all to me, I'll give my all to you\nYou're my end and my beginning",
+        "dateOrNames": "OLIVIA & LIAM • CELEBRATING LOVE"
+      },
+      "priceAdjustment": 0,
+      "available": true,
+      "themeNote": "Full-bleed portrait photo with lower-third gold accent typography."
+    }
+  },
+  {
+    "baseKey": "lyric_templates",
+    "id": "forever-young-lyrics",
+    "label": "Forever Young — Song Lyrics on Canvas",
+    "description": "Inspirational Bob Dylan folk classic lyrics with golden hour glow over cherished family and couple photos.",
+    "flatPrice": "0",
+    "sortOrder": 5,
+    "extras": {
+      "id": "forever-young-lyrics",
+      "name": "Forever Young — Song Lyrics on Canvas",
+      "category": "artwork",
+      "previewImage": "/assets/lyric-canvas/forever-young-lyrics.svg",
+      "description": "Inspirational Bob Dylan folk classic lyrics with golden hour glow over cherished family and couple photos.",
+      "defaultLayout": "photo-lyrics-overlay",
+      "defaultBackground": {
+        "color": "#78350F",
+        "overlayDarkness": 35
+      },
+      "defaultTypography": {
+        "fontFamily": "Cinzel",
+        "fontSize": "base",
+        "fontStyle": "normal",
+        "textColor": "#FFFBEB",
+        "alignment": "center"
+      },
+      "supportsPhoto": true,
+      "defaultText": {
+        "title": "FOREVER YOUNG",
+        "artistOrSubtitle": "BOB DYLAN",
+        "lyrics": "May God bless and keep you always\nMay your wishes all come true\nMay you always do for others and let others do for you\nMay you build a ladder to the stars and climb on every rung\nMay you stay forever young",
+        "dateOrNames": "BLESSINGS FOR A LIFETIME • ESTABLISHED 2024"
+      },
+      "priceAdjustment": 0,
+      "available": true,
+      "themeNote": "Warm golden hues and timeless classic serif typography."
+    }
+  },
+  {
+    "baseKey": "lyric_templates",
+    "id": "wedding-vows-canvas",
+    "label": "Canvas Wall Art — Wedding Vows Canvas",
+    "description": "Sacred wedding promises crafted in romantic cursive script with decorative double-line border detailing.",
+    "flatPrice": "0",
+    "sortOrder": 6,
+    "extras": {
+      "id": "wedding-vows-canvas",
+      "name": "Canvas Wall Art — Wedding Vows Canvas",
+      "category": "quote_art",
+      "previewImage": "/assets/lyric-canvas/wedding-vows-canvas.svg",
+      "description": "Sacred wedding promises crafted in romantic cursive script with decorative double-line border detailing.",
+      "defaultLayout": "classic-centered-lyrics",
+      "defaultBackground": {
+        "color": "#FAF5FF",
+        "overlayDarkness": 0
+      },
+      "defaultTypography": {
+        "fontFamily": "Dancing Script",
+        "fontSize": "lg",
+        "fontStyle": "italic",
+        "textColor": "#581C87",
+        "alignment": "center"
+      },
+      "supportsPhoto": true,
+      "defaultText": {
+        "title": "TO HAVE AND TO HOLD",
+        "artistOrSubtitle": "FROM THIS DAY FORWARD",
+        "lyrics": "From this day forward, for better, for worse,\nFor richer, for poorer, in sickness and in health,\nTo love and to cherish, till death do us part.\nI give you my hand, my heart, and my love.",
+        "dateOrNames": "ALEX & TAYLOR • OUR SACRED PROMISE"
+      },
+      "priceAdjustment": 0,
+      "available": true,
+      "themeNote": "Clean botanical and vows typography on canvas."
+    }
+  },
+  {
+    "baseKey": "lyric_templates",
+    "id": "sheet-music-wall-art",
+    "label": "Sheet Music Canvas Print — Wall Art",
+    "description": "Vintage stave, clef and musical notes canvas background paired with your song title, couple names, and lyrics.",
+    "flatPrice": "0",
+    "sortOrder": 7,
+    "extras": {
+      "id": "sheet-music-wall-art",
+      "name": "Sheet Music Canvas Print — Wall Art",
+      "category": "sheet_music",
+      "previewImage": "/assets/lyric-canvas/sheet-music-wall-art.svg",
+      "description": "Vintage stave, clef and musical notes canvas background paired with your song title, couple names, and lyrics.",
+      "defaultLayout": "sheet-music-bg",
+      "defaultBackground": {
+        "color": "#FEF9C3",
+        "texture": "sheet-music",
+        "overlayDarkness": 0
+      },
+      "defaultTypography": {
+        "fontFamily": "Cinzel",
+        "fontSize": "base",
+        "fontStyle": "normal",
+        "textColor": "#78350F",
+        "alignment": "center"
+      },
+      "supportsPhoto": true,
+      "defaultText": {
+        "title": "CANON IN D MAJOR",
+        "artistOrSubtitle": "OUR SONG WRITTEN IN THE STARS",
+        "lyrics": "Music gives a soul to the universe,\nWings to the mind, flight to the imagination,\nAnd life to everything.\nOur song will play on in our hearts forever.",
+        "dateOrNames": "SARAH & LUCAS • FIRST DANCE SCORE"
+      },
+      "priceAdjustment": 0,
+      "available": true,
+      "themeNote": "Features authentic vintage sheet music stave illustration."
+    }
+  },
+  {
+    "baseKey": "lyric_templates",
+    "id": "first-anniversary-gift",
+    "label": "First Wedding Anniversary Gift",
+    "description": "Statement quote design with large decorative quotation marks on blush canvas for him or her.",
+    "flatPrice": "0",
+    "sortOrder": 8,
+    "extras": {
+      "id": "first-anniversary-gift",
+      "name": "First Wedding Anniversary Gift",
+      "category": "quote_art",
+      "previewImage": "/assets/lyric-canvas/first-anniversary-gift.svg",
+      "description": "Statement quote design with large decorative quotation marks on blush canvas for him or her.",
+      "defaultLayout": "quote-solid-bg",
+      "defaultBackground": {
+        "color": "#FCE7F3",
+        "overlayDarkness": 0
+      },
+      "defaultTypography": {
+        "fontFamily": "Playfair Display",
+        "fontSize": "base",
+        "fontStyle": "normal",
+        "textColor": "#831843",
+        "alignment": "center"
+      },
+      "supportsPhoto": true,
+      "defaultText": {
+        "title": "1ST ANNIVERSARY FOR HIM & HER",
+        "artistOrSubtitle": "365 DAYS OF UNCONDITIONAL LOVE",
+        "lyrics": "Love is a partnership of two people who bring out\nthe very best in each other.\nThank you for 365 days of smiles,\nlaughter, and endless love.",
+        "dateOrNames": "HAPPY 1ST ANNIVERSARY • TO MY FOREVER"
+      },
+      "priceAdjustment": 0,
+      "available": true,
+      "themeNote": "Typographic quote style with optional photo background."
+    }
+  },
+  {
+    "baseKey": "lyric_templates",
+    "id": "couples-personalized-art",
+    "label": "Personalized Canvas Art Couples Gifts",
+    "description": "Split modern layout pairing your favorite couple snapshot with a sweet song lyric and heart emblem.",
+    "flatPrice": "0",
+    "sortOrder": 9,
+    "extras": {
+      "id": "couples-personalized-art",
+      "name": "Personalized Canvas Art Couples Gifts",
+      "category": "artwork",
+      "previewImage": "/assets/lyric-canvas/couples-personalized-art.svg",
+      "description": "Split modern layout pairing your favorite couple snapshot with a sweet song lyric and heart emblem.",
+      "defaultLayout": "split-side-by-side",
+      "defaultBackground": {
+        "color": "#FEF9C3",
+        "overlayDarkness": 0
+      },
+      "defaultTypography": {
+        "fontFamily": "Dancing Script",
+        "fontSize": "base",
+        "fontStyle": "italic",
+        "textColor": "#854D0E",
+        "alignment": "center"
+      },
+      "supportsPhoto": true,
+      "defaultText": {
+        "title": "BETTER TOGETHER",
+        "artistOrSubtitle": "JACK JOHNSON",
+        "lyrics": "It's always better when we're together.\nWe'll look at the stars when we're together,\nWell, it's always better when we're together.",
+        "dateOrNames": "JACK & CHLOE • TOGETHER IS OUR FAVORITE PLACE"
+      },
+      "priceAdjustment": 0,
+      "available": true,
+      "themeNote": "Cozy split canvas with hand-drawn red heart motif."
+    }
+  },
+  {
+    "baseKey": "lyric_templates",
+    "id": "first-dance-lyrics",
+    "label": "First Dance Canvas — Your Wedding Song Lyrics on Canvas",
+    "description": "Large calligraphic \"Love\" headline with biblical 1 Corinthians love poem or your wedding song lyrics.",
+    "flatPrice": "0",
+    "sortOrder": 10,
+    "extras": {
+      "id": "first-dance-lyrics",
+      "name": "First Dance Canvas — Your Wedding Song Lyrics on Canvas",
+      "category": "quote_art",
+      "previewImage": "/assets/lyric-canvas/first-dance-lyrics.svg",
+      "description": "Large calligraphic \"Love\" headline with biblical 1 Corinthians love poem or your wedding song lyrics.",
+      "defaultLayout": "classic-centered-lyrics",
+      "defaultBackground": {
+        "color": "#FEFCE8",
+        "texture": "parchment",
+        "overlayDarkness": 0
+      },
+      "defaultTypography": {
+        "fontFamily": "Cormorant Garamond",
+        "fontSize": "base",
+        "fontStyle": "italic",
+        "textColor": "#78350F",
+        "alignment": "center"
+      },
+      "supportsPhoto": true,
+      "defaultText": {
+        "title": "LOVE NEVER FAILS",
+        "artistOrSubtitle": "1 CORINTHIANS 13:4-8",
+        "lyrics": "Love is patient, love is kind.\nIt does not envy, it does not boast.\nIt always protects, always trusts,\nAlways hopes, always perseveres.\nLove never fails.",
+        "dateOrNames": "DANIEL & CHARLOTTE • FIRST DANCE MEMORIES"
+      },
+      "priceAdjustment": 0,
+      "available": true,
+      "themeNote": "Classic script \"Love\" header on gallery-wrapped canvas."
+    }
+  },
+  {
+    "baseKey": "lyric_templates",
+    "id": "wedding-vows-1st-anniversary",
+    "label": "Wedding Vows on Canvas — Anniversary Gift",
+    "description": "Golden hour sunset couple photo with anniversary vow renewal typography along the lower third.",
+    "flatPrice": "0",
+    "sortOrder": 11,
+    "extras": {
+      "id": "wedding-vows-1st-anniversary",
+      "name": "Wedding Vows on Canvas — Anniversary Gift",
+      "category": "quote_art",
+      "previewImage": "/assets/lyric-canvas/wedding-vows-1st-anniversary.svg",
+      "description": "Golden hour sunset couple photo with anniversary vow renewal typography along the lower third.",
+      "defaultLayout": "bottom-third-lyrics",
+      "defaultBackground": {
+        "color": "#FFFFFF",
+        "overlayDarkness": 35
+      },
+      "defaultTypography": {
+        "fontFamily": "Dancing Script",
+        "fontSize": "base",
+        "fontStyle": "italic",
+        "textColor": "#FEF08A",
+        "alignment": "center"
+      },
+      "supportsPhoto": true,
+      "defaultText": {
+        "title": "I CHOOSE YOU OVER AND OVER AGAIN",
+        "artistOrSubtitle": "1ST ANNIVERSARY VOW RENEWAL",
+        "lyrics": "Without pause, without a doubt, in a heartbeat.\nThrough every laughter and every trial,\nI'll keep choosing you.\nToday, tomorrow, and for all the days to come.",
+        "dateOrNames": "ONE YEAR OF HAPPINESS • FOREVER TO GO"
+      },
+      "priceAdjustment": 0,
+      "available": true,
+      "themeNote": "Sunset romantic atmosphere with vow renewal dedication."
+    }
+  },
+  {
+    "baseKey": "lyric_sizes",
+    "id": "lyric-8x8",
+    "label": "Lyric Canvas: 8\" × 8\"",
+    "description": null,
+    "flatPrice": "1498.5",
+    "sortOrder": 0,
+    "extras": {
+      "id": "lyric-8x8",
+      "productTypeId": "canvas-lyric",
+      "label": "Lyric Canvas: 8\" × 8\"",
+      "dimensionsSummary": "8\" × 8\"",
+      "price": 1498.5,
+      "widthInches": 8,
+      "heightInches": 8,
+      "categories": [
+        "RECOMMENDED",
+        "SQUARE",
+        "SMALL"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Lyric Canvas",
+          "dimension": "8\" × 8\"",
+          "widthRatio": 8,
+          "heightRatio": 8
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "lyric_sizes",
+    "id": "lyric-10x10",
+    "label": "Lyric Canvas: 10\" × 10\"",
+    "description": null,
+    "flatPrice": "1699",
+    "sortOrder": 1,
+    "extras": {
+      "id": "lyric-10x10",
+      "productTypeId": "canvas-lyric",
+      "label": "Lyric Canvas: 10\" × 10\"",
+      "dimensionsSummary": "10\" × 10\"",
+      "price": 1699,
+      "widthInches": 10,
+      "heightInches": 10,
+      "categories": [
+        "SQUARE",
+        "SMALL"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Lyric Canvas",
+          "dimension": "10\" × 10\"",
+          "widthRatio": 10,
+          "heightRatio": 10
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "lyric_sizes",
+    "id": "lyric-12x12",
+    "label": "Lyric Canvas: 12\" × 12\"",
+    "description": null,
+    "flatPrice": "1899",
+    "sortOrder": 2,
+    "extras": {
+      "id": "lyric-12x12",
+      "productTypeId": "canvas-lyric",
+      "label": "Lyric Canvas: 12\" × 12\"",
+      "dimensionsSummary": "12\" × 12\"",
+      "price": 1899,
+      "widthInches": 12,
+      "heightInches": 12,
+      "categories": [
+        "RECOMMENDED",
+        "SQUARE",
+        "SMALL"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Lyric Canvas",
+          "dimension": "12\" × 12\"",
+          "widthRatio": 12,
+          "heightRatio": 12
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "lyric_sizes",
+    "id": "lyric-16x16",
+    "label": "Lyric Canvas: 16\" × 16\"",
+    "description": null,
+    "flatPrice": "2299",
+    "sortOrder": 3,
+    "extras": {
+      "id": "lyric-16x16",
+      "productTypeId": "canvas-lyric",
+      "label": "Lyric Canvas: 16\" × 16\"",
+      "dimensionsSummary": "16\" × 16\"",
+      "price": 2299,
+      "widthInches": 16,
+      "heightInches": 16,
+      "categories": [
+        "SQUARE",
+        "SMALL"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Lyric Canvas",
+          "dimension": "16\" × 16\"",
+          "widthRatio": 16,
+          "heightRatio": 16
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "lyric_sizes",
+    "id": "lyric-20x20",
+    "label": "Lyric Canvas: 20\" × 20\"",
+    "description": null,
+    "flatPrice": "2799",
+    "sortOrder": 4,
+    "extras": {
+      "id": "lyric-20x20",
+      "productTypeId": "canvas-lyric",
+      "label": "Lyric Canvas: 20\" × 20\"",
+      "dimensionsSummary": "20\" × 20\"",
+      "price": 2799,
+      "widthInches": 20,
+      "heightInches": 20,
+      "categories": [
+        "SQUARE",
+        "LARGE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Lyric Canvas",
+          "dimension": "20\" × 20\"",
+          "widthRatio": 20,
+          "heightRatio": 20
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "lyric_sizes",
+    "id": "lyric-12x18",
+    "label": "Lyric Canvas: 12\" × 18\"",
+    "description": null,
+    "flatPrice": "1999",
+    "sortOrder": 5,
+    "extras": {
+      "id": "lyric-12x18",
+      "productTypeId": "canvas-lyric",
+      "label": "Lyric Canvas: 12\" × 18\"",
+      "dimensionsSummary": "12\" × 18\"",
+      "price": 1999,
+      "widthInches": 12,
+      "heightInches": 18,
+      "categories": [
+        "RECOMMENDED",
+        "SMALL"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Lyric Canvas",
+          "dimension": "12\" × 18\"",
+          "widthRatio": 12,
+          "heightRatio": 18
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "lyric_sizes",
+    "id": "lyric-16x20",
+    "label": "Lyric Canvas: 16\" × 20\"",
+    "description": null,
+    "flatPrice": "2499",
+    "sortOrder": 6,
+    "extras": {
+      "id": "lyric-16x20",
+      "productTypeId": "canvas-lyric",
+      "label": "Lyric Canvas: 16\" × 20\"",
+      "dimensionsSummary": "16\" × 20\"",
+      "price": 2499,
+      "widthInches": 16,
+      "heightInches": 20,
+      "categories": [
+        "RECOMMENDED",
+        "LARGE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Lyric Canvas",
+          "dimension": "16\" × 20\"",
+          "widthRatio": 16,
+          "heightRatio": 20
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "lyric_sizes",
+    "id": "lyric-18x24",
+    "label": "Lyric Canvas: 18\" × 24\"",
+    "description": null,
+    "flatPrice": "2999",
+    "sortOrder": 7,
+    "extras": {
+      "id": "lyric-18x24",
+      "productTypeId": "canvas-lyric",
+      "label": "Lyric Canvas: 18\" × 24\"",
+      "dimensionsSummary": "18\" × 24\"",
+      "price": 2999,
+      "widthInches": 18,
+      "heightInches": 24,
+      "categories": [
+        "PANORAMIC",
+        "LARGE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Lyric Canvas",
+          "dimension": "18\" × 24\"",
+          "widthRatio": 18,
+          "heightRatio": 24
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "lyric_sizes",
+    "id": "lyric-20x30",
+    "label": "Lyric Canvas: 20\" × 30\"",
+    "description": null,
+    "flatPrice": "3499",
+    "sortOrder": 8,
+    "extras": {
+      "id": "lyric-20x30",
+      "productTypeId": "canvas-lyric",
+      "label": "Lyric Canvas: 20\" × 30\"",
+      "dimensionsSummary": "20\" × 30\"",
+      "price": 3499,
+      "widthInches": 20,
+      "heightInches": 30,
+      "categories": [
+        "PANORAMIC",
+        "LARGE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Lyric Canvas",
+          "dimension": "20\" × 30\"",
+          "widthRatio": 20,
+          "heightRatio": 30
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "lyric_sizes",
+    "id": "lyric-24x36",
+    "label": "Lyric Canvas: 24\" × 36\"",
+    "description": null,
+    "flatPrice": "4299",
+    "sortOrder": 9,
+    "extras": {
+      "id": "lyric-24x36",
+      "productTypeId": "canvas-lyric",
+      "label": "Lyric Canvas: 24\" × 36\"",
+      "dimensionsSummary": "24\" × 36\"",
+      "price": 4299,
+      "widthInches": 24,
+      "heightInches": 36,
+      "categories": [
+        "PANORAMIC",
+        "LARGE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Lyric Canvas",
+          "dimension": "24\" × 36\"",
+          "widthRatio": 24,
+          "heightRatio": 36
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "andy-warhol",
+    "label": "Andy-Warhol",
+    "description": "Iconic 4-quadrant screenprint Pop Art with contrasting vibrant pop palettes across four quadrants.",
+    "flatPrice": "0",
+    "sortOrder": 0,
+    "extras": {
+      "id": "andy-warhol",
+      "name": "Andy-Warhol",
+      "previewImage": "/assets/pop-art/andy-warhol.svg",
+      "price": 499,
+      "priceAdjustment": 0,
+      "description": "Iconic 4-quadrant screenprint Pop Art with contrasting vibrant pop palettes across four quadrants.",
+      "processingType": "multi-panel-warhol",
+      "processingNote": "4-panel Pop Art composition with contrasting complementary background and subject color treatments.",
+      "panelsCount": 4,
+      "availability": "available",
+      "badge": "POPULAR"
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "caricatures",
+    "label": "Caricatures",
+    "description": "Playful cartoon caricature styling with bold hand-drawn contours, comic cel shading, and warm tones.",
+    "flatPrice": "100",
+    "sortOrder": 1,
+    "extras": {
+      "id": "caricatures",
+      "name": "Caricatures",
+      "previewImage": "/assets/pop-art/caricatures.svg",
+      "price": 599,
+      "priceAdjustment": 100,
+      "description": "Playful cartoon caricature styling with bold hand-drawn contours, comic cel shading, and warm tones.",
+      "processingType": "caricature",
+      "processingNote": "Artistic caricature preview generated. Our digital artists hand-refine the exaggerated features and proportions for your final print.",
+      "panelsCount": 1,
+      "availability": "available",
+      "badge": "ARTIST PICK"
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "pixel-painting",
+    "label": "Pixel Painting",
+    "description": "Retro 8-bit digital pixel art mosaic transformation preserving facial likeness with sharp mosaic tiles.",
+    "flatPrice": "1251",
+    "sortOrder": 2,
+    "extras": {
+      "id": "pixel-painting",
+      "name": "Pixel Painting",
+      "previewImage": "/assets/pop-art/pixel-painting.svg",
+      "price": 1750,
+      "priceAdjustment": 1251,
+      "description": "Retro 8-bit digital pixel art mosaic transformation preserving facial likeness with sharp mosaic tiles.",
+      "processingType": "pixel-mosaic",
+      "processingNote": "Genuine digital pixel art mosaic transformation with calibrated block resolution and pixel grid geometry.",
+      "panelsCount": 1,
+      "availability": "available",
+      "badge": "PREMIUM"
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "lichtenstein",
+    "label": "Lichtenstein",
+    "description": "Roy Lichtenstein comic strip pop art featuring Ben-Day halftone dots, ink contours, and primary comic colors.",
+    "flatPrice": "0",
+    "sortOrder": 3,
+    "extras": {
+      "id": "lichtenstein",
+      "name": "Lichtenstein",
+      "previewImage": "/assets/pop-art/lichtenstein.svg",
+      "price": 499,
+      "priceAdjustment": 0,
+      "description": "Roy Lichtenstein comic strip pop art featuring Ben-Day halftone dots, ink contours, and primary comic colors.",
+      "processingType": "halftone-comic",
+      "processingNote": "Comic-book Ben-Day halftone dot pattern rasterization with bold black inking and high-contrast color separation.",
+      "panelsCount": 1,
+      "availability": "available"
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "glo-portrait",
+    "label": "Glo-Portrait",
+    "description": "Vibrant neon glowing portrait with electric contours on a bright pop art textured backdrop.",
+    "flatPrice": "0",
+    "sortOrder": 4,
+    "extras": {
+      "id": "glo-portrait",
+      "name": "Glo-Portrait",
+      "previewImage": "/assets/pop-art/glo-portrait.svg",
+      "price": 499,
+      "priceAdjustment": 0,
+      "description": "Vibrant neon glowing portrait with electric contours on a bright pop art textured backdrop.",
+      "processingType": "neon-glow",
+      "processingNote": "Electric neon edge luminescence with saturated pop duotone color mapping and pattern background.",
+      "panelsCount": 1,
+      "availability": "available"
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "coca-cola1",
+    "label": "Coca Cola1",
+    "description": "1960s advertising pop art screenprint in bold magenta, hot pink, and crisp cyan highlights.",
+    "flatPrice": "0",
+    "sortOrder": 5,
+    "extras": {
+      "id": "coca-cola1",
+      "name": "Coca Cola1",
+      "previewImage": "/assets/pop-art/coca-cola1.svg",
+      "price": 499,
+      "priceAdjustment": 0,
+      "description": "1960s advertising pop art screenprint in bold magenta, hot pink, and crisp cyan highlights.",
+      "processingType": "poster-tritone",
+      "processingNote": "High-contrast 60s vintage silkscreen tri-tone posterization in vibrant fuchsia and electric cyan.",
+      "panelsCount": 1,
+      "availability": "available"
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "coca-cola2",
+    "label": "Coca Cola2",
+    "description": "Rich vintage poster style featuring crimson red, antique off-white cream, and deep midnight navy.",
+    "flatPrice": "0",
+    "sortOrder": 6,
+    "extras": {
+      "id": "coca-cola2",
+      "name": "Coca Cola2",
+      "previewImage": "/assets/pop-art/coca-cola2.svg",
+      "price": 499,
+      "priceAdjustment": 0,
+      "description": "Rich vintage poster style featuring crimson red, antique off-white cream, and deep midnight navy.",
+      "processingType": "poster-tritone",
+      "processingNote": "Vintage high-contrast posterization in crimson red, warm parchment cream, and midnight navy.",
+      "panelsCount": 1,
+      "availability": "available"
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "che-all-in-1",
+    "label": "Che-all-in-1",
+    "description": "Iconic 4-panel revolutionary pop art montage with rotating bold graphic screenprint colorways.",
+    "flatPrice": "0",
+    "sortOrder": 7,
+    "extras": {
+      "id": "che-all-in-1",
+      "name": "Che-all-in-1",
+      "previewImage": "/assets/pop-art/che-all-in-1.svg",
+      "price": 499,
+      "priceAdjustment": 0,
+      "description": "Iconic 4-panel revolutionary pop art montage with rotating bold graphic screenprint colorways.",
+      "processingType": "multi-panel-warhol",
+      "processingNote": "4-panel high-contrast screenprint arrangement featuring bold red, amber, cyan, and magenta duotones.",
+      "panelsCount": 4,
+      "availability": "available"
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "che-all-in-2",
+    "label": "Che-all-in-2",
+    "description": "Dynamic 6-panel high-impact pop art montage with rotating vibrant silkscreen duotone treatments.",
+    "flatPrice": "0",
+    "sortOrder": 8,
+    "extras": {
+      "id": "che-all-in-2",
+      "name": "Che-all-in-2",
+      "previewImage": "/assets/pop-art/che-all-in-2.svg",
+      "price": 499,
+      "priceAdjustment": 0,
+      "description": "Dynamic 6-panel high-impact pop art montage with rotating vibrant silkscreen duotone treatments.",
+      "processingType": "multi-panel-warhol",
+      "processingNote": "6-panel screenprint montage cycling through red, gold, green, cyan, violet, and amber pop blocks.",
+      "panelsCount": 6,
+      "availability": "available"
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "coupe5",
+    "label": "Coupe5",
+    "description": "High-contrast silver gelatin black-and-white pop portrait with rich velvety blacks and bright highlights.",
+    "flatPrice": "0",
+    "sortOrder": 9,
+    "extras": {
+      "id": "coupe5",
+      "name": "Coupe5",
+      "previewImage": "/assets/pop-art/coupe5.svg",
+      "price": 499,
+      "priceAdjustment": 0,
+      "description": "High-contrast silver gelatin black-and-white pop portrait with rich velvety blacks and bright highlights.",
+      "processingType": "monochrome-high-contrast",
+      "processingNote": "Classic fine-art black-and-white pop posterization with stark tonal separation and deep contrast.",
+      "panelsCount": 1,
+      "availability": "available"
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "coupe8",
+    "label": "Coupe8",
+    "description": "Warm monochrome sepia-tinted vintage screenprint with deep espresso shadows and cream highlights.",
+    "flatPrice": "0",
+    "sortOrder": 10,
+    "extras": {
+      "id": "coupe8",
+      "name": "Coupe8",
+      "previewImage": "/assets/pop-art/coupe8.svg",
+      "price": 499,
+      "priceAdjustment": 0,
+      "description": "Warm monochrome sepia-tinted vintage screenprint with deep espresso shadows and cream highlights.",
+      "processingType": "poster-duotone",
+      "processingNote": "Warm sepia vintage duotone screenprint with filmic tonal gradation and rich midtone warmth.",
+      "panelsCount": 1,
+      "availability": "available"
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "che1",
+    "label": "Che1",
+    "description": "Fiery monochromatic amber, ochre, and deep crimson revolutionary pop screenprint.",
+    "flatPrice": "0",
+    "sortOrder": 11,
+    "extras": {
+      "id": "che1",
+      "name": "Che1",
+      "previewImage": "/assets/pop-art/che1.svg",
+      "price": 499,
+      "priceAdjustment": 0,
+      "description": "Fiery monochromatic amber, ochre, and deep crimson revolutionary pop screenprint.",
+      "processingType": "poster-duotone",
+      "processingNote": "Monochromatic warm amber and deep vermilion silkscreen posterization.",
+      "panelsCount": 1,
+      "availability": "available"
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "marilyn1",
+    "label": "Marilyn1",
+    "description": "Warhol's legendary Marilyn Monroe palette: electric turquoise, hot fuchsia pink, and luminous highlights.",
+    "flatPrice": "0",
+    "sortOrder": 12,
+    "extras": {
+      "id": "marilyn1",
+      "name": "Marilyn1",
+      "previewImage": "/assets/pop-art/marilyn1.svg",
+      "price": 499,
+      "priceAdjustment": 0,
+      "description": "Warhol's legendary Marilyn Monroe palette: electric turquoise, hot fuchsia pink, and luminous highlights.",
+      "processingType": "poster-tritone",
+      "processingNote": "Electric turquoise and hot fuchsia duotone pop screenprint inspired by 1962 silk screen masterworks.",
+      "panelsCount": 1,
+      "availability": "available"
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "sachiko1",
+    "label": "Sachiko1",
+    "description": "4-panel pastel pop quartet featuring soft bubblegum pink, seafoam cyan, peach, and lavender.",
+    "flatPrice": "0",
+    "sortOrder": 13,
+    "extras": {
+      "id": "sachiko1",
+      "name": "Sachiko1",
+      "previewImage": "/assets/pop-art/sachiko1.svg",
+      "price": 499,
+      "priceAdjustment": 0,
+      "description": "4-panel pastel pop quartet featuring soft bubblegum pink, seafoam cyan, peach, and lavender.",
+      "processingType": "multi-panel-warhol",
+      "processingNote": "4-panel pastel pop screenprint quartet with balanced Japanese contemporary pastel colorways.",
+      "panelsCount": 4,
+      "availability": "available"
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "dollar3",
+    "label": "Dollar3",
+    "description": "Pop art series aesthetic with electric cobalt blue shadows and bold mustard yellow highlights.",
+    "flatPrice": "0",
+    "sortOrder": 14,
+    "extras": {
+      "id": "dollar3",
+      "name": "Dollar3",
+      "previewImage": "/assets/pop-art/dollar3.svg",
+      "price": 499,
+      "priceAdjustment": 0,
+      "description": "Pop art series aesthetic with electric cobalt blue shadows and bold mustard yellow highlights.",
+      "processingType": "poster-duotone",
+      "processingNote": "Cobalt blue and mustard yellow duotone screenprint inspired by vintage Pop Art currency series.",
+      "panelsCount": 1,
+      "availability": "available"
+    }
+  },
+  {
+    "baseKey": "pop_art_styles",
+    "id": "mao5",
+    "label": "Mao5",
+    "description": "Avant-garde 70s screenprint with stark crimson red, sage green, and charcoal graphic tones.",
+    "flatPrice": "0",
+    "sortOrder": 15,
+    "extras": {
+      "id": "mao5",
+      "name": "Mao5",
+      "previewImage": "/assets/pop-art/mao5.svg",
+      "price": 499,
+      "priceAdjustment": 0,
+      "description": "Avant-garde 70s screenprint with stark crimson red, sage green, and charcoal graphic tones.",
+      "processingType": "poster-tritone",
+      "processingNote": "Silkscreen posterization in stark crimson, vintage olive-sage, and pitch black charcoal.",
+      "panelsCount": 1,
+      "availability": "available"
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-sq-8x8",
+    "label": "8\" × 8\"",
+    "description": null,
+    "flatPrice": "399",
+    "sortOrder": 0,
+    "extras": {
+      "id": "pop-sq-8x8",
+      "productTypeId": "canvas-pop-art",
+      "label": "8\" × 8\"",
+      "dimensionsSummary": "8\" × 8\"",
+      "widthInches": 8,
+      "heightInches": 8,
+      "price": 399,
+      "categories": [
+        "SQUARE",
+        "SMALL"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "8\" × 8\"",
+          "widthRatio": 8,
+          "heightRatio": 8
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-sq-10x10",
+    "label": "10\" × 10\"",
+    "description": null,
+    "flatPrice": "449",
+    "sortOrder": 1,
+    "extras": {
+      "id": "pop-sq-10x10",
+      "productTypeId": "canvas-pop-art",
+      "label": "10\" × 10\"",
+      "dimensionsSummary": "10\" × 10\"",
+      "widthInches": 10,
+      "heightInches": 10,
+      "price": 449,
+      "categories": [
+        "RECOMMENDED",
+        "SQUARE",
+        "SMALL"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "10\" × 10\"",
+          "widthRatio": 10,
+          "heightRatio": 10
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-12x12",
+    "label": "12\" × 12\"",
+    "description": null,
+    "flatPrice": "499",
+    "sortOrder": 2,
+    "extras": {
+      "id": "pop-12x12",
+      "productTypeId": "canvas-pop-art",
+      "label": "12\" × 12\"",
+      "dimensionsSummary": "12\" × 12\"",
+      "widthInches": 12,
+      "heightInches": 12,
+      "price": 499,
+      "categories": [
+        "RECOMMENDED",
+        "SQUARE",
+        "SMALL"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "12\" × 12\"",
+          "widthRatio": 12,
+          "heightRatio": 12
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-16x16",
+    "label": "16\" × 16\"",
+    "description": null,
+    "flatPrice": "799",
+    "sortOrder": 3,
+    "extras": {
+      "id": "pop-16x16",
+      "productTypeId": "canvas-pop-art",
+      "label": "16\" × 16\"",
+      "dimensionsSummary": "16\" × 16\"",
+      "widthInches": 16,
+      "heightInches": 16,
+      "price": 799,
+      "categories": [
+        "RECOMMENDED",
+        "SQUARE"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "16\" × 16\"",
+          "widthRatio": 16,
+          "heightRatio": 16
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-sq-18x18",
+    "label": "18\" × 18\"",
+    "description": null,
+    "flatPrice": "999",
+    "sortOrder": 4,
+    "extras": {
+      "id": "pop-sq-18x18",
+      "productTypeId": "canvas-pop-art",
+      "label": "18\" × 18\"",
+      "dimensionsSummary": "18\" × 18\"",
+      "widthInches": 18,
+      "heightInches": 18,
+      "price": 999,
+      "categories": [
+        "SQUARE",
+        "LARGE"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "18\" × 18\"",
+          "widthRatio": 18,
+          "heightRatio": 18
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-sq-20x20",
+    "label": "20\" × 20\"",
+    "description": null,
+    "flatPrice": "1199",
+    "sortOrder": 5,
+    "extras": {
+      "id": "pop-sq-20x20",
+      "productTypeId": "canvas-pop-art",
+      "label": "20\" × 20\"",
+      "dimensionsSummary": "20\" × 20\"",
+      "widthInches": 20,
+      "heightInches": 20,
+      "price": 1199,
+      "categories": [
+        "RECOMMENDED",
+        "SQUARE",
+        "LARGE"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "20\" × 20\"",
+          "widthRatio": 20,
+          "heightRatio": 20
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-pan-12x8",
+    "label": "12\" × 8\"",
+    "description": null,
+    "flatPrice": "449",
+    "sortOrder": 6,
+    "extras": {
+      "id": "pop-pan-12x8",
+      "productTypeId": "canvas-pop-art",
+      "label": "12\" × 8\"",
+      "dimensionsSummary": "12\" × 8\"",
+      "widthInches": 12,
+      "heightInches": 8,
+      "price": 449,
+      "categories": [
+        "PANORAMIC",
+        "SMALL"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "12\" × 8\"",
+          "widthRatio": 12,
+          "heightRatio": 8
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-pan-12x18",
+    "label": "12\" × 18\"",
+    "description": null,
+    "flatPrice": "649",
+    "sortOrder": 7,
+    "extras": {
+      "id": "pop-pan-12x18",
+      "productTypeId": "canvas-pop-art",
+      "label": "12\" × 18\"",
+      "dimensionsSummary": "12\" × 18\"",
+      "widthInches": 12,
+      "heightInches": 18,
+      "price": 649,
+      "categories": [
+        "RECOMMENDED",
+        "PANORAMIC",
+        "SMALL"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "12\" × 18\"",
+          "widthRatio": 12,
+          "heightRatio": 18
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-pan-16x20",
+    "label": "16\" × 20\"",
+    "description": null,
+    "flatPrice": "899",
+    "sortOrder": 8,
+    "extras": {
+      "id": "pop-pan-16x20",
+      "productTypeId": "canvas-pop-art",
+      "label": "16\" × 20\"",
+      "dimensionsSummary": "16\" × 20\"",
+      "widthInches": 16,
+      "heightInches": 20,
+      "price": 899,
+      "categories": [
+        "RECOMMENDED",
+        "PANORAMIC"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "16\" × 20\"",
+          "widthRatio": 16,
+          "heightRatio": 20
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-pan-16x24",
+    "label": "16\" × 24\"",
+    "description": null,
+    "flatPrice": "1099",
+    "sortOrder": 9,
+    "extras": {
+      "id": "pop-pan-16x24",
+      "productTypeId": "canvas-pop-art",
+      "label": "16\" × 24\"",
+      "dimensionsSummary": "16\" × 24\"",
+      "widthInches": 16,
+      "heightInches": 24,
+      "price": 1099,
+      "categories": [
+        "RECOMMENDED",
+        "PANORAMIC",
+        "LARGE"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "16\" × 24\"",
+          "widthRatio": 16,
+          "heightRatio": 24
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-pan-16x32",
+    "label": "16\" × 32\"",
+    "description": null,
+    "flatPrice": "1399",
+    "sortOrder": 10,
+    "extras": {
+      "id": "pop-pan-16x32",
+      "productTypeId": "canvas-pop-art",
+      "label": "16\" × 32\"",
+      "dimensionsSummary": "16\" × 32\"",
+      "widthInches": 16,
+      "heightInches": 32,
+      "price": 1399,
+      "categories": [
+        "PANORAMIC",
+        "LARGE"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "16\" × 32\"",
+          "widthRatio": 16,
+          "heightRatio": 32
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-pan-18x24",
+    "label": "18\" × 24\"",
+    "description": null,
+    "flatPrice": "1299",
+    "sortOrder": 11,
+    "extras": {
+      "id": "pop-pan-18x24",
+      "productTypeId": "canvas-pop-art",
+      "label": "18\" × 24\"",
+      "dimensionsSummary": "18\" × 24\"",
+      "widthInches": 18,
+      "heightInches": 24,
+      "price": 1299,
+      "categories": [
+        "PANORAMIC",
+        "LARGE"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "18\" × 24\"",
+          "widthRatio": 18,
+          "heightRatio": 24
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-pan-20x30",
+    "label": "20\" × 30\"",
+    "description": null,
+    "flatPrice": "1699",
+    "sortOrder": 12,
+    "extras": {
+      "id": "pop-pan-20x30",
+      "productTypeId": "canvas-pop-art",
+      "label": "20\" × 30\"",
+      "dimensionsSummary": "20\" × 30\"",
+      "widthInches": 20,
+      "heightInches": 30,
+      "price": 1699,
+      "categories": [
+        "RECOMMENDED",
+        "PANORAMIC",
+        "LARGE"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "20\" × 30\"",
+          "widthRatio": 20,
+          "heightRatio": 30
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-pan-24x36",
+    "label": "24\" × 36\"",
+    "description": null,
+    "flatPrice": "1999",
+    "sortOrder": 13,
+    "extras": {
+      "id": "pop-pan-24x36",
+      "productTypeId": "canvas-pop-art",
+      "label": "24\" × 36\"",
+      "dimensionsSummary": "24\" × 36\"",
+      "widthInches": 24,
+      "heightInches": 36,
+      "price": 1999,
+      "categories": [
+        "PANORAMIC",
+        "LARGE"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "24\" × 36\"",
+          "widthRatio": 24,
+          "heightRatio": 36
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-pt-12x16",
+    "label": "12\" × 16\"",
+    "description": null,
+    "flatPrice": "649",
+    "sortOrder": 14,
+    "extras": {
+      "id": "pop-pt-12x16",
+      "productTypeId": "canvas-pop-art",
+      "label": "12\" × 16\"",
+      "dimensionsSummary": "12\" × 16\"",
+      "widthInches": 12,
+      "heightInches": 16,
+      "price": 649,
+      "categories": [
+        "RECOMMENDED",
+        "PORTRAIT",
+        "SMALL"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "12\" × 16\"",
+          "widthRatio": 12,
+          "heightRatio": 16
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-pt-16x20",
+    "label": "16\" × 20\"",
+    "description": null,
+    "flatPrice": "899",
+    "sortOrder": 15,
+    "extras": {
+      "id": "pop-pt-16x20",
+      "productTypeId": "canvas-pop-art",
+      "label": "16\" × 20\"",
+      "dimensionsSummary": "16\" × 20\"",
+      "widthInches": 16,
+      "heightInches": 20,
+      "price": 899,
+      "categories": [
+        "RECOMMENDED",
+        "PORTRAIT"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "16\" × 20\"",
+          "widthRatio": 16,
+          "heightRatio": 20
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-pt-18x24",
+    "label": "18\" × 24\"",
+    "description": null,
+    "flatPrice": "1299",
+    "sortOrder": 16,
+    "extras": {
+      "id": "pop-pt-18x24",
+      "productTypeId": "canvas-pop-art",
+      "label": "18\" × 24\"",
+      "dimensionsSummary": "18\" × 24\"",
+      "widthInches": 18,
+      "heightInches": 24,
+      "price": 1299,
+      "categories": [
+        "PORTRAIT",
+        "LARGE"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "18\" × 24\"",
+          "widthRatio": 18,
+          "heightRatio": 24
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "pop_art_sizes",
+    "id": "pop-pt-24x36",
+    "label": "24\" × 36\"",
+    "description": null,
+    "flatPrice": "1999",
+    "sortOrder": 17,
+    "extras": {
+      "id": "pop-pt-24x36",
+      "productTypeId": "canvas-pop-art",
+      "label": "24\" × 36\"",
+      "dimensionsSummary": "24\" × 36\"",
+      "widthInches": 24,
+      "heightInches": 36,
+      "price": 1999,
+      "categories": [
+        "PORTRAIT",
+        "LARGE"
+      ],
+      "panelsCount": 1,
+      "diagramType": "single-shape",
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Pop Art Canvas",
+          "dimension": "24\" × 36\"",
+          "widthRatio": 24,
+          "heightRatio": 36
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-10x8",
+    "label": "10\" × 8\"",
+    "description": null,
+    "flatPrice": "399",
+    "sortOrder": 0,
+    "extras": {
+      "id": "banner-10x8",
+      "productTypeId": "canvas-banner",
+      "label": "10\" × 8\"",
+      "dimensionsSummary": "10\" × 8\"",
+      "widthInches": 10,
+      "heightInches": 8,
+      "price": 399,
+      "categories": [
+        "RECOMMENDED",
+        "SMALL"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "10\" × 8\"",
+          "widthRatio": 10,
+          "heightRatio": 8
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-12x12",
+    "label": "12\" × 12\" (1 ft × 1 ft)",
+    "description": null,
+    "flatPrice": "399",
+    "sortOrder": 1,
+    "extras": {
+      "id": "banner-12x12",
+      "productTypeId": "canvas-banner",
+      "label": "12\" × 12\" (1 ft × 1 ft)",
+      "dimensionsSummary": "12\" × 12\"",
+      "widthInches": 12,
+      "heightInches": 12,
+      "price": 399,
+      "categories": [
+        "RECOMMENDED",
+        "SQUARE",
+        "SMALL"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "12\" × 12\"",
+          "widthRatio": 12,
+          "heightRatio": 12
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-24x36",
+    "label": "24\" × 36\" (2 ft × 3 ft)",
+    "description": null,
+    "flatPrice": "864",
+    "sortOrder": 2,
+    "extras": {
+      "id": "banner-24x36",
+      "productTypeId": "canvas-banner",
+      "label": "24\" × 36\" (2 ft × 3 ft)",
+      "dimensionsSummary": "24\" × 36\"",
+      "widthInches": 24,
+      "heightInches": 36,
+      "price": 864,
+      "categories": [
+        "RECOMMENDED"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "24\" × 36\"",
+          "widthRatio": 24,
+          "heightRatio": 36
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-36x48",
+    "label": "36\" × 48\" (3 ft × 4 ft)",
+    "description": null,
+    "flatPrice": "1728",
+    "sortOrder": 3,
+    "extras": {
+      "id": "banner-36x48",
+      "productTypeId": "canvas-banner",
+      "label": "36\" × 48\" (3 ft × 4 ft)",
+      "dimensionsSummary": "36\" × 48\"",
+      "widthInches": 36,
+      "heightInches": 48,
+      "price": 1728,
+      "categories": [
+        "RECOMMENDED"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "36\" × 48\"",
+          "widthRatio": 36,
+          "heightRatio": 48
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-69x52",
+    "label": "69\" × 52\"",
+    "description": null,
+    "flatPrice": "3567",
+    "sortOrder": 4,
+    "extras": {
+      "id": "banner-69x52",
+      "productTypeId": "canvas-banner",
+      "label": "69\" × 52\"",
+      "dimensionsSummary": "69\" × 52\"",
+      "widthInches": 69,
+      "heightInches": 52,
+      "price": 3567,
+      "categories": [
+        "RECOMMENDED",
+        "LARGE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "69\" × 52\"",
+          "widthRatio": 69,
+          "heightRatio": 52
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-128x96",
+    "label": "128\" × 96\"",
+    "description": null,
+    "flatPrice": "12025.24",
+    "sortOrder": 5,
+    "extras": {
+      "id": "banner-128x96",
+      "productTypeId": "canvas-banner",
+      "label": "128\" × 96\"",
+      "dimensionsSummary": "128\" × 96\"",
+      "widthInches": 128,
+      "heightInches": 96,
+      "price": 12025.24,
+      "categories": [
+        "RECOMMENDED",
+        "LARGE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "128\" × 96\"",
+          "widthRatio": 128,
+          "heightRatio": 96
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-187x140",
+    "label": "187\" × 140\"",
+    "description": null,
+    "flatPrice": "25769.88",
+    "sortOrder": 6,
+    "extras": {
+      "id": "banner-187x140",
+      "productTypeId": "canvas-banner",
+      "label": "187\" × 140\"",
+      "dimensionsSummary": "187\" × 140\"",
+      "widthInches": 187,
+      "heightInches": 140,
+      "price": 25769.88,
+      "categories": [
+        "RECOMMENDED",
+        "LARGE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "187\" × 140\"",
+          "widthRatio": 187,
+          "heightRatio": 140
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-246x185",
+    "label": "246\" × 185\"",
+    "description": null,
+    "flatPrice": "42025.56",
+    "sortOrder": 7,
+    "extras": {
+      "id": "banner-246x185",
+      "productTypeId": "canvas-banner",
+      "label": "246\" × 185\"",
+      "dimensionsSummary": "246\" × 185\"",
+      "widthInches": 246,
+      "heightInches": 185,
+      "price": 42025.56,
+      "categories": [
+        "RECOMMENDED",
+        "LARGE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "246\" × 185\"",
+          "widthRatio": 246,
+          "heightRatio": 185
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-305x229",
+    "label": "305\" × 229\"",
+    "description": null,
+    "flatPrice": "63171.16",
+    "sortOrder": 8,
+    "extras": {
+      "id": "banner-305x229",
+      "productTypeId": "canvas-banner",
+      "label": "305\" × 229\"",
+      "dimensionsSummary": "305\" × 229\"",
+      "widthInches": 305,
+      "heightInches": 229,
+      "price": 63171.16,
+      "categories": [
+        "RECOMMENDED",
+        "LARGE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "305\" × 229\"",
+          "widthRatio": 305,
+          "heightRatio": 229
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-sq-24x24",
+    "label": "24\" × 24\" (2 ft × 2 ft)",
+    "description": null,
+    "flatPrice": "576",
+    "sortOrder": 9,
+    "extras": {
+      "id": "banner-sq-24x24",
+      "productTypeId": "canvas-banner",
+      "label": "24\" × 24\" (2 ft × 2 ft)",
+      "dimensionsSummary": "24\" × 24\"",
+      "widthInches": 24,
+      "heightInches": 24,
+      "price": 576,
+      "categories": [
+        "SQUARE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "24\" × 24\"",
+          "widthRatio": 24,
+          "heightRatio": 24
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-sq-36x36",
+    "label": "36\" × 36\" (3 ft × 3 ft)",
+    "description": null,
+    "flatPrice": "1296",
+    "sortOrder": 10,
+    "extras": {
+      "id": "banner-sq-36x36",
+      "productTypeId": "canvas-banner",
+      "label": "36\" × 36\" (3 ft × 3 ft)",
+      "dimensionsSummary": "36\" × 36\"",
+      "widthInches": 36,
+      "heightInches": 36,
+      "price": 1296,
+      "categories": [
+        "SQUARE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "36\" × 36\"",
+          "widthRatio": 36,
+          "heightRatio": 36
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-sq-48x48",
+    "label": "48\" × 48\" (4 ft × 4 ft)",
+    "description": null,
+    "flatPrice": "2304",
+    "sortOrder": 11,
+    "extras": {
+      "id": "banner-sq-48x48",
+      "productTypeId": "canvas-banner",
+      "label": "48\" × 48\" (4 ft × 4 ft)",
+      "dimensionsSummary": "48\" × 48\"",
+      "widthInches": 48,
+      "heightInches": 48,
+      "price": 2304,
+      "categories": [
+        "SQUARE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "48\" × 48\"",
+          "widthRatio": 48,
+          "heightRatio": 48
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-sq-72x72",
+    "label": "72\" × 72\" (6 ft × 6 ft)",
+    "description": null,
+    "flatPrice": "5080",
+    "sortOrder": 12,
+    "extras": {
+      "id": "banner-sq-72x72",
+      "productTypeId": "canvas-banner",
+      "label": "72\" × 72\" (6 ft × 6 ft)",
+      "dimensionsSummary": "72\" × 72\"",
+      "widthInches": 72,
+      "heightInches": 72,
+      "price": 5080,
+      "categories": [
+        "SQUARE",
+        "LARGE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "72\" × 72\"",
+          "widthRatio": 72,
+          "heightRatio": 72
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-sq-96x96",
+    "label": "96\" × 96\" (8 ft × 8 ft)",
+    "description": null,
+    "flatPrice": "9032",
+    "sortOrder": 13,
+    "extras": {
+      "id": "banner-sq-96x96",
+      "productTypeId": "canvas-banner",
+      "label": "96\" × 96\" (8 ft × 8 ft)",
+      "dimensionsSummary": "96\" × 96\"",
+      "widthInches": 96,
+      "heightInches": 96,
+      "price": 9032,
+      "categories": [
+        "SQUARE",
+        "LARGE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "96\" × 96\"",
+          "widthRatio": 96,
+          "heightRatio": 96
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-pan-36x12",
+    "label": "36\" × 12\" (3 ft × 1 ft)",
+    "description": null,
+    "flatPrice": "432",
+    "sortOrder": 14,
+    "extras": {
+      "id": "banner-pan-36x12",
+      "productTypeId": "canvas-banner",
+      "label": "36\" × 12\" (3 ft × 1 ft)",
+      "dimensionsSummary": "36\" × 12\"",
+      "widthInches": 36,
+      "heightInches": 12,
+      "price": 432,
+      "categories": [
+        "PANORAMIC"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "36\" × 12\"",
+          "widthRatio": 36,
+          "heightRatio": 12
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-pan-48x16",
+    "label": "48\" × 16\" (4 ft × 1.3 ft)",
+    "description": null,
+    "flatPrice": "768",
+    "sortOrder": 15,
+    "extras": {
+      "id": "banner-pan-48x16",
+      "productTypeId": "canvas-banner",
+      "label": "48\" × 16\" (4 ft × 1.3 ft)",
+      "dimensionsSummary": "48\" × 16\"",
+      "widthInches": 48,
+      "heightInches": 16,
+      "price": 768,
+      "categories": [
+        "PANORAMIC"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "48\" × 16\"",
+          "widthRatio": 48,
+          "heightRatio": 16
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-pan-60x20",
+    "label": "60\" × 20\" (5 ft × 1.67 ft)",
+    "description": null,
+    "flatPrice": "1200",
+    "sortOrder": 16,
+    "extras": {
+      "id": "banner-pan-60x20",
+      "productTypeId": "canvas-banner",
+      "label": "60\" × 20\" (5 ft × 1.67 ft)",
+      "dimensionsSummary": "60\" × 20\"",
+      "widthInches": 60,
+      "heightInches": 20,
+      "price": 1200,
+      "categories": [
+        "PANORAMIC"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "60\" × 20\"",
+          "widthRatio": 60,
+          "heightRatio": 20
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-pan-72x24",
+    "label": "72\" × 24\" (6 ft × 2 ft)",
+    "description": null,
+    "flatPrice": "1728",
+    "sortOrder": 17,
+    "extras": {
+      "id": "banner-pan-72x24",
+      "productTypeId": "canvas-banner",
+      "label": "72\" × 24\" (6 ft × 2 ft)",
+      "dimensionsSummary": "72\" × 24\"",
+      "widthInches": 72,
+      "heightInches": 24,
+      "price": 1728,
+      "categories": [
+        "PANORAMIC"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "72\" × 24\"",
+          "widthRatio": 72,
+          "heightRatio": 24
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-pan-96x32",
+    "label": "96\" × 32\" (8 ft × 2.67 ft)",
+    "description": null,
+    "flatPrice": "3072",
+    "sortOrder": 18,
+    "extras": {
+      "id": "banner-pan-96x32",
+      "productTypeId": "canvas-banner",
+      "label": "96\" × 32\" (8 ft × 2.67 ft)",
+      "dimensionsSummary": "96\" × 32\"",
+      "widthInches": 96,
+      "heightInches": 32,
+      "price": 3072,
+      "categories": [
+        "PANORAMIC"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "96\" × 32\"",
+          "widthRatio": 96,
+          "heightRatio": 32
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-pan-120x36",
+    "label": "120\" × 36\" (10 ft × 3 ft)",
+    "description": null,
+    "flatPrice": "4320",
+    "sortOrder": 19,
+    "extras": {
+      "id": "banner-pan-120x36",
+      "productTypeId": "canvas-banner",
+      "label": "120\" × 36\" (10 ft × 3 ft)",
+      "dimensionsSummary": "120\" × 36\"",
+      "widthInches": 120,
+      "heightInches": 36,
+      "price": 4320,
+      "categories": [
+        "PANORAMIC",
+        "LARGE"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "120\" × 36\"",
+          "widthRatio": 120,
+          "heightRatio": 36
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-sm-12x18",
+    "label": "12\" × 18\" (1 ft × 1.5 ft)",
+    "description": null,
+    "flatPrice": "399",
+    "sortOrder": 20,
+    "extras": {
+      "id": "banner-sm-12x18",
+      "productTypeId": "canvas-banner",
+      "label": "12\" × 18\" (1 ft × 1.5 ft)",
+      "dimensionsSummary": "12\" × 18\"",
+      "widthInches": 12,
+      "heightInches": 18,
+      "price": 399,
+      "categories": [
+        "SMALL"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "12\" × 18\"",
+          "widthRatio": 12,
+          "heightRatio": 18
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-sm-16x20",
+    "label": "16\" × 20\"",
+    "description": null,
+    "flatPrice": "399",
+    "sortOrder": 21,
+    "extras": {
+      "id": "banner-sm-16x20",
+      "productTypeId": "canvas-banner",
+      "label": "16\" × 20\"",
+      "dimensionsSummary": "16\" × 20\"",
+      "widthInches": 16,
+      "heightInches": 20,
+      "price": 399,
+      "categories": [
+        "SMALL"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "16\" × 20\"",
+          "widthRatio": 16,
+          "heightRatio": 20
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-sm-16x24",
+    "label": "16\" × 24\"",
+    "description": null,
+    "flatPrice": "399",
+    "sortOrder": 22,
+    "extras": {
+      "id": "banner-sm-16x24",
+      "productTypeId": "canvas-banner",
+      "label": "16\" × 24\"",
+      "dimensionsSummary": "16\" × 24\"",
+      "widthInches": 16,
+      "heightInches": 24,
+      "price": 399,
+      "categories": [
+        "SMALL"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "16\" × 24\"",
+          "widthRatio": 16,
+          "heightRatio": 24
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_sizes",
+    "id": "banner-sm-20x24",
+    "label": "20\" × 24\"",
+    "description": null,
+    "flatPrice": "480",
+    "sortOrder": 23,
+    "extras": {
+      "id": "banner-sm-20x24",
+      "productTypeId": "canvas-banner",
+      "label": "20\" × 24\"",
+      "dimensionsSummary": "20\" × 24\"",
+      "widthInches": 20,
+      "heightInches": 24,
+      "price": 480,
+      "categories": [
+        "SMALL"
+      ],
+      "panels": [
+        {
+          "id": "p0",
+          "label": "Canvas Banner",
+          "dimension": "20\" × 24\"",
+          "widthRatio": 20,
+          "heightRatio": 24
+        }
+      ]
+    }
+  },
+  {
+    "baseKey": "banner_hardware",
+    "id": "no-hooks",
+    "label": "No Hardware (Clean Trim)",
+    "description": "Clean, flat banner edges ready for tape, tacking, or custom frames.",
+    "flatPrice": "0",
+    "sortOrder": 0,
+    "extras": {
+      "id": "no-hooks",
+      "name": "No Hardware (Clean Trim)",
+      "price": 0,
+      "description": "Clean, flat banner edges ready for tape, tacking, or custom frames."
+    }
+  },
+  {
+    "baseKey": "banner_hardware",
+    "id": "banner-grommets",
+    "label": "Corner Eyelets / Metal Grommets",
+    "description": "Reinforced nickel eyelets placed at corners for rope, bungee, or zip tie mounting.",
+    "flatPrice": "99",
+    "sortOrder": 1,
+    "extras": {
+      "id": "banner-grommets",
+      "name": "Corner Eyelets / Metal Grommets",
+      "price": 99,
+      "description": "Reinforced nickel eyelets placed at corners for rope, bungee, or zip tie mounting."
+    }
+  },
+  {
+    "baseKey": "banner_hardware",
+    "id": "banner-pole-pocket",
+    "label": "Top & Bottom Pole Pockets",
+    "description": "Neatly stitched 2-inch top and bottom sleeves for dowels, tubes, or hanging banner rods.",
+    "flatPrice": "149",
+    "sortOrder": 2,
+    "extras": {
+      "id": "banner-pole-pocket",
+      "name": "Top & Bottom Pole Pockets",
+      "price": 149,
+      "description": "Neatly stitched 2-inch top and bottom sleeves for dowels, tubes, or hanging banner rods."
+    }
+  },
+  {
+    "baseKey": "banner_hardware",
+    "id": "banner-hanging-rails",
+    "label": "Solid Wood Hanging Rails",
+    "description": "Natural solid wood top and bottom magnetic clamping rails with rustic hanging cord.",
+    "flatPrice": "199",
+    "sortOrder": 3,
+    "extras": {
+      "id": "banner-hanging-rails",
+      "name": "Solid Wood Hanging Rails",
+      "price": 199,
+      "description": "Natural solid wood top and bottom magnetic clamping rails with rustic hanging cord."
+    }
+  },
+  {
+    "baseKey": "banner_hardware",
+    "id": "hooks-hanging",
+    "label": "Standard Hanging Mounts",
+    "description": "Pre-attached lightweight adhesive wall mounting hooks.",
+    "flatPrice": "0",
+    "sortOrder": 4,
+    "extras": {
+      "id": "hooks-hanging",
+      "name": "Standard Hanging Mounts",
+      "price": 0,
+      "description": "Pre-attached lightweight adhesive wall mounting hooks."
+    }
+  },
+  {
+    "baseKey": "banner_backgrounds",
+    "id": "#FFFFFF",
+    "label": "Studio White (Default)",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 0,
+    "extras": {
+      "hex": "#FFFFFF",
+      "name": "Studio White (Default)",
+      "id": "#FFFFFF"
+    }
+  },
+  {
+    "baseKey": "banner_backgrounds",
+    "id": "#FFFDF9",
+    "label": "Warm Cream",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 1,
+    "extras": {
+      "hex": "#FFFDF9",
+      "name": "Warm Cream",
+      "id": "#FFFDF9"
+    }
+  },
+  {
+    "baseKey": "banner_backgrounds",
+    "id": "#F1F5F9",
+    "label": "Mist Gray",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 2,
+    "extras": {
+      "hex": "#F1F5F9",
+      "name": "Mist Gray",
+      "id": "#F1F5F9"
+    }
+  },
+  {
+    "baseKey": "banner_backgrounds",
+    "id": "#FAF8F5",
+    "label": "Soft Ivory",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 3,
+    "extras": {
+      "hex": "#FAF8F5",
+      "name": "Soft Ivory",
+      "id": "#FAF8F5"
+    }
+  },
+  {
+    "baseKey": "banner_backgrounds",
+    "id": "#E53935",
+    "label": "Crimson Red",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 4,
+    "extras": {
+      "hex": "#E53935",
+      "name": "Crimson Red",
+      "id": "#E53935"
+    }
+  },
+  {
+    "baseKey": "banner_backgrounds",
+    "id": "#0E4A93",
+    "label": "Canvas India Blue",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 5,
+    "extras": {
+      "hex": "#0E4A93",
+      "name": "Canvas India Blue",
+      "id": "#0E4A93"
+    }
+  },
+  {
+    "baseKey": "banner_backgrounds",
+    "id": "#1E293B",
+    "label": "Dark Slate",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 6,
+    "extras": {
+      "hex": "#1E293B",
+      "name": "Dark Slate",
+      "id": "#1E293B"
+    }
+  },
+  {
+    "baseKey": "banner_backgrounds",
+    "id": "#0F172A",
+    "label": "Midnight Black",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 7,
+    "extras": {
+      "hex": "#0F172A",
+      "name": "Midnight Black",
+      "id": "#0F172A"
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-8x8",
+    "label": "8\" × 8\"",
+    "description": null,
+    "flatPrice": "198",
+    "sortOrder": 0,
+    "extras": {
+      "id": "word-sq-8x8",
+      "ratioTab": "Square",
+      "widthInches": 8,
+      "heightInches": 8,
+      "label": "8\" × 8\"",
+      "price": 198,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-9x9",
+    "label": "9\" × 9\"",
+    "description": null,
+    "flatPrice": "305",
+    "sortOrder": 1,
+    "extras": {
+      "id": "word-sq-9x9",
+      "ratioTab": "Square",
+      "widthInches": 9,
+      "heightInches": 9,
+      "label": "9\" × 9\"",
+      "price": 305,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-10x10",
+    "label": "10\" × 10\"",
+    "description": null,
+    "flatPrice": "349",
+    "sortOrder": 2,
+    "extras": {
+      "id": "word-sq-10x10",
+      "ratioTab": "Square",
+      "widthInches": 10,
+      "heightInches": 10,
+      "label": "10\" × 10\"",
+      "price": 349,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-11x11",
+    "label": "11\" × 11\"",
+    "description": null,
+    "flatPrice": "397",
+    "sortOrder": 3,
+    "extras": {
+      "id": "word-sq-11x11",
+      "ratioTab": "Square",
+      "widthInches": 11,
+      "heightInches": 11,
+      "label": "11\" × 11\"",
+      "price": 397,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-12x12",
+    "label": "12\" × 12\"",
+    "description": null,
+    "flatPrice": "449",
+    "sortOrder": 4,
+    "extras": {
+      "id": "word-sq-12x12",
+      "ratioTab": "Square",
+      "widthInches": 12,
+      "heightInches": 12,
+      "label": "12\" × 12\"",
+      "price": 449,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-13x13",
+    "label": "13\" × 13\"",
+    "description": null,
+    "flatPrice": "506",
+    "sortOrder": 5,
+    "extras": {
+      "id": "word-sq-13x13",
+      "ratioTab": "Square",
+      "widthInches": 13,
+      "heightInches": 13,
+      "label": "13\" × 13\"",
+      "price": 506,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-14x14",
+    "label": "14\" × 14\"",
+    "description": null,
+    "flatPrice": "566",
+    "sortOrder": 6,
+    "extras": {
+      "id": "word-sq-14x14",
+      "ratioTab": "Square",
+      "widthInches": 14,
+      "heightInches": 14,
+      "label": "14\" × 14\"",
+      "price": 566,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-15x15",
+    "label": "15\" × 15\"",
+    "description": null,
+    "flatPrice": "608",
+    "sortOrder": 7,
+    "extras": {
+      "id": "word-sq-15x15",
+      "ratioTab": "Square",
+      "widthInches": 15,
+      "heightInches": 15,
+      "label": "15\" × 15\"",
+      "price": 608,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-16x16",
+    "label": "16\" × 16\"",
+    "description": null,
+    "flatPrice": "670",
+    "sortOrder": 8,
+    "extras": {
+      "id": "word-sq-16x16",
+      "ratioTab": "Square",
+      "widthInches": 16,
+      "heightInches": 16,
+      "label": "16\" × 16\"",
+      "price": 670,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-17x17",
+    "label": "17\" × 17\"",
+    "description": null,
+    "flatPrice": "746",
+    "sortOrder": 9,
+    "extras": {
+      "id": "word-sq-17x17",
+      "ratioTab": "Square",
+      "widthInches": 17,
+      "heightInches": 17,
+      "label": "17\" × 17\"",
+      "price": 746,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-18x18",
+    "label": "18\" × 18\"",
+    "description": null,
+    "flatPrice": "821",
+    "sortOrder": 10,
+    "extras": {
+      "id": "word-sq-18x18",
+      "ratioTab": "Square",
+      "widthInches": 18,
+      "heightInches": 18,
+      "label": "18\" × 18\"",
+      "price": 821,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-19x19",
+    "label": "19\" × 19\"",
+    "description": null,
+    "flatPrice": "900",
+    "sortOrder": 11,
+    "extras": {
+      "id": "word-sq-19x19",
+      "ratioTab": "Square",
+      "widthInches": 19,
+      "heightInches": 19,
+      "label": "19\" × 19\"",
+      "price": 900,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-20x20",
+    "label": "20\" × 20\"",
+    "description": null,
+    "flatPrice": "984",
+    "sortOrder": 12,
+    "extras": {
+      "id": "word-sq-20x20",
+      "ratioTab": "Square",
+      "widthInches": 20,
+      "heightInches": 20,
+      "label": "20\" × 20\"",
+      "price": 984,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-21x21",
+    "label": "21\" × 21\"",
+    "description": null,
+    "flatPrice": "1070",
+    "sortOrder": 13,
+    "extras": {
+      "id": "word-sq-21x21",
+      "ratioTab": "Square",
+      "widthInches": 21,
+      "heightInches": 21,
+      "label": "21\" × 21\"",
+      "price": 1070,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-22x22",
+    "label": "22\" × 22\"",
+    "description": null,
+    "flatPrice": "1161",
+    "sortOrder": 14,
+    "extras": {
+      "id": "word-sq-22x22",
+      "ratioTab": "Square",
+      "widthInches": 22,
+      "heightInches": 22,
+      "label": "22\" × 22\"",
+      "price": 1161,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-23x23",
+    "label": "23\" × 23\"",
+    "description": null,
+    "flatPrice": "1256",
+    "sortOrder": 15,
+    "extras": {
+      "id": "word-sq-23x23",
+      "ratioTab": "Square",
+      "widthInches": 23,
+      "heightInches": 23,
+      "label": "23\" × 23\"",
+      "price": 1256,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-24x24",
+    "label": "24\" × 24\"",
+    "description": null,
+    "flatPrice": "1356",
+    "sortOrder": 16,
+    "extras": {
+      "id": "word-sq-24x24",
+      "ratioTab": "Square",
+      "widthInches": 24,
+      "heightInches": 24,
+      "label": "24\" × 24\"",
+      "price": 1356,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-25x25",
+    "label": "25\" × 25\"",
+    "description": null,
+    "flatPrice": "1461",
+    "sortOrder": 17,
+    "extras": {
+      "id": "word-sq-25x25",
+      "ratioTab": "Square",
+      "widthInches": 25,
+      "heightInches": 25,
+      "label": "25\" × 25\"",
+      "price": 1461,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-26x26",
+    "label": "26\" × 26\"",
+    "description": null,
+    "flatPrice": "1569",
+    "sortOrder": 18,
+    "extras": {
+      "id": "word-sq-26x26",
+      "ratioTab": "Square",
+      "widthInches": 26,
+      "heightInches": 26,
+      "label": "26\" × 26\"",
+      "price": 1569,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-27x27",
+    "label": "27\" × 27\"",
+    "description": null,
+    "flatPrice": "1681",
+    "sortOrder": 19,
+    "extras": {
+      "id": "word-sq-27x27",
+      "ratioTab": "Square",
+      "widthInches": 27,
+      "heightInches": 27,
+      "label": "27\" × 27\"",
+      "price": 1681,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-28x28",
+    "label": "28\" × 28\"",
+    "description": null,
+    "flatPrice": "1797",
+    "sortOrder": 20,
+    "extras": {
+      "id": "word-sq-28x28",
+      "ratioTab": "Square",
+      "widthInches": 28,
+      "heightInches": 28,
+      "label": "28\" × 28\"",
+      "price": 1797,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-29x29",
+    "label": "29\" × 29\"",
+    "description": null,
+    "flatPrice": "1916",
+    "sortOrder": 21,
+    "extras": {
+      "id": "word-sq-29x29",
+      "ratioTab": "Square",
+      "widthInches": 29,
+      "heightInches": 29,
+      "label": "29\" × 29\"",
+      "price": 1916,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-30x30",
+    "label": "30\" × 30\"",
+    "description": null,
+    "flatPrice": "2041",
+    "sortOrder": 22,
+    "extras": {
+      "id": "word-sq-30x30",
+      "ratioTab": "Square",
+      "widthInches": 30,
+      "heightInches": 30,
+      "label": "30\" × 30\"",
+      "price": 2041,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-sq-31x31",
+    "label": "31\" × 31\"",
+    "description": null,
+    "flatPrice": "2169",
+    "sortOrder": 23,
+    "extras": {
+      "id": "word-sq-31x31",
+      "ratioTab": "Square",
+      "widthInches": 31,
+      "heightInches": 31,
+      "label": "31\" × 31\"",
+      "price": 2169,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-32-12x8",
+    "label": "12\" × 8\"",
+    "description": null,
+    "flatPrice": "249",
+    "sortOrder": 24,
+    "extras": {
+      "id": "word-32-12x8",
+      "ratioTab": "3:2 Ratio",
+      "widthInches": 12,
+      "heightInches": 8,
+      "label": "12\" × 8\"",
+      "price": 249,
+      "aspectRatio": 1.5
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-32-15x10",
+    "label": "15\" × 10\"",
+    "description": null,
+    "flatPrice": "399",
+    "sortOrder": 25,
+    "extras": {
+      "id": "word-32-15x10",
+      "ratioTab": "3:2 Ratio",
+      "widthInches": 15,
+      "heightInches": 10,
+      "label": "15\" × 10\"",
+      "price": 399,
+      "aspectRatio": 1.5
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-32-18x12",
+    "label": "18\" × 12\"",
+    "description": null,
+    "flatPrice": "499",
+    "sortOrder": 26,
+    "extras": {
+      "id": "word-32-18x12",
+      "ratioTab": "3:2 Ratio",
+      "widthInches": 18,
+      "heightInches": 12,
+      "label": "18\" × 12\"",
+      "price": 499,
+      "aspectRatio": 1.5
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-32-21x14",
+    "label": "21\" × 14\"",
+    "description": null,
+    "flatPrice": "699",
+    "sortOrder": 27,
+    "extras": {
+      "id": "word-32-21x14",
+      "ratioTab": "3:2 Ratio",
+      "widthInches": 21,
+      "heightInches": 14,
+      "label": "21\" × 14\"",
+      "price": 699,
+      "aspectRatio": 1.5
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-32-24x16",
+    "label": "24\" × 16\"",
+    "description": null,
+    "flatPrice": "899",
+    "sortOrder": 28,
+    "extras": {
+      "id": "word-32-24x16",
+      "ratioTab": "3:2 Ratio",
+      "widthInches": 24,
+      "heightInches": 16,
+      "label": "24\" × 16\"",
+      "price": 899,
+      "aspectRatio": 1.5
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-32-27x18",
+    "label": "27\" × 18\"",
+    "description": null,
+    "flatPrice": "1099",
+    "sortOrder": 29,
+    "extras": {
+      "id": "word-32-27x18",
+      "ratioTab": "3:2 Ratio",
+      "widthInches": 27,
+      "heightInches": 18,
+      "label": "27\" × 18\"",
+      "price": 1099,
+      "aspectRatio": 1.5
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-32-30x20",
+    "label": "30\" × 20\"",
+    "description": null,
+    "flatPrice": "1299",
+    "sortOrder": 30,
+    "extras": {
+      "id": "word-32-30x20",
+      "ratioTab": "3:2 Ratio",
+      "widthInches": 30,
+      "heightInches": 20,
+      "label": "30\" × 20\"",
+      "price": 1299,
+      "aspectRatio": 1.5
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-32-36x24",
+    "label": "36\" × 24\"",
+    "description": null,
+    "flatPrice": "1799",
+    "sortOrder": 31,
+    "extras": {
+      "id": "word-32-36x24",
+      "ratioTab": "3:2 Ratio",
+      "widthInches": 36,
+      "heightInches": 24,
+      "label": "36\" × 24\"",
+      "price": 1799,
+      "aspectRatio": 1.5
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-43-12x9",
+    "label": "12\" × 9\"",
+    "description": null,
+    "flatPrice": "299",
+    "sortOrder": 32,
+    "extras": {
+      "id": "word-43-12x9",
+      "ratioTab": "4:3 Ratio",
+      "widthInches": 12,
+      "heightInches": 9,
+      "label": "12\" × 9\"",
+      "price": 299,
+      "aspectRatio": 1.3333333333333333
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-43-16x12",
+    "label": "16\" × 12\"",
+    "description": null,
+    "flatPrice": "449",
+    "sortOrder": 33,
+    "extras": {
+      "id": "word-43-16x12",
+      "ratioTab": "4:3 Ratio",
+      "widthInches": 16,
+      "heightInches": 12,
+      "label": "16\" × 12\"",
+      "price": 449,
+      "aspectRatio": 1.3333333333333333
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-43-20x15",
+    "label": "20\" × 15\"",
+    "description": null,
+    "flatPrice": "749",
+    "sortOrder": 34,
+    "extras": {
+      "id": "word-43-20x15",
+      "ratioTab": "4:3 Ratio",
+      "widthInches": 20,
+      "heightInches": 15,
+      "label": "20\" × 15\"",
+      "price": 749,
+      "aspectRatio": 1.3333333333333333
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-43-24x18",
+    "label": "24\" × 18\"",
+    "description": null,
+    "flatPrice": "999",
+    "sortOrder": 35,
+    "extras": {
+      "id": "word-43-24x18",
+      "ratioTab": "4:3 Ratio",
+      "widthInches": 24,
+      "heightInches": 18,
+      "label": "24\" × 18\"",
+      "price": 999,
+      "aspectRatio": 1.3333333333333333
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-43-28x21",
+    "label": "28\" × 21\"",
+    "description": null,
+    "flatPrice": "1299",
+    "sortOrder": 36,
+    "extras": {
+      "id": "word-43-28x21",
+      "ratioTab": "4:3 Ratio",
+      "widthInches": 28,
+      "heightInches": 21,
+      "label": "28\" × 21\"",
+      "price": 1299,
+      "aspectRatio": 1.3333333333333333
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-43-32x24",
+    "label": "32\" × 24\"",
+    "description": null,
+    "flatPrice": "1599",
+    "sortOrder": 37,
+    "extras": {
+      "id": "word-43-32x24",
+      "ratioTab": "4:3 Ratio",
+      "widthInches": 32,
+      "heightInches": 24,
+      "label": "32\" × 24\"",
+      "price": 1599,
+      "aspectRatio": 1.3333333333333333
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-169-16x9",
+    "label": "16\" × 9\"",
+    "description": null,
+    "flatPrice": "349",
+    "sortOrder": 38,
+    "extras": {
+      "id": "word-169-16x9",
+      "ratioTab": "16:9 Ratio",
+      "widthInches": 16,
+      "heightInches": 9,
+      "label": "16\" × 9\"",
+      "price": 349,
+      "aspectRatio": 1.7777777777777777
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-169-20x11",
+    "label": "20\" × 11.25\"",
+    "description": null,
+    "flatPrice": "599",
+    "sortOrder": 39,
+    "extras": {
+      "id": "word-169-20x11",
+      "ratioTab": "16:9 Ratio",
+      "widthInches": 20,
+      "heightInches": 11.25,
+      "label": "20\" × 11.25\"",
+      "price": 599,
+      "aspectRatio": 1.7777777777777777
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-169-24x13",
+    "label": "24\" × 13.5\"",
+    "description": null,
+    "flatPrice": "799",
+    "sortOrder": 40,
+    "extras": {
+      "id": "word-169-24x13",
+      "ratioTab": "16:9 Ratio",
+      "widthInches": 24,
+      "heightInches": 13.5,
+      "label": "24\" × 13.5\"",
+      "price": 799,
+      "aspectRatio": 1.7777777777777777
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-169-28x15",
+    "label": "28\" × 15.75\"",
+    "description": null,
+    "flatPrice": "999",
+    "sortOrder": 41,
+    "extras": {
+      "id": "word-169-28x15",
+      "ratioTab": "16:9 Ratio",
+      "widthInches": 28,
+      "heightInches": 15.75,
+      "label": "28\" × 15.75\"",
+      "price": 999,
+      "aspectRatio": 1.7777777777777777
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-169-32x18",
+    "label": "32\" × 18\"",
+    "description": null,
+    "flatPrice": "1299",
+    "sortOrder": 42,
+    "extras": {
+      "id": "word-169-32x18",
+      "ratioTab": "16:9 Ratio",
+      "widthInches": 32,
+      "heightInches": 18,
+      "label": "32\" × 18\"",
+      "price": 1299,
+      "aspectRatio": 1.7777777777777777
+    }
+  },
+  {
+    "baseKey": "word_art_sizes",
+    "id": "word-169-40x22",
+    "label": "40\" × 22.5\"",
+    "description": null,
+    "flatPrice": "1899",
+    "sortOrder": 43,
+    "extras": {
+      "id": "word-169-40x22",
+      "ratioTab": "16:9 Ratio",
+      "widthInches": 40,
+      "heightInches": 22.5,
+      "label": "40\" × 22.5\"",
+      "price": 1899,
+      "aspectRatio": 1.7777777777777777
+    }
+  },
+  {
+    "baseKey": "word_art_fonts",
+    "id": "Arial",
+    "label": "Arial (Clean Sans)",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 0,
+    "extras": {
+      "id": "Arial",
+      "label": "Arial (Clean Sans)"
+    }
+  },
+  {
+    "baseKey": "word_art_fonts",
+    "id": "Montserrat",
+    "label": "Montserrat (Modern Bold)",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 1,
+    "extras": {
+      "id": "Montserrat",
+      "label": "Montserrat (Modern Bold)"
+    }
+  },
+  {
+    "baseKey": "word_art_fonts",
+    "id": "Playfair Display",
+    "label": "Playfair Display (Elegant Serif)",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 2,
+    "extras": {
+      "id": "Playfair Display",
+      "label": "Playfair Display (Elegant Serif)"
+    }
+  },
+  {
+    "baseKey": "word_art_fonts",
+    "id": "Bebas Neue",
+    "label": "Bebas Neue (Impact Display)",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 3,
+    "extras": {
+      "id": "Bebas Neue",
+      "label": "Bebas Neue (Impact Display)"
+    }
+  },
+  {
+    "baseKey": "word_art_fonts",
+    "id": "Pacifico",
+    "label": "Pacifico (Casual Script)",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 4,
+    "extras": {
+      "id": "Pacifico",
+      "label": "Pacifico (Casual Script)"
+    }
+  },
+  {
+    "baseKey": "word_art_fonts",
+    "id": "Dancing Script",
+    "label": "Dancing Script (Playful Script)",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 5,
+    "extras": {
+      "id": "Dancing Script",
+      "label": "Dancing Script (Playful Script)"
+    }
+  },
+  {
+    "baseKey": "word_art_fonts",
+    "id": "Oswald",
+    "label": "Oswald (Condensed Sans)",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 6,
+    "extras": {
+      "id": "Oswald",
+      "label": "Oswald (Condensed Sans)"
+    }
+  },
+  {
+    "baseKey": "word_art_fonts",
+    "id": "Roboto",
+    "label": "Roboto (Geometric Sans)",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 7,
+    "extras": {
+      "id": "Roboto",
+      "label": "Roboto (Geometric Sans)"
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "neutrals-plum",
+    "label": "Neutrals & Plum",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 0,
+    "extras": {
+      "id": "neutrals-plum",
+      "label": "Neutrals & Plum",
+      "colors": [
+        "#FFFFFF",
+        "#4A4036",
+        "#483D4A"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "mint-steel-beige",
+    "label": "Mint / Steel Grey / Beige",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 1,
+    "extras": {
+      "id": "mint-steel-beige",
+      "label": "Mint / Steel Grey / Beige",
+      "colors": [
+        "#72B5A8",
+        "#A8B0B5",
+        "#9C8E82"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "greens",
+    "label": "Greens",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 2,
+    "extras": {
+      "id": "greens",
+      "label": "Greens",
+      "colors": [
+        "#2ECC40",
+        "#00B32C",
+        "#007A1E"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "blues",
+    "label": "Blues",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 3,
+    "extras": {
+      "id": "blues",
+      "label": "Blues",
+      "colors": [
+        "#93C5FD",
+        "#3B82F6",
+        "#1D4ED8",
+        "#1E3A8A"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "warm-earth-tones",
+    "label": "Warm Earth Tones",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 4,
+    "extras": {
+      "id": "warm-earth-tones",
+      "label": "Warm Earth Tones",
+      "colors": [
+        "#F5EBE1",
+        "#D4A373",
+        "#A98467",
+        "#6C584C"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "sunset",
+    "label": "Sunset",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 5,
+    "extras": {
+      "id": "sunset",
+      "label": "Sunset",
+      "colors": [
+        "#FEF08A",
+        "#FDBA74",
+        "#FB923C",
+        "#F43F5E",
+        "#BE123C"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "pastels",
+    "label": "Pastels",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 6,
+    "extras": {
+      "id": "pastels",
+      "label": "Pastels",
+      "colors": [
+        "#FDE2E4",
+        "#FAD2E1",
+        "#E2ECE9",
+        "#BEE1E6",
+        "#DFE7FD"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "black-gold",
+    "label": "Black & Gold",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 7,
+    "extras": {
+      "id": "black-gold",
+      "label": "Black & Gold",
+      "colors": [
+        "#FFFFFF",
+        "#D4AF37",
+        "#AA7C11",
+        "#1A1A1A"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "ocean",
+    "label": "Ocean",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 8,
+    "extras": {
+      "id": "ocean",
+      "label": "Ocean",
+      "colors": [
+        "#E0F2FE",
+        "#7DD3FC",
+        "#0284C7",
+        "#0369A1",
+        "#0E4A93"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "jewel-tones",
+    "label": "Jewel Tones",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 9,
+    "extras": {
+      "id": "jewel-tones",
+      "label": "Jewel Tones",
+      "colors": [
+        "#0D9488",
+        "#4338CA",
+        "#7E22CE",
+        "#BE185D",
+        "#B45309"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "monochrome",
+    "label": "Monochrome",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 10,
+    "extras": {
+      "id": "monochrome",
+      "label": "Monochrome",
+      "colors": [
+        "#FFFFFF",
+        "#CBD5E1",
+        "#94A3B8",
+        "#64748B",
+        "#334155",
+        "#0F172A"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "bright-vibrant",
+    "label": "Bright & Vibrant",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 11,
+    "extras": {
+      "id": "bright-vibrant",
+      "label": "Bright & Vibrant",
+      "colors": [
+        "#F43F5E",
+        "#8B5CF6",
+        "#06B6D4",
+        "#10B981",
+        "#F59E0B"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "rose-burgundy",
+    "label": "Rose & Burgundy",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 12,
+    "extras": {
+      "id": "rose-burgundy",
+      "label": "Rose & Burgundy",
+      "colors": [
+        "#FFE4E6",
+        "#FDA4AF",
+        "#F43F5E",
+        "#9F1239",
+        "#4C0519"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "terracotta",
+    "label": "Terracotta",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 13,
+    "extras": {
+      "id": "terracotta",
+      "label": "Terracotta",
+      "colors": [
+        "#FDF0ED",
+        "#E07A5F",
+        "#C85A32",
+        "#9C4121",
+        "#3D405B"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "lavender",
+    "label": "Lavender",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 14,
+    "extras": {
+      "id": "lavender",
+      "label": "Lavender",
+      "colors": [
+        "#F3E8FF",
+        "#D8B4FE",
+        "#A855F7",
+        "#7E22CE",
+        "#581C87"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_colors",
+    "id": "forest-moss",
+    "label": "Forest & Moss",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 15,
+    "extras": {
+      "id": "forest-moss",
+      "label": "Forest & Moss",
+      "colors": [
+        "#ECFDF5",
+        "#A7F3D0",
+        "#34D399",
+        "#059669",
+        "#064E3B",
+        "#2D4A22"
+      ]
+    }
+  },
+  {
+    "baseKey": "word_art_directions",
+    "id": "horizontal",
+    "label": "Horizontal",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 0,
+    "extras": {
+      "id": "horizontal",
+      "label": "Horizontal"
+    }
+  },
+  {
+    "baseKey": "word_art_directions",
+    "id": "horizontal_vertical",
+    "label": "Horizontal & Vertical",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 1,
+    "extras": {
+      "id": "horizontal_vertical",
+      "label": "Horizontal & Vertical"
+    }
+  },
+  {
+    "baseKey": "word_art_directions",
+    "id": "left_angled",
+    "label": "Left Angled",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 2,
+    "extras": {
+      "id": "left_angled",
+      "label": "Left Angled"
+    }
+  },
+  {
+    "baseKey": "word_art_directions",
+    "id": "left_right_angled",
+    "label": "Left & Right Angled",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 3,
+    "extras": {
+      "id": "left_right_angled",
+      "label": "Left & Right Angled"
+    }
+  },
+  {
+    "baseKey": "word_art_directions",
+    "id": "right_angled",
+    "label": "Right Angled",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 4,
+    "extras": {
+      "id": "right_angled",
+      "label": "Right Angled"
+    }
+  },
+  {
+    "baseKey": "word_art_directions",
+    "id": "vertical",
+    "label": "Vertical",
+    "description": null,
+    "flatPrice": "0",
+    "sortOrder": 5,
+    "extras": {
+      "id": "vertical",
+      "label": "Vertical"
+    }
+  }
+]

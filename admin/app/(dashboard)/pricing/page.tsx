@@ -13,7 +13,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 
 const SETTING_LABELS: Record<string, string> = {
-  shape_area_rate_per_sqin: 'Shape Area Rate (Rs. per sq. inch)',
+  shape_area_rate_per_sqin: 'Legacy shared shape rate (fallback only)',
+  canvas_shape_area_rate_per_sqin: 'Canvas Shape Area Rate (Rs. per sq. inch)',
+  acrylic_shape_area_rate_per_sqin: 'Acrylic Shape Area Rate (Rs. per sq. inch)',
   acrylic_thickness_rate_3mm: 'Acrylic Thickness Rate — 3mm (Rs. per sq. inch)',
   acrylic_thickness_rate_5mm: 'Acrylic Thickness Rate — 5mm (Rs. per sq. inch)',
   acrylic_thickness_rate_6mm: 'Acrylic Thickness Rate — 6mm (Rs. per sq. inch)',
@@ -27,7 +29,7 @@ function PricingSettingRow({ setting, canManage }: { setting: PricingSettingItem
   const updateMutation = useMutation({
     mutationFn: () => apiClient.patch(`/admin/pricing-settings/${setting.key}`, { value }),
     onSuccess: () => {
-      toast.success('Rate updated — takes effect immediately on the storefront');
+      toast.success('Rate updated — takes effect when the storefront is refreshed');
       queryClient.invalidateQueries({ queryKey: ['pricing-settings'] });
     },
     onError: (err: unknown) => {
@@ -78,7 +80,7 @@ export default function PricingPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Pricing</h1>
         <p className="text-sm text-muted-foreground">
-          Rates used directly in pricing formulas on the storefront — changes apply immediately, no deploy needed.
+          Rates used directly in pricing formulas on the storefront — changes apply on storefront refresh, no deploy needed.
         </p>
       </div>
 
