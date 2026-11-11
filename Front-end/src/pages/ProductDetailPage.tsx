@@ -636,10 +636,10 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 </div>
               )}
 
-              {/* Format: Poster / Canvas / Acrylic — same design, different materials */}
+              {/* Material: Poster / Canvas / Acrylic — same design, different materials */}
               {formatSiblings.length > 1 && (
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">Format:</span>
+                  <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">Material:</span>
                   <div className="flex items-center gap-1.5">
                     {formatSiblings.map(({ label, match }) => (
                       <button
@@ -1084,7 +1084,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
                   You May Also Like in {categoryName}
                 </h2>
-                <p className="text-xs text-stone-500 mt-0.5">Popular complementary formats and bestselling custom wall decor</p>
+                <p className="text-xs text-stone-500 mt-0.5">Popular complementary materials and bestselling custom wall decor</p>
               </div>
               <Link to={categoryLink} className="text-xs font-bold text-[#0E4A93] hover:text-[#E8752A] flex items-center gap-1 transition-colors">
                 <span>View All {categoryName}</span>
