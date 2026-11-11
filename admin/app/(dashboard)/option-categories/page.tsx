@@ -11,6 +11,7 @@ import type { OptionCategoryListItem } from '@/lib/types/option-category';
 import { usePermission } from '@/lib/auth/use-permission';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DESIGN_TEMPLATE_SEED_ITEMS } from '@/lib/customizer-options';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -33,7 +34,7 @@ type Entry =
   | { kind: 'fixed'; title: string; note: string };
 
 interface SeedSpec {
-  scope: 'CANVAS' | 'ACRYLIC';
+  scope: 'CANVAS' | 'ACRYLIC' | 'BOTH';
   name: string;
   items: Array<{ label: string; description: string; flatPrice: string; extras: Record<string, unknown> }>;
 }
@@ -60,6 +61,12 @@ const ACRYLIC_THICKNESS_SEED: SeedSpec = {
       { label: '8MM Premium Optical Cast Acrylic', description: '', flatPrice: '250.00', extras: { id: '8mm', name: '8MM Optical Cast', thicknessMm: 8, badge: 'Museum Quality' } },
       { label: '18mm Heavy Block Acrylic', description: '', flatPrice: '450.00', extras: { id: '18mm', name: '', thicknessMm: 18, badge: '' } },
   ],
+};
+
+const DESIGN_TEMPLATES_SEED: SeedSpec = {
+  scope: 'BOTH',
+  name: 'Design templates',
+  items: DESIGN_TEMPLATE_SEED_ITEMS,
 };
 
 interface Section {
@@ -126,9 +133,15 @@ const TABS: TabBlock[] = [
         heading: 'Layouts & Designs',
         entries: [
           {
+            kind: 'category',
+            baseKey: 'design_templates',
+            title: 'Design templates (Father’s Day, Valentine’s Day, Birthday, ...)',
+            seed: DESIGN_TEMPLATES_SEED,
+          },
+          {
             kind: 'fixed',
-            title: 'Layout arrangements and design templates (Father’s Day, Valentine’s Day, ...)',
-            note: 'Fixed in code.',
+            title: 'Layout arrangements (Single Full Image, Landscape, Portrait, Square, ...)',
+            note: 'Each layout also defines how the picture is cut into panels, so layouts follow the product style. Add or hide whole product styles under Customizer products.',
           },
         ],
       },
@@ -370,11 +383,25 @@ export default function OptionCategoriesPage() {
 
   return (
     <div className="space-y-10">
+      <Link
+        href="/product-customization"
+        className="flex items-center justify-between gap-4 rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
+      >
+        <div>
+          <div className="font-semibold">Need different options or prices for one product?</div>
+          <div className="text-sm text-muted-foreground">
+            Pick a product and give it its own customization options. Each product keeps its own copy, so nothing
+            mixes between products.
+          </div>
+        </div>
+        <ArrowRight className="h-5 w-5 shrink-0 text-primary" />
+      </Link>
+
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Customize Page Options</h1>
         <p className="text-sm text-muted-foreground">
-          Laid out exactly like the storefront customizer: each block is a sidebar tab, and each heading
-          under it is the section a customer sees there. Changes show up when the storefront is refreshed.
+          These are the shared options every product uses by default. Each block is a tab of the customizer, and each
+          heading is a section a customer sees there. Changes show up when the storefront is refreshed.
         </p>
       </div>
 

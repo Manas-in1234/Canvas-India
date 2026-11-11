@@ -22,6 +22,7 @@ import {
   Ruler,
   IndianRupee,
   ImageIcon,
+  PackageSearch,
   type LucideIcon,
 } from "lucide-react";
 export interface NavLink {
@@ -135,6 +136,12 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Customize page options",
         icon: SlidersHorizontal,
         permissions: ["option_catalog.view"],
+      },
+      {
+        href: "/product-customization",
+        label: "Product customization",
+        icon: PackageSearch,
+        permissions: ["products.edit"],
       },
       {
         href: "/shapes",
