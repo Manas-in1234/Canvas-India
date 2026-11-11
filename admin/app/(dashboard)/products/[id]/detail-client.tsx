@@ -101,7 +101,7 @@ export function ProductDetailClient({ id: initialId }: { id: string }) {
     },
   });
 
-  if (isLoading) {
+  if (isLoading || id === "placeholder") {
     return (
       <div className="space-y-4">
         <Skeleton className="h-8 w-64" />
