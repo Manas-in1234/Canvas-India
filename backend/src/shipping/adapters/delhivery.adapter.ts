@@ -155,13 +155,16 @@ export class DelhiveryAdapter implements CourierProviderAdapter {
   async createShipment(
     orderId: string,
     warehouseId: string,
-    _items: Array<{ orderItemId: string; quantity: number }>,
+    items: Array<{ orderItemId: string; quantity: number }>,
   ): Promise<CreateShipmentResult> {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: {
         items: true,
         customer: true,
+        addresses: true,
+        payments: true,
+        shipments: true,
       },
     });
 
@@ -174,21 +177,26 @@ export class DelhiveryAdapter implements CourierProviderAdapter {
     });
 
     const pickup = warehouse?.name || this.pickupLocation;
-    const shippingAddress: any = (order as any).shippingAddress || {};
+    const shippingAddress = order.addresses.find(address => address.type === 'SHIPPING');
+    const isCod = order.payments.some(payment => payment.provider === 'COD' && payment.status === 'PENDING');
+    if (isCod && (!shippingAddress || order.shipments.length > 0 || items.length !== order.items.length ||
+      order.items.some(orderItem => items.filter(item => item.orderItemId === orderItem.id && item.quantity === orderItem.quantity).length !== 1))) {
+      throw new Error('Cash on Delivery requires a shipping address and a single shipment with all order items.');
+    }
 
     const recipientName =
-      shippingAddress.name || order.customer?.name || 'Valued Customer';
+      shippingAddress?.name || order.customer?.name || 'Valued Customer';
     const recipientPhone =
-      shippingAddress.phone || order.customer?.phone || this.pickupPhone;
+      shippingAddress?.phone || order.customer?.phone || this.pickupPhone;
     const recipientAddress =
-      shippingAddress.street_address || shippingAddress.address || 'Customer Address';
+      shippingAddress?.line1 || 'Customer Address';
     const recipientPin =
-      shippingAddress.postal_code || shippingAddress.pincode || '500001';
-    const recipientCity = shippingAddress.city || 'Hyderabad';
-    const recipientState = shippingAddress.state || 'Telangana';
+      shippingAddress?.postalCode || '500001';
+    const recipientCity = shippingAddress?.city || 'Hyderabad';
+    const recipientState = shippingAddress?.state || 'Telangana';
 
     const orderNumber = order.orderNumber || `CI-${Date.now()}`;
-    const totalAmount = Number((order as any).totalAmount || 0);
+    const totalAmount = Number(order.total);
 
     const payload = {
       shipments: [
@@ -201,7 +209,7 @@ export class DelhiveryAdapter implements CourierProviderAdapter {
           country: 'India',
           phone: recipientPhone,
           order: orderNumber,
-          payment_mode: 'Pre-paid',
+          payment_mode: isCod ? 'COD' : 'Pre-paid',
           return_pin: this.pickupPincode,
           return_city: 'Hyderabad',
           return_phone: this.pickupPhone,
@@ -210,7 +218,7 @@ export class DelhiveryAdapter implements CourierProviderAdapter {
           return_country: 'India',
           products_desc: 'Custom Canvas / Photo Print',
           hsn_code: '4911',
-          cod_amount: '0',
+          cod_amount: isCod ? totalAmount.toFixed(2) : '0',
           order_date: new Date().toISOString(),
           total_amount: totalAmount.toString(),
           seller_add: 'H NO 4-9-197/B/84, Nacharam HMT Nagar Main Road',

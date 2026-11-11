@@ -47,6 +47,16 @@ async function getServices(env: Env): Promise<{ prisma: PrismaClient; services: 
   return { prisma, services };
 }
 
+async function delhiveryPostalCode(pin: string, token: string) {
+  const response = await fetch(`https://track.delhivery.com/c/api/pin-codes/json/?filter_codes=${encodeURIComponent(pin)}`, {
+    headers: { Authorization: `Token ${token.trim()}`, Accept: 'application/json' },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!response.ok) throw new Error('Delhivery serviceability check failed');
+  const data = await response.json() as { delivery_codes?: { postal_code?: { cod?: string; pre_paid?: string; city?: string; district?: string; state_code?: string } }[] };
+  return data.delivery_codes?.[0]?.postal_code ?? null;
+}
+
 const ALLOWED_ORIGIN_PATTERNS = [
   /^http:\/\/localhost:(3000|3001|5173|5174)$/,
   /^http:\/\/127\.0\.0\.1:(3000|3001|5173|5174)$/,
@@ -1192,7 +1202,70 @@ export default {
 
       if (pathname === '/api/v1/storefront/orders' && method === 'POST') {
         const body = (await request.json().catch(() => ({}))) as any;
-        const items = Array.isArray(body.items) ? body.items : [];
+        let items = Array.isArray(body.items) ? body.items : [];
+        const isCod = body.paymentMethod === 'COD';
+        let codAmounts: { subtotal: number; shipping: number; tax: number; total: number } | undefined;
+        const codId = typeof body.requestId === 'string' ? body.requestId : '';
+        const codReceipt = (order: { id: string; orderNumber: string; total: unknown }) => ({
+          id: order.id, orderNumber: order.orderNumber, total: order.total,
+        });
+        const findCodOrder = () => prisma.order.findFirst({
+          where: { id: codId, payments: { some: { provider: 'COD' } } },
+          select: { id: true, orderNumber: true, total: true },
+        });
+        if (isCod) {
+          if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(codId)) {
+            return jsonResponse({ message: 'Invalid checkout request. Refresh and try again.' }, 400, request);
+          }
+          const existing = await findCodOrder();
+          if (existing) return jsonResponse(codReceipt(existing), 200, request);
+
+          const address = body.shippingAddress;
+          const pin = address?.postal_code;
+          if (!/^[1-9][0-9]{5}$/.test(pin ?? '') ||
+              !/^[0-9]{10}$/.test(String(address?.phone ?? '').replace(/\D/g, '')) ||
+              ![address?.name, address?.street_address, address?.city, address?.state].every(value =>
+                typeof value === 'string' && value.trim() && value.length <= 250)) {
+            return jsonResponse({ message: 'Enter a complete delivery address and phone number for Cash on Delivery.' }, 400, request);
+          }
+          if (body.discount || body.couponCode || items.length > 100 || items.some(item =>
+            !item || typeof item.productId !== 'string' || item.customizationDetails || item.imageUrl ||
+            !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 100)) {
+            return jsonResponse({ message: 'Cash on Delivery is available for catalog items without coupons or custom artwork.' }, 400, request);
+          }
+          if (items.length) {
+            const products = await prisma.product.findMany({
+              where: { id: { in: items.map(item => item.productId) }, status: 'ACTIVE', deletedAt: null, productType: { isActive: true } },
+              select: { id: true, name: true, basePrice: true, storefront: true },
+            });
+            const byId = new Map(products.map(product => [product.id, product]));
+            if (items.some(item => {
+              const product = byId.get(item.productId);
+              return !product || Number(product.basePrice) !== Number(item.price) ||
+                Number(product.basePrice) <= 0 ||
+                (product.storefront as { stockStatus?: string } | null)?.stockStatus === 'Out of Stock';
+            })) {
+              return jsonResponse({ message: 'An item or price changed. Refresh your cart before placing a Cash on Delivery order.' }, 409, request);
+            }
+            items = items.map(item => {
+              const product = byId.get(item.productId)!;
+              return { productId: product.id, title: product.name, price: Number(product.basePrice), quantity: item.quantity,
+                imageUrl: (product.storefront as { image?: string } | null)?.image };
+            });
+            const subtotal = Math.round(items.reduce((sum, item) => sum + item.price * item.quantity, 0) * 100) / 100;
+            const shipping = subtotal >= 999 ? 0 : 99;
+            codAmounts = { subtotal, shipping, tax: Math.round(subtotal * 0.18), total: subtotal + shipping };
+            if (Math.round(Number(body.total) * 100) !== Math.round(codAmounts.total * 100)) {
+              return jsonResponse({ message: 'The order total changed. Review your cart and try again.' }, 409, request);
+            }
+            if (!env.DELHIVERY_API_TOKEN?.trim()) {
+              return jsonResponse({ message: 'Cash on Delivery is temporarily unavailable.' }, 503, request);
+            }
+            const postalCode = await delhiveryPostalCode(pin, env.DELHIVERY_API_TOKEN).catch(() => undefined);
+            if (postalCode === undefined) return jsonResponse({ message: 'Could not check Cash on Delivery. Try again or pay online.' }, 503, request);
+            if (postalCode?.cod !== 'Y') return jsonResponse({ message: 'Cash on Delivery is unavailable for this PIN code.' }, 422, request);
+          }
+        }
         if (items.length === 0) {
           return jsonResponse({ statusCode: 400, message: 'Order items are required' }, 400, request);
         }
@@ -1202,7 +1275,7 @@ export default {
         const name = body.customerName || (body.shippingAddress && body.shippingAddress.name) || (email ? email.split('@')[0] : 'Guest Customer');
 
         let customer = null;
-        if (body.customerId) {
+        if (!isCod && body.customerId) {
           customer = await prisma.customer.findUnique({ where: { id: body.customerId } }).catch(() => null);
         }
         if (!customer && email) {
@@ -1214,29 +1287,30 @@ export default {
         if (!customer) {
           customer = await prisma.customer.create({
             data: {
-              ...(body.customerId && body.customerId.length >= 20 ? { id: body.customerId } : {}),
+              ...(!isCod && body.customerId && body.customerId.length >= 20 ? { id: body.customerId } : {}),
               name,
               email: email || null,
               phone: phone || null,
-              isGuest: !body.customerId,
+              isGuest: isCod || !body.customerId,
             },
           });
         }
 
-        const orderCount = await prisma.order.count();
-        const orderNumber = `CC${10000 + orderCount + 1}`;
+        const orderCount = isCod ? 0 : await prisma.order.count();
+        const orderNumber = isCod ? `CC-COD-${codId}` : `CC${10000 + orderCount + 1}`;
 
-        const subtotal = Number(body.subtotal) || 0;
-        const discount = Number(body.discount) || 0;
-        const shippingFee = Number(body.shippingFee) || 0;
-        const tax = Number(body.tax) || 0;
-        const total = Number(body.total) || (subtotal - discount + shippingFee + tax);
+        const subtotal = codAmounts?.subtotal ?? (Number(body.subtotal) || 0);
+        const discount = isCod ? 0 : Number(body.discount) || 0;
+        const shippingFee = codAmounts?.shipping ?? (Number(body.shippingFee) || 0);
+        const tax = codAmounts?.tax ?? (Number(body.tax) || 0);
+        const total = codAmounts?.total ?? (Number(body.total) || (subtotal - discount + shippingFee + tax));
 
-        const isPaid = body.payment?.status === 'captured' || Boolean(body.payment?.razorpayPaymentId);
+        const isPaid = !isCod && (body.payment?.status === 'captured' || Boolean(body.payment?.razorpayPaymentId));
 
         const newOrder = await prisma.$transaction(async (tx) => {
           const order = await tx.order.create({
             data: {
+              ...(isCod ? { id: codId } : {}),
               orderNumber,
               customerId: customer.id,
               orderStatus: 'CONFIRMED',
@@ -1300,18 +1374,19 @@ export default {
               events: {
                 create: [
                   { type: 'order.created', message: `Order ${orderNumber} placed via storefront checkout` },
+                  ...(isCod ? [{ type: 'order.cod', message: 'Cash on Delivery · collect payment on delivery' }] : []),
                   ...(isPaid ? [{ type: 'order.paid', message: `Payment verified via Razorpay (${body.payment?.razorpayPaymentId || 'PAID'})` }] : []),
                 ],
               },
-              ...(isPaid ? {
+              ...(isCod || isPaid ? {
                 payments: {
                   create: [
                     {
-                      provider: 'RAZORPAY',
-                      status: 'PAID',
+                      provider: isCod ? 'COD' : 'RAZORPAY',
+                      status: isCod ? 'PENDING' : 'PAID',
                       amount: total,
                       currency: 'INR',
-                      providerRef: body.payment?.razorpayPaymentId || null,
+                      providerRef: isCod ? null : body.payment?.razorpayPaymentId || null,
                     },
                   ],
                 },
@@ -1324,9 +1399,15 @@ export default {
             },
           });
           return order;
+        }).catch(async error => {
+          if (isCod && error?.code === 'P2002') {
+            const existing = await findCodOrder();
+            if (existing) return existing;
+          }
+          throw error;
         });
 
-        return jsonResponse(newOrder, 201, request);
+        return jsonResponse(isCod ? codReceipt(newOrder) : newOrder, 201, request);
       }
 
       if (pathname === '/api/v1/storefront/orders' && method === 'GET') {
@@ -1795,13 +1876,8 @@ export default {
         if (!env.DELHIVERY_API_TOKEN) {
           return jsonResponse({ statusCode: 500, message: 'Delhivery credentials are not configured' }, 500, request);
         }
-        const token = env.DELHIVERY_API_TOKEN.trim();
         try {
-          const res = await fetch(`https://track.delhivery.com/c/api/pin-codes/json/?filter_codes=${pin}`, {
-            headers: { Authorization: `Token ${token}`, Accept: 'application/json' },
-          });
-          const data: any = await res.json().catch(() => ({}));
-          const code = data?.delivery_codes?.[0]?.postal_code;
+          const code = await delhiveryPostalCode(pin, env.DELHIVERY_API_TOKEN);
 
           if (!code) {
             return jsonResponse({
