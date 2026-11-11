@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import type { ProductListItem } from '@/lib/types/product';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiClient, ApiError } from '@/lib/api-client';
@@ -32,6 +34,8 @@ export default function InventoryPage() {
     queryFn: () => apiClient.get<InventoryItem[]>('/inventory'),
   });
 
+  const products = useQuery({ queryKey: ['products'], queryFn: () => apiClient.get<ProductListItem[]>('/products?admin=1') });
+  const untracked = (products.data ?? []).filter(product => !(data ?? []).some(item => item.variant.productId === product.id));
   const [adjustItem, setAdjustItem] = useState<InventoryItem | null>(null);
   const [quantity, setQuantity] = useState('');
   const [reason, setReason] = useState('');
@@ -118,6 +122,16 @@ export default function InventoryPage() {
         <DataTable columns={columns} data={data ?? []} getRowKey={(row) => row.id} emptyMessage="No inventory items yet." />
       )}
 
+      {!isLoading && !isError && <section className="space-y-3">
+        <h2 className="text-lg font-semibold">Products without stock tracking</h2>
+        <p className="text-sm text-muted-foreground">These products are in your catalog but have no SKU stock records. Quantities are unknown, not zero. Made-to-order availability is managed in Products.</p>
+        {products.isLoading ? <Skeleton className="h-10 w-full" /> : products.isError ? <p className="text-destructive">Could not load catalog products.</p> : <DataTable data={untracked} getRowKey={row => row.id} columns={[
+          {header: 'Product', cell: row => <Link className="underline" href={`/products/placeholder?id=${encodeURIComponent(row.id)}`}>{row.name}</Link>},
+          {header: 'Category', cell: row => row.storefront?.category ?? row.productType?.name},
+          {header: 'Storefront availability', cell: row => row.storefront?.stockStatus ?? 'Not specified'},
+          {header: 'Stock quantity', cell: () => 'Not tracked'},
+        ]} />}
+      </section>}
       <Dialog open={adjustItem !== null} onOpenChange={(open) => !open && setAdjustItem(null)}>
         <DialogContent>
           <DialogHeader>
