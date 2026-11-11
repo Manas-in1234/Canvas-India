@@ -411,6 +411,12 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
       shape: selectedShape || '',
       qty: quantity.toString(),
     });
+    if (product.image) {
+      params.set('prefillImage', product.image);
+    }
+    if (product.name) {
+      params.set('prefillName', product.name);
+    }
     navigate(`/customize/${material}/${product.slug || product.id}?${params.toString()}`);
   };
 

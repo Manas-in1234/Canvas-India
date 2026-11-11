@@ -82,6 +82,14 @@ export const AddToCartConfirmationModal: React.FC = () => {
       params.set('customMm', item.customizationDetails.customThicknessMm.toString());
     }
 
+    const imgToPrefill = item.photoUrl || thumbnail || product.image;
+    if (imgToPrefill) {
+      params.set('prefillImage', imgToPrefill);
+    }
+    if (product.name) {
+      params.set('prefillName', product.name);
+    }
+
     navigate(`/customize/${materialType}/${targetId}?${params.toString()}`);
   };
 

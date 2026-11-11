@@ -135,7 +135,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     product.categorySlug === 'cork-art-patterns' ||
     product.category === 'Cork Art Patterns' ||
     product.id.includes('cork-art-patterns') ||
-    product.slug?.includes('cork-art-patterns') ||
+    (product.slug ?? '').includes('cork-art-patterns') ||
     (product.name && product.name.toLowerCase().includes('cork pattern'));
 
   const isCorkProduct =
@@ -411,6 +411,12 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
       shape: selectedShape || '',
       qty: quantity.toString(),
     });
+    if (product.image) {
+      params.set('prefillImage', product.image);
+    }
+    if (product.name) {
+      params.set('prefillName', product.name);
+    }
     navigate(`/customize/${material}/${product.slug || product.id}?${params.toString()}`);
   };
 
