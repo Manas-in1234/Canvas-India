@@ -1202,7 +1202,7 @@ export default {
 
       if (pathname === '/api/v1/storefront/orders' && method === 'POST') {
         const body = (await request.json().catch(() => ({}))) as any;
-        let items = Array.isArray(body.items) ? body.items : [];
+        let items: any[] = Array.isArray(body.items) ? body.items : [];
         const isCod = body.paymentMethod === 'COD';
         let codAmounts: { subtotal: number; shipping: number; tax: number; total: number } | undefined;
         const codId = typeof body.requestId === 'string' ? body.requestId : '';
