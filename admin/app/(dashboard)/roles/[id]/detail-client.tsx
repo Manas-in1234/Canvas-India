@@ -12,6 +12,7 @@ import { usePermission } from "@/lib/auth/use-permission";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NewRoleForm } from "../new/new-role-form";
 
 // Groups permissions by the part before the first "." (e.g. "orders.view" ->
 // "orders") so the checklist reads as sections instead of one long flat list.
@@ -27,7 +28,7 @@ function groupPermissions(
   return groups;
 }
 
-export function RoleDetailClient({ id: initialId }: { id: string }) {
+function RoleDetail({ id: initialId }: { id: string }) {
   const id = useRecordId(initialId);
   const { hasPermission } = usePermission();
   const queryClient = useQueryClient();
@@ -155,4 +156,10 @@ export function RoleDetailClient({ id: initialId }: { id: string }) {
       </Card>
     </div>
   );
+}
+
+export function RoleDetailClient({ id: initialId }: { id: string }) {
+  const id = useRecordId(initialId);
+  if (id === "new") return <NewRoleForm />;
+  return <RoleDetail id={initialId} />;
 }
