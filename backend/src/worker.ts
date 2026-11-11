@@ -1,3 +1,4 @@
+import { HomepagePromotions } from './catalog/homepage-promotions.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from './generated/prisma/client.js';
 import { getQueryCompilerWasm } from './common/prisma-wasm/wasm-loader.js';
@@ -263,6 +264,18 @@ export default {
     const { prisma, services } = await getServices(env);
 
     try {
+      if (pathname === '/api/v1/homepage-promotions' && method === 'GET') {
+        return jsonResponse(await new HomepagePromotions(prisma).storefront(), 200, request);
+      }
+      if (pathname === '/api/v1/admin/homepage-promotions' && (method === 'GET' || method === 'PUT')) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, ['discounts.manage'], request);
+        if (denied) return denied;
+        const promotions = new HomepagePromotions(prisma);
+        const result = method === 'GET' ? await promotions.settings() : await promotions.save(await request.json(), user.id);
+        return jsonResponse(result, 200, request);
+      }
       const heroImage = pathname.match(/^\/api\/v1\/(admin\/)?hero-images(?:\/([^/]+))?$/);
       if (heroImage) {
         const [, admin, requestedSlot] = heroImage;

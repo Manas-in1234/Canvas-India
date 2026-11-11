@@ -78,6 +78,12 @@ export const NAV_SECTIONS: NavSection[] = [
         permissions: ["products.view"],
       },
       {
+        href: "/homepage-promotions",
+        label: "Homepage Promotions",
+        icon: ImageIcon,
+        permissions: ["discounts.manage"],
+      },
+      {
         href: "/hero-images",
         label: "Hero Images",
         icon: ImageIcon,
