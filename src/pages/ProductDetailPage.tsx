@@ -442,22 +442,20 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     }
   };
 
+  const customSpecs: { label: string; value: string }[] = Array.isArray((product as any).specifications)
+    ? (product as any).specifications.filter((r: any) => r?.label && r?.value)
+    : [];
+
   const categoryName = product.category || 'Prints';
   const categoryLink = `/${product.categorySlug || 'canvas'}`;
 
-  // Ensure the striked-off original price is ALWAYS strictly higher than the current selling price
-  const rawCompare = (product.compareAtPrice && product.compareAtPrice > product.price)
-    ? product.compareAtPrice
-    : (product.originalPrice && product.originalPrice > product.price)
-    ? product.originalPrice
-    : Math.round(product.price * 1.35);
-  const effectiveOriginalPrice = rawCompare > product.price ? rawCompare : Math.round(product.price * 1.35);
-
-  const effectiveDiscount = (!effectiveOriginalPrice)
-    ? 0
-    : (product.discountPercent && product.discountPercent > 0)
-    ? product.discountPercent
-    : Math.max(15, Math.round(((effectiveOriginalPrice - product.price) / effectiveOriginalPrice) * 100));
+  // The struck-through price and the % off both come from the two prices set in the
+  // admin, so they always agree. No discount is shown when there isn't one.
+  const effectiveOriginalPrice =
+    product.originalPrice && product.originalPrice > product.price ? product.originalPrice : 0;
+  const effectiveDiscount = effectiveOriginalPrice
+    ? Math.round(((effectiveOriginalPrice - product.price) / effectiveOriginalPrice) * 100)
+    : 0;
 
   return (
     <div className="w-full bg-[#FFFDF9] py-6 sm:py-10 text-stone-900 font-manrope">
@@ -615,9 +613,11 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
 
               <div className="flex items-baseline gap-3">
                 <span className="text-2xl sm:text-3xl font-extrabold text-stone-950">₹{product.price.toLocaleString('en-IN')}</span>
-                <span className="text-base text-stone-400 line-through">
-                  ₹{effectiveOriginalPrice.toLocaleString('en-IN')}
-                </span>
+                {effectiveOriginalPrice > 0 && (
+                  <span className="text-base text-stone-400 line-through">
+                    ₹{effectiveOriginalPrice.toLocaleString('en-IN')}
+                  </span>
+                )}
                 {effectiveDiscount > 0 && (
                   <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
                     {effectiveDiscount}% OFF
@@ -972,40 +972,51 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
               </h2>
 
               <div className="rounded-xl border border-stone-200 overflow-hidden text-xs bg-white divide-y divide-stone-100">
+                {customSpecs.length > 0 ? (
+                  customSpecs.map((row, index) => (
+                    <div key={`${row.label}-${index}`} className={`flex py-2.5 px-4 ${index % 2 === 0 ? 'bg-stone-50' : ''}`}>
+                      <span className="w-1/3 font-bold text-stone-800">{row.label}</span>
+                      <span className="w-2/3 text-stone-700">{row.value}</span>
+                    </div>
+                  ))
+                ) : (
+                  <>
                 <div className="flex py-2.5 px-4 bg-stone-50">
-                  <span className="w-1/3 font-bold text-stone-800">Category</span>
-                  <span className="w-2/3 text-stone-700">{categoryName}</span>
-                </div>
-                {product.subcategory && (
-                  <div className="flex py-2.5 px-4">
-                    <span className="w-1/3 font-bold text-stone-800">Subcategory</span>
-                    <span className="w-2/3 text-stone-700">{product.subcategory}</span>
-                  </div>
+                      <span className="w-1/3 font-bold text-stone-800">Category</span>
+                      <span className="w-2/3 text-stone-700">{categoryName}</span>
+                    </div>
+                    {product.subcategory && (
+                      <div className="flex py-2.5 px-4">
+                        <span className="w-1/3 font-bold text-stone-800">Subcategory</span>
+                        <span className="w-2/3 text-stone-700">{product.subcategory}</span>
+                      </div>
+                    )}
+                    <div className="flex py-2.5 px-4 bg-stone-50">
+                      <span className="w-1/3 font-bold text-stone-800">Material</span>
+                      <span className="w-2/3 text-stone-700">{selectedMaterial || product.material || 'Museum Grade Fine Art'}</span>
+                    </div>
+                    <div className="flex py-2.5 px-4">
+                      <span className="w-1/3 font-bold text-stone-800">Print Quality</span>
+                      <span className="w-2/3 text-stone-700">12-Color Archival UV-Resistant Inks (2400 DPI)</span>
+                    </div>
+                    <div className="flex py-2.5 px-4 bg-stone-50">
+                      <span className="w-1/3 font-bold text-stone-800">Available Sizes</span>
+                      <span className="w-2/3 text-stone-700">{product.sizes?.join(', ') || 'Custom Dimensions Available'}</span>
+                    </div>
+                    <div className="flex py-2.5 px-4">
+                      <span className="w-1/3 font-bold text-stone-800">Available Finishes</span>
+                      <span className="w-2/3 text-stone-700">{product.finishes?.join(', ') || 'Standard Finish'}</span>
+                    </div>
+                    <div className="flex py-2.5 px-4 bg-stone-50">
+                      <span className="w-1/3 font-bold text-stone-800">Mounting Hardware</span>
+                      <span className="w-2/3 text-stone-700">Pre-attached hangers &amp; stainless wall standoffs included</span>
+                    </div>
+                    <div className="flex py-2.5 px-4">
+                      <span className="w-1/3 font-bold text-stone-800">Origin</span>
+                      <span className="w-2/3 text-stone-700">Proudly Designed &amp; Made in India</span>
+                    </div>
+                  </>
                 )}
-                <div className="flex py-2.5 px-4 bg-stone-50">
-                  <span className="w-1/3 font-bold text-stone-800">Material</span>
-                  <span className="w-2/3 text-stone-700">{selectedMaterial || product.material || 'Museum Grade Fine Art'}</span>
-                </div>
-                <div className="flex py-2.5 px-4">
-                  <span className="w-1/3 font-bold text-stone-800">Print Quality</span>
-                  <span className="w-2/3 text-stone-700">12-Color Archival UV-Resistant Inks (2400 DPI)</span>
-                </div>
-                <div className="flex py-2.5 px-4 bg-stone-50">
-                  <span className="w-1/3 font-bold text-stone-800">Available Sizes</span>
-                  <span className="w-2/3 text-stone-700">{product.sizes?.join(', ') || 'Custom Dimensions Available'}</span>
-                </div>
-                <div className="flex py-2.5 px-4">
-                  <span className="w-1/3 font-bold text-stone-800">Available Finishes</span>
-                  <span className="w-2/3 text-stone-700">{product.finishes?.join(', ') || 'Standard Finish'}</span>
-                </div>
-                <div className="flex py-2.5 px-4 bg-stone-50">
-                  <span className="w-1/3 font-bold text-stone-800">Mounting Hardware</span>
-                  <span className="w-2/3 text-stone-700">Pre-attached hangers &amp; stainless wall standoffs included</span>
-                </div>
-                <div className="flex py-2.5 px-4">
-                  <span className="w-1/3 font-bold text-stone-800">Origin</span>
-                  <span className="w-2/3 text-stone-700">Proudly Designed &amp; Made in India</span>
-                </div>
               </div>
             </div>
 
