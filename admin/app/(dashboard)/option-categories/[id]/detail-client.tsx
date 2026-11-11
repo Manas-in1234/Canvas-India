@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ArrowLeft, ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, ArrowDown, ArrowUp, Eye, EyeOff, ImagePlus, Plus, Trash2 } from 'lucide-react';
 import { apiClient, ApiError } from '@/lib/api-client';
 import type { OptionCategoryItem, OptionCategoryListItem, OptionPriceMode } from '@/lib/types/option-category';
 import { usePermission } from '@/lib/auth/use-permission';
@@ -29,6 +29,12 @@ interface ItemFormState {
   extraColor: string;
   extraBorderColor: string;
   extraBorderWidth: string;
+  extraId: string;
+  extraName: string;
+  extraBadge: string;
+  extraThicknessInches: string;
+  extraDepthPx: string;
+  extraThicknessMm: string;
 }
 
 const EMPTY_FORM: ItemFormState = {
@@ -43,6 +49,12 @@ const EMPTY_FORM: ItemFormState = {
   extraColor: '#000000',
   extraBorderColor: 'transparent',
   extraBorderWidth: '0',
+  extraId: '',
+  extraName: '',
+  extraBadge: '',
+  extraThicknessInches: '',
+  extraDepthPx: '',
+  extraThicknessMm: '',
 };
 
 /**
@@ -53,13 +65,21 @@ const EMPTY_FORM: ItemFormState = {
  * `color` for frame's swatch, and `borderColor`+`borderWidth` together for
  * wrap_style's edge preview.
  */
-type ExtrasFieldKey = 'extraHex' | 'extraWidthPx' | 'extraColor' | 'extraBorderColor' | 'extraBorderWidth';
-const EXTRAS_FIELD_CONFIG: Record<ExtrasFieldKey, { jsonKey: string; label: string; type: 'color' | 'number' }> = {
+type ExtrasFieldKey =
+  | 'extraHex' | 'extraWidthPx' | 'extraColor' | 'extraBorderColor' | 'extraBorderWidth'
+  | 'extraId' | 'extraName' | 'extraBadge' | 'extraThicknessInches' | 'extraDepthPx' | 'extraThicknessMm';
+const EXTRAS_FIELD_CONFIG: Record<ExtrasFieldKey, { jsonKey: string; label: string; type: 'color' | 'number' | 'text' }> = {
   extraHex: { jsonKey: 'hex', label: 'Swatch color', type: 'color' },
   extraWidthPx: { jsonKey: 'widthPx', label: 'Width (px)', type: 'number' },
   extraColor: { jsonKey: 'color', label: 'Frame color', type: 'color' },
   extraBorderColor: { jsonKey: 'borderColor', label: 'Edge color', type: 'color' },
   extraBorderWidth: { jsonKey: 'borderWidth', label: 'Edge width (px)', type: 'number' },
+  extraId: { jsonKey: 'id', label: 'Internal id (blank = auto)', type: 'text' },
+  extraName: { jsonKey: 'name', label: 'Short name', type: 'text' },
+  extraBadge: { jsonKey: 'badge', label: 'Badge (e.g. Recommended)', type: 'text' },
+  extraThicknessInches: { jsonKey: 'thicknessInches', label: 'Thickness (inches)', type: 'number' },
+  extraDepthPx: { jsonKey: 'depthPx', label: 'Preview depth (px)', type: 'number' },
+  extraThicknessMm: { jsonKey: 'thicknessMm', label: 'Thickness (mm)', type: 'number' },
 };
 
 function extrasFieldsFor(baseKey: string): ExtrasFieldKey[] {
@@ -73,6 +93,10 @@ function extrasFieldsFor(baseKey: string): ExtrasFieldKey[] {
       return ['extraColor'];
     case 'wrap_style':
       return ['extraBorderColor', 'extraBorderWidth'];
+    case 'canvas_thickness':
+      return ['extraId', 'extraName', 'extraBadge', 'extraThicknessInches', 'extraDepthPx'];
+    case 'acrylic_thickness':
+      return ['extraId', 'extraName', 'extraBadge', 'extraThicknessMm'];
     default:
       return [];
   }
@@ -142,7 +166,11 @@ export function OptionCategoryDetailClient({ id: initialId }: { id: string }) {
       ? Object.fromEntries(
           fields.map((key) => {
             const { jsonKey, type } = EXTRAS_FIELD_CONFIG[key];
-            return [jsonKey, type === 'number' ? Number(f[key]) || 0 : f[key]];
+            const raw = f[key];
+            if (key === 'extraId' && !raw.trim()) {
+              return [jsonKey, f.label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || undefined];
+            }
+            return [jsonKey, type === 'number' ? Number(raw) || 0 : raw];
           }),
         )
       : undefined;
@@ -169,7 +197,7 @@ export function OptionCategoryDetailClient({ id: initialId }: { id: string }) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ itemId, payload }: { itemId: string; payload: ReturnType<typeof toPayload> }) =>
+    mutationFn: ({ itemId, payload }: { itemId: string; payload: Record<string, unknown> }) =>
       apiClient.patch(`/admin/option-categories/items/${itemId}`, payload),
     onSuccess: () => {
       toast.success('Item updated');
@@ -318,7 +346,10 @@ export function OptionCategoryDetailClient({ id: initialId }: { id: string }) {
                         <ExtrasPreview baseKey={category.baseKey} extras={item.extras} />
                       )}
                       <div>
-                        <div className="font-medium">{item.label}</div>
+                        <div className="font-medium">
+                          {item.label}
+                          {!item.isActive && <Badge variant="outline" className="ml-2">Hidden</Badge>}
+                        </div>
                         {item.description && <div className="text-sm text-muted-foreground">{item.description}</div>}
                         <div className="text-xs text-muted-foreground">
                           {item.priceMode === 'AREA_RATE'
@@ -339,6 +370,15 @@ export function OptionCategoryDetailClient({ id: initialId }: { id: string }) {
                           onClick={() => moveItem(index, 1)}
                         >
                           <ArrowDown className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          title={item.isActive ? 'Hide from the storefront' : 'Show on the storefront'}
+                          disabled={updateMutation.isPending}
+                          onClick={() => updateMutation.mutate({ itemId: item.id, payload: { isActive: !item.isActive } })}
+                        >
+                          {item.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                         </Button>
                         <Button size="sm" variant="ghost" onClick={() => startEdit(item)}>
                           Edit
@@ -383,6 +423,33 @@ export function OptionCategoryDetailClient({ id: initialId }: { id: string }) {
   );
 }
 
+/** Shrinks an uploaded picture to a small icon so it can be stored with the option. */
+function imageToIconDataUrl(file: File, maxSize = 192): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new window.Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      const ctx = canvas.getContext('2d');
+      URL.revokeObjectURL(url);
+      if (!ctx) {
+        reject(new Error('no canvas'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/webp', 0.85));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('bad image'));
+    };
+    img.src = url;
+  });
+}
+
 function ItemForm({
   form,
   onChange,
@@ -403,11 +470,11 @@ function ItemForm({
         <Input value={form.description} onChange={(e) => onChange({ ...form, description: e.target.value })} />
       </div>
       {extrasFields.length > 0 && (
-        <div className="flex gap-3 rounded-md border bg-muted/30 p-3">
+        <div className="grid grid-cols-2 gap-3 rounded-md border bg-muted/30 p-3">
           {extrasFields.map((key) => {
             const { label, type } = EXTRAS_FIELD_CONFIG[key];
             return (
-              <div key={key} className="flex-1 space-y-2">
+              <div key={key} className="space-y-2">
                 <Label>{label}</Label>
                 {type === 'color' ? (
                   <div className="flex items-center gap-2">
@@ -419,6 +486,8 @@ function ItemForm({
                     />
                     <Input value={form[key]} onChange={(e) => onChange({ ...form, [key]: e.target.value })} placeholder="#FFFFFF or transparent" />
                   </div>
+                ) : type === 'text' ? (
+                  <Input value={form[key]} onChange={(e) => onChange({ ...form, [key]: e.target.value })} />
                 ) : (
                   <Input
                     type="number"
@@ -449,12 +518,40 @@ function ItemForm({
               <span className="text-[10px] text-muted-foreground">No image</span>
             )}
           </div>
-          <Input
-            className="flex-1"
-            placeholder="https://..."
-            value={form.imageUrl}
-            onChange={(e) => onChange({ ...form, imageUrl: e.target.value })}
-          />
+          <div className="flex flex-1 flex-col gap-2">
+            <Input
+              placeholder="Paste an image address (https://...) or upload below"
+              value={form.imageUrl.startsWith('data:') ? 'Uploaded image' : form.imageUrl}
+              readOnly={form.imageUrl.startsWith('data:')}
+              onChange={(e) => onChange({ ...form, imageUrl: e.target.value })}
+            />
+            <div className="flex gap-2">
+              <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs hover:bg-muted">
+                <ImagePlus className="h-3.5 w-3.5" />
+                Upload icon
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = '';
+                    if (!file) return;
+                    try {
+                      onChange({ ...form, imageUrl: await imageToIconDataUrl(file) });
+                    } catch {
+                      toast.error('Could not read that image. Try a PNG, JPG or WebP file.');
+                    }
+                  }}
+                />
+              </label>
+              {form.imageUrl && (
+                <Button type="button" size="xs" variant="ghost" onClick={() => onChange({ ...form, imageUrl: '' })}>
+                  Remove image
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
       <div className="flex gap-2">

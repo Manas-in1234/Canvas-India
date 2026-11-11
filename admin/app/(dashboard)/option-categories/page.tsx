@@ -2,12 +2,15 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { ArrowRight } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import type { OptionCategoryListItem } from '@/lib/types/option-category';
 import { usePermission } from '@/lib/auth/use-permission';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -25,9 +28,39 @@ import { Skeleton } from '@/components/ui/skeleton';
  *              it is listed here to make the map complete, with no editor yet
  */
 type Entry =
-  | { kind: 'category'; baseKey: string; title?: string }
+  | { kind: 'category'; baseKey: string; title?: string; seed?: SeedSpec }
   | { kind: 'link'; title: string; href: string; note: string }
   | { kind: 'fixed'; title: string; note: string };
+
+interface SeedSpec {
+  scope: 'CANVAS' | 'ACRYLIC';
+  name: string;
+  items: Array<{ label: string; description: string; flatPrice: string; extras: Record<string, unknown> }>;
+}
+
+const CANVAS_THICKNESS_SEED: SeedSpec = {
+  scope: 'CANVAS',
+  name: 'Canvas thickness',
+  items: [
+      { label: 'Canvas Lite', description: 'Ultra slim & lightweight, economical mount', flatPrice: '148.50', extras: { id: 'canvas-lite', name: 'Canvas Lite', thicknessInches: 0.5, depthPx: 12, badge: '' } },
+      { label: 'Thin Gallery Wrap', description: 'Standard modern gallery profile', flatPrice: '193.05', extras: { id: 'thin-gallery', name: 'Thin Gallery Wrap', thicknessInches: 0.75, depthPx: 18, badge: 'Recommended' } },
+      { label: 'Thick Gallery Wrap', description: 'Museum-grade premium deep projection', flatPrice: '231.66', extras: { id: 'thick-gallery', name: 'Thick Gallery Wrap', thicknessInches: 1.5, depthPx: 30, badge: 'Museum Quality' } },
+      { label: 'Custom Thickness', description: 'Specify custom canvas frame depth', flatPrice: '193.05', extras: { id: 'custom-thickness', name: 'Custom Thickness', thicknessInches: 1.0, depthPx: 22, badge: '' } },
+      { label: 'Unframed Rolled Canvas', description: 'Flexible unmounted rolled canvas or hanging bar', flatPrice: '85.00', extras: { id: 'hanging-canvas', name: 'Unframed Rolled Canvas', thicknessInches: 0.25, depthPx: 8, badge: '' } },
+  ],
+};
+
+const ACRYLIC_THICKNESS_SEED: SeedSpec = {
+  scope: 'ACRYLIC',
+  name: 'Acrylic thickness',
+  items: [
+      { label: '3MM Lightweight Cast Acrylic', description: '', flatPrice: '0.00', extras: { id: '3mm', name: '3MM Cast Acrylic', thicknessMm: 3, badge: '' } },
+      { label: '5MM Standard Studio Acrylic', description: '', flatPrice: '150.00', extras: { id: '5mm', name: '5MM Studio Acrylic', thicknessMm: 5, badge: 'Recommended' } },
+      { label: '6MM Architectural Grade Acrylic', description: '', flatPrice: '200.00', extras: { id: '6mm', name: '6MM Architectural Grade', thicknessMm: 6, badge: '' } },
+      { label: '8MM Premium Optical Cast Acrylic', description: '', flatPrice: '250.00', extras: { id: '8mm', name: '8MM Optical Cast', thicknessMm: 8, badge: 'Museum Quality' } },
+      { label: '18mm Heavy Block Acrylic', description: '', flatPrice: '450.00', extras: { id: '18mm', name: '', thicknessMm: 18, badge: '' } },
+  ],
+};
 
 interface Section {
   heading: string;
@@ -110,9 +143,10 @@ const TABS: TabBlock[] = [
         scope: 'Canvas',
         entries: [
           {
-            kind: 'fixed',
-            title: 'Canvas Lite, Thin Gallery Wrap, Thick Gallery Wrap, Custom Thickness',
-            note: 'These are the canvas thickness cards. Fixed in code, because thickness also drives the 3D preview and pricing.',
+            kind: 'category',
+            baseKey: 'canvas_thickness',
+            title: 'Canvas thickness cards (Canvas Lite, Thin / Thick Gallery Wrap, ...)',
+            seed: CANVAS_THICKNESS_SEED,
           },
         ],
       },
@@ -136,17 +170,30 @@ const TABS: TabBlock[] = [
         scope: 'Acrylic',
         entries: [
           {
+            kind: 'category',
+            baseKey: 'acrylic_thickness',
+            title: 'Acrylic thickness cards (3, 5, 6, 8 mm ...)',
+            seed: ACRYLIC_THICKNESS_SEED,
+          },
+          {
             kind: 'link',
             title: 'Acrylic thickness rates',
             href: '/pricing',
-            note: 'The per-sq-inch rates for 3, 5, 6 and 8 mm are editable under Pricing. The cards themselves are fixed in code.',
+            note: 'The per-sq-inch price of each acrylic thickness is set under Pricing.',
           },
         ],
       },
       {
         heading: 'Canvas Stretcher Thickness',
         scope: 'Canvas',
-        entries: [{ kind: 'fixed', title: 'Stretcher depth options', note: 'Fixed in code.' }],
+        entries: [
+          {
+            kind: 'category',
+            baseKey: 'canvas_thickness',
+            title: 'Same list as the Wrap cards (Canvas thickness)',
+            seed: CANVAS_THICKNESS_SEED,
+          },
+        ],
       },
       { heading: 'Backing', scope: 'Acrylic', entries: [{ kind: 'category', baseKey: 'backgrounds' }] },
       { heading: 'Surface Finish', scope: 'Acrylic', entries: [{ kind: 'category', baseKey: 'finish' }] },
@@ -195,6 +242,8 @@ function groupByBaseKey(categories: OptionCategoryListItem[]) {
 
 export default function OptionCategoriesPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const [seeding, setSeeding] = useState<string | null>(null);
   const { hasPermission } = usePermission();
 
   const { data, isLoading, isError } = useQuery({
@@ -209,9 +258,50 @@ export default function OptionCategoriesPage() {
   ]);
   const unplaced = Array.from(groups.keys()).filter((k) => !placed.has(k));
 
-  const renderVariantRows = (baseKey: string) => {
+  // Creates the list in the database from what the storefront shows today, so the
+  // team can start editing (rename, re-price, change icons, hide, delete, add).
+  const seedCategory = async (baseKey: string, seed: SeedSpec) => {
+    setSeeding(baseKey);
+    try {
+      const created = await apiClient.post<{ id: string }>('/admin/option-categories', {
+        baseKey,
+        materialScope: seed.scope,
+        name: seed.name,
+      });
+      for (const item of seed.items) {
+        await apiClient.post(`/admin/option-categories/${created.id}/items`, {
+          label: item.label,
+          description: item.description || undefined,
+          priceMode: 'FLAT',
+          flatPrice: item.flatPrice,
+          extras: item.extras,
+        });
+      }
+      await queryClient.invalidateQueries({ queryKey: ['option-categories'] });
+      toast.success('Ready to edit. The storefront now reads this list.');
+    } catch {
+      toast.error('Could not set this list up. Please try again.');
+      await queryClient.invalidateQueries({ queryKey: ['option-categories'] });
+    } finally {
+      setSeeding(null);
+    }
+  };
+
+  const renderVariantRows = (baseKey: string, seed?: SeedSpec) => {
     const variants = groups.get(baseKey);
     if (!variants || variants.length === 0) {
+      if (seed && hasPermission('option_catalog.manage')) {
+        return (
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Showing the built-in options. Set up to make them editable.
+            </p>
+            <Button size="sm" disabled={seeding === baseKey} onClick={() => void seedCategory(baseKey, seed)}>
+              {seeding === baseKey ? 'Setting up…' : 'Set up from current options'}
+            </Button>
+          </div>
+        );
+      }
       return <p className="text-xs text-muted-foreground">Not set up yet.</p>;
     }
     return variants.map((variant) => (
@@ -245,7 +335,7 @@ export default function OptionCategoriesPage() {
             </CardHeader>
           )}
           <CardContent className={`space-y-2 ${single || !entry.title ? 'pt-4' : ''}`}>
-            {renderVariantRows(entry.baseKey)}
+            {renderVariantRows(entry.baseKey, entry.seed)}
           </CardContent>
         </Card>
       );
