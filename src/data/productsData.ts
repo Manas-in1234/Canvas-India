@@ -190,7 +190,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     features: [
       'Curated coordinated gallery wall collections',
       'Matching palette for modern Indian interiors',
-      'Handcrafted solid wood and floater frame options',
+      'Solid wood and floater frame options',
       'Personalized with your family moments'
     ],
     ctaText: 'Explore Home Collections',

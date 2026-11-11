@@ -6,6 +6,7 @@ import { addressService } from '../services/addressService';
 import { orderService } from '../services/orderService';
 import { paymentService } from '../services/paymentService';
 import { delhiveryService, PincodeServiceabilityResult } from '../services/delhiveryService';
+import { validateDiscountCode, DiscountValidationError } from '../api/discountsApi';
 import { Address } from '../types/auth';
 import {
   ShieldCheck,
@@ -63,6 +64,7 @@ export const CheckoutPage: React.FC = () => {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponApplied, setCouponApplied] = useState<string | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
 
   // Payment & Processing state
   const [processing, setProcessing] = useState(false);
@@ -132,21 +134,28 @@ export const CheckoutPage: React.FC = () => {
   const tax = Math.round(taxableAmount * 0.18); // 18% GST calculation (displayed clearly)
   const total = taxableAmount + shippingFee;
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     setCouponError(null);
     const code = couponCode.trim().toUpperCase();
+    if (!code) return;
 
-    if (code === 'CANVAS10') {
-      const disc = Math.round(subtotal * 0.10);
+    setIsValidatingCoupon(true);
+    try {
+      const result = await validateDiscountCode(code, subtotal, user?.id);
+      const disc = Math.round(Number(result.discountAmount));
       setCouponDiscount(disc);
-      setCouponApplied('CANVAS10 (10% OFF applied)');
-    } else if (code === 'FIRSTPRINT') {
-      const disc = Math.min(250, Math.round(subtotal * 0.15));
-      setCouponDiscount(disc);
-      setCouponApplied('FIRSTPRINT (₹' + disc + ' OFF applied)');
-    } else {
-      setCouponError('Invalid coupon code. Try CANVAS10 for 10% off.');
+      setCouponApplied(
+        result.discountType === 'PERCENTAGE'
+          ? `${result.code} (${Number(result.value)}% OFF applied)`
+          : `${result.code} (₹${disc} OFF applied)`
+      );
+    } catch (err) {
+      setCouponDiscount(0);
+      setCouponApplied(null);
+      setCouponError(err instanceof DiscountValidationError ? err.message : 'Could not validate this coupon. Please try again.');
+    } finally {
+      setIsValidatingCoupon(false);
     }
   };
 
@@ -518,7 +527,7 @@ export const CheckoutPage: React.FC = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-lg font-bold text-[#002B49]">Delivery Address</h2>
-                    <p className="text-xs text-gray-500">Where should we deliver your handcrafted prints?</p>
+                    <p className="text-xs text-gray-500">Where should we deliver your prints?</p>
                   </div>
                   {!user && (
                     <button
@@ -922,14 +931,16 @@ export const CheckoutPage: React.FC = () => {
                     type="text"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
-                    placeholder="Enter CANVAS10"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-xs uppercase font-semibold focus:ring-2 focus:ring-[#002B49] outline-none"
+                    placeholder="Enter coupon code"
+                    disabled={isValidatingCoupon}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-xs uppercase font-semibold focus:ring-2 focus:ring-[#002B49] outline-none disabled:opacity-60"
                   />
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-gray-800 hover:bg-black text-white text-xs font-semibold rounded-lg transition"
+                    disabled={isValidatingCoupon || !couponCode.trim()}
+                    className="px-4 py-2 bg-gray-800 hover:bg-black text-white text-xs font-semibold rounded-lg transition disabled:opacity-60 disabled:hover:bg-gray-800"
                   >
-                    Apply
+                    {isValidatingCoupon ? 'Checking…' : 'Apply'}
                   </button>
                 </div>
                 {couponApplied && (

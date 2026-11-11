@@ -527,7 +527,7 @@ export const CheckoutPage: React.FC = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-lg font-bold text-[#002B49]">Delivery Address</h2>
-                    <p className="text-xs text-gray-500">Where should we deliver your handcrafted prints?</p>
+                    <p className="text-xs text-gray-500">Where should we deliver your prints?</p>
                   </div>
                   {!user && (
                     <button

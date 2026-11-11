@@ -40,7 +40,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
       id: 'canvas-slide',
       badge: '🇮🇳 FLAT 50% OFF • FESTIVE OFFER',
       heading: 'TURN YOUR MEMORIES INTO WALL ART',
-      subheading: 'Premium Canvas, Acrylic & Cork Prints • Handcrafted in India for Modern Homes & Spaces',
+      subheading: 'Premium Canvas, Acrylic & Cork Prints • Made in India for Modern Homes & Spaces',
       highlightText: 'Museum-grade 420 GSM cotton canvas hand-stretched on solid pine frames.',
       ctaPrimaryText: 'SHOP CANVAS',
       ctaSecondaryText: 'CREATE CUSTOM ART',

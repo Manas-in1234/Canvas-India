@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { StorefrontHeroImage } from '../components/StorefrontHeroImage';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   SlidersHorizontal,
@@ -111,7 +112,7 @@ export const CanvasCategoryPage: React.FC = () => {
                   Canvas Prints &amp; Wall Art
                 </h1>
                 <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-2xl">
-                  Archival 380 GSM pure cotton stretched over kiln-dried solid pine frames. Fade-resistant pigment inks handcrafted for Indian homes, galleries, and corporate workspaces.
+                  Archival 380 GSM pure cotton stretched over kiln-dried solid pine frames. Fade-resistant pigment inks made for Indian homes, galleries, and corporate workspaces.
                 </p>
               </div>
 
@@ -148,8 +149,8 @@ export const CanvasCategoryPage: React.FC = () => {
             {/* RIGHT COLUMN: Canvas Lifestyle Visual */}
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-3xl overflow-hidden border border-stone-200 shadow-xl bg-stone-100 group aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3]">
-                <img
-                  src="/assets/canvas/canvas-gold-teal-leaves.webp"
+                <StorefrontHeroImage
+                  slot="canvas"
                   alt="Canvas Prints and Wall Art"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />

@@ -112,7 +112,7 @@ export const CanvasCategoryPage: React.FC = () => {
                   Canvas Prints &amp; Wall Art
                 </h1>
                 <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-2xl">
-                  Archival 380 GSM pure cotton stretched over kiln-dried solid pine frames. Fade-resistant pigment inks handcrafted for Indian homes, galleries, and corporate workspaces.
+                  Archival 380 GSM pure cotton stretched over kiln-dried solid pine frames. Fade-resistant pigment inks made for Indian homes, galleries, and corporate workspaces.
                 </p>
               </div>
 

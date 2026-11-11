@@ -221,7 +221,7 @@ export const BackOfFrameView: React.FC<{ hook: string; className?: string }> = (
         {/* Product label sticker */}
         <rect x="18" y="186" width="92" height="30" rx="3" fill="#FAF7EF" stroke="#D8CDB0" strokeWidth="1" />
         <text x="24" y="198" fontSize="8" fontWeight="700" fill="#1f2937" fontFamily="Arial, sans-serif">CANVAS INDIA</text>
-        <text x="24" y="209" fontSize="6" fill="#6b7280" fontFamily="Arial, sans-serif">Handcrafted Print</text>
+        <text x="24" y="209" fontSize="6" fill="#6b7280" fontFamily="Arial, sans-serif">Fine Art Print</text>
       </svg>
 
       <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold uppercase tracking-wide text-stone-700 shadow-sm">

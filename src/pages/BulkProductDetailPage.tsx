@@ -320,7 +320,7 @@ export const BulkProductDetailPage: React.FC = () => {
             <ul className="space-y-2 text-sm text-stone-600 list-disc pl-4">
               <li>Minimum order quantity is {MIN_BULK_QTY} units per style.</li>
               <li>Mix sizes or finishes within one bulk order — pricing is calculated on total quantity.</li>
-              <li>Handcrafted in India — every piece is printed and finished at our own facility.</li>
+              <li>Made in India — every piece is printed and finished at our own facility.</li>
             </ul>
           </div>
           <div>

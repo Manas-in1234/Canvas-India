@@ -148,7 +148,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           ) : (
             <div className="flex items-center gap-1 text-[10px] text-emerald-700 font-bold">
               <span className="bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60 leading-none">New</span>
-              <span className="text-stone-400 font-normal leading-none">• Handcrafted</span>
             </div>
           )}
         </div>

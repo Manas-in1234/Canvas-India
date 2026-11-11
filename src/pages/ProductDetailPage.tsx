@@ -1004,7 +1004,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 </div>
                 <div className="flex py-2.5 px-4">
                   <span className="w-1/3 font-bold text-stone-800">Origin</span>
-                  <span className="w-2/3 text-stone-700">Proudly Designed &amp; Handcrafted in India</span>
+                  <span className="w-2/3 text-stone-700">Proudly Designed &amp; Made in India</span>
                 </div>
               </div>
             </div>
@@ -1022,7 +1022,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
                 Quality Verification &amp; Workshop Standards
               </h2>
-              <p className="text-xs text-stone-500 mt-0.5">Every piece is handcrafted &amp; individually tested at our Hyderabad facility</p>
+              <p className="text-xs text-stone-500 mt-0.5">Every piece is individually tested at our Hyderabad facility</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-bold text-xs px-3 py-1 rounded-full flex items-center gap-1.5">

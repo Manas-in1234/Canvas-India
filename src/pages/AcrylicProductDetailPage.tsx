@@ -955,7 +955,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                   <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
                     <PackageCheck className="w-5 h-5 text-[#0E4A93]" />
                     <div className="font-bold text-stone-900 text-xs">Production Time</div>
-                    <div className="text-[11px] text-stone-500">Handcrafted &amp; cured in 24 - 48 hours</div>
+                    <div className="text-[11px] text-stone-500">Printed &amp; cured in 24 - 48 hours</div>
                   </div>
                   <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
                     <Truck className="w-5 h-5 text-emerald-600" />

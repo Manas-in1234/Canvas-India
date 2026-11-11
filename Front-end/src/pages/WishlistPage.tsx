@@ -74,7 +74,7 @@ export const WishlistPage: React.FC = () => {
             </div>
             <h2 className="text-xl font-bold text-stone-900">Your wishlist is currently empty</h2>
             <p className="text-xs sm:text-sm text-stone-500 leading-relaxed">
-              Explore our collections of handcrafted canvas, acrylic, and cork prints, and tap the heart icon on any product to save it here.
+              Explore our collections of canvas, acrylic, and cork prints, and tap the heart icon on any product to save it here.
             </p>
             <div className="pt-2">
               <Link

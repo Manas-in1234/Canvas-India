@@ -10934,7 +10934,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       </button>
                       {expandedFrameCategory === 'premium' && (
                         <div className="p-3 bg-stone-50/50 text-xs text-stone-500 italic">
-                          Premium artisanal framing with handcrafted solid hardwoods.
+                          Premium artisanal framing with solid hardwoods.
                         </div>
                       )}
                     </div>
@@ -11109,7 +11109,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         ))}
                       </div>
                       <p className="text-[10px] text-stone-500 leading-relaxed">
-                        Handcrafted solid pine stretcher frame made to your exact depth. Sensible range: 15 mm to 100 mm.
+                        Solid pine stretcher frame made to your exact depth. Sensible range: 15 mm to 100 mm.
                       </p>
                     </div>
                   )}

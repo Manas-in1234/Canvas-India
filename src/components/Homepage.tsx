@@ -872,7 +872,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 Why Choose<br /><span className="bg-gradient-to-r from-amber-300 to-[#FF6FB1] bg-clip-text text-transparent">Canvas India?</span>
               </h2>
               <p className="text-sm text-white/80 mt-4 max-w-sm leading-relaxed">
-                We bring your ideas to life with high-quality canvas, acrylic and cork products — helping you create beautiful, handcrafted art that lasts and adds heart to your space.
+                We bring your ideas to life with high-quality canvas, acrylic and cork products — helping you create beautiful art that lasts and adds heart to your space.
               </p>
               <button
                 type="button"
