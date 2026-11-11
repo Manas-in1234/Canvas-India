@@ -1991,7 +1991,7 @@ interface DesignTemplate {
   swatchClass: string;
 }
 
-const DESIGN_TEMPLATE_CATEGORIES = [
+const BASE_DESIGN_TEMPLATE_CATEGORIES = [
   "Father's Day",
   "Mother's Day",
   "Summer Day",
@@ -2001,7 +2001,7 @@ const DESIGN_TEMPLATE_CATEGORIES = [
   'Anniversary'
 ];
 
-const DESIGN_TEMPLATES: DesignTemplate[] = [
+const BASE_DESIGN_TEMPLATES: DesignTemplate[] = [
   // Father's Day
   { id: 'tpl-fd-1', category: "Father's Day", name: 'Love You Dad', textPreset: 'Love You Dad', decor: 'necktie', accent: '#0f172a', swatchClass: 'bg-stone-900 text-white' },
   { id: 'tpl-fd-2', category: "Father's Day", name: "Happy Father's Day", textPreset: "Happy Father's Day", decor: 'ribbon', accent: '#0284c7', swatchClass: 'bg-sky-100 text-sky-900' },
@@ -2139,7 +2139,7 @@ const DISPLAY_OPTIONS = [
   { id: 'dust-cover', label: 'Dust Cover', price: 49 }
 ];
 
-const COLOR_FINISH_OPTIONS: { id: ColorFilterType; label: string }[] = [
+const BASE_COLOR_FINISH_OPTIONS: { id: ColorFilterType; label: string }[] = [
   { id: 'original', label: 'Original' },
   { id: 'sepia', label: 'Sepia' },
   { id: 'grayscale', label: 'GrayScale' }
@@ -2151,7 +2151,7 @@ const LAMINATION_OPTIONS = [
   { id: 'premium', label: 'Premium', price: 249 }
 ];
 
-const RETOUCH_CHECKS = [
+const BASE_RETOUCH_CHECKS = [
   { id: 'red-eye', label: 'Red Eye Removal' },
   { id: 'dust-scratch', label: 'Dust/Scratch Removal' },
   { id: 'enhance-color', label: 'Enhance Color' },
@@ -2302,7 +2302,7 @@ const createDefaultPanel = (): PanelImageState => ({
 });
 
 // Helper renderers for 3D isometric wraps (CanvasChamp style) & hardware icons
-const renderWrapPreview = (id: string) => {
+const renderWrapPreview = (id: string, info?: { inches?: number; depthPx?: number }) => {
   if (id === 'hanging-canvas') {
     return (
       <div className="w-16 h-14 mx-auto relative flex flex-col items-center justify-center">
@@ -2340,8 +2340,8 @@ const renderWrapPreview = (id: string) => {
     );
   }
 
-  const depthValue = id === 'canvas-lite' ? '0.50"' : id === 'thin-gallery' ? '0.75"' : id === 'thick-gallery' ? '1.50"' : 'Custom';
-  const sideWidth = id === 'canvas-lite' ? 12 : id === 'thin-gallery' ? 20 : id === 'thick-gallery' ? 30 : 24;
+  const depthValue = id === 'canvas-lite' ? '0.50"' : id === 'thin-gallery' ? '0.75"' : id === 'thick-gallery' ? '1.50"' : info?.inches ? `${info.inches.toFixed(2)}"` : 'Custom';
+  const sideWidth = id === 'canvas-lite' ? 12 : id === 'thin-gallery' ? 20 : id === 'thick-gallery' ? 30 : info?.depthPx ? Math.max(8, Math.min(36, info.depthPx)) : 24;
 
   return (
     <div className="w-20 h-16 mx-auto relative flex items-center justify-center">
@@ -2649,6 +2649,23 @@ export interface CanvasCustomizerPageProps {
   materialProp?: 'canvas' | 'acrylic';
 }
 
+/** A product's own saved list, in the same shape the shared lists arrive in. Hidden options are dropped. */
+function productListToDtos(items: any[]): OptionCategoryItemDto[] {
+  return items
+    .filter((i) => i && !i.hidden)
+    .map((i, index) => ({
+      id: String(i.id),
+      label: String(i.label ?? ''),
+      description: i.description ? String(i.description) : null,
+      imageUrl: i.imageUrl ? String(i.imageUrl) : null,
+      sortOrder: index,
+      priceMode: i.priceMode === 'AREA_RATE' ? ('AREA_RATE' as const) : ('FLAT' as const),
+      flatPrice: String(i.flatPrice ?? 0),
+      areaRatePerSqIn: i.areaRatePerSqIn !== null && i.areaRatePerSqIn !== undefined ? String(i.areaRatePerSqIn) : null,
+      extras: i.extras && typeof i.extras === 'object' ? i.extras : null,
+    }));
+}
+
 export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ materialProp }) => {
   const { productId } = useParams<{ productId: string }>();
   const [searchParams] = useSearchParams();
@@ -2691,6 +2708,28 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const wordArtColorSchemes = useCatalogOptions('word_art_colors', DEFAULT_WORD_ART_COLOR_SCHEMES);
   const WORD_ART_SIZE_CATALOG = useMemo(() => Object.fromEntries(Object.keys(DEFAULT_WORD_ART_SIZE_CATALOG).map((key) => [key, wordArtSizes.filter((size) => size.ratioTab === key)])) as typeof DEFAULT_WORD_ART_SIZE_CATALOG, [wordArtSizes]);
   const [activeMaterial, setActiveMaterial] = useState<'canvas' | 'acrylic'>(routeMaterial);
+
+  // Options this specific product has customized in the admin. Each product keeps its own
+  // independent copy, so nothing here ever mixes with another product's options or prices.
+  const productOverrides = useMemo<Record<string, { items?: any[] }> | null>(() => {
+    const key = searchParams.get('product') || productId;
+    const list: any[] = Array.isArray(allProducts) ? (allProducts as any[]) : [];
+    const match = key ? list.find((p) => p.id === key || p.slug === key) : null;
+    const sections = match?.customizer?.sections;
+    return sections && typeof sections === 'object' ? sections : null;
+  }, [allProducts, productId, searchParams]);
+  const overriddenKeys = useMemo(
+    () => new Set(Object.keys(productOverrides ?? {}).filter((k) => Array.isArray(productOverrides?.[k]?.items))),
+    [productOverrides],
+  );
+  const loadOptions = useCallback(
+    (baseKey: string, material?: 'ACRYLIC' | 'CANVAS') => {
+      const own = productOverrides?.[baseKey];
+      if (own && Array.isArray(own.items)) return Promise.resolve(productListToDtos(own.items));
+      return fetchOptionCategoryItems(baseKey, material);
+    },
+    [productOverrides],
+  );
 
   useEffect(() => {
     if (routeMaterial !== activeMaterial) {
@@ -3791,7 +3830,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // LAYOUTS & DESIGNS tab
   const [layoutSubTab, setLayoutSubTab] = useState<'DESIGNS' | 'LAYOUTS'>('LAYOUTS');
-  const [designCategory, setDesignCategory] = useState<string>(DESIGN_TEMPLATE_CATEGORIES[0]);
+  const [designCategory, setDesignCategory] = useState<string>(BASE_DESIGN_TEMPLATE_CATEGORIES[0]);
   const [expandedDesignCategory, setExpandedDesignCategory] = useState<string | null>("Valentine's Day");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [expandedLayoutId, setExpandedLayoutId] = useState<string | null>('layout-1');
@@ -3865,8 +3904,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      fetchOptionCategoryItems('border_width'),
-      fetchOptionCategoryItems('border_color'),
+      loadOptions('border_width'),
+      loadOptions('border_color'),
       fetchOptionCategoryItems('font'),
       fetchOptionCategoryItems('text_color'),
       fetchOptionCategoryItems('clipart'),
@@ -3881,10 +3920,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadOptions]);
 
   const liveOrFallbackBorderWidths = useMemo(() => {
-    if (liveBorderWidths.length === 0) return ACRYLIC_BORDER_WIDTHS;
+    if (liveBorderWidths.length === 0 && !overriddenKeys.has('border_width')) return ACRYLIC_BORDER_WIDTHS;
     return liveBorderWidths.map((item) => ({
       id: (item.extras?.id as string) ?? item.id,
       label: item.label,
@@ -3893,7 +3932,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveBorderWidths]);
 
   const liveOrFallbackBorderColors = useMemo(() => {
-    if (liveBorderColors.length === 0) return ACRYLIC_BORDER_COLORS;
+    if (liveBorderColors.length === 0 && !overriddenKeys.has('border_color')) return ACRYLIC_BORDER_COLORS;
     return liveBorderColors.map((item) => ({
       name: item.label,
       hex: (item.extras?.hex as string) ?? '#000000',
@@ -3901,7 +3940,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveBorderColors]);
 
   const liveBorderWidthPrices = useMemo(() => {
-    if (liveBorderWidths.length === 0) return CANVAS_BORDER_WIDTH_PRICES;
+    if (liveBorderWidths.length === 0 && !overriddenKeys.has('border_width')) return CANVAS_BORDER_WIDTH_PRICES;
     const prices: Record<string, number> = {};
     for (const item of liveBorderWidths) {
       const id = (item.extras?.id as string) ?? item.id;
@@ -3934,6 +3973,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // re-fetches whenever activeMaterial changes; the rest are BOTH-scoped and
   // just refetch harmlessly alongside it.
   const [liveWrapStyles, setLiveWrapStyles] = useState<OptionCategoryItemDto[]>([]);
+  const [liveDesignTemplates, setLiveDesignTemplates] = useState<OptionCategoryItemDto[]>([]);
+  const [liveColorFinish, setLiveColorFinish] = useState<OptionCategoryItemDto[]>([]);
+  const [liveRetouch, setLiveRetouch] = useState<OptionCategoryItemDto[]>([]);
   const [liveCanvasThickness, setLiveCanvasThickness] = useState<OptionCategoryItemDto[]>([]);
   const [liveAcrylicThickness, setLiveAcrylicThickness] = useState<OptionCategoryItemDto[]>([]);
   const [liveHardware, setLiveHardware] = useState<OptionCategoryItemDto[]>([]);
@@ -3953,18 +3995,24 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     let cancelled = false;
     const material = activeMaterial === 'acrylic' ? 'ACRYLIC' : 'CANVAS';
     Promise.all([
-      fetchOptionCategoryItems('wrap_style'),
-      fetchOptionCategoryItems('hardware', material),
-      fetchOptionCategoryItems('display_option'),
-      fetchOptionCategoryItems('material_grade'),
-      fetchOptionCategoryItems('lamination'),
-      fetchOptionCategoryItems('frame'),
-      fetchOptionCategoryItems('backgrounds', 'ACRYLIC'),
-      fetchOptionCategoryItems('finish', 'ACRYLIC'),
-      fetchOptionCategoryItems('canvas_thickness', 'CANVAS'),
-      fetchOptionCategoryItems('acrylic_thickness', 'ACRYLIC'),
-    ]).then(([wrapStyles, hardware, displayOptions, materialGrades, laminations, frames, backing, finish, canvasThickness, acrylicThickness]) => {
+      loadOptions('wrap_style'),
+      loadOptions('hardware', material),
+      loadOptions('display_option'),
+      loadOptions('material_grade'),
+      loadOptions('lamination'),
+      loadOptions('frame'),
+      loadOptions('backgrounds', 'ACRYLIC'),
+      loadOptions('finish', 'ACRYLIC'),
+      loadOptions('canvas_thickness', 'CANVAS'),
+      loadOptions('acrylic_thickness', 'ACRYLIC'),
+      loadOptions('design_templates'),
+      loadOptions('color_finishing'),
+      loadOptions('retouching'),
+    ]).then(([wrapStyles, hardware, displayOptions, materialGrades, laminations, frames, backing, finish, canvasThickness, acrylicThickness, designTemplates, colorFinishing, retouching]) => {
       if (cancelled) return;
+      setLiveDesignTemplates(designTemplates);
+      setLiveColorFinish(colorFinishing);
+      setLiveRetouch(retouching);
       setLiveCanvasThickness(canvasThickness);
       setLiveAcrylicThickness(acrylicThickness);
       setLiveWrapStyles(wrapStyles);
@@ -3982,12 +4030,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return () => {
       cancelled = true;
     };
-  }, [activeMaterial]);
+  }, [activeMaterial, loadOptions]);
 
   // Thickness cards are admin-managed (name, price, icon, badge, order, hidden/deleted).
   // Until the team sets them up, the built-in lists below are used unchanged.
   const CANVAS_THICKNESS_OPTIONS = useMemo(() => {
-    if (liveCanvasThickness.length === 0) return BASE_CANVAS_THICKNESS_OPTIONS;
+    if (liveCanvasThickness.length === 0 && !overriddenKeys.has('canvas_thickness')) return BASE_CANVAS_THICKNESS_OPTIONS;
     return liveCanvasThickness.map((item) => {
       const extras = item.extras ?? {};
       const id = (extras.id as string) ?? item.id;
@@ -4007,7 +4055,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveCanvasThickness]);
   const THICKNESS_OPTIONS = CANVAS_THICKNESS_OPTIONS;
   const ACRYLIC_THICKNESS_OPTIONS = useMemo(() => {
-    if (liveAcrylicThickness.length === 0) return BASE_ACRYLIC_THICKNESS_OPTIONS;
+    if (liveAcrylicThickness.length === 0 && !overriddenKeys.has('acrylic_thickness')) return BASE_ACRYLIC_THICKNESS_OPTIONS;
     return liveAcrylicThickness.map((item) => {
       const extras = item.extras ?? {};
       return {
@@ -4031,8 +4079,50 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return opt.price;
   };
 
+  // Design templates, color finishing and retouching are admin-managed too (shared or per product).
+  const DESIGN_TEMPLATES = useMemo<(DesignTemplate & { bgColor?: string; textColor?: string })[]>(() => {
+    if (liveDesignTemplates.length === 0 && !overriddenKeys.has('design_templates')) return BASE_DESIGN_TEMPLATES;
+    return liveDesignTemplates.map((item) => {
+      const x = item.extras ?? {};
+      return {
+        id: String((x.id as string) || item.id),
+        category: String((x.category as string) || 'Other'),
+        name: item.label,
+        textPreset: String((x.textPreset as string) || item.label),
+        decor: (['confetti', 'ribbon', 'floral', 'hearts', 'necktie', 'balloons'].includes(x.decor as string) ? x.decor : 'confetti') as DecorType,
+        accent: String((x.accent as string) || '#e11d48'),
+        swatchClass: '',
+        bgColor: (x.bgColor as string) || '#fff1f2',
+        textColor: (x.textColor as string) || '#881337',
+      };
+    });
+  }, [liveDesignTemplates, overriddenKeys]);
+  const DESIGN_TEMPLATE_CATEGORIES = useMemo(() => {
+    if (liveDesignTemplates.length === 0 && !overriddenKeys.has('design_templates')) return BASE_DESIGN_TEMPLATE_CATEGORIES;
+    return Array.from(new Set(DESIGN_TEMPLATES.map((t) => t.category)));
+  }, [DESIGN_TEMPLATES, liveDesignTemplates, overriddenKeys]);
+  const COLOR_FINISH_OPTIONS = useMemo(() => {
+    const own = overriddenKeys.has('color_finishing');
+    if (liveColorFinish.length === 0 && !own) return BASE_COLOR_FINISH_OPTIONS;
+    const known = new Set(['original', 'sepia', 'grayscale']);
+    const mapped = liveColorFinish
+      .map((item) => ({
+        id: String((item.extras?.id as string) ?? item.label).toLowerCase().replace(/[^a-z]/g, '') as ColorFilterType,
+        label: item.label,
+      }))
+      .filter((o) => known.has(o.id));
+    return mapped.length === 0 && !own ? BASE_COLOR_FINISH_OPTIONS : mapped;
+  }, [liveColorFinish, overriddenKeys]);
+  const RETOUCH_CHECKS = useMemo(() => {
+    if (liveRetouch.length === 0 && !overriddenKeys.has('retouching')) return BASE_RETOUCH_CHECKS;
+    return liveRetouch.map((item) => ({
+      id: String((item.extras?.id as string) || item.id),
+      label: item.label,
+    }));
+  }, [liveRetouch, overriddenKeys]);
+
   const liveOrFallbackWrapStyles = useMemo(() => {
-    if (liveWrapStyles.length === 0) return WRAP_OPTIONS;
+    if (liveWrapStyles.length === 0 && !overriddenKeys.has('wrap_style')) return WRAP_OPTIONS;
     return liveWrapStyles.map((item) => ({
       id: (item.extras?.id as string) ?? item.id,
       name: item.label,
@@ -4046,7 +4136,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveWrapStyles]);
 
   const liveOrFallbackHardware = useMemo(() => {
-    if (liveHardware.length === 0) {
+    if (liveHardware.length === 0 && !overriddenKeys.has('hardware')) {
       return activeMaterial === 'acrylic' ? ACRYLIC_HARDWARE_OPTIONS : HARDWARE_OPTIONS;
     }
     return liveHardware.map((item) => ({
@@ -4060,7 +4150,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveHardware, activeMaterial]);
 
   const liveOrFallbackDisplayOptions = useMemo(() => {
-    if (liveDisplayOptions.length === 0) return DISPLAY_OPTIONS;
+    if (liveDisplayOptions.length === 0 && !overriddenKeys.has('display_option')) return DISPLAY_OPTIONS;
     return liveDisplayOptions.map((item) => ({
       id: (item.extras?.id as string) ?? item.id,
       label: item.label,
@@ -4069,7 +4159,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveDisplayOptions]);
 
   const liveOrFallbackMaterialGrades = useMemo(() => {
-    if (liveMaterialGrades.length === 0) return MATERIAL_VARIANTS;
+    if (liveMaterialGrades.length === 0 && !overriddenKeys.has('material_grade')) return MATERIAL_VARIANTS;
     return liveMaterialGrades.map((item) => ({
       id: (item.extras?.id as string) ?? item.id,
       name: item.label,
@@ -4079,7 +4169,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveMaterialGrades]);
 
   const liveOrFallbackLaminations = useMemo(() => {
-    if (liveLaminations.length === 0) return LAMINATION_OPTIONS;
+    if (liveLaminations.length === 0 && !overriddenKeys.has('lamination')) return LAMINATION_OPTIONS;
     return liveLaminations.map((item) => ({
       id: (item.extras?.id as string) ?? item.id,
       label: item.label,
@@ -4088,7 +4178,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveLaminations]);
 
   const liveOrFallbackFrames = useMemo(() => {
-    if (liveFrames.length === 0) return FRAME_OPTIONS;
+    if (liveFrames.length === 0 && !overriddenKeys.has('frame')) return FRAME_OPTIONS;
     return liveFrames.map((item) => ({
       id: (item.extras?.id as string) ?? item.id,
       name: item.label,
@@ -4102,7 +4192,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Inline fallback for the two brand-new acrylic categories — matches the
   // real seeded admin data, used only if the live fetch comes back empty.
   const liveOrFallbackBacking = useMemo(() => {
-    if (liveBacking.length === 0) {
+    if (liveBacking.length === 0 && !overriddenKeys.has('backgrounds')) {
       return [
         { id: 'transparent', label: 'Transparent (Clear Optical)', hex: 'transparent', price: 0 },
         { id: 'white', label: 'Solid White Opaque Backing', hex: '#FFFFFF', price: 0 },
@@ -4119,7 +4209,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveBacking]);
 
   const liveOrFallbackFinish = useMemo(() => {
-    if (liveFinish.length === 0) {
+    if (liveFinish.length === 0 && !overriddenKeys.has('finish')) {
       return [
         { id: 'high-gloss', label: 'High Gloss Clear', price: 0 },
         { id: 'anti-glare', label: 'Anti-Glare Matte', price: 180 },
@@ -10486,7 +10576,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                           </div>
                                         )}
 
-                                        <div className={`relative w-full h-24 flex items-center justify-center p-2.5 ${tpl.swatchClass}`}>
+                                        <div className={`relative w-full h-24 flex items-center justify-center p-2.5 ${tpl.swatchClass}`} style={tpl.bgColor ? { backgroundColor: tpl.bgColor, color: tpl.textColor } : undefined}>
                                           {renderDecorSvg(tpl.decor, tpl.accent, 'absolute inset-0 w-full h-full pointer-events-none')}
                                           <div className="relative w-12 h-14 rounded bg-white/90 border border-black/10 shadow-xs flex items-center justify-center text-center p-1">
                                             <span className="text-[8px] font-black leading-tight text-stone-800 line-clamp-2">
@@ -10661,7 +10751,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             subtitle={displaySub}
                             priceText={th.price === 0 ? 'Included' : `+₹${th.price.toFixed(2)}`}
                             previewHeightClass="h-16 p-1"
-                            preview={th.image ? <img src={th.image} alt={th.name || th.label} className="mx-auto h-full max-h-14 w-auto object-contain" /> : renderWrapPreview(th.id)}
+                            preview={th.image ? <img src={th.image} alt={th.name || th.label} className="mx-auto h-full max-h-14 w-auto object-contain" /> : renderWrapPreview(th.id, { inches: th.thicknessInches, depthPx: th.depthPx })}
                           />
                         );
                       })}
@@ -11084,7 +11174,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           title={cardTitle}
                           priceText={cardPrice}
                           previewHeightClass="h-16 p-1.5"
-                          preview={th.image ? <img src={th.image} alt={th.name || th.label} className="mx-auto h-full max-h-14 w-auto object-contain" /> : renderWrapPreview(th.id)}
+                          preview={th.image ? <img src={th.image} alt={th.name || th.label} className="mx-auto h-full max-h-14 w-auto object-contain" /> : renderWrapPreview(th.id, { inches: th.thicknessInches, depthPx: th.depthPx })}
                         />
                       );
                     })}

@@ -665,7 +665,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 <div className="space-y-3">
                   <button
                     type="button"
-                    onClick={() => navigate(`/customize/${product.material === 'acrylic' ? 'acrylic' : 'canvas'}/single?prefillImage=${encodeURIComponent(product.image)}&prefillName=${encodeURIComponent(product.name)}`)}
+                    onClick={() => navigate(`/customize/${product.material === 'acrylic' ? 'acrylic' : 'canvas'}/single?prefillImage=${encodeURIComponent(product.image)}&prefillName=${encodeURIComponent(product.name)}&product=${encodeURIComponent(product.slug || product.id)}`)}
                     className="w-full py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
                   >
                     <Pencil className="w-4 h-4" />

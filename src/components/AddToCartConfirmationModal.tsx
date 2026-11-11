@@ -89,6 +89,7 @@ export const AddToCartConfirmationModal: React.FC = () => {
     if (product.name) {
       params.set('prefillName', product.name);
     }
+    if (product.slug || product.id) params.set('product', product.slug || product.id);
 
     navigate(`/customize/${materialType}/${targetId}?${params.toString()}`);
   };

@@ -203,6 +203,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               if (product.name) {
                 queryParams.set('prefillName', product.name);
               }
+              queryParams.set('product', product.slug || product.id);
               const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
               navigate(`/customize/${material}/single${queryString}`);
             }}
