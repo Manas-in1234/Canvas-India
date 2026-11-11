@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiClient, buildAdminApiUrl } from '@/lib/api-client';
+import { ApiError, apiClient, buildAdminApiUrl } from '@/lib/api-client';
 import { usePermission } from '@/lib/auth/use-permission';
 import { HERO_IMAGE_MAX_BYTES, HERO_IMAGE_SLOTS, type HeroImageSlot } from '@/lib/hero-image-slots';
 
@@ -15,6 +15,31 @@ type HeroImage = { ownerId: string; fileName: string; checksum: string };
 const queryKey = ['hero-images'];
 const storeUrl = 'https://canvassindia.com';
 const imageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+const maxSourceBytes = 25 * 1024 * 1024;
+
+async function prepareImage(file: File) {
+  if (file.size <= 1024 * 1024) return file;
+
+  const bitmap = await createImageBitmap(file);
+  try {
+    const canvas = document.createElement('canvas');
+    const scale = Math.min(1, 2200 / Math.max(bitmap.width, bitmap.height));
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Could not prepare this image. Try a smaller JPEG or WebP.');
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/webp', 0.86));
+    if (blob?.type === 'image/webp' && blob.size <= HERO_IMAGE_MAX_BYTES && blob.size < file.size) {
+      return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.webp', { type: blob.type });
+    }
+    if (file.size <= HERO_IMAGE_MAX_BYTES) return file;
+    throw new Error('This image is still too large after resizing. Try a smaller image.');
+  } finally {
+    bitmap.close();
+  }
+}
+
 
 function HeroImageCard({ slot, image }: { slot: HeroImageSlot; image?: HeroImage }) {
   const settings = HERO_IMAGE_SLOTS[slot];
@@ -44,7 +69,7 @@ function HeroImageCard({ slot, image }: { slot: HeroImageSlot; image?: HeroImage
         return null;
       }
       const data = new FormData();
-      data.set('file', file);
+      data.set('file', await prepareImage(file));
       return apiClient.upload<HeroImage>(route, data);
     },
     onSuccess: (saved) => {
@@ -53,9 +78,16 @@ function HeroImageCard({ slot, image }: { slot: HeroImageSlot; image?: HeroImage
         ...(saved ? [saved] : []),
       ]);
       clearFile();
-      toast.success(saved ? `${settings.label} image published` : `${settings.label} default image restored`);
+      toast.success(saved ? `${settings.label} image published` : `${settings.label} original image restored`);
     },
-    onError: (err) => setError(err instanceof Error ? err.message : 'Could not update the image.'),
+    onError: (err) => {
+      if (err instanceof ApiError && err.status === 0) {
+        void queryClient.invalidateQueries({ queryKey });
+        setError('The server did not confirm the update. Check the current image before retrying.');
+        return;
+      }
+      setError(err instanceof Error ? err.message : 'Could not update the image.');
+    },
   });
 
   return (
@@ -82,7 +114,7 @@ function HeroImageCard({ slot, image }: { slot: HeroImageSlot; image?: HeroImage
           )}
         </div>
         <figcaption className="truncate text-sm text-muted-foreground">
-          {selection ? `Preview: ${selection.file.name}` : image ? `Published: ${image.fileName}` : 'Using the default image'}
+          {selection ? `Preview: ${selection.file.name}` : image ? `Published: ${image.fileName}` : 'Using the original image'}
         </figcaption>
       </figure>
       <div className="mt-auto space-y-2">
@@ -100,9 +132,9 @@ function HeroImageCard({ slot, image }: { slot: HeroImageSlot; image?: HeroImage
             setSelection(null);
             setError('');
             if (!file) return;
-            if (!imageTypes.includes(file.type) || !file.size || file.size > HERO_IMAGE_MAX_BYTES) {
+            if (!imageTypes.includes(file.type) || !file.size || file.size > maxSourceBytes) {
               event.currentTarget.value = '';
-              setError('Choose a JPEG, PNG, or WebP image no larger than 4 MB.');
+              setError('Choose a JPEG, PNG, or WebP image no larger than 25 MB.');
               return;
             }
             setSelection({ file, url: URL.createObjectURL(file) });
@@ -121,14 +153,12 @@ function HeroImageCard({ slot, image }: { slot: HeroImageSlot; image?: HeroImage
           {changeImage.isPending ? 'Updating…' : 'Upload & publish'}
         </Button>
         {selection && <Button variant="ghost" disabled={changeImage.isPending} onClick={clearFile}>Cancel</Button>}
-        {image && !selection && (
-          <Button variant="outline" disabled={changeImage.isPending} onClick={() => {
-            if (window.confirm(`Restore the default hero image for ${settings.label}?`)) changeImage.mutate(null);
+          <Button variant="outline" disabled={!image || changeImage.isPending} onClick={() => {
+            if (window.confirm(`Restore the original hero image for ${settings.label}?`)) changeImage.mutate(null);
           }}>
             <RotateCcw className="size-4" aria-hidden="true" />
-            Restore default
+            Revert to original
           </Button>
-        )}
       </div>
     </section>
   );
@@ -148,7 +178,7 @@ export default function HeroImagesPage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Hero Images</h1>
         <p className="text-sm text-muted-foreground">Replace the main image at the top of each storefront page. Uploads go live when published.</p>
-        <p className="mt-1 text-sm text-muted-foreground">JPEG, PNG, or WebP · Up to 4 MB per image</p>
+        <p className="mt-1 text-sm text-muted-foreground">JPEG, PNG, or WebP · Up to 25 MB before optimization</p>
       </header>
       {!canEdit ? <p>You don’t have permission to manage hero images.</p>
         : images.isPending ? <p role="status">Loading hero images…</p>
