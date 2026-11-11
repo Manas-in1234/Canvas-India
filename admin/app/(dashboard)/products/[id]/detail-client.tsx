@@ -13,10 +13,14 @@ import { StatusBadge } from "@/components/status-badge";
 import { usePermission } from "@/lib/auth/use-permission";
 import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  ProductForm,
+  buildStorefrontPayload,
+  defaultSpecifications,
+  type ProductFormState,
+} from "./product-form";
 import {
   Dialog,
   DialogContent,
@@ -51,21 +55,33 @@ export function ProductDetailClient({ id: initialId }: { id: string }) {
     queryFn: () => apiClient.get<ProductDetail>(`/products/${id}`),
   });
 
-  const [storefront, setStorefront] = useState<Record<string, any>>({});
-  const [status, setStatus] = useState("DRAFT");
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [basePrice, setBasePrice] = useState("");
-  const [costPrice, setCostPrice] = useState("");
+  const [form, setForm] = useState<ProductFormState>({
+    status: "DRAFT",
+    name: "",
+    description: "",
+    basePrice: "",
+    costPrice: "",
+    originalPrice: "",
+    storefront: {},
+    specifications: [],
+  });
 
   useEffect(() => {
     if (product) {
-      setStorefront(product.storefront ?? {});
-      setStatus(product.status);
-      setName(product.name);
-      setDescription(product.description ?? "");
-      setBasePrice(product.basePrice);
-      setCostPrice(product.costPrice ?? "");
+      const sf = product.storefront ?? {};
+      const saved = Array.isArray(sf.specifications) ? sf.specifications : [];
+      setForm({
+        status: product.status,
+        name: product.name,
+        description: product.description ?? "",
+        basePrice: product.basePrice,
+        costPrice: product.costPrice ?? "",
+        originalPrice: String(sf.originalPrice ?? sf.compareAtPrice ?? product.basePrice),
+        storefront: sf,
+        specifications: saved.length
+          ? saved
+          : defaultSpecifications(sf, product.productType?.name),
+      });
     }
   }, [product]);
 
@@ -120,13 +136,17 @@ export function ProductDetailClient({ id: initialId }: { id: string }) {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    if (Number(form.originalPrice) > 0 && Number(form.originalPrice) < Number(form.basePrice)) {
+      toast.error("The original price must not be lower than the selling price.");
+      return;
+    }
     updateMutation.mutate({
-      name,
-      description: description || undefined,
-      basePrice,
-      storefront,
-      status,
-      costPrice: costPrice || undefined,
+      name: form.name,
+      description: form.description || undefined,
+      basePrice: form.basePrice,
+      storefront: buildStorefrontPayload(form),
+      status: form.status,
+      costPrice: form.costPrice || undefined,
     });
   };
 
@@ -162,70 +182,24 @@ export function ProductDetailClient({ id: initialId }: { id: string }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSave} className="space-y-4">
-              <Label>Visibility</Label><select className="w-full rounded border p-2" value={status} disabled={!canEdit} onChange={e => setStatus(e.target.value)}><option value="ACTIVE">Live</option><option value="DRAFT">Draft (hidden)</option></select>
-              {['category', 'categorySlug', 'subcategory', 'image', 'shortDescription', 'material', 'badge', 'stockStatus', 'shape', 'finish'].map(key => <div key={key} className="space-y-2"><Label>{key.replace(/([A-Z])/g, ' $1')}</Label><Input value={storefront[key] ?? ''} disabled={!hasPermission('products.edit')} onChange={e => setStorefront({...storefront, [key]: e.target.value})} /></div>)}
-              <div className="space-y-2"><Label>Original price</Label><Input type="number" min="0" step="0.01" value={storefront.originalPrice ?? ''} onChange={e => setStorefront({...storefront, originalPrice: Number(e.target.value)})} /></div>
-              {['images', 'sizes', 'finishes', 'features', 'tags', 'occasions', 'availableThicknesses', 'availableStyles', 'availableBases', 'availablePapers', 'applications'].map(key => <div key={key} className="space-y-2"><Label>{key.replace(/([A-Z])/g, ' $1')} (one per line)</Label><textarea className="w-full rounded border p-2" rows={3} value={(storefront[key] ?? []).join('\n')} disabled={!hasPermission('products.edit')} onChange={e => setStorefront({...storefront, [key]: e.target.value.split('\n').filter(Boolean)})} /></div>)}
-              {['customizable', 'uploadRequired', 'featured', 'bestseller'].map(key => <label key={key} className="flex gap-2"><input type="checkbox" checked={!!storefront[key]} disabled={!hasPermission('products.edit')} onChange={e => setStorefront({...storefront, [key]: e.target.checked})} />{key}</label>)}
-
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={!canEdit}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  disabled={!canEdit}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="basePrice">Base Price (₹)</Label>
-                  <Input
-                    id="basePrice"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={basePrice}
-                    onChange={(e) => setBasePrice(e.target.value)}
-                    disabled={!canEdit}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="costPrice">Cost Price (₹)</Label>
-                  <Input
-                    id="costPrice"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={costPrice}
-                    onChange={(e) => setCostPrice(e.target.value)}
-                    disabled={!canEdit}
-                  />
-                </div>
-              </div>
-              {canEdit && (
-                <Button type="submit" disabled={updateMutation.isPending}>
-                  {updateMutation.isPending ? "Saving…" : "Save Changes"}
-                </Button>
-              )}
-            </form>
-          </CardContent>
-        </Card>
+        <form onSubmit={handleSave} className="space-y-5 lg:col-span-2">
+          <ProductForm
+            form={form}
+            setForm={setForm}
+            canEdit={canEdit}
+            typeName={product.productType?.name}
+          />
+          {canEdit && (
+            <div className="sticky bottom-0 z-10 flex items-center justify-between gap-3 rounded-xl border bg-background/95 p-3 shadow-lg backdrop-blur">
+              <p className="text-xs text-muted-foreground">
+                Changes go live on the website as soon as you save.
+              </p>
+              <Button type="submit" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? "Saving…" : "Save changes"}
+              </Button>
+            </div>
+          )}
+        </form>
 
         <Card>
           <CardHeader>
