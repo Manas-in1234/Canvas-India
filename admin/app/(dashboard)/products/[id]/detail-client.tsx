@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   ProductForm,
   buildStorefrontPayload,
+  validateForm,
   defaultSpecifications,
   type ProductFormState,
 } from "./product-form";
@@ -49,9 +50,14 @@ export function ProductDetailClient({ id: initialId }: { id: string }) {
     data: product,
     isLoading,
     isError,
+    error: loadError,
+    refetch,
   } = useQuery({
     queryKey: ["products", id],
     enabled: !!id && id !== "placeholder",
+    // A missing product (404) won't appear by retrying; anything else might.
+    retry: (count, err) =>
+      !(err instanceof ApiError && err.status >= 400 && err.status < 500) && count < 3,
     queryFn: () => apiClient.get<ProductDetail>(`/products/${id}`),
   });
 
@@ -127,7 +133,23 @@ export function ProductDetailClient({ id: initialId }: { id: string }) {
   }
 
   if (isError || !product) {
-    return <p className="text-sm text-destructive">Failed to load product.</p>;
+    return (
+      <div className="space-y-3">
+        <p className="text-sm text-destructive">
+          {loadError instanceof ApiError && loadError.status === 404
+            ? "This product no longer exists."
+            : "Couldn't load this product."}
+        </p>
+        <div className="flex gap-2">
+          <Button size="sm" onClick={() => void refetch()}>
+            Try again
+          </Button>
+          <Link href="/products" className="inline-flex items-center text-sm text-muted-foreground hover:underline">
+            Back to Products
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   const canEdit = hasPermission("products.edit");
@@ -136,17 +158,18 @@ export function ProductDetailClient({ id: initialId }: { id: string }) {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    if (Number(form.originalPrice) > 0 && Number(form.originalPrice) < Number(form.basePrice)) {
-      toast.error("The original price must not be lower than the selling price.");
+    const problem = validateForm(form);
+    if (problem) {
+      toast.error(problem);
       return;
     }
     updateMutation.mutate({
       name: form.name,
-      description: form.description || undefined,
+      description: form.description,
       basePrice: form.basePrice,
       storefront: buildStorefrontPayload(form),
       status: form.status,
-      costPrice: form.costPrice || undefined,
+      costPrice: form.costPrice.trim() === "" ? null : form.costPrice,
     });
   };
 

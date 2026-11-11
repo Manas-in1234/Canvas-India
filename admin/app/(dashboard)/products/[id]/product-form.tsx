@@ -27,6 +27,9 @@ const STANDARD_PRINT_QUALITY = "12-Color Archival UV-Resistant Inks (2400 DPI)";
 const STANDARD_MOUNTING = "Pre-attached hangers & stainless wall standoffs included";
 const STANDARD_ORIGIN = "Proudly Designed & Made in India";
 
+const txt = (value: unknown): string =>
+  typeof value === "string" || typeof value === "number" ? String(value) : "";
+
 const asList = (value: unknown): string[] => (Array.isArray(value) ? value.map(String) : []);
 
 /** The rows the website shows today, so editing starts from what shoppers already see. */
@@ -45,6 +48,26 @@ export function defaultSpecifications(sf: Record<string, any>, typeName?: string
 
 export function discountFor(price: number, original: number): number {
   return original > price && original > 0 ? Math.round(((original - price) / original) * 100) : 0;
+}
+
+/** Returns a message when the form can't be saved, so bad input never reaches the server. */
+export function validateForm(form: ProductFormState): string | null {
+  if (!form.name.trim()) return "Product name is required.";
+  const price = Number(form.basePrice);
+  if (form.basePrice.trim() === "" || !Number.isFinite(price) || price < 0) {
+    return "Enter a valid selling price.";
+  }
+  if (form.originalPrice.trim() !== "") {
+    const original = Number(form.originalPrice);
+    if (!Number.isFinite(original) || original < 0) return "Enter a valid original price.";
+    if (original > 0 && original < price) {
+      return "The original price must not be lower than the selling price.";
+    }
+  }
+  if (form.costPrice.trim() !== "" && !Number.isFinite(Number(form.costPrice))) {
+    return "Enter a valid cost price.";
+  }
+  return null;
 }
 
 export function buildStorefrontPayload(form: ProductFormState): Record<string, any> {
@@ -239,7 +262,7 @@ export function ProductForm({
         </div>
         <Field label="Short description" hint="One line shown on product cards.">
           <Input
-            value={sf.shortDescription ?? ""}
+            value={txt(sf.shortDescription)}
             disabled={!canEdit}
             onChange={(e) => setSf("shortDescription", e.target.value)}
           />
@@ -255,17 +278,17 @@ export function ProductForm({
         </Field>
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Badge" hint="e.g. New, Trending">
-            <Input value={sf.badge ?? ""} disabled={!canEdit} onChange={(e) => setSf("badge", e.target.value)} />
+            <Input value={txt(sf.badge)} disabled={!canEdit} onChange={(e) => setSf("badge", e.target.value)} />
           </Field>
           <Field label="Stock status">
             <Input
-              value={sf.stockStatus ?? ""}
+              value={txt(sf.stockStatus)}
               disabled={!canEdit}
               onChange={(e) => setSf("stockStatus", e.target.value)}
             />
           </Field>
           <Field label="Material">
-            <Input value={sf.material ?? ""} disabled={!canEdit} onChange={(e) => setSf("material", e.target.value)} />
+            <Input value={txt(sf.material)} disabled={!canEdit} onChange={(e) => setSf("material", e.target.value)} />
           </Field>
         </div>
       </Section>
@@ -342,18 +365,18 @@ export function ProductForm({
       <Section title="Category" description="Where the product sits on the website.">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Category">
-            <Input value={sf.category ?? ""} disabled={!canEdit} onChange={(e) => setSf("category", e.target.value)} />
+            <Input value={txt(sf.category)} disabled={!canEdit} onChange={(e) => setSf("category", e.target.value)} />
           </Field>
           <Field label="Category slug">
             <Input
-              value={sf.categorySlug ?? ""}
+              value={txt(sf.categorySlug)}
               disabled={!canEdit}
               onChange={(e) => setSf("categorySlug", e.target.value)}
             />
           </Field>
           <Field label="Subcategory">
             <Input
-              value={sf.subcategory ?? ""}
+              value={txt(sf.subcategory)}
               disabled={!canEdit}
               onChange={(e) => setSf("subcategory", e.target.value)}
             />
@@ -362,13 +385,13 @@ export function ProductForm({
             <div className="flex gap-2">
               <Input
                 placeholder="Shape"
-                value={sf.shape ?? ""}
+                value={txt(sf.shape)}
                 disabled={!canEdit}
                 onChange={(e) => setSf("shape", e.target.value)}
               />
               <Input
                 placeholder="Finish"
-                value={sf.finish ?? ""}
+                value={txt(sf.finish)}
                 disabled={!canEdit}
                 onChange={(e) => setSf("finish", e.target.value)}
               />
