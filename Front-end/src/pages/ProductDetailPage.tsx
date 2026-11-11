@@ -135,7 +135,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     product.categorySlug === 'cork-art-patterns' ||
     product.category === 'Cork Art Patterns' ||
     product.id.includes('cork-art-patterns') ||
-    product.slug.includes('cork-art-patterns') ||
+    (product.slug ?? '').includes('cork-art-patterns') ||
     (product.name && product.name.toLowerCase().includes('cork pattern'));
 
   const isCorkProduct =

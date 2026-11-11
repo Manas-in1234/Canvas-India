@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Product, CartItem } from '../types';
 import { ALL_PRODUCTS } from '../data/productsData';
@@ -8,6 +8,18 @@ export interface AddToCartConfirmationState {
   isOpen: boolean;
   item: CartItem | null;
 }
+
+const HIDEABLE_CATEGORY_SLUGS = new Set([
+  'canvas',
+  'acrylic',
+  'cork',
+  'devotional-art',
+  'scenery-landscape-art',
+  'tribal-ethnic-art',
+  'line-art',
+  'motivational-posters',
+  'cork-art-patterns',
+]);
 
 interface ShopContextType {
   cartItems: CartItem[];
@@ -22,6 +34,8 @@ interface ShopContextType {
   accountModalOpen: boolean;
   selectedProductForCustomize: Product | null;
   allProducts: Product[];
+  /** False when the admin has hidden this category (or every product in it) from the website. */
+  isCategoryVisible: (categorySlug: string) => boolean;
   totalCartCount: number;
   isLoadingProducts: boolean;
   productsError: string | null;
@@ -108,8 +122,24 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Products state with initial fallback from productsData
   const [allProducts, setAllProducts] = useState<Product[]>(ALL_PRODUCTS);
+  // True once the product list came from the backend. The built-in fallback list
+  // says nothing about what the admin has hidden, so it never hides a category.
+  const [productsFromApi, setProductsFromApi] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
+
+  // Categories backed by a product type in the admin. Links to these are shown
+  // only while at least one live product carries the category; others (Gifts,
+  // Corporate Orders, ...) are not product-based and are always shown.
+  const slugsWithLiveProducts = useMemo(
+    () => new Set(allProducts.map((product) => product.categorySlug)),
+    [allProducts],
+  );
+  const isCategoryVisible = useCallback(
+    (categorySlug: string) =>
+      !productsFromApi || !HIDEABLE_CATEGORY_SLUGS.has(categorySlug) || slugsWithLiveProducts.has(categorySlug),
+    [productsFromApi, slugsWithLiveProducts],
+  );
 
   const loadProducts = async () => {
     setIsLoadingProducts(true);
@@ -118,28 +148,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const apiProducts = await fetchProductsFromApi();
 
-      if (apiProducts && apiProducts.length > 0) {
-        // Only update products that exist in the real website catalogue (ALL_PRODUCTS)
-        // and have a valid non-placeholder image. Never inject dummy or orphaned demo items.
-        const updatedProducts = ALL_PRODUCTS.map((staticProd) => {
-          const apiMatch = apiProducts.find(
-            (p) =>
-              (String(p.id) === String(staticProd.id) || (p.slug && p.slug === staticProd.slug)) &&
-              p.image &&
-              !p.image.includes('/products/placeholders/')
-          );
-          if (apiMatch) {
-            return { ...staticProd, ...apiMatch };
-          }
-          return staticProd;
-        });
-        setAllProducts(updatedProducts);
-      } else {
-        setAllProducts(ALL_PRODUCTS);
-      }
+      setAllProducts(apiProducts);
+      setProductsFromApi(true);
     } catch (err: any) {
       setProductsError(err?.message || 'Failed to fetch products from backend');
       setAllProducts(ALL_PRODUCTS);
+      setProductsFromApi(false);
     } finally {
       setIsLoadingProducts(false);
     }
@@ -436,6 +450,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         accountModalOpen,
         selectedProductForCustomize,
         allProducts,
+        isCategoryVisible,
         totalCartCount,
        isLoadingProducts,
        productsError,

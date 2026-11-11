@@ -1,3 +1,4 @@
+import { HomepagePromotions } from './catalog/homepage-promotions.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from './generated/prisma/client.js';
 import { getQueryCompilerWasm } from './common/prisma-wasm/wasm-loader.js';
@@ -44,6 +45,16 @@ async function getServices(env: Env): Promise<{ prisma: PrismaClient; services: 
   }
   const services = createServicesContainer(prisma);
   return { prisma, services };
+}
+
+async function delhiveryPostalCode(pin: string, token: string) {
+  const response = await fetch(`https://track.delhivery.com/c/api/pin-codes/json/?filter_codes=${encodeURIComponent(pin)}`, {
+    headers: { Authorization: `Token ${token.trim()}`, Accept: 'application/json' },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!response.ok) throw new Error('Delhivery serviceability check failed');
+  const data = await response.json() as { delivery_codes?: { postal_code?: { cod?: string; pre_paid?: string; city?: string; district?: string; state_code?: string } }[] };
+  return data.delivery_codes?.[0]?.postal_code ?? null;
 }
 
 const ALLOWED_ORIGIN_PATTERNS = [
@@ -204,6 +215,51 @@ function checkPermission(user: any, required: string[], request: Request): Respo
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// Public website visibility. The website only shows products that are ACTIVE
+// and whose category (product type) has not been hidden; the admin sees all.
+// ---------------------------------------------------------------------------
+
+const PRODUCT_LIST_INCLUDE = { productType: true, categories: { include: { category: true } } } as const;
+
+/** True when the database has not been migrated to include product_types.is_active yet. */
+function isMissingColumnError(err: any): boolean {
+  return err?.code === 'P2022' || /column .* does not exist/i.test(String(err?.message ?? ''));
+}
+
+async function isSignedInAdmin(request: Request, env: Env, prisma: PrismaClient): Promise<boolean> {
+  const header = request.headers.get('Authorization');
+  if (!header || !header.startsWith('Bearer ')) return false;
+  const { user, error } = await authenticate(request, env, prisma);
+  return !error && Boolean(user?.permissions?.includes('products.view'));
+}
+
+async function findPublicProducts(prisma: PrismaClient) {
+  const live = { deletedAt: null, status: 'ACTIVE' as const };
+  const list = (where: any) =>
+    prisma.product.findMany({ where, include: PRODUCT_LIST_INCLUDE, orderBy: { createdAt: 'desc' } });
+  try {
+    return await list({ ...live, productType: { isActive: true } });
+  } catch (err: any) {
+    // Deployed before the visibility migration was applied: hide by status only.
+    if (isMissingColumnError(err)) return list(live);
+    throw err;
+  }
+}
+
+function isPubliclyVisible(product: { status?: string; productType?: { isActive?: boolean } | null }): boolean {
+  return product.status === 'ACTIVE' && product.productType?.isActive !== false;
+}
+
+async function findPublicProductTypes(prisma: PrismaClient) {
+  try {
+    return await prisma.productType.findMany({ where: { isActive: true }, orderBy: { name: 'asc' } });
+  } catch (err: any) {
+    if (isMissingColumnError(err)) return prisma.productType.findMany({ orderBy: { name: 'asc' } });
+    throw err;
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: any): Promise<Response> {
     if (request.method === 'OPTIONS') {
@@ -218,6 +274,18 @@ export default {
     const { prisma, services } = await getServices(env);
 
     try {
+      if (pathname === '/api/v1/homepage-promotions' && method === 'GET') {
+        return jsonResponse(await new HomepagePromotions(prisma).storefront(), 200, request);
+      }
+      if (pathname === '/api/v1/admin/homepage-promotions' && (method === 'GET' || method === 'PUT')) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, ['discounts.manage'], request);
+        if (denied) return denied;
+        const promotions = new HomepagePromotions(prisma);
+        const result = method === 'GET' ? await promotions.settings() : await promotions.save(await request.json(), user.id);
+        return jsonResponse(result, 200, request);
+      }
       const heroImage = pathname.match(/^\/api\/v1\/(admin\/)?hero-images(?:\/([^/]+))?$/);
       if (heroImage) {
         const [, admin, requestedSlot] = heroImage;
@@ -871,7 +939,21 @@ export default {
       // -------------------------------------------------------------
       if (pathname === '/api/v1/products') {
         if (method === 'GET') {
-          return jsonResponse(await services.products.findAll(), 200, request);
+          // Admin list: the admin app asks for it explicitly with ?admin=1, which
+          // needs a login with products.view. A signed-in admin who calls without
+          // the flag gets the same (so an older cached admin page keeps working).
+          // Everyone else only sees what is live on the website.
+          if (query.admin === '1') {
+            const { user, error } = await authenticate(request, env, prisma);
+            if (error) return error;
+            const denied = checkPermission(user, ['products.view'], request);
+            if (denied) return denied;
+            return jsonResponse(await services.products.findAll(true), 200, request);
+          }
+          if (await isSignedInAdmin(request, env, prisma)) {
+            return jsonResponse(await services.products.findAll(true), 200, request);
+          }
+          return jsonResponse(await findPublicProducts(prisma), 200, request);
         }
         if (method === 'POST') {
           const { user, error } = await authenticate(request, env, prisma);
@@ -887,7 +969,11 @@ export default {
       if (productMatch) {
         const id = productMatch[1];
         if (method === 'GET') {
-          return jsonResponse(await services.products.findOne(id), 200, request);
+          const product: any = await services.products.findOne(id);
+          if (!(await isSignedInAdmin(request, env, prisma)) && !isPubliclyVisible(product)) {
+            return jsonResponse({ statusCode: 404, message: `Product ${id} not found` }, 404, request);
+          }
+          return jsonResponse(product, 200, request);
         }
         if (method === 'PATCH') {
           const { user, error } = await authenticate(request, env, prisma);
@@ -931,7 +1017,53 @@ export default {
       }
 
       if (pathname === '/api/v1/product-types') {
-        if (method === 'GET') return jsonResponse(await services.productTypes.findAll(), 200, request);
+        if (method === 'GET') {
+          if (!(await isSignedInAdmin(request, env, prisma))) {
+            return jsonResponse(await findPublicProductTypes(prisma), 200, request);
+          }
+          const [types, counts] = await Promise.all([
+            services.productTypes.findAll(),
+            prisma.product.groupBy({ by: ['productTypeId', 'status'], where: { deletedAt: null }, _count: { _all: true } }),
+          ]);
+          return jsonResponse(
+            types.map((type: any) => {
+              const own = counts.filter((c) => c.productTypeId === type.id);
+              return {
+                ...type,
+                productCount: own.reduce((sum, c) => sum + c._count._all, 0),
+                liveCount: own.filter((c) => c.status === 'ACTIVE').reduce((sum, c) => sum + c._count._all, 0),
+              };
+            }),
+            200,
+            request,
+          );
+        }
+      }
+
+      const productTypeMatch = pathname.match(/^\/api\/v1\/product-types\/([^/]+)$/);
+      if (productTypeMatch && method === 'PATCH') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, ['products.edit'], request);
+        if (permError) return permError;
+        const body = (await request.json()) as any;
+        if (typeof body.isActive !== 'boolean') {
+          return jsonResponse({ statusCode: 400, message: 'isActive (true or false) is required' }, 400, request);
+        }
+        try {
+          const updated = await prisma.productType.update({ where: { id: productTypeMatch[1] }, data: { isActive: body.isActive } });
+          await services.audit.record({
+            adminUserId: user.id,
+            action: body.isActive ? 'CATEGORY_SHOWN_ON_WEBSITE' : 'CATEGORY_HIDDEN_FROM_WEBSITE',
+            entityType: 'ProductType',
+            entityId: updated.id,
+            reason: updated.name,
+          });
+          return jsonResponse(updated, 200, request);
+        } catch (err: any) {
+          if (err?.code === 'P2025') return jsonResponse({ statusCode: 404, message: 'Category not found' }, 404, request);
+          throw err;
+        }
       }
 
       const variantsMatch = pathname.match(/^\/api\/v1\/products\/([^/]+)\/variants$/);
@@ -1070,7 +1202,70 @@ export default {
 
       if (pathname === '/api/v1/storefront/orders' && method === 'POST') {
         const body = (await request.json().catch(() => ({}))) as any;
-        const items = Array.isArray(body.items) ? body.items : [];
+        let items: any[] = Array.isArray(body.items) ? body.items : [];
+        const isCod = body.paymentMethod === 'COD';
+        let codAmounts: { subtotal: number; shipping: number; tax: number; total: number } | undefined;
+        const codId = typeof body.requestId === 'string' ? body.requestId : '';
+        const codReceipt = (order: { id: string; orderNumber: string; total: unknown }) => ({
+          id: order.id, orderNumber: order.orderNumber, total: order.total,
+        });
+        const findCodOrder = () => prisma.order.findFirst({
+          where: { id: codId, payments: { some: { provider: 'COD' } } },
+          select: { id: true, orderNumber: true, total: true },
+        });
+        if (isCod) {
+          if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(codId)) {
+            return jsonResponse({ message: 'Invalid checkout request. Refresh and try again.' }, 400, request);
+          }
+          const existing = await findCodOrder();
+          if (existing) return jsonResponse(codReceipt(existing), 200, request);
+
+          const address = body.shippingAddress;
+          const pin = address?.postal_code;
+          if (!/^[1-9][0-9]{5}$/.test(pin ?? '') ||
+              !/^[0-9]{10}$/.test(String(address?.phone ?? '').replace(/\D/g, '')) ||
+              ![address?.name, address?.street_address, address?.city, address?.state].every(value =>
+                typeof value === 'string' && value.trim() && value.length <= 250)) {
+            return jsonResponse({ message: 'Enter a complete delivery address and phone number for Cash on Delivery.' }, 400, request);
+          }
+          if (body.discount || body.couponCode || items.length > 100 || items.some(item =>
+            !item || typeof item.productId !== 'string' || item.customizationDetails || item.imageUrl ||
+            !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 100)) {
+            return jsonResponse({ message: 'Cash on Delivery is available for catalog items without coupons or custom artwork.' }, 400, request);
+          }
+          if (items.length) {
+            const products = await prisma.product.findMany({
+              where: { id: { in: items.map(item => item.productId) }, status: 'ACTIVE', deletedAt: null, productType: { isActive: true } },
+              select: { id: true, name: true, basePrice: true, storefront: true },
+            });
+            const byId = new Map(products.map(product => [product.id, product]));
+            if (items.some(item => {
+              const product = byId.get(item.productId);
+              return !product || Number(product.basePrice) !== Number(item.price) ||
+                Number(product.basePrice) <= 0 ||
+                (product.storefront as { stockStatus?: string } | null)?.stockStatus === 'Out of Stock';
+            })) {
+              return jsonResponse({ message: 'An item or price changed. Refresh your cart before placing a Cash on Delivery order.' }, 409, request);
+            }
+            items = items.map(item => {
+              const product = byId.get(item.productId)!;
+              return { productId: product.id, title: product.name, price: Number(product.basePrice), quantity: item.quantity,
+                imageUrl: (product.storefront as { image?: string } | null)?.image };
+            });
+            const subtotal = Math.round(items.reduce((sum, item) => sum + item.price * item.quantity, 0) * 100) / 100;
+            const shipping = subtotal >= 999 ? 0 : 99;
+            codAmounts = { subtotal, shipping, tax: Math.round(subtotal * 0.18), total: subtotal + shipping };
+            if (Math.round(Number(body.total) * 100) !== Math.round(codAmounts.total * 100)) {
+              return jsonResponse({ message: 'The order total changed. Review your cart and try again.' }, 409, request);
+            }
+            if (!env.DELHIVERY_API_TOKEN?.trim()) {
+              return jsonResponse({ message: 'Cash on Delivery is temporarily unavailable.' }, 503, request);
+            }
+            const postalCode = await delhiveryPostalCode(pin, env.DELHIVERY_API_TOKEN).catch(() => undefined);
+            if (postalCode === undefined) return jsonResponse({ message: 'Could not check Cash on Delivery. Try again or pay online.' }, 503, request);
+            if (postalCode?.cod !== 'Y') return jsonResponse({ message: 'Cash on Delivery is unavailable for this PIN code.' }, 422, request);
+          }
+        }
         if (items.length === 0) {
           return jsonResponse({ statusCode: 400, message: 'Order items are required' }, 400, request);
         }
@@ -1080,7 +1275,7 @@ export default {
         const name = body.customerName || (body.shippingAddress && body.shippingAddress.name) || (email ? email.split('@')[0] : 'Guest Customer');
 
         let customer = null;
-        if (body.customerId) {
+        if (!isCod && body.customerId) {
           customer = await prisma.customer.findUnique({ where: { id: body.customerId } }).catch(() => null);
         }
         if (!customer && email) {
@@ -1092,29 +1287,30 @@ export default {
         if (!customer) {
           customer = await prisma.customer.create({
             data: {
-              ...(body.customerId && body.customerId.length >= 20 ? { id: body.customerId } : {}),
+              ...(!isCod && body.customerId && body.customerId.length >= 20 ? { id: body.customerId } : {}),
               name,
               email: email || null,
               phone: phone || null,
-              isGuest: !body.customerId,
+              isGuest: isCod || !body.customerId,
             },
           });
         }
 
-        const orderCount = await prisma.order.count();
-        const orderNumber = `CC${10000 + orderCount + 1}`;
+        const orderCount = isCod ? 0 : await prisma.order.count();
+        const orderNumber = isCod ? `CC-COD-${codId}` : `CC${10000 + orderCount + 1}`;
 
-        const subtotal = Number(body.subtotal) || 0;
-        const discount = Number(body.discount) || 0;
-        const shippingFee = Number(body.shippingFee) || 0;
-        const tax = Number(body.tax) || 0;
-        const total = Number(body.total) || (subtotal - discount + shippingFee + tax);
+        const subtotal = codAmounts?.subtotal ?? (Number(body.subtotal) || 0);
+        const discount = isCod ? 0 : Number(body.discount) || 0;
+        const shippingFee = codAmounts?.shipping ?? (Number(body.shippingFee) || 0);
+        const tax = codAmounts?.tax ?? (Number(body.tax) || 0);
+        const total = codAmounts?.total ?? (Number(body.total) || (subtotal - discount + shippingFee + tax));
 
-        const isPaid = body.payment?.status === 'captured' || Boolean(body.payment?.razorpayPaymentId);
+        const isPaid = !isCod && (body.payment?.status === 'captured' || Boolean(body.payment?.razorpayPaymentId));
 
         const newOrder = await prisma.$transaction(async (tx) => {
           const order = await tx.order.create({
             data: {
+              ...(isCod ? { id: codId } : {}),
               orderNumber,
               customerId: customer.id,
               orderStatus: 'CONFIRMED',
@@ -1178,18 +1374,19 @@ export default {
               events: {
                 create: [
                   { type: 'order.created', message: `Order ${orderNumber} placed via storefront checkout` },
+                  ...(isCod ? [{ type: 'order.cod', message: 'Cash on Delivery · collect payment on delivery' }] : []),
                   ...(isPaid ? [{ type: 'order.paid', message: `Payment verified via Razorpay (${body.payment?.razorpayPaymentId || 'PAID'})` }] : []),
                 ],
               },
-              ...(isPaid ? {
+              ...(isCod || isPaid ? {
                 payments: {
                   create: [
                     {
-                      provider: 'RAZORPAY',
-                      status: 'PAID',
+                      provider: isCod ? 'COD' : 'RAZORPAY',
+                      status: isCod ? 'PENDING' : 'PAID',
                       amount: total,
                       currency: 'INR',
-                      providerRef: body.payment?.razorpayPaymentId || null,
+                      providerRef: isCod ? null : body.payment?.razorpayPaymentId || null,
                     },
                   ],
                 },
@@ -1202,9 +1399,15 @@ export default {
             },
           });
           return order;
+        }).catch(async error => {
+          if (isCod && error?.code === 'P2002') {
+            const existing = await findCodOrder();
+            if (existing) return existing;
+          }
+          throw error;
         });
 
-        return jsonResponse(newOrder, 201, request);
+        return jsonResponse(isCod ? codReceipt(newOrder) : newOrder, 201, request);
       }
 
       if (pathname === '/api/v1/storefront/orders' && method === 'GET') {
@@ -1673,13 +1876,8 @@ export default {
         if (!env.DELHIVERY_API_TOKEN) {
           return jsonResponse({ statusCode: 500, message: 'Delhivery credentials are not configured' }, 500, request);
         }
-        const token = env.DELHIVERY_API_TOKEN.trim();
         try {
-          const res = await fetch(`https://track.delhivery.com/c/api/pin-codes/json/?filter_codes=${pin}`, {
-            headers: { Authorization: `Token ${token}`, Accept: 'application/json' },
-          });
-          const data: any = await res.json().catch(() => ({}));
-          const code = data?.delivery_codes?.[0]?.postal_code;
+          const code = await delhiveryPostalCode(pin, env.DELHIVERY_API_TOKEN);
 
           if (!code) {
             return jsonResponse({

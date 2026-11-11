@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useLocation, Link, useSearchParams } from 'react-router-dom';
+import { useLocation, Link, Navigate, useSearchParams } from 'react-router-dom';
 import { 
   ChevronRight, 
   Search, 
@@ -48,7 +48,8 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
     onToggleWishlist, 
     onAddToCart, 
     onOpenCustomize, 
-    onOpenQuote 
+    onOpenQuote,
+    isCategoryVisible 
   } = useShop();
 
   const config = CATEGORY_CONFIGS[activeSlug] || CATEGORY_CONFIGS['canvas'];
@@ -244,6 +245,11 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
     }
     return list;
   }, [filteredProducts, sortBy]);
+
+  // A category the admin has hidden from the website has no page to show.
+  if (!isCategoryVisible(activeSlug)) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="w-full bg-[#FFFDF9] py-6 sm:py-10 text-stone-900 font-manrope">

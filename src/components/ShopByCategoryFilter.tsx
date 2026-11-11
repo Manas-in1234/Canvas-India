@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 import { SHOP_CATEGORIES } from '../data/shopCategories';
+import { useShop } from '../context/ShopContext';
 
 export interface ShopCategoryOption {
   name: string;
@@ -23,7 +24,8 @@ export const ShopByCategoryFilter: React.FC<ShopByCategoryFilterProps> = ({
   onChange,
   onItemClick,
 }) => {
-  const list = categories || SHOP_CATEGORIES;
+  const { isCategoryVisible } = useShop();
+  const list = (categories || SHOP_CATEGORIES).filter((cat) => isCategoryVisible(cat.categorySlug));
 
   const toggle = (slug: string) => {
     const next = selectedSlugs.includes(slug)

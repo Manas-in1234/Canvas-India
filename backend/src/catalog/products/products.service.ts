@@ -11,9 +11,9 @@ export class ProductsService {
     private readonly auditService: AuditService,
   ) {}
 
-  findAll() {
+  findAll(admin = false) {
     return this.prisma.product.findMany({
-      where: { deletedAt: null },
+      where: { deletedAt: null, ...(admin ? {} : { status: 'ACTIVE' as const }) },
       include: { productType: true, categories: { include: { category: true } } },
       orderBy: { createdAt: 'desc' },
     });
@@ -46,6 +46,7 @@ export class ProductsService {
         productTypeId: dto.productTypeId,
         basePrice: dto.basePrice,
         costPrice: dto.costPrice,
+        storefront: dto.storefront,
       },
     });
   }
@@ -68,6 +69,17 @@ export class ProductsService {
         changes: {
           basePrice: { old: existing.basePrice.toString(), new: dto.basePrice },
         },
+      });
+    }
+
+    // Showing or hiding a product on the website is a status change worth tracing.
+    if (dto.status !== undefined && dto.status !== existing.status) {
+      await this.auditService.record({
+        adminUserId: actingAdminId,
+        action: 'PRODUCT_STATUS_CHANGED',
+        entityType: 'Product',
+        entityId: id,
+        changes: { status: { old: existing.status, new: dto.status } },
       });
     }
 

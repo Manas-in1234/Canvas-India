@@ -1,11 +1,13 @@
 import React from 'react';
 import { CIRCULAR_CATEGORIES } from '../data/storeData';
+import { useShop } from '../context/ShopContext';
 
 interface CategoryGridProps {
   onSelectCategory: (slug: string) => void;
 }
 
 export const CategoryGrid: React.FC<CategoryGridProps> = ({ onSelectCategory }) => {
+  const { isCategoryVisible } = useShop();
   return (
     <section id="shop-categories" className="py-8 sm:py-10 bg-white border-b border-stone-100">
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
@@ -31,7 +33,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ onSelectCategory }) 
 
         {/* Clean Circular Categories without box cards */}
         <div className="flex items-start justify-between gap-4 sm:gap-6 xl:gap-8 overflow-x-auto pb-2 pt-1 scrollbar-none">
-          {CIRCULAR_CATEGORIES.map((cat) => (
+          {CIRCULAR_CATEGORIES.filter((cat) => isCategoryVisible(cat.slug)).map((cat) => (
             <button
               key={cat.id}
               type="button"

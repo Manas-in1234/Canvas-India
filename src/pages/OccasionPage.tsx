@@ -99,7 +99,7 @@ const TRUST_BADGES: { label: string; icon: React.ComponentType<{ className?: str
 export const OccasionPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { allProducts } = useShop();
+  const { allProducts, isCategoryVisible } = useShop();
 
   const occasion = getOccasionBySlug(slug);
 
@@ -124,7 +124,7 @@ export const OccasionPage: React.FC = () => {
     if (!occasion) return [];
     return occasion.categorySlugs
       .map((slugKey) => GIFT_TILE_CATEGORIES.find((c) => c.categorySlug === slugKey))
-      .filter((c): c is NonNullable<typeof c> => Boolean(c))
+      .filter((c): c is NonNullable<typeof c> => c !== undefined && isCategoryVisible(c.categorySlug))
       .map((cat) => {
         const firstProduct = allProducts.find((p) => p.categorySlug === cat.categorySlug);
         const destination = cat.customizerKey
@@ -136,7 +136,7 @@ export const OccasionPage: React.FC = () => {
         // actually relevant and already verified to load (it's the banner).
         return { ...cat, destination, image: occasion.tileImages?.[cat.categorySlug] || occasion.bannerImage };
       });
-  }, [occasion, allProducts]);
+  }, [occasion, allProducts, isCategoryVisible]);
 
   if (!occasion) {
     return (

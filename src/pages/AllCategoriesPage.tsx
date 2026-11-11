@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { PRIMARY_CATEGORIES } from '../data/storeData';
+import { useShop } from '../context/ShopContext';
 
 const ROUTES: Record<string, string> = {
   'canvas': '/canvas',
@@ -23,8 +24,9 @@ const EXCLUDED_SLUGS = new Set(['canvas', 'acrylic', 'cork', 'gifts', 'corporate
 
 export const AllCategoriesPage: React.FC = () => {
   const navigate = useNavigate();
+  const { isCategoryVisible } = useShop();
   React.useEffect(() => { document.title = 'All Categories | Canvas India'; }, []);
-  const categories = PRIMARY_CATEGORIES.filter((cat) => !EXCLUDED_SLUGS.has(cat.slug));
+  const categories = PRIMARY_CATEGORIES.filter((cat) => !EXCLUDED_SLUGS.has(cat.slug) && isCategoryVisible(cat.slug));
 
   return (
     <div className="w-full bg-[#FFFDF9] py-8 sm:py-12 text-stone-900 font-manrope min-h-[70vh]">

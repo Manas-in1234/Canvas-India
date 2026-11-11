@@ -147,6 +147,9 @@ model CustomerAddress {
 model ProductType {
   id       String              @id @default(uuid())
   name     String              @unique // Canvas, Photo Print, Mug, ...
+  // false hides the whole category from the public website: its products
+  // stop appearing in the storefront's product list. The admin still sees them.
+  isActive Boolean             @default(true) @map("is_active")
   products Product[]
   slaRules ProductionSlaRule[]
 
@@ -172,6 +175,7 @@ model Collection {
 }
 
 model Product {
+  storefront Json?
   id              String              @id @default(uuid())
   name            String
   slug            String              @unique

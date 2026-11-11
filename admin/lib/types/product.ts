@@ -3,6 +3,15 @@ export type ProductStatus = 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
 export interface ProductType {
   id: string;
   name: string;
+  /** false when the whole category is hidden from the website. */
+  isActive?: boolean;
+}
+
+/** A category as listed by the admin: the product type plus how many products it holds. */
+export interface ProductTypeSummary extends ProductType {
+  isActive: boolean;
+  productCount: number;
+  liveCount: number;
 }
 
 export interface ProductCategoryLink {
@@ -11,6 +20,7 @@ export interface ProductCategoryLink {
 }
 
 export interface ProductListItem {
+  storefront?: Record<string, any>;
   id: string;
   name: string;
   slug: string;

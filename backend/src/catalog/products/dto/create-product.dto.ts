@@ -1,6 +1,10 @@
-import { IsDecimal, IsOptional, IsString } from 'class-validator';
+import { IsDecimal, IsOptional, IsString, IsObject } from 'class-validator';
 
 export class CreateProductDto {
+  @IsOptional()
+  @IsObject()
+  storefront?: Record<string, any>;
+
   @IsString()
   name!: string;
 
