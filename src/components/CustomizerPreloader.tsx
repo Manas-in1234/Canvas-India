@@ -5,7 +5,7 @@ interface CustomizerPreloaderProps {
   active: boolean;
 }
 
-export const PRELOADER_MIN_MS = 4000;
+export const PRELOADER_MIN_MS = 600;
 
 /**
  * Branded loading indicator for the Canvas and Acrylic customizers.

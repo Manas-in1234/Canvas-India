@@ -2800,8 +2800,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         setLayoutSubTab('LAYOUTS');
       }
     }
-    beginPreloader();
-    endPreloader(PRELOADER_MIN_MS);
   };
 
   const [selectedProductTypeId, setSelectedProductTypeId] = useState<string>(() =>
@@ -3394,11 +3392,37 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const activeCustomizationKey = useRef<string>(`${routeMaterial}-${resolveCurrentProductId(routeMaterial, productId)}`);
 
   // Panel Images State
-  const [panelImages, setPanelImages] = useState<Record<number, PanelImageState>>({
-    0: createDefaultPanel(),
-    1: createDefaultPanel(),
-    2: createDefaultPanel(),
-    3: createDefaultPanel()
+  const [panelImages, setPanelImages] = useState<Record<number, PanelImageState>>(() => {
+    const prefill = searchParams.get('prefillImage');
+    if (!prefill) {
+      return {
+        0: createDefaultPanel(),
+        1: createDefaultPanel(),
+        2: createDefaultPanel(),
+        3: createDefaultPanel()
+      };
+    }
+    const initial: Record<number, PanelImageState> = {};
+    const defaultMeta = {
+      originalSrc: prefill,
+      width: 1200,
+      height: 1200,
+      aspectRatio: 1,
+      name: searchParams.get('prefillName') || 'Design'
+    };
+    for (let i = 0; i < 20; i++) {
+      initial[i] = {
+        ...createDefaultPanel(),
+        imageUrl: prefill,
+        uploadedImage: defaultMeta,
+        scale: 1,
+        rotation: 0,
+        panX: 0,
+        panY: 0,
+        fitMode: 'cover'
+      };
+    }
+    return initial;
   });
 
   const switchProductSession = (newMaterial: string, newProductId: string) => {
@@ -3504,7 +3528,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [hoveredPanelIndex, setHoveredPanelIndex] = useState<number | null>(null);
 
   // Uploaded photo collection (all photos uploaded in this session)
-  const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
+  const [uploadedPhotos, setUploadedPhotos] = useState<string[]>(() => {
+    const prefill = searchParams.get('prefillImage');
+    return prefill ? [prefill] : [];
+  });
 
   // Arriving from a catalogue design's "Customize this Product" button: the
   // design's own artwork is passed as ?prefillImage= and dropped straight
@@ -3518,10 +3545,30 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const prefillImage = searchParams.get('prefillImage');
     if (!prefillImage || lastPrefillImageRef.current === prefillImage) return;
     lastPrefillImageRef.current = prefillImage;
-    const img = new Image();
-    img.onload = () => {
-      const width = img.naturalWidth || img.width || 1200;
-      const height = img.naturalHeight || img.height || 1200;
+
+    // Apply immediately so canvas is populated with zero delay
+    setUploadedPhotos((prev) => (prev.includes(prefillImage) ? prev : [prefillImage, ...prev]));
+    setPanelImages((prev) => {
+      const next = { ...prev };
+      for (let i = 0; i < 20; i++) {
+        if (i === 0 || !next[i]?.imageUrl) {
+          next[i] = {
+            ...createDefaultPanel(),
+            imageUrl: prefillImage,
+            scale: 1,
+            rotation: 0,
+            panX: 0,
+            panY: 0,
+            fitMode: 'cover'
+          };
+        }
+      }
+      return next;
+    });
+
+    const applyMetaAndSize = (w?: number, h?: number) => {
+      const width = w || 1200;
+      const height = h || 1200;
       const aspectRatio = width / height;
       const meta = {
         originalSrc: prefillImage,
@@ -3533,32 +3580,22 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       // Switch to a custom canvas size that matches the artwork's own
       // aspect ratio exactly, instead of cropping (fit 'cover') or
       // letterboxing (fit 'contain') it into a generic square/rectangle.
-      // Kept continuous (not snapped to the Custom Size dropdowns' coarse
-      // CUSTOM_SIZE_STEPS list) so the canvas proportions are genuinely
-      // accurate — the dropdown options are extended below to include
-      // this exact value so it still renders as a real selection there.
       const longSide = 16;
-      let w = aspectRatio >= 1 ? longSide : longSide * aspectRatio;
-      let h = aspectRatio >= 1 ? longSide / aspectRatio : longSide;
-      w = Math.max(4, Math.min(40, Math.round(w * 10) / 10));
-      h = Math.max(4, Math.min(40, Math.round(h * 10) / 10));
-      prefillSizeRef.current = { width: w, height: h };
-      setCustomWidth(w);
-      setCustomHeight(h);
+      let wDim = aspectRatio >= 1 ? longSide : longSide * aspectRatio;
+      let hDim = aspectRatio >= 1 ? longSide / aspectRatio : longSide;
+      wDim = Math.max(4, Math.min(40, Math.round(wDim * 10) / 10));
+      hDim = Math.max(4, Math.min(40, Math.round(hDim * 10) / 10));
+      prefillSizeRef.current = { width: wDim, height: hDim };
+      setCustomWidth(wDim);
+      setCustomHeight(hDim);
       setIsCustomSize(true);
-      setUploadedPhotos((prev) => (prev.includes(prefillImage) ? prev : [prefillImage, ...prev]));
       setPanelImages((prev) => {
         const next = { ...prev };
         for (let i = 0; i < 20; i++) {
-          if (i === 0 || !next[i]?.imageUrl) {
+          if (next[i]?.imageUrl === prefillImage) {
             next[i] = {
-              ...createDefaultPanel(),
-              imageUrl: prefillImage,
+              ...next[i],
               uploadedImage: meta,
-              scale: 1,
-              rotation: 0,
-              panX: 0,
-              panY: 0,
               fitMode: 'cover'
             };
           }
@@ -3567,24 +3604,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       });
       setActiveTab('SELECT SIZE');
     };
+
+    const img = new Image();
+    img.onload = () => {
+      applyMetaAndSize(img.naturalWidth || img.width, img.naturalHeight || img.height);
+    };
     img.onerror = () => {
-      setUploadedPhotos((prev) => (prev.includes(prefillImage) ? prev : [prefillImage, ...prev]));
-      setPanelImages((prev) => {
-        const next = { ...prev };
-        for (let i = 0; i < 20; i++) {
-          if (i === 0 || !next[i]?.imageUrl) {
-            next[i] = {
-              ...createDefaultPanel(),
-              imageUrl: prefillImage,
-              fitMode: 'contain'
-            };
-          }
-        }
-        return next;
-      });
-      setActiveTab('SELECT SIZE');
+      applyMetaAndSize(1200, 1200);
     };
     img.src = prefillImage;
+
+    if (img.complete && img.naturalWidth > 0) {
+      applyMetaAndSize(img.naturalWidth, img.naturalHeight);
+    }
   }, [searchParams]);
 
   // Mobile Upload & QR Code Sync State (matches Acrylic Customizer)
