@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Plus, Trash2 } from "lucide-react";
 import { apiClient, ApiError } from "@/lib/api-client";
 import type { ProductListItem, ProductStatus, ProductTypeSummary } from "@/lib/types/product";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
@@ -131,6 +131,38 @@ export default function ProductsPage() {
     },
     { header: "Base Price", cell: (row) => formatCurrency(row.basePrice) },
     { header: "Created", cell: (row) => formatDate(row.createdAt) },
+    ...(canEdit
+      ? [
+          {
+            header: "",
+            cell: (row: ProductListItem) => {
+              if (row.status === "ARCHIVED") return null;
+              const live = row.status === "ACTIVE";
+              return (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={visibilityMutation.isPending}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    visibilityMutation.mutate({
+                      id: row.id,
+                      status: live ? "DRAFT" : "ACTIVE",
+                    });
+                  }}
+                >
+                  {live ? (
+                    <EyeOff className="mr-1.5 h-4 w-4" />
+                  ) : (
+                    <Eye className="mr-1.5 h-4 w-4" />
+                  )}
+                  {live ? "Hide from website" : "Show on website"}
+                </Button>
+              );
+            },
+          },
+        ]
+      : []),
     ...(canDelete
       ? [
           {
