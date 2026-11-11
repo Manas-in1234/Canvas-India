@@ -2,6 +2,34 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { UserProfile } from '../types/auth';
+import { buildApiUrl } from '../api/productsApi';
+
+/**
+ * Mirrors the signed-in customer into the shop's customer list (what the admin sees).
+ * The backend only fills in a phone number that is still missing, so this is safe to repeat.
+ * Failures are ignored: it must never get in the way of signing in.
+ */
+const syncedKeys = new Set<string>();
+async function pushCustomerToBackend(userId: string, email: string | undefined, name: string, phone: string) {
+  const cleanPhone = phone.replace(/\D/g, '');
+  const key = `${userId}:${cleanPhone}`;
+  if (syncedKeys.has(key)) return;
+  try {
+    const response = await fetch(buildApiUrl('/storefront/customers/sync'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: userId,
+        email: email || undefined,
+        name: name || undefined,
+        phone: cleanPhone.length === 10 ? cleanPhone : undefined,
+      }),
+    });
+    if (response.ok) syncedKeys.add(key);
+  } catch {
+    /* ignore */
+  }
+}
 
 interface AuthContextType {
   user: User | null;
@@ -54,6 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           created_at: data.created_at,
           updated_at: data.updated_at,
         });
+        void pushCustomerToBackend(userId, email || data.email, data.full_name || '', data.phone || '');
       } else {
         // If profile row doesn't exist yet, populate from user metadata
         setProfile({
@@ -62,6 +91,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           full_name: user?.user_metadata?.full_name || '',
           phone: user?.user_metadata?.phone || '',
         });
+        void pushCustomerToBackend(
+          userId,
+          email,
+          user?.user_metadata?.full_name || user?.user_metadata?.name || '',
+          user?.user_metadata?.phone || '',
+        );
       }
     } catch (err) {
       console.error('Exception fetching profile:', err);
@@ -367,6 +402,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) return { error };
 
       setProfile((prev) => (prev ? { ...prev, ...params } : null));
+      void pushCustomerToBackend(
+        user.id,
+        user.email,
+        params.full_name ?? profile?.full_name ?? '',
+        params.phone ?? profile?.phone ?? '',
+      );
       return { error: null };
     } catch (err: any) {
       return { error: err };

@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 
 export const CheckoutPage: React.FC = () => {
-  const { user, profile, isConfigured } = useAuth();
+  const { user, profile, isConfigured, updateProfile } = useAuth();
   const { cartItems, clearCart } = useShop();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -243,6 +243,17 @@ export const CheckoutPage: React.FC = () => {
           console.warn('Could not auto-save address:', err);
         }
       }
+    }
+
+    // Every order needs a reachable mobile number, whichever address was chosen.
+    const orderPhone = getEffectiveShippingAddress().phone?.replace(/\D/g, '') ?? '';
+    if (orderPhone.length !== 10) {
+      alert('Please add a valid 10-digit mobile number for this order.');
+      return;
+    }
+    // Remember it on the customer's profile so they aren't asked again.
+    if (user && !profile?.phone) {
+      void updateProfile({ phone: orderPhone });
     }
 
     setStep(3);
