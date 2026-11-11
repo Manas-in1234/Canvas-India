@@ -99,6 +99,7 @@ export interface Order {
   total: number;
   shipping_address: Address;
   shipping_method: 'standard' | 'express';
+  payment_method?: 'COD';
   notes?: string;
   created_at: string;
   updated_at: string;

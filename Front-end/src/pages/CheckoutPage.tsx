@@ -3,7 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useShop } from '../context/ShopContext';
 import { addressService } from '../services/addressService';
-import { orderService } from '../services/orderService';
+import { buildApiUrl } from '../api/productsApi';
+import { orderService, type CreateOrderParams } from '../services/orderService';
 import { paymentService } from '../services/paymentService';
 import { delhiveryService, PincodeServiceabilityResult } from '../services/delhiveryService';
 import { validateDiscountCode, DiscountValidationError } from '../api/discountsApi';
@@ -57,7 +58,10 @@ export const CheckoutPage: React.FC = () => {
   const [saveToAccount, setSaveToAccount] = useState(true);
 
   // Shipping Method
-  const [shippingMethod, setShippingMethod] = useState<'standard' | 'express'>('standard');
+  const [shippingMethod, setShippingMethod] = useState<'standard' | 'express' | 'cod'>('standard');
+  const [codAvailability, setCodAvailability] = useState<{ pin: string; available: boolean } | null>(null);
+  const codRequest = React.useRef<{ fingerprint: string; id: string } | null>(null);
+  const submitting = React.useRef(false);
 
   // Coupon
   const [couponCode, setCouponCode] = useState('');
@@ -244,7 +248,25 @@ export const CheckoutPage: React.FC = () => {
     setStep(3);
   };
 
+  const checkoutPin = getEffectiveShippingAddress().postal_code;
+  const codAvailable = codAvailability?.pin === checkoutPin && codAvailability.available;
+  const codEligible = !couponApplied && cartItems.every(item => !item.customizationDetails && !item.photoUrl);
+  const isCod = shippingMethod === 'cod';
+
+  useEffect(() => {
+    if (step !== 3 || !/^[1-9][0-9]{5}$/.test(checkoutPin)) return;
+    const controller = new AbortController();
+    setCodAvailability(null);
+    fetch(buildApiUrl(`/shipping/serviceability?pincode=${encodeURIComponent(checkoutPin)}`), { signal: controller.signal })
+      .then(async response => response.ok && (await response.json()).cod === true)
+      .then(available => { if (!controller.signal.aborted) setCodAvailability({ pin: checkoutPin, available }); })
+      .catch(() => { if (!controller.signal.aborted) setCodAvailability({ pin: checkoutPin, available: false }); });
+    return () => controller.abort();
+  }, [checkoutPin, step]);
+
   const handleStartPayment = async () => {
+    if (submitting.current || processing || (isCod && (!codAvailable || !codEligible))) return;
+    submitting.current = true;
     setPaymentError(null);
     setProcessing(true);
 
@@ -252,7 +274,7 @@ export const CheckoutPage: React.FC = () => {
 
     try {
       // 1. Create order record
-      const order = await orderService.createOrder({
+      const orderParams: CreateOrderParams = {
         userId: user?.id || null,
         guestEmail: user?.email || guestEmail || null,
         guestPhone: profile?.phone || guestPhone || null,
@@ -270,8 +292,19 @@ export const CheckoutPage: React.FC = () => {
         tax,
         total,
         shippingAddress: address,
-        shippingMethod,
-      });
+        shippingMethod: shippingMethod === 'express' ? 'express' : 'standard',
+      };
+      if (isCod) {
+        const fingerprint = JSON.stringify(orderParams);
+        if (codRequest.current?.fingerprint !== fingerprint) {
+          codRequest.current = { fingerprint, id: crypto.randomUUID() };
+        }
+        const order = await orderService.createCodOrder(orderParams, codRequest.current.id);
+        clearCart();
+        navigate(`/order-success/${order.id}`, { state: { order } });
+        return;
+      }
+      const order = await orderService.createOrder(orderParams);
 
       // 2. Trigger Razorpay Payment
       await paymentService.initiatePayment({
@@ -325,6 +358,8 @@ export const CheckoutPage: React.FC = () => {
     } catch (err: any) {
       setProcessing(false);
       setPaymentError(err.message || 'An unexpected error occurred while placing your order.');
+    } finally {
+      submitting.current = false;
     }
   };
 
@@ -827,42 +862,58 @@ export const CheckoutPage: React.FC = () => {
                       </div>
                       <span className="text-xs font-bold text-[#002B49]">₹199</span>
                     </label>
+                    <label className={`flex items-center justify-between gap-3 rounded-xl border p-4 ${isCod ? 'border-[#002B49] ring-2 ring-[#002B49] bg-blue-50/30' : 'border-gray-200'}`}>
+                      <div className="flex items-center gap-3">
+                        <input type="radio" name="shipping_method" checked={isCod}
+                          disabled={processing || !codAvailable || !codEligible} onChange={() => setShippingMethod('cod')} />
+                        <div>
+                          <p className="text-xs font-bold text-gray-900">Cash on Delivery</p>
+                          <p className="text-[11px] text-gray-500">
+                            {!codEligible ? 'Available for catalog items without coupons or custom artwork.'
+                              : codAvailability?.pin !== checkoutPin ? 'Checking Cash on Delivery availability…'
+                              : !codAvailable ? 'Unavailable for this PIN code.'
+                              : 'Standard delivery (3–5 business days). Pay when your order arrives.'}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold text-[#002B49]">{subtotal >= 999 ? 'FREE' : '₹99'}</span>
+                    </label>
                   </div>
                 </div>
 
                 {/* Razorpay Gateway Call-To-Action Box */}
                 <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-[#002B49]">Payment Gateway</h2>
-                    <span className="text-[11px] font-semibold text-green-700 bg-green-50 px-2.5 py-1 rounded-full border border-green-200">
+                    <h2 className="text-lg font-bold text-[#002B49]">{isCod ? 'Cash on Delivery' : 'Payment Gateway'}</h2>
+                    {!isCod && <span className="text-[11px] font-semibold text-green-700 bg-green-50 px-2.5 py-1 rounded-full border border-green-200">
                       Razorpay Live Verified
-                    </span>
+                    </span>}
                   </div>
 
                   <p className="text-xs text-gray-600 mb-6 leading-relaxed">
-                    By clicking <strong>Pay Securely with Razorpay</strong>, the official Razorpay payment modal will launch, allowing payment via UPI (Google Pay, PhonePe, Paytm), Credit/Debit Cards, Net Banking, and Wallets.
+                    {isCod ? 'Pay the amount due when your order arrives.' : <>By clicking <strong>Pay Securely with Razorpay</strong>, the official Razorpay payment modal will launch, allowing payment via UPI, cards, net banking, and wallets.</>}
                   </p>
 
                   <button
                     onClick={handleStartPayment}
-                    disabled={processing}
+                    disabled={processing || (isCod && (!codAvailable || !codEligible))}
                     className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-[#002B49] hover:bg-[#001f35] text-white text-sm font-bold rounded-xl shadow-lg hover:shadow-xl transition disabled:opacity-50"
                   >
                     {processing ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Initializing Payment Gateway...</span>
+                        <span>{isCod ? 'Placing your order…' : 'Initializing Payment Gateway…'}</span>
                       </>
                     ) : (
                       <>
                         <Lock className="w-4 h-4 text-green-400" />
-                        <span>Pay Securely ₹{total.toLocaleString('en-IN')} with Razorpay</span>
+                        <span>{isCod ? `Place order · ₹${total.toLocaleString('en-IN')} due on delivery` : `Pay Securely ₹${total.toLocaleString('en-IN')} with Razorpay`}</span>
                         <ArrowRight className="w-4 h-4" />
                       </>
                     )}
                   </button>
 
-                  <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-center gap-4 text-[11px] text-gray-500">
+                  {!isCod && <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-center gap-4 text-[11px] text-gray-500">
                     <span className="flex items-center gap-1">
                       <ShieldCheck className="w-4 h-4 text-green-600" />
                       100% Secure Transaction
@@ -871,7 +922,7 @@ export const CheckoutPage: React.FC = () => {
                     <span>Supports UPI, Cards & Net Banking</span>
                     <span>•</span>
                     <span>Safe Cancellation & Refund Support</span>
-                  </div>
+                  </div>}
                 </div>
               </div>
             )}

@@ -1,3 +1,4 @@
+import { buildApiUrl } from '../api/productsApi';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Order, OrderItem, PaymentRecord } from '../types/auth';
 
@@ -30,6 +31,51 @@ export const orderService = {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const randomPart = Math.floor(1000 + Math.random() * 9000);
     return `CI-${datePart}-${randomPart}`;
+  },
+
+  async createCodOrder(params: CreateOrderParams, requestId: string): Promise<Order> {
+    const response = await fetch(buildApiUrl('/storefront/orders'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...params,
+        items: params.items.map(({ imageUrl, ...item }) => item),
+        customerEmail: params.guestEmail,
+        customerPhone: params.shippingAddress.phone,
+        paymentMethod: 'COD',
+        requestId,
+      }),
+    });
+    const receipt = await response.json();
+    if (!response.ok) throw new Error(receipt.message || 'Could not place your Cash on Delivery order.');
+    const now = new Date().toISOString();
+    const order: Order = {
+      id: receipt.id,
+      order_number: receipt.orderNumber,
+      status: 'confirmed',
+      payment_method: 'COD',
+      subtotal: params.subtotal,
+      discount: 0,
+      shipping_fee: params.shippingFee,
+      tax: params.tax,
+      total: Number(receipt.total),
+      shipping_address: params.shippingAddress,
+      shipping_method: 'standard',
+      created_at: now,
+      updated_at: now,
+      items: params.items.map((item, index) => ({
+        id: `${receipt.id}-${index}`, order_id: receipt.id, product_id: item.productId,
+        title: item.title, price: item.price, quantity: item.quantity,
+        image_url: item.imageUrl, created_at: now,
+      })),
+    };
+    try {
+      const orders: Order[] = JSON.parse(localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY) ?? '[]');
+      localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify([order, ...orders.filter(existing => existing.id !== order.id)]));
+    } catch {
+      // The server has already confirmed the order.
+    }
+    return order;
   },
 
   async createOrder(params: CreateOrderParams): Promise<Order> {
