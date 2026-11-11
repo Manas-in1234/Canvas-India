@@ -33,7 +33,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const navigate = useNavigate();
   return (
-    <div className={`group flex flex-col justify-between text-left select-none ${variant === 'listing' ? 'p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-stone-200/70 hover:border-[#0E4A93]/40 hover:shadow-md transition-all duration-300' : ''}`}>
+    <div className={`group flex flex-col justify-between text-left select-none min-w-0 w-full ${variant === 'listing' ? 'p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-stone-200/70 hover:border-[#0E4A93]/40 hover:shadow-md transition-all duration-300' : ''}`}>
       <div>
         {/* Product Image linked to /products/:id */}
         <div className={`relative aspect-[3/4] ${variant === 'listing' ? 'w-full rounded-lg sm:rounded-xl' : 'max-h-[170px] w-full rounded-lg'} overflow-hidden bg-stone-100`}>
@@ -155,7 +155,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
 
       {/* Action CTA: Add to Cart & Customize First / Order in bulk */}
-      <div className="mt-2.5 pt-1.5 border-t border-stone-100 flex items-center gap-1.5">
+      <div className="mt-2.5 pt-1.5 border-t border-stone-100 flex items-center gap-1 sm:gap-1.5 w-full min-w-0">
         <button
           type="button"
           onClick={(e) => {
@@ -163,7 +163,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             e.preventDefault();
             onAddToCart(product);
           }}
-          className="flex-1 py-1.5 px-2 rounded-lg bg-[#0E4A93] hover:bg-[#09356A] text-white text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs"
+          className="flex-1 min-w-0 py-1.5 px-1.5 sm:px-2 rounded-lg bg-[#0E4A93] hover:bg-[#09356A] text-white text-[10px] sm:text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs overflow-hidden"
           title="Add directly to cart"
         >
           <ShoppingCart className="w-3 h-3 shrink-0" />
@@ -184,7 +184,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 py-1.5 px-2 rounded-lg bg-white hover:bg-blue-50 text-[#0E4A93] border border-[#0E4A93] text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs text-center"
+            className="flex-1 min-w-0 py-1.5 px-1.5 sm:px-2 rounded-lg bg-white hover:bg-blue-50 text-[#0E4A93] border border-[#0E4A93] text-[10px] sm:text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs text-center overflow-hidden"
             title="Order this item in bulk"
           >
             <Package className="w-3 h-3 text-[#0E4A93] shrink-0" />
@@ -207,7 +207,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
               navigate(`/customize/${material}/single${queryString}`);
             }}
-            className="flex-1 py-1.5 px-2 rounded-lg bg-orange-50 hover:bg-orange-100 text-[#E8752A] border border-orange-200 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs"
+            className="flex-1 min-w-0 py-1.5 px-1.5 sm:px-2 rounded-lg bg-orange-50 hover:bg-orange-100 text-[#E8752A] border border-orange-200 text-[10px] sm:text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs overflow-hidden"
             title="Customize before ordering"
           >
             <Sparkles className="w-3 h-3 text-[#E8752A] shrink-0" />
