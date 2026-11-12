@@ -5660,16 +5660,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     setUploadedPhotos(nextUploaded);
 
     if (!stillHasUrl) {
-      const fallbackUrl = nextUploaded[0] || null;
+      // Just clear the slot — don't auto-fill it with whatever photo happens
+      // to be left in the tray. That silently re-applied an unrelated photo
+      // (and carried it into the next product selected) instead of actually
+      // clearing it.
       setPanelImages((prev) => {
         const next: Record<number, PanelImageState> = { ...prev };
         Object.keys(next).forEach((k) => {
           const slotIdx = Number(k);
           if (next[slotIdx]?.imageUrl === photoUrl) {
-            next[slotIdx] = {
-              ...createDefaultPanel(),
-              imageUrl: slotIdx === 0 && nextUploaded.length === 1 ? fallbackUrl : null
-            };
+            next[slotIdx] = { ...createDefaultPanel(), imageUrl: null };
           }
         });
         return next;
@@ -9865,17 +9865,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             className="w-full h-full object-cover pointer-events-none" 
                           />
                           {/* Move / Drag Indicator Icon */}
-                          <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-xs text-white p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                          <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-xs text-white p-0.5 rounded opacity-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block">
                             <Move className="w-2.5 h-2.5" />
                           </div>
-                          {/* Remove Photo Button */}
+                          {/* Remove Photo Button — always visible on mobile
+                              (there's no hover state on touch), hover-reveal
+                              only on larger pointer-driven screens. */}
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleRemoveUploadedPhoto(photo, pIdx);
                             }}
-                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-rose-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10"
+                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-rose-600 text-white flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all cursor-pointer z-10"
                             title="Remove photo"
                             aria-label="Remove photo"
                           >
@@ -11859,7 +11861,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             bottomSlot={
-              <div className="hidden md:flex flex-wrap items-center justify-center gap-2.5 text-[11px] font-bold text-stone-600 bg-white/90 backdrop-blur-xs px-4 py-1.5 rounded-full shadow-xs border border-stone-200/80">
+              <div className="flex flex-wrap items-center justify-center gap-1.5 md:gap-2.5 text-[9px] md:text-[11px] font-bold text-stone-600 bg-white/90 backdrop-blur-xs px-2.5 md:px-4 py-1 md:py-1.5 rounded-xl md:rounded-full shadow-xs border border-stone-200/80">
                 {activeMaterial === 'acrylic' ? (
                   <>
                     <span>
