@@ -754,9 +754,11 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           <SectionTitle title="Best Sellers" sub="Loved by artists, creators and home decorators" />
         </Container>
         <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
-            <button type="button" aria-label="Previous" onClick={() => scrollRow(carouselRef, -1)} className={arrowBtn}>
-              <ChevronLeft className="w-5 h-5" />
-            </button>
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Previous" onClick={() => scrollRow(carouselRef, -1)} className={arrowBtn}>
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+            </div>
             <div ref={carouselRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-3 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
               {bestsellers.map((p) => {
                 // Same catalogue design is often also sold as both Canvas and
@@ -807,9 +809,11 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 );
               })}
             </div>
-            <button type="button" aria-label="Next" onClick={() => scrollRow(carouselRef, 1)} className={arrowBtn}>
-              <ChevronRight className="w-5 h-5" />
-            </button>
+            <div className="hidden sm:block">
+              <button type="button" aria-label="Next" onClick={() => scrollRow(carouselRef, 1)} className={arrowBtn}>
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
         </div>
         <Container>
           <div className="text-center mt-5">
