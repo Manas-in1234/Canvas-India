@@ -5272,7 +5272,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Named distinctly from the panel-image pinch-zoom refs below, which track
   // a separate gesture on the uploaded photo itself.
   const itemPointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
-  const itemPinchStateRef = useRef<{ initialDistance: number; initialFontSize: number; initialScale: number } | null>(null);
+  const itemPinchStateRef = useRef<{
+    initialDistance: number;
+    initialFontSize: number;
+    initialScale: number;
+    initialAngle: number;
+    initialRotation: number;
+  } | null>(null);
   // Tracks whether the current pointer-down actually dragged the item any
   // meaningful distance, so the click handler can tell a tap (open the
   // editor) apart from a drag (just move it, don't also pop the editor open).
@@ -6005,7 +6011,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 position: 'absolute',
                 left: `${txt.x}%`,
                 top: `${txt.y}%`,
-                transform: 'translate(-50%, -50%)',
+                transform: `translate(-50%, -50%) rotate(${txt.rotation || 0}deg)`,
                 fontFamily: txt.fontFamily,
                 fontSize: `${txt.fontSize}px`,
                 fontWeight: txt.fontWeight === 'bold' ? 700 : 400,
@@ -6121,16 +6127,22 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     targetEl.setPointerCapture(e.pointerId);
     itemPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
-    // A second finger landing on the same element starts a pinch-to-resize
-    // instead of a drag — grab the two most recent touch points as the
-    // pinch baseline and cancel any in-progress single-finger drag.
+    // A second finger landing on the same element starts a combined
+    // pinch-to-resize + twist-to-rotate instead of a drag — grab the two
+    // most recent touch points as the baseline and cancel any in-progress
+    // single-finger drag.
     if (itemPointersRef.current.size >= 2) {
       const pts = Array.from(itemPointersRef.current.values()).slice(-2);
       const dist = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
+      const angle = Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x) * (180 / Math.PI);
       itemPinchStateRef.current = {
         initialDistance: dist,
         initialFontSize: type === 'text' ? (textElements.find((t) => t.id === id)?.fontSize || 32) : 32,
-        initialScale: type === 'clipart' ? (clipartElements.find((c) => c.id === id)?.scale || 1) : 1
+        initialScale: type === 'clipart' ? (clipartElements.find((c) => c.id === id)?.scale || 1) : 1,
+        initialAngle: angle,
+        initialRotation: type === 'text'
+          ? (textElements.find((t) => t.id === id)?.rotation || 0)
+          : (clipartElements.find((c) => c.id === id)?.rotation || 0)
       };
       itemDragRef.current = null;
       return;
@@ -6151,12 +6163,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       const pts = Array.from(itemPointersRef.current.values()).slice(-2);
       const dist = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
       const ratio = dist / itemPinchStateRef.current.initialDistance;
+      const angle = Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x) * (180 / Math.PI);
+      // Full, unrestricted rotation — any angle in either direction.
+      const newRotation = itemPinchStateRef.current.initialRotation + (angle - itemPinchStateRef.current.initialAngle);
       if (type === 'text') {
         const newSize = Math.round(Math.max(10, Math.min(120, itemPinchStateRef.current.initialFontSize * ratio)));
-        handleUpdateActiveText({ fontSize: newSize });
+        handleUpdateActiveText({ fontSize: newSize, rotation: newRotation });
       } else {
         const newScale = Math.max(0.2, Math.min(4, itemPinchStateRef.current.initialScale * ratio));
-        handleUpdateActiveClipart({ scale: newScale });
+        handleUpdateActiveClipart({ scale: newScale, rotation: newRotation });
       }
       return;
     }
@@ -6166,8 +6181,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (Math.hypot(e.clientX - d.startX, e.clientY - d.startY) > 6) {
       hasDraggedItemRef.current = true;
     }
-    const nx = Math.max(5, Math.min(95, d.origX + ((e.clientX - d.startX) / d.w) * 100));
-    const ny = Math.max(5, Math.min(95, d.origY + ((e.clientY - d.startY) / d.h) * 100));
+    const nx = Math.max(1, Math.min(99, d.origX + ((e.clientX - d.startX) / d.w) * 100));
+    const ny = Math.max(1, Math.min(99, d.origY + ((e.clientY - d.startY) / d.h) * 100));
     if (type === 'text') {
       handleUpdateActiveText({ x: nx, y: ny });
     } else {
