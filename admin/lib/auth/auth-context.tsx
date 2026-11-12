@@ -69,7 +69,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    const promise = run().finally(() => {
+    const exchange = async (): Promise<RefreshOutcome> => navigator.locks
+      ? await navigator.locks.request(REFRESH_TOKEN_KEY, run)
+      : run();
+    const promise = exchange().finally(() => {
       refreshInFlight.current = null;
     });
     refreshInFlight.current = promise;
@@ -121,6 +124,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Intentionally run once on mount only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!serverUnavailable) return;
+    const reconnect = () => { void restoreSession(); };
+    window.addEventListener('online', reconnect);
+    return () => window.removeEventListener('online', reconnect);
+  }, [serverUnavailable, restoreSession]);
 
   const login = useCallback(async (email: string, password: string) => {
     const result = await apiClient.post<LoginResponse>('/auth/login', { email, password });

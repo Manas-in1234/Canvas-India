@@ -64,13 +64,27 @@ function HeroImageCard({ slot, image }: { slot: HeroImageSlot; image?: HeroImage
 
   const changeImage = useMutation({
     mutationFn: async (file: File | null) => {
-      if (!file) {
-        await apiClient.delete(route);
-        return null;
+      const prepared = file ? await prepareImage(file) : null;
+      try {
+        if (!prepared) {
+          await apiClient.delete(route);
+          return null;
+        }
+        const data = new FormData();
+        data.set('file', prepared);
+        return await apiClient.upload<HeroImage>(route, data);
+      } catch (error) {
+        if (!(error instanceof ApiError) || ![0, 502, 503, 504].includes(error.status)) throw error;
+        const current = await apiClient.get<HeroImage[]>('/admin/hero-images')
+          .then(images => images.find(item => item.ownerId === slot))
+          .catch(() => undefined);
+        if (prepared && current) {
+          const digest = await crypto.subtle.digest('SHA-256', await prepared.arrayBuffer());
+          const checksum = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+          if (current.checksum === checksum) return current;
+        }
+        throw new ApiError(0, 'The server did not confirm the update. Check the current image before retrying.');
       }
-      const data = new FormData();
-      data.set('file', await prepareImage(file));
-      return apiClient.upload<HeroImage>(route, data);
     },
     onSuccess: (saved) => {
       queryClient.setQueryData<HeroImage[]>(queryKey, (current = []) => [

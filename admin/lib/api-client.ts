@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api/v1';
+const API_BASE_URL = process.env.NODE_ENV === 'production'
+  ? '/api/v1'
+  : process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api/v1';
 
 export const buildAdminApiUrl = (path: string) => `${API_BASE_URL}${path}`;
 
@@ -47,7 +49,7 @@ async function fetchWithRetry(path: string, init: RequestInit): Promise<Response
   let lastError: unknown;
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
-      const response = await fetch(buildAdminApiUrl(path), init);
+      const response = await fetch(buildAdminApiUrl(path), { ...init, signal: init.signal ?? AbortSignal.timeout(30000) });
       if (!TRANSIENT_STATUSES.has(response.status) || attempt === attempts) return response;
     } catch (err) {
       lastError = err;
