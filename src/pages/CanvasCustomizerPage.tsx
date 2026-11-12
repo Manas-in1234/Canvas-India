@@ -9412,7 +9412,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 />
               )
             ) : (
-            <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
+            <div className="flex-1 min-h-0 p-3 sm:p-4 space-y-2.5 sm:space-y-4 overflow-y-auto">
               <div>
                 <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-1">
                   Upload Photos
@@ -9595,7 +9595,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 <button
                   type="button"
                   onClick={() => setUploadMode('computer')}
-                  className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 py-1.5 sm:py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     uploadMode === 'computer'
                       ? 'bg-white text-[#0E4A93] shadow-xs'
                       : 'text-stone-600 hover:text-stone-900'
@@ -9607,7 +9607,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 <button
                   type="button"
                   onClick={() => setUploadMode('mobile')}
-                  className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 py-1.5 sm:py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     uploadMode === 'mobile'
                       ? 'bg-white text-[#0E4A93] shadow-xs'
                       : 'text-stone-600 hover:text-stone-900'
@@ -9634,7 +9634,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       uploadTargetRef.current = (isSplitProduct || isMosaicProduct) ? 0 : -1;
                       fileInputRef.current?.click();
                     }}
-                    className="w-full py-3 px-4 bg-[#0E4A93] hover:bg-[#0B3A75] active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
+                    className="w-full py-2.5 sm:py-3 px-4 bg-[#0E4A93] hover:bg-[#0B3A75] active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <UploadCloud className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
                     <span>{isMobile ? 'Select Photo from Device' : 'Browse Photos to Upload'}</span>
@@ -9650,10 +9650,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       e.preventDefault();
                       handleFilesUpload(e.dataTransfer.files, (isSplitProduct || isMosaicProduct) ? 0 : -1);
                     }}
-                    className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-4 sm:p-6 text-center cursor-pointer transition-all group"
+                    className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-3 sm:p-6 text-center cursor-pointer transition-all group"
                   >
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white text-[#0E4A93] shadow-sm flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
-                      <UploadCloud className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+                    <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-white text-[#0E4A93] shadow-sm flex items-center justify-center mx-auto mb-1.5 sm:mb-3 group-hover:scale-110 transition-transform">
+                      <UploadCloud className="w-4 h-4 sm:w-6 sm:h-6 stroke-[2.5]" />
                     </div>
                     <div className="text-xs font-bold text-stone-900">
                       {isMobile ? 'Or tap here to choose from Gallery / Camera' : 'Click to Browse or Drag Photos'}
@@ -11556,7 +11556,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         {/* ------------------------------------------------------------------- */}
         {/* COLUMN 3: MAIN RIGHT LIVE CANVAS PREVIEW WORKSPACE                  */}
         {/* ------------------------------------------------------------------- */}
-        <main className="order-1 md:order-3 w-full min-w-0 h-[42vh] min-h-[260px] max-h-[48vh] md:h-full md:max-h-none md:flex-1 shrink-0 md:shrink flex flex-col bg-[#E2E8F0]/60 relative overflow-x-hidden overflow-y-auto md:overflow-hidden">
+        <main className="order-1 md:order-3 w-full min-w-0 h-[50vh] min-h-[300px] max-h-[56vh] md:h-full md:max-h-none md:flex-1 shrink-0 md:shrink flex flex-col bg-[#E2E8F0]/60 relative overflow-x-hidden overflow-y-auto md:overflow-hidden">
           {/* Top Action Bar for Workspace */}
           {isBusRollProduct ? (
             <BusRollTopToolbar
