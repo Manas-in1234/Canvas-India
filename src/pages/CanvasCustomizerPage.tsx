@@ -4502,7 +4502,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       0: {
         ...createDefaultPanel(),
         imageUrl: tmpl.image,
-        fitMode: 'contain',
+        fitMode: 'cover',
         scale: 1,
         rotation: 0,
         panX: 0,
