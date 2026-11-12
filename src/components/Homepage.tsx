@@ -783,26 +783,10 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                         className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                         onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
                       />
-                      <span className="absolute top-1.5 left-1.5 bg-gradient-to-r from-[#E8752A] to-[#EC4899] text-white text-[8px] sm:text-[10px] font-bold px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full shadow">Bestseller</span>
+                      <span className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
+                        <Star className="w-4 h-4 fill-[#E8752A] text-[#E8752A]" />
+                      </span>
                     </Link>
-                    {hasBothFormats && (
-                      <div className="flex items-center gap-1 mb-1.5 px-0.5">
-                        {(['canvas', 'acrylic'] as const).map((fmt) => (
-                          <button
-                            key={fmt}
-                            type="button"
-                            onClick={() => setBestsellerFormat((prev) => ({ ...prev, [baseId]: fmt }))}
-                            className={`flex-1 py-0.5 sm:py-1 rounded-md text-[8px] sm:text-[10px] font-bold capitalize transition-colors cursor-pointer ${
-                              activeFormat === fmt
-                                ? 'bg-[#0E4A93] text-white'
-                                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                            }`}
-                          >
-                            {fmt}
-                          </button>
-                        ))}
-                      </div>
-                    )}
                     <div className="flex items-start justify-between gap-1.5 px-0.5">
                       <div className="min-w-0">
                         <Link to={`/products/${d.id}`} className="block text-[#1A4F53] font-bold text-[11px] sm:text-[17px] leading-tight mb-0.5 truncate hover:text-[#0E4A93]">
