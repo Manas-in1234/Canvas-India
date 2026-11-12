@@ -330,14 +330,27 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               </button>
             </div>
 
-            {/* Mobile/tablet only: single festive offers banner below the text */}
+            {/* Mobile/tablet only: single festive offers banner below the text.
+                No card edge/shadow — the photo's top fades into the hero's own
+                cream background (same masked-blend technique as the desktop
+                version's photo), so it reads as a continuation of the page
+                rather than a boxed-in insert. */}
             <button
               type="button"
               onClick={handleCustomizeFestiveGift}
-              className="lg:hidden mt-8 relative w-full aspect-[16/9] rounded-2xl text-left shadow-md overflow-hidden cursor-pointer"
+              className="lg:hidden mt-8 relative w-full aspect-[16/9] text-left cursor-pointer"
             >
-              <StorefrontHeroImage slot="home" mobile alt="" className="absolute inset-0 w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#7C2D12]/95 via-[#9A3412]/60 to-[#9A3412]/10" />
+              <StorefrontHeroImage
+                slot="home"
+                mobile
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{
+                  maskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.5) 12%, #000 26%, #000 100%)',
+                  WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.5) 12%, #000 26%, #000 100%)',
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#7C2D12]/95 via-[#9A3412]/55 to-transparent" />
               <div className="relative h-full flex flex-col justify-end p-5">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">{promotion.saleName}</span>
                 <div className="font-bold text-white text-2xl leading-tight mt-0.5 drop-shadow-md" style={{ fontFamily: SERIF }}>

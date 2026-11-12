@@ -1350,16 +1350,6 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 );
               })}
-
-              {/* Kept inside the scrollable list (not as a fixed footer below
-                  it) so it's always reachable by scrolling, regardless of
-                  viewport/toolbar height quirks that could otherwise push a
-                  fixed footer off-screen. */}
-              <div className="mt-2 p-3 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-600 space-y-1">
-                <div className="font-semibold text-stone-900">Need Help?</div>
-                <div>WhatsApp: +91 78930 51555</div>
-                <div className="text-[11px] text-stone-500">Pan-India delivery with live tracking</div>
-              </div>
             </div>
           </div>
           <div className="flex-1" onClick={() => setMobileMenuOpen(false)} />
