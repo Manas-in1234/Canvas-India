@@ -144,6 +144,21 @@
   }
 }
 
+/* Mobile customizer panel: slides up from the bottom when a drill-down
+   tab (Products, Wrap & Border, Layouts, etc) opens over the canvas. */
+@keyframes customizerPanelSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.customizer-panel-slide-up {
+  animation: customizerPanelSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .cta-shiny-glow {
   box-shadow: 0 8px 20px -2px rgba(245, 110, 15, 0.65), 0 4px 10px rgba(13, 71, 161, 0.3);
   animation: ctaOrangeGlow 3s ease-in-out infinite;

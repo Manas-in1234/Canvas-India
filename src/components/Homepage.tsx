@@ -146,7 +146,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
 
   const handleStartCreatingCanvas = () => {
     const first = allProducts.find((p) => p.categorySlug === 'canvas');
-    navigate(`/customize/canvas/${first?.slug || first?.id || 'canvas-single'}?tab=products`);
+    navigate(`/customize/canvas/${first?.slug || first?.id || 'canvas-single'}`);
   };
 
   const handleCustomizeFestiveGift = () => {

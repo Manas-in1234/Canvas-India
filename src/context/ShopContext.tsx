@@ -316,7 +316,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
       navigate(`/customize/${material}/single${queryString}`);
     } else {
-      navigate('/customize/canvas/single?tab=products');
+      navigate('/customize/canvas/single');
     }
   };
 

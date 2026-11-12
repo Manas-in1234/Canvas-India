@@ -246,7 +246,7 @@ export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
     <section
       className={`w-full md:w-[480px] lg:w-[500px] xl:w-[515px] bg-white border-b md:border-b-0 md:border-r border-stone-200 flex-col z-10 md:flex md:flex-none md:h-full overflow-hidden shadow-sm ${
         isOverlay
-          ? 'fixed top-14 inset-x-0 bottom-0 z-40 flex animate-in slide-in-from-bottom duration-300 md:static md:inset-auto md:z-10'
+          ? 'fixed top-14 inset-x-0 bottom-0 z-40 flex customizer-panel-slide-up md:static md:inset-auto md:z-10 md:[animation:none]'
           : 'order-2 md:order-none flex'
       }`}
     >
