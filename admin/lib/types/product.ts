@@ -58,6 +58,8 @@ export interface ProductDetail extends Omit<ProductListItem, 'categories'> {
 }
 
 export interface CreateProductInput {
+  status?: "DRAFT" | "ACTIVE";
+  storefront?: Record<string, unknown>;
   name: string;
   slug: string;
   description?: string;

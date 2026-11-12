@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ProductsService } from './products.service.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
@@ -27,7 +27,10 @@ export class ProductsController {
 
   @Post()
   @RequirePermissions('products.create')
-  create(@Body() dto: CreateProductDto) {
+  create(@Body() dto: CreateProductDto, @CurrentUser() user: AuthenticatedUser) {
+    if (dto.status === 'ACTIVE' && !user.permissions.includes('products.edit')) {
+      throw new ForbiddenException('You do not have permission to publish products.');
+    }
     return this.productsService.create(dto);
   }
 
