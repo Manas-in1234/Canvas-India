@@ -2740,7 +2740,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (requestedTab === 'UPLOAD') return 'UPLOAD';
     if (requestedTab === 'SIZE' || requestedTab === 'SELECT SIZE') return 'SELECT SIZE';
     const initialPt = resolveCurrentProductId(routeMaterial, productId);
-    if (initialPt.includes('digital') || initialPt.includes('painting')) return 'EFFECTS & OPTIONS';
     if (initialPt.includes('bus')) return 'CREATE BUS ROLL';
     if (initialPt.includes('banner')) return 'UPLOAD';
     if (searchParams.get('prefillImage')) return 'SELECT SIZE';
@@ -4768,7 +4767,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
-      setActiveTab('EFFECTS & OPTIONS');
+      setActiveTab('UPLOAD');
       navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
@@ -4928,9 +4927,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     } else {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
-      if (productId.includes('digital') || productId.includes('painting')) {
-        setActiveTab('EFFECTS & OPTIONS');
-      } else if (productId.includes('bus')) {
+      if (productId.includes('bus')) {
         setActiveTab('CREATE BUS ROLL');
       } else if (!currentActiveImage) {
         setActiveTab('UPLOAD');

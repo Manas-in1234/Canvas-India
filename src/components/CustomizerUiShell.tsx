@@ -91,7 +91,7 @@ export const CustomizerHeader: React.FC<CustomizerHeaderProps> = ({
           <img
             src="/canvas-india-official-logo.webp"
             alt="Canvas India"
-            className="h-6 sm:h-8 md:h-9 w-auto max-w-[90px] sm:max-w-none object-contain block select-none"
+            className="h-8 sm:h-8 md:h-9 w-auto max-w-[120px] sm:max-w-none object-contain block select-none"
           />
         </Link>
       </div>
