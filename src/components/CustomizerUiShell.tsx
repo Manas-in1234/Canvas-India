@@ -604,7 +604,7 @@ export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps>
       {/* Dynamic Size Indicator directly below the Product Preview */}
       <div
         data-testid="customizer-size-indicator"
-        className="mt-1.5 sm:mt-3 inline-flex items-center justify-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-stone-300 bg-white text-[11px] sm:text-xs font-extrabold text-stone-700 shadow-xs"
+        className="mt-9 sm:mt-6 inline-flex items-center justify-center px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-stone-300 bg-white text-[11px] sm:text-xs font-extrabold text-stone-700 shadow-xs"
       >
         {sizeLabel}
       </div>
