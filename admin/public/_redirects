@@ -1,13 +1,18 @@
+# Creation pages take precedence over record detail routes.
+/products/new       /products/new            200
+/roles/new          /roles/new               200
+/segments/new       /segments/new            200
+
 # Static export builds one placeholder shell per dynamic detail route (the
 # actual id is resolved client-side from the API, never at build time) — map
 # any real id under these paths to that shell so Cloudflare Pages serves it
 # instead of a 404.
 /orders/*           /orders/placeholder           200
 /customers/*        /customers/placeholder        200
-/products/*         /products/placeholder         200
+/products/:id         /products/placeholder         200
 /ndr/*              /ndr/placeholder              200
-/roles/*            /roles/placeholder            200
-/segments/*         /segments/placeholder         200
+/roles/:id            /roles/placeholder            200
+/segments/:id         /segments/placeholder         200
 /artwork/*          /artwork/placeholder          200
 /shapes/*           /shapes/placeholder           200
 /option-categories/* /option-categories/placeholder 200
