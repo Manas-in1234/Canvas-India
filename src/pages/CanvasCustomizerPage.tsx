@@ -5273,6 +5273,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // a separate gesture on the uploaded photo itself.
   const itemPointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
   const itemPinchStateRef = useRef<{ initialDistance: number; initialFontSize: number; initialScale: number } | null>(null);
+  // Tracks whether the current pointer-down actually dragged the item any
+  // meaningful distance, so the click handler can tell a tap (open the
+  // editor) apart from a drag (just move it, don't also pop the editor open).
+  const hasDraggedItemRef = useRef(false);
 
   const activeTextElement = useMemo(() => {
     if (selectedElement?.type === 'text' && selectedElement.id) {
@@ -5990,7 +5994,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 e.stopPropagation();
                 setSelectedElement({ type: 'text', id: txt.id });
                 setActivePanelIndex(slotIdx);
-                setShowTextModal(true);
+                // Only open the editor on a genuine tap — not after the
+                // pointer actually dragged the text, which also fires a
+                // click once released.
+                if (!hasDraggedItemRef.current) {
+                  setShowTextModal(true);
+                }
               }}
               style={{
                 position: 'absolute',
@@ -6107,10 +6116,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const startItemDrag = (e: React.PointerEvent, type: 'text' | 'clipart', id: string, x: number, y: number) => {
     e.stopPropagation();
     setSelectedElement({ type, id });
-    if (type === 'text') {
-      setShowTextModal(true);
-      setShowClipartModal(false);
-    }
+    hasDraggedItemRef.current = false;
     const targetEl = e.currentTarget as HTMLElement;
     targetEl.setPointerCapture(e.pointerId);
     itemPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -6157,6 +6163,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
     const d = itemDragRef.current;
     if (!d) return;
+    if (Math.hypot(e.clientX - d.startX, e.clientY - d.startY) > 6) {
+      hasDraggedItemRef.current = true;
+    }
     const nx = Math.max(5, Math.min(95, d.origX + ((e.clientX - d.startX) / d.w) * 100));
     const ny = Math.max(5, Math.min(95, d.origY + ((e.clientY - d.startY) / d.h) * 100));
     if (type === 'text') {
