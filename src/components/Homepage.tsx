@@ -706,7 +706,6 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 >
                   <div className="relative w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-1.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
                     <img src={o.bannerImage} alt={o.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <span className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-base shadow-sm">{o.emoji}</span>
                   </div>
                   <div className="flex items-start justify-between gap-1.5 px-0.5">
                     <div className="min-w-0">
@@ -785,9 +784,6 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                         className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                         onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
                       />
-                      <span className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
-                        <Star className="w-4 h-4 fill-[#E8752A] text-[#E8752A]" />
-                      </span>
                     </Link>
                     <div className="flex items-start justify-between gap-1.5 px-0.5">
                       <div className="min-w-0">
