@@ -16,7 +16,8 @@ import {
   Smile,
   Eye,
   Box,
-  Trash2
+  Trash2,
+  X
 } from 'lucide-react';
 
 // ============================================================================
@@ -220,19 +221,47 @@ export interface CustomizerPanelProps {
   metaText?: string;
   badge?: string;
   children: React.ReactNode;
+  // Desktop is always a permanently-docked column (via md:), unaffected by
+  // this. On mobile: 'overlay' (default) slides the panel in full-screen
+  // above the canvas, for drill-down tabs like Products/Wrap/Layouts.
+  // 'inline' keeps it in normal document flow after the canvas instead, for
+  // the resting/Upload tab, so the canvas stays the prominent middle
+  // content while upload-management content (photo thumbnails etc.) stays
+  // reachable below it rather than hidden behind an overlay.
+  mobileMode?: 'overlay' | 'inline';
+  onCloseMobile?: () => void;
 }
 
 export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
   title,
   metaText,
   badge,
-  children
+  children,
+  mobileMode = 'overlay',
+  onCloseMobile
 }) => {
   const resolvedMeta = metaText || badge;
+  const isOverlay = mobileMode === 'overlay';
   return (
-    <section className="w-full md:w-[480px] lg:w-[500px] xl:w-[515px] bg-white border-b md:border-b-0 md:border-r border-stone-200 flex flex-col z-10 md:flex-none md:h-full overflow-visible md:overflow-hidden shadow-sm">
+    <section
+      className={`w-full md:w-[480px] lg:w-[500px] xl:w-[515px] bg-white border-b md:border-b-0 md:border-r border-stone-200 flex-col z-10 md:flex md:flex-none md:h-full overflow-hidden shadow-sm ${
+        isOverlay
+          ? 'fixed top-14 inset-x-0 bottom-0 z-40 flex animate-in slide-in-from-right duration-200 md:static md:inset-auto md:z-10'
+          : 'order-2 md:order-none flex'
+      }`}
+    >
+      {isOverlay && onCloseMobile && (
+        <button
+          type="button"
+          onClick={onCloseMobile}
+          className="md:hidden absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center shadow-xs cursor-pointer"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
       {title && <CustomizerSectionHeader title={title} metaText={resolvedMeta} />}
-      <div className="max-h-[60vh] md:max-h-none md:flex-1 overflow-y-auto min-h-0 flex flex-col pb-[max(1rem,env(safe-area-inset-bottom,16px))]">
+      <div className="flex-1 md:flex-1 overflow-y-auto min-h-0 flex flex-col pb-[max(1rem,env(safe-area-inset-bottom,16px))]">
         {children}
       </div>
     </section>
