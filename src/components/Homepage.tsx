@@ -338,7 +338,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             <button
               type="button"
               onClick={handleCustomizeFestiveGift}
-              className="lg:hidden mt-8 relative w-full aspect-[16/9] text-left cursor-pointer"
+              className="lg:hidden mt-4 relative w-full aspect-[16/9] text-left cursor-pointer"
             >
               <StorefrontHeroImage
                 slot="home"
