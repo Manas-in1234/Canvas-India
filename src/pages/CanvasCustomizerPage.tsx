@@ -9157,7 +9157,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   };
 
   return (
-    <div className="w-full h-screen flex flex-col bg-[#F1F5F9] text-stone-900 font-manrope overflow-hidden select-none">
+    <div className="w-full min-h-screen md:h-screen flex flex-col bg-[#F1F5F9] text-stone-900 font-manrope overflow-y-auto md:overflow-hidden select-none">
       <CustomizerPreloader active={preloaderActive} />
       {/* SVG ClipPath Mask Definitions for non-rectangular canvas shapes */}
       <svg width="0" height="0" className="absolute pointer-events-none opacity-0" aria-hidden="true">
@@ -9295,7 +9295,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       {/* ===================================================================== */}
       {/* 2. BODY CONTAINER: 3-COLUMN LAYOUT (Shared with Acrylic Customizer)   */}
       {/* ===================================================================== */}
-      <div className="flex-1 min-w-0 flex flex-col md:flex-row overflow-hidden relative">
+      <div className="flex-1 min-w-0 flex flex-col md:flex-row md:overflow-hidden relative">
         {/* COLUMN 1: LEFT VERTICAL SIDEBAR */}
         <CustomizerSidebar
           items={toolbarItems}
@@ -11626,7 +11626,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         {/* ------------------------------------------------------------------- */}
         {/* COLUMN 3: MAIN RIGHT LIVE CANVAS PREVIEW WORKSPACE                  */}
         {/* ------------------------------------------------------------------- */}
-        <main className="order-1 md:order-3 w-full min-w-0 h-[56vh] min-h-[300px] max-h-[64vh] md:h-full md:max-h-none md:flex-1 shrink md:shrink flex flex-col bg-[#E2E8F0]/60 relative overflow-hidden">
+        <main className="order-1 md:order-3 w-full min-w-0 min-h-[420px] md:min-h-0 md:h-full md:max-h-none md:flex-1 flex flex-col bg-[#E2E8F0]/60 relative overflow-hidden">
           {/* Top Action Bar for Workspace */}
           {isBusRollProduct ? (
             <BusRollTopToolbar

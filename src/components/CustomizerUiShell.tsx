@@ -230,9 +230,9 @@ export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
 }) => {
   const resolvedMeta = metaText || badge;
   return (
-    <section className="w-full md:w-[480px] lg:w-[500px] xl:w-[515px] bg-white border-b md:border-b-0 md:border-r border-stone-200 flex flex-col z-10 flex-1 md:flex-none min-h-[220px] md:min-h-0 md:h-full overflow-hidden shadow-sm">
+    <section className="w-full md:w-[480px] lg:w-[500px] xl:w-[515px] bg-white border-b md:border-b-0 md:border-r border-stone-200 flex flex-col z-10 md:flex-none md:h-full overflow-visible md:overflow-hidden shadow-sm">
       {title && <CustomizerSectionHeader title={title} metaText={resolvedMeta} />}
-      <div className="flex-1 overflow-y-auto min-h-0 flex flex-col pb-[max(1rem,env(safe-area-inset-bottom,16px))]">
+      <div className="max-h-[60vh] md:max-h-none md:flex-1 overflow-y-auto min-h-0 flex flex-col pb-[max(1rem,env(safe-area-inset-bottom,16px))]">
         {children}
       </div>
     </section>
