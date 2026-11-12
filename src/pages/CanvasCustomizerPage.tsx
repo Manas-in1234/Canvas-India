@@ -5267,6 +5267,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     height: 420
   });
   const itemDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number; w: number; h: number } | null>(null);
+  // Multi-touch tracking for pinch-to-resize on text/clipart items: a second
+  // finger landing on the same element switches from drag to pinch-scale.
+  // Named distinctly from the panel-image pinch-zoom refs below, which track
+  // a separate gesture on the uploaded photo itself.
+  const itemPointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const itemPinchStateRef = useRef<{ initialDistance: number; initialFontSize: number; initialScale: number } | null>(null);
 
   const activeTextElement = useMemo(() => {
     if (selectedElement?.type === 'text' && selectedElement.id) {
@@ -6106,14 +6112,49 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setShowClipartModal(false);
     }
     const targetEl = e.currentTarget as HTMLElement;
+    targetEl.setPointerCapture(e.pointerId);
+    itemPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    // A second finger landing on the same element starts a pinch-to-resize
+    // instead of a drag — grab the two most recent touch points as the
+    // pinch baseline and cancel any in-progress single-finger drag.
+    if (itemPointersRef.current.size >= 2) {
+      const pts = Array.from(itemPointersRef.current.values()).slice(-2);
+      const dist = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
+      itemPinchStateRef.current = {
+        initialDistance: dist,
+        initialFontSize: type === 'text' ? (textElements.find((t) => t.id === id)?.fontSize || 32) : 32,
+        initialScale: type === 'clipart' ? (clipartElements.find((c) => c.id === id)?.scale || 1) : 1
+      };
+      itemDragRef.current = null;
+      return;
+    }
+
     const parentContainer = targetEl.closest('.ci-slot-container') || stageRef.current;
     const rect = parentContainer?.getBoundingClientRect() || stageRef.current?.getBoundingClientRect();
     if (!rect) return;
     itemDragRef.current = { startX: e.clientX, startY: e.clientY, origX: x, origY: y, w: rect.width, h: rect.height };
-    targetEl.setPointerCapture(e.pointerId);
   };
 
   const moveItemDrag = (e: React.PointerEvent, type: 'text' | 'clipart', id: string) => {
+    if (itemPointersRef.current.has(e.pointerId)) {
+      itemPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+
+    if (itemPinchStateRef.current && itemPointersRef.current.size >= 2) {
+      const pts = Array.from(itemPointersRef.current.values()).slice(-2);
+      const dist = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
+      const ratio = dist / itemPinchStateRef.current.initialDistance;
+      if (type === 'text') {
+        const newSize = Math.round(Math.max(10, Math.min(120, itemPinchStateRef.current.initialFontSize * ratio)));
+        handleUpdateActiveText({ fontSize: newSize });
+      } else {
+        const newScale = Math.max(0.2, Math.min(4, itemPinchStateRef.current.initialScale * ratio));
+        handleUpdateActiveClipart({ scale: newScale });
+      }
+      return;
+    }
+
     const d = itemDragRef.current;
     if (!d) return;
     const nx = Math.max(5, Math.min(95, d.origX + ((e.clientX - d.startX) / d.w) * 100));
@@ -6125,8 +6166,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
   };
 
-  const endItemDrag = () => {
-    itemDragRef.current = null;
+  const endItemDrag = (e?: React.PointerEvent) => {
+    if (e) itemPointersRef.current.delete(e.pointerId);
+    if (itemPointersRef.current.size < 2) {
+      itemPinchStateRef.current = null;
+    }
+    if (itemPointersRef.current.size === 0) {
+      itemDragRef.current = null;
+    }
   };
 
   const updateActivePanelTransform = (updater: (curr: PanelImageState) => Partial<PanelImageState>) => {
