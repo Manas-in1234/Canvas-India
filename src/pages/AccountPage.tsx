@@ -23,6 +23,15 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
+
+/** Brings any stored phone format (+91 98765 43210, 919876543210, 09876543210) down to the 10-digit mobile number. */
+const toTenDigitPhone = (raw?: string | null): string => {
+  let digits = (raw || '').replace(/\D/g, '');
+  if (digits.length > 10 && digits.startsWith('91')) digits = digits.slice(2);
+  if (digits.length > 10 && digits.startsWith('0')) digits = digits.slice(1);
+  return digits.slice(-10);
+};
+
 export const AccountPage: React.FC = () => {
   const { user, profile, signOut, updateProfile } = useAuth();
   const { wishlistIds, allProducts } = useShop();
@@ -54,14 +63,14 @@ export const AccountPage: React.FC = () => {
 
   // Profile edit state
   const [editName, setEditName] = useState(profile?.full_name || '');
-  const [editPhone, setEditPhone] = useState(profile?.phone || '');
+  const [editPhone, setEditPhone] = useState(toTenDigitPhone(profile?.phone));
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileSavedMsg, setProfileSavedMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
       setEditName(profile.full_name || '');
-      setEditPhone(profile.phone || '');
+      setEditPhone(toTenDigitPhone(profile.phone));
     }
   }, [profile]);
 
