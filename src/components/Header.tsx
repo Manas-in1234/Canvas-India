@@ -161,6 +161,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
   const allCatRef = useRef<HTMLDivElement>(null);
   const allCatDropdownRef = useRef<HTMLDivElement>(null);
   const megaMenuDropdownRef = useRef<HTMLDivElement>(null);
@@ -188,12 +189,14 @@ export const Header: React.FC<HeaderProps> = ({
     return PRIMARY_CATEGORIES.filter((cat) => !excluded.has(cat.slug));
   }, []);
 
-  // Close open dropdown menus on scroll or resize to prevent detached floating elements
+  // Close open dropdown menus on scroll or resize to prevent detached floating elements.
+  // Search is excluded: opening it auto-focuses the input, and on mobile that
+  // triggers the keyboard to appear, which fires a scroll event that would
+  // otherwise close the search box the instant it opens.
   useEffect(() => {
     const handleScrollOrResize = () => {
       setActiveMegaMenu(null);
       setAllCategoriesOpen(false);
-      setSearchOpen(false);
     };
     window.addEventListener('scroll', handleScrollOrResize, { passive: true });
     window.addEventListener('resize', handleScrollOrResize, { passive: true });
@@ -259,8 +262,10 @@ export const Header: React.FC<HeaderProps> = ({
         setActiveMegaMenu(null);
       }
 
-      // Handle Search dropdown outside click
-      if (searchRef.current && !searchRef.current.contains(target)) {
+      // Handle Search dropdown outside click (desktop bar or mobile expandable box)
+      const clickedInsideDesktopSearch = searchRef.current && searchRef.current.contains(target);
+      const clickedInsideMobileSearch = mobileSearchRef.current && mobileSearchRef.current.contains(target);
+      if (!clickedInsideDesktopSearch && !clickedInsideMobileSearch) {
         setSearchOpen(false);
       }
 
@@ -718,7 +723,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Mobile Expandable Search */}
           {searchOpen && (
-            <div className="lg:hidden mt-2.5">
+            <div ref={mobileSearchRef} className="lg:hidden mt-2.5">
               <form onSubmit={handleSearchSubmit} className="relative w-full">
                 <input
                   type="text"
