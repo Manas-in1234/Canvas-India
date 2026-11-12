@@ -10056,7 +10056,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                               }
                             }
                           }}
-                          className={`flex-1 min-w-[62px] py-1.5 px-1.5 text-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${
+                          className={`py-1.5 px-3 text-center text-[11px] font-extrabold rounded-lg whitespace-nowrap transition-all cursor-pointer ${
                             isActive
                               ? 'bg-[#0E4A93] text-white shadow-xs'
                               : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
