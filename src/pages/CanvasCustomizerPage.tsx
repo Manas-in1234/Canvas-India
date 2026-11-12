@@ -11626,7 +11626,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         {/* ------------------------------------------------------------------- */}
         {/* COLUMN 3: MAIN RIGHT LIVE CANVAS PREVIEW WORKSPACE                  */}
         {/* ------------------------------------------------------------------- */}
-        <main className="order-1 md:order-3 w-full min-w-0 h-[56vh] min-h-[320px] max-h-[64vh] md:h-full md:max-h-none md:flex-1 shrink-0 md:shrink flex flex-col bg-[#E2E8F0]/60 relative overflow-hidden">
+        <main className="order-1 md:order-3 w-full min-w-0 h-[56vh] min-h-[260px] max-h-[64vh] md:h-full md:max-h-none md:flex-1 shrink md:shrink flex flex-col bg-[#E2E8F0]/60 relative overflow-hidden">
           {/* Top Action Bar for Workspace */}
           {isBusRollProduct ? (
             <BusRollTopToolbar
