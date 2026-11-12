@@ -420,12 +420,12 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                   onClick={() => onSelectCategory(c.slug)}
                   className="group snap-start shrink-0 w-[46%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
                 >
-                  <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm">
+                  <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-1.5 sm:mb-3 bg-stone-100 shadow-sm">
                     <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
-                  <div className="flex items-start justify-between gap-2 px-1">
+                  <div className="flex items-start justify-between gap-1.5 px-0.5">
                     <div className="min-w-0">
-                      <h3 className="text-[#1A4F53] font-bold text-[12px] sm:text-[17px] leading-tight mb-1 truncate">{c.name}</h3>
+                      <h3 className="text-[#1A4F53] font-bold text-[11px] sm:text-[17px] leading-tight mb-0.5 truncate">{c.name}</h3>
                       <p className="text-[10px] sm:text-[13px] text-[#567477] truncate">{c.sub}</p>
                     </div>
                     <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
@@ -489,12 +489,12 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 to={c.href}
                 className="group snap-start shrink-0 w-[46%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
               >
-                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
+                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-1.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
                   <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
-                <div className="flex items-start justify-between gap-2 px-1">
+                <div className="flex items-start justify-between gap-1.5 px-0.5">
                   <div className="min-w-0">
-                    <h3 className="text-[#1A4F53] font-bold text-[12px] sm:text-[17px] leading-tight mb-1 truncate">{c.name}</h3>
+                    <h3 className="text-[#1A4F53] font-bold text-[11px] sm:text-[17px] leading-tight mb-0.5 truncate">{c.name}</h3>
                     <p className="text-[10px] sm:text-[13px] text-[#567477] truncate">
                       {c.price ? `Starts at ₹${c.price.toLocaleString('en-IN')}` : 'Custom Sizes Available'}
                     </p>
@@ -560,7 +560,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 to={c.href}
                 className="group snap-start shrink-0 w-[46%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
               >
-                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
+                <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-1.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
                   {c.image ? (
                     <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
@@ -569,9 +569,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                     </div>
                   )}
                 </div>
-                <div className="flex items-start justify-between gap-2 px-1">
+                <div className="flex items-start justify-between gap-1.5 px-0.5">
                   <div className="min-w-0">
-                    <h3 className="text-[#1A4F53] font-bold text-[12px] sm:text-[17px] leading-tight mb-1 truncate">{c.name}</h3>
+                    <h3 className="text-[#1A4F53] font-bold text-[11px] sm:text-[17px] leading-tight mb-0.5 truncate">{c.name}</h3>
                     <p className="text-[10px] sm:text-[13px] text-[#567477] truncate">
                       {c.price ? `Starts at ₹${c.price.toLocaleString('en-IN')}` : 'Custom Sizes Available'}
                     </p>
@@ -638,12 +638,12 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                   to={c.href}
                   className="group snap-start shrink-0 w-[46%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
                 >
-                  <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
+                  <div className="w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-1.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
                     <img src={c.image} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
-                  <div className="flex items-start justify-between gap-2 px-1">
+                  <div className="flex items-start justify-between gap-1.5 px-0.5">
                     <div className="min-w-0">
-                      <h3 className="text-[#1A4F53] font-bold text-[12px] sm:text-[17px] leading-tight mb-1 truncate">{c.name}</h3>
+                      <h3 className="text-[#1A4F53] font-bold text-[11px] sm:text-[17px] leading-tight mb-0.5 truncate">{c.name}</h3>
                       <p className="text-[10px] sm:text-[13px] text-[#567477] truncate">
                         {c.price ? `Starts at ₹${c.price.toLocaleString('en-IN')}` : 'Eco-Friendly'}
                       </p>
@@ -704,13 +704,13 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                   onClick={() => navigate(`/occasions/${o.slug}`)}
                   className="group snap-start shrink-0 w-[46%] sm:w-[30%] lg:w-[23%] flex flex-col text-left cursor-pointer focus:outline-none"
                 >
-                  <div className="relative w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-2.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
+                  <div className="relative w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-1.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
                     <img src={o.bannerImage} alt={o.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <span className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-base shadow-sm">{o.emoji}</span>
                   </div>
-                  <div className="flex items-start justify-between gap-2 px-1">
+                  <div className="flex items-start justify-between gap-1.5 px-0.5">
                     <div className="min-w-0">
-                      <h3 className="text-[#1A4F53] font-bold text-[12px] sm:text-[17px] leading-tight mb-1 truncate">{o.name}</h3>
+                      <h3 className="text-[#1A4F53] font-bold text-[11px] sm:text-[17px] leading-tight mb-0.5 truncate">{o.name}</h3>
                       <p className="text-[10px] sm:text-[13px] text-[#567477] truncate">Personalized gifts &amp; keepsakes</p>
                     </div>
                     <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
@@ -757,7 +757,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
             <button type="button" aria-label="Previous" onClick={() => scrollRow(carouselRef, -1)} className={arrowBtn}>
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <div ref={carouselRef} className="flex gap-5 overflow-x-auto scroll-smooth py-3 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+            <div ref={carouselRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-3 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
               {bestsellers.map((p) => {
                 // Same catalogue design is often also sold as both Canvas and
                 // Acrylic (see catalogueCanvasAcrylicProducts.ts) — let the
@@ -774,8 +774,8 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 const d = hasBothFormats ? (activeFormat === 'acrylic' ? acrylicVariant! : canvasVariant!) : p;
 
                 return (
-                  <div key={p.id} className="snap-start shrink-0 w-[62%] sm:w-[36%] lg:w-[23.5%] bg-white rounded-2xl border border-orange-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all p-3">
-                    <Link to={`/products/${d.id}`} className="relative block aspect-[4/3] rounded-xl overflow-hidden bg-stone-100">
+                  <div key={p.id} className="snap-start shrink-0 w-[46%] sm:w-[30%] lg:w-[23%] bg-white rounded-xl border border-orange-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all p-2">
+                    <Link to={`/products/${d.id}`} className="relative block aspect-[4/3] rounded-lg overflow-hidden bg-stone-100">
                       <img
                         src={d.image}
                         alt={d.name}
@@ -783,16 +783,16 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                         className="w-full h-full object-contain hover:scale-105 transition-transform duration-500"
                         onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
                       />
-                      <span className="absolute top-2 left-2 bg-gradient-to-r from-[#E8752A] to-[#EC4899] text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow">Bestseller</span>
+                      <span className="absolute top-1.5 left-1.5 bg-gradient-to-r from-[#E8752A] to-[#EC4899] text-white text-[8px] sm:text-[10px] font-bold px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full shadow">Bestseller</span>
                     </Link>
                     {hasBothFormats && (
-                      <div className="flex items-center gap-1.5 mt-2">
+                      <div className="flex items-center gap-1 mt-1.5">
                         {(['canvas', 'acrylic'] as const).map((fmt) => (
                           <button
                             key={fmt}
                             type="button"
                             onClick={() => setBestsellerFormat((prev) => ({ ...prev, [baseId]: fmt }))}
-                            className={`flex-1 py-1 rounded-md text-[10px] font-bold capitalize transition-colors cursor-pointer ${
+                            className={`flex-1 py-0.5 sm:py-1 rounded-md text-[8px] sm:text-[10px] font-bold capitalize transition-colors cursor-pointer ${
                               activeFormat === fmt
                                 ? 'bg-[#0E4A93] text-white'
                                 : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
@@ -803,13 +803,13 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                         ))}
                       </div>
                     )}
-                    <Link to={`/products/${d.id}`} className="block mt-3 text-sm font-semibold text-stone-800 line-clamp-1 hover:text-[#0E4A93]">
+                    <Link to={`/products/${d.id}`} className="block mt-1.5 text-[12px] sm:text-[13px] font-semibold text-stone-800 line-clamp-1 hover:text-[#0E4A93]">
                       {d.name}
                     </Link>
-                    <div className="flex items-end justify-between mt-1.5">
-                      <div>
-                        <div className="text-lg font-extrabold" style={{ color: BLUE }}>₹{d.price.toLocaleString('en-IN')}</div>
-                        <div className="flex items-center gap-1 text-[10px] text-stone-500">
+                    <div className="flex items-end justify-between mt-1 gap-1.5">
+                      <div className="min-w-0">
+                        <div className="text-[13px] sm:text-base font-extrabold truncate" style={{ color: BLUE }}>₹{d.price.toLocaleString('en-IN')}</div>
+                        <div className="flex items-center gap-1 text-[9px] sm:text-[10px] text-stone-500">
                           <Stars />
                           {d.reviewsCount ? <span>({d.reviewsCount})</span> : null}
                         </div>
@@ -818,9 +818,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                         type="button"
                         aria-label="Add to cart"
                         onClick={() => onAddToCart(d)}
-                        className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0E4A93] to-[#5B2BB8] hover:from-[#E8752A] hover:to-[#EC4899] text-white flex items-center justify-center shadow-md transition cursor-pointer"
+                        className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-[#0E4A93] to-[#5B2BB8] hover:from-[#E8752A] hover:to-[#EC4899] text-white flex items-center justify-center shadow-sm transition cursor-pointer shrink-0"
                       >
-                        <ShoppingCart className="w-4 h-4" />
+                        <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </button>
                     </div>
                   </div>
