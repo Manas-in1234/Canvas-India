@@ -774,19 +774,19 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 const d = hasBothFormats ? (activeFormat === 'acrylic' ? acrylicVariant! : canvasVariant!) : p;
 
                 return (
-                  <div key={p.id} className="snap-start shrink-0 w-[46%] sm:w-[30%] lg:w-[23%] bg-white rounded-xl border border-orange-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all p-2">
-                    <Link to={`/products/${d.id}`} className="relative block aspect-[4/3] rounded-lg overflow-hidden bg-stone-100">
+                  <div key={p.id} className="group snap-start shrink-0 w-[46%] sm:w-[30%] lg:w-[23%] flex flex-col text-left">
+                    <Link to={`/products/${d.id}`} className="relative block w-full aspect-[4/3] lg:aspect-[3/2] rounded-xl overflow-hidden mb-1.5 sm:mb-3 bg-stone-100 shadow-sm border border-stone-200/60">
                       <img
                         src={d.image}
                         alt={d.name}
                         loading="lazy"
-                        className="w-full h-full object-contain hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                         onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
                       />
                       <span className="absolute top-1.5 left-1.5 bg-gradient-to-r from-[#E8752A] to-[#EC4899] text-white text-[8px] sm:text-[10px] font-bold px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full shadow">Bestseller</span>
                     </Link>
                     {hasBothFormats && (
-                      <div className="flex items-center gap-1 mt-1.5">
+                      <div className="flex items-center gap-1 mb-1.5 px-0.5">
                         {(['canvas', 'acrylic'] as const).map((fmt) => (
                           <button
                             key={fmt}
@@ -803,24 +803,20 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                         ))}
                       </div>
                     )}
-                    <Link to={`/products/${d.id}`} className="block mt-1.5 text-[12px] sm:text-[13px] font-semibold text-stone-800 line-clamp-1 hover:text-[#0E4A93]">
-                      {d.name}
-                    </Link>
-                    <div className="flex items-end justify-between mt-1 gap-1.5">
+                    <div className="flex items-start justify-between gap-1.5 px-0.5">
                       <div className="min-w-0">
-                        <div className="text-[13px] sm:text-base font-extrabold truncate" style={{ color: BLUE }}>₹{d.price.toLocaleString('en-IN')}</div>
-                        <div className="flex items-center gap-1 text-[9px] sm:text-[10px] text-stone-500">
-                          <Stars />
-                          {d.reviewsCount ? <span>({d.reviewsCount})</span> : null}
-                        </div>
+                        <Link to={`/products/${d.id}`} className="block text-[#1A4F53] font-bold text-[11px] sm:text-[17px] leading-tight mb-0.5 truncate hover:text-[#0E4A93]">
+                          {d.name}
+                        </Link>
+                        <p className="text-[10px] sm:text-[13px] text-[#567477] truncate">₹{d.price.toLocaleString('en-IN')}</p>
                       </div>
                       <button
                         type="button"
                         aria-label="Add to cart"
                         onClick={() => onAddToCart(d)}
-                        className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-[#0E4A93] to-[#5B2BB8] hover:from-[#E8752A] hover:to-[#EC4899] text-white flex items-center justify-center shadow-sm transition cursor-pointer shrink-0"
+                        className="w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 hover:bg-[#E8752A] transition-colors shadow-sm cursor-pointer"
                       >
-                        <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                        <ShoppingCart className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
                       </button>
                     </div>
                   </div>
