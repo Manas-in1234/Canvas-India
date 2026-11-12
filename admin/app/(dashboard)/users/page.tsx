@@ -9,6 +9,7 @@ import type { AdminUserListItem } from '@/lib/types/admin-user';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { Badge } from '@/components/ui/badge';
 import { usePermission } from '@/lib/auth/use-permission';
+import { useAuth } from '@/lib/auth/auth-context';
 import { formatDate } from '@/lib/format';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,6 +17,7 @@ import { cn } from '@/lib/utils';
 
 export default function UsersPage() {
   const { hasPermission } = usePermission();
+  const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const canManage = hasPermission('users.manage');
 
@@ -58,7 +60,18 @@ export default function UsersPage() {
           {
             header: '',
             cell: (row: AdminUserListItem) =>
-              row.isActive ? (
+              row.isActive && (row.role.name === 'Super Admin' || row.id === currentUser?.id) ? (
+                <span
+                  className="text-xs text-muted-foreground"
+                  title={
+                    row.role.name === 'Super Admin'
+                      ? 'The Super Admin has the highest access and cannot be deactivated.'
+                      : 'You cannot deactivate your own account.'
+                  }
+                >
+                  {row.role.name === 'Super Admin' ? 'Protected' : 'You'}
+                </span>
+              ) : row.isActive ? (
                 <Button
                   variant="destructive"
                   size="sm"

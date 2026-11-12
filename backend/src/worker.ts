@@ -1563,6 +1563,28 @@ export default {
         }
       }
 
+      // Deactivating a team member. The Super Admin holds the highest access, and nobody can
+      // lock themselves out, so those two cases are refused here, not just hidden in the screen.
+      const deactivateUserMatch = pathname.match(/^\/api\/v1\/users\/([^/]+)\/deactivate$/);
+      if (deactivateUserMatch && method === 'PATCH') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, ['users.manage'], request);
+        if (permError) return permError;
+        const targetId = deactivateUserMatch[1];
+        if (targetId === user.id) {
+          return jsonResponse({ statusCode: 400, message: 'You cannot deactivate your own account.' }, 400, request);
+        }
+        const target = await prisma.adminUser.findUnique({ where: { id: targetId }, include: { role: true } });
+        if (!target) {
+          return jsonResponse({ statusCode: 404, message: 'Team member not found.' }, 404, request);
+        }
+        if (target.role?.name === 'Super Admin') {
+          return jsonResponse({ statusCode: 403, message: 'The Super Admin cannot be deactivated.' }, 403, request);
+        }
+        return jsonResponse(await services.users.deactivate(targetId, user.id), 200, request);
+      }
+
       if (pathname === '/api/v1/roles') {
         const { user, error } = await authenticate(request, env, prisma);
         if (error) return error;
