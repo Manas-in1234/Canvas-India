@@ -2786,6 +2786,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   const handleSelectTab = (tabId: ToolbarTab) => {
     setActiveTab(tabId);
+    // The panel only floats as a fixed overlay for drill-down tabs; the
+    // product's "resting" tab (Upload, Select Size for prefilled/readymade
+    // products, or Create Bus Roll) renders inline after the canvas on
+    // mobile instead, so tapping it needs an explicit scroll into view -
+    // nothing else moves the viewport there on its own.
+    const restingTabForScroll = isBusRollProduct ? 'CREATE BUS ROLL' : isPrefillMode ? 'SELECT SIZE' : 'UPLOAD';
+    if (tabId === restingTabForScroll && window.innerWidth < 768) {
+      requestAnimationFrame(() => {
+        document.getElementById('customizer-panel-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
     if (tabId === 'POP ART STYLE') {
       setIsPopArtStyleModalOpen(true);
       return;
