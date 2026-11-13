@@ -2768,7 +2768,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     );
   }, [allProducts, productId, activeMaterial]);
 
+  // Styles managed from the admin dashboard, loaded from the backend (see the fetch further down).
+  const [liveCanvasStyles, setLiveCanvasStyles] = useState<CanvasProductType[] | null>(null);
+  const [liveAcrylicStyles, setLiveAcrylicStyles] = useState<AcrylicProductType[] | null>(null);
+
   const resolveCurrentProductId = (mat: 'canvas' | 'acrylic', id?: string) => {
+    // A style added from the admin has its own slug. Keep it, instead of letting the
+    // resolver below fall back to Single Print and drop the style's own shapes and settings.
+    if (id && !BUILT_IN_STYLE_IDS.has(id)) {
+      const live = mat === 'acrylic' ? liveAcrylicStyles : liveCanvasStyles;
+      if (live?.some((p) => p.id === id)) return id;
+    }
     if (mat === 'acrylic') {
       return resolveAcrylicProductTypeId(id, catalogProduct);
     }
@@ -2860,7 +2870,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedProductTypeId(resolved);
       switchProductSession(activeMaterial, resolved);
     }
-  }, [productId, activeMaterial]);
+  }, [productId, activeMaterial, liveCanvasStyles, liveAcrylicStyles]);
 
   const isHexagonProduct = activeMaterial === 'canvas' && selectedProductTypeId.includes('hexagon');
   const isWallArtProduct = selectedProductTypeId.includes('wall') || selectedProductTypeId.includes('display');
@@ -2893,8 +2903,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Product styles (the PRODUCTS tab cards) managed from the admin dashboard.
   // The built-in lists stay as the fallback, so the picker is never empty if
   // the fetch fails or the table has no rows yet.
-  const [liveCanvasStyles, setLiveCanvasStyles] = useState<CanvasProductType[] | null>(null);
-  const [liveAcrylicStyles, setLiveAcrylicStyles] = useState<AcrylicProductType[] | null>(null);
   useEffect(() => {
     let cancelled = false;
     Promise.all([fetchCustomizerProductTypes('CANVAS'), fetchCustomizerProductTypes('ACRYLIC')]).then(
@@ -15831,20 +15839,29 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
       {/* Select Size & Shape Modal */}
       <SelectSizeShapeModal
+        key={selectedProductTypeId}
         isOpen={isSizeShapeModalOpen}
         onClose={() => setIsSizeShapeModalOpen(false)}
         material={activeMaterial}
         productId={selectedProductTypeId}
         productName={selectedProductType.name}
         singlePrintMode={isAdminAddedStyle}
-        shapeStyle={(() => {
-          // A style built around one uploaded shape (its id is 'custom-<id>') gets that shape drawn on every size.
+        shapeChoices={(() => {
+          // A style added from the admin offers the shapes ticked for it. Uploaded shapes
+          // (id 'custom-<id>') carry their traced outline; built-in ones are drawn by name.
           if (!isAdminAddedStyle) return null;
-          const ids = selectedProductType.supportedShapeIds;
-          const key = ids && ids.length === 1 ? ids[0] : selectedProductType.defaultShape;
-          if (!key || !key.startsWith('custom-')) return null;
-          const found = customShapes.find((c) => `custom-${c.id}` === key);
-          return found ? { id: key, name: found.name, clipPathType: found.clipPathType, clipPathValue: found.clipPathValue } : null;
+          const ids = selectedProductType.supportedShapeIds ?? [];
+          const choices = ids
+            .map((id) => {
+              if (id.startsWith('custom-')) {
+                const c = customShapes.find((x) => `custom-${x.id}` === id);
+                return c ? { id, name: c.name, clipPathType: c.clipPathType as string, clipPathValue: c.clipPathValue } : null;
+              }
+              const built = CANVAS_SHAPES.find((x) => x.id === id);
+              return built ? { id, name: built.name, clipPathType: 'CSS_FUNCTION', clipPathValue: '' } : null;
+            })
+            .filter((x): x is { id: string; name: string; clipPathType: string; clipPathValue: string } => x !== null);
+          return choices.length > 0 ? choices : null;
         })()}
         currentShapeId={selectedShapeId}
         currentSizeId={selectedSizeId}

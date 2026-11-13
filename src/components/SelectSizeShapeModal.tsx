@@ -16,7 +16,7 @@ export interface SelectSizeShapeModalProps {
   /** Styles added from the admin have no size list of their own; show the Single Print one. */
   singlePrintMode?: boolean;
   /** A style built around one uploaded (traced) shape: every size is drawn in that shape, like Heart Canvas. */
-  shapeStyle?: { id: string; name: string; clipPathType: string; clipPathValue: string } | null;
+  shapeChoices?: Array<{ id: string; name: string; clipPathType: string; clipPathValue: string }> | null;
   currentShapeId?: string;
   currentSizeId?: string;
   isCustomSize?: boolean;
@@ -49,7 +49,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   productId,
   productName,
   singlePrintMode = false,
-  shapeStyle = null,
+  shapeChoices = null,
   currentShapeId = 'shape-square',
   currentSizeId = '',
   isCustomSize = false,
@@ -68,6 +68,12 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   const isDigitalPainting = productId.toLowerCase() === 'canvas-digital-painting';
   const isLyric = productId.toLowerCase() === 'canvas-lyric' || productId.toLowerCase().includes('lyric');
   const isPopArt = productId.toLowerCase().includes('pop');
+
+  // Which of the style's shapes the customer is looking at (a style may offer several).
+  const [chosenShapeId, setChosenShapeId] = useState<string>(
+    () => shapeChoices?.find((c) => c.id === currentShapeId)?.id ?? shapeChoices?.[0]?.id ?? '',
+  );
+  const shapeStyle = shapeChoices?.find((c) => c.id === chosenShapeId) ?? shapeChoices?.[0] ?? null;
 
   const isSinglePrint = useMemo(() => {
     const norm = productId.toLowerCase();
@@ -1330,6 +1336,30 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
                     <span className="ml-1.5 text-[10px] opacity-80">
                       ({singlePrintSizes[cat]?.length || 0})
                     </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Shapes this style offers (only when there is more than one to pick from) */}
+        {shapeChoices && shapeChoices.length > 1 && (
+          <div className="px-6 py-2 bg-white border-b border-stone-200">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-stone-500 mr-2 hidden sm:inline">Shape:</span>
+              {shapeChoices.map((c) => {
+                const on = shapeStyle?.id === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setChosenShapeId(c.id)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-bold border cursor-pointer transition-colors ${
+                      on ? 'bg-[#0E4A93] text-white border-[#0E4A93]' : 'bg-white text-stone-700 border-stone-300 hover:border-[#0E4A93]'
+                    }`}
+                  >
+                    {c.name}
                   </button>
                 );
               })}
