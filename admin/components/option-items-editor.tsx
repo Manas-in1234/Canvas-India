@@ -260,7 +260,11 @@ export function OptionItemsEditor({
     if ((SECTION_EXTRAS[baseKey] ?? []).some((f) => f.key === "id") && !String(extras.id ?? "").trim()) {
       extras.id = slugify(draft.label) || draft.id;
     }
-    const saved = { ...draft, label: draft.label.trim(), extras };
+    const label = draft.label.trim();
+    if (baseKey === "canvas_thickness" || baseKey === "acrylic_thickness") {
+      extras.name = label;
+    }
+    const saved = { ...draft, label, extras };
     onChange(isNew ? [...items, saved] : items.map((i) => (i.id === saved.id ? saved : i)));
     cancel();
   };
