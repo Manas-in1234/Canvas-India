@@ -12402,7 +12402,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           }}
                         >
                           {(() => {
-                            const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges) && !hasFraming;
+                            // The physical gallery-wrap edge strips simulate a
+                            // rectangular stretcher-bar canvas's wrapped side
+                            // depth - they're simple flat bars along the 4
+                            // sides of the bounding box, so on a die-cut shape
+                            // (round/triangle/heart/oval) they drew a square
+                            // frame around the shaped print instead of
+                            // following its outline. Rectangular shapes only.
+                            const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges) && !hasFraming &&
+                              ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
                           const isWhiteEdge = selectedWrapId === 'white-border';
                           const isImageWrapped = (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && panelImages[0]?.fitMode === 'cover';
                           const imgMeta = panelImages[0]?.uploadedImage;
@@ -14452,7 +14460,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   ? currentShape.clipPathStyle
                   : isHexagonProduct ? HEXAGON_CLIP_PATH : (isRectangularShape ? undefined : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined)));
                 const hasClip = Boolean(clipStyle);
-                const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges);
+                // Same shape-aware exclusion as the main canvas stage: the
+                // physical edge-wrap styling is a flat rectangular effect,
+                // wrong on a die-cut shape.
+                const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges) && !hasClip;
 
                 const singleCanvasContent = (
                   <div
@@ -14639,8 +14650,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 const activeRotY = is360 ? viewerRotation : currentPreset.rotY;
                 const activeTiltX = is360 ? viewerTiltX : currentPreset.tiltX;
 
-                // Physical thickness based on selected Canvas thickness option & frame (ONLY for 7 edge products)
-                const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges);
+                // Physical thickness based on selected Canvas thickness option & frame (ONLY for 7 edge products).
+                // Excludes die-cut shapes (round/triangle/heart/oval) - the
+                // depth/edge effect is a flat rectangular extrusion, wrong
+                // on anything that isn't actually rectangular.
+                const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges) &&
+                  ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
                 const thicknessOption = (activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS).find((t: any) => t.id === selectedThicknessId) || THICKNESS_OPTIONS[0];
                 const baseDepthPx = showPhysicalEdges
                   ? (selectedThicknessId === 'canvas-lite' ? 14 : selectedThicknessId === 'thin-gallery' ? 20 : selectedThicknessId === 'thick-gallery' ? 34 : selectedThicknessId === 'custom-thickness' ? Math.round((effectiveThicknessInches * 20) / 0.75) : ((thicknessOption as any)?.depthPx || 20))
