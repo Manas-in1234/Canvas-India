@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { useOccasions } from '../context/OccasionsContext';
+import { bannerTextColor } from '../utils/bannerTextColor';
 import { GIFT_TILE_CATEGORIES } from '../data/shopCategories';
 
 const OCCASION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -189,13 +190,11 @@ export const OccasionPage: React.FC = () => {
         </nav>
       </div>
 
-      {/* HERO BANNER — flat solid color in the occasion's own accent, the
-          occasion photo on the right, text vertically centered. No pattern
-          texture or doodles — kept clean. */}
+      {/* Hero photo fades into the selected background color. */}
       <div className="relative mt-4 mx-auto max-w-[1680px] px-4 sm:px-8 lg:px-12 xl:px-14">
         <section
           className="relative w-full overflow-hidden rounded-3xl h-[280px] sm:h-[320px] lg:h-[360px]"
-          style={{ backgroundColor: occasion.accent }}
+          style={{ backgroundColor: occasion.bannerColor ?? occasion.accent, color: bannerTextColor(occasion.bannerColor) }}
         >
           {/* The occasion photo, full-bleed on the right, fading into the
               solid color on the left so the headline stays readable */}
@@ -210,10 +209,10 @@ export const OccasionPage: React.FC = () => {
           />
 
           <div className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-10 lg:px-14 max-w-[64%] sm:max-w-xl">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight drop-shadow-sm" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight drop-shadow-sm" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
               {heroTitle}
             </h1>
-            <p className="text-sm sm:text-base text-white/90 max-w-xl mt-3 leading-relaxed drop-shadow-sm">
+            <p className={`text-sm sm:text-base max-w-xl mt-3 leading-relaxed drop-shadow-sm ${occasion.bannerColor ? '' : 'text-white/90'}`}>
               {occasion.tagline}
             </p>
           </div>

@@ -3,7 +3,11 @@ import { buildApiUrl } from '../api/productsApi';
 import { FESTIVAL_OCCASIONS, OCCASIONS, type OccasionDef } from '../data/occasionsData';
 import { MEGA_MENUS_DATA } from '../data/storeData';
 
-type Occasion = OccasionDef & { heroTitle?: string; group: 'occasion' | 'festival' };
+type Occasion = OccasionDef & {
+  heroTitle?: string;
+  bannerColor?: string | null;
+  group: 'occasion' | 'festival';
+};
 
 const defaults: Occasion[] = [
   ...OCCASIONS.map(row => ({ ...row, group: 'occasion' as const })),
