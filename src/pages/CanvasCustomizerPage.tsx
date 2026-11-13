@@ -12875,10 +12875,20 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                                 {borderWidthPx > 0 && (
                                   <div
-                                    className="absolute inset-0 pointer-events-none z-25"
+                                    className="absolute pointer-events-none z-25"
                                     style={{
+                                      // Inset by half the border width instead of sitting flush
+                                      // at inset-0: on a shaped canvas (round/oval/heart/
+                                      // triangle), this box is clipped to that exact same
+                                      // outline, so a border drawn right at that boundary gets
+                                      // mostly cut away by the clip-path and looks invisible.
+                                      // Pulling it in guarantees the stroke stays inside the
+                                      // visible clip region.
+                                      inset: `${borderWidthPx / 2}px`,
                                       border: `${borderWidthPx}px solid ${selectedBorderColor}`,
-                                      borderRadius: currentShape.id === 'shape-circle' ? '9999px' : undefined
+                                      borderRadius: currentShape.id === 'shape-circle' ? '9999px' : undefined,
+                                      clipPath: ['shape-oval', 'shape-heart', 'shape-triangle'].includes(currentShape.id) ? currentShape.clipPathStyle : undefined,
+                                      WebkitClipPath: ['shape-oval', 'shape-heart', 'shape-triangle'].includes(currentShape.id) ? currentShape.clipPathStyle : undefined
                                     }}
                                   />
                                 )}
