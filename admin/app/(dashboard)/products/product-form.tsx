@@ -365,16 +365,9 @@ export function ProductForm({
       </Section>
 
       <Section title="Category" description="Where the product sits on the website.">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Category">
             <Input value={txt(sf.category)} disabled={!canEdit} onChange={(e) => setSf("category", e.target.value)} />
-          </Field>
-          <Field label="Category slug">
-            <Input
-              value={txt(sf.categorySlug)}
-              disabled={!canEdit}
-              onChange={(e) => setSf("categorySlug", e.target.value)}
-            />
           </Field>
           <Field label="Subcategory">
             <Input
