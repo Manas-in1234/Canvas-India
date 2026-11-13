@@ -2746,6 +2746,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return 'UPLOAD';
   });
 
+  // Tracks whether the user has explicitly tapped a toolbar tab yet (as
+  // opposed to just landing on one automatically on page load). See
+  // handleSelectTab and the mobileMode prop below.
+  const userHasSelectedTabRef = useRef(false);
+
   useEffect(() => {
     const requestedTab = searchParams.get('tab')?.toUpperCase();
     if (requestedTab === 'PRODUCTS') {
@@ -2785,18 +2790,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   };
 
   const handleSelectTab = (tabId: ToolbarTab) => {
+    // Select Size (for prefilled/readymade products) only renders inline,
+    // without the usual slide-up overlay, for the very first automatic
+    // landing on that tab - so the product is visible immediately instead
+    // of being hidden behind a drawer. Any explicit tap on a tab afterward
+    // (including re-tapping Select Size itself) should behave exactly like
+    // every other drill-down tab: a sliding overlay, never a scroll-to.
+    userHasSelectedTabRef.current = true;
     setActiveTab(tabId);
-    // The panel only floats as a fixed overlay for drill-down tabs; the
-    // product's "resting" tab (Upload, Select Size for prefilled/readymade
-    // products, or Create Bus Roll) renders inline after the canvas on
-    // mobile instead, so tapping it needs an explicit scroll into view -
-    // nothing else moves the viewport there on its own.
-    const restingTabForScroll = isBusRollProduct ? 'CREATE BUS ROLL' : isPrefillMode ? 'SELECT SIZE' : 'UPLOAD';
-    if (tabId === restingTabForScroll && window.innerWidth < 768) {
-      requestAnimationFrame(() => {
-        document.getElementById('customizer-panel-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    }
     if (tabId === 'POP ART STYLE') {
       setIsPopArtStyleModalOpen(true);
       return;
@@ -9368,8 +9369,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               ? `${liveOrFallbackHardware.length} Hardware`
               : 'Specifications'
           }
-          mobileMode={activeTab === (isBusRollProduct ? 'CREATE BUS ROLL' : isPrefillMode ? 'SELECT SIZE' : 'UPLOAD') ? 'inline' : 'overlay'}
-          onCloseMobile={() => setActiveTab(isBusRollProduct ? 'CREATE BUS ROLL' : isPrefillMode ? 'SELECT SIZE' : 'UPLOAD')}
+          mobileMode={activeTab === (isBusRollProduct ? 'CREATE BUS ROLL' : (isPrefillMode && !userHasSelectedTabRef.current) ? 'SELECT SIZE' : 'UPLOAD') ? 'inline' : 'overlay'}
+          onCloseMobile={() => setActiveTab(isBusRollProduct ? 'CREATE BUS ROLL' : 'UPLOAD')}
         >
           {/* ---------------------------- PRODUCTS ---------------------------- */}
           {activeTab === 'PRODUCTS' && (
