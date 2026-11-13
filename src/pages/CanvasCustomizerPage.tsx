@@ -11103,13 +11103,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           onClick={() => {
                             setSelectedWrapId(w.id);
                             // Keep the Border section's own color swatch in
-                            // sync with Black/White Border Wrap - otherwise
-                            // whatever color was already active there (e.g.
-                            // white) visually overrides the wrap's color.
-                            if (w.id === 'black-border') {
-                              setSelectedBorderColor('#000000');
-                            } else if (w.id === 'white-border') {
-                              setSelectedBorderColor('#FFFFFF');
+                            // sync with Black/White Border Wrap, but only when
+                            // a border is already active - otherwise this would
+                            // visually turn a border on the user never chose.
+                            if (selectedBorderWidthId !== 'none') {
+                              if (w.id === 'black-border') {
+                                setSelectedBorderColor('#000000');
+                              } else if (w.id === 'white-border') {
+                                setSelectedBorderColor('#FFFFFF');
+                              }
                             }
                           }}
                           title={w.name}
@@ -12644,18 +12646,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                 </>
                               )}
 
-                              {/* Edge Wrap color mat for shaped canvases - the
-                                  gallery-wrap edge strips above are rectangular
-                                  and don't apply to a die-cut shape, but the
-                                  wrap's color (Black/White Border Wrap) should
-                                  still show in the square backing board's
-                                  corners around the shape, not disappear. */}
-                              {!showPhysicalEdges && !['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id) && (isBlackBorderWrap || isWhiteEdge) && (
-                                <div
-                                  className="absolute inset-0 pointer-events-none z-0"
-                                  style={{ backgroundColor: effectiveEdgeColor }}
-                                />
-                              )}
 
                               {/* 2. FRONT CANVAS SURFACE */}
                               <div
