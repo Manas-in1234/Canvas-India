@@ -100,14 +100,19 @@ export const AccountPage: React.FC = () => {
       // Safe to repeat: the backend ignores an order number it already has.
       if (user.email) {
         for (const order of list) {
-          if (order.payment?.status !== 'captured') continue;
+          // The payment may come back as one record or a list; older orders may have none, in which
+          // case a confirmed (or later) order status means it was paid.
+          const payments = ([] as any[]).concat((order as any).payment ?? []);
+          const paid = payments.find((p) => p?.status === 'captured');
+          const placedOk = ['confirmed', 'processing', 'shipped', 'delivered'].includes(String(order.status).toLowerCase());
+          if (!paid && !(payments.length === 0 && placedOk && order.payment_method !== 'COD')) continue;
           const key = `ci_synced_${order.order_number}`;
           try {
             if (localStorage.getItem(key)) continue;
           } catch {
             // storage unavailable: just sync
           }
-          void mirrorOrderToBackend(order, user.email, { razorpayPaymentId: order.payment.razorpay_payment_id }).then((ok) => {
+          void mirrorOrderToBackend(order, user.email, { razorpayPaymentId: paid?.razorpay_payment_id }).then((ok) => {
             if (!ok) return;
             try {
               localStorage.setItem(key, '1');
