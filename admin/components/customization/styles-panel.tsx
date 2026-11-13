@@ -23,6 +23,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ShapeDetectDialog, ShapeManagerDialog, ShapeThumb, ShapeToolbar, useShapes, type ShapeApprovedHandler } from '@/components/customization/shape-manager';
+import type { CustomShapeListItem } from '@/lib/types/shape';
 import { formatCurrency } from '@/lib/format';
 
 const ICON_TYPES = [
@@ -42,6 +44,12 @@ const SHAPES: Array<{ id: string; label: string }> = [
   { id: 'shape-hexagon', label: 'Hexagon' },
   { id: 'shape-triangle', label: 'Triangle' },
 ];
+
+/**
+ * The id a style stores for a shape. The storefront names built-in shapes by their own id
+ * ('shape-heart') but refers to an uploaded, traced shape as 'custom-<id>'.
+ */
+const shapeKey = (s: Pick<CustomShapeListItem, 'id' | 'origin'>) => (s.origin === 'ADMIN_UPLOADED' ? `custom-${s.id}` : s.id);
 
 /** The tabs and views a style can switch on or off, worded like the customizer's sidebar. */
 const FEATURES: Array<{ key: string; label: string; canvasOnly?: boolean }> = [
@@ -161,6 +169,16 @@ function setFeature(caps: Record<string, unknown>, key: string, on: boolean): Re
   return next;
 }
 
+/** Copies every size preset of one style onto another, so the new style's SELECT SIZE tab isn't empty. */
+async function copySizePresets(fromSlug: string, toSlug: string) {
+  const presets = await apiClient.get<SizePresetListItem[]>(`/admin/size-presets?productTypeId=${encodeURIComponent(fromSlug)}`);
+  for (const preset of presets) {
+    const { id: _id, createdAt: _c, updatedAt: _u, sortOrder: _s, ...rest } = preset;
+    const body = Object.fromEntries(Object.entries(rest).filter(([, v]) => v !== null && v !== undefined));
+    await apiClient.post('/admin/size-presets', { ...body, productTypeId: toSlug });
+  }
+}
+
 export function StylesPanel({ material }: { material: CustomizerMaterial }) {
   const queryClient = useQueryClient();
   const { hasPermission } = usePermission();
@@ -173,6 +191,15 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
   const [templateId, setTemplateId] = useState('');
   const [copySizes, setCopySizes] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<CustomizerProductType | null>(null);
+  const [detectOpen, setDetectOpen] = useState(false);
+  const [managerOpen, setManagerOpen] = useState(false);
+  const [managerShapeId, setManagerShapeId] = useState<string | null>(null);
+
+  const canSeeShapes = hasPermission('shapes.view');
+  const canDetectShapes = hasPermission('shapes.create');
+  const shapesQuery = useShapes(canSeeShapes);
+  const libraryShapes = shapesQuery.data ?? [];
+  const pendingShapes = libraryShapes.filter((s) => s.status === 'PENDING').length;
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['customizer-product-types'],
@@ -194,16 +221,7 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
         ...toPayload(form),
       });
       const template = all.find((s) => s.id === templateId);
-      if (template && copySizes) {
-        const presets = await apiClient.get<SizePresetListItem[]>(
-          `/admin/size-presets?productTypeId=${encodeURIComponent(template.slug)}`,
-        );
-        for (const preset of presets) {
-          const { id: _id, createdAt: _c, updatedAt: _u, sortOrder: _s, ...rest } = preset;
-          const body = Object.fromEntries(Object.entries(rest).filter(([, v]) => v !== null && v !== undefined));
-          await apiClient.post('/admin/size-presets', { ...body, productTypeId: created.slug });
-        }
-      }
+      if (template && copySizes) await copySizePresets(template.slug, created.slug);
       return created;
     },
     onSuccess: () => {
@@ -264,9 +282,76 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((prev) => ({ ...prev, [key]: value }));
 
+  // Approved shapes from the live library; the built-in list if it can't be loaded.
+  // Ids a style already uses that are not in the library stay visible so saving never drops them.
+  const shapeOptions: Array<{ id: string; name: string; thumb?: (typeof libraryShapes)[number] }> = (() => {
+    const approved = libraryShapes.filter((s) => s.status === 'APPROVED');
+    const base = approved.length > 0 ? approved.map((s) => ({ id: shapeKey(s), name: s.name, thumb: s })) : SHAPES.map((s) => ({ id: s.id, name: s.label }));
+    const known = new Set(base.map((o) => o.id));
+    const extra = [form.defaultShapeId, ...form.supportedShapeIds].filter((id, i, all) => id && !known.has(id) && all.indexOf(id) === i);
+    return [...base, ...extra.map((id) => ({ id, name: id }))];
+  })();
+  const shapeName = (id: string | null) => {
+    if (!id) return null;
+    return libraryShapes.find((s) => shapeKey(s) === id)?.name ?? SHAPES.find((s) => s.id === id)?.label ?? id;
+  };
+  const toggleShape = (id: string, on: boolean) =>
+    setForm((prev) => {
+      const supportedShapeIds = on ? [...new Set([...prev.supportedShapeIds, id])] : prev.supportedShapeIds.filter((x) => x !== id);
+      const defaultShapeId = !on && prev.defaultShapeId === id ? (supportedShapeIds[0] ?? '') : prev.defaultShapeId;
+      return { ...prev, supportedShapeIds, defaultShapeId };
+    });
+  const makeDefaultShape = (id: string) =>
+    setForm((prev) => ({ ...prev, defaultShapeId: id, supportedShapeIds: prev.supportedShapeIds.includes(id) ? prev.supportedShapeIds : [...prev.supportedShapeIds, id] }));
+
+  // An approved shape can also become its own card on the Products tab (like Heart Canvas).
+  const addShapeStyle = useMutation({
+    mutationFn: async (shape: CustomShapeListItem) => {
+      const noun = material === 'CANVAS' ? 'Canvas' : 'Acrylic';
+      const template = styles.find((s) => s.slug === (material === 'CANVAS' ? 'canvas-single' : 'acrylic-print')) ?? styles[0];
+      const taken = new Set(all.map((s) => s.slug));
+      const base = slugify(material, `${shape.name} ${noun}`);
+      let slug = base;
+      for (let n = 2; taken.has(slug); n++) slug = `${base}-${n}`;
+      const key = shapeKey(shape);
+      const created = await apiClient.post<CustomizerProductType>('/admin/customizer-product-types', {
+        material,
+        slug,
+        name: `${shape.name} ${noun}`,
+        startingPrice: Number(template?.startingPrice ?? 0),
+        image: null,
+        iconType: template?.iconType ?? 'print',
+        panelsCount: 1,
+        description: null,
+        defaultShapeId: key,
+        supportedShapeIds: [key],
+        defaultSizeOptionId: template?.defaultSizeOptionId ?? null,
+        defaultLayoutId: template?.defaultLayoutId ?? null,
+        defaultHardwareId: template?.defaultHardwareId ?? null,
+        defaultThicknessId: template?.defaultThicknessId ?? null,
+        ...(template?.supportedHardwareIds ? { supportedHardwareIds: template.supportedHardwareIds } : {}),
+        ...(template?.supportedLayoutIds ? { supportedLayoutIds: template.supportedLayoutIds } : {}),
+        capabilities: template?.capabilities ?? {},
+        isActive: true,
+      });
+      if (template) await copySizePresets(template.slug, created.slug);
+      return created;
+    },
+    onSuccess: (created) => {
+      toast.success(`Added "${created.name}" to the Products tab`);
+      invalidate();
+      queryClient.invalidateQueries({ queryKey: ['size-presets'] });
+    },
+    onError: (err: unknown) => toast.error(err instanceof ApiError ? err.message : 'The shape was approved, but its style could not be added'),
+  });
+  const onShapeApproved: ShapeApprovedHandler = (shape, { addAsStyle }) => {
+    if (addAsStyle) addShapeStyle.mutate(shape);
+    else toggleShape(shapeKey(shape), true);
+  };
+
   const slugValid = /^[a-z0-9]+(-[a-z0-9]+)*$/.test(form.slug);
   const priceValid = form.startingPrice !== '' && Number.isFinite(Number(form.startingPrice)) && Number(form.startingPrice) >= 0;
-  const canSave = form.name.trim() !== '' && priceValid && (editing ? true : slugValid);
+  const canSave = form.name.trim() !== '' && priceValid && form.supportedShapeIds.length > 0 && (editing ? true : slugValid);
 
   return (
     <div className="space-y-6">
@@ -317,7 +402,9 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
                   </div>
                   <div className="truncate text-xs text-muted-foreground">
                     Starts at {formatCurrency(style.startingPrice)} &middot; {style.panelsCount ?? 1} panel
-                    {(style.panelsCount ?? 1) === 1 ? '' : 's'} &middot; {style.slug}
+                    {(style.panelsCount ?? 1) === 1 ? '' : 's'} &middot;{' '}
+                    {style.supportedShapeIds ? `${style.supportedShapeIds.length} shape${style.supportedShapeIds.length === 1 ? '' : 's'}` : 'all shapes'}
+                    {style.defaultShapeId ? ` (default ${shapeName(style.defaultShapeId)})` : ''} &middot; {style.slug}
                   </div>
                 </div>
                 {canManage && (
@@ -428,20 +515,6 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
                 <Label>Panels</Label>
                 <Input type="number" min="1" value={form.panelsCount} onChange={(e) => set('panelsCount', e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <Label>Default shape</Label>
-                <select
-                  value={form.defaultShapeId}
-                  onChange={(e) => set('defaultShapeId', e.target.value)}
-                  className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
-                >
-                  {SHAPES.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
 
             <div className="space-y-2">
@@ -491,25 +564,45 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
               <Input value={form.description} onChange={(e) => set('description', e.target.value)} />
             </div>
 
-            <div className="space-y-2">
-              <Label>Shapes a customer can pick</Label>
-              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                {SHAPES.map((s) => (
-                  <label key={s.id} className="flex items-center gap-1.5 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={form.supportedShapeIds.includes(s.id)}
-                      onChange={(e) =>
-                        set(
-                          'supportedShapeIds',
-                          e.target.checked ? [...form.supportedShapeIds, s.id] : form.supportedShapeIds.filter((x) => x !== s.id),
-                        )
-                      }
-                    />
-                    {s.label}
-                  </label>
-                ))}
+            <div className="space-y-3 rounded-md border p-3">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <Label>Shapes</Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Tick the shapes a customer can pick for this style and mark one as the starting shape. Detect a new
+                    outline from a photo, or manage pricing and approvals for every shape.
+                  </p>
+                </div>
+                {canSeeShapes && (
+                  <ShapeToolbar
+                    canDetect={canDetectShapes}
+                    pending={pendingShapes}
+                    onDetect={() => setDetectOpen(true)}
+                    onManage={() => {
+                      setManagerShapeId(null);
+                      setManagerOpen(true);
+                    }}
+                  />
+                )}
               </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {shapeOptions.map((opt) => {
+                  const on = form.supportedShapeIds.includes(opt.id);
+                  const isDefault = form.defaultShapeId === opt.id;
+                  return (
+                    <div key={opt.id} className={`flex items-center gap-2 rounded-md border p-2 ${on ? 'bg-muted/40' : ''}`}>
+                      <input type="checkbox" checked={on} aria-label={`Offer ${opt.name}`} onChange={(e) => toggleShape(opt.id, e.target.checked)} />
+                      {opt.thumb ? <ShapeThumb shape={opt.thumb} size={32} /> : <div className="h-8 w-8 shrink-0 rounded bg-muted" />}
+                      <span className="min-w-0 flex-1 truncate text-sm">{opt.name}</span>
+                      <label className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <input type="radio" name="default-shape" checked={isDefault} onChange={() => makeDefaultShape(opt.id)} />
+                        Default
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+              {form.supportedShapeIds.length === 0 && <p className="text-[11px] text-destructive">Pick at least one shape for this style.</p>}
             </div>
 
             <div className="space-y-2">
@@ -557,6 +650,22 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ShapeDetectDialog
+        open={detectOpen}
+        onOpenChange={setDetectOpen}
+        onDetected={(shape) => {
+          setManagerShapeId(shape.id);
+          setManagerOpen(true);
+        }}
+      />
+      <ShapeManagerDialog
+        open={managerOpen}
+        onOpenChange={setManagerOpen}
+        initialShapeId={managerShapeId}
+        onApproved={onShapeApproved}
+        styleLabel={material === 'CANVAS' ? 'Canvas' : 'Acrylic'}
+      />
 
       <Dialog open={!!pendingDelete} onOpenChange={(open) => !open && setPendingDelete(null)}>
         <DialogContent>

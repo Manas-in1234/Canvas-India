@@ -9,7 +9,6 @@ import {
   UserCog,
   ShieldCheck,
   BarChart3,
-  ScanLine,
   Settings,
   RotateCcw,
   SlidersHorizontal,
@@ -116,12 +115,6 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Customization",
         icon: SlidersHorizontal,
         permissions: ["option_catalog.view"],
-      },
-      {
-        href: "/shapes",
-        label: "Shape detection",
-        icon: ScanLine,
-        permissions: ["shapes.view"],
       },
       {
         href: "/pricing",

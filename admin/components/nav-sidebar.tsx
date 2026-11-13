@@ -78,9 +78,6 @@ export function NavSidebar({
                       >
                         <Icon size={17} strokeWidth={1.7} />
                         <span>{link.label}</span>
-                        {link.href === "/shapes" && (
-                          <span className="nav-ai">AUTO</span>
-                        )}
                       </Link>
                     );
                   })}

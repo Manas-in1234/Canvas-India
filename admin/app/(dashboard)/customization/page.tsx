@@ -11,7 +11,7 @@ type Material = 'CANVAS' | 'ACRYLIC';
 type Tab = 'styles' | 'sizes' | 'layouts' | 'wrap' | 'hardware' | 'options' | 'controls';
 
 const TABS: { key: Tab; label: string; hint: string; permission: string; blocks?: string[] }[] = [
-  { key: 'styles', label: 'Products', hint: 'The style cards a customer picks first: name, price and cover image.', permission: 'option_catalog.view' },
+  { key: 'styles', label: 'Products', hint: 'The style cards a customer picks first: name, price, cover image and the shapes each style offers, including shape detection.', permission: 'option_catalog.view' },
   { key: 'sizes', label: 'Select size', hint: 'Every size and its price, plus the inch limits for custom sizes.', permission: 'size_presets.view', blocks: ['SELECT SIZE'] },
   { key: 'layouts', label: 'Layouts & designs', hint: 'Design templates grouped by day or occasion.', permission: 'option_catalog.view', blocks: ['LAYOUTS & DESIGNS'] },
   { key: 'wrap', label: 'Wrap & border', hint: 'Thickness, edge wrap, borders and frames.', permission: 'option_catalog.view', blocks: ['WRAP & BORDER'] },

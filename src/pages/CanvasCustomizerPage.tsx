@@ -5146,19 +5146,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       searchParams.get('prefillImage') ||
       '';
 
+    // Picking a style opens its Select Size / Layout popup. Don't jump to Upload
+    // here: closing the popup (X or Cancel) must leave the customer on the tab
+    // they were on. Confirming a size or layout moves them on by itself
+    // (handleApplySizeAndShape / handleApplyLayoutFromModal).
     if (isSingleOrShaped) {
       setIsSizeShapeModalOpen(true);
       setIsLayoutModalOpen(false);
-      if (!currentActiveImage) {
-        setActiveTab('UPLOAD');
-      }
     } else if (isLayoutProduct) {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(true);
       setLayoutSubTab('LAYOUTS');
-      if (!currentActiveImage) {
-        setActiveTab('UPLOAD');
-      }
     } else {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);

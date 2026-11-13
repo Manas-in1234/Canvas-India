@@ -313,7 +313,7 @@ export default function DashboardHomePage() {
             style={{ paddingTop: 4, paddingBottom: 8 }}
           >
             {canShapes && (
-              <Link href="/shapes" className="attention-row">
+              <Link href="/customization?material=CANVAS&tab=styles" className="attention-row">
                 <span className="stat-icon orange">
                   <ScanLine size={17} />
                 </span>
@@ -459,11 +459,11 @@ export default function DashboardHomePage() {
             <h2>A new shape. A whole new possibility.</h2>
             <p>
               Upload a silhouette, let shape detection trace the outline, then
-              review and approve it for your canvas & acrylic customizers.
+              review and approve it for your canvas & acrylic customizers, all from Add style.
             </p>
           </div>
-          <Link href="/shapes">
-            Open shape studio <ArrowUpRight size={14} />
+          <Link href="/customization?material=CANVAS&tab=styles">
+            Open customization studio <ArrowUpRight size={14} />
           </Link>
         </section>
       )}
