@@ -4002,7 +4002,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // just refetch harmlessly alongside it.
   const [liveWrapStyles, setLiveWrapStyles] = useState<OptionCategoryItemDto[]>([]);
   const [liveDesignTemplates, setLiveDesignTemplates] = useState<OptionCategoryItemDto[]>([]);
-  const [liveColorFinish, setLiveColorFinish] = useState<OptionCategoryItemDto[]>([]);
   const [liveRetouch, setLiveRetouch] = useState<OptionCategoryItemDto[]>([]);
   const [liveCanvasThickness, setLiveCanvasThickness] = useState<OptionCategoryItemDto[]>([]);
   const [liveAcrylicThickness, setLiveAcrylicThickness] = useState<OptionCategoryItemDto[]>([]);
