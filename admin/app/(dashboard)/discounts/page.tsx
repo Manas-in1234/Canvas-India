@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { DiscountExpiryFields } from '@/components/discount-expiry-fields';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -21,9 +23,10 @@ export default function DiscountsPage() {
   const { hasPermission } = usePermission();
   const queryClient = useQueryClient();
   const canManage = hasPermission('discounts.manage');
-  const [editingExpiry, setEditingExpiry] = useState<Discount | null>(null);
+  const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null);
   const [neverExpires, setNeverExpires] = useState(true);
   const [expiryDate, setExpiryDate] = useState('');
+  const [fields, setFields] = useState({ description: '', discountType: 'PERCENTAGE', value: '', minOrderSubtotal: '', usageLimit: '' });
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['discounts'],
@@ -42,16 +45,23 @@ export default function DiscountsPage() {
     },
   });
 
-  const expiryMutation = useMutation({
+  const editMutation = useMutation({
     mutationFn: ({ id, expiresAt }: { id: string; expiresAt: string | null }) =>
-      apiClient.patch(`/growth/discounts/${id}`, { expiresAt }),
+      apiClient.patch(`/growth/discounts/${id}`, {
+        description: fields.description.trim(),
+        discountType: fields.discountType,
+        value: Number(fields.value),
+        minOrderSubtotal: fields.minOrderSubtotal === '' ? null : Number(fields.minOrderSubtotal),
+        usageLimit: fields.usageLimit === '' ? null : Number(fields.usageLimit),
+        expiresAt,
+      }),
     onSuccess: () => {
-      setEditingExpiry(null);
+      setEditingDiscount(null);
       void queryClient.invalidateQueries({ queryKey: ['discounts'] });
-      toast.success('Discount expiry updated');
+      toast.success('Discount updated');
     },
     onError: (err: unknown) => {
-      toast.error(err instanceof ApiError ? err.message : 'Failed to update discount expiry');
+      toast.error(err instanceof ApiError ? err.message : 'Failed to update discount');
     },
   });
 
@@ -94,10 +104,17 @@ export default function DiscountsPage() {
             cell: (row: Discount) => (
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={() => {
+                  setFields({
+                    description: row.description ?? '',
+                    discountType: row.discountType,
+                    value: String(row.value),
+                    minOrderSubtotal: row.minOrderSubtotal == null ? '' : String(row.minOrderSubtotal),
+                    usageLimit: row.usageLimit == null ? '' : String(row.usageLimit),
+                  });
                   setNeverExpires(!row.expiresAt);
                   setExpiryDate(row.expiresAt?.slice(0, 10) ?? '');
-                  setEditingExpiry(row);
-                }}>Edit expiry</Button>
+                  setEditingDiscount(row);
+                }}>Edit</Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -152,27 +169,56 @@ export default function DiscountsPage() {
       ) : (
         <DataTable columns={columns} data={data ?? []} getRowKey={(row) => row.id} emptyMessage="No discounts yet." />
       )}
-      <Dialog open={editingExpiry !== null} onOpenChange={open => {
-        if (!open && !expiryMutation.isPending) setEditingExpiry(null);
+      <Dialog open={editingDiscount !== null} onOpenChange={open => {
+        if (!open && !editMutation.isPending) setEditingDiscount(null);
       }}>
-        <DialogContent>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit expiry</DialogTitle>
-            <DialogDescription>{editingExpiry?.code}</DialogDescription>
+            <DialogTitle>Edit discount</DialogTitle>
+            <DialogDescription>{editingDiscount?.code}</DialogDescription>
           </DialogHeader>
           <form className="space-y-4" onSubmit={event => {
             event.preventDefault();
-            if (!editingExpiry || expiryMutation.isPending) return;
-            const current = editingExpiry.expiresAt;
+            if (!editingDiscount || editMutation.isPending) return;
+            const current = editingDiscount.expiresAt;
             const expiresAt = neverExpires ? null : current?.slice(0, 10) === expiryDate
               ? current : new Date(expiryDate).toISOString();
-            expiryMutation.mutate({ id: editingExpiry.id, expiresAt });
+            editMutation.mutate({ id: editingDiscount.id, expiresAt });
           }}>
+            <div className="space-y-2">
+              <Label htmlFor="edit-discount-description">Description</Label>
+              <Input id="edit-discount-description" value={fields.description}
+                onChange={event => setFields({ ...fields, description: event.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-discount-type">Type</Label>
+              <select id="edit-discount-type" className="h-9 w-full rounded-md border bg-background px-2"
+                value={fields.discountType} onChange={event => setFields({ ...fields, discountType: event.target.value })}>
+                <option value="PERCENTAGE">Percentage</option>
+                <option value="FIXED_AMOUNT">Fixed amount (₹)</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-discount-value">Value</Label>
+              <Input id="edit-discount-value" type="number" min="0.01" step="0.01"
+                max={fields.discountType === 'PERCENTAGE' ? 100 : undefined} required value={fields.value}
+                onChange={event => setFields({ ...fields, value: event.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-discount-minimum">Minimum subtotal (₹)</Label>
+              <Input id="edit-discount-minimum" type="number" min="0" step="0.01" value={fields.minOrderSubtotal}
+                onChange={event => setFields({ ...fields, minOrderSubtotal: event.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-discount-limit">Usage limit</Label>
+              <Input id="edit-discount-limit" type="number" min="1" step="1" value={fields.usageLimit}
+                onChange={event => setFields({ ...fields, usageLimit: event.target.value })} />
+            </div>
             <DiscountExpiryFields neverExpires={neverExpires} setNeverExpires={setNeverExpires}
               date={expiryDate} setDate={setExpiryDate} />
             <DialogFooter>
-              <Button type="submit" disabled={expiryMutation.isPending}>
-                {expiryMutation.isPending ? 'Saving…' : 'Save expiry'}
+              <Button type="submit" disabled={editMutation.isPending}>
+                {editMutation.isPending ? 'Saving…' : 'Save changes'}
               </Button>
             </DialogFooter>
           </form>

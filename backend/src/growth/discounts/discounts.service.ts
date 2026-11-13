@@ -153,6 +153,15 @@ export class DiscountsService {
 
     const discountType = dto.discountType ?? current.discountType;
     const value = dto.value !== undefined ? dto.value : Number(current.value);
+    if (!['PERCENTAGE', 'FIXED_AMOUNT'].includes(discountType) || !Number.isFinite(value) || value <= 0) {
+      throw new BadRequestException('Choose a discount type and enter a positive value');
+    }
+    if (dto.usageLimit != null && (!Number.isInteger(dto.usageLimit) || dto.usageLimit < 1)) {
+      throw new BadRequestException('Usage limit must be a positive whole number');
+    }
+    if (dto.minOrderSubtotal != null && (!Number.isFinite(dto.minOrderSubtotal) || dto.minOrderSubtotal < 0)) {
+      throw new BadRequestException('Minimum order subtotal must be zero or more');
+    }
 
     if (discountType === 'PERCENTAGE' && value > 100) {
       throw new BadRequestException('Percentage discount cannot exceed 100%');

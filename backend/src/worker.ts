@@ -1094,6 +1094,16 @@ export default {
       }
 
       if (pathname === '/api/v1/product-types') {
+        if (method === 'POST') {
+          const { user, error } = await authenticate(request, env, prisma);
+          if (error) return error;
+          const denied = checkPermission(user, ['products.edit'], request);
+          if (denied) return denied;
+          const body = await request.json() as { name?: unknown };
+          const category = await services.productTypes.create(body?.name);
+          return jsonResponse(category, 201, request);
+        }
+
         if (method === 'GET') {
           if (!(await isSignedInAdmin(request, env, prisma))) {
             return jsonResponse(await findPublicProductTypes(prisma), 200, request);
@@ -1118,6 +1128,21 @@ export default {
       }
 
       const productTypeMatch = pathname.match(/^\/api\/v1\/product-types\/([^/]+)$/);
+      if (productTypeMatch && method === 'DELETE') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, ['products.edit'], request);
+        if (denied) return denied;
+        try {
+          await services.productTypes.deleteEmpty(decodeURIComponent(productTypeMatch[1]));
+        } catch (error) {
+          if ((error as { code?: string }).code === 'P2003') {
+            return jsonResponse({ message: 'This category is linked to products. Hide it from the website instead.' }, 409, request);
+          }
+          throw error;
+        }
+        return new Response(null, { status: 204, headers: corsHeaders(request) });
+      }
       if (productTypeMatch && method === 'PATCH') {
         const { user, error } = await authenticate(request, env, prisma);
         if (error) return error;

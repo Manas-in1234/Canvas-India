@@ -33,12 +33,12 @@ export class UpdateDiscountDto {
   @IsNumber()
   @Min(0)
   @IsOptional()
-  minOrderSubtotal?: number;
+  minOrderSubtotal?: number | null;
 
   @IsNumber()
   @Min(1)
   @IsOptional()
-  usageLimit?: number;
+  usageLimit?: number | null;
 
   @IsNumber()
   @Min(1)
