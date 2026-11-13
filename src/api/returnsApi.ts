@@ -18,6 +18,7 @@ export async function mirrorOrderToBackend(
   order: Order,
   email: string | null,
   payment: { razorpayPaymentId?: string },
+  couponCode?: string | null,
 ): Promise<void> {
   if (!email) return;
   try {
@@ -43,6 +44,7 @@ export async function mirrorOrderToBackend(
         tax: order.tax,
         total: order.total,
         shippingAddress: order.shipping_address,
+        couponCode: couponCode || undefined,
         payment: { status: 'captured', razorpayPaymentId: payment.razorpayPaymentId },
       }),
     });

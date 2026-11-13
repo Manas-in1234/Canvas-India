@@ -1,6 +1,6 @@
 import { HomepagePromotions } from './catalog/homepage-promotions.js';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from './generated/prisma/client.js';
+import { PrismaClient, Prisma } from './generated/prisma/client.js';
 import { getQueryCompilerWasm } from './common/prisma-wasm/wasm-loader.js';
 import { createServicesContainer, ServicesContainer } from './common/services-container.js';
 import { hashPassword, verifyPassword, sha256Hex } from './common/crypto/password.js';
@@ -1324,12 +1324,27 @@ export default {
         const orderNumber = isCod ? `CC-COD-${codId}` : (mirroredNumber ?? `CC${10000 + orderCount + 1}`);
 
         const subtotal = codAmounts?.subtotal ?? (Number(body.subtotal) || 0);
-        const discount = isCod ? 0 : Number(body.discount) || 0;
+        let discount = isCod ? 0 : Number(body.discount) || 0;
+        // A coupon is re-checked on the server: the discount is what the code is really worth,
+        // never just what the browser claims.
+        let appliedDiscountId: string | null = null;
+        if (!isCod && typeof body.couponCode === 'string' && body.couponCode.trim()) {
+          const checked = await services.discounts.validateDiscount({
+            code: body.couponCode, subtotal, customerId: customer.id,
+          });
+          discount = Math.round(Number(checked.discountAmount));
+          appliedDiscountId = checked.discountId;
+        } else if (!isCod && discount > 0) {
+          return jsonResponse({ message: 'A discount needs a valid coupon code.' }, 400, request);
+        }
         const shippingFee = codAmounts?.shipping ?? (Number(body.shippingFee) || 0);
         const tax = codAmounts?.tax ?? (Number(body.tax) || 0);
-        const total = codAmounts?.total ?? (Number(body.total) || (subtotal - discount + shippingFee + tax));
+        const total = codAmounts?.total ?? (appliedDiscountId
+          ? Math.max(0, subtotal - discount + shippingFee)
+          : (Number(body.total) || (subtotal - discount + shippingFee + tax)));
 
-        const isPaid = !isCod && (body.payment?.status === 'captured' || Boolean(body.payment?.razorpayPaymentId));
+        const isFree = !isCod && !!appliedDiscountId && total <= 0;
+        const isPaid = isFree || (!isCod && (body.payment?.status === 'captured' || Boolean(body.payment?.razorpayPaymentId)));
 
         const newOrder = await prisma.$transaction(async (tx) => {
           const order = await tx.order.create({
@@ -1399,10 +1414,10 @@ export default {
                 create: [
                   { type: 'order.created', message: `Order ${orderNumber} placed via storefront checkout` },
                   ...(isCod ? [{ type: 'order.cod', message: 'Cash on Delivery · collect payment on delivery' }] : []),
-                  ...(isPaid ? [{ type: 'order.paid', message: `Payment verified via Razorpay (${body.payment?.razorpayPaymentId || 'PAID'})` }] : []),
+                  ...(isPaid ? [{ type: 'order.paid', message: isFree ? `Order fully covered by coupon ${body.couponCode}` : `Payment verified via Razorpay (${body.payment?.razorpayPaymentId || 'PAID'})` }] : []),
                 ],
               },
-              ...(isCod || isPaid ? {
+              ...(isCod || (isPaid && !isFree) ? {
                 payments: {
                   create: [
                     {
@@ -1422,6 +1437,9 @@ export default {
               customer: true,
             },
           });
+          if (appliedDiscountId) {
+            await services.discounts.recordRedemption(appliedDiscountId, customer.id, new Prisma.Decimal(discount), order.id, undefined, tx);
+          }
           return order;
         }).catch(async error => {
           if (isCod && error?.code === 'P2002') {
@@ -1599,6 +1617,16 @@ export default {
           const handler = (kind === 'returns' ? returnActions : replacementActions)[action];
           if (handler) return jsonResponse(await handler(id), 200, request);
         }
+      }
+
+      // Public coupon check used by storefront checkout.
+      if (pathname === '/api/v1/discounts/validate' && method === 'POST') {
+        const body = (await request.json().catch(() => ({}))) as any;
+        return jsonResponse(await services.discounts.validateDiscount({
+          code: String(body.code ?? ''),
+          subtotal: body.subtotal === undefined ? undefined : Number(body.subtotal),
+          customerId: typeof body.customerId === 'string' ? body.customerId : undefined,
+        }), 200, request);
       }
 
       // Storefront: a customer looks up their order (by order number + the email on it),

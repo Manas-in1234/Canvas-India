@@ -64,6 +64,7 @@ export const CheckoutPage: React.FC = () => {
   const [couponCode, setCouponCode] = useState('');
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponApplied, setCouponApplied] = useState<string | null>(null);
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
 
@@ -146,6 +147,7 @@ export const CheckoutPage: React.FC = () => {
       const result = await validateDiscountCode(code, subtotal, user?.id);
       const disc = Math.round(Number(result.discountAmount));
       setCouponDiscount(disc);
+      setAppliedCode(result.code);
       setCouponApplied(
         result.discountType === 'PERCENTAGE'
           ? `${result.code} (${Number(result.value)}% OFF applied)`
@@ -153,6 +155,7 @@ export const CheckoutPage: React.FC = () => {
       );
     } catch (err) {
       setCouponDiscount(0);
+      setAppliedCode(null);
       setCouponApplied(null);
       setCouponError(err instanceof DiscountValidationError ? err.message : 'Could not validate this coupon. Please try again.');
     } finally {
@@ -274,6 +277,14 @@ export const CheckoutPage: React.FC = () => {
         shippingMethod,
       });
 
+      // 2a. Fully discounted order: nothing to charge, so skip the payment gateway.
+      if (total <= 0 && appliedCode) {
+        await mirrorOrderToBackend(order, user?.email || guestEmail || null, {}, appliedCode);
+        clearCart();
+        navigate(`/order-success/${order.id}`);
+        return;
+      }
+
       // 2. Trigger Razorpay Payment
       await paymentService.initiatePayment({
         order,
@@ -294,7 +305,7 @@ export const CheckoutPage: React.FC = () => {
 
             await mirrorOrderToBackend(order, user?.email || guestEmail || null, {
               razorpayPaymentId: razorpayResponse.razorpay_payment_id,
-            });
+            }, appliedCode);
 
             // Clear shopping cart on confirmed transaction
             clearCart();
@@ -861,7 +872,7 @@ export const CheckoutPage: React.FC = () => {
                     ) : (
                       <>
                         <Lock className="w-4 h-4 text-green-400" />
-                        <span>Pay Securely ₹{total.toLocaleString('en-IN')} with Razorpay</span>
+                        <span>{total <= 0 ? 'Place order (no payment needed)' : `Pay Securely ₹${total.toLocaleString('en-IN')} with Razorpay`}</span>
                         <ArrowRight className="w-4 h-4" />
                       </>
                     )}
