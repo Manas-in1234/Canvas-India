@@ -10,6 +10,9 @@ export function indiaDateKey(value: string | Date): string {
     .map((key) => parts.find((p) => p.type === key)!.value)
     .join("-");
 }
+// A cancelled or refunded order is not revenue, even if its payment status still says PAID.
+const isCounted = (order: OrderListItem) =>
+  order.paymentStatus === "PAID" && !["CANCELLED", "REFUNDED"].includes(order.orderStatus);
 export function orderOverview(
   orders: OrderListItem[],
   days: number,
@@ -33,7 +36,7 @@ export function orderOverview(
       (b) => b.date === indiaDateKey(order.createdAt),
     )!;
     bucket.orders++;
-    if (order.paymentStatus === "PAID") {
+    if (isCounted(order)) {
       const cents = Math.round(Number(order.total) * 100);
       if (Number.isFinite(cents)) {
         paidCents += cents;
@@ -45,7 +48,7 @@ export function orderOverview(
     selected,
     buckets,
     paidAmount: paidCents / 100,
-    paidOrders: selected.filter((o) => o.paymentStatus === "PAID").length,
+    paidOrders: selected.filter(isCounted).length,
     awaitingPayment: selected.filter(
       (o) =>
         ["PENDING", "AUTHORIZED"].includes(o.paymentStatus) &&
