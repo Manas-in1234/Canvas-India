@@ -32,7 +32,8 @@ export function configureApiClient(getters: { getAccessToken: () => string | nul
   onUnauthorized = getters.onUnauthorized;
 }
 
-const TRANSIENT_STATUSES = new Set([502, 503, 504]);
+// 500 is included because Cloudflare reports a worker that ran out of CPU time (error 1102) as a 500.
+const TRANSIENT_STATUSES = new Set([500, 502, 503, 504, 522, 523, 524]);
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
@@ -41,7 +42,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * repeating it could create a duplicate; those surface the error instead.
  */
 function maxAttempts(path: string, method: string | undefined) {
-  return (method ?? 'GET') === 'GET' || path === '/auth/refresh' ? 3 : 1;
+  return (method ?? 'GET') === 'GET' || path === '/auth/refresh' ? 5 : 1;
 }
 
 async function fetchWithRetry(path: string, init: RequestInit): Promise<Response> {
@@ -57,7 +58,7 @@ async function fetchWithRetry(path: string, init: RequestInit): Promise<Response
         throw new ApiError(0, 'Cannot reach the server. Check your connection and try again.');
       }
     }
-    await sleep(350 * attempt);
+    await sleep(300 * attempt);
   }
   throw lastError instanceof Error ? lastError : new ApiError(0, 'Cannot reach the server.');
 }
