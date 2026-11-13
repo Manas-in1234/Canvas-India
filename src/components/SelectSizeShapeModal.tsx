@@ -1034,10 +1034,14 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
     return defaultOptionId;
   });
 
-  // Custom size state
+  // Custom size state - kept as the raw typed string (not a coerced number)
+  // so the field can actually be cleared and retyped. Coercing every
+  // keystroke to a number meant backspacing to an empty field instantly
+  // snapped back to the fallback default, making it impossible to clear
+  // and type a fresh value - the field basically couldn't be hand-edited.
   const [showCustomSize, setShowCustomSize] = useState<boolean>(isCustomSize);
-  const [localCustomW, setLocalCustomW] = useState<number>(customWidth || 10);
-  const [localCustomH, setLocalCustomH] = useState<number>(customHeight || 10);
+  const [localCustomW, setLocalCustomW] = useState<string>(String(customWidth || 10));
+  const [localCustomH, setLocalCustomH] = useState<string>(String(customHeight || 10));
 
   // If category changes, keep selection if present or default to first
   useEffect(() => {
@@ -1380,7 +1384,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
                   <span className="text-xs font-bold text-[#0E4A93]">
                     ₹
                     {Math.round(
-                      Math.max(8, localCustomW) * Math.max(8, localCustomH) * (material === 'acrylic' ? 4.5 : 2.5)
+                      Math.max(8, Number(localCustomW) || 0) * Math.max(8, Number(localCustomH) || 0) * (material === 'acrylic' ? 4.5 : 2.5)
                     ).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                 )}
@@ -1398,9 +1402,13 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
                       max={48}
                       value={localCustomW}
                       onChange={(e) => {
-                        const val = Number(e.target.value) || 8;
-                        setLocalCustomW(val);
-                        setLocalCustomH(val);
+                        setLocalCustomW(e.target.value);
+                        setLocalCustomH(e.target.value);
+                      }}
+                      onBlur={() => {
+                        const clamped = String(Math.max(8, Math.min(48, Number(localCustomW) || 10)));
+                        setLocalCustomW(clamped);
+                        setLocalCustomH(clamped);
                       }}
                       className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
                     />
@@ -1416,7 +1424,8 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
                         min={8}
                         max={48}
                         value={localCustomW}
-                        onChange={(e) => setLocalCustomW(Number(e.target.value) || 8)}
+                        onChange={(e) => setLocalCustomW(e.target.value)}
+                        onBlur={() => setLocalCustomW(String(Math.max(8, Math.min(48, Number(localCustomW) || 10))))}
                         className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
                       />
                     </div>
@@ -1429,7 +1438,8 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
                         min={8}
                         max={48}
                         value={localCustomH}
-                        onChange={(e) => setLocalCustomH(Number(e.target.value) || 8)}
+                        onChange={(e) => setLocalCustomH(e.target.value)}
+                        onBlur={() => setLocalCustomH(String(Math.max(8, Math.min(48, Number(localCustomH) || 10))))}
                         className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
                       />
                     </div>
@@ -1454,7 +1464,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
               {showCustomSize
                 ? displayPrice(
                     Math.round(
-                      Math.max(8, localCustomW) * Math.max(8, localCustomH) * (material === 'acrylic' ? 4.5 : 2.5)
+                      Math.max(8, Number(localCustomW) || 0) * Math.max(8, Number(localCustomH) || 0) * (material === 'acrylic' ? 4.5 : 2.5)
                     )
                   ).toLocaleString('en-IN', { minimumFractionDigits: 2 })
                 : currentSelectedOption && displayPrice(currentSelectedOption.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
