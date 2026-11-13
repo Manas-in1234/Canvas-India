@@ -14,6 +14,10 @@ import { DiscountType } from './create-discount.dto.js';
 export class UpdateDiscountDto {
   @IsString()
   @IsOptional()
+  code?: string;
+
+  @IsString()
+  @IsOptional()
   description?: string;
 
   @IsEnum(DiscountType)
@@ -28,7 +32,7 @@ export class UpdateDiscountDto {
   @IsNumber()
   @IsPositive()
   @IsOptional()
-  maxDiscountAmount?: number;
+  maxDiscountAmount?: number | null;
 
   @IsNumber()
   @Min(0)
@@ -43,11 +47,11 @@ export class UpdateDiscountDto {
   @IsNumber()
   @Min(1)
   @IsOptional()
-  perCustomerLimit?: number;
+  perCustomerLimit?: number | null;
 
   @IsDateString()
   @IsOptional()
-  startsAt?: string;
+  startsAt?: string | null;
 
   @IsDateString()
   @IsOptional()
@@ -73,9 +77,9 @@ export class UpdateDiscountDto {
 
   @IsString()
   @IsOptional()
-  customerSegmentId?: string;
+  customerSegmentId?: string | null;
 
   @IsString()
   @IsOptional()
-  campaignId?: string;
+  campaignId?: string | null;
 }

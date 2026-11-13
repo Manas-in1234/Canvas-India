@@ -19,6 +19,13 @@ import { buttonVariants, Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
+const extraNumbers = [
+  { key: 'maxDiscountAmount', label: 'Maximum discount (₹)', min: '0.01', step: '0.01' },
+  { key: 'perCustomerLimit', label: 'Usage limit per customer', min: '1', step: '1' },
+] as const;
+
+const optionalNumber = (value: string) => value === '' ? null : Number(value);
+
 export default function DiscountsPage() {
   const { hasPermission } = usePermission();
   const queryClient = useQueryClient();
@@ -26,7 +33,11 @@ export default function DiscountsPage() {
   const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null);
   const [neverExpires, setNeverExpires] = useState(true);
   const [expiryDate, setExpiryDate] = useState('');
-  const [fields, setFields] = useState({ description: '', discountType: 'PERCENTAGE', value: '', minOrderSubtotal: '', usageLimit: '' });
+  const [fields, setFields] = useState({
+    code: '', description: '', discountType: 'PERCENTAGE', value: '', minOrderSubtotal: '', usageLimit: '',
+    maxDiscountAmount: '', perCustomerLimit: '', startDate: '', isActive: true, isExclusive: false,
+    applicableCategoryIds: '', applicableProductIds: '', customerSegmentId: '', campaignId: '',
+  });
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['discounts'],
@@ -48,7 +59,21 @@ export default function DiscountsPage() {
   const editMutation = useMutation({
     mutationFn: ({ id, expiresAt }: { id: string; expiresAt: string | null }) =>
       apiClient.patch(`/growth/discounts/${id}`, {
+        code: fields.code.trim().toUpperCase(),
         description: fields.description.trim(),
+        maxDiscountAmount: optionalNumber(fields.maxDiscountAmount),
+        perCustomerLimit: optionalNumber(fields.perCustomerLimit),
+        startsAt: fields.startDate
+          ? editingDiscount?.startsAt?.slice(0, 10) === fields.startDate
+            ? editingDiscount.startsAt
+            : new Date(fields.startDate).toISOString()
+          : null,
+        isActive: fields.isActive,
+        isExclusive: fields.isExclusive,
+        applicableCategoryIds: fields.applicableCategoryIds.split(',').map(value => value.trim()).filter(Boolean),
+        applicableProductIds: fields.applicableProductIds.split(',').map(value => value.trim()).filter(Boolean),
+        customerSegmentId: fields.customerSegmentId.trim() || null,
+        campaignId: fields.campaignId.trim() || null,
         discountType: fields.discountType,
         value: Number(fields.value),
         minOrderSubtotal: fields.minOrderSubtotal === '' ? null : Number(fields.minOrderSubtotal),
@@ -105,7 +130,17 @@ export default function DiscountsPage() {
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={() => {
                   setFields({
+                    code: row.code,
                     description: row.description ?? '',
+                    maxDiscountAmount: row.maxDiscountAmount == null ? '' : String(row.maxDiscountAmount),
+                    perCustomerLimit: row.perCustomerLimit == null ? '' : String(row.perCustomerLimit),
+                    startDate: row.startsAt?.slice(0, 10) ?? '',
+                    isActive: row.isActive,
+                    isExclusive: row.isExclusive,
+                    applicableCategoryIds: row.applicableCategoryIds?.join(', ') ?? '',
+                    applicableProductIds: row.applicableProductIds?.join(', ') ?? '',
+                    customerSegmentId: row.customerSegmentId ?? '',
+                    campaignId: row.campaignId ?? '',
                     discountType: row.discountType,
                     value: String(row.value),
                     minOrderSubtotal: row.minOrderSubtotal == null ? '' : String(row.minOrderSubtotal),
@@ -186,6 +221,14 @@ export default function DiscountsPage() {
             editMutation.mutate({ id: editingDiscount.id, expiresAt });
           }}>
             <div className="space-y-2">
+              <Label htmlFor="edit-discount-code">Discount code</Label>
+              <Input id="edit-discount-code" required maxLength={80} value={fields.code}
+                onChange={event => setFields({ ...fields, code: event.target.value.toUpperCase() })} />
+              {editingDiscount && fields.code.trim() !== editingDiscount.code && (
+                <p className="text-sm text-muted-foreground">If this code appears on the homepage, select the renamed code in Homepage Promotions after saving.</p>
+              )}
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="edit-discount-description">Description</Label>
               <Input id="edit-discount-description" value={fields.description}
                 onChange={event => setFields({ ...fields, description: event.target.value })} />
@@ -214,8 +257,46 @@ export default function DiscountsPage() {
               <Input id="edit-discount-limit" type="number" min="1" step="1" value={fields.usageLimit}
                 onChange={event => setFields({ ...fields, usageLimit: event.target.value })} />
             </div>
+            {extraNumbers.map(({ key, label, min, step }) => (
+              <div key={key} className="space-y-2">
+                <Label htmlFor={key}>{label}</Label>
+                <Input id={key} type="number" min={min} step={step} value={fields[key]}
+                  onChange={event => setFields({ ...fields, [key]: event.target.value })} />
+              </div>
+            ))}
+            <div className="space-y-2">
+              <Label htmlFor="edit-discount-start">Start date (optional)</Label>
+              <Input id="edit-discount-start" type="date" value={fields.startDate}
+                onChange={event => setFields({ ...fields, startDate: event.target.value })} />
+            </div>
             <DiscountExpiryFields neverExpires={neverExpires} setNeverExpires={setNeverExpires}
               date={expiryDate} setDate={setExpiryDate} />
+            <div className="flex flex-wrap gap-4 text-sm">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={fields.isActive}
+                  onChange={event => setFields({ ...fields, isActive: event.target.checked })} />
+                Active
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={fields.isExclusive}
+                  onChange={event => setFields({ ...fields, isExclusive: event.target.checked })} />
+                Exclusive
+              </label>
+            </div>
+            <details className="space-y-3 rounded border p-3">
+              <summary className="cursor-pointer text-sm font-medium">Targeting and campaign</summary>
+              {([
+                ['applicableCategoryIds', 'Eligible category IDs (comma separated)'],
+                ['applicableProductIds', 'Eligible product IDs (comma separated)'],
+                ['customerSegmentId', 'Customer segment ID'],
+                ['campaignId', 'Campaign ID'],
+              ] as const).map(([key, label]) => (
+                <div key={key} className="space-y-2">
+                  <Label htmlFor={key}>{label}</Label>
+                  <Input id={key} value={fields[key]} onChange={event => setFields({ ...fields, [key]: event.target.value })} />
+                </div>
+              ))}
+            </details>
             <DialogFooter>
               <Button type="submit" disabled={editMutation.isPending}>
                 {editMutation.isPending ? 'Saving…' : 'Save changes'}
