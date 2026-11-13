@@ -1,8 +1,14 @@
+// In production the admin talks to the backend directly. The admin site's own /api/v1 proxy adds a
+// second server that can fail on its own (it ran out of CPU time about one request in seven), so it is
+// only used as the alternate route when a repeated read fails.
+const DIRECT_API_BASE_URL = 'https://canvas-india-backend.kasettynani.workers.dev/api/v1';
+const PROXY_API_BASE_URL = '/api/v1';
 const API_BASE_URL = process.env.NODE_ENV === 'production'
-  ? '/api/v1'
+  ? DIRECT_API_BASE_URL
   : process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api/v1';
 
 export const buildAdminApiUrl = (path: string) => `${API_BASE_URL}${path}`;
+const alternateApiUrl = (path: string) => `${PROXY_API_BASE_URL}${path}`;
 
 export class ApiError extends Error {
   constructor(
@@ -50,7 +56,8 @@ async function fetchWithRetry(path: string, init: RequestInit): Promise<Response
   let lastError: unknown;
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
-      const response = await fetch(buildAdminApiUrl(path), { ...init, signal: init.signal ?? AbortSignal.timeout(30000) });
+      const useAlternate = process.env.NODE_ENV === 'production' && attempts > 1 && attempt % 2 === 0;
+      const response = await fetch(useAlternate ? alternateApiUrl(path) : buildAdminApiUrl(path), { ...init, signal: init.signal ?? AbortSignal.timeout(30000) });
       if (!TRANSIENT_STATUSES.has(response.status) || attempt === attempts) return response;
     } catch (err) {
       lastError = err;

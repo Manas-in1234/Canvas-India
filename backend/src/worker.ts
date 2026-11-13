@@ -451,9 +451,12 @@ export default {
             return jsonResponse(item, 201, request);
           }
           if (method === 'GET' && pathname === '/api/v1/admin/option-categories') {
+            // The overview only needs how many items each list has. Sending every item with its
+            // images and settings made this response grow until it ran out of processing time.
+            // Each list's full items are loaded one at a time when it is opened.
             const categories = await prisma.optionCategory.findMany({
               orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-              include: { items: { orderBy: { sortOrder: 'asc' } } },
+              include: { items: { select: { id: true }, orderBy: { sortOrder: 'asc' } } },
             });
             return jsonResponse(categories, 200, request);
           }
