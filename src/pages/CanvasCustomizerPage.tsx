@@ -2788,6 +2788,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return 'UPLOAD';
   });
 
+  // Temporarily dismisses the mobile overlay (View Preview / the X button)
+  // WITHOUT changing activeTab, so the customer stays on whatever section
+  // they were in (Select Size, Layouts, etc) instead of being bounced to
+  // Upload - reopening it (any tab tap) lands back where they actually were.
+  const [isPanelHiddenMobile, setIsPanelHiddenMobile] = useState(false);
+
   useEffect(() => {
     const requestedTab = searchParams.get('tab')?.toUpperCase();
     if (requestedTab === 'PRODUCTS') {
@@ -2828,6 +2834,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   const handleSelectTab = (tabId: ToolbarTab) => {
     setActiveTab(tabId);
+    setIsPanelHiddenMobile(false);
     if (tabId === 'POP ART STYLE') {
       setIsPopArtStyleModalOpen(true);
       return;
@@ -9584,8 +9591,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               ? `${liveOrFallbackHardware.length} Hardware`
               : 'Specifications'
           }
-          mobileMode={activeTab === mobileRestingTab ? 'inline' : 'overlay'}
-          onCloseMobile={() => setActiveTab(mobileRestingTab)}
+          mobileMode={isPanelHiddenMobile ? 'hidden' : activeTab === mobileRestingTab ? 'inline' : 'overlay'}
+          onCloseMobile={() => setIsPanelHiddenMobile(true)}
           prevStep={{
             label: prevTab.label,
             disabled: activeTabIndex === 0,
@@ -9598,7 +9605,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           }}
           previewAction={
             (activeTab === 'SELECT SIZE' || activeTab === 'LAYOUTS & DESIGNS')
-              ? { label: 'View Preview', onClick: () => setActiveTab(mobileRestingTab) }
+              ? { label: 'View Preview', onClick: () => setIsPanelHiddenMobile(true) }
               : undefined
           }
         >

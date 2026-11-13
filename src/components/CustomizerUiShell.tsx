@@ -228,8 +228,13 @@ export interface CustomizerPanelProps {
   // 'inline' keeps it in normal document flow after the canvas instead, for
   // the resting/Upload tab, so the canvas stays the prominent middle
   // content while upload-management content (photo thumbnails etc.) stays
-  // reachable below it rather than hidden behind an overlay.
-  mobileMode?: 'overlay' | 'inline';
+  // reachable below it rather than hidden behind an overlay. 'hidden' is a
+  // temporary dismiss (View Preview / the X button) that does NOT change
+  // which tab is active - it just stops rendering the overlay on mobile so
+  // the canvas is visible, while staying on the same section underneath so
+  // reopening it (tapping its sidebar tab, or a "Select Another X" button
+  // elsewhere) lands back where the customer actually was, not on Upload.
+  mobileMode?: 'overlay' | 'inline' | 'hidden';
   onCloseMobile?: () => void;
   // Mobile-only "Back"/"Continue" footer so there's a clear way to move to
   // the next toolbar step without hunting for the sidebar tab strip behind
@@ -257,12 +262,15 @@ export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
 }) => {
   const resolvedMeta = metaText || badge;
   const isOverlay = mobileMode === 'overlay';
+  const isHiddenMobile = mobileMode === 'hidden';
   return (
     <section
       id="customizer-panel-section"
       className={`w-full md:w-[480px] lg:w-[500px] xl:w-[515px] bg-white border-b md:border-b-0 md:border-r border-stone-200 flex-col z-10 md:flex md:flex-none md:h-full overflow-hidden shadow-sm ${
         isOverlay
           ? 'fixed top-14 inset-x-0 bottom-0 z-40 flex customizer-panel-slide-up md:static md:inset-auto md:z-10 md:[animation:none]'
+          : isHiddenMobile
+          ? 'hidden md:flex md:order-none'
           : 'order-2 md:order-none flex'
       }`}
     >
