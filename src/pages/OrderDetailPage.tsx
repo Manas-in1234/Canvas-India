@@ -8,6 +8,7 @@ import {
   requestReturn,
   getLiveOrderStatus,
   cancelOrder,
+  mirrorOrderToBackend,
   type ReturnInfo,
   type LiveOrderStatus,
 } from '../api/returnsApi';
@@ -42,7 +43,13 @@ export const OrderDetailPage: React.FC = () => {
 
   const loadLive = async () => {
     if (!order || !contactEmail) return;
-    setLive(await getLiveOrderStatus(order.order_number, contactEmail).catch(() => null));
+    let status = await getLiveOrderStatus(order.order_number, contactEmail).catch(() => null);
+    // Orders paid before the store tracked them are added now, so they can be managed too.
+    if (status && !status.found && order.payment?.status === 'captured') {
+      await mirrorOrderToBackend(order, contactEmail, { razorpayPaymentId: order.payment.razorpay_payment_id });
+      status = await getLiveOrderStatus(order.order_number, contactEmail).catch(() => null);
+    }
+    setLive(status);
   };
   useEffect(() => {
     void loadLive();
@@ -275,6 +282,12 @@ export const OrderDetailPage: React.FC = () => {
           </div>
         </div>
 
+        {!live?.found && shownStatus !== 'cancelled' && (
+          <div className="print:hidden rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
+            <strong>Cancellation policy:</strong> an order can be cancelled until production begins. Once printing and
+            framing has started, it can no longer be cancelled. To cancel, contact support.
+          </div>
+        )}
         {live?.found && shownStatus !== 'cancelled' && (
           <div className="print:hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm flex flex-wrap items-center justify-between gap-3">
             {live.cancellable ? (
