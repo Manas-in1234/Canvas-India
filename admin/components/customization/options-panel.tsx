@@ -295,6 +295,7 @@ function groupByBaseKey(categories: OptionCategoryListItem[]) {
 export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC'; tabs: string[] }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [progress, setProgress] = useState('');
   const [seeding, setSeeding] = useState<string | null>(null);
   const { hasPermission } = usePermission();
 
@@ -323,42 +324,72 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
 
   // Creates the list in the database from what the storefront shows today, so the
   // team can start editing (rename, re-price, change icons, hide, delete, add).
-  const seedCategory = async (baseKey: string, seed: SeedSpec) => {
-    setSeeding(baseKey);
-    let createdId: string | null = null;
-    try {
-      // Created switched off and only turned on once every item is in, so customers never see a half-built list.
-      const created = await apiClient.post<{ id: string }>('/admin/option-categories', {
-        baseKey,
-        materialScope: seed.scope,
-        name: seed.name,
-        isActive: false,
-      });
-      createdId = created.id;
-      for (const item of seed.items) {
-        await apiClient.post(`/admin/option-categories/${created.id}/items`, {
-          label: item.label,
-          description: item.description || undefined,
-          priceMode: 'FLAT',
-          flatPrice: item.flatPrice,
-          extras: item.extras,
-        });
+  // Safe against a flaky connection: every step is retried, a half-built list is picked up
+  // where it stopped instead of starting over, and customers only see it once every item is in.
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  async function withRetry<T>(work: () => Promise<T>, onFail?: () => Promise<boolean>): Promise<T | undefined> {
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      try {
+        return await work();
+      } catch (error) {
+        if (attempt === 4) throw error;
+        await wait(400 * attempt);
+        // The failed call may have gone through before the connection dropped; do not repeat it if so.
+        if (onFail && (await onFail().catch(() => false))) return undefined;
       }
-      await apiClient.patch(`/admin/option-categories/${created.id}`, { isActive: true });
+    }
+    return undefined;
+  }
+
+  const seedCategory = async (baseKey: string, seed: SeedSpec, draft?: OptionCategoryListItem) => {
+    setSeeding(baseKey);
+    try {
+      let id = draft?.id;
+      if (!id) {
+        const created = await withRetry(
+          () =>
+            apiClient.post<{ id: string }>('/admin/option-categories', {
+              baseKey,
+              materialScope: seed.scope,
+              name: seed.name,
+              isActive: false,
+            }),
+          async () => {
+            const list = await apiClient.get<OptionCategoryListItem[]>('/admin/option-categories');
+            const found = list.find((c) => c.baseKey === baseKey && c.materialScope === seed.scope && !c.isActive);
+            if (found) id = found.id;
+            return !!found;
+          },
+        );
+        if (created) id = created.id;
+      }
+      if (!id) throw new Error('no list');
+      const listId = id;
+      const countItems = async () => (await apiClient.get<OptionCategoryListItem>(`/admin/option-categories/${listId}`)).items.length;
+      for (let index = draft?.items.length ?? 0; index < seed.items.length; index++) {
+        setProgress(`${index} of ${seed.items.length}`);
+        const item = seed.items[index];
+        await withRetry(
+          () =>
+            apiClient.post(`/admin/option-categories/${listId}/items`, {
+              label: item.label,
+              description: item.description || undefined,
+              priceMode: 'FLAT',
+              flatPrice: item.flatPrice,
+              extras: item.extras,
+            }),
+          async () => (await countItems()) > index,
+        );
+      }
+      await withRetry(() => apiClient.patch(`/admin/option-categories/${listId}`, { isActive: true }));
       await queryClient.invalidateQueries({ queryKey: ['option-categories'] });
       toast.success('Ready to edit. The storefront now reads this list.');
     } catch {
-      if (createdId) {
-        try {
-          await apiClient.delete(`/admin/option-categories/${createdId}`);
-        } catch {
-          // leave the switched-off draft; it is invisible to customers
-        }
-      }
-      toast.error('Could not set this list up. Please try again.');
+      toast.error('Setup paused because the connection kept dropping. Press "Finish setup" to continue where it stopped.');
       await queryClient.invalidateQueries({ queryKey: ['option-categories'] });
     } finally {
       setSeeding(null);
+      setProgress('');
     }
   };
 
@@ -372,7 +403,7 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
               Showing the built-in options. Set up to make them editable.
             </p>
             <Button size="sm" disabled={seeding === baseKey} onClick={() => void seedCategory(baseKey, seed)}>
-              {seeding === baseKey ? 'Setting up…' : 'Set up from current options'}
+              {seeding === baseKey ? `Setting up… ${progress}` : 'Set up from current options'}
             </Button>
           </div>
         );
@@ -380,8 +411,8 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
       return <p className="text-xs text-muted-foreground">Not set up yet.</p>;
     }
     return variants.map((variant) => (
+      <div key={variant.id} className="space-y-1.5">
       <button
-        key={variant.id}
         className="flex w-full items-center justify-between rounded-md border p-3 text-left text-sm hover:bg-muted"
         onClick={() =>
           hasPermission('option_catalog.view') &&
@@ -397,6 +428,15 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
           Edit <ArrowRight className="h-3.5 w-3.5" />
         </span>
       </button>
+      {seed && !variant.isActive && variant.items.length < seed.items.length && hasPermission('option_catalog.manage') && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span>Setup stopped at {variant.items.length} of {seed.items.length}. Customers still see the built-in options.</span>
+          <Button size="sm" disabled={seeding === baseKey} onClick={() => void seedCategory(baseKey, seed, variant)}>
+            {seeding === baseKey ? `Setting up… ${progress}` : 'Finish setup'}
+          </Button>
+        </div>
+      )}
+      </div>
     ));
   };
 
