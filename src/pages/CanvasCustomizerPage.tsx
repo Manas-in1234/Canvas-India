@@ -9357,8 +9357,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               ? `${liveOrFallbackHardware.length} Hardware`
               : 'Specifications'
           }
-          mobileMode={activeTab === (isBusRollProduct ? 'CREATE BUS ROLL' : 'UPLOAD') ? 'inline' : 'overlay'}
-          onCloseMobile={() => setActiveTab(isBusRollProduct ? 'CREATE BUS ROLL' : 'UPLOAD')}
+          mobileMode={activeTab === (isBusRollProduct ? 'CREATE BUS ROLL' : isPrefillMode ? 'SELECT SIZE' : 'UPLOAD') ? 'inline' : 'overlay'}
+          onCloseMobile={() => setActiveTab(isBusRollProduct ? 'CREATE BUS ROLL' : isPrefillMode ? 'SELECT SIZE' : 'UPLOAD')}
         >
           {/* ---------------------------- PRODUCTS ---------------------------- */}
           {activeTab === 'PRODUCTS' && (
