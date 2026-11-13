@@ -111,24 +111,6 @@ const CUSTOM_SIZE_SEED: SeedSpec = {
   })),
 };
 
-const SIDEBAR_TABS_SEED: SeedSpec = {
-  scope: 'BOTH',
-  name: 'Customizer sidebar tabs',
-  items: [
-    ['PRODUCTS', 'Products'], ['UPLOAD', 'Upload'], ['SELECT SIZE', 'Select size'], ['LAYOUTS & DESIGNS', 'Layouts & designs'],
-    ['WRAP & BORDER', 'Wrap & border'], ['HARDWARE & FINISH', 'Hardware & finish'], ['OPTIONS', 'Options'],
-  ].map(([id, label]) => ({ label, description: '', flatPrice: '0', extras: { id } })),
-};
-
-const TOOLBAR_SEED: SeedSpec = {
-  scope: 'BOTH',
-  name: 'Customizer top buttons',
-  items: [
-    ['save', 'Save'], ['add_text', 'Add text'], ['add_clipart', 'Add clipart'],
-    ['room_view', 'Room view'], ['view_3d', '3D view'], ['view_360', '360° view'],
-  ].map(([id, label]) => ({ label, description: '', flatPrice: '0', extras: { id } })),
-};
-
 const TABS: TabBlock[] = [
   {
     tab: 'SPECIALTY PRODUCTS',
@@ -154,14 +136,6 @@ const TABS: TabBlock[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    tab: 'CUSTOMIZER TABS & BUTTONS',
-    note: 'Rename, hide or reorder the left-hand tabs and the buttons across the top of the customizer.',
-    sections: [
-      { heading: 'Left-hand tabs', entries: [{ kind: 'category', baseKey: 'sidebar_tabs', title: 'Tabs', seed: SIDEBAR_TABS_SEED }] },
-      { heading: 'Top buttons', entries: [{ kind: 'category', baseKey: 'toolbar_buttons', title: 'Buttons', seed: TOOLBAR_SEED }] },
     ],
   },
   {
@@ -306,6 +280,8 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
 
   const groups = groupByBaseKey(data ?? []);
   const placed = new Set<string>([
+    // The old editor was removed. Keep its saved lists out of the generic Options panel.
+    'sidebar_tabs', 'toolbar_buttons',
     ...TABS.flatMap((t) => t.sections.flatMap((s) => s.entries)).flatMap((e) => (e.kind === 'category' ? [e.baseKey] : [])),
     ...NOT_CONNECTED.map((n) => n.baseKey),
   ]);
