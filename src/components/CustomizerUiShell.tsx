@@ -274,7 +274,7 @@ export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
       <div className="flex-1 md:flex-1 overflow-y-auto min-h-0 flex flex-col pb-[max(1rem,env(safe-area-inset-bottom,16px))]">
         {children}
       </div>
-      {isOverlay && (prevStep || nextStep) && (
+      {(prevStep || nextStep) && (
         <div className="md:hidden shrink-0 border-t border-stone-200 bg-white p-3 flex items-center gap-2 pb-[max(0.75rem,env(safe-area-inset-bottom,12px))]">
           {prevStep && (
             <button
