@@ -2858,6 +2858,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
   };
 
+  // Back/Continue (panel footer and canvas view alike) always show the
+  // preloader beat on every device, including mobile - unlike a plain
+  // sidebar tab tap, these are a deliberate "move to the next/previous
+  // step" action the customer explicitly asked to feel more substantial.
+  const handleStepNav = (tabId: ToolbarTab) => {
+    beginPreloader();
+    endPreloader(PRELOADER_MIN_MS);
+    handleSelectTab(tabId);
+  };
+
   const [selectedProductTypeId, setSelectedProductTypeId] = useState<string>(() =>
     resolveCurrentProductId(routeMaterial, productId)
   );
@@ -9604,12 +9614,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           prevStep={{
             label: prevTab.label,
             disabled: activeTabIndex === 0,
-            onClick: () => handleSelectTab(prevTab.id)
+            onClick: () => handleStepNav(prevTab.id)
           }}
           nextStep={{
             label: nextTab.label,
             disabled: activeTabIndex === toolbarItems.length - 1,
-            onClick: () => handleSelectTab(nextTab.id)
+            onClick: () => handleStepNav(nextTab.id)
           }}
           previewAction={
             (activeTab === 'SELECT SIZE' || activeTab === 'LAYOUTS & DESIGNS' || activeTab === 'WRAP & BORDER' || activeTab === 'HARDWARE & FINISH')
@@ -12076,12 +12086,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             prevStep={{
               label: prevTab.label,
               disabled: activeTabIndex === 0,
-              onClick: () => handleSelectTab(prevTab.id)
+              onClick: () => handleStepNav(prevTab.id)
             }}
             nextStep={{
               label: nextTab.label,
               disabled: activeTabIndex === toolbarItems.length - 1,
-              onClick: () => handleSelectTab(nextTab.id)
+              onClick: () => handleStepNav(nextTab.id)
             }}
             reselectAction={
               activeTab === 'LAYOUTS & DESIGNS'
