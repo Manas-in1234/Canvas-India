@@ -2417,6 +2417,9 @@ const renderFloatingFrameContainer = (
     aspectRatio?: number;
     isMultiPanel?: boolean;
     scale?: number;
+    // Pass the canvas shape's own clip-path when the frame should follow a
+    // round/oval/heart/triangle shape instead of the default rectangle.
+    shapeClipPath?: string;
   }
 ) => {
   const frame = FRAME_OPTIONS.find((f) => f.id === opts.frameId);
@@ -2455,6 +2458,44 @@ const renderFloatingFrameContainer = (
 
   const mouldingPadding = opts.scale ? Math.max(8, Math.round(18 * opts.scale)) : 18;
   const gapPadding = opts.scale ? Math.max(3, Math.round(7 * opts.scale)) : 7;
+
+  // Round/oval/heart/triangle canvases: the moulding, recess gap and content
+  // all re-apply the same (percentage/objectBoundingBox-based) shape clip-path
+  // at each nested, padded layer, so each layer traces a smaller copy of the
+  // same shape and the padding between them reads as a shape-following ring
+  // instead of a rectangular frame around a round print.
+  if (opts.shapeClipPath) {
+    const clip = opts.shapeClipPath;
+    return (
+      <div
+        className="relative select-none"
+        style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.42)) drop-shadow(0 6px 14px rgba(0,0,0,0.26))' }}
+      >
+        <div
+          className="relative"
+          style={{
+            padding: `${mouldingPadding}px`,
+            background: mouldingGradient,
+            clipPath: clip,
+            WebkitClipPath: clip
+          }}
+        >
+          <div
+            className="relative bg-[#0b0c0e] overflow-hidden"
+            style={{
+              padding: `${gapPadding}px`,
+              clipPath: clip,
+              WebkitClipPath: clip
+            }}
+          >
+            <div className="relative" style={{ clipPath: clip, WebkitClipPath: clip }}>
+              {content}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -11335,11 +11376,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </div>
               )}
 
-              {/* ==================== 3. FRAMES SECTION (Matching Screenshot 3) ====================
-                  Floating frames are a rectangular wood/metal moulding with
-                  mitred corners - there's no round/shaped equivalent, so this
-                  section only applies to rectangular canvases. */}
-              {!isMultiFrameProduct && (!shapeApplies || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id)) && (
+              {/* ==================== 3. FRAMES SECTION (Matching Screenshot 3) ==================== */}
+              {!isMultiFrameProduct && (
                 <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
                   {/* Dark Section Header Bar */}
                   <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
@@ -13027,10 +13065,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         })()}
                       </div>,
                       {
-                        frameId: isRectangularShape ? selectedFrameId : 'no-frame',
+                        frameId: selectedFrameId,
                         displayWidthInches,
                         displayHeightInches,
-                        aspectRatio: printAspect
+                        aspectRatio: printAspect,
+                        shapeClipPath: isRectangularShape ? undefined : currentShape.clipPathStyle
                       }
                     )}
                   </div>
@@ -13183,9 +13222,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id));
 
         const frameOption = liveOrFallbackFrames.find((f) => f.id === selectedFrameId);
-        // Floating frames are a rectangular wood/metal moulding - they have no
-        // round/shaped equivalent, so they never apply to a die-cut shape.
-        const hasOuterFrame = Boolean(shapeApplies && isRectangularShape && frameOption && frameOption.id !== 'no-frame');
+        const hasOuterFrame = Boolean(shapeApplies && frameOption && frameOption.id !== 'no-frame');
         const frameColor = hasOuterFrame ? frameOption?.color : undefined;
         const borderWidthPx = shapeApplies
           ? liveOrFallbackBorderWidths.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0
@@ -14603,7 +14640,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           scale: 0.65,
                           displayWidthInches: geom.widthInches,
                           displayHeightInches: geom.heightInches,
-                          aspectRatio: previewAspect
+                          aspectRatio: previewAspect,
+                          shapeClipPath: clipStyle
                         })
                       : singleCanvasContent}
                   </div>
