@@ -121,7 +121,7 @@ export function OptionCategoryDetailClient({ id: initialId }: { id: string }) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <Link
-            href="/option-categories"
+            href="/customization?tab=options"
             className="mb-1 flex items-center gap-1 text-sm text-muted-foreground hover:underline"
           >
             <ArrowLeft className="h-3.5 w-3.5" />

@@ -136,7 +136,7 @@ export function SizesDetailClient({ productTypeId: initialProductTypeId }: { pro
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/sizes" className="mb-1 flex items-center gap-1 text-sm text-muted-foreground hover:underline">
+          <Link href="/customization?tab=sizes" className="mb-1 flex items-center gap-1 text-sm text-muted-foreground hover:underline">
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to Sizes
           </Link>

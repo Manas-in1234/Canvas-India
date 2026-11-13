@@ -4,7 +4,6 @@ import {
   Package,
   Boxes,
   Warehouse,
-  Layers,
   Tag,
   Users,
   UserCog,
@@ -14,10 +13,8 @@ import {
   Settings,
   RotateCcw,
   SlidersHorizontal,
-  Ruler,
   IndianRupee,
   ImageIcon,
-  PackageSearch,
   type LucideIcon,
 } from "lucide-react";
 export interface NavLink {
@@ -115,28 +112,10 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "Customization studio",
     links: [
       {
-        href: "/customizer-products",
-        label: "Customizer products",
-        icon: Layers,
-        permissions: ["option_catalog.view"],
-      },
-      {
-        href: "/sizes",
-        label: "Select size",
-        icon: Ruler,
-        permissions: ["size_presets.view"],
-      },
-      {
-        href: "/option-categories",
-        label: "Customize page options",
+        href: "/customization",
+        label: "Customization",
         icon: SlidersHorizontal,
         permissions: ["option_catalog.view"],
-      },
-      {
-        href: "/product-customization",
-        label: "Product customization",
-        icon: PackageSearch,
-        permissions: ["products.edit"],
       },
       {
         href: "/shapes",

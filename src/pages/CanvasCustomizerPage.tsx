@@ -2715,8 +2715,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const key = searchParams.get('product') || productId;
     const list: any[] = Array.isArray(allProducts) ? (allProducts as any[]) : [];
     const match = key ? list.find((p) => p.id === key || p.slug === key) : null;
-    const sections = match?.customizer?.sections;
-    return sections && typeof sections === 'object' ? sections : null;
+    // Per-product customization is switched off: every canvas / acrylic product uses the
+    // shared options for its material (managed in the admin Customization page).
+    void match;
+    return null as Record<string, any> | null;
   }, [allProducts, productId, searchParams]);
   const overriddenKeys = useMemo(
     () => new Set(Object.keys(productOverrides ?? {}).filter((k) => Array.isArray(productOverrides?.[k]?.items))),
