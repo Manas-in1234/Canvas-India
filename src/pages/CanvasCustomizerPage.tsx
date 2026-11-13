@@ -6988,6 +6988,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     panels
   ]);
 
+  // The oval shape's clip-path (ellipse(50% 38%)) was authored for a
+  // landscape (wider-than-tall) box - its fixed percentages don't adapt to
+  // orientation, so picking a vertical/portrait oval size (height > width)
+  // makes the 38%-of-height radius come out almost equal to the 50%-of-width
+  // radius, rendering as a near-perfect circle instead of a tall oval. Swap
+  // which axis gets 50% vs 38% based on the actual print's orientation.
+  const effectiveShapeClipPath =
+    currentShape.id === 'shape-oval'
+      ? (printAspect >= 1 ? 'ellipse(50% 38% at 50% 50%)' : 'ellipse(38% 50% at 50% 50%)')
+      : currentShape.clipPathStyle;
+
   // Continuously track physical workspace canvas dimensions for pixel-perfect edge wrap synchronization
   useEffect(() => {
     const el = workspaceCanvasBoxRef.current;
@@ -12772,10 +12783,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                     : (selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : '#FFFFFF'),
                                   clipPath: (showPhysicalEdges || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? undefined
-                                    : currentShape.clipPathStyle,
+                                    : effectiveShapeClipPath,
                                   WebkitClipPath: (showPhysicalEdges || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? undefined
-                                    : currentShape.clipPathStyle,
+                                    : effectiveShapeClipPath,
                                   touchAction: 'none'
                                 }}
                               >
@@ -13001,8 +13012,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                       inset: `${borderWidthPx / 2}px`,
                                       border: `${borderWidthPx}px solid ${selectedBorderColor}`,
                                       borderRadius: currentShape.id === 'shape-circle' ? '9999px' : undefined,
-                                      clipPath: ['shape-oval', 'shape-heart', 'shape-triangle'].includes(currentShape.id) ? currentShape.clipPathStyle : undefined,
-                                      WebkitClipPath: ['shape-oval', 'shape-heart', 'shape-triangle'].includes(currentShape.id) ? currentShape.clipPathStyle : undefined
+                                      clipPath: ['shape-oval', 'shape-heart', 'shape-triangle'].includes(currentShape.id) ? effectiveShapeClipPath : undefined,
+                                      WebkitClipPath: ['shape-oval', 'shape-heart', 'shape-triangle'].includes(currentShape.id) ? effectiveShapeClipPath : undefined
                                     }}
                                   />
                                 )}
@@ -13116,7 +13127,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           ? '9999px'
                           : undefined,
                         shapeClipPath: !isRectangularShape && currentShape.id !== 'shape-circle'
-                          ? currentShape.clipPathStyle
+                          ? effectiveShapeClipPath
                           : undefined
                       }
                     )}
@@ -13257,12 +13268,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         const isHexagonCluster = isHexagonProduct && panels.length > 1;
         const isRectShape = !geom.clipPath && ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
         const activeClipPath = shapeApplies && currentShape.shapeType === 'custom'
-          ? currentShape.clipPathStyle
+          ? effectiveShapeClipPath
           : isHexagonProduct
           ? (geom.clipPath || HEXAGON_HORIZONTAL_CLIP_PATH)
           : isRectShape
           ? undefined
-          : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined));
+          : (geom.clipPath || (shapeApplies ? effectiveShapeClipPath : undefined));
 
         const isRectangularShape =
           !activeClipPath &&
@@ -14595,8 +14606,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                 // 4. Single Non-Rectangular or Rectangular Canvas & Acrylic on Room Wall
                 const clipStyle = shapeApplies && currentShape.shapeType === 'custom'
-                  ? currentShape.clipPathStyle
-                  : isHexagonProduct ? HEXAGON_CLIP_PATH : (isRectangularShape ? undefined : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined)));
+                  ? effectiveShapeClipPath
+                  : isHexagonProduct ? HEXAGON_CLIP_PATH : (isRectangularShape ? undefined : (geom.clipPath || (shapeApplies ? effectiveShapeClipPath : undefined)));
                 const hasClip = Boolean(clipStyle);
                 // Same shape-aware exclusion as the main canvas stage: the
                 // physical edge-wrap styling is a flat rectangular effect,
