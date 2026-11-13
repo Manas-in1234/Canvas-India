@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useShop } from '../context/ShopContext';
 import { addressService } from '../services/addressService';
 import { orderService } from '../services/orderService';
+import { mirrorOrderToBackend } from '../api/returnsApi';
 import { Address, Order } from '../types/auth';
 import {
   User,
@@ -95,6 +96,27 @@ export const AccountPage: React.FC = () => {
     try {
       const list = await orderService.getUserOrders(user.id);
       setOrders(list);
+      // Orders placed before the store tracked them are copied to the backend so the admin can see them.
+      // Safe to repeat: the backend ignores an order number it already has.
+      if (user.email) {
+        for (const order of list) {
+          if (order.payment?.status !== 'captured') continue;
+          const key = `ci_synced_${order.order_number}`;
+          try {
+            if (localStorage.getItem(key)) continue;
+          } catch {
+            // storage unavailable: just sync
+          }
+          void mirrorOrderToBackend(order, user.email, { razorpayPaymentId: order.payment.razorpay_payment_id }).then((ok) => {
+            if (!ok) return;
+            try {
+              localStorage.setItem(key, '1');
+            } catch {
+              // ignore
+            }
+          });
+        }
+      }
     } catch (err) {
       console.error('Failed to load orders:', err);
     } finally {

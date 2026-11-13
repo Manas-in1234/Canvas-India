@@ -19,10 +19,10 @@ export async function mirrorOrderToBackend(
   email: string | null,
   payment: { razorpayPaymentId?: string },
   couponCode?: string | null,
-): Promise<void> {
-  if (!email) return;
+): Promise<boolean> {
+  if (!email) return false;
   try {
-    await fetch(buildApiUrl('storefront/orders'), {
+    const response = await fetch(buildApiUrl('storefront/orders'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -48,8 +48,10 @@ export async function mirrorOrderToBackend(
         payment: { status: 'captured', razorpayPaymentId: payment.razorpayPaymentId },
       }),
     });
+    return response.ok;
   } catch (err) {
     console.warn('Could not sync order to the store backend:', err);
+    return false;
   }
 }
 
