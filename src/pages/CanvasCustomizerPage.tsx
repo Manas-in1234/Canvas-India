@@ -3491,6 +3491,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [customWidth, setCustomWidth] = useState<number>(8);
   const [customHeight, setCustomHeight] = useState<number>(8);
 
+  // Raw typed text for the Select Size tab's custom-size inputs, kept
+  // separate from the committed customWidth/customHeight numbers so the
+  // field can actually be cleared and retyped (coercing every keystroke to
+  // a number and snapping an empty field back to a fallback makes manual
+  // entry impossible - the field could never be backspaced and retyped).
+  // Resyncs whenever the committed value changes for any other reason
+  // (picking a preset, resetting size, switching product, our own blur
+  // commit below).
+  const [customWidthDraft, setCustomWidthDraft] = useState<string>(String(customWidth));
+  const [customHeightDraft, setCustomHeightDraft] = useState<string>(String(customHeight));
+  useEffect(() => { setCustomWidthDraft(String(customWidth)); }, [customWidth]);
+  useEffect(() => { setCustomHeightDraft(String(customHeight)); }, [customHeight]);
+
   const canUseCustomSize = currentSizeOption.panels.length === 1;
 
   // Panels for the current size layout
@@ -10445,60 +10458,51 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       Custom Size (Height × Width inches)
                     </div>
                     <div className="flex items-center justify-center gap-2 flex-wrap">
-                      <div className="relative">
-                        <select
-                          value={customHeight}
-                          onChange={(e) => {
-                            setIsCustomSize(true);
-                            const val = Number(e.target.value);
-                            setCustomHeight(val);
-                            if (isWordArtProduct) {
-                              setWordArtSizeOption((prev) => ({
-                                ...prev,
-                                heightInches: val,
-                                label: `${prev.widthInches}" × ${val}"`,
-                                aspectRatio: prev.widthInches / val
-                              }));
-                            }
-                          }}
-                          className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] appearance-none pr-6 cursor-pointer"
-                        >
-                          {/* Current value merged in — a prefilled aspect-matched
-                              size (or any other exact value) renders as a real
-                              selection even when it isn't one of the coarse steps. */}
-                          {Array.from(new Set([...customSizeSteps, customHeight])).sort((a, b) => a - b).map((n) => (
-                            <option key={n} value={n}>{n}&quot;</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="w-3.5 h-3.5 text-stone-500 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
+                      <input
+                        type="number"
+                        min={customSizeSteps[0]}
+                        max={customSizeSteps[customSizeSteps.length - 1]}
+                        value={customHeightDraft}
+                        onChange={(e) => setCustomHeightDraft(e.target.value)}
+                        onBlur={() => {
+                          const val = Math.max(customSizeSteps[0], Math.min(customSizeSteps[customSizeSteps.length - 1], Number(customHeightDraft) || customHeight));
+                          setIsCustomSize(true);
+                          setCustomHeight(val);
+                          if (isWordArtProduct) {
+                            setWordArtSizeOption((prev) => ({
+                              ...prev,
+                              heightInches: val,
+                              label: `${prev.widthInches}" × ${val}"`,
+                              aspectRatio: prev.widthInches / val
+                            }));
+                          }
+                        }}
+                        className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93]"
+                      />
 
                       <span className="text-xs text-stone-400 font-bold px-1">×</span>
 
-                      <div className="relative">
-                        <select
-                          value={customWidth}
-                          onChange={(e) => {
-                            setIsCustomSize(true);
-                            const val = Number(e.target.value);
-                            setCustomWidth(val);
-                            if (isWordArtProduct) {
-                              setWordArtSizeOption((prev) => ({
-                                ...prev,
-                                widthInches: val,
-                                label: `${val}" × ${prev.heightInches}"`,
-                                aspectRatio: val / prev.heightInches
-                              }));
-                            }
-                          }}
-                          className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] appearance-none pr-6 cursor-pointer"
-                        >
-                          {Array.from(new Set([...customSizeSteps, customWidth])).sort((a, b) => a - b).map((n) => (
-                            <option key={n} value={n}>{n}&quot;</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="w-3.5 h-3.5 text-stone-500 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
+                      <input
+                        type="number"
+                        min={customSizeSteps[0]}
+                        max={customSizeSteps[customSizeSteps.length - 1]}
+                        value={customWidthDraft}
+                        onChange={(e) => setCustomWidthDraft(e.target.value)}
+                        onBlur={() => {
+                          const val = Math.max(customSizeSteps[0], Math.min(customSizeSteps[customSizeSteps.length - 1], Number(customWidthDraft) || customWidth));
+                          setIsCustomSize(true);
+                          setCustomWidth(val);
+                          if (isWordArtProduct) {
+                            setWordArtSizeOption((prev) => ({
+                              ...prev,
+                              widthInches: val,
+                              label: `${val}" × ${prev.heightInches}"`,
+                              aspectRatio: val / prev.heightInches
+                            }));
+                          }
+                        }}
+                        className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93]"
+                      />
 
                       <div className="text-xs font-black text-[#0E4A93] ml-2">
                         ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(customSizePrice, quantity) : customSizePrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -10581,60 +10585,54 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     </div>
                     {selectedProductTypeId === 'canvas-round' ? (
                       <div className="flex items-center justify-center gap-2 flex-wrap">
-                        <div className="relative">
-                          <select
-                            value={customWidth}
-                            onChange={(e) => {
-                              setIsCustomSize(true);
-                              const val = Number(e.target.value);
-                              setCustomWidth(val);
-                              setCustomHeight(val);
-                            }}
-                            className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] appearance-none pr-6 cursor-pointer"
-                          >
-                            {Array.from(new Set([...customSizeSteps, customWidth])).sort((a, b) => a - b).map((n) => (
-                              <option key={n} value={n}>{n}&quot; Dia</option>
-                            ))}
-                          </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-stone-500 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        </div>
+                        <input
+                          type="number"
+                          min={customSizeSteps[0]}
+                          max={customSizeSteps[customSizeSteps.length - 1]}
+                          value={customWidthDraft}
+                          onChange={(e) => {
+                            setCustomWidthDraft(e.target.value);
+                            setCustomHeightDraft(e.target.value);
+                          }}
+                          onBlur={() => {
+                            const val = Math.max(customSizeSteps[0], Math.min(customSizeSteps[customSizeSteps.length - 1], Number(customWidthDraft) || customWidth));
+                            setIsCustomSize(true);
+                            setCustomWidth(val);
+                            setCustomHeight(val);
+                          }}
+                          className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93]"
+                        />
                         <div className="text-xs font-black text-[#0E4A93] ml-2">
                           ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(customSizePrice, quantity) : customSizePrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                       </div>
                     ) : (
                       <div className="flex items-center justify-center gap-2 flex-wrap">
-                        <div className="relative">
-                          <select
-                            value={customHeight}
-                            onChange={(e) => {
-                              setIsCustomSize(true);
-                              setCustomHeight(Number(e.target.value));
-                            }}
-                            className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] appearance-none pr-6 cursor-pointer"
-                          >
-                            {Array.from(new Set([...customSizeSteps, customHeight])).sort((a, b) => a - b).map((n) => (
-                              <option key={n} value={n}>{n}&quot;</option>
-                            ))}
-                          </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-stone-500 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        </div>
+                        <input
+                          type="number"
+                          min={customSizeSteps[0]}
+                          max={customSizeSteps[customSizeSteps.length - 1]}
+                          value={customHeightDraft}
+                          onChange={(e) => setCustomHeightDraft(e.target.value)}
+                          onBlur={() => {
+                            setIsCustomSize(true);
+                            setCustomHeight(Math.max(customSizeSteps[0], Math.min(customSizeSteps[customSizeSteps.length - 1], Number(customHeightDraft) || customHeight)));
+                          }}
+                          className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93]"
+                        />
                         <span className="text-xs text-stone-400 font-bold px-1">×</span>
-                        <div className="relative">
-                          <select
-                            value={customWidth}
-                            onChange={(e) => {
-                              setIsCustomSize(true);
-                              setCustomWidth(Number(e.target.value));
-                            }}
-                            className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] appearance-none pr-6 cursor-pointer"
-                          >
-                            {Array.from(new Set([...customSizeSteps, customWidth])).sort((a, b) => a - b).map((n) => (
-                              <option key={n} value={n}>{n}&quot;</option>
-                            ))}
-                          </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-stone-500 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        </div>
+                        <input
+                          type="number"
+                          min={customSizeSteps[0]}
+                          max={customSizeSteps[customSizeSteps.length - 1]}
+                          value={customWidthDraft}
+                          onChange={(e) => setCustomWidthDraft(e.target.value)}
+                          onBlur={() => {
+                            setIsCustomSize(true);
+                            setCustomWidth(Math.max(customSizeSteps[0], Math.min(customSizeSteps[customSizeSteps.length - 1], Number(customWidthDraft) || customWidth)));
+                          }}
+                          className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93]"
+                        />
                         <div className="text-xs font-black text-[#0E4A93] ml-2">
                           ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(customSizePrice, quantity) : customSizePrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
