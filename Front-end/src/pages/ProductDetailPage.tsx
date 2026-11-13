@@ -411,6 +411,12 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
       shape: selectedShape || '',
       qty: quantity.toString(),
     });
+    if (product.image) {
+      params.set('prefillImage', product.image);
+    }
+    if (product.name) {
+      params.set('prefillName', product.name);
+    }
     navigate(`/customize/${material}/${product.slug || product.id}?${params.toString()}`);
   };
 
@@ -630,10 +636,10 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 </div>
               )}
 
-              {/* Format: Poster / Canvas / Acrylic — same design, different materials */}
+              {/* Material: Poster / Canvas / Acrylic — same design, different materials */}
               {formatSiblings.length > 1 && (
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">Format:</span>
+                  <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">Material:</span>
                   <div className="flex items-center gap-1.5">
                     {formatSiblings.map(({ label, match }) => (
                       <button
@@ -998,7 +1004,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 </div>
                 <div className="flex py-2.5 px-4">
                   <span className="w-1/3 font-bold text-stone-800">Origin</span>
-                  <span className="w-2/3 text-stone-700">Proudly Designed &amp; Handcrafted in India</span>
+                  <span className="w-2/3 text-stone-700">Proudly Designed &amp; Made in India</span>
                 </div>
               </div>
             </div>
@@ -1016,7 +1022,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
                 Quality Verification &amp; Workshop Standards
               </h2>
-              <p className="text-xs text-stone-500 mt-0.5">Every piece is handcrafted &amp; individually tested at our Hyderabad facility</p>
+              <p className="text-xs text-stone-500 mt-0.5">Every piece is individually tested at our Hyderabad facility</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-bold text-xs px-3 py-1 rounded-full flex items-center gap-1.5">
@@ -1078,7 +1084,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
                   You May Also Like in {categoryName}
                 </h2>
-                <p className="text-xs text-stone-500 mt-0.5">Popular complementary formats and bestselling custom wall decor</p>
+                <p className="text-xs text-stone-500 mt-0.5">Popular complementary materials and bestselling custom wall decor</p>
               </div>
               <Link to={categoryLink} className="text-xs font-bold text-[#0E4A93] hover:text-[#E8752A] flex items-center gap-1 transition-colors">
                 <span>View All {categoryName}</span>
@@ -1086,7 +1092,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-4 gap-y-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-8">
               {relatedProducts.map((relProd) => (
                 <ProductCard
                   key={relProd.id}

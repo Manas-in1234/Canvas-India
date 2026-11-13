@@ -2,6 +2,34 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { UserProfile } from '../types/auth';
+import { buildApiUrl } from '../api/productsApi';
+
+/**
+ * Mirrors the signed-in customer into the shop's customer list (what the admin sees).
+ * The backend only fills in a phone number that is still missing, so this is safe to repeat.
+ * Failures are ignored: it must never get in the way of signing in.
+ */
+const syncedKeys = new Set<string>();
+async function pushCustomerToBackend(userId: string, email: string | undefined, name: string, phone: string) {
+  const cleanPhone = phone.replace(/\D/g, '');
+  const key = `${userId}:${cleanPhone}`;
+  if (syncedKeys.has(key)) return;
+  try {
+    const response = await fetch(buildApiUrl('/storefront/customers/sync'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: userId,
+        email: email || undefined,
+        name: name || undefined,
+        phone: cleanPhone.length === 10 ? cleanPhone : undefined,
+      }),
+    });
+    if (response.ok) syncedKeys.add(key);
+  } catch {
+    /* ignore */
+  }
+}
 
 interface AuthContextType {
   user: User | null;
@@ -31,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string, email?: string) => {
+  const fetchProfile = async (userId: string, email?: string, meta?: Record<string, any>) => {
     if (!isSupabaseConfigured) return;
     try {
       const { data, error } = await supabase
@@ -49,19 +77,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.id,
           email: email || data.email,
           full_name: data.full_name || '',
-          phone: data.phone || '',
+          phone: data.phone || meta?.phone || '',
           avatar_url: data.avatar_url,
           created_at: data.created_at,
           updated_at: data.updated_at,
         });
+        void pushCustomerToBackend(userId, email || data.email, data.full_name || '', data.phone || '');
       } else {
         // If profile row doesn't exist yet, populate from user metadata
         setProfile({
           id: userId,
           email: email,
-          full_name: user?.user_metadata?.full_name || '',
-          phone: user?.user_metadata?.phone || '',
+          full_name: meta?.full_name || user?.user_metadata?.full_name || '',
+          phone: meta?.phone || user?.user_metadata?.phone || '',
         });
+        void pushCustomerToBackend(
+          userId,
+          email,
+          user?.user_metadata?.full_name || user?.user_metadata?.name || '',
+          user?.user_metadata?.phone || '',
+        );
       }
     } catch (err) {
       console.error('Exception fetching profile:', err);
@@ -79,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id, session.user.email);
+        fetchProfile(session.user.id, session.user.email, session.user.user_metadata);
       }
       setLoading(false);
     }).catch((err) => {
@@ -93,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(newSession);
         setUser(newSession?.user ?? null);
         if (newSession?.user) {
-          await fetchProfile(newSession.user.id, newSession.user.email);
+          await fetchProfile(newSession.user.id, newSession.user.email, newSession.user.user_metadata);
         } else {
           setProfile(null);
         }
@@ -357,16 +392,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const updates = {
-        id: user.id,
-        ...params,
-        updated_at: new Date().toISOString(),
-      };
+      const now = new Date().toISOString();
+      let saved = false;
+      let lastError: unknown = null;
 
-      const { error } = await supabase.from('profiles').upsert(updates);
-      if (error) return { error };
+      // 1. The profiles table (what we normally use).
+      const { error } = await supabase.from('profiles').upsert({ id: user.id, ...params, updated_at: now });
+      if (!error) {
+        saved = true;
+      } else {
+        console.warn('Profile upsert failed, trying a plain update:', error);
+        lastError = error;
+        // 2. A plain update, in case inserting isn't allowed but updating is.
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ ...params, updated_at: now })
+          .eq('id', user.id);
+        if (!updateError) {
+          saved = true;
+        } else {
+          console.warn('Profile update failed too:', updateError);
+          lastError = updateError;
+        }
+      }
+
+      // 3. Also keep it on the account itself, which always works for the signed-in person.
+      const meta: Record<string, string> = {};
+      if (params.phone !== undefined) meta.phone = params.phone;
+      if (params.full_name !== undefined) meta.full_name = params.full_name;
+      if (Object.keys(meta).length > 0) {
+        const { error: metaError } = await supabase.auth.updateUser({ data: meta });
+        if (!metaError) {
+          saved = true;
+        } else {
+          console.warn('Could not store details on the account:', metaError);
+          lastError = lastError ?? metaError;
+        }
+      }
+
+      if (!saved) {
+        return { error: lastError instanceof Error ? lastError : new Error('Could not save your details.') };
+      }
 
       setProfile((prev) => (prev ? { ...prev, ...params } : null));
+      void pushCustomerToBackend(
+        user.id,
+        user.email,
+        params.full_name ?? profile?.full_name ?? '',
+        params.phone ?? profile?.phone ?? '',
+      );
       return { error: null };
     } catch (err: any) {
       return { error: err };

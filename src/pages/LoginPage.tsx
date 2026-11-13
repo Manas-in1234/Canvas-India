@@ -45,6 +45,11 @@ export const LoginPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [emailTimer]);
 
+  // The email service only lets a few codes go out per hour. Say that plainly, and point to what still works.
+  const RATE_LIMIT_MESSAGE =
+    'Too many codes were requested for this email in a short time. The last code we sent is still valid, so check your inbox and spam folder. You can also try again in a few minutes or continue with Google.';
+  const isRateLimited = (message?: string) => /rate limit|too many|over_email_send_rate_limit|security purposes/i.test(message || '');
+
   // Google OAuth Login
   const handleGoogleSignIn = async () => {
     setError(null);
@@ -76,10 +81,16 @@ export const LoginPage: React.FC = () => {
     setLoading(false);
 
     if (sendError) {
-      setError(sendError.message || 'Unable to send OTP code to this email. Please try again.');
+      if (isRateLimited(sendError.message)) {
+        setError(RATE_LIMIT_MESSAGE);
+        // Keep the code box open: a code sent earlier still works. Make "Resend" wait longer.
+        setEmailTimer(120);
+      } else {
+        setError(sendError.message || 'Unable to send OTP code to this email. Please try again.');
+      }
     } else {
       setEmailOtpSent(true);
-      setEmailTimer(30);
+      setEmailTimer(60);
       setSuccess(`Verification code sent to ${email.trim()}`);
     }
   };

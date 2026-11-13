@@ -1332,7 +1332,7 @@ export default {
           const checked = await services.discounts.validateDiscount({
             code: body.couponCode, subtotal, customerId: customer.id,
           });
-          discount = Math.round(Number(checked.discountAmount));
+          discount = Math.round(Number(checked.discountAmount) * 100) / 100;
           appliedDiscountId = checked.discountId;
         } else if (!isCod && discount > 0) {
           return jsonResponse({ message: 'A discount needs a valid coupon code.' }, 400, request);

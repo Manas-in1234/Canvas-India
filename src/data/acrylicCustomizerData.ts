@@ -2514,7 +2514,7 @@ export const ACRYLIC_DESIGN_OVERLAYS: AcrylicDesignOverlay[] = [
     name: 'Botanical Eucalyptus',
     category: 'Floral',
     image: '/assets/customizer/acrylic/designs/floral-botanical.svg',
-    description: 'Handcrafted eucalyptus branch bordering the top edge.',
+    description: 'Botanical eucalyptus branch bordering the top edge.',
     renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
       <path d="M 15 12 Q 50 20 85 12" fill="none" stroke="#6EE7B7" stroke-width="0.8" opacity="0.85"/>
       <ellipse cx="30" cy="13" rx="2.5" ry="4.5" fill="#A7F3D0" opacity="0.75" transform="rotate(-30 30 13)"/>

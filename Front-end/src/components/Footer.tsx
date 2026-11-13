@@ -34,7 +34,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
               />
             </div>
             <p className="text-stone-400 text-[11px] leading-relaxed">
-              India&apos;s preferred personalized art &amp; printing studio. Handcrafted custom canvas, museum-grade acrylics, eco-cork, and premium photo frames.
+              India&apos;s preferred personalized art &amp; printing studio. Custom canvas, museum-grade acrylics, eco-cork, and premium photo frames.
             </p>
             <div>
               <Link to="/about-us" className="inline-block text-[11px] font-semibold text-[#E8752A] hover:text-white transition-colors">
@@ -137,7 +137,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
         {/* Bottom Bar: Payments + Copyright */}
         <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-stone-400 text-[11px]">
           <div>
-            © {new Date().getFullYear()} Canvas India Inc. Handcrafted with passion in India. All rights reserved.
+            © {new Date().getFullYear()} Canvas India Inc. Made with passion in India. All rights reserved.
           </div>
 
           {/* Payment Badges Strip */}

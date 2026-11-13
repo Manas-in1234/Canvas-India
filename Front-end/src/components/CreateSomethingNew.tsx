@@ -36,7 +36,7 @@ export const CreateSomethingNew: React.FC<CreateSomethingNewProps> = ({
             {/* Supporting text */}
             <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-xl">
               Turn your favorite memories and ideas into personalized products. 
-              Museum-grade cotton canvas, optical crystal acrylic, and natural cork wall art handcrafted in India.
+              Museum-grade cotton canvas, optical crystal acrylic, and natural cork wall art made in India.
             </p>
 
             {/* Flat format highlights (No rectangular cards) */}

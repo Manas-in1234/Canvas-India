@@ -1187,6 +1187,52 @@ export type HardwareOption = AcrylicHardwareOption;
 
 export const ACRYLIC_HARDWARE_OPTIONS: AcrylicHardwareOption[] = [
   {
+    id: 'no-hooks',
+    name: 'Without Base / No Hooks',
+    price: 0,
+    description: 'Clean unmounted acrylic panel for custom installation.',
+    image: '/assets/customizer/acrylic/hardware/no-hooks.svg'
+  },
+  {
+    id: 'hooks-hanging',
+    name: 'Hooks for Hanging',
+    price: 0,
+    description: 'Twin self-levelling hanging hooks included at no charge.',
+    image: '/assets/customizer/acrylic/hardware/hooks-hanging.svg'
+  },
+  {
+    id: 'ready-to-hang',
+    name: 'Ready to Hang Cleat',
+    price: 0,
+    description: 'Pre-installed recessed French cleat wall hanger.',
+    image: '/assets/customizer/acrylic/hardware/ready-to-hang.svg'
+  },
+  {
+    id: 'sawtooth-hanger',
+    name: 'Sawtooth Hanger',
+    price: 25.00,
+    description: 'Heavy-duty brass sawtooth hanger attached to rear backing.',
+    image: '/assets/customizer/acrylic/hardware/sawtooth-hanger.svg'
+  },
+  {
+    id: 'easel-back',
+    name: 'Easel Back / Stand',
+    price: 49.00,
+    description: 'Foldable tabletop stand for desk, shelf, and mantle display.',
+    image: '/assets/customizer/acrylic/hardware/easel-back.svg'
+  },
+  {
+    id: 'nail-free-hook',
+    name: 'Nail Free Hook',
+    price: 49.00,
+    description: 'Damage-free adhesive wall hook with high weight capacity.',
+    image: '/assets/customizer/acrylic/hardware/nail-free-hook.svg'
+  },
+  {
+    // Rs.199 base for 4 studs + Rs.50/extra stud beyond 4 (client pricing
+    // sheet) — real quantity-aware pricing built on main, supersedes the
+    // flat-Rs.200-for-exactly-4 fix this branch had; studQuantity is picked
+    // in the customizer UI (see acrylicStudQuantity in CanvasCustomizerPage).
     id: 'acrylic-standoffs',
     name: 'Acrylic Standoffs',
     label: 'Acrylic Standoffs',
@@ -1531,11 +1577,24 @@ export const ACRYLIC_BORDER_COLORS = [
   { name: 'Silver', hex: '#94A3B8' }
 ];
 
-export const THICKNESS_OPTIONS = [
-  { id: '3mm', label: '3MM Lightweight Cast Acrylic', name: '3MM Cast Acrylic', thicknessMm: 3, price: 0 },
-  { id: '5mm', label: '5MM Standard Studio Acrylic', name: '5MM Studio Acrylic', thicknessMm: 5, price: 150.00, badge: 'Recommended' },
-  { id: '6mm', label: '6MM Architectural Grade Acrylic', name: '6MM Architectural Grade', thicknessMm: 6, price: 200.00 },
-  { id: '8mm', label: '8MM Premium Optical Cast Acrylic', name: '8MM Optical Cast', thicknessMm: 8, price: 250.00, badge: 'Museum Quality' }
+// Client pricing sheet: 3/5/6/8mm are billed by area (ratePerSqIn * width *
+// height) rather than a flat addon. `price` stays as a flat fallback for
+// tiers with no area rate (18mm) and as the pre-area-pricing legacy value.
+// thicknessMm/name/badge are UI-display fields only, not used in pricing.
+export const THICKNESS_OPTIONS: Array<{
+  id: string;
+  label: string;
+  name?: string;
+  thicknessMm?: number;
+  price: number;
+  ratePerSqIn?: number;
+  badge?: string;
+}> = [
+  { id: '3mm', label: '3MM Lightweight Cast Acrylic', name: '3MM Cast Acrylic', thicknessMm: 3, price: 0, ratePerSqIn: 5.50 },
+  { id: '5mm', label: '5MM Standard Studio Acrylic', name: '5MM Studio Acrylic', thicknessMm: 5, price: 150.00, ratePerSqIn: 6.50, badge: 'Recommended' },
+  { id: '6mm', label: '6MM Architectural Grade Acrylic', name: '6MM Architectural Grade', thicknessMm: 6, price: 200.00, ratePerSqIn: 7.75 },
+  { id: '8mm', label: '8MM Premium Optical Cast Acrylic', name: '8MM Optical Cast', thicknessMm: 8, price: 250.00, ratePerSqIn: 9.50, badge: 'Museum Quality' },
+  { id: '18mm', label: '18mm Heavy Block Acrylic', price: 450.00 }
 ];
 
 export const PAPER_OPTIONS = [
@@ -2455,7 +2514,7 @@ export const ACRYLIC_DESIGN_OVERLAYS: AcrylicDesignOverlay[] = [
     name: 'Botanical Eucalyptus',
     category: 'Floral',
     image: '/assets/customizer/acrylic/designs/floral-botanical.svg',
-    description: 'Handcrafted eucalyptus branch bordering the top edge.',
+    description: 'Botanical eucalyptus branch bordering the top edge.',
     renderOverlaySvg: `<svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full">
       <path d="M 15 12 Q 50 20 85 12" fill="none" stroke="#6EE7B7" stroke-width="0.8" opacity="0.85"/>
       <ellipse cx="30" cy="13" rx="2.5" ry="4.5" fill="#A7F3D0" opacity="0.75" transform="rotate(-30 30 13)"/>

@@ -20,7 +20,7 @@ export const AboutUsPage: React.FC = () => {
   const { onOpenCustomize } = useShop();
 
   useEffect(() => {
-    document.title = 'About Us | Canvas India — Handcrafted Personalized Art & Printing';
+    document.title = 'About Us | Canvas India — Personalized Art & Printing';
   }, []);
 
   return (
@@ -36,7 +36,7 @@ export const AboutUsPage: React.FC = () => {
             <div className="lg:col-span-7 space-y-6 text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white text-[#0E4A93] text-xs font-bold shadow-xs border border-stone-200/80">
                 <Sparkles className="w-3.5 h-3.5 text-[#E8752A]" />
-                <span>Handcrafted in India • Dedicated Print Studio</span>
+                <span>Made in India • Dedicated Print Studio</span>
               </div>
 
               <h1 

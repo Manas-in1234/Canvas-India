@@ -24,7 +24,7 @@ export const HowItWorks: React.FC = () => {
     {
       number: '4',
       title: 'Order & Receive',
-      desc: 'Handcrafted in India, bubble-shield packaged and delivered to your doorstep.',
+      desc: 'Made in India, bubble-shield packaged and delivered to your doorstep.',
       icon: PackageCheck,
     },
   ];

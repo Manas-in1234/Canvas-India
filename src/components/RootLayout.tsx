@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { PhonePrompt } from './PhonePrompt';
 import { Outlet, Link, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
@@ -179,6 +180,7 @@ export const RootLayout: React.FC = () => {
       {/* Main Routed Page Content */}
       <main className="flex-1">
         <Outlet />
+        <PhonePrompt />
       </main>
 
       {/* Indian E-Commerce Footer */}

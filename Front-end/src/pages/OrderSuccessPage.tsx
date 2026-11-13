@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useLocation, Link } from 'react-router-dom';
 import { orderService } from '../services/orderService';
 import { Order } from '../types/auth';
 import {
@@ -15,6 +15,7 @@ import {
 
 export const OrderSuccessPage: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
+  const confirmedOrder = (useLocation().state as { order?: Order } | null)?.order;
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,7 +24,7 @@ export const OrderSuccessPage: React.FC = () => {
       if (!orderId) return;
       setLoading(true);
       try {
-        const found = await orderService.getOrderById(orderId);
+        const found = confirmedOrder?.id === orderId ? confirmedOrder : await orderService.getOrderById(orderId);
         setOrder(found);
       } catch (err) {
         console.error('Failed to load order:', err);
@@ -32,7 +33,7 @@ export const OrderSuccessPage: React.FC = () => {
       }
     };
     fetchOrder();
-  }, [orderId]);
+  }, [orderId, confirmedOrder]);
 
   if (loading) {
     return (
@@ -53,7 +54,7 @@ export const OrderSuccessPage: React.FC = () => {
           </div>
 
           <span className="inline-block px-3 py-1 bg-green-50 text-green-800 text-xs font-bold uppercase tracking-wider rounded-full mb-2">
-            Payment & Order Confirmed
+            {order?.payment_method === 'COD' ? 'Cash on Delivery · Order Confirmed' : 'Order Confirmed'}
           </span>
 
           <h1 className="text-2xl sm:text-3xl font-black text-[#002B49]">
@@ -177,7 +178,7 @@ export const OrderSuccessPage: React.FC = () => {
                   <span>₹{Number(order.tax).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="pt-2 border-t border-gray-200 flex justify-between text-sm font-bold text-[#002B49]">
-                  <span>Total Paid</span>
+                  <span>{order.payment_method === 'COD' ? 'Amount due on delivery' : 'Total Paid'}</span>
                   <span>₹{Number(order.total).toLocaleString('en-IN')}</span>
                 </div>
               </div>

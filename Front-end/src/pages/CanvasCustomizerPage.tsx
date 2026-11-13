@@ -3547,27 +3547,41 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setCustomHeight(h);
       setIsCustomSize(true);
       setUploadedPhotos((prev) => (prev.includes(prefillImage) ? prev : [prefillImage, ...prev]));
-      setPanelImages((prev) => ({
-        ...prev,
-        0: {
-          ...createDefaultPanel(),
-          imageUrl: prefillImage,
-          uploadedImage: meta,
-          scale: 1,
-          rotation: 0,
-          panX: 0,
-          panY: 0,
-          fitMode: 'cover'
+      setPanelImages((prev) => {
+        const next = { ...prev };
+        for (let i = 0; i < 20; i++) {
+          if (i === 0 || !next[i]?.imageUrl) {
+            next[i] = {
+              ...createDefaultPanel(),
+              imageUrl: prefillImage,
+              uploadedImage: meta,
+              scale: 1,
+              rotation: 0,
+              panX: 0,
+              panY: 0,
+              fitMode: 'cover'
+            };
+          }
         }
-      }));
+        return next;
+      });
       setActiveTab('SELECT SIZE');
     };
     img.onerror = () => {
       setUploadedPhotos((prev) => (prev.includes(prefillImage) ? prev : [prefillImage, ...prev]));
-      setPanelImages((prev) => ({
-        ...prev,
-        0: { ...createDefaultPanel(), imageUrl: prefillImage, fitMode: 'contain' }
-      }));
+      setPanelImages((prev) => {
+        const next = { ...prev };
+        for (let i = 0; i < 20; i++) {
+          if (i === 0 || !next[i]?.imageUrl) {
+            next[i] = {
+              ...createDefaultPanel(),
+              imageUrl: prefillImage,
+              fitMode: 'contain'
+            };
+          }
+        }
+        return next;
+      });
       setActiveTab('SELECT SIZE');
     };
     img.src = prefillImage;
@@ -10479,6 +10493,41 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                     const targetShape = layout.shapeId || (layout.aspectRatio === 1 ? 'shape-square' : 'shape-rectangle');
                                     setSelectedShapeId(targetShape);
                                   }
+                                  const activeImg =
+                                    panelImages[0]?.imageUrl ||
+                                    uploadedPhotos[0] ||
+                                    searchParams.get('prefillImage') ||
+                                    '';
+                                  if (activeImg) {
+                                    const allPhotos = uploadedPhotos.length > 0 ? uploadedPhotos : [activeImg];
+                                    const imgMeta =
+                                      panelImages[0]?.uploadedImage || {
+                                        originalSrc: activeImg,
+                                        width: 1200,
+                                        height: 1200,
+                                        aspectRatio: 1,
+                                        name: searchParams.get('prefillName') || 'Design'
+                                      };
+                                    setPanelImages((prev) => {
+                                      const next = { ...prev };
+                                      for (let i = 0; i < Math.max(layout.panelsCount, 4); i++) {
+                                        if (!next[i]?.imageUrl) {
+                                          const photoToUse = allPhotos[i % allPhotos.length] || activeImg;
+                                          next[i] = {
+                                            ...createDefaultPanel(),
+                                            imageUrl: photoToUse,
+                                            uploadedImage: imgMeta,
+                                            scale: 1,
+                                            rotation: 0,
+                                            panX: 0,
+                                            panY: 0,
+                                            fitMode: 'cover'
+                                          };
+                                        }
+                                      }
+                                      return next;
+                                    });
+                                  }
                                 }}
                                 className={`group relative rounded-xl border-2 transition-all overflow-hidden flex flex-col justify-between cursor-pointer ${
                                   isSelected
@@ -10885,7 +10934,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       </button>
                       {expandedFrameCategory === 'premium' && (
                         <div className="p-3 bg-stone-50/50 text-xs text-stone-500 italic">
-                          Premium artisanal framing with handcrafted solid hardwoods.
+                          Premium artisanal framing with solid hardwoods.
                         </div>
                       )}
                     </div>
@@ -11060,7 +11109,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         ))}
                       </div>
                       <p className="text-[10px] text-stone-500 leading-relaxed">
-                        Handcrafted solid pine stretcher frame made to your exact depth. Sensible range: 15 mm to 100 mm.
+                        Solid pine stretcher frame made to your exact depth. Sensible range: 15 mm to 100 mm.
                       </p>
                     </div>
                   )}

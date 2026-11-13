@@ -36,7 +36,7 @@ export const BestsellersSection: React.FC<BestsellersSectionProps> = ({
               Bestselling Products
             </h2>
             <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
-              Top rated custom prints handcrafted for Indian living rooms and workspaces
+              Top rated custom prints made for Indian living rooms and workspaces
             </p>
           </div>
 

@@ -1,4 +1,6 @@
+import { buildApiUrl } from '../api/productsApi';
 import React, { useRef, useState } from 'react';
+import { StorefrontHeroImage } from './StorefrontHeroImage';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight, Tag, Copy, Check, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote, Image as ImageIcon, LayoutGrid, Grid2x2, Columns3, Grid3x3, Music, Type, Rows3 } from 'lucide-react';
 import { Product } from '../types';
@@ -116,6 +118,15 @@ const arrowBtn =
   'w-10 h-10 rounded-full bg-white border border-stone-200 shadow-md flex items-center justify-center text-[#0E4A93] hover:bg-[#E8752A] hover:text-white hover:border-[#E8752A] transition-colors cursor-pointer shrink-0';
 
 export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCart, allProducts, onCustomize, onOpenQuote, wishlistIds, onToggleWishlist }) => {
+  const [promotion, setPromotion] = React.useState({ saleName: 'Festive Sale', percentage: 20, coupons: [] as { code: string; desc: string }[] });
+  React.useEffect(() => {
+    const controller = new AbortController();
+    fetch(buildApiUrl('/homepage-promotions'), { signal: controller.signal })
+      .then(response => response.ok ? response.json() : null)
+      .then(settings => { if (settings && !controller.signal.aborted) setPromotion(settings); })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
   const navigate = useNavigate();
   const carouselRef = useRef<HTMLDivElement>(null);
   const testiRef = useRef<HTMLDivElement>(null);
@@ -164,9 +175,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
         {/* Desktop/tablet: full-bleed festive image, fading into the cream
             background on the left — same treatment the original lifestyle
             photo used, no card/box, just one continuous scene. */}
-        <img
-          src={u('photo-1577083753695-e010191bacb5', 2200)}
-          alt="Festive diya oil lamps with flower petals"
+        <StorefrontHeroImage
+          slot="home"
+          alt=""
           className="hidden lg:block absolute right-0 top-0 h-full w-[60%] object-cover object-center"
           style={{
             maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, #000 35%, #000 100%)',
@@ -185,12 +196,12 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           onClick={handleCustomizeFestiveGift}
           className="hidden lg:flex absolute right-14 bottom-12 z-20 flex-col items-start text-left cursor-pointer group"
         >
-          <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-300 drop-shadow">Festive Sale</span>
+          <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-300 drop-shadow">{promotion.saleName}</span>
           <div className="font-bold text-white text-4xl leading-tight mt-1 drop-shadow-lg" style={{ fontFamily: SERIF }}>
-            Up to 20% Off
+            Up to {promotion.percentage}% Off
           </div>
           <span className="inline-flex items-center gap-2 mt-3.5 text-sm font-bold text-white bg-[#E8752A] group-hover:bg-[#D3631A] rounded-full px-5 py-2.5 shadow-lg shadow-orange-950/40 transition-colors">
-            Customize Festive Gift <ArrowRight className="w-4 h-4" />
+            Customize a Gift <ArrowRight className="w-4 h-4" />
           </span>
         </button>
 
@@ -227,7 +238,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               SPECIAL PRICE
             </span>
             <span className="text-lg sm:text-2xl font-black tracking-tight text-white drop-shadow-md mt-0.5 leading-none">
-              20% OFF
+              {promotion.percentage}% OFF
             </span>
           </button>
         </div>
@@ -325,25 +336,22 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               onClick={handleCustomizeFestiveGift}
               className="lg:hidden mt-8 relative w-full aspect-[16/9] rounded-2xl text-left shadow-md overflow-hidden cursor-pointer"
             >
-              <img src={u('photo-1577083753695-e010191bacb5', 1200)} alt="Festive diya oil lamps with flower petals" className="absolute inset-0 w-full h-full object-cover" />
+              <StorefrontHeroImage slot="home" mobile alt="" className="absolute inset-0 w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#7C2D12]/95 via-[#9A3412]/60 to-[#9A3412]/10" />
               <div className="relative h-full flex flex-col justify-end p-5">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">Festive Sale</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">{promotion.saleName}</span>
                 <div className="font-bold text-white text-2xl leading-tight mt-0.5 drop-shadow-md" style={{ fontFamily: SERIF }}>
-                  Up to 20% Off
+                  Up to {promotion.percentage}% Off
                 </div>
                 <span className="inline-flex items-center gap-1.5 mt-2.5 text-xs font-bold text-white bg-[#E8752A] rounded-full px-3.5 py-1.5 shadow-md self-start">
-                  Customize Festive Gift <ArrowRight className="w-3.5 h-3.5" />
+                  Customize a Gift <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </div>
             </button>
 
             {/* In-hero coupon codes */}
             <div className="mt-8 lg:mt-10 pt-6 border-t border-stone-300/60 flex flex-wrap items-center gap-2.5">
-              {[
-                { code: 'CANVAS10', desc: '10% OFF' },
-                { code: 'FIRSTPRINT', desc: 'Up to ₹250 OFF' },
-              ].map(({ code, desc }) => {
+              {promotion.coupons.map(({ code, desc }) => {
                 const isCopied = copiedCoupon === code;
                 return (
                   <button
@@ -871,7 +879,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                 Why Choose<br /><span className="bg-gradient-to-r from-amber-300 to-[#FF6FB1] bg-clip-text text-transparent">Canvas India?</span>
               </h2>
               <p className="text-sm text-white/80 mt-4 max-w-sm leading-relaxed">
-                We bring your ideas to life with high-quality canvas, acrylic and cork products — helping you create beautiful, handcrafted art that lasts and adds heart to your space.
+                We bring your ideas to life with high-quality canvas, acrylic and cork products — helping you create beautiful art that lasts and adds heart to your space.
               </p>
               <button
                 type="button"

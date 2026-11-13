@@ -549,10 +549,10 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
               </div>
             )}
 
-            {/* Format: Canvas / Acrylic — same design, different materials */}
+            {/* Material: Canvas / Acrylic — same design, different materials */}
             {formatSiblings.length > 1 && (
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">Format:</span>
+                <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">Material:</span>
                 <div className="flex items-center gap-1.5">
                   {formatSiblings.map(({ label, match }) => (
                     <button
@@ -581,7 +581,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
               <div className="space-y-3">
                 <button
                   type="button"
-                  onClick={() => navigate(`/customize/acrylic/single?prefillImage=${encodeURIComponent(product.image)}&prefillName=${encodeURIComponent(product.name)}`)}
+                  onClick={() => navigate(`/customize/acrylic/single?prefillImage=${encodeURIComponent(product.image)}&prefillName=${encodeURIComponent(product.name)}&product=${encodeURIComponent(product.slug || product.id)}`)}
                   className="w-full py-3.5 px-6 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
                 >
                   <Pencil className="w-4 h-4" />
@@ -955,7 +955,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                   <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
                     <PackageCheck className="w-5 h-5 text-[#0E4A93]" />
                     <div className="font-bold text-stone-900 text-xs">Production Time</div>
-                    <div className="text-[11px] text-stone-500">Handcrafted &amp; cured in 24 - 48 hours</div>
+                    <div className="text-[11px] text-stone-500">Printed &amp; cured in 24 - 48 hours</div>
                   </div>
                   <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
                     <Truck className="w-5 h-5 text-emerald-600" />
@@ -1185,7 +1185,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
             <div className="flex items-center justify-between mb-8">
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-wider text-[#0E4A93] mb-1">
-                  Explore Similar Formats
+                  Explore Similar Materials
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">
                   MORE LIKE THIS
