@@ -1,3 +1,4 @@
+import { Occasions, isOccasionSlug } from './catalog/occasions.js';
 import { HomepagePromotions } from './catalog/homepage-promotions.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, Prisma } from './generated/prisma/client.js';
@@ -291,6 +292,42 @@ export default {
     const { prisma, services } = await getServices(env);
 
     try {
+      if (pathname === '/api/v1/occasions' && method === 'GET') {
+        return jsonResponse(await new Occasions(prisma).list(), 200, request);
+      }
+      const publicOccasionCover = pathname.match(/^\/api\/v1\/occasions\/([^/]+)\/cover$/);
+      if (publicOccasionCover && method === 'GET' && isOccasionSlug(publicOccasionCover[1])) {
+        const cover = await new Occasions(prisma).images.get(publicOccasionCover[1]);
+        if (!cover?.contentBytes) return jsonResponse({ message: 'Cover not found.' }, 404, request);
+        return new Response(new Uint8Array(cover.contentBytes), { headers: {
+          ...corsHeaders(request), 'Content-Type': cover.mimeType, 'X-Content-Type-Options': 'nosniff',
+          'Cache-Control': 'public, no-cache', ETag: `"${cover.checksum}"`,
+        } });
+      }
+      const adminOccasion = pathname.match(/^\/api\/v1\/admin\/occasions(?:\/([^/]+)(\/cover)?)?$/);
+      if (adminOccasion) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, ['products.edit'], request);
+        if (denied) return denied;
+        const [, slug, cover] = adminOccasion;
+        const occasions = new Occasions(prisma);
+        if (!slug && method === 'GET') return jsonResponse(await occasions.list(true), 200, request);
+        if (slug && !isOccasionSlug(slug)) return jsonResponse({ message: 'Invalid occasion URL.' }, 400, request);
+        if (!slug && method === 'POST') {
+          const body = await request.json() as { slug?: string };
+          return jsonResponse(await occasions.save(typeof body?.slug === 'string' ? body.slug : '', body, true, user.id), 201, request);
+        }
+        if (slug && !cover && method === 'PUT') {
+          return jsonResponse(await occasions.save(slug, await request.json(), false, user.id), 200, request);
+        }
+        if (slug && cover && (method === 'POST' || method === 'DELETE')) {
+          if (!await occasions.exists(slug)) return jsonResponse({ message: 'Occasion not found.' }, 404, request);
+          if (method === 'POST') return jsonResponse(await occasions.images.upload(slug, request, user.id), 200, request);
+          await occasions.images.reset(slug, user.id);
+          return new Response(null, { status: 204, headers: corsHeaders(request) });
+        }
+      }
       if (pathname === '/api/v1/homepage-promotions' && method === 'GET') {
         return jsonResponse(await new HomepagePromotions(prisma).storefront(), 200, request);
       }
