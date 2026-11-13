@@ -155,6 +155,14 @@ describe('DiscountsService', () => {
     });
   });
 
+  it('clears an existing expiry when set to null and preserves it when omitted', async () => {
+    prisma.discount.findUnique.mockResolvedValue({ ...baseDiscount, expiresAt: new Date('2030-01-01') });
+    await service.update(baseDiscount.id, { expiresAt: null });
+    expect(prisma.discount.update.mock.lastCall?.[0].data.expiresAt).toBeNull();
+    await service.update(baseDiscount.id, { isActive: false });
+    expect(prisma.discount.update.mock.lastCall?.[0].data.expiresAt).toBeUndefined();
+  });
+
   describe('create', () => {
     it('throws ConflictException when code already exists', async () => {
       prisma.discount.findUnique.mockResolvedValue(baseDiscount);

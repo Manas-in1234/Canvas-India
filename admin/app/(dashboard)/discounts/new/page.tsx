@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { DiscountExpiryFields } from '@/components/discount-expiry-fields';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -23,6 +24,7 @@ export default function NewDiscountPage() {
   const [value, setValue] = useState('');
   const [minOrderSubtotal, setMinOrderSubtotal] = useState('');
   const [usageLimit, setUsageLimit] = useState('');
+  const [neverExpires, setNeverExpires] = useState(true);
   const [expiresAt, setExpiresAt] = useState('');
 
   const createMutation = useMutation({
@@ -46,7 +48,7 @@ export default function NewDiscountPage() {
       value: Number(value),
       minOrderSubtotal: minOrderSubtotal ? Number(minOrderSubtotal) : undefined,
       usageLimit: usageLimit ? Number(usageLimit) : undefined,
-      expiresAt: expiresAt ? new Date(expiresAt).toISOString() : undefined,
+      expiresAt: neverExpires ? undefined : new Date(expiresAt).toISOString(),
       isActive: true,
     });
   };
@@ -134,15 +136,8 @@ export default function NewDiscountPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="expiresAt">Expires At (optional)</Label>
-              <Input
-                id="expiresAt"
-                type="date"
-                value={expiresAt}
-                onChange={(e) => setExpiresAt(e.target.value)}
-              />
-            </div>
+            <DiscountExpiryFields neverExpires={neverExpires} setNeverExpires={setNeverExpires}
+              date={expiresAt} setDate={setExpiresAt} />
 
             <Button type="submit" disabled={createMutation.isPending}>
               {createMutation.isPending ? 'Creating…' : 'Create Discount'}
