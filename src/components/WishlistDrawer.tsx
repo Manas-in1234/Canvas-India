@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { X, Heart, Trash2, ShoppingBag, ArrowRight, ExternalLink } from 'lucide-react';
 import { Product } from '../types';
 import { ProductImage } from './ProductImage';
@@ -21,6 +21,8 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
   onAddToCart,
   onToggleWishlist,
 }) => {
+  const navigate = useNavigate();
+
   if (!isOpen) return null;
 
   const wishlistedProducts = allProducts.filter((p) => wishlistIds.includes(p.id));
@@ -64,7 +66,10 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
                   Save your favorite canvas, acrylic prints, and custom decor pieces to order later.
                 </p>
                 <button
-                  onClick={onClose}
+                  onClick={() => {
+                    onClose();
+                    navigate('/search');
+                  }}
                   className="px-5 py-2 bg-[#0E4A93] text-white text-xs font-bold rounded-lg mt-2 cursor-pointer shadow-sm hover:bg-[#0a356a] transition-colors"
                 >
                   Explore Catalog

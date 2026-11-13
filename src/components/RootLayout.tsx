@@ -42,6 +42,13 @@ export const RootLayout: React.FC = () => {
     onOpenCustomize,
   } = useShop();
 
+  // wishlistIds can carry ids for products that no longer exist in the
+  // catalog (removed/renamed items) - the drawer and wishlist page already
+  // filter against allProducts before counting, so the header badge and
+  // mobile nav dot need to do the same instead of trusting the raw array
+  // length, or they show a stale count the customer can never actually see.
+  const wishlistedProductsCount = allProducts.filter((p) => wishlistIds.includes(p.id)).length;
+
   // We manage scroll position ourselves instead of trusting the browser's
   // native scroll restoration. For a client-routed SPA, native restoration
   // tends to jump to the top first and only settle at the previous position
@@ -165,7 +172,7 @@ export const RootLayout: React.FC = () => {
       {/* Royal Blue Header + White Category Nav */}
       <Header
         cartCount={totalCartCount}
-        wishlistCount={wishlistIds.length}
+        wishlistCount={wishlistedProductsCount}
         onOpenCart={() => setCartDrawerOpen(true)}
         onOpenWishlist={() => setWishlistDrawerOpen(true)}
         onOpenQuote={() => window.open('https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote', '_blank', 'noopener,noreferrer')}
@@ -238,9 +245,9 @@ export const RootLayout: React.FC = () => {
         >
           <Heart className="w-5 h-5" />
           <span>Wishlist</span>
-          {wishlistIds.length > 0 && (
+          {wishlistedProductsCount > 0 && (
             <span className="absolute top-0.5 right-2 bg-[#E8752A] text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
-              {wishlistIds.length}
+              {wishlistedProductsCount}
             </span>
           )}
         </Link>
