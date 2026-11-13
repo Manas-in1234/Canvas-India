@@ -62,6 +62,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   const isDigitalPainting = productId.toLowerCase() === 'canvas-digital-painting';
   const isLyric = productId.toLowerCase() === 'canvas-lyric' || productId.toLowerCase().includes('lyric');
   const isPopArt = productId.toLowerCase().includes('pop');
+  const isRoundShape = currentShapeId === 'shape-circle' || productId.toLowerCase().includes('round');
 
   const isSinglePrint = useMemo(() => {
     const norm = productId.toLowerCase();
@@ -1346,8 +1347,9 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
             })}
           </div>
 
-          {/* Custom Size Section (Available for single print) */}
-          {isSinglePrint && (
+          {/* Custom Size Section - available for single print and every
+              shaped product (Round, Triangle, Heart, Oval) alike. */}
+          {(
             <div className="pt-2">
               <div
                 onClick={() => setShowCustomSize(!showCustomSize)}
@@ -1368,7 +1370,9 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
                   <div>
                     <h4 className="text-xs sm:text-sm font-black text-stone-900">Custom Size</h4>
                     <p className="text-[11px] text-stone-500">
-                      Need custom dimensions? Enter width and height (8&quot; to 48&quot;)
+                      {isRoundShape
+                        ? 'Need a custom diameter? Enter it yourself (8" to 48")'
+                        : 'Need custom dimensions? Enter width and height (8" to 48")'}
                     </p>
                   </div>
                 </div>
@@ -1383,34 +1387,54 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
               </div>
 
               {showCustomSize && (
-                <div className="mt-3 p-4 rounded-xl bg-white border border-stone-200 shadow-inner grid grid-cols-2 gap-3 animate-in fade-in duration-150">
-                  <div>
+                isRoundShape ? (
+                  <div className="mt-3 p-4 rounded-xl bg-white border border-stone-200 shadow-inner animate-in fade-in duration-150">
                     <label className="text-[11px] font-extrabold text-stone-600 block mb-1">
-                      WIDTH (INCHES)
+                      DIAMETER (INCHES)
                     </label>
                     <input
                       type="number"
                       min={8}
                       max={48}
                       value={localCustomW}
-                      onChange={(e) => setLocalCustomW(Number(e.target.value) || 8)}
+                      onChange={(e) => {
+                        const val = Number(e.target.value) || 8;
+                        setLocalCustomW(val);
+                        setLocalCustomH(val);
+                      }}
                       className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
                     />
                   </div>
-                  <div>
-                    <label className="text-[11px] font-extrabold text-stone-600 block mb-1">
-                      HEIGHT (INCHES)
-                    </label>
-                    <input
-                      type="number"
-                      min={8}
-                      max={48}
-                      value={localCustomH}
-                      onChange={(e) => setLocalCustomH(Number(e.target.value) || 8)}
-                      className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
-                    />
+                ) : (
+                  <div className="mt-3 p-4 rounded-xl bg-white border border-stone-200 shadow-inner grid grid-cols-2 gap-3 animate-in fade-in duration-150">
+                    <div>
+                      <label className="text-[11px] font-extrabold text-stone-600 block mb-1">
+                        WIDTH (INCHES)
+                      </label>
+                      <input
+                        type="number"
+                        min={8}
+                        max={48}
+                        value={localCustomW}
+                        onChange={(e) => setLocalCustomW(Number(e.target.value) || 8)}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-extrabold text-stone-600 block mb-1">
+                        HEIGHT (INCHES)
+                      </label>
+                      <input
+                        type="number"
+                        min={8}
+                        max={48}
+                        value={localCustomH}
+                        onChange={(e) => setLocalCustomH(Number(e.target.value) || 8)}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
+                      />
+                    </div>
                   </div>
-                </div>
+                )
               )}
             </div>
           )}
