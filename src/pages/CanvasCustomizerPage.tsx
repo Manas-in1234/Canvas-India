@@ -5081,7 +5081,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     setActivePanelIndex(0);
 
     const isSingle = productId === 'canvas-single' || productId === 'canvas-classic' || productId === 'acrylic-print' || productId === 'acrylic-single' || productId === 'acrylic-photo-panel';
-    const isSingleOrShaped = [
+    // A style added from the admin uses the standard single-panel editor, so it opens
+    // the same Select Size popup as Single Print instead of dropping straight to Upload.
+    const isAdminStyle = !BUILT_IN_STYLE_IDS.has(productId);
+    const isSingleOrShaped = isAdminStyle || [
       'canvas-single',
       'canvas-classic',
       'canvas-round',
@@ -5120,7 +5123,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       if (pt.defaultShape) {
         setSelectedShapeId(pt.defaultShape);
       }
-      if (pt.defaultSizeOptionId) {
+      if (isAdminStyle && !pt.defaultSizeOptionId) {
+        setSizeCategoryFilter('RECOMMENDED');
+        setSelectedSizeId(activeMaterial === 'acrylic' ? 'rec-10x10' : 'single-10x10');
+      } else if (pt.defaultSizeOptionId) {
         setSelectedSizeId(pt.defaultSizeOptionId);
       } else {
         const matchingSizes = SIZE_OPTIONS.filter((s) => s.productTypeId === productId);
@@ -15830,6 +15836,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         material={activeMaterial}
         productId={selectedProductTypeId}
         productName={selectedProductType.name}
+        singlePrintMode={isAdminAddedStyle}
         currentShapeId={selectedShapeId}
         currentSizeId={selectedSizeId}
         isCustomSize={isCustomSize}

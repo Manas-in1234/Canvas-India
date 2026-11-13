@@ -13,6 +13,8 @@ export interface SelectSizeShapeModalProps {
   material: 'canvas' | 'acrylic';
   productId: string;
   productName: string;
+  /** Styles added from the admin have no size list of their own; show the Single Print one. */
+  singlePrintMode?: boolean;
   currentShapeId?: string;
   currentSizeId?: string;
   isCustomSize?: boolean;
@@ -44,6 +46,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   material,
   productId,
   productName,
+  singlePrintMode = false,
   currentShapeId = 'shape-square',
   currentSizeId = '',
   isCustomSize = false,
@@ -66,6 +69,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   const isSinglePrint = useMemo(() => {
     const norm = productId.toLowerCase();
     return (
+      singlePrintMode ||
       norm === 'canvas-single' ||
       norm === 'canvas-classic' ||
       norm === 'acrylic-print' ||
@@ -77,7 +81,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
       norm.includes('lyric') ||
       norm.includes('pop')
     );
-  }, [productId]);
+  }, [productId, singlePrintMode]);
 
   // Active Category Tab for Single Print: RECOMMENDED (default), SQUARE, PANORAMIC, LARGE, SMALL
   const [activeCategory, setActiveCategory] = useState<SinglePrintCategory>('RECOMMENDED');
