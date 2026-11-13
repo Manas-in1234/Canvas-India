@@ -1315,8 +1315,13 @@ export default {
           });
         }
 
-        const orderCount = isCod ? 0 : await prisma.order.count();
-        const orderNumber = isCod ? `CC-COD-${codId}` : `CC${10000 + orderCount + 1}`;
+        const mirroredNumber = !isCod && /^CI-\d{8}-\d{4}$/.test(String(body.orderNumber ?? '')) ? String(body.orderNumber) : null;
+        if (mirroredNumber) {
+          const already = await prisma.order.findUnique({ where: { orderNumber: mirroredNumber }, include: { items: true, addresses: true, customer: true } });
+          if (already) return jsonResponse(already, 200, request);
+        }
+        const orderCount = isCod || mirroredNumber ? 0 : await prisma.order.count();
+        const orderNumber = isCod ? `CC-COD-${codId}` : (mirroredNumber ?? `CC${10000 + orderCount + 1}`);
 
         const subtotal = codAmounts?.subtotal ?? (Number(body.subtotal) || 0);
         const discount = isCod ? 0 : Number(body.discount) || 0;
@@ -1596,19 +1601,35 @@ export default {
         }
       }
 
-      // Storefront: the customer files a return (saved immediately) and tracks its status.
-      if (pathname === '/api/v1/storefront/returns' && method === 'POST') {
-        const body = (await request.json().catch(() => ({}))) as any;
-        const customerId = typeof body.customerId === 'string' ? body.customerId : '';
-        if (!customerId) return jsonResponse({ message: 'customerId is required' }, 400, request);
-        return jsonResponse(await services.returnsReplacements.createReturnForCustomer(customerId, {
-          orderId: String(body.orderId ?? ''), orderItemId: String(body.orderItemId ?? ''), reason: String(body.reason ?? ''),
+      // Storefront: a customer looks up their order (by order number + the email on it),
+      // files a return (saved immediately, shown to admins) and tracks its status.
+      if (pathname === '/api/v1/storefront/returns' && (method === 'GET' || method === 'POST')) {
+        const body = method === 'POST' ? ((await request.json().catch(() => ({}))) as any) : {};
+        const orderNumber = String(method === 'POST' ? body.orderNumber ?? '' : query.orderNumber ?? '').trim();
+        const email = String(method === 'POST' ? body.email ?? '' : query.email ?? '').trim().toLowerCase();
+        if (!orderNumber || !email) return jsonResponse({ message: 'orderNumber and email are required' }, 400, request);
+        const order = await prisma.order.findFirst({
+          where: { orderNumber, customer: { email } },
+          include: { items: { select: { id: true, productNameSnapshot: true, quantity: true } } },
+        });
+        if (method === 'GET') {
+          if (!order) return jsonResponse({ found: false }, 200, request);
+          const returns = await prisma.returnRequest.findMany({
+            where: { orderId: order.id }, orderBy: { createdAt: 'desc' },
+            select: { id: true, orderItemId: true, reason: true, status: true, createdAt: true },
+          });
+          return jsonResponse({
+            found: true, orderId: order.id, delivered: order.shippingStatus === 'DELIVERED',
+            items: order.items, returns,
+          }, 200, request);
+        }
+        if (!order) return jsonResponse({ message: 'Order not found for this customer' }, 404, request);
+        if (order.shippingStatus !== 'DELIVERED') {
+          return jsonResponse({ message: 'Returns can be requested once the order has been delivered.' }, 400, request);
+        }
+        return jsonResponse(await services.returnsReplacements.createReturnForCustomer(order.customerId, {
+          orderId: order.id, orderItemId: String(body.orderItemId ?? ''), reason: String(body.reason ?? ''),
         }), 201, request);
-      }
-      if (pathname === '/api/v1/storefront/returns' && method === 'GET') {
-        const customerId = query.customerId;
-        if (!customerId) return jsonResponse([], 200, request);
-        return jsonResponse(await services.returnsReplacements.findReturnRequestsForCustomer(customerId), 200, request);
       }
 
       // -------------------------------------------------------------

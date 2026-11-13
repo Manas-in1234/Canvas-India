@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { orderService } from '../services/orderService';
 import { Order } from '../types/auth';
+import { useAuth } from '../context/AuthContext';
+import { getReturnInfo, requestReturn, type ReturnInfo } from '../api/returnsApi';
 import {
   Package,
   MapPin,
@@ -20,6 +22,38 @@ export const OrderDetailPage: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const [returnInfo, setReturnInfo] = useState<ReturnInfo | null>(null);
+  const [returnItemId, setReturnItemId] = useState<string | null>(null);
+  const [returnReason, setReturnReason] = useState('');
+  const [returnBusy, setReturnBusy] = useState(false);
+  const [returnError, setReturnError] = useState<string | null>(null);
+  const contactEmail = user?.email || order?.guest_email || null;
+
+  const loadReturns = async () => {
+    if (!order || !contactEmail) return;
+    setReturnInfo(await getReturnInfo(order.order_number, contactEmail).catch(() => null));
+  };
+  useEffect(() => {
+    void loadReturns();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order?.order_number, contactEmail]);
+
+  const submitReturn = async () => {
+    if (!order || !contactEmail || !returnItemId) return;
+    setReturnBusy(true);
+    setReturnError(null);
+    try {
+      await requestReturn(order.order_number, contactEmail, returnItemId, returnReason.trim());
+      setReturnItemId(null);
+      setReturnReason('');
+      await loadReturns();
+    } catch (err: any) {
+      setReturnError(err.message);
+    } finally {
+      setReturnBusy(false);
+    }
+  };
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -297,6 +331,64 @@ export const OrderDetailPage: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {/* Returns */}
+        {returnInfo?.found && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm print:hidden">
+            <h2 className="text-base font-bold text-[#002B49] mb-1">Returns</h2>
+            {!returnInfo.delivered && (
+              <p className="text-xs text-gray-500 mb-3">You can request a return once your order has been delivered.</p>
+            )}
+            <div className="divide-y divide-gray-100">
+              {returnInfo.items?.map((item) => {
+                const existing = returnInfo.returns?.find((r) => r.orderItemId === item.id);
+                return (
+                  <div key={item.id} className="py-3 flex flex-wrap items-center justify-between gap-3">
+                    <span className="text-sm text-gray-800">{item.productNameSnapshot}</span>
+                    {existing ? (
+                      <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-blue-100 text-blue-800">
+                        Return {existing.status.toLowerCase()}
+                      </span>
+                    ) : returnInfo.delivered ? (
+                      <button
+                        onClick={() => { setReturnItemId(item.id); setReturnError(null); }}
+                        className="px-4 py-1.5 border border-[#002B49] text-[#002B49] rounded-lg text-xs font-semibold hover:bg-gray-50"
+                      >
+                        Request return
+                      </button>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+            {returnItemId && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
+                <label className="text-xs font-semibold text-gray-700 block" htmlFor="return-reason">
+                  Why are you returning this item?
+                </label>
+                <textarea
+                  id="return-reason"
+                  rows={3}
+                  maxLength={2000}
+                  value={returnReason}
+                  onChange={(e) => setReturnReason(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 p-2 text-sm"
+                />
+                {returnError && <p className="text-xs text-red-600">{returnError}</p>}
+                <div className="flex gap-2">
+                  <button
+                    disabled={returnBusy || !returnReason.trim()}
+                    onClick={submitReturn}
+                    className="px-4 py-2 bg-[#002B49] text-white rounded-lg text-xs font-semibold disabled:opacity-50"
+                  >
+                    {returnBusy ? 'Submitting…' : 'Submit return request'}
+                  </button>
+                  <button onClick={() => setReturnItemId(null)} className="px-4 py-2 text-xs text-gray-600">Cancel</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Shipping & Payment Two-Column Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

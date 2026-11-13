@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useShop } from '../context/ShopContext';
 import { addressService } from '../services/addressService';
 import { orderService } from '../services/orderService';
+import { mirrorOrderToBackend } from '../api/returnsApi';
 import { paymentService } from '../services/paymentService';
 import { delhiveryService, PincodeServiceabilityResult } from '../services/delhiveryService';
 import { validateDiscountCode, DiscountValidationError } from '../api/discountsApi';
@@ -289,6 +290,10 @@ export const CheckoutPage: React.FC = () => {
               razorpayOrderId: razorpayResponse.razorpay_order_id,
               razorpayPaymentId: razorpayResponse.razorpay_payment_id,
               razorpaySignature: razorpayResponse.razorpay_signature,
+            });
+
+            await mirrorOrderToBackend(order, user?.email || guestEmail || null, {
+              razorpayPaymentId: razorpayResponse.razorpay_payment_id,
             });
 
             // Clear shopping cart on confirmed transaction
