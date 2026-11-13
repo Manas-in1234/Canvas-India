@@ -42,7 +42,7 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    label: "Store management",
+    label: "Sales & customers",
     links: [
       {
         href: "/orders",
@@ -57,6 +57,17 @@ export const NAV_SECTIONS: NavSection[] = [
         permissions: ["returns.view"],
       },
       {
+        href: "/customers",
+        label: "Customers",
+        icon: Users,
+        permissions: ["customers.view"],
+      },
+    ],
+  },
+  {
+    label: "Catalog",
+    links: [
+      {
         href: "/products",
         label: "Products",
         icon: Package,
@@ -68,6 +79,11 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: Boxes,
         permissions: ["products.view"],
       },
+    ],
+  },
+  {
+    label: "Storefront & promotions",
+    links: [
       {
         href: "/homepage-promotions",
         label: "Homepage Promotions",
@@ -79,12 +95,6 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Hero Images",
         icon: ImageIcon,
         permissions: ["products.edit"],
-      },
-      {
-        href: "/customers",
-        label: "Customers",
-        icon: Users,
-        permissions: ["customers.view"],
       },
       {
         href: "/discounts",
@@ -105,7 +115,7 @@ export const NAV_SECTIONS: NavSection[] = [
       },
       {
         href: "/pricing",
-        label: "Pricing",
+        label: "Customizer pricing",
         icon: IndianRupee,
         permissions: ["pricing.view"],
       },
