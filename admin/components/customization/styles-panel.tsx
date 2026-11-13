@@ -182,8 +182,6 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
   const [editing, setEditing] = useState<CustomizerProductType | null>(null);
   const [form, setForm] = useState<FormState>(BLANK);
   const [slugTouched, setSlugTouched] = useState(false);
-  const [templateId, setTemplateId] = useState('');
-  const [copySizes, setCopySizes] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<CustomizerProductType | null>(null);
   const [detectOpen, setDetectOpen] = useState(false);
   const [managerOpen, setManagerOpen] = useState(false);
@@ -202,6 +200,7 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
 
   const all = data ?? [];
   const styles = all.filter((s) => s.material === material);
+  const singlePrint = styles.find((s) => s.slug === (material === 'CANVAS' ? 'canvas-single' : 'acrylic-print')) ?? styles[0];
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['customizer-product-types'] });
 
   const saveMutation = useMutation({
@@ -214,8 +213,8 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
         slug: form.slug,
         ...toPayload(form),
       });
-      const template = all.find((s) => s.id === templateId);
-      if (template && copySizes) await copySizePresets(template.slug, created.slug);
+      // Start the new style's SELECT SIZE tab with Single Print's sizes so it is never empty.
+      if (singlePrint) await copySizePresets(singlePrint.slug, created.slug);
       return created;
     },
     onSuccess: () => {
@@ -255,8 +254,6 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
     setEditing(null);
     setForm({ ...BLANK, capabilities: {} });
     setSlugTouched(false);
-    setTemplateId('');
-    setCopySizes(true);
     setDialogOpen(true);
   };
 
@@ -264,14 +261,6 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
     setEditing(style);
     setForm(fromRow(style));
     setDialogOpen(true);
-  };
-
-  const applyTemplate = (id: string) => {
-    setTemplateId(id);
-    const template = all.find((s) => s.id === id);
-    if (!template) return;
-    // Keep what the admin already typed for the identity fields; take everything else from the template.
-    setForm((prev) => ({ ...fromRow(template), name: prev.name, slug: prev.slug, startingPrice: prev.startingPrice || template.startingPrice, image: prev.image, description: prev.description }));
   };
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((prev) => ({ ...prev, [key]: value }));
@@ -302,7 +291,7 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
   const addShapeStyle = useMutation({
     mutationFn: async (shape: CustomShapeListItem) => {
       const noun = material === 'CANVAS' ? 'Canvas' : 'Acrylic';
-      const template = styles.find((s) => s.slug === (material === 'CANVAS' ? 'canvas-single' : 'acrylic-print')) ?? styles[0];
+      const template = singlePrint;
       const taken = new Set(all.map((s) => s.slug));
       const base = slugify(material, `${shape.name} ${noun}`);
       let slug = base;
@@ -431,36 +420,11 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
             <DialogDescription>
               {editing
                 ? 'Changes show on the storefront immediately.'
-                : 'A new style uses the standard single-panel editor, like Single Print. Special editors (Lyric Studio, Bus Roll, collage grids) belong to the built-in styles.'}
+                : 'A new style uses the standard single-panel editor, like Single Print, and starts with Single Print\'s sizes. Special editors (Lyric Studio, Bus Roll, collage grids) belong to the built-in styles.'}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-5">
-            {!editing && (
-              <div className="space-y-2 rounded-md border bg-muted/30 p-3">
-                <Label htmlFor="cp-template">Start from an existing style</Label>
-                <select
-                  id="cp-template"
-                  value={templateId}
-                  onChange={(e) => applyTemplate(e.target.value)}
-                  className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
-                >
-                  <option value="">Blank (Single Print defaults)</option>
-                  {styles.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-                {templateId && (
-                  <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <input type="checkbox" checked={copySizes} onChange={(e) => setCopySizes(e.target.checked)} />
-                    Also copy that style&apos;s sizes, so the SELECT SIZE tab isn&apos;t empty
-                  </label>
-                )}
-              </div>
-            )}
-
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Name</Label>
