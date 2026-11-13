@@ -119,6 +119,18 @@ export const Header: React.FC<HeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [allCategoriesOpen, setAllCategoriesOpen] = useState(false);
 
+  // Lock background page scroll while the mobile nav drawer is open — without
+  // this, scrolling inside the drawer's category list also scrolls the page
+  // behind it.
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileMenuOpen]);
+
   // "Gifts & Occasions" opens the dedicated "Shop by Occasion" listing page.
   const goToShopOccasions = () => {
     navigate('/occasions');
@@ -151,6 +163,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
   const allCatRef = useRef<HTMLDivElement>(null);
   const allCatDropdownRef = useRef<HTMLDivElement>(null);
   const megaMenuDropdownRef = useRef<HTMLDivElement>(null);
@@ -178,12 +191,14 @@ export const Header: React.FC<HeaderProps> = ({
     return PRIMARY_CATEGORIES.filter((cat) => !excluded.has(cat.slug) && isCategoryVisible(cat.slug));
   }, [isCategoryVisible]);
 
-  // Close open dropdown menus on scroll or resize to prevent detached floating elements
+  // Close open dropdown menus on scroll or resize to prevent detached floating elements.
+  // Search is excluded: opening it auto-focuses the input, and on mobile that
+  // triggers the keyboard to appear, which fires a scroll event that would
+  // otherwise close the search box the instant it opens.
   useEffect(() => {
     const handleScrollOrResize = () => {
       setActiveMegaMenu(null);
       setAllCategoriesOpen(false);
-      setSearchOpen(false);
     };
     window.addEventListener('scroll', handleScrollOrResize, { passive: true });
     window.addEventListener('resize', handleScrollOrResize, { passive: true });
@@ -249,8 +264,10 @@ export const Header: React.FC<HeaderProps> = ({
         setActiveMegaMenu(null);
       }
 
-      // Handle Search dropdown outside click
-      if (searchRef.current && !searchRef.current.contains(target)) {
+      // Handle Search dropdown outside click (desktop bar or mobile expandable box)
+      const clickedInsideDesktopSearch = searchRef.current && searchRef.current.contains(target);
+      const clickedInsideMobileSearch = mobileSearchRef.current && mobileSearchRef.current.contains(target);
+      if (!clickedInsideDesktopSearch && !clickedInsideMobileSearch) {
         setSearchOpen(false);
       }
 
@@ -662,7 +679,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <img
                   src="/canvas-india-official-logo.webp"
                   alt="Canvass India"
-                  className="h-7 sm:h-8 md:h-9 w-auto object-contain block select-none"
+                  className="h-9 sm:h-10 w-auto object-contain block select-none"
                 />
               </Link>
             </div>
@@ -708,7 +725,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Mobile Expandable Search */}
           {searchOpen && (
-            <div className="lg:hidden mt-2.5">
+            <div ref={mobileSearchRef} className="lg:hidden mt-2.5">
               <form onSubmit={handleSearchSubmit} className="relative w-full">
                 <input
                   type="text"
@@ -1208,6 +1225,32 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
+            {/* Quick Links — always visible, not buried inside a submenu or
+                dependent on scrolling the categories list below. */}
+            <div className="p-3 border-b border-stone-200 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onTrackOrder?.();
+                }}
+                className="py-2 px-2 bg-white border border-stone-200 text-[#0E4A93] text-[11px] font-bold rounded-lg text-center shadow-2xs flex items-center justify-center gap-1.5"
+              >
+                <Package className="w-3.5 h-3.5" />
+                <span>Track Your Order</span>
+              </button>
+              <a
+                href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2 px-2 bg-[#E8752A] hover:bg-[#D3631A] text-white text-[11px] font-bold rounded-lg text-center shadow-2xs flex items-center justify-center gap-1.5"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>Get a Quote</span>
+              </a>
+            </div>
+
             <div className="flex-1 overflow-y-auto p-3 space-y-1">
               <div className="text-[11px] uppercase tracking-wider font-bold text-stone-400 mb-2 px-1">
                 Explore Categories &amp; Products
@@ -1314,12 +1357,6 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 );
               })}
-            </div>
-
-            <div className="p-3 bg-stone-50 border-t border-stone-200 text-xs text-stone-600 space-y-1">
-              <div className="font-semibold text-stone-900">Need Help?</div>
-              <div>WhatsApp: +91 78930 51555</div>
-              <div className="text-[11px] text-stone-500">Pan-India delivery with live tracking</div>
             </div>
           </div>
           <div className="flex-1" onClick={() => setMobileMenuOpen(false)} />

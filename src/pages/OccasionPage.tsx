@@ -196,14 +196,14 @@ export const OccasionPage: React.FC = () => {
           <img
             src={occasion.bannerImage}
             alt={occasion.name}
-            className="hidden sm:block absolute right-0 top-0 h-full w-[55%] object-cover"
+            className="block absolute right-0 top-0 h-full w-[42%] sm:w-[55%] object-cover"
             style={{
-              maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, #000 45%, #000 100%)',
-              WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 20%, #000 45%, #000 100%)',
+              maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 10%, #000 35%, #000 100%)',
+              WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 10%, #000 35%, #000 100%)',
             }}
           />
 
-          <div className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-10 lg:px-14 max-w-xl">
+          <div className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-10 lg:px-14 max-w-[64%] sm:max-w-xl">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight drop-shadow-sm" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
               {occasion.name} Gifts &amp; Prints
             </h1>

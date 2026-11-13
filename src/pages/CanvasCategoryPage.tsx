@@ -134,7 +134,7 @@ export const CanvasCategoryPage: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => navigate(`/customize/canvas/${products[0]?.slug || products[0]?.id || 'canvas-single'}?tab=products`)}
+                  onClick={() => navigate(`/customize/canvas/${products[0]?.slug || products[0]?.id || 'canvas-single'}`)}
                   className="px-6 py-3.5 bg-[#E8752A] hover:bg-[#d6651d] active:scale-[0.99] text-white text-xs sm:text-sm font-black rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4 text-amber-200" />

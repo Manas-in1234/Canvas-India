@@ -57,7 +57,7 @@ export const AcrylicClipartModal: React.FC<AcrylicClipartModalProps> = ({
       {/* Floating Active Clipart Controls Bar (When an item is selected on canvas) */}
       {activeClipart && (
         <div
-          className="absolute top-14 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-xl shadow-xl border border-stone-200 flex items-center gap-2 select-none animate-in fade-in slide-in-from-top-2"
+          className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-xl shadow-xl border border-stone-200 flex items-center gap-2 select-none animate-in fade-in slide-in-from-top-2 max-w-[94vw] overflow-x-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="text-[11px] font-extrabold text-stone-800 pr-2 border-r border-stone-200 flex items-center gap-1">
@@ -136,10 +136,12 @@ export const AcrylicClipartModal: React.FC<AcrylicClipartModalProps> = ({
 
       {/* Main Clipart Library Picker Dialog */}
       {isOpen && (
-        <div
-          className="absolute top-14 left-2 right-2 sm:left-auto sm:right-4 z-40 bg-white border border-stone-200 rounded-2xl shadow-2xl p-4 w-auto sm:w-96 max-h-[80vh] overflow-y-auto select-none animate-in fade-in slide-in-from-top-2 duration-200"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <>
+          <div className="fixed inset-0 z-40 bg-black/30 sm:bg-transparent" onClick={onClose} />
+          <div
+            className="fixed top-16 left-2 right-2 sm:left-auto sm:right-4 sm:top-16 z-50 bg-white border border-stone-200 rounded-2xl shadow-2xl p-4 w-auto sm:w-96 max-h-[75vh] overflow-y-auto select-none animate-in fade-in slide-in-from-top-2 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
           {/* Header */}
           <div className="flex items-center justify-between pb-2 border-b border-stone-200 mb-3">
             <div className="flex items-center gap-2">
@@ -200,7 +202,8 @@ export const AcrylicClipartModal: React.FC<AcrylicClipartModalProps> = ({
               </button>
             ))}
           </div>
-        </div>
+          </div>
+        </>
       )}
     </>
   );

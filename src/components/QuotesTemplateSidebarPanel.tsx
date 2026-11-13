@@ -194,7 +194,7 @@ export const QuotesTemplateSidebarPanel: React.FC<QuotesTemplateSidebarPanelProp
                       No templates match "{activeFilterTag}" in this category.
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {items.map((t) => {
                         const isSelected = t.id === selectedTemplateId;
                         return (

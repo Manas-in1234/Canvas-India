@@ -60,10 +60,14 @@ export const AcrylicLiveTextEditor: React.FC<AcrylicLiveTextEditorProps> = ({
   if (!activeText) return null;
 
   return (
-    <div
-      className="absolute top-14 left-2 right-2 sm:left-auto sm:right-4 z-40 bg-white/95 backdrop-blur-md border border-stone-200 rounded-2xl shadow-2xl p-4 w-auto sm:w-88 max-h-[80vh] overflow-y-auto select-none animate-in fade-in slide-in-from-top-2 duration-200"
-      onClick={(e) => e.stopPropagation()}
-    >
+    <>
+      {/* Backdrop — also makes it unambiguous this is a floating overlay,
+          not part of the scrollable panel content behind it. */}
+      <div className="fixed inset-0 z-40 bg-black/30 sm:bg-transparent" onClick={onClose} />
+      <div
+        className="fixed top-16 left-2 right-2 sm:left-auto sm:right-4 sm:top-16 z-50 bg-white/95 backdrop-blur-md border border-stone-200 rounded-2xl shadow-2xl p-4 w-auto sm:w-88 max-h-[75vh] overflow-y-auto select-none animate-in fade-in slide-in-from-top-2 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
       {/* Header */}
       <div className="flex items-center justify-between pb-2.5 border-b border-stone-200/80 mb-3">
         <div className="flex items-center gap-2">
@@ -275,6 +279,7 @@ export const AcrylicLiveTextEditor: React.FC<AcrylicLiveTextEditorProps> = ({
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };

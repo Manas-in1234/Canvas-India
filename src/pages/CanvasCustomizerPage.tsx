@@ -2782,12 +2782,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (requestedTab === 'UPLOAD') return 'UPLOAD';
     if (requestedTab === 'SIZE' || requestedTab === 'SELECT SIZE') return 'SELECT SIZE';
     const initialPt = resolveCurrentProductId(routeMaterial, productId);
-    if (initialPt.includes('digital') || initialPt.includes('painting')) return 'EFFECTS & OPTIONS';
     if (initialPt.includes('bus')) return 'CREATE BUS ROLL';
     if (initialPt.includes('banner')) return 'UPLOAD';
     if (searchParams.get('prefillImage')) return 'SELECT SIZE';
     return 'UPLOAD';
   });
+
+  // Tracks whether the user has explicitly tapped a toolbar tab yet (as
+  // opposed to just landing on one automatically on page load). See
+  // handleSelectTab and the mobileMode prop below.
+  const userHasSelectedTabRef = useRef(false);
 
   useEffect(() => {
     const requestedTab = searchParams.get('tab')?.toUpperCase();
@@ -2828,6 +2832,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   };
 
   const handleSelectTab = (tabId: ToolbarTab) => {
+    // Select Size (for prefilled/readymade products) only renders inline,
+    // without the usual slide-up overlay, for the very first automatic
+    // landing on that tab - so the product is visible immediately instead
+    // of being hidden behind a drawer. Any explicit tap on a tab afterward
+    // (including re-tapping Select Size itself) should behave exactly like
+    // every other drill-down tab: a sliding overlay, never a scroll-to.
+    userHasSelectedTabRef.current = true;
     setActiveTab(tabId);
     if (tabId === 'POP ART STYLE') {
       setIsPopArtStyleModalOpen(true);
@@ -2842,8 +2853,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         setLayoutSubTab('LAYOUTS');
       }
     }
-    beginPreloader();
-    endPreloader(PRELOADER_MIN_MS);
   };
 
   const [selectedProductTypeId, setSelectedProductTypeId] = useState<string>(() =>
@@ -4715,7 +4724,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       0: {
         ...createDefaultPanel(),
         imageUrl: tmpl.image,
-        fitMode: 'contain',
+        fitMode: 'cover',
         scale: 1,
         rotation: 0,
         panX: 0,
@@ -4981,7 +4990,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
-      setActiveTab('EFFECTS & OPTIONS');
+      setActiveTab('UPLOAD');
       navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
@@ -5141,9 +5150,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     } else {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
-      if (productId.includes('digital') || productId.includes('painting')) {
-        setActiveTab('EFFECTS & OPTIONS');
-      } else if (productId.includes('bus')) {
+      if (productId.includes('bus')) {
         setActiveTab('CREATE BUS ROLL');
       } else if (!currentActiveImage) {
         setActiveTab('UPLOAD');
@@ -5480,6 +5487,22 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     height: 420
   });
   const itemDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number; w: number; h: number } | null>(null);
+  // Multi-touch tracking for pinch-to-resize on text/clipart items: a second
+  // finger landing on the same element switches from drag to pinch-scale.
+  // Named distinctly from the panel-image pinch-zoom refs below, which track
+  // a separate gesture on the uploaded photo itself.
+  const itemPointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const itemPinchStateRef = useRef<{
+    initialDistance: number;
+    initialFontSize: number;
+    initialScale: number;
+    initialAngle: number;
+    initialRotation: number;
+  } | null>(null);
+  // Tracks whether the current pointer-down actually dragged the item any
+  // meaningful distance, so the click handler can tell a tap (open the
+  // editor) apart from a drag (just move it, don't also pop the editor open).
+  const hasDraggedItemRef = useRef(false);
 
   const activeTextElement = useMemo(() => {
     if (selectedElement?.type === 'text' && selectedElement.id) {
@@ -5857,16 +5880,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     setUploadedPhotos(nextUploaded);
 
     if (!stillHasUrl) {
-      const fallbackUrl = nextUploaded[0] || null;
+      // Just clear the slot — don't auto-fill it with whatever photo happens
+      // to be left in the tray. That silently re-applied an unrelated photo
+      // (and carried it into the next product selected) instead of actually
+      // clearing it.
       setPanelImages((prev) => {
         const next: Record<number, PanelImageState> = { ...prev };
         Object.keys(next).forEach((k) => {
           const slotIdx = Number(k);
           if (next[slotIdx]?.imageUrl === photoUrl) {
-            next[slotIdx] = {
-              ...createDefaultPanel(),
-              imageUrl: slotIdx === 0 && nextUploaded.length === 1 ? fallbackUrl : null
-            };
+            next[slotIdx] = { ...createDefaultPanel(), imageUrl: null };
           }
         });
         return next;
@@ -6197,13 +6220,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 e.stopPropagation();
                 setSelectedElement({ type: 'text', id: txt.id });
                 setActivePanelIndex(slotIdx);
-                setShowTextModal(true);
+                // Only open the editor on a genuine tap — not after the
+                // pointer actually dragged the text, which also fires a
+                // click once released.
+                if (!hasDraggedItemRef.current) {
+                  setShowTextModal(true);
+                }
               }}
               style={{
                 position: 'absolute',
                 left: `${txt.x}%`,
                 top: `${txt.y}%`,
-                transform: 'translate(-50%, -50%)',
+                transform: `translate(-50%, -50%) rotate(${txt.rotation || 0}deg)`,
                 fontFamily: txt.fontFamily,
                 fontSize: `${txt.fontSize}px`,
                 fontWeight: txt.fontWeight === 'bold' ? 700 : 400,
@@ -6314,23 +6342,67 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const startItemDrag = (e: React.PointerEvent, type: 'text' | 'clipart', id: string, x: number, y: number) => {
     e.stopPropagation();
     setSelectedElement({ type, id });
-    if (type === 'text') {
-      setShowTextModal(true);
-      setShowClipartModal(false);
-    }
+    hasDraggedItemRef.current = false;
     const targetEl = e.currentTarget as HTMLElement;
+    targetEl.setPointerCapture(e.pointerId);
+    itemPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    // A second finger landing on the same element starts a combined
+    // pinch-to-resize + twist-to-rotate instead of a drag — grab the two
+    // most recent touch points as the baseline and cancel any in-progress
+    // single-finger drag.
+    if (itemPointersRef.current.size >= 2) {
+      const pts = Array.from(itemPointersRef.current.values()).slice(-2);
+      const dist = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
+      const angle = Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x) * (180 / Math.PI);
+      itemPinchStateRef.current = {
+        initialDistance: dist,
+        initialFontSize: type === 'text' ? (textElements.find((t) => t.id === id)?.fontSize || 32) : 32,
+        initialScale: type === 'clipart' ? (clipartElements.find((c) => c.id === id)?.scale || 1) : 1,
+        initialAngle: angle,
+        initialRotation: type === 'text'
+          ? (textElements.find((t) => t.id === id)?.rotation || 0)
+          : (clipartElements.find((c) => c.id === id)?.rotation || 0)
+      };
+      itemDragRef.current = null;
+      return;
+    }
+
     const parentContainer = targetEl.closest('.ci-slot-container') || stageRef.current;
     const rect = parentContainer?.getBoundingClientRect() || stageRef.current?.getBoundingClientRect();
     if (!rect) return;
     itemDragRef.current = { startX: e.clientX, startY: e.clientY, origX: x, origY: y, w: rect.width, h: rect.height };
-    targetEl.setPointerCapture(e.pointerId);
   };
 
   const moveItemDrag = (e: React.PointerEvent, type: 'text' | 'clipart', id: string) => {
+    if (itemPointersRef.current.has(e.pointerId)) {
+      itemPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+
+    if (itemPinchStateRef.current && itemPointersRef.current.size >= 2) {
+      const pts = Array.from(itemPointersRef.current.values()).slice(-2);
+      const dist = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
+      const ratio = dist / itemPinchStateRef.current.initialDistance;
+      const angle = Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x) * (180 / Math.PI);
+      // Full, unrestricted rotation — any angle in either direction.
+      const newRotation = itemPinchStateRef.current.initialRotation + (angle - itemPinchStateRef.current.initialAngle);
+      if (type === 'text') {
+        const newSize = Math.round(Math.max(10, Math.min(120, itemPinchStateRef.current.initialFontSize * ratio)));
+        handleUpdateActiveText({ fontSize: newSize, rotation: newRotation });
+      } else {
+        const newScale = Math.max(0.2, Math.min(4, itemPinchStateRef.current.initialScale * ratio));
+        handleUpdateActiveClipart({ scale: newScale, rotation: newRotation });
+      }
+      return;
+    }
+
     const d = itemDragRef.current;
     if (!d) return;
-    const nx = Math.max(5, Math.min(95, d.origX + ((e.clientX - d.startX) / d.w) * 100));
-    const ny = Math.max(5, Math.min(95, d.origY + ((e.clientY - d.startY) / d.h) * 100));
+    if (Math.hypot(e.clientX - d.startX, e.clientY - d.startY) > 6) {
+      hasDraggedItemRef.current = true;
+    }
+    const nx = Math.max(1, Math.min(99, d.origX + ((e.clientX - d.startX) / d.w) * 100));
+    const ny = Math.max(1, Math.min(99, d.origY + ((e.clientY - d.startY) / d.h) * 100));
     if (type === 'text') {
       handleUpdateActiveText({ x: nx, y: ny });
     } else {
@@ -6338,8 +6410,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
   };
 
-  const endItemDrag = () => {
-    itemDragRef.current = null;
+  const endItemDrag = (e?: React.PointerEvent) => {
+    if (e) itemPointersRef.current.delete(e.pointerId);
+    if (itemPointersRef.current.size < 2) {
+      itemPinchStateRef.current = null;
+    }
+    if (itemPointersRef.current.size === 0) {
+      itemDragRef.current = null;
+    }
   };
 
   const updateActivePanelTransform = (updater: (curr: PanelImageState) => Partial<PanelImageState>) => {
@@ -9302,7 +9380,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   };
 
   return (
-    <div className="w-full h-screen flex flex-col bg-[#F1F5F9] text-stone-900 font-manrope overflow-hidden select-none">
+    <div className="w-full min-h-screen md:h-screen flex flex-col bg-[#F1F5F9] text-stone-900 font-manrope overflow-y-auto md:overflow-hidden select-none">
       <CustomizerPreloader active={preloaderActive} />
       {/* SVG ClipPath Mask Definitions for non-rectangular canvas shapes */}
       <svg width="0" height="0" className="absolute pointer-events-none opacity-0" aria-hidden="true">
@@ -9440,7 +9518,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       {/* ===================================================================== */}
       {/* 2. BODY CONTAINER: 3-COLUMN LAYOUT (Shared with Acrylic Customizer)   */}
       {/* ===================================================================== */}
-      <div className="flex-1 min-w-0 flex flex-col md:flex-row overflow-hidden relative">
+      <div className="flex-1 min-w-0 flex flex-col md:flex-row md:overflow-hidden relative">
         {/* COLUMN 1: LEFT VERTICAL SIDEBAR */}
         <CustomizerSidebar
           items={toolbarItems}
@@ -9502,6 +9580,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               ? `${liveOrFallbackHardware.length} Hardware`
               : 'Specifications'
           }
+          mobileMode={activeTab === (isBusRollProduct ? 'CREATE BUS ROLL' : (isPrefillMode && !userHasSelectedTabRef.current) ? 'SELECT SIZE' : 'UPLOAD') ? 'inline' : 'overlay'}
+          onCloseMobile={() => setActiveTab(isBusRollProduct ? 'CREATE BUS ROLL' : 'UPLOAD')}
         >
           {/* ---------------------------- PRODUCTS ---------------------------- */}
           {activeTab === 'PRODUCTS' && (
@@ -9625,7 +9705,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 />
               )
             ) : (
-            <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
+            <div className="flex-1 min-h-0 p-3 sm:p-4 space-y-2.5 sm:space-y-4 overflow-y-auto">
               <div>
                 <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-1">
                   Upload Photos
@@ -9808,7 +9888,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 <button
                   type="button"
                   onClick={() => setUploadMode('computer')}
-                  className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 py-1.5 sm:py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     uploadMode === 'computer'
                       ? 'bg-white text-[#0E4A93] shadow-xs'
                       : 'text-stone-600 hover:text-stone-900'
@@ -9820,7 +9900,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 <button
                   type="button"
                   onClick={() => setUploadMode('mobile')}
-                  className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 py-1.5 sm:py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     uploadMode === 'mobile'
                       ? 'bg-white text-[#0E4A93] shadow-xs'
                       : 'text-stone-600 hover:text-stone-900'
@@ -9847,7 +9927,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       uploadTargetRef.current = (isSplitProduct || isMosaicProduct) ? 0 : -1;
                       fileInputRef.current?.click();
                     }}
-                    className="w-full py-3 px-4 bg-[#0E4A93] hover:bg-[#0B3A75] active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
+                    className="w-full py-2.5 sm:py-3 px-4 bg-[#0E4A93] hover:bg-[#0B3A75] active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <UploadCloud className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
                     <span>{isMobile ? 'Select Photo from Device' : 'Browse Photos to Upload'}</span>
@@ -9863,10 +9943,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       e.preventDefault();
                       handleFilesUpload(e.dataTransfer.files, (isSplitProduct || isMosaicProduct) ? 0 : -1);
                     }}
-                    className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-4 sm:p-6 text-center cursor-pointer transition-all group"
+                    className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-3 sm:p-6 text-center cursor-pointer transition-all group"
                   >
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white text-[#0E4A93] shadow-sm flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
-                      <UploadCloud className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+                    <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-white text-[#0E4A93] shadow-sm flex items-center justify-center mx-auto mb-1.5 sm:mb-3 group-hover:scale-110 transition-transform">
+                      <UploadCloud className="w-4 h-4 sm:w-6 sm:h-6 stroke-[2.5]" />
                     </div>
                     <div className="text-xs font-bold text-stone-900">
                       {isMobile ? 'Or tap here to choose from Gallery / Camera' : 'Click to Browse or Drag Photos'}
@@ -10007,17 +10087,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             className="w-full h-full object-cover pointer-events-none" 
                           />
                           {/* Move / Drag Indicator Icon */}
-                          <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-xs text-white p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                          <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-xs text-white p-0.5 rounded opacity-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block">
                             <Move className="w-2.5 h-2.5" />
                           </div>
-                          {/* Remove Photo Button */}
+                          {/* Remove Photo Button — always visible on mobile
+                              (there's no hover state on touch), hover-reveal
+                              only on larger pointer-driven screens. */}
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleRemoveUploadedPhoto(photo, pIdx);
                             }}
-                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-rose-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10"
+                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-rose-600 text-white flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all cursor-pointer z-10"
                             title="Remove photo"
                             aria-label="Remove photo"
                           >
@@ -10199,7 +10281,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                               }
                             }
                           }}
-                          className={`flex-1 min-w-[62px] py-1.5 px-1.5 text-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${
+                          className={`py-1.5 px-3 text-center text-[11px] font-extrabold rounded-lg whitespace-nowrap transition-all cursor-pointer ${
                             isActive
                               ? 'bg-[#0E4A93] text-white shadow-xs'
                               : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
@@ -11737,7 +11819,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         {/* ------------------------------------------------------------------- */}
         {/* COLUMN 3: MAIN RIGHT LIVE CANVAS PREVIEW WORKSPACE                  */}
         {/* ------------------------------------------------------------------- */}
-        <main className="order-1 md:order-3 w-full min-w-0 h-[38vh] min-h-[230px] max-h-[42vh] md:h-full md:max-h-none md:flex-1 shrink-0 md:shrink flex flex-col bg-[#E2E8F0]/60 relative overflow-hidden">
+        <main className="order-1 md:order-3 w-full min-w-0 min-h-[420px] md:min-h-0 md:h-full md:max-h-none md:flex-1 flex flex-col bg-[#E2E8F0]/60 relative overflow-hidden">
           {/* Top Action Bar for Workspace */}
           {isBusRollProduct ? (
             <BusRollTopToolbar
@@ -11969,7 +12051,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             bottomSlot={
-              <div className="hidden md:flex flex-wrap items-center justify-center gap-2.5 text-[11px] font-bold text-stone-600 bg-white/90 backdrop-blur-xs px-4 py-1.5 rounded-full shadow-xs border border-stone-200/80">
+              <div className="flex flex-wrap items-center justify-center gap-1.5 md:gap-2.5 text-[9px] md:text-[11px] font-bold text-stone-600 bg-white/90 backdrop-blur-xs px-2.5 md:px-4 py-1 md:py-1.5 rounded-xl md:rounded-full shadow-xs border border-stone-200/80">
                 {activeMaterial === 'acrylic' ? (
                   <>
                     <span>
