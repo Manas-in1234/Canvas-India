@@ -36,7 +36,7 @@ export class ReturnsReplacementsService {
     const request = await this.prisma.returnRequest.findUnique({
       where: { id },
       include: {
-        order: true,
+        order: { include: { customer: true } },
         orderItem: true,
       },
     });
@@ -46,6 +46,88 @@ export class ReturnsReplacementsService {
     }
 
     return request;
+  }
+
+  /** Request plus its status history (order events tagged with this request). */
+  async findReturnRequestDetail(id: string) {
+    const request = await this.findReturnRequest(id);
+    return { ...request, history: await this.historyFor(request.orderId, 'return.', 'returnRequestId', id) };
+  }
+
+  async findReplacementRequestDetail(id: string) {
+    const request = await this.findReplacementRequest(id);
+    return { ...request, history: await this.historyFor(request.orderId, 'replacement.', 'replacementRequestId', id) };
+  }
+
+  private async historyFor(orderId: string, prefix: string, key: string, id: string) {
+    const events = await this.prisma.orderEvent.findMany({
+      where: { orderId, type: { startsWith: prefix } },
+      orderBy: { createdAt: 'asc' },
+    });
+    return events
+      .filter((e) => (e.metadata as Record<string, unknown> | null)?.[key] === id)
+      .map((e) => ({ type: e.type, message: e.message, createdAt: e.createdAt }));
+  }
+
+  /** Customer-facing: only requests for orders owned by this customer. */
+  findReturnRequestsForCustomer(customerId: string) {
+    return this.prisma.returnRequest.findMany({
+      where: { order: { customerId } },
+      orderBy: { createdAt: 'desc' },
+      include: { order: { select: { orderNumber: true } }, orderItem: { select: { productNameSnapshot: true } } },
+    });
+  }
+
+  /** Customer files a return; verifies the order belongs to them and blocks duplicates. */
+  async createReturnForCustomer(customerId: string, dto: CreateReturnRequestDto) {
+    const order = await this.prisma.order.findFirst({ where: { id: dto.orderId, customerId } });
+    if (!order) {
+      throw new NotFoundException('Order not found for this customer');
+    }
+    const open = await this.prisma.returnRequest.findFirst({
+      where: { orderItemId: dto.orderItemId, status: { in: ['REQUESTED', 'REVIEW', 'APPROVED', 'RETURNED'] } },
+    });
+    if (open) {
+      throw new BadRequestException('A return request is already open for this item');
+    }
+    return this.createReturnRequest(dto);
+  }
+
+  async rejectReturn(id: string) {
+    const request = await this.findReturnRequest(id);
+    if (!['REQUESTED', 'REVIEW', 'APPROVED'].includes(request.status)) {
+      throw new BadRequestException(`Return request cannot be rejected from ${request.status}`);
+    }
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.returnRequest.update({ where: { id }, data: { status: 'REJECTED' } });
+      await tx.orderEvent.create({
+        data: {
+          orderId: request.orderId,
+          type: 'return.rejected',
+          message: `Return request ${id} rejected`,
+          metadata: { returnRequestId: id },
+        },
+      });
+      return updated;
+    });
+  }
+
+  async deleteReturn(id: string) {
+    const request = await this.findReturnRequest(id);
+    if (!['REFUNDED', 'RETURNED', 'REJECTED'].includes(request.status)) {
+      throw new BadRequestException('Only finished (returned, refunded or rejected) requests can be deleted');
+    }
+    await this.prisma.returnRequest.delete({ where: { id } });
+    return { deleted: true };
+  }
+
+  async deleteReplacement(id: string) {
+    const request = await this.findReplacementRequest(id);
+    if (!['COMPLETED', 'REJECTED'].includes(request.status)) {
+      throw new BadRequestException('Only completed or rejected requests can be deleted');
+    }
+    await this.prisma.replacementRequest.delete({ where: { id } });
+    return { deleted: true };
   }
 
   async createReturnRequest(dto: CreateReturnRequestDto) {
@@ -128,7 +210,7 @@ export class ReturnsReplacementsService {
   async approveReturn(id: string) {
     const request = await this.findReturnRequest(id);
 
-    if (request.status !== 'REVIEW') {
+    if (request.status !== 'REVIEW' && request.status !== 'REQUESTED') {
       throw new BadRequestException(
         `Return request cannot be approved from ${request.status}`,
       );
@@ -339,7 +421,7 @@ export class ReturnsReplacementsService {
   async approveReplacement(id: string) {
     const request = await this.findReplacementRequest(id);
 
-    if (request.status !== 'REVIEW') {
+    if (request.status !== 'REVIEW' && request.status !== 'REQUESTED') {
       throw new BadRequestException(
         `Replacement request cannot be approved from ${request.status}`,
       );

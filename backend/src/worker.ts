@@ -1563,6 +1563,54 @@ export default {
         }
       }
 
+      // Per-request admin actions: detail, accept / reject / mark received / refund, delete.
+      const aftercareMatch = pathname.match(/^\/api\/v1\/returns-replacements\/(returns|replacements)\/([^/]+)(?:\/([a-z]+))?$/);
+      if (aftercareMatch) {
+        const [, kind, id, action] = aftercareMatch;
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const svc = services.returnsReplacements;
+        if (method === 'GET' && !action) {
+          const permError = checkPermission(user, ['returns.view'], request);
+          if (permError) return permError;
+          return jsonResponse(
+            kind === 'returns' ? await svc.findReturnRequestDetail(id) : await svc.findReplacementRequestDetail(id), 200, request);
+        }
+        const manageError = checkPermission(user, ['returns.manage'], request);
+        if (method === 'DELETE' && !action) {
+          if (manageError) return manageError;
+          return jsonResponse(kind === 'returns' ? await svc.deleteReturn(id) : await svc.deleteReplacement(id), 200, request);
+        }
+        if (method === 'POST' && action) {
+          if (manageError) return manageError;
+          const returnActions: Record<string, (id: string) => Promise<unknown>> = {
+            approve: (x) => svc.approveReturn(x), reject: (x) => svc.rejectReturn(x),
+            returned: (x) => svc.markReturned(x), refund: (x) => svc.refundReturn(x),
+          };
+          const replacementActions: Record<string, (id: string) => Promise<unknown>> = {
+            approve: (x) => svc.approveReplacement(x), reject: (x) => svc.rejectReplacement(x),
+            complete: (x) => svc.completeReplacement(x),
+          };
+          const handler = (kind === 'returns' ? returnActions : replacementActions)[action];
+          if (handler) return jsonResponse(await handler(id), 200, request);
+        }
+      }
+
+      // Storefront: the customer files a return (saved immediately) and tracks its status.
+      if (pathname === '/api/v1/storefront/returns' && method === 'POST') {
+        const body = (await request.json().catch(() => ({}))) as any;
+        const customerId = typeof body.customerId === 'string' ? body.customerId : '';
+        if (!customerId) return jsonResponse({ message: 'customerId is required' }, 400, request);
+        return jsonResponse(await services.returnsReplacements.createReturnForCustomer(customerId, {
+          orderId: String(body.orderId ?? ''), orderItemId: String(body.orderItemId ?? ''), reason: String(body.reason ?? ''),
+        }), 201, request);
+      }
+      if (pathname === '/api/v1/storefront/returns' && method === 'GET') {
+        const customerId = query.customerId;
+        if (!customerId) return jsonResponse([], 200, request);
+        return jsonResponse(await services.returnsReplacements.findReturnRequestsForCustomer(customerId), 200, request);
+      }
+
       // -------------------------------------------------------------
       // 7. Users, Roles, Customers
       // -------------------------------------------------------------

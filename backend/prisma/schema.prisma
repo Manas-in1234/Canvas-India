@@ -713,6 +713,7 @@ enum ReturnStatus {
   APPROVED
   RETURNED
   REFUNDED
+  REJECTED
 }
 
 enum ReplacementStatus {
