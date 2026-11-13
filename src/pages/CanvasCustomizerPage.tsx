@@ -12633,6 +12633,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                 </>
                               )}
 
+                              {/* Edge Wrap color mat for shaped canvases - the
+                                  gallery-wrap edge strips above are rectangular
+                                  and don't apply to a die-cut shape, but the
+                                  wrap's color (Black/White Border Wrap) should
+                                  still show in the square backing board's
+                                  corners around the shape, not disappear. */}
+                              {!showPhysicalEdges && !['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id) && (isBlackBorderWrap || isWhiteEdge) && (
+                                <div
+                                  className="absolute inset-0 pointer-events-none z-0"
+                                  style={{ backgroundColor: effectiveEdgeColor }}
+                                />
+                              )}
+
                               {/* 2. FRONT CANVAS SURFACE */}
                               <div
                                 {...panelHandlers(0)}
