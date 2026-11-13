@@ -43,6 +43,18 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
     },
   });
 
+  const acceptMutation = useMutation({
+    mutationFn: () => apiClient.post(`/orders/${id}/accept`),
+    onSuccess: () => {
+      toast.success("Order accepted - production started");
+      queryClient.invalidateQueries({ queryKey: ["orders", id] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : "Failed to accept order");
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -60,6 +72,10 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
     hasPermission("orders.cancel") &&
     order.orderStatus !== "CANCELLED" &&
     order.orderStatus !== "COMPLETED";
+
+  const canAccept =
+    hasPermission("orders.edit") &&
+    (order.orderStatus === "CONFIRMED" || order.orderStatus === "PAID");
 
   const shippingAddress = order.addresses.find((a) => a.type === "SHIPPING");
   const billingAddress = order.addresses.find((a) => a.type === "BILLING");
@@ -86,15 +102,29 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
         </div>
       </div>
 
-      {canCancel && (
-        <Button
-          variant="destructive"
-          size="sm"
-          disabled={cancelMutation.isPending}
-          onClick={() => cancelMutation.mutate()}
-        >
-          {cancelMutation.isPending ? "Cancelling…" : "Cancel Order"}
-        </Button>
+      {(canAccept || canCancel) && (
+        <div className="flex flex-wrap items-center gap-2">
+          {canAccept && (
+            <Button size="sm" disabled={acceptMutation.isPending} onClick={() => acceptMutation.mutate()}>
+              {acceptMutation.isPending ? "Accepting…" : "Accept Order"}
+            </Button>
+          )}
+          {canCancel && (
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={cancelMutation.isPending}
+              onClick={() => confirm("Cancel this order?") && cancelMutation.mutate()}
+            >
+              {cancelMutation.isPending ? "Cancelling…" : "Cancel Order"}
+            </Button>
+          )}
+          {canAccept && (
+            <span className="text-xs text-muted-foreground">
+              Accepting starts production; the customer can no longer cancel after that.
+            </span>
+          )}
+        </div>
       )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

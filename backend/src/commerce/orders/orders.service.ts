@@ -174,7 +174,43 @@ export class OrdersService {
     return order;
   }
 
-  async cancel(id: string, actingAdminId?: string) {
+  /** Admin accepts a confirmed order: production starts, so customers can no longer cancel it. */
+  async accept(id: string, actingAdminId?: string) {
+    const order = await this.prisma.order.findUnique({ where: { id } });
+    if (!order) {
+      throw new NotFoundException(`Order ${id} not found`);
+    }
+    if (order.orderStatus !== 'CONFIRMED' && order.orderStatus !== 'PAID') {
+      throw new BadRequestException(`Cannot accept an order in status ${order.orderStatus}`);
+    }
+    const updated = await this.prisma.order.update({
+      where: { id },
+      data: {
+        orderStatus: 'PROCESSING',
+        events: { create: { type: 'order.accepted', message: 'Order accepted - production started' } },
+      },
+    });
+    await this.auditService.record({ adminUserId: actingAdminId, action: 'ORDER_ACCEPTED', entityType: 'Order', entityId: id });
+    return updated;
+  }
+
+  /** Customers may cancel only until production starts (before the admin accepts) and before dispatch. */
+  isCustomerCancellable(order: { orderStatus: string; shippingStatus: string }) {
+    return ['PENDING_PAYMENT', 'PAID', 'CONFIRMED'].includes(order.orderStatus) && order.shippingStatus === 'NOT_SHIPPED';
+  }
+
+  async cancelByCustomer(orderId: string) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    if (!this.isCustomerCancellable(order)) {
+      throw new BadRequestException('This order can no longer be cancelled because production has started.');
+    }
+    return this.cancel(orderId, undefined, 'Order cancelled by the customer');
+  }
+
+  async cancel(id: string, actingAdminId?: string, message = 'Order cancelled') {
     const order = await this.prisma.order.findUnique({ where: { id }, include: { items: true } });
     if (!order) {
       throw new NotFoundException(`Order ${id} not found`);
@@ -193,7 +229,7 @@ export class OrdersService {
       where: { id },
       data: {
         orderStatus: 'CANCELLED',
-        events: { create: { type: 'order.cancelled', message: 'Order cancelled' } },
+        events: { create: { type: 'order.cancelled', message } },
       },
     });
 

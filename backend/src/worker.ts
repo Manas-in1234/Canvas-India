@@ -1541,6 +1541,36 @@ export default {
         return jsonResponse(await services.orders.findOne(orderId), 200, request);
       }
 
+      const orderActionMatch = pathname.match(/^\/api\/v1\/orders\/([^/]+)\/(accept|cancel)$/);
+      if (orderActionMatch && method === 'POST') {
+        const [, orderId, action] = orderActionMatch;
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, [action === 'accept' ? 'orders.edit' : 'orders.cancel'], request);
+        if (permError) return permError;
+        return jsonResponse(
+          action === 'accept' ? await services.orders.accept(orderId, user.id) : await services.orders.cancel(orderId, user.id),
+          200, request);
+      }
+
+      // Storefront: live order status, and customer cancellation (only before production starts).
+      if (pathname === '/api/v1/storefront/orders/status' && (method === 'GET' || method === 'POST')) {
+        const body = method === 'POST' ? ((await request.json().catch(() => ({}))) as any) : {};
+        const orderNumber = String(method === 'POST' ? body.orderNumber ?? '' : query.orderNumber ?? '').trim();
+        const email = String(method === 'POST' ? body.email ?? '' : query.email ?? '').trim().toLowerCase();
+        if (!orderNumber || !email) return jsonResponse({ message: 'orderNumber and email are required' }, 400, request);
+        const order = await prisma.order.findFirst({ where: { orderNumber, customer: { email } } });
+        if (!order) return jsonResponse(method === 'GET' ? { found: false } : { message: 'Order not found for this customer' }, method === 'GET' ? 200 : 404, request);
+        if (method === 'POST') {
+          await services.orders.cancelByCustomer(order.id);
+          return jsonResponse({ cancelled: true }, 200, request);
+        }
+        return jsonResponse({
+          found: true, orderStatus: order.orderStatus, shippingStatus: order.shippingStatus,
+          cancellable: services.orders.isCustomerCancellable(order),
+        }, 200, request);
+      }
+
       const orderPaymentsMatch = pathname.match(/^\/api\/v1\/orders\/([^/]+)\/payments$/);
       if (orderPaymentsMatch) {
         const orderId = orderPaymentsMatch[1];

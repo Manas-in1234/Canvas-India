@@ -186,6 +186,11 @@ export const OrderSuccessPage: React.FC = () => {
           </div>
         )}
 
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 text-center">
+          <strong>Cancellation policy:</strong> you can cancel this order from the order page until production begins.
+          Once printing and framing has started, the order can no longer be cancelled.
+        </div>
+
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link

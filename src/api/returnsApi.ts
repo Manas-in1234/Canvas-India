@@ -76,3 +76,30 @@ export async function requestReturn(
     throw new Error(data.message || 'Could not submit your return request.');
   }
 }
+
+export interface LiveOrderStatus {
+  found: boolean;
+  orderStatus?: string;
+  shippingStatus?: string;
+  /** True only until the store starts production. */
+  cancellable?: boolean;
+}
+
+export async function getLiveOrderStatus(orderNumber: string, email: string): Promise<LiveOrderStatus> {
+  const url = `${buildApiUrl('storefront/orders/status')}?orderNumber=${encodeURIComponent(orderNumber)}&email=${encodeURIComponent(email)}`;
+  const res = await fetch(url);
+  if (!res.ok) return { found: false };
+  return res.json();
+}
+
+export async function cancelOrder(orderNumber: string, email: string): Promise<void> {
+  const res = await fetch(buildApiUrl('storefront/orders/status'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ orderNumber, email }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.message || 'Could not cancel this order.');
+  }
+}

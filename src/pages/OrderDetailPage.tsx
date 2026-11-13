@@ -3,7 +3,14 @@ import { useParams, Link } from 'react-router-dom';
 import { orderService } from '../services/orderService';
 import { Order } from '../types/auth';
 import { useAuth } from '../context/AuthContext';
-import { getReturnInfo, requestReturn, type ReturnInfo } from '../api/returnsApi';
+import {
+  getReturnInfo,
+  requestReturn,
+  getLiveOrderStatus,
+  cancelOrder,
+  type ReturnInfo,
+  type LiveOrderStatus,
+} from '../api/returnsApi';
 import {
   Package,
   MapPin,
@@ -29,6 +36,43 @@ export const OrderDetailPage: React.FC = () => {
   const [returnBusy, setReturnBusy] = useState(false);
   const [returnError, setReturnError] = useState<string | null>(null);
   const contactEmail = user?.email || order?.guest_email || null;
+  const [live, setLive] = useState<LiveOrderStatus | null>(null);
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+
+  const loadLive = async () => {
+    if (!order || !contactEmail) return;
+    setLive(await getLiveOrderStatus(order.order_number, contactEmail).catch(() => null));
+  };
+  useEffect(() => {
+    void loadLive();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order?.order_number, contactEmail]);
+
+  const handleCancel = async () => {
+    if (!order || !contactEmail) return;
+    if (!window.confirm('Cancel this order? This cannot be undone.')) return;
+    setCancelBusy(true);
+    setCancelError(null);
+    try {
+      await cancelOrder(order.order_number, contactEmail);
+      await loadLive();
+    } catch (err: any) {
+      setCancelError(err.message);
+    } finally {
+      setCancelBusy(false);
+    }
+  };
+
+  // The store's live status wins over the status saved when the order was placed.
+  const shownStatus: string = (() => {
+    if (!live?.found) return order?.status ?? 'confirmed';
+    if (live.orderStatus === 'CANCELLED') return 'cancelled';
+    if (live.shippingStatus === 'DELIVERED') return 'delivered';
+    if (['PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'READY'].includes(live.shippingStatus ?? '')) return 'shipped';
+    if (live.orderStatus === 'PROCESSING') return 'processing';
+    return order?.status === 'pending' ? 'pending' : 'confirmed';
+  })();
 
   const loadReturns = async () => {
     if (!order || !contactEmail) return;
@@ -124,7 +168,7 @@ export const OrderDetailPage: React.FC = () => {
     }
   };
 
-  const currentStep = getStepIndex(order.status);
+  const currentStep = getStepIndex(shownStatus);
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8 print:bg-white print:p-0">
@@ -175,14 +219,16 @@ export const OrderDetailPage: React.FC = () => {
             <div className="text-right">
               <span
                 className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                  order.status === 'delivered'
+                  shownStatus === 'delivered'
                     ? 'bg-green-100 text-green-800'
-                    : order.status === 'shipped'
+                    : shownStatus === 'cancelled'
+                    ? 'bg-red-100 text-red-800'
+                    : shownStatus === 'shipped'
                     ? 'bg-blue-100 text-blue-800'
                     : 'bg-amber-100 text-amber-800'
                 }`}
               >
-                {order.status}
+                {shownStatus}
               </span>
               <p className="text-xl font-black text-[#002B49] mt-2">
                 ₹{Number(order.total).toLocaleString('en-IN')}
@@ -228,6 +274,35 @@ export const OrderDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {live?.found && shownStatus !== 'cancelled' && (
+          <div className="print:hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm flex flex-wrap items-center justify-between gap-3">
+            {live.cancellable ? (
+              <>
+                <p className="text-xs text-gray-600 max-w-md">
+                  You can cancel this order until production starts. Once printing and framing begins, it can no longer be cancelled.
+                </p>
+                <button
+                  onClick={handleCancel}
+                  disabled={cancelBusy}
+                  className="px-4 py-2 border border-red-300 text-red-700 rounded-lg text-xs font-semibold hover:bg-red-50 disabled:opacity-50"
+                >
+                  {cancelBusy ? 'Cancelling…' : 'Cancel order'}
+                </button>
+              </>
+            ) : (
+              <p className="text-xs text-gray-600">
+                This order can no longer be cancelled because production (printing and framing) has started.
+              </p>
+            )}
+            {cancelError && <p className="w-full text-xs text-red-600">{cancelError}</p>}
+          </div>
+        )}
+        {shownStatus === 'cancelled' && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs text-red-800">
+            This order has been cancelled. If you paid online, contact support about your refund.
+          </div>
+        )}
 
         {/* Order Items & Customization Details */}
         <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
