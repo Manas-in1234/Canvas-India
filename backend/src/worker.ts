@@ -506,7 +506,7 @@ export default {
       if (pathname === '/api/v1/admin/pricing-settings' || pathname.startsWith('/api/v1/admin/pricing-settings/')) {
         const { user, error } = await authenticate(request, env, prisma);
         if (error) return error;
-        const isManage = method === 'PATCH';
+        const isManage = method === 'PATCH' || method === 'POST' || method === 'DELETE';
         const denied = checkPermission(user, [isManage ? 'pricing.manage' : 'pricing.view'], request);
         if (denied) return denied;
 
@@ -515,14 +515,50 @@ export default {
             const settings = await prisma.pricingSetting.findMany({ orderBy: { key: 'asc' } });
             return jsonResponse(settings, 200, request);
           }
+          // Add a new pricing method.
+          if (method === 'POST' && pathname === '/api/v1/admin/pricing-settings') {
+            const body = (await request.json()) as any;
+            const key = String(body.key ?? '').trim().toLowerCase();
+            if (!/^[a-z0-9_]{2,80}$/.test(key)) {
+              return jsonResponse({ message: 'Key must be 2-80 characters: lowercase letters, numbers and underscores.' }, 400, request);
+            }
+            if (body.value === undefined || body.value === null || String(body.value).trim() === '' || !Number.isFinite(Number(body.value)) || Number(body.value) < 0) {
+              return jsonResponse({ message: 'Rate must be a non-negative number' }, 400, request);
+            }
+            const existing = await prisma.pricingSetting.findUnique({ where: { key } });
+            if (existing) return jsonResponse({ message: 'A pricing method with this key already exists.' }, 409, request);
+            const created = await prisma.pricingSetting.create({
+              data: {
+                key,
+                value: String(body.value),
+                description: typeof body.description === 'string' && body.description.trim() ? body.description.trim() : null,
+                updatedBy: user.id,
+              },
+            });
+            await services.audit.record({
+              adminUserId: user.id, action: 'PRICING_SETTING_CREATED', entityType: 'PricingSetting', entityId: key,
+              reason: `Created with ${body.value}`,
+            });
+            return jsonResponse(created, 201, request);
+          }
           const keyMatch = pathname.match(/^\/api\/v1\/admin\/pricing-settings\/([^/]+)$/);
+          // Delete a pricing method.
+          if (keyMatch && method === 'DELETE') {
+            await prisma.pricingSetting.delete({ where: { key: keyMatch[1] } });
+            await services.audit.record({
+              adminUserId: user.id, action: 'PRICING_SETTING_DELETED', entityType: 'PricingSetting', entityId: keyMatch[1],
+              reason: 'Deleted',
+            });
+            return jsonResponse({ success: true }, 200, request);
+          }
           if (keyMatch && method === 'PATCH') {
             const body = (await request.json()) as any;
             if ((typeof body.value !== 'string' && typeof body.value !== 'number') || String(body.value).trim() === '' || !Number.isFinite(Number(body.value)) || Number(body.value) < 0) {
               return jsonResponse({ message: 'Rate must be a non-negative number' }, 400, request);
             }
             const key = keyMatch[1];
-            const data = { value: String(body.value), updatedBy: user.id };
+            const data: { value: string; updatedBy: string; description?: string | null } = { value: String(body.value), updatedBy: user.id };
+            if (typeof body.description === 'string') data.description = body.description.trim() || null;
             const material = key === 'canvas_shape_area_rate_per_sqin' ? 'Canvas'
               : key === 'acrylic_shape_area_rate_per_sqin' ? 'Acrylic' : null;
             const updated = material
