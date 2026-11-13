@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { OccasionsProvider } from './context/OccasionsContext';
 import { ShopProvider } from './context/ShopContext';
 import { RootLayout } from './components/RootLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -53,6 +54,7 @@ import { OrderSuccessPage } from './pages/OrderSuccessPage';
 export function App() {
   return (
     <ErrorBoundary>
+      <OccasionsProvider>
       <AuthProvider>
         <ShopProvider>
         <Routes>
@@ -177,6 +179,7 @@ export function App() {
         </Routes>
       </ShopProvider>
     </AuthProvider>
+      </OccasionsProvider>
     </ErrorBoundary>
   );
 }

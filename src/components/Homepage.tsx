@@ -4,7 +4,7 @@ import { StorefrontHeroImage } from './StorefrontHeroImage';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight, Tag, Copy, Check, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote, Image as ImageIcon, LayoutGrid, Grid2x2, Columns3, Grid3x3, Music, Type, Rows3 } from 'lucide-react';
 import { Product } from '../types';
-import { OCCASIONS } from '../data/occasionsData';
+import { useOccasions } from '../context/OccasionsContext';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 import { ACRYLIC_PRODUCT_TYPES } from '../data/acrylicCustomizerData';
 import { ACRYLIC_STYLE_LANDING_DATA, getAcrylicLandingDataByProductId } from '../data/acrylicStyleLandingData';
@@ -118,6 +118,7 @@ const arrowBtn =
   'w-10 h-10 rounded-full bg-white border border-stone-200 shadow-md flex items-center justify-center text-[#0E4A93] hover:bg-[#E8752A] hover:text-white hover:border-[#E8752A] transition-colors cursor-pointer shrink-0';
 
 export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCart, allProducts, onCustomize, onOpenQuote, wishlistIds, onToggleWishlist }) => {
+  const { occasions } = useOccasions();
   const [promotion, setPromotion] = React.useState({ saleName: 'Festive Sale', percentage: 20, coupons: [] as { code: string; desc: string }[] });
   React.useEffect(() => {
     const controller = new AbortController();
@@ -697,7 +698,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               </button>
             </div>
             <div ref={occasionRowRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
-              {OCCASIONS.map((o) => (
+              {occasions.map((o) => (
                 <button
                   key={o.slug}
                   type="button"

@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
-import { OCCASIONS } from '../data/occasionsData';
+import { useOccasions } from '../context/OccasionsContext';
 
 export const AllOccasionsPage: React.FC = () => {
+  const { occasions } = useOccasions();
   const navigate = useNavigate();
   React.useEffect(() => { document.title = 'All Occasions | Canvas India'; }, []);
 
@@ -18,7 +19,7 @@ export const AllOccasionsPage: React.FC = () => {
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">All Occasions</h1>
         <p className="text-sm text-stone-500 mt-1 mb-8">Thoughtful personalized gifts for every celebration</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 sm:gap-6">
-          {OCCASIONS.map((o) => (
+          {occasions.map((o) => (
             <button
               key={o.slug}
               type="button"

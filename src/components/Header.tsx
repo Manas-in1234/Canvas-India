@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useOccasions } from '../context/OccasionsContext';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -111,6 +112,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAccount,
   onTrackOrder,
 }) => {
+  const { giftMenu } = useOccasions();
+  const menus: typeof MEGA_MENUS_DATA = { ...MEGA_MENUS_DATA, gifts: giftMenu };
   const navigate = useNavigate();
   const location = useLocation();
   const { isCategoryVisible } = useShop();
@@ -333,7 +336,7 @@ export const Header: React.FC<HeaderProps> = ({
       megaMenuTimeoutRef.current = null;
     }
     const isCorporate = slug === 'corporate-orders';
-    const menuData = MEGA_MENUS_DATA[slug];
+    const menuData = menus[slug];
     const targetWidth = isCorporate ? 360 : menuData?.groups && menuData.groups[3] ? 1260 : menuData?.groups && menuData.groups[2] ? 1050 : 850;
     const estWidth = Math.min(targetWidth, window.innerWidth - 32);
     const left = Math.max(16, Math.min(rect.left, window.innerWidth - estWidth - 16));
@@ -848,7 +851,7 @@ export const Header: React.FC<HeaderProps> = ({
                 const Icon = getCategoryIcon(cat.iconName);
                 const isActive = activeNav === cat.slug;
                 const isMenuOpen = activeMegaMenu === cat.slug;
-                const menuData = MEGA_MENUS_DATA[cat.slug];
+                const menuData = menus[cat.slug];
 
                 return (
                   <React.Fragment key={cat.slug}>
@@ -1267,7 +1270,7 @@ export const Header: React.FC<HeaderProps> = ({
                 const Icon = getCategoryIcon(cat.iconName);
                 const isActive = activeNav === cat.slug;
                 const isExpanded = expandedMobileCategory === cat.slug;
-                const menuData = MEGA_MENUS_DATA[cat.slug];
+                const menuData = menus[cat.slug];
 
                 return (
                   <div key={cat.slug} className="rounded-xl overflow-hidden border border-stone-200/60 bg-stone-50/50 my-1">
