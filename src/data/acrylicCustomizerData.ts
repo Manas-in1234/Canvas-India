@@ -1229,15 +1229,13 @@ export const ACRYLIC_HARDWARE_OPTIONS: AcrylicHardwareOption[] = [
     image: '/assets/customizer/acrylic/hardware/nail-free-hook.svg'
   },
   {
-    // Rs.199 base for 4 studs + Rs.50/extra stud beyond 4 (client pricing
-    // sheet) — real quantity-aware pricing built on main, supersedes the
-    // flat-Rs.200-for-exactly-4 fix this branch had; studQuantity is picked
+    // Rs.50 per stud, minimum 4 studs (client pricing sheet); studQuantity is picked
     // in the customizer UI (see acrylicStudQuantity in CanvasCustomizerPage).
     id: 'acrylic-standoffs',
     name: 'Acrylic Standoffs',
     label: 'Acrylic Standoffs',
-    price: 199,
-    basePrice: 199,
+    price: 200,
+    basePrice: 200,
     baseQuantity: 4,
     extraStudPrice: 50,
     description: 'Premium stainless steel standoff mounts for floating display',

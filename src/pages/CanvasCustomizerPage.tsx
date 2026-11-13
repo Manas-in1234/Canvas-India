@@ -3465,7 +3465,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [isCustomSize, setIsCustomSize] = useState<boolean>(false);
   const [customWidth, setCustomWidth] = useState<number>(8);
   const [customHeight, setCustomHeight] = useState<number>(8);
-  const customSizePrice = useMemo(() => Math.max(99, Math.round(customWidth * customHeight * 4.2)), [customWidth, customHeight]);
 
   const canUseCustomSize = currentSizeOption.panels.length === 1;
 
@@ -4349,6 +4348,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [selectedThicknessId]);
   const [selectedHardwareId, setSelectedHardwareId] = useState<string>(routeMaterial === 'acrylic' ? 'acrylic-standoffs' : 'no-hooks');
   const [acrylicStudQuantity, setAcrylicStudQuantity] = useState<number>(4);
+  // Client pricing sheet: acrylic is billed per sq inch by thickness (3mm 5.50, 5mm 6.50, 6mm 7.75,
+  // 8mm 9.50) and canvas at 1.65 per sq inch. Studs are 50 each, minimum 4.
+  const acrylicSizeRate = activeMaterial === 'acrylic' ? acrylicThicknessRates[selectedThicknessId] : undefined;
+  const areaPriced = (width: number | undefined, height: number | undefined, fallback: number): number =>
+    acrylicSizeRate && width && height ? Math.round(width * height * acrylicSizeRate) : fallback;
+  const customSizePrice = useMemo(
+    () => Math.round(customWidth * customHeight * (acrylicSizeRate ?? shapeAreaRates.canvas)),
+    [customWidth, customHeight, acrylicSizeRate, shapeAreaRates],
+  );
+  const studsPrice = (count: number): number => Math.max(4, count) * 50;
   const [selectedDisplayOptionId, setSelectedDisplayOptionId] = useState<string>('open-back');
 
   // Select Size & Shape Modal State
@@ -5707,7 +5716,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     ? ((isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price) + popStyleAdjustment)
     : isLyricProduct
     ? ((isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price) + lyricPriceAdjustment)
-    : (isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price);
+    : (isCustomSize && canUseCustomSize ? customSizePrice : areaPriced(currentSizeOption.widthInches, currentSizeOption.heightInches, currentSizeOption.price));
 
   const unitPrice = useMemo(() => {
     let price = sizePrice;
@@ -5737,9 +5746,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       const acrylicThickness = ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId);
       const liveRate = acrylicThickness ? acrylicThicknessRates[acrylicThickness.id] : undefined;
       if (liveRate) {
-        const boundingWidth = isCustomSize && canUseCustomSize ? customWidth : (currentSizeOption.widthInches ?? customWidth);
-        const boundingHeight = isCustomSize && canUseCustomSize ? customHeight : (currentSizeOption.heightInches ?? customHeight);
-        price += Math.round(boundingWidth * boundingHeight * liveRate);
+        // Already included in the base size price above (area x thickness rate).
       } else if (acrylicThickness) {
         price += acrylicThickness.price;
       }
@@ -5759,7 +5766,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     // Rs.199 base for 4 studs + Rs.50/extra stud beyond 4 (client pricing
     // sheet) — real quantity-aware pricing, acrylic-standoffs only.
     const acrylicHardwarePrice = selectedHardwareId === 'acrylic-standoffs'
-      ? (199 + Math.max(0, acrylicStudQuantity - 4) * 50)
+      ? studsPrice(acrylicStudQuantity)
       : 0;
 
     // liveOrFallbackHardware already resolves to the right list for the
@@ -5802,6 +5809,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return price;
   }, [
     sizePrice,
+    acrylicSizeRate,
     shapeApplies,
     currentShape,
     isCustomSize,
@@ -5837,7 +5845,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   const totalPrice = unitPrice * quantity;
   const acrylicHardwarePrice = selectedHardwareId === 'acrylic-standoffs'
-    ? (199 + Math.max(0, acrylicStudQuantity - 4) * 50)
+    ? studsPrice(acrylicStudQuantity)
     : 0;
 
   // Single source of truth for whether at least ONE valid customer image is currently uploaded
@@ -9483,7 +9491,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       const p = selectedProductTypeId === 'canvas-banner'
                         ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
                         : activeMaterial === 'acrylic' && selectedHardwareId === 'acrylic-standoffs'
-                        ? (199 + Math.max(0, acrylicStudQuantity - 4) * 50)
+                        ? studsPrice(acrylicStudQuantity)
                         : (liveOrFallbackHardware.find((h) => h.id === selectedHardwareId)?.price || 0);
                       return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0);
                     })()}
@@ -10515,7 +10523,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           }}
                           title={opt.label}
                           subtitle={opt.dimensionsSummary}
-                          priceText={`₹${(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(opt.price, quantity) : opt.price).toLocaleString('en-IN')}`}
+                          priceText={`₹${(() => { const shown = areaPriced(opt.widthInches, opt.heightInches, opt.price); return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(shown, quantity) : shown); })().toLocaleString('en-IN')}`}
                           previewHeightClass="h-16 p-1.5"
                           preview={renderSizePreview(opt, isSelected)}
                         />
@@ -11472,7 +11480,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           </span>
                         </div>
                         <span className="text-xs sm:text-sm font-bold text-[#0E4A93]">
-                          ₹199 for 4 studs
+                          ₹50 per stud (min 4)
                         </span>
                       </div>
 
@@ -11493,7 +11501,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                               Set of 4 studs (Included)
                             </div>
                             <div className="text-[11px] font-semibold text-[#0E4A93]">
-                              ₹199 for 4 studs
+                              ₹50 per stud (min 4)
                             </div>
                           </div>
                         </div>
@@ -11588,8 +11596,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     <div className="p-3 bg-[#EBF5FE] border border-blue-200/80 rounded-xl flex items-start gap-2.5 text-[11px] text-stone-700 leading-relaxed shadow-2xs">
                       <Info className="w-4 h-4 text-[#0E4A93] shrink-0 mt-0.5" />
                       <div className="space-y-0.5 font-medium">
-                        <div>• 4 studs are included in the base price of ₹199.</div>
-                        <div>• Each additional stud costs ₹50.</div>
+                        <div>• Each stud is ₹50, with a minimum of 4 studs.</div>
+                        <div>• Studs are priced per stud.</div>
                       </div>
                     </div>
                   </div>
