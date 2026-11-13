@@ -4,6 +4,7 @@ import {
   Package,
   Boxes,
   Tag,
+  Gift,
   Users,
   UserCog,
   ShieldCheck,
@@ -94,6 +95,12 @@ export const NAV_SECTIONS: NavSection[] = [
         href: "/hero-images",
         label: "Hero Images",
         icon: ImageIcon,
+        permissions: ["products.edit"],
+      },
+      {
+        href: "/occasions",
+        label: "Gifts & Occasions",
+        icon: Gift,
         permissions: ["products.edit"],
       },
       {
