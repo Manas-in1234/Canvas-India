@@ -10571,6 +10571,76 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       );
                     })}
                   </div>
+
+                  {/* Custom Size Box for shaped canvases - a single synced
+                      diameter for round (it has to stay a circle), or the
+                      usual independent Height x Width pair otherwise. */}
+                  <div className="mt-4 p-3 bg-stone-50 rounded-xl border border-stone-200">
+                    <div className="text-center text-[11px] font-bold text-stone-700 mb-2">
+                      {selectedProductTypeId === 'canvas-round' ? 'Custom Diameter (inches)' : 'Custom Size (Height × Width inches)'}
+                    </div>
+                    {selectedProductTypeId === 'canvas-round' ? (
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <div className="relative">
+                          <select
+                            value={customWidth}
+                            onChange={(e) => {
+                              setIsCustomSize(true);
+                              const val = Number(e.target.value);
+                              setCustomWidth(val);
+                              setCustomHeight(val);
+                            }}
+                            className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] appearance-none pr-6 cursor-pointer"
+                          >
+                            {Array.from(new Set([...customSizeSteps, customWidth])).sort((a, b) => a - b).map((n) => (
+                              <option key={n} value={n}>{n}&quot; Dia</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-3.5 h-3.5 text-stone-500 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                        <div className="text-xs font-black text-[#0E4A93] ml-2">
+                          ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(customSizePrice, quantity) : customSizePrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <div className="relative">
+                          <select
+                            value={customHeight}
+                            onChange={(e) => {
+                              setIsCustomSize(true);
+                              setCustomHeight(Number(e.target.value));
+                            }}
+                            className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] appearance-none pr-6 cursor-pointer"
+                          >
+                            {Array.from(new Set([...customSizeSteps, customHeight])).sort((a, b) => a - b).map((n) => (
+                              <option key={n} value={n}>{n}&quot;</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-3.5 h-3.5 text-stone-500 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                        <span className="text-xs text-stone-400 font-bold px-1">×</span>
+                        <div className="relative">
+                          <select
+                            value={customWidth}
+                            onChange={(e) => {
+                              setIsCustomSize(true);
+                              setCustomWidth(Number(e.target.value));
+                            }}
+                            className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] appearance-none pr-6 cursor-pointer"
+                          >
+                            {Array.from(new Set([...customSizeSteps, customWidth])).sort((a, b) => a - b).map((n) => (
+                              <option key={n} value={n}>{n}&quot;</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-3.5 h-3.5 text-stone-500 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                        <div className="text-xs font-black text-[#0E4A93] ml-2">
+                          ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(customSizePrice, quantity) : customSizePrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
             </div>
