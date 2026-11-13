@@ -44,7 +44,7 @@ export interface SelectSizeShapeModalProps {
 
 export type SinglePrintCategory = 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL';
 
-export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
+const SelectSizeShapeModalContent: React.FC<SelectSizeShapeModalProps> = ({
   isOpen,
   onClose,
   material,
@@ -62,7 +62,6 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   bulkQuantity,
   onResetSize
 }) => {
-  if (!isOpen) return null;
 
   const hasBulkDiscount = bulkQuantity !== undefined && bulkQuantity >= MIN_BULK_QTY;
   const displayPrice = (price: number) => (hasBulkDiscount ? bulkUnitPriceFor(price, bulkQuantity!) : price);
@@ -1560,3 +1559,10 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
     </div>
   );
 };
+
+/**
+ * Renders nothing while closed. The body is a separate component so its hooks always run in the same
+ * order (a hook-bearing component must not return early before them), and so each opening starts fresh.
+ */
+export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = (props) =>
+  props.isOpen ? <SelectSizeShapeModalContent {...props} /> : null;
