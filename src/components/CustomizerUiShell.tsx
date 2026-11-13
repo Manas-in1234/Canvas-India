@@ -228,9 +228,29 @@ export interface CustomizerPanelProps {
   // 'inline' keeps it in normal document flow after the canvas instead, for
   // the resting/Upload tab, so the canvas stays the prominent middle
   // content while upload-management content (photo thumbnails etc.) stays
-  // reachable below it rather than hidden behind an overlay.
-  mobileMode?: 'overlay' | 'inline';
+  // reachable below it rather than hidden behind an overlay. 'hidden' is a
+  // temporary dismiss (View Preview / the X button) that does NOT change
+  // which tab is active - it just stops rendering the overlay on mobile so
+  // the canvas is visible, while staying on the same section underneath so
+  // reopening it (tapping its sidebar tab, or a "Select Another X" button
+  // elsewhere) lands back where the customer actually was, not on Upload.
+  mobileMode?: 'overlay' | 'inline' | 'hidden';
   onCloseMobile?: () => void;
+  // Mobile-only "Back"/"Continue" footer so there's a clear way to move to
+  // the next toolbar step without hunting for the sidebar tab strip behind
+  // the overlay. Desktop already has equivalent chevrons on the canvas
+  // itself, so these only render when the panel is an overlay on mobile.
+  prevStep?: { label: string; disabled: boolean; onClick: () => void };
+  nextStep?: { label: string; disabled: boolean; onClick: () => void };
+  // "View Preview" - closes the overlay to reveal the canvas with whatever
+  // size/layout/etc was just picked already applied, so the customer can
+  // actually see the effect of their choice instead of staying stuck behind
+  // the drawer. Mobile overlay tabs only (Select Size, Layouts & Designs).
+  previewAction?: { label: string; onClick: () => void };
+  // Shown in place of the (disabled) Continue button once nextStep is
+  // disabled - i.e. this is the last toolbar step, so "continue" should
+  // mean finishing the order, not advancing to a tab that doesn't exist.
+  onAddToCart?: () => void;
 }
 
 export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
@@ -239,16 +259,23 @@ export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
   badge,
   children,
   mobileMode = 'overlay',
-  onCloseMobile
+  onCloseMobile,
+  prevStep,
+  nextStep,
+  previewAction,
+  onAddToCart
 }) => {
   const resolvedMeta = metaText || badge;
   const isOverlay = mobileMode === 'overlay';
+  const isHiddenMobile = mobileMode === 'hidden';
   return (
     <section
       id="customizer-panel-section"
       className={`w-full md:w-[480px] lg:w-[500px] xl:w-[515px] bg-white border-b md:border-b-0 md:border-r border-stone-200 flex-col z-10 md:flex md:flex-none md:h-full overflow-hidden shadow-sm ${
         isOverlay
           ? 'fixed top-14 inset-x-0 bottom-0 z-40 flex customizer-panel-slide-up md:static md:inset-auto md:z-10 md:[animation:none]'
+          : isHiddenMobile
+          ? 'hidden md:flex md:order-none'
           : 'order-2 md:order-none flex'
       }`}
     >
@@ -266,6 +293,63 @@ export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
       <div className="flex-1 md:flex-1 overflow-y-auto min-h-0 flex flex-col pb-[max(1rem,env(safe-area-inset-bottom,16px))]">
         {children}
       </div>
+      {isOverlay && previewAction && (
+        <div className="md:hidden shrink-0 px-3 pt-3">
+          <button
+            type="button"
+            onClick={previewAction.onClick}
+            className="w-full py-3 px-3 rounded-xl text-xs font-black uppercase tracking-wide flex items-center justify-center gap-2 bg-[#E8752A] hover:bg-[#d6651d] text-white shadow-sm cursor-pointer"
+          >
+            <Eye className="w-4 h-4 shrink-0" />
+            <span className="truncate">{previewAction.label}</span>
+          </button>
+        </div>
+      )}
+      {(prevStep || nextStep) && (
+        <div className="md:hidden shrink-0 border-t border-stone-200 bg-white p-3 flex items-center gap-2 pb-[max(0.75rem,env(safe-area-inset-bottom,12px))]">
+          {prevStep && (
+            <button
+              type="button"
+              onClick={prevStep.onClick}
+              disabled={prevStep.disabled}
+              className={`flex-1 min-w-0 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-colors ${
+                prevStep.disabled
+                  ? 'opacity-40 cursor-not-allowed border-stone-200 text-stone-400'
+                  : 'border-stone-300 text-stone-700 hover:bg-stone-50 cursor-pointer'
+              }`}
+            >
+              <ChevronLeft className="w-4 h-4 shrink-0" />
+              <span className="truncate">{prevStep.label}</span>
+            </button>
+          )}
+          {nextStep && (
+            nextStep.disabled && onAddToCart ? (
+              <button
+                type="button"
+                onClick={onAddToCart}
+                className="flex-1 min-w-0 py-2.5 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-colors bg-[#E8752A] hover:bg-[#d6651d] text-white shadow-xs cursor-pointer"
+              >
+                <ShoppingCart className="w-4 h-4 shrink-0" />
+                <span className="truncate">Add to Cart</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={nextStep.onClick}
+                disabled={nextStep.disabled}
+                className={`flex-1 min-w-0 py-2.5 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-colors ${
+                  nextStep.disabled
+                    ? 'opacity-40 cursor-not-allowed bg-stone-200 text-stone-400'
+                    : 'bg-[#0E4A93] hover:bg-[#09356A] text-white shadow-xs cursor-pointer'
+                }`}
+              >
+                <span className="truncate">Continue: {nextStep.label}</span>
+                <ChevronRight className="w-4 h-4 shrink-0" />
+              </button>
+            )
+          )}
+        </div>
+      )}
     </section>
   );
 };
@@ -620,6 +704,10 @@ export interface CustomizerPreviewControlsProps {
   isContain?: boolean;
   onToggleFit?: () => void;
   onReset?: () => void;
+  // "Select Another Size"/"Select Another Layout" - reopens that tab's
+  // overlay from the canvas itself, so the customer can go back and forth
+  // between picking and previewing without hunting for the sidebar tabs.
+  reselectAction?: { label: string; onClick: () => void };
 }
 
 export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps> = ({
@@ -630,6 +718,7 @@ export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps>
   onRotateRight,
   extraControls,
   bottomSlot,
+  reselectAction,
   isContain,
   onToggleFit,
   onReset
@@ -643,6 +732,17 @@ export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps>
       >
         {sizeLabel}
       </div>
+
+      {reselectAction && (
+        <button
+          type="button"
+          onClick={reselectAction.onClick}
+          className="md:hidden mt-1.5 inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full border border-[#0E4A93]/30 bg-white text-[#0E4A93] text-[10px] font-bold hover:bg-blue-50 transition-colors cursor-pointer"
+        >
+          <RotateCcw className="w-3 h-3 shrink-0" />
+          <span className="truncate">{reselectAction.label}</span>
+        </button>
+      )}
 
       {/* Image Controls: [ − ] [ + ] [ ↶ ] [ ↷ ] [ Fit/Fill ] [ Reset ] directly below the Size Indicator */}
       <div
@@ -758,6 +858,7 @@ export interface CustomizerPreviewAreaProps {
   onReset?: () => void;
   prevStep?: { label: string; disabled: boolean; onClick: () => void };
   nextStep?: { label: string; disabled: boolean; onClick: () => void };
+  reselectAction?: { label: string; onClick: () => void };
   onPointerMove?: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerUp?: (e: React.PointerEvent<HTMLDivElement>) => void;
   onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
@@ -780,6 +881,7 @@ export const CustomizerPreviewArea: React.FC<CustomizerPreviewAreaProps> = ({
   onReset,
   prevStep,
   nextStep,
+  reselectAction,
   onPointerMove,
   onPointerUp,
   onClick,
@@ -860,6 +962,7 @@ export const CustomizerPreviewArea: React.FC<CustomizerPreviewAreaProps> = ({
           onRotateRight={onRotateRight}
           extraControls={extraControls}
           bottomSlot={bottomSlot}
+          reselectAction={reselectAction}
           isContain={isContain}
           onToggleFit={onToggleFit}
           onReset={onReset}
