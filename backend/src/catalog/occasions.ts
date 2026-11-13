@@ -9,6 +9,7 @@ const defaultCover = '/assets/acrylic/acrylic-gift.webp';
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const maxSlug = 64;
 const fields = { name: 80, heroTitle: 140, tagline: 250, pitchHeadline: 180, pitchText: 600 } as const;
+const hexColor = /^#[0-9a-f]{6}$/i;
 
 function assetKey(slug: string) {
   return prefix + slug + '/content';
@@ -65,12 +66,24 @@ export class Occasions {
       if (!value || value.length > max) throw new BadRequestException(`Fill in ${key} using up to ${max} characters.`);
       return [key, value];
     }));
+    const { bannerColor } = input;
+    if (bannerColor !== undefined && bannerColor !== null
+      && (typeof bannerColor !== 'string' || !hexColor.test(bannerColor))) {
+      throw new BadRequestException('Choose a valid banner fade color.');
+    }
     const exists = await this.exists(slug);
     if (creating && exists) throw new ConflictException('An occasion with this URL already exists.');
     if (!creating && !exists) throw new BadRequestException('Occasion not found.');
-    const bytes = new TextEncoder().encode(JSON.stringify(text));
     await this.prisma.$transaction(async tx => {
       const storageKey = assetKey(slug);
+      let color = typeof bannerColor === 'string' ? bannerColor.toUpperCase() : null;
+      if (!creating && bannerColor === undefined) {
+        const previous = await tx.asset.findUnique({ where: { storageKey }, select: { contentBytes: true } });
+        if (previous?.contentBytes) {
+          color = JSON.parse(new TextDecoder().decode(previous.contentBytes)).bannerColor ?? null;
+        }
+      }
+      const bytes = new TextEncoder().encode(JSON.stringify({ ...text, bannerColor: color }));
       const data = { contentBytes: bytes, fileSize: bytes.byteLength };
       const create = {
         ...data, storageKey, ownerType, ownerId: slug, fileName: 'occasion.json',

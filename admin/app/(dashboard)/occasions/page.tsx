@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiClient, buildAdminApiUrl } from '@/lib/api-client';
+import { bannerTextColor } from '@/lib/banner-text-color';
 import { usePermission } from '@/lib/auth/use-permission';
 import { imageTypes, maxSourceBytes, prepareImage } from '@/lib/storefront-image-upload';
 
@@ -22,6 +23,8 @@ type Details = Record<(typeof fields)[number][0], string>;
 type Occasion = Details & {
   slug: string;
   bannerImage: string;
+  accent: string;
+  bannerColor?: string | null;
   hasCustomCover: boolean;
   group: 'occasion' | 'festival';
 };
@@ -30,6 +33,8 @@ const empty: Details = { name: '', heroTitle: '', tagline: '', pitchHeadline: ''
 const queryKey = ['storefront-occasions'];
 const route = '/admin/occasions';
 const store = 'https://canvassindia.com';
+const defaultBannerColor = '#0E4A93';
+const fadeMask = 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 10%, #000 35%, #000 100%)';
 const control = 'w-full rounded-md border bg-background px-3 py-2 text-sm';
 const card = 'space-y-5 rounded-xl border bg-card p-5';
 
@@ -39,6 +44,7 @@ function errorMessage(error: unknown) {
 
 function OccasionEditor({ occasion, onCreated }: { occasion?: Occasion; onCreated: (slug: string) => void }) {
   const [details, setDetails] = useState<Details>(occasion ?? empty);
+  const [bannerColor, setBannerColor] = useState(occasion?.bannerColor ?? null);
   const [slug, setSlug] = useState(occasion?.slug ?? '');
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState('');
@@ -48,7 +54,8 @@ function OccasionEditor({ occasion, onCreated }: { occasion?: Occasion; onCreate
   const savedImage = occasion?.bannerImage;
   const currentImage = savedImage?.startsWith('/api/v1/')
     ? buildAdminApiUrl(savedImage.slice('/api/v1'.length))
-    : savedImage && new URL(savedImage, store).href;
+    : new URL(savedImage ?? '/assets/acrylic/acrylic-gift.webp', store).href;
+  const effectiveBannerColor = bannerColor ?? occasion?.accent ?? defaultBannerColor;
 
   useEffect(() => {
     if (!file) return;
@@ -59,8 +66,8 @@ function OccasionEditor({ occasion, onCreated }: { occasion?: Occasion; onCreate
 
   const save = useMutation({
     mutationFn: () => occasion
-      ? apiClient.put<{ slug: string }>(route + '/' + occasion.slug, details)
-      : apiClient.post<{ slug: string }>(route, { ...details, slug }),
+      ? apiClient.put<{ slug: string }>(route + '/' + occasion.slug, { ...details, bannerColor })
+      : apiClient.post<{ slug: string }>(route, { ...details, slug, bannerColor }),
     onSuccess: async result => {
       await client.invalidateQueries({ queryKey });
       if (!occasion) onCreated(result.slug);
@@ -122,6 +129,27 @@ function OccasionEditor({ occasion, onCreated }: { occasion?: Occasion; onCreate
                   }} />}
             </div>
           ))}
+          <div className="space-y-2">
+            <Label htmlFor="occasion-banner-color">Banner fade color</Label>
+            <div className="flex flex-wrap items-center gap-3">
+              <Input id="occasion-banner-color" type="color" className="w-14 cursor-pointer p-1"
+                value={effectiveBannerColor} onChange={event => setBannerColor(event.target.value.toUpperCase())} />
+              <span className="text-sm text-muted-foreground">{effectiveBannerColor}</span>
+              <Button type="button" variant="outline" size="sm" disabled={!bannerColor} onClick={() => setBannerColor(null)}>
+                <RotateCcw className="size-4" /> Reset color
+              </Button>
+            </div>
+            <div className="relative flex min-h-36 max-w-lg items-center overflow-hidden rounded-xl p-4"
+              style={{ backgroundColor: effectiveBannerColor, color: bannerTextColor(bannerColor) }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={preview || currentImage} alt="" className="absolute inset-y-0 right-0 h-full w-[55%] object-cover"
+                style={{ maskImage: fadeMask, WebkitMaskImage: fadeMask }} />
+              <div className="relative w-[55%] break-words">
+                <p className="font-serif text-lg font-bold">{details.heroTitle || 'Banner title'}</p>
+                {details.tagline && <p className="mt-1 text-xs">{details.tagline}</p>}
+              </div>
+            </div>
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="occasion-url">Page URL</Label>
             {occasion ? <p id="occasion-url" className="break-all text-sm text-muted-foreground">/occasions/{slug}</p>
