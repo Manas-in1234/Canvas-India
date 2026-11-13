@@ -11335,8 +11335,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </div>
               )}
 
-              {/* ==================== 3. FRAMES SECTION (Matching Screenshot 3) ==================== */}
-              {!isMultiFrameProduct && (
+              {/* ==================== 3. FRAMES SECTION (Matching Screenshot 3) ====================
+                  Floating frames are a rectangular wood/metal moulding with
+                  mitred corners - there's no round/shaped equivalent, so this
+                  section only applies to rectangular canvases. */}
+              {!isMultiFrameProduct && (!shapeApplies || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id)) && (
                 <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
                   {/* Dark Section Header Bar */}
                   <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
@@ -13024,7 +13027,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         })()}
                       </div>,
                       {
-                        frameId: selectedFrameId,
+                        frameId: isRectangularShape ? selectedFrameId : 'no-frame',
                         displayWidthInches,
                         displayHeightInches,
                         aspectRatio: printAspect
@@ -13174,16 +13177,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           ? undefined
           : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined));
 
-        const frameOption = liveOrFallbackFrames.find((f) => f.id === selectedFrameId);
-        const hasOuterFrame = Boolean(shapeApplies && frameOption && frameOption.id !== 'no-frame');
-        const frameColor = hasOuterFrame ? frameOption?.color : undefined;
-        const borderWidthPx = shapeApplies
-          ? liveOrFallbackBorderWidths.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0
-          : 0;
         const isRectangularShape =
           !activeClipPath &&
           (!shapeApplies ||
             ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id));
+
+        const frameOption = liveOrFallbackFrames.find((f) => f.id === selectedFrameId);
+        // Floating frames are a rectangular wood/metal moulding - they have no
+        // round/shaped equivalent, so they never apply to a die-cut shape.
+        const hasOuterFrame = Boolean(shapeApplies && isRectangularShape && frameOption && frameOption.id !== 'no-frame');
+        const frameColor = hasOuterFrame ? frameOption?.color : undefined;
+        const borderWidthPx = shapeApplies
+          ? liveOrFallbackBorderWidths.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0
+          : 0;
 
         // Render the exact shape-following border for both rectangular and curved/custom shapes
         const renderPreviewShapeBorder = (scaledBorderPx: number) => {
