@@ -3,7 +3,7 @@ import type { PrismaClient } from '../generated/prisma/client.js';
 import { Occasions } from './occasions.js';
 
 it('publishes new occasions and restores existing covers independently of the text', async () => {
-  type Asset = { ownerId: string; ownerType: string; storageKey: string; contentBytes: Uint8Array; checksum?: string };
+  type Asset = { ownerId: string; ownerType: string; storageKey: string; fileName: string; contentBytes?: Uint8Array; checksum?: string };
   const rows = new Map<string, Asset>();
   const asset = {
     findUnique: async ({ where }: { where: { storageKey: string } }) => rows.get(where.storageKey),
@@ -16,7 +16,10 @@ it('publishes new occasions and restores existing covers independently of the te
       return saved;
     },
     create: async ({ data }: { data: Asset }) => rows.set(data.storageKey, data),
-    deleteMany: async ({ where }: { where: { storageKey: string } }) => ({ count: Number(rows.delete(where.storageKey)) }),
+    deleteMany: async ({ where }: { where: { storageKey: string | { in: string[] }; fileName?: string } }) => {
+      const keys = typeof where.storageKey === 'string' ? [where.storageKey] : where.storageKey.in;
+      return { count: keys.filter(key => (!where.fileName || rows.get(key)?.fileName === where.fileName) && rows.delete(key)).length };
+    },
   };
   const auditLog = { create: vi.fn() };
   const prisma = { asset, $transaction: async (run: (tx: unknown) => Promise<unknown>) => run({ asset, auditLog }) };
@@ -60,4 +63,18 @@ it('publishes new occasions and restores existing covers independently of the te
   });
   await expect(occasions.save('graduation', details, true, 'editor')).rejects.toThrow('already exists');
   expect((await occasions.list()).find(row => row.slug === 'graduation')?.name).toBe('Graduation');
+
+  await occasions.setVisibility('brothers-day', 'hidden', 'editor');
+  expect((await occasions.list()).some(row => row.slug === 'brothers-day')).toBe(false);
+  expect((await occasions.list(true)).find(row => row.slug === 'brothers-day')).toMatchObject({ ...details, hidden: true });
+  await occasions.save('brothers-day', { ...details, name: 'Edited while hidden' }, false, 'editor');
+  expect((await occasions.list()).some(row => row.slug === 'brothers-day')).toBe(false);
+  await occasions.setVisibility('brothers-day', 'visible', 'editor');
+  expect((await occasions.list()).find(row => row.slug === 'brothers-day')?.name).toBe('Edited while hidden');
+  await occasions.setVisibility('brothers-day', 'deleted', 'editor');
+  await occasions.setVisibility('graduation', 'deleted', 'editor');
+  await occasions.setVisibility('graduation', 'deleted', 'editor');
+  expect((await occasions.list(true)).some(row => ['brothers-day', 'graduation'].includes(row.slug))).toBe(false);
+  await expect(occasions.setVisibility('brothers-day', 'visible', 'editor')).rejects.toThrow('Occasion not found');
+  await expect(occasions.save('graduation', details, true, 'editor')).rejects.toThrow('previously used');
 });

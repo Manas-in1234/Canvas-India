@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ExternalLink, Plus, RotateCcw, Upload } from 'lucide-react';
+import { ExternalLink, Eye, EyeOff, Plus, RotateCcw, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +26,7 @@ type Occasion = Details & {
   accent: string;
   bannerColor?: string | null;
   hasCustomCover: boolean;
+  hidden: boolean;
   group: 'occasion' | 'festival';
 };
 
@@ -42,7 +43,11 @@ function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Something went wrong. Please try again.';
 }
 
-function OccasionEditor({ occasion, onCreated }: { occasion?: Occasion; onCreated: (slug: string) => void }) {
+function OccasionEditor({ occasion, onCreated, onDeleted }: {
+  occasion?: Occasion;
+  onCreated: (slug: string) => void;
+  onDeleted: () => void;
+}) {
   const [details, setDetails] = useState<Details>(occasion ?? empty);
   const [bannerColor, setBannerColor] = useState(occasion?.bannerColor ?? null);
   const [slug, setSlug] = useState(occasion?.slug ?? '');
@@ -91,11 +96,30 @@ function OccasionEditor({ occasion, onCreated }: { occasion?: Occasion; onCreate
     },
   });
 
-  const busy = save.isPending || changeCover.isPending;
+  const visibility = useMutation({
+    mutationFn: (action: 'hide' | 'show' | 'delete') => {
+      const path = route + '/' + occasion!.slug;
+      return action === 'delete' ? apiClient.delete(path) : apiClient.put(path + '/visibility', { hidden: action === 'hide' });
+    },
+    onSuccess: async (_, action) => {
+      if (action === 'delete') {
+        client.setQueryData<Occasion[]>(queryKey, rows => rows?.filter(row => row.slug !== occasion?.slug));
+        onDeleted();
+      } else {
+        client.setQueryData<Occasion[]>(queryKey, rows => rows?.map(row =>
+          row.slug === occasion?.slug ? { ...row, hidden: action === 'hide' } : row));
+        setStatus(action === 'hide' ? 'Occasion hidden from the storefront.' : 'Occasion visible on the storefront.');
+      }
+      await client.invalidateQueries({ queryKey });
+    },
+  });
+
+  const busy = save.isPending || changeCover.isPending || visibility.isPending;
 
   function clearFeedback() {
     save.reset();
     changeCover.reset();
+    visibility.reset();
     setStatus('');
     setFileError('');
   }
@@ -109,7 +133,7 @@ function OccasionEditor({ occasion, onCreated }: { occasion?: Occasion; onCreate
       }}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-semibold">{occasion ? 'Edit occasion' : 'New occasion'}</h2>
-          {occasion && <a className="inline-flex items-center gap-1.5 text-sm text-primary" href={store + '/occasions/' + occasion.slug} target="_blank" rel="noreferrer">
+          {occasion && !occasion.hidden && <a className="inline-flex items-center gap-1.5 text-sm text-primary" href={store + '/occasions/' + occasion.slug} target="_blank" rel="noreferrer">
             View storefront <ExternalLink className="size-4" />
           </a>}
         </div>
@@ -135,9 +159,6 @@ function OccasionEditor({ occasion, onCreated }: { occasion?: Occasion; onCreate
               <Input id="occasion-banner-color" type="color" className="w-14 cursor-pointer p-1"
                 value={effectiveBannerColor} onChange={event => setBannerColor(event.target.value.toUpperCase())} />
               <span className="text-sm text-muted-foreground">{effectiveBannerColor}</span>
-              <Button type="button" variant="outline" size="sm" disabled={!bannerColor} onClick={() => setBannerColor(null)}>
-                <RotateCcw className="size-4" /> Reset color
-              </Button>
             </div>
             <div className="relative flex min-h-36 max-w-lg items-center overflow-hidden rounded-xl p-4"
               style={{ backgroundColor: effectiveBannerColor, color: bannerTextColor(bannerColor) }}>
@@ -200,6 +221,30 @@ function OccasionEditor({ occasion, onCreated }: { occasion?: Occasion; onCreate
           </div>
         </section>
       )}
+      {occasion && (
+        <section className={card}>
+          <div>
+            <h2 className="font-semibold">Storefront visibility</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{occasion.hidden ? 'Hidden from the storefront.' : 'Visible on the storefront.'}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" disabled={busy} onClick={() => {
+              clearFeedback();
+              visibility.mutate(occasion.hidden ? 'show' : 'hide');
+            }}>
+              {occasion.hidden ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+              {occasion.hidden ? 'Show on website' : 'Hide from website'}
+            </Button>
+            <Button variant="destructive" disabled={busy} onClick={() => {
+              if (window.confirm(`Permanently delete “${occasion.name}” and its custom cover? This cannot be undone.`)) {
+                clearFeedback();
+                visibility.mutate('delete');
+              }
+            }}><Trash2 className="size-4" /> Delete occasion</Button>
+          </div>
+          {visibility.error && <p role="alert" className="text-sm text-destructive">{errorMessage(visibility.error)}</p>}
+        </section>
+      )}
       {status && <p role="status" className="text-sm text-green-700">{status}</p>}
     </div>
   );
@@ -213,6 +258,7 @@ export default function OccasionsPage() {
   const { hasPermission } = usePermission();
   const canEdit = hasPermission('products.edit');
   const [selected, setSelected] = useState<string | null>(null);
+  const [deletionStatus, setDeletionStatus] = useState('');
   const { data, isPending, error, refetch } = useQuery({
     queryKey,
     queryFn: () => apiClient.get<Occasion[]>(route),
@@ -227,6 +273,7 @@ export default function OccasionsPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Gifts &amp; Occasions</h1>
         <p className="mt-1 text-sm text-muted-foreground">Manage occasion cards and pages on the storefront.</p>
+        {deletionStatus && <p role="status" className="mt-2 text-sm text-green-700">{deletionStatus}</p>}
       </div>
       {isPending && <p role="status" className="text-sm text-muted-foreground">Loading occasions…</p>}
       {!data && error && <div className="space-y-2">
@@ -241,14 +288,18 @@ export default function OccasionsPage() {
               <option value="">New occasion</option>
               {(['occasion', 'festival'] as const).map(group => (
                 <optgroup key={group} label={group === 'occasion' ? 'Special occasions' : 'Festivals'}>
-                  {data.filter(row => row.group === group).map(row => <option key={row.slug} value={row.slug}>{row.name}</option>)}
+                  {data.filter(row => row.group === group).map(row => <option key={row.slug} value={row.slug}>{row.name}{row.hidden ? ' (Hidden)' : ''}</option>)}
                 </optgroup>
               ))}
             </select>
           </div>
           <Button variant="outline" onClick={() => setSelected('')}><Plus className="size-4" /> New occasion</Button>
         </div>
-        <div className="max-w-3xl"><OccasionEditor key={active?.slug ?? 'new'} occasion={active} onCreated={setSelected} /></div>
+        <div className="max-w-3xl"><OccasionEditor key={active?.slug ?? 'new'} occasion={active}
+          onCreated={setSelected} onDeleted={() => {
+            setSelected(null);
+            setDeletionStatus('Occasion deleted.');
+          }} /></div>
       </>}
     </div>
   );

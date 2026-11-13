@@ -297,20 +297,22 @@ export default {
       }
       const publicOccasionCover = pathname.match(/^\/api\/v1\/occasions\/([^/]+)\/cover$/);
       if (publicOccasionCover && method === 'GET' && isOccasionSlug(publicOccasionCover[1])) {
-        const cover = await new Occasions(prisma).images.get(publicOccasionCover[1]);
+        const occasions = new Occasions(prisma);
+        const slug = publicOccasionCover[1];
+        const cover = await occasions.exists(slug) ? await occasions.images.get(slug) : null;
         if (!cover?.contentBytes) return jsonResponse({ message: 'Cover not found.' }, 404, request);
         return new Response(new Uint8Array(cover.contentBytes), { headers: {
           ...corsHeaders(request), 'Content-Type': cover.mimeType, 'X-Content-Type-Options': 'nosniff',
           'Cache-Control': 'public, no-cache', ETag: `"${cover.checksum}"`,
         } });
       }
-      const adminOccasion = pathname.match(/^\/api\/v1\/admin\/occasions(?:\/([^/]+)(\/cover)?)?$/);
+      const adminOccasion = pathname.match(/^\/api\/v1\/admin\/occasions(?:\/([^/]+)(\/cover|\/visibility)?)?$/);
       if (adminOccasion) {
         const { user, error } = await authenticate(request, env, prisma);
         if (error) return error;
         const denied = checkPermission(user, ['products.edit'], request);
         if (denied) return denied;
-        const [, slug, cover] = adminOccasion;
+        const [, slug, action] = adminOccasion;
         const occasions = new Occasions(prisma);
         if (!slug && method === 'GET') return jsonResponse(await occasions.list(true), 200, request);
         if (slug && !isOccasionSlug(slug)) return jsonResponse({ message: 'Invalid occasion URL.' }, 400, request);
@@ -318,10 +320,20 @@ export default {
           const body = await request.json() as { slug?: string };
           return jsonResponse(await occasions.save(typeof body?.slug === 'string' ? body.slug : '', body, true, user.id), 201, request);
         }
-        if (slug && !cover && method === 'PUT') {
+        if (slug && !action && method === 'PUT') {
           return jsonResponse(await occasions.save(slug, await request.json(), false, user.id), 200, request);
         }
-        if (slug && cover && (method === 'POST' || method === 'DELETE')) {
+        if (slug && !action && method === 'DELETE') {
+          await occasions.setVisibility(slug, 'deleted', user.id);
+          return new Response(null, { status: 204, headers: corsHeaders(request) });
+        }
+        if (slug && action === '/visibility' && method === 'PUT') {
+          const body = await request.json() as { hidden?: unknown };
+          if (typeof body?.hidden !== 'boolean') return jsonResponse({ message: 'Choose whether to hide or show the occasion.' }, 400, request);
+          await occasions.setVisibility(slug, body.hidden ? 'hidden' : 'visible', user.id);
+          return new Response(null, { status: 204, headers: corsHeaders(request) });
+        }
+        if (slug && action === '/cover' && (method === 'POST' || method === 'DELETE')) {
           if (!await occasions.exists(slug)) return jsonResponse({ message: 'Occasion not found.' }, 404, request);
           if (method === 'POST') return jsonResponse(await occasions.images.upload(slug, request, user.id), 200, request);
           await occasions.images.reset(slug, user.id);
