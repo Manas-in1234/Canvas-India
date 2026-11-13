@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  FIXED_LIST_KEYS,
+  NO_ADD_KEYS,
+  NO_PRICE_KEYS,
   SECTION_EXTRAS,
   blankItem,
   imageToIconDataUrl,
@@ -19,7 +22,7 @@ const formatPrice = (item: EditableItem) =>
   item.priceMode === "AREA_RATE"
     ? `₹${item.areaRatePerSqIn ?? 0}/sq in`
     : item.flatPrice === 0
-      ? "Included"
+      ? "Free"
       : `+₹${item.flatPrice.toLocaleString("en-IN")}`;
 
 /** The small picture on each card: the uploaded icon, or a swatch drawn from the option's own settings. */
@@ -58,6 +61,9 @@ function OptionPreview({ baseKey, item }: { baseKey: string; item: EditableItem 
       </div>
     );
   }
+  if (NO_PRICE_KEYS.has(baseKey)) {
+    return <div className={`${box} text-sm font-semibold text-muted-foreground`}>{baseKey === "custom_size_steps" ? `${item.label}"` : "Aa"}</div>;
+  }
   return <div className={`${box} text-[10px] text-muted-foreground`}>No icon</div>;
 }
 
@@ -88,6 +94,7 @@ function ExtraInput({ field, value, onChange }: { field: ExtraField; value: unkn
         </select>
       ) : (
         <Input
+          list={field.key === "category" ? "design-groups" : undefined}
           type={field.kind === "number" ? "number" : "text"}
           value={text}
           onChange={(e) => onChange(field.kind === "number" ? (e.target.value === "" ? "" : Number(e.target.value)) : e.target.value)}
@@ -112,13 +119,14 @@ function ItemForm({
   onCancel: () => void;
 }) {
   const fields = SECTION_EXTRAS[baseKey] ?? [];
+  const noPrice = NO_PRICE_KEYS.has(baseKey);
   const setExtra = (key: string, value: unknown) => setDraft({ ...draft, extras: { ...draft.extras, [key]: value } });
   return (
     <div className="space-y-4 rounded-xl border-2 border-primary/30 bg-card p-4">
       <div className="flex items-start gap-4">
         <div className="space-y-2">
           <OptionPreview baseKey={baseKey} item={draft} />
-          <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border px-2 py-1 text-[11px] hover:bg-muted">
+          {!noPrice && <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border px-2 py-1 text-[11px] hover:bg-muted">
             <ImagePlus className="h-3 w-3" />
             {draft.imageUrl ? "Change icon" : "Upload icon"}
             <input
@@ -136,8 +144,8 @@ function ItemForm({
                 }
               }}
             />
-          </label>
-          {draft.imageUrl && (
+          </label>}
+          {!noPrice && draft.imageUrl && (
             <button type="button" className="block text-[11px] text-muted-foreground hover:text-destructive" onClick={() => setDraft({ ...draft, imageUrl: "" })}>
               Remove icon
             </button>
@@ -148,13 +156,24 @@ function ItemForm({
             <Label className="text-xs">Name</Label>
             <Input value={draft.label} onChange={(e) => setDraft({ ...draft, label: e.target.value })} autoFocus />
           </div>
+          {!noPrice && (
           <div className="space-y-1 sm:col-span-2">
             <Label className="text-xs">Description (optional)</Label>
             <Input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
           </div>
+          )}
+          {!noPrice && (
           <div className="space-y-1">
             <Label className="text-xs">Price (₹)</Label>
             <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant={draft.priceMode === "FLAT" && draft.flatPrice === 0 ? "default" : "outline"}
+                onClick={() => setDraft({ ...draft, priceMode: "FLAT", flatPrice: 0 })}
+              >
+                Free
+              </Button>
               <select
                 className="h-9 rounded-lg border border-input bg-background px-2 text-xs"
                 value={draft.priceMode}
@@ -170,6 +189,7 @@ function ItemForm({
               )}
             </div>
           </div>
+          )}
         </div>
       </div>
       {fields.length > 0 && (
@@ -212,6 +232,7 @@ export function OptionItemsEditor({
   const [draft, setDraft] = useState<EditableItem | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const fixedList = FIXED_LIST_KEYS.has(baseKey);
 
   const startEdit = (item: EditableItem) => {
     setEditingId(item.id);
@@ -251,8 +272,63 @@ export function OptionItemsEditor({
     onChange(next);
   };
 
+  const groups =
+    baseKey === "design_templates"
+      ? Array.from(new Set(items.map((i) => String(i.extras.category ?? "").trim()).filter(Boolean)))
+      : [];
+  const groupOf = (i: EditableItem) => String(i.extras.category ?? "").trim();
+  const renameGroup = (name: string) => {
+    const next = window.prompt("New name for this group", name)?.trim();
+    if (!next || next === name) return;
+    onChange(items.map((i) => (groupOf(i) === name ? { ...i, extras: { ...i.extras, category: next } } : i)));
+  };
+  const setGroupHidden = (name: string, hidden: boolean) =>
+    onChange(items.map((i) => (groupOf(i) === name ? { ...i, hidden } : i)));
+  const deleteGroup = (name: string) => {
+    if (window.confirm(`Delete the group "${name}" and every design in it?`)) onChange(items.filter((i) => groupOf(i) !== name));
+  };
+
   return (
     <div className="space-y-2.5">
+      {baseKey === "design_templates" && (
+        <>
+          <datalist id="design-groups">
+            {groups.map((g) => (
+              <option key={g} value={g} />
+            ))}
+          </datalist>
+          <div className="rounded-xl border bg-muted/30 p-3">
+            <div className="mb-2 text-xs font-semibold text-muted-foreground">
+              Groups (days and occasions). To add a new day such as Christmas, add a design and type the new group name.
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {groups.map((g) => {
+                const all = items.filter((i) => groupOf(i) === g);
+                const allHidden = all.every((i) => i.hidden);
+                return (
+                  <div key={g} className="flex items-center gap-1 rounded-full border bg-card py-1 pl-3 pr-1 text-xs">
+                    <span className={allHidden ? "text-muted-foreground line-through" : "font-medium"}>{g}</span>
+                    <span className="text-muted-foreground">({all.length})</span>
+                    {canEdit && (
+                      <>
+                        <Button type="button" size="icon-xs" variant="ghost" aria-label={allHidden ? "Show group" : "Hide group"} onClick={() => setGroupHidden(g, !allHidden)}>
+                          {allHidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                        </Button>
+                        <Button type="button" size="icon-xs" variant="ghost" aria-label="Rename group" onClick={() => renameGroup(g)}>
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <Button type="button" size="icon-xs" variant="ghost" aria-label="Delete group" onClick={() => deleteGroup(g)}>
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
       {items.length === 0 && !draft && (
         <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
           No options yet. Customers will see nothing here until you add one.
@@ -279,7 +355,7 @@ export function OptionItemsEditor({
                 )}
               </div>
               {item.description && <p className="truncate text-xs text-muted-foreground">{item.description}</p>}
-              <p className="text-sm font-semibold text-primary">{formatPrice(item)}</p>
+              {!NO_PRICE_KEYS.has(baseKey) && <p className="text-sm font-semibold text-primary">{formatPrice(item)}</p>}
             </div>
             {canEdit && (
               confirmDeleteId === item.id ? (
@@ -313,9 +389,11 @@ export function OptionItemsEditor({
                   <Button type="button" size="icon-sm" variant="ghost" aria-label="Edit" onClick={() => startEdit(item)}>
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                  <Button type="button" size="icon-sm" variant="ghost" aria-label="Delete" onClick={() => setConfirmDeleteId(item.id)}>
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                  </Button>
+                  {!fixedList && (
+                    <Button type="button" size="icon-sm" variant="ghost" aria-label="Delete" onClick={() => setConfirmDeleteId(item.id)}>
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </Button>
+                  )}
                 </div>
               )
             )}
@@ -323,7 +401,7 @@ export function OptionItemsEditor({
         ),
       )}
       {isNew && draft && <ItemForm baseKey={baseKey} draft={draft} setDraft={setDraft} onSave={commit} onCancel={cancel} />}
-      {canEdit && !draft && (
+      {canEdit && !draft && !NO_ADD_KEYS.has(baseKey) && (
         <Button type="button" variant="outline" size="sm" onClick={startAdd}>
           <Plus className="mr-1.5 h-4 w-4" />
           Add option

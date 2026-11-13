@@ -8,12 +8,16 @@ import { SizesPanel } from '@/components/customization/sizes-panel';
 import { OptionsPanel } from '@/components/customization/options-panel';
 
 type Material = 'CANVAS' | 'ACRYLIC';
-type Tab = 'styles' | 'sizes' | 'options';
+type Tab = 'styles' | 'sizes' | 'layouts' | 'wrap' | 'hardware' | 'options' | 'controls';
 
-const TABS: { key: Tab; label: string; permission: string }[] = [
-  { key: 'styles', label: 'Product styles', permission: 'option_catalog.view' },
-  { key: 'sizes', label: 'Sizes', permission: 'size_presets.view' },
-  { key: 'options', label: 'Options', permission: 'option_catalog.view' },
+const TABS: { key: Tab; label: string; hint: string; permission: string; blocks?: string[] }[] = [
+  { key: 'styles', label: 'Products', hint: 'The style cards a customer picks first: name, price and cover image.', permission: 'option_catalog.view' },
+  { key: 'sizes', label: 'Select size', hint: 'Every size and its price, plus the inch limits for custom sizes.', permission: 'size_presets.view', blocks: ['SELECT SIZE'] },
+  { key: 'layouts', label: 'Layouts & designs', hint: 'Design templates grouped by day or occasion.', permission: 'option_catalog.view', blocks: ['LAYOUTS & DESIGNS'] },
+  { key: 'wrap', label: 'Wrap & border', hint: 'Thickness, edge wrap, borders and frames.', permission: 'option_catalog.view', blocks: ['WRAP & BORDER'] },
+  { key: 'hardware', label: 'Hardware & finish', hint: 'Thickness, backing, hardware, back display and color finishing.', permission: 'option_catalog.view', blocks: ['HARDWARE & FINISH'] },
+  { key: 'options', label: 'Options', hint: 'Lamination, photo retouching, material variants and special products.', permission: 'option_catalog.view', blocks: ['OPTIONS', 'SELECT CANVAS MATERIAL VARIANT', 'SPECIALTY PRODUCTS'] },
+  { key: 'controls', label: 'Tabs & buttons', hint: 'Rename, hide or reorder the customizer tabs and top buttons.', permission: 'option_catalog.view', blocks: ['CUSTOMIZER TABS & BUTTONS'] },
 ];
 
 function CustomizationInner() {
@@ -38,6 +42,8 @@ function CustomizationInner() {
     sync(material, t);
   };
 
+  const current = TABS.find((t) => t.key === tab) ?? TABS[0];
+
   return (
     <div className="space-y-6">
       <div>
@@ -57,14 +63,14 @@ function CustomizationInner() {
         ))}
       </div>
 
-      <div className="flex gap-1 border-b" role="tablist">
+      <div className="flex gap-1 overflow-x-auto border-b" role="tablist">
         {allowed.map((t) => (
           <button
             key={t.key}
             role="tab"
             aria-selected={tab === t.key}
             onClick={() => setTab(t.key)}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium ${
+            className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium ${
               tab === t.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -77,9 +83,15 @@ function CustomizationInner() {
         <p className="text-sm text-muted-foreground">You do not have access to customization settings.</p>
       ) : (
         <>
+          <p className="text-sm text-muted-foreground">{current.hint}</p>
           {tab === 'styles' && <StylesPanel material={material} />}
-          {tab === 'sizes' && <SizesPanel material={material} />}
-          {tab === 'options' && <OptionsPanel material={material} />}
+          {tab === 'sizes' && (
+            <div className="space-y-10">
+              <SizesPanel material={material} />
+              <OptionsPanel material={material} tabs={current.blocks ?? []} />
+            </div>
+          )}
+          {tab !== 'styles' && tab !== 'sizes' && <OptionsPanel material={material} tabs={current.blocks ?? []} />}
         </>
       )}
     </div>

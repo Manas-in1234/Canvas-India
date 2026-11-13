@@ -121,6 +121,7 @@ import {
 } from '../data/lyricCanvasData';
 import { fetchApprovedCustomShapes, filterToUnknownShapes, toShapeOption, type CustomShapeDto } from '../api/customShapesApi';
 import { fetchPricingRates, SHAPE_AREA_RATE_FALLBACK, ACRYLIC_THICKNESS_RATE_FALLBACKS } from '../api/pricingSettingsApi';
+import { applyControls, applyLayoutOverrides, controlLabel, KNOWN_TAB_IDS, useCustomizerControls } from '../api/customizerControls';
 import { fetchOptionCategoryItems, type OptionCategoryItemDto } from '../api/optionCategoriesApi';
 import {
   fetchCustomizerProductTypes,
@@ -2965,7 +2966,44 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Primary Toolbar items: dynamically filtered by selected product capabilities
   // EXACT ORDER: 1. PRODUCTS, 2. UPLOAD, 3. SELECT SIZE, 4. LAYOUTS & DESIGNS, 5. WRAP & BORDER, 6. HARDWARE & FINISH, 7. OPTIONS
-  const toolbarItems = useMemo<{ id: ToolbarTab; label: string; icon: React.ElementType }[]>(() => {
+  const customizerControls = useCustomizerControls();
+
+  // Inch steps offered in the Custom Size boxes, as set in the admin (Customization → Select size).
+  // Kept in ascending order whatever order they were added in; falls back to the built-in list.
+  const [liveCustomSizeSteps, setLiveCustomSizeSteps] = useState<number[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void fetchOptionCategoryItems('custom_size_steps').then((items) => {
+      if (cancelled) return;
+      const steps = items
+        .map((item) => Number(String(item.label).replace(/[^0-9.]/g, '')))
+        .filter((n) => Number.isFinite(n) && n >= 1 && n <= 200);
+      setLiveCustomSizeSteps(steps.length > 0 ? steps : null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  // Layout names, prices, cover images, visibility and order from the admin (Customization → Layouts & designs).
+  const [liveLayoutItems, setLiveLayoutItems] = useState<OptionCategoryItemDto[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void fetchOptionCategoryItems('layouts').then((items) => {
+      if (!cancelled) setLiveLayoutItems(items.length > 0 ? items : null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const getManagedLayouts = useCallback(
+    (productTypeId: string) => applyLayoutOverrides(getProductLayouts(productTypeId), liveLayoutItems),
+    [liveLayoutItems],
+  );
+  const customSizeSteps = useMemo(
+    () => (liveCustomSizeSteps ? Array.from(new Set(liveCustomSizeSteps)).sort((a, b) => a - b) : CUSTOM_SIZE_STEPS),
+    [liveCustomSizeSteps],
+  );
+  const baseToolbarItems = useMemo<{ id: ToolbarTab; label: string; icon: React.ElementType }[]>(() => {
     if (isBusRollProduct) {
       return [
         { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
@@ -3031,6 +3069,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     ];
     return items.filter((item) => item.enabled);
   }, [activeMaterial, productCapabilities, isSingleOrShapedCanvas, isBusRollProduct, isPopArtProduct, isLyricProduct, isWordArtProduct, isQuotesProduct, isPrefillMode, isSinglePrintCanvas, isDigitalPaintingProduct]);
+
+  // Names, visibility and order of the left-hand tabs, as set in the admin (Customization → Tabs & buttons).
+  const toolbarItems = useMemo(() => {
+    const shown = applyControls(baseToolbarItems, customizerControls.tabs, (item) => item.id, KNOWN_TAB_IDS);
+    // Never leave the customer with no tabs at all.
+    const safe = shown.length > 0 ? shown : baseToolbarItems;
+    return safe.map((item) => ({ ...item, label: controlLabel(customizerControls.tabs, item.id, item.label) }));
+  }, [baseToolbarItems, customizerControls.tabs]);
 
   // Product tabs supported check
 
@@ -3285,7 +3331,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
 
     if (isLayoutProduct) {
-      const layouts = getProductLayouts(selectedProductTypeId);
+      const layouts = getManagedLayouts(selectedProductTypeId);
       return layouts.map((layout) => ({
         id: layout.id,
         productTypeId: selectedProductTypeId,
@@ -3326,7 +3372,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       ? configOptions.filter((opt) => !(opt.widthInches === 9 && opt.heightInches === 9) && !(opt.widthInches === 16 && opt.heightInches === 16))
       : configOptions;
     return filteredOptions.length > 0 ? filteredOptions : SIZE_OPTIONS.filter((s) => s.productTypeId === selectedProductTypeId);
-  }, [activeMaterial, selectedProductTypeId, selectedShapeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isWordArtProduct, isLyricProduct, isWallArtProduct, isCollageProduct, isHexagonProduct, isSplitProduct, isMosaicProduct, liveSizeOptions, CANVAS_BANNER_SIZE_OPTIONS, POP_ART_SIZE_OPTIONS, WORD_ART_SIZE_CATALOG, LYRIC_CANVAS_SIZE_OPTIONS]);
+  }, [activeMaterial, selectedProductTypeId, selectedShapeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isWordArtProduct, isLyricProduct, isWallArtProduct, isCollageProduct, isHexagonProduct, isSplitProduct, isMosaicProduct, liveSizeOptions, getManagedLayouts, CANVAS_BANNER_SIZE_OPTIONS, POP_ART_SIZE_OPTIONS, WORD_ART_SIZE_CATALOG, LYRIC_CANVAS_SIZE_OPTIONS]);
 
   // Category filter state for single prints: 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL' (Default: 'RECOMMENDED')
   // A '?category=PANORAMIC' URL param (used by the Panoramic Canvas Prints
@@ -4082,7 +4128,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   };
 
   // Design templates, color finishing and retouching are admin-managed too (shared or per product).
-  const DESIGN_TEMPLATES = useMemo<(DesignTemplate & { bgColor?: string; textColor?: string })[]>(() => {
+  const DESIGN_TEMPLATES = useMemo<(DesignTemplate & { bgColor?: string; textColor?: string; imageUrl?: string })[]>(() => {
     if (liveDesignTemplates.length === 0 && !overriddenKeys.has('design_templates')) return BASE_DESIGN_TEMPLATES;
     return liveDesignTemplates.map((item) => {
       const x = item.extras ?? {};
@@ -4096,6 +4142,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         swatchClass: '',
         bgColor: (x.bgColor as string) || '#fff1f2',
         textColor: (x.textColor as string) || '#881337',
+        imageUrl: item.imageUrl || undefined,
       };
     });
   }, [liveDesignTemplates, overriddenKeys]);
@@ -4180,8 +4227,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveLaminations]);
 
   const liveOrFallbackFrames = useMemo(() => {
-    if (liveFrames.length === 0 && !overriddenKeys.has('frame')) return FRAME_OPTIONS;
+    if (liveFrames.length === 0 && !overriddenKeys.has('frame')) return FRAME_OPTIONS.map((f) => ({ ...f, group: 'floating' }));
     return liveFrames.map((item) => ({
+      group: String((item.extras?.group as string) || 'Floating').trim().toLowerCase(),
       id: (item.extras?.id as string) ?? item.id,
       name: item.label,
       price: Number(item.flatPrice),
@@ -4190,6 +4238,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       color: (item.extras?.color as string) ?? '#000000',
     }));
   }, [liveFrames]);
+
+  const frameGroups = useMemo(() => {
+    const builtIn = [
+      { key: 'standard', label: 'Standard', note: 'Standard gallery frames are available in single canvas formats. Select Floating for museum-grade floating shadow gap frames.', builtIn: true },
+      { key: 'premium', label: 'Premium', note: 'Premium artisanal framing with solid hardwoods.', builtIn: true },
+      { key: 'floating', label: 'Floating', note: '', builtIn: true },
+    ];
+    const extra = Array.from(new Set(liveOrFallbackFrames.map((f) => f.group)))
+      .filter((g) => g && !builtIn.some((b) => b.key === g))
+      .map((g) => ({ key: g, label: g.replace(/\w/g, (c) => c.toUpperCase()), note: '', builtIn: false }));
+    return [...builtIn, ...extra];
+  }, [liveOrFallbackFrames]);
 
   // Inline fallback for the two brand-new acrylic categories — matches the
   // real seeded admin data, used only if the live fetch comes back empty.
@@ -4244,7 +4304,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [selectedBorderColor, setSelectedBorderColor] = useState<string>('#FFFFFF');
   const [borderHexInput, setBorderHexInput] = useState<string>('#FFFFFF');
   const [selectedFrameId, setSelectedFrameId] = useState<string>('no-frame');
-  const [expandedFrameCategory, setExpandedFrameCategory] = useState<'standard' | 'premium' | 'floating'>('floating');
+  const [expandedFrameCategory, setExpandedFrameCategory] = useState<string>('floating');
 
   // Acrylic-only: backing color behind the clear sheet, and surface finish.
   const [selectedBackingId, setSelectedBackingId] = useState<string>('transparent');
@@ -10279,7 +10339,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           {/* Current value merged in — a prefilled aspect-matched
                               size (or any other exact value) renders as a real
                               selection even when it isn't one of the coarse steps. */}
-                          {Array.from(new Set([...CUSTOM_SIZE_STEPS, customHeight])).sort((a, b) => a - b).map((n) => (
+                          {Array.from(new Set([...customSizeSteps, customHeight])).sort((a, b) => a - b).map((n) => (
                             <option key={n} value={n}>{n}&quot;</option>
                           ))}
                         </select>
@@ -10306,7 +10366,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           }}
                           className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] appearance-none pr-6 cursor-pointer"
                         >
-                          {Array.from(new Set([...CUSTOM_SIZE_STEPS, customWidth])).sort((a, b) => a - b).map((n) => (
+                          {Array.from(new Set([...customSizeSteps, customWidth])).sort((a, b) => a - b).map((n) => (
                             <option key={n} value={n}>{n}&quot;</option>
                           ))}
                         </select>
@@ -10579,12 +10639,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                         )}
 
                                         <div className={`relative w-full h-24 flex items-center justify-center p-2.5 ${tpl.swatchClass}`} style={tpl.bgColor ? { backgroundColor: tpl.bgColor, color: tpl.textColor } : undefined}>
-                                          {renderDecorSvg(tpl.decor, tpl.accent, 'absolute inset-0 w-full h-full pointer-events-none')}
-                                          <div className="relative w-12 h-14 rounded bg-white/90 border border-black/10 shadow-xs flex items-center justify-center text-center p-1">
-                                            <span className="text-[8px] font-black leading-tight text-stone-800 line-clamp-2">
-                                              {tpl.textPreset}
-                                            </span>
-                                          </div>
+                                          {tpl.imageUrl ? (
+                                            <img src={tpl.imageUrl} alt={tpl.name} className="absolute inset-0 w-full h-full object-cover" />
+                                          ) : (
+                                            <>
+                                              {renderDecorSvg(tpl.decor, tpl.accent, 'absolute inset-0 w-full h-full pointer-events-none')}
+                                              <div className="relative w-12 h-14 rounded bg-white/90 border border-black/10 shadow-xs flex items-center justify-center text-center p-1">
+                                                <span className="text-[8px] font-black leading-tight text-stone-800 line-clamp-2">
+                                                  {tpl.textPreset}
+                                                </span>
+                                              </div>
+                                            </>
+                                          )}
                                         </div>
 
                                         <div className="p-1.5 bg-white text-center border-t border-stone-100">
@@ -10606,7 +10672,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                   {/* ==================== LAYOUTS TAB ==================== */}
                   {layoutSubTab === 'LAYOUTS' && (() => {
-                    const currentProductLayouts = getProductLayouts(selectedProductTypeId);
+                    const currentProductLayouts = getManagedLayouts(selectedProductTypeId);
                     const activeLayout = currentProductLayouts.find((l) => l.id === selectedLayoutId) || currentProductLayouts[0];
                     return (
                       <div className="space-y-3">
@@ -10696,7 +10762,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                                 <div className="w-full h-24 bg-stone-50 border-b border-stone-100 p-2 flex items-center justify-center">
                                   <div className="w-full h-full flex items-center justify-center group-hover:scale-105 transition-transform">
-                                    {renderProductLayoutDiagram(layout, isSelected)}
+                                    {layout.coverImage ? <img src={layout.coverImage} alt={layout.name} className="max-h-full max-w-full object-contain" /> : renderProductLayoutDiagram(layout, isSelected)}
                                   </div>
                                 </div>
 
@@ -11050,97 +11116,59 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   </div>
 
                   <div className="divide-y divide-stone-100">
-                    {/* Accordion 1: Standard */}
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => setExpandedFrameCategory(expandedFrameCategory === 'standard' ? 'floating' : 'standard')}
-                        className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
-                      >
-                        <span>Standard</span>
-                        {expandedFrameCategory === 'standard' ? (
-                          <ChevronDown className="w-4 h-4 text-stone-500" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4 text-stone-400" />
-                        )}
-                      </button>
-                      {expandedFrameCategory === 'standard' && (
-                        <div className="p-3 bg-stone-50/50 text-xs text-stone-500 italic">
-                          Standard gallery frames are available in single canvas formats. Select Floating for museum-grade floating shadow gap frames.
-                        </div>
-                      )}
-                    </div>
+                    {/* Frame groups: Standard / Premium / Floating plus any group added in the admin */}
+                    {frameGroups.map((group) => {
+                      const groupFrames = liveOrFallbackFrames.filter((ff) => ff.id !== 'no-frame' && ff.group === group.key);
+                      if (groupFrames.length === 0 && !group.builtIn) return null;
+                      const isOpen = expandedFrameCategory === group.key;
+                      return (
+                        <div key={group.key}>
+                          <button
+                            type="button"
+                            onClick={() => setExpandedFrameCategory(isOpen ? 'floating' : group.key)}
+                            className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
+                          >
+                            <span>{group.label}</span>
+                            {isOpen ? <ChevronDown className="w-4 h-4 text-stone-500" /> : <ChevronRight className="w-4 h-4 text-stone-400" />}
+                          </button>
+                          {isOpen && groupFrames.length === 0 && (
+                            <div className="p-3 bg-stone-50/50 text-xs text-stone-500 italic">{group.note}</div>
+                          )}
+                          {isOpen && groupFrames.length > 0 && (
+                            <div className="p-3 space-y-2.5">
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                {groupFrames.map((ff) => {
+                                  const isSelected = selectedFrameId === ff.id;
+                                  return (
+                                    <CustomizerOptionCard
+                                      key={ff.id}
+                                      selected={isSelected}
+                                      onClick={() => setSelectedFrameId(isSelected ? 'no-frame' : ff.id)}
+                                      title={ff.name}
+                                      priceText={ff.price === 0 ? 'Free' : `₹${ff.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                      previewHeightClass="h-16 p-1.5"
+                                      preview={ff.image && ff.id.length > 20 ? <img src={ff.image} alt={ff.name} className="mx-auto h-full max-h-14 w-auto object-contain" /> : renderFloatingFrameThumbnail(ff.id)}
+                                    />
+                                  );
+                                })}
+                              </div>
 
-                    {/* Accordion 2: Premium */}
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => setExpandedFrameCategory(expandedFrameCategory === 'premium' ? 'floating' : 'premium')}
-                        className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
-                      >
-                        <span>Premium</span>
-                        {expandedFrameCategory === 'premium' ? (
-                          <ChevronDown className="w-4 h-4 text-stone-500" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4 text-stone-400" />
-                        )}
-                      </button>
-                      {expandedFrameCategory === 'premium' && (
-                        <div className="p-3 bg-stone-50/50 text-xs text-stone-500 italic">
-                          Premium artisanal framing with solid hardwoods.
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Accordion 3: Floating (Expanded as shown in Screenshot 3) */}
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => setExpandedFrameCategory(expandedFrameCategory === 'floating' ? 'standard' : 'floating')}
-                        className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
-                      >
-                        <span>Floating</span>
-                        {expandedFrameCategory === 'floating' ? (
-                          <ChevronDown className="w-4 h-4 text-stone-500" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4 text-stone-400" />
-                        )}
-                      </button>
-
-                      {expandedFrameCategory === 'floating' && (
-                        <div className="p-3 space-y-2.5">
-                          {/* Admin-managed via the 'frame' option category */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                            {liveOrFallbackFrames.filter((ff) => ff.id !== 'no-frame').map((ff) => {
-                              const isSelected = selectedFrameId === ff.id;
-                              return (
-                                <CustomizerOptionCard
-                                  key={ff.id}
-                                  selected={isSelected}
-                                  onClick={() => setSelectedFrameId(isSelected ? 'no-frame' : ff.id)}
-                                  title={ff.name}
-                                  priceText={`₹${ff.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                                  previewHeightClass="h-16 p-1.5"
-                                  preview={renderFloatingFrameThumbnail(ff.id)}
-                                />
-                              );
-                            })}
-                          </div>
-
-                          {selectedFrameId !== 'no-frame' && (
-                            <div className="flex justify-end pt-1">
-                              <button
-                                type="button"
-                                onClick={() => setSelectedFrameId('no-frame')}
-                                className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
-                              >
-                                Remove Frame (Frameless)
-                              </button>
+                              {selectedFrameId !== 'no-frame' && (
+                                <div className="flex justify-end pt-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedFrameId('no-frame')}
+                                    className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                                  >
+                                    Remove Frame (Frameless)
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
-                      )}
-                    </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

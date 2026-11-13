@@ -9,7 +9,7 @@ import { apiClient, ApiError } from '@/lib/api-client';
 import type { OptionCategoryItem, OptionCategoryListItem } from '@/lib/types/option-category';
 import { usePermission } from '@/lib/auth/use-permission';
 import { useRecordId } from '@/lib/use-record-id';
-import type { EditableItem } from '@/lib/customizer-options';
+import { customizationTabFor, type EditableItem } from '@/lib/customizer-options';
 import { OptionItemsEditor } from '@/components/option-items-editor';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -121,16 +121,16 @@ export function OptionCategoryDetailClient({ id: initialId }: { id: string }) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <Link
-            href="/customization?tab=options"
+            href={`/customization?material=${category.materialScope === 'ACRYLIC' ? 'ACRYLIC' : 'CANVAS'}&tab=${customizationTabFor(category.baseKey)}`}
             className="mb-1 flex items-center gap-1 text-sm text-muted-foreground hover:underline"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back to options
+            Back to Customization
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight">{category.name}</h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            These are the shared options every product uses unless it has its own copy under Product customization.
-            Changes here are saved as you make them.
+            Every product of this material uses these options. Add, rename, re-price, hide or delete items, and
+            change their order. Changes are saved as you make them.
           </p>
         </div>
         <Badge variant="outline">{category.materialScope}</Badge>

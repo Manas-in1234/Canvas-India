@@ -8,6 +8,7 @@ import { apiClient, ApiError } from '@/lib/api-client';
 import type { CustomizerMaterial, CustomizerProductType } from '@/lib/types/customizer-product-type';
 import type { SizePresetListItem } from '@/lib/types/size-preset';
 import { usePermission } from '@/lib/auth/use-permission';
+import { imageToIconDataUrl } from '@/lib/customizer-options';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -444,7 +445,7 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
             </div>
 
             <div className="space-y-2">
-              <Label>Image URL</Label>
+              <Label>Cover image</Label>
               <div className="flex items-center gap-3">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
                   {form.image ? (
@@ -454,7 +455,34 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
                     <span className="text-[10px] text-muted-foreground">No image</span>
                   )}
                 </div>
-                <Input className="flex-1" placeholder="https://... (optional)" value={form.image} onChange={(e) => set('image', e.target.value)} />
+                <div className="flex flex-1 flex-col gap-2">
+                  <div className="flex gap-2">
+                    <label className="inline-flex cursor-pointer items-center rounded-md border px-3 py-1.5 text-sm hover:bg-muted">
+                      {form.image ? 'Change image' : 'Upload image'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          e.target.value = '';
+                          if (!file) return;
+                          try {
+                            set('image', await imageToIconDataUrl(file, 480));
+                          } catch {
+                            toast.error('Could not read that image. Try a PNG, JPG or WebP file.');
+                          }
+                        }}
+                      />
+                    </label>
+                    {form.image && (
+                      <Button type="button" variant="ghost" size="sm" onClick={() => set('image', '')}>
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  <Input placeholder="…or paste an image link (optional)" value={form.image.startsWith('data:') ? '' : form.image} onChange={(e) => set('image', e.target.value)} />
+                </div>
               </div>
             </div>
 

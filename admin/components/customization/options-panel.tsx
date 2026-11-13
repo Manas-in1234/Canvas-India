@@ -12,6 +12,7 @@ import { usePermission } from '@/lib/auth/use-permission';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DESIGN_TEMPLATE_SEED_ITEMS } from '@/lib/customizer-options';
+import layoutSeed from '@/lib/layout-seed.json';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -82,6 +83,52 @@ interface TabBlock {
   footnote?: string;
 }
 
+const LAYOUT_TYPE_LABELS: Record<string, string> = {
+  'canvas-single': 'Single print',
+  'canvas-hexagon': 'Hexagon',
+  'canvas-wall-art': 'Wall display',
+  'canvas-collage': 'Photo collage',
+  'canvas-split': 'Split',
+  'canvas-mosaic': 'Photo mosaic',
+};
+
+const LAYOUTS_SEED: SeedSpec = {
+  scope: 'BOTH',
+  name: 'Layouts',
+  items: (layoutSeed as Array<{ id: string; type: string; name: string; price: number; acrylicPrice: number | null }>).map((l) => ({
+    label: l.name,
+    description: '',
+    flatPrice: String(l.price),
+    extras: { id: l.id, category: LAYOUT_TYPE_LABELS[l.type] ?? l.type, acrylicPrice: l.acrylicPrice ?? '' },
+  })),
+};
+
+const CUSTOM_SIZE_SEED: SeedSpec = {
+  scope: 'BOTH',
+  name: 'Custom size limits (inches)',
+  items: [6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36, 40, 44].map((n) => ({
+    label: String(n), description: '', flatPrice: '0', extras: {},
+  })),
+};
+
+const SIDEBAR_TABS_SEED: SeedSpec = {
+  scope: 'BOTH',
+  name: 'Customizer sidebar tabs',
+  items: [
+    ['PRODUCTS', 'Products'], ['UPLOAD', 'Upload'], ['SELECT SIZE', 'Select size'], ['LAYOUTS & DESIGNS', 'Layouts & designs'],
+    ['WRAP & BORDER', 'Wrap & border'], ['HARDWARE & FINISH', 'Hardware & finish'], ['OPTIONS', 'Options'],
+  ].map(([id, label]) => ({ label, description: '', flatPrice: '0', extras: { id } })),
+};
+
+const TOOLBAR_SEED: SeedSpec = {
+  scope: 'BOTH',
+  name: 'Customizer top buttons',
+  items: [
+    ['save', 'Save'], ['add_text', 'Add text'], ['add_clipart', 'Add clipart'],
+    ['room_view', 'Room view'], ['view_3d', '3D view'], ['view_360', '360° view'],
+  ].map(([id, label]) => ({ label, description: '', flatPrice: '0', extras: { id } })),
+};
+
 const TABS: TabBlock[] = [
   {
     tab: 'SPECIALTY PRODUCTS',
@@ -94,36 +141,27 @@ const TABS: TabBlock[] = [
     ],
   },
   {
-    tab: 'PRODUCTS',
-    note: 'The product style cards a customer picks first.',
+    tab: 'SELECT SIZE',
     sections: [
       {
-        heading: 'Product styles',
+        heading: 'Custom size limits',
         entries: [
           {
-            kind: 'link',
-            title: 'Customizer products',
-            href: '/customization?tab=styles',
-            note: 'Add, hide, remove and reorder the Canvas and Acrylic style cards (Single Print, Wall Display, Split, ...).',
+            kind: 'category',
+            baseKey: 'custom_size_steps',
+            title: 'Inch steps offered in the Custom Size boxes (Height × Width). Add a smaller or larger number and it is placed in order automatically.',
+            seed: CUSTOM_SIZE_SEED,
           },
         ],
       },
     ],
   },
   {
-    tab: 'SELECT SIZE',
+    tab: 'CUSTOMIZER TABS & BUTTONS',
+    note: 'Rename, hide or reorder the left-hand tabs and the buttons across the top of the customizer.',
     sections: [
-      {
-        heading: 'Select Size',
-        entries: [
-          {
-            kind: 'link',
-            title: 'Select size',
-            href: '/sizes',
-            note: 'Every size, its price and its panel layout, per product style.',
-          },
-        ],
-      },
+      { heading: 'Left-hand tabs', entries: [{ kind: 'category', baseKey: 'sidebar_tabs', title: 'Tabs', seed: SIDEBAR_TABS_SEED }] },
+      { heading: 'Top buttons', entries: [{ kind: 'category', baseKey: 'toolbar_buttons', title: 'Buttons', seed: TOOLBAR_SEED }] },
     ],
   },
   {
@@ -139,9 +177,10 @@ const TABS: TabBlock[] = [
             seed: DESIGN_TEMPLATES_SEED,
           },
           {
-            kind: 'fixed',
-            title: 'Layout arrangements (Single Full Image, Landscape, Portrait, Square, ...)',
-            note: 'Each layout also defines how the picture is cut into panels, so layouts follow the product style. Add or hide whole product styles under Customizer products.',
+            kind: 'category',
+            baseKey: 'layouts',
+            title: 'Layout arrangements (Single Full Image, Landscape, Wall Display, Collage, ...). Rename, re-price, hide, reorder or add a cover image. New layout shapes need a developer, because each one defines how the photo is cut into panels.',
+            seed: LAYOUTS_SEED,
           },
         ],
       },
@@ -253,7 +292,7 @@ function groupByBaseKey(categories: OptionCategoryListItem[]) {
   return groups;
 }
 
-export function OptionsPanel({ material }: { material: 'CANVAS' | 'ACRYLIC' }) {
+export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC'; tabs: string[] }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [seeding, setSeeding] = useState<string | null>(null);
@@ -271,7 +310,7 @@ export function OptionsPanel({ material }: { material: 'CANVAS' | 'ACRYLIC' }) {
   ]);
   const unplaced = Array.from(groups.keys()).filter((k) => !placed.has(k));
   const matches = (scope?: string) => !scope || scope.toUpperCase() === 'BOTH' || scope.toUpperCase() === material;
-  const visibleTabs = TABS.map((block) => ({
+  const visibleTabs = TABS.filter((block) => tabs.includes(block.tab)).map((block) => ({
     ...block,
     sections: block.sections
       .filter((section) => matches(section.scope))
@@ -286,12 +325,16 @@ export function OptionsPanel({ material }: { material: 'CANVAS' | 'ACRYLIC' }) {
   // team can start editing (rename, re-price, change icons, hide, delete, add).
   const seedCategory = async (baseKey: string, seed: SeedSpec) => {
     setSeeding(baseKey);
+    let createdId: string | null = null;
     try {
+      // Created switched off and only turned on once every item is in, so customers never see a half-built list.
       const created = await apiClient.post<{ id: string }>('/admin/option-categories', {
         baseKey,
         materialScope: seed.scope,
         name: seed.name,
+        isActive: false,
       });
+      createdId = created.id;
       for (const item of seed.items) {
         await apiClient.post(`/admin/option-categories/${created.id}/items`, {
           label: item.label,
@@ -301,9 +344,17 @@ export function OptionsPanel({ material }: { material: 'CANVAS' | 'ACRYLIC' }) {
           extras: item.extras,
         });
       }
+      await apiClient.patch(`/admin/option-categories/${created.id}`, { isActive: true });
       await queryClient.invalidateQueries({ queryKey: ['option-categories'] });
       toast.success('Ready to edit. The storefront now reads this list.');
     } catch {
+      if (createdId) {
+        try {
+          await apiClient.delete(`/admin/option-categories/${createdId}`);
+        } catch {
+          // leave the switched-off draft; it is invisible to customers
+        }
+      }
       toast.error('Could not set this list up. Please try again.');
       await queryClient.invalidateQueries({ queryKey: ['option-categories'] });
     } finally {
@@ -394,14 +445,6 @@ export function OptionsPanel({ material }: { material: 'CANVAS' | 'ACRYLIC' }) {
 
   return (
     <div className="space-y-10">
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight">Customizer options</h2>
-        <p className="text-sm text-muted-foreground">
-          Every {material === 'CANVAS' ? 'canvas' : 'acrylic'} product uses these options. Each block is a tab of the
-          customizer, and each heading is a section a customer sees there. Changes show when the storefront is refreshed.
-        </p>
-      </div>
-
       {isLoading ? (
         <div className="space-y-2">
           <Skeleton className="h-20 w-full" />
@@ -413,10 +456,12 @@ export function OptionsPanel({ material }: { material: 'CANVAS' | 'ACRYLIC' }) {
         <>
           {visibleTabs.map((block) => (
             <section key={block.tab} className="space-y-5">
-              <div className="border-b pb-2">
-                <h2 className="text-lg font-semibold tracking-wide">{block.tab}</h2>
-                {block.note && <p className="text-xs text-muted-foreground">{block.note}</p>}
-              </div>
+              {(visibleTabs.length > 1 || block.note) && (
+                <div className="border-b pb-2">
+                  {visibleTabs.length > 1 && <h2 className="text-lg font-semibold tracking-wide">{block.tab}</h2>}
+                  {block.note && <p className="text-xs text-muted-foreground">{block.note}</p>}
+                </div>
+              )}
               {block.sections.map((section) => (
                 <div key={section.heading} className="space-y-2">
                   <h3 className="flex items-center gap-2 text-sm font-semibold">
@@ -432,7 +477,7 @@ export function OptionsPanel({ material }: { material: 'CANVAS' | 'ACRYLIC' }) {
             </section>
           ))}
 
-          <section className="space-y-5">
+          {tabs.includes('OPTIONS') && <section className="space-y-5">
             <div className="border-b pb-2">
               <h2 className="text-lg font-semibold tracking-wide">NOT CONNECTED TO THE STOREFRONT YET</h2>
               <p className="text-xs text-muted-foreground">
@@ -460,7 +505,7 @@ export function OptionsPanel({ material }: { material: 'CANVAS' | 'ACRYLIC' }) {
                 </Card>
               ))}
             </div>
-          </section>
+          </section>}
         </>
       )}
     </div>

@@ -38,7 +38,10 @@ export const SECTION_EXTRAS: Record<string, ExtraField[]> = {
   border_color: [{ key: "hex", label: "Swatch color", kind: "color" }],
   backgrounds: [{ key: "hex", label: "Swatch color", kind: "color" }],
   border_width: [{ key: "widthPx", label: "Line width (px)", kind: "number" }],
-  frame: [{ key: "color", label: "Frame color", kind: "color" }],
+  frame: [
+    { key: "color", label: "Frame color", kind: "color" },
+    { key: "group", label: "Group", kind: "text", hint: "Floating, Standard, Premium - or type a new group name to create one. Blank means Floating." },
+  ],
   wrap_style: [
     { key: "borderColor", label: "Edge color", kind: "color" },
     { key: "borderWidth", label: "Edge width (px)", kind: "number" },
@@ -56,6 +59,7 @@ export const SECTION_EXTRAS: Record<string, ExtraField[]> = {
     { key: "thicknessMm", label: "Thickness (mm)", kind: "number" },
     { key: "id", label: "Internal id", kind: "text", hint: "Leave blank to create automatically" },
   ],
+  layouts: [{ key: "acrylicPrice", label: "Acrylic price (₹)", kind: "number", hint: "Used when the customer is on an acrylic product. Leave blank to use the price above." }],
   design_templates: [
     { key: "category", label: "Group", kind: "text", hint: "e.g. Birthday, Wedding" },
     { key: "textPreset", label: "Text on the card", kind: "text" },
@@ -231,4 +235,23 @@ export function imageToIconDataUrl(file: File, maxSize = 192): Promise<string> {
     };
     img.src = url;
   });
+}
+
+/** Lists where a price makes no sense (they only hold a name, a number or a visibility switch). */
+export const NO_PRICE_KEYS = new Set(["custom_size_steps", "sidebar_tabs", "toolbar_buttons"]);
+
+/** Lists made of things that already exist in the storefront: they can be renamed, hidden and reordered, not added or deleted. */
+export const FIXED_LIST_KEYS = new Set(["sidebar_tabs", "toolbar_buttons"]);
+
+/** Lists where a brand-new item would have nothing behind it in the storefront, so only existing ones can be managed. */
+export const NO_ADD_KEYS = new Set(["sidebar_tabs", "toolbar_buttons", "layouts"]);
+
+/** The Customization-page tab each list belongs to (used for "Back" links). */
+export function customizationTabFor(baseKey: string): string {
+  if (baseKey === "custom_size_steps") return "sizes";
+  if (baseKey === "design_templates" || baseKey === "layouts") return "layouts";
+  if (["canvas_thickness", "wrap_style", "border_width", "border_color", "frame"].includes(baseKey)) return "wrap";
+  if (["acrylic_thickness", "backgrounds", "finish", "hardware", "display_option", "color_finishing"].includes(baseKey)) return "hardware";
+  if (baseKey === "sidebar_tabs" || baseKey === "toolbar_buttons") return "controls";
+  return "options";
 }

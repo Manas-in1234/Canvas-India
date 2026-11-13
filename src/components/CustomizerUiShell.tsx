@@ -1,3 +1,4 @@
+import { applyControls, controlLabel, KNOWN_TOOLBAR_IDS, useCustomizerControls } from '../api/customizerControls';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -422,81 +423,11 @@ export const CustomizerTopToolbar: React.FC<CustomizerTopToolbarProps> = ({
 
   const allExtraActions = [...builtInPreviewActions, ...extraActions];
 
-  return (
-    <div className="h-10 sm:h-12 bg-white border-b border-stone-200 px-2 sm:px-4 flex items-center justify-between shrink-0 z-20 overflow-x-auto no-scrollbar">
-      {/* Left Spacer (No Zoom/Rotate or duplicate product info in top toolbar) */}
-      <div className="flex items-center gap-1.5 shrink-0" />
-
-      {/* Right: [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW, 3D VIEW, 360° VIEW] */}
-      <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto">
-        {/* SAVE */}
-        <button
-          type="button"
-          onClick={onSave}
-          className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 rounded-lg text-[11px] sm:text-xs font-bold transition-all shadow-2xs hover:border-stone-400 cursor-pointer"
-          title="Save design to browser"
-        >
-          <Save className="w-3.5 h-3.5 text-[#0E4A93]" />
-          <span>SAVE</span>
-        </button>
-
-        {/* ADD TEXT */}
-        <button
-          type="button"
-          onClick={onToggleText}
-          className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
-            textActive
-              ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
-              : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
-          }`}
-          title="Add custom typography"
-        >
-          <Type className="w-3.5 h-3.5" />
-          <span>ADD TEXT</span>
-        </button>
-
-        {/* ADD CLIPART */}
-        <button
-          type="button"
-          onClick={onToggleClipart}
-          className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
-            clipartActive
-              ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
-              : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
-          }`}
-          title="Add clipart and stickers"
-        >
-          <Smile className="w-3.5 h-3.5" />
-          <span>ADD CLIPART</span>
-        </button>
-
-        {/* ROOM VIEW */}
-        {handleRoomView && (
-          <button
-            type="button"
-            disabled={isRoomViewDisabled}
-            aria-disabled={isRoomViewDisabled}
-            onClick={() => {
-              if (isRoomViewDisabled) return;
-              handleRoomView();
-            }}
-            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold border transition-all shadow-2xs ${
-              isRoomViewDisabled
-                ? 'bg-stone-100 text-stone-400 border-stone-200 opacity-50 cursor-not-allowed'
-                : isRoomViewActive
-                ? 'bg-[#0E4A93] text-white border-[#0E4A93] cursor-pointer'
-                : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400 cursor-pointer'
-            }`}
-            title={isRoomViewDisabled ? 'Upload an image first to enable Room View' : 'Preview on realistic wall'}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span>ROOM VIEW</span>
-          </button>
-        )}
-
-        {/* 3D VIEW & 360° VIEW (and any additional actions) */}
-        {allExtraActions.map((act) => {
-          const Icon = act.icon;
+  const controls = useCustomizerControls();
+  const L = (configId: string, builtIn: string) => (configId ? controlLabel(controls.toolbar, configId, builtIn) : builtIn);
+  const EXTRA_CONFIG_IDS: Record<string, string> = { 'shared-3d-view': 'view_3d', 'shared-360-view': 'view_360' };
+  const renderExtra = (act: CustomizerToolbarExtraAction) => {
+    const Icon = act.icon;
           const isDisabled = Boolean(act.disabled);
           return (
             <button
@@ -518,10 +449,113 @@ export const CustomizerTopToolbar: React.FC<CustomizerTopToolbarProps> = ({
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
-              <span>{act.label}</span>
+              <span>{L(EXTRA_CONFIG_IDS[act.id ?? ''] ?? '', act.label)}</span>
             </button>
           );
-        })}
+  };
+  const toolbarNodes: { configId: string; node: React.ReactNode }[] = [
+    {
+      configId: 'save',
+      node: (
+        <React.Fragment key="save">
+<button
+          type="button"
+          onClick={onSave}
+          className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 rounded-lg text-[11px] sm:text-xs font-bold transition-all shadow-2xs hover:border-stone-400 cursor-pointer"
+          title="Save design to browser"
+        >
+          <Save className="w-3.5 h-3.5 text-[#0E4A93]" />
+          <span>{L('save', 'SAVE')}</span>
+        </button>
+        </React.Fragment>
+      ),
+    },
+    {
+      configId: 'add_text',
+      node: (
+        <React.Fragment key="add_text">
+<button
+          type="button"
+          onClick={onToggleText}
+          className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
+            textActive
+              ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
+              : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
+          }`}
+          title="Add custom typography"
+        >
+          <Type className="w-3.5 h-3.5" />
+          <span>{L('add_text', 'ADD TEXT')}</span>
+        </button>
+        </React.Fragment>
+      ),
+    },
+    {
+      configId: 'add_clipart',
+      node: (
+        <React.Fragment key="add_clipart">
+<button
+          type="button"
+          onClick={onToggleClipart}
+          className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold border transition-all shadow-2xs cursor-pointer ${
+            clipartActive
+              ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
+              : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400'
+          }`}
+          title="Add clipart and stickers"
+        >
+          <Smile className="w-3.5 h-3.5" />
+          <span>{L('add_clipart', 'ADD CLIPART')}</span>
+        </button>
+        </React.Fragment>
+      ),
+    },
+    ...(handleRoomView
+      ? [
+          {
+            configId: 'room_view',
+            node: (
+              <React.Fragment key="room_view">
+<button
+            type="button"
+            disabled={isRoomViewDisabled}
+            aria-disabled={isRoomViewDisabled}
+            onClick={() => {
+              if (isRoomViewDisabled) return;
+              handleRoomView();
+            }}
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold border transition-all shadow-2xs ${
+              isRoomViewDisabled
+                ? 'bg-stone-100 text-stone-400 border-stone-200 opacity-50 cursor-not-allowed'
+                : isRoomViewActive
+                ? 'bg-[#0E4A93] text-white border-[#0E4A93] cursor-pointer'
+                : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-300 hover:border-stone-400 cursor-pointer'
+            }`}
+            title={isRoomViewDisabled ? 'Upload an image first to enable Room View' : 'Preview on realistic wall'}
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>{L('room_view', 'ROOM VIEW')}</span>
+          </button>
+              </React.Fragment>
+            ),
+          },
+        ]
+      : []),
+    ...allExtraActions.map((act) => ({
+      configId: EXTRA_CONFIG_IDS[act.id ?? ''] ?? '',
+      node: <React.Fragment key={act.id || act.label}>{renderExtra(act)}</React.Fragment>,
+    })),
+  ];
+  const visibleToolbarNodes = applyControls(toolbarNodes, controls.toolbar, (n) => n.configId || undefined, KNOWN_TOOLBAR_IDS);
+
+  return (
+    <div className="h-10 sm:h-12 bg-white border-b border-stone-200 px-2 sm:px-4 flex items-center justify-between shrink-0 z-20 overflow-x-auto no-scrollbar">
+      {/* Left Spacer (No Zoom/Rotate or duplicate product info in top toolbar) */}
+      <div className="flex items-center gap-1.5 shrink-0" />
+
+      {/* Right: [SAVE, ADD TEXT, ADD CLIPART, ROOM VIEW, 3D VIEW, 360° VIEW] */}
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto">
+        {visibleToolbarNodes.map((n) => n.node)}
 
         {/* Delete Selected Element (Text/Clipart) */}
         {showDelete && onDeleteSelectedItem && (
