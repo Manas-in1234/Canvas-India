@@ -14409,22 +14409,43 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     {activeMaterial === 'acrylic' && (
                       <>
                         {/* 4 corner metallic standoff mounts when standoff mounting is selected */}
-                        {(selectedHardwareId === 'acrylic-standoffs' || selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && !hasClip && (
-                          <>
-                            <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
-                              <div className="w-1 h-1 rounded-full bg-stone-700/60" />
-                            </div>
-                            <div className="absolute top-2 right-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
-                              <div className="w-1 h-1 rounded-full bg-stone-700/60" />
-                            </div>
-                            <div className="absolute bottom-2 left-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
-                              <div className="w-1 h-1 rounded-full bg-stone-700/60" />
-                            </div>
-                            <div className="absolute bottom-2 right-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
-                              <div className="w-1 h-1 rounded-full bg-stone-700/60" />
-                            </div>
-                          </>
-                        )}
+                        {(selectedHardwareId === 'acrylic-standoffs' || selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && !hasClip && (() => {
+                          // Fixed pixel bolts looked fine on the normal-size customizer
+                          // canvas, but Room View renders the product true-to-scale -
+                          // often much smaller - so the same fixed size/offset made them
+                          // look oversized and bunched together near one corner instead
+                          // of small corner mounts. Scale both with the panel's actual
+                          // rendered width instead.
+                          const boltSize = Math.max(5, Math.min(14, roomProductWidth * 0.05));
+                          const boltOffset = Math.max(3, Math.min(10, roomProductWidth * 0.035));
+                          const dotSize = Math.max(2, boltSize * 0.35);
+                          const corners: Array<{ top?: number; bottom?: number; left?: number; right?: number }> = [
+                            { top: boltOffset, left: boltOffset },
+                            { top: boltOffset, right: boltOffset },
+                            { bottom: boltOffset, left: boltOffset },
+                            { bottom: boltOffset, right: boltOffset }
+                          ];
+                          return (
+                            <>
+                              {corners.map((pos, i) => (
+                                <div
+                                  key={i}
+                                  className="absolute rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center"
+                                  style={{
+                                    width: `${boltSize}px`,
+                                    height: `${boltSize}px`,
+                                    top: pos.top !== undefined ? `${pos.top}px` : undefined,
+                                    bottom: pos.bottom !== undefined ? `${pos.bottom}px` : undefined,
+                                    left: pos.left !== undefined ? `${pos.left}px` : undefined,
+                                    right: pos.right !== undefined ? `${pos.right}px` : undefined
+                                  }}
+                                >
+                                  <div className="rounded-full bg-stone-700/60" style={{ width: `${dotSize}px`, height: `${dotSize}px` }} />
+                                </div>
+                              ))}
+                            </>
+                          );
+                        })()}
                         {/* Crystal optical acrylic glass gloss sheen */}
                         <div
                           className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
