@@ -2811,8 +2811,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         setLayoutSubTab('LAYOUTS');
       }
     }
-    beginPreloader();
-    endPreloader(PRELOADER_MIN_MS);
   };
 
   const [selectedProductTypeId, setSelectedProductTypeId] = useState<string>(() =>
