@@ -2788,6 +2788,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return 'UPLOAD';
   });
 
+  // Temporarily dismisses the mobile overlay (View Preview / the X button)
+  // WITHOUT changing activeTab, so the customer stays on whatever section
+  // they were in (Select Size, Layouts, etc) instead of being bounced to
+  // Upload - reopening it (any tab tap) lands back where they actually were.
+  const [isPanelHiddenMobile, setIsPanelHiddenMobile] = useState(false);
+
   useEffect(() => {
     const requestedTab = searchParams.get('tab')?.toUpperCase();
     if (requestedTab === 'PRODUCTS') {
@@ -2828,6 +2834,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   const handleSelectTab = (tabId: ToolbarTab) => {
     setActiveTab(tabId);
+    setIsPanelHiddenMobile(false);
     if (tabId === 'POP ART STYLE') {
       setIsPopArtStyleModalOpen(true);
       return;
@@ -9584,8 +9591,24 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               ? `${liveOrFallbackHardware.length} Hardware`
               : 'Specifications'
           }
-          mobileMode={activeTab === mobileRestingTab ? 'inline' : 'overlay'}
-          onCloseMobile={() => setActiveTab(mobileRestingTab)}
+          mobileMode={isPanelHiddenMobile ? 'hidden' : activeTab === mobileRestingTab ? 'inline' : 'overlay'}
+          onCloseMobile={() => setIsPanelHiddenMobile(true)}
+          prevStep={{
+            label: prevTab.label,
+            disabled: activeTabIndex === 0,
+            onClick: () => handleSelectTab(prevTab.id)
+          }}
+          nextStep={{
+            label: nextTab.label,
+            disabled: activeTabIndex === toolbarItems.length - 1,
+            onClick: () => handleSelectTab(nextTab.id)
+          }}
+          previewAction={
+            (activeTab === 'SELECT SIZE' || activeTab === 'LAYOUTS & DESIGNS' || activeTab === 'WRAP & BORDER' || activeTab === 'HARDWARE & FINISH')
+              ? { label: 'View Preview', onClick: () => setIsPanelHiddenMobile(true) }
+              : undefined
+          }
+          onAddToCart={handleAddToCart}
         >
           {/* ---------------------------- PRODUCTS ---------------------------- */}
           {activeTab === 'PRODUCTS' && (
@@ -12052,6 +12075,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               disabled: activeTabIndex === toolbarItems.length - 1,
               onClick: () => handleSelectTab(nextTab.id)
             }}
+            reselectAction={
+              activeTab === 'LAYOUTS & DESIGNS'
+                ? { label: 'Select Layouts & Design', onClick: () => handleSelectTab('LAYOUTS & DESIGNS') }
+                : activeTab === 'WRAP & BORDER'
+                ? { label: 'Select Another Wrap or Border', onClick: () => handleSelectTab('WRAP & BORDER') }
+                : activeTab === 'HARDWARE & FINISH'
+                ? { label: 'Select Another Hardware or Finish', onClick: () => handleSelectTab('HARDWARE & FINISH') }
+                : toolbarItems.some((t) => t.id === 'SELECT SIZE')
+                ? { label: 'Select Another Size', onClick: () => handleSelectTab('SELECT SIZE') }
+                : toolbarItems.some((t) => t.id === 'LAYOUTS & DESIGNS')
+                ? { label: 'Select Layouts & Design', onClick: () => handleSelectTab('LAYOUTS & DESIGNS') }
+                : undefined
+            }
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             bottomSlot={
