@@ -247,6 +247,10 @@ export interface CustomizerPanelProps {
   // actually see the effect of their choice instead of staying stuck behind
   // the drawer. Mobile overlay tabs only (Select Size, Layouts & Designs).
   previewAction?: { label: string; onClick: () => void };
+  // Shown in place of the (disabled) Continue button once nextStep is
+  // disabled - i.e. this is the last toolbar step, so "continue" should
+  // mean finishing the order, not advancing to a tab that doesn't exist.
+  onAddToCart?: () => void;
 }
 
 export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
@@ -258,7 +262,8 @@ export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
   onCloseMobile,
   prevStep,
   nextStep,
-  previewAction
+  previewAction,
+  onAddToCart
 }) => {
   const resolvedMeta = metaText || badge;
   const isOverlay = mobileMode === 'overlay';
@@ -318,19 +323,30 @@ export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
             </button>
           )}
           {nextStep && (
-            <button
-              type="button"
-              onClick={nextStep.onClick}
-              disabled={nextStep.disabled}
-              className={`flex-1 min-w-0 py-2.5 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-colors ${
-                nextStep.disabled
-                  ? 'opacity-40 cursor-not-allowed bg-stone-200 text-stone-400'
-                  : 'bg-[#0E4A93] hover:bg-[#09356A] text-white shadow-xs cursor-pointer'
-              }`}
-            >
-              <span className="truncate">Continue: {nextStep.label}</span>
-              <ChevronRight className="w-4 h-4 shrink-0" />
-            </button>
+            nextStep.disabled && onAddToCart ? (
+              <button
+                type="button"
+                onClick={onAddToCart}
+                className="flex-1 min-w-0 py-2.5 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-colors bg-[#E8752A] hover:bg-[#d6651d] text-white shadow-xs cursor-pointer"
+              >
+                <ShoppingCart className="w-4 h-4 shrink-0" />
+                <span className="truncate">Add to Cart</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={nextStep.onClick}
+                disabled={nextStep.disabled}
+                className={`flex-1 min-w-0 py-2.5 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-colors ${
+                  nextStep.disabled
+                    ? 'opacity-40 cursor-not-allowed bg-stone-200 text-stone-400'
+                    : 'bg-[#0E4A93] hover:bg-[#09356A] text-white shadow-xs cursor-pointer'
+                }`}
+              >
+                <span className="truncate">Continue: {nextStep.label}</span>
+                <ChevronRight className="w-4 h-4 shrink-0" />
+              </button>
+            )
           )}
         </div>
       )}

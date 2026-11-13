@@ -9604,10 +9604,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             onClick: () => handleSelectTab(nextTab.id)
           }}
           previewAction={
-            (activeTab === 'SELECT SIZE' || activeTab === 'LAYOUTS & DESIGNS' || activeTab === 'WRAP & BORDER')
+            (activeTab === 'SELECT SIZE' || activeTab === 'LAYOUTS & DESIGNS' || activeTab === 'WRAP & BORDER' || activeTab === 'HARDWARE & FINISH')
               ? { label: 'View Preview', onClick: () => setIsPanelHiddenMobile(true) }
               : undefined
           }
+          onAddToCart={handleAddToCart}
         >
           {/* ---------------------------- PRODUCTS ---------------------------- */}
           {activeTab === 'PRODUCTS' && (
@@ -12079,6 +12080,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 ? { label: 'Select Layouts & Design', onClick: () => handleSelectTab('LAYOUTS & DESIGNS') }
                 : activeTab === 'WRAP & BORDER'
                 ? { label: 'Select Another Wrap or Border', onClick: () => handleSelectTab('WRAP & BORDER') }
+                : activeTab === 'HARDWARE & FINISH'
+                ? { label: 'Select Another Hardware or Finish', onClick: () => handleSelectTab('HARDWARE & FINISH') }
                 : toolbarItems.some((t) => t.id === 'SELECT SIZE')
                 ? { label: 'Select Another Size', onClick: () => handleSelectTab('SELECT SIZE') }
                 : toolbarItems.some((t) => t.id === 'LAYOUTS & DESIGNS')
