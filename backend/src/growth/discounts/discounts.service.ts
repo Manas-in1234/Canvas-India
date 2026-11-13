@@ -140,7 +140,14 @@ export class DiscountsService {
   async update(id: string, dto: UpdateDiscountDto) {
     const current = await this.findOne(id);
 
-    const startsAt = dto.startsAt ? new Date(dto.startsAt) : current.startsAt;
+    let code: string | undefined;
+    if (dto.code !== undefined) {
+      code = typeof dto.code === 'string' ? dto.code.trim().toUpperCase() : '';
+      if (!code || code.length > 80) throw new BadRequestException('Enter a discount code of up to 80 characters');
+    }
+    const startUpdate = dto.startsAt == null ? dto.startsAt : new Date(dto.startsAt);
+    const startsAt = startUpdate === undefined ? current.startsAt : startUpdate;
+    if (startsAt && Number.isNaN(startsAt.getTime())) throw new BadRequestException('Enter a valid start date');
     const expiryUpdate = dto.expiresAt == null ? dto.expiresAt : new Date(dto.expiresAt);
     if (expiryUpdate instanceof Date && Number.isNaN(expiryUpdate.getTime())) {
       throw new BadRequestException('Enter a valid expiration date');
@@ -153,49 +160,72 @@ export class DiscountsService {
 
     const discountType = dto.discountType ?? current.discountType;
     const value = dto.value !== undefined ? dto.value : Number(current.value);
+    if (!['PERCENTAGE', 'FIXED_AMOUNT'].includes(discountType) || !Number.isFinite(value) || value <= 0) {
+      throw new BadRequestException('Choose a discount type and enter a positive value');
+    }
+    if (dto.usageLimit != null && (!Number.isInteger(dto.usageLimit) || dto.usageLimit < 1)) {
+      throw new BadRequestException('Usage limit must be a positive whole number');
+    }
+    if (dto.minOrderSubtotal != null && (!Number.isFinite(dto.minOrderSubtotal) || dto.minOrderSubtotal < 0)) {
+      throw new BadRequestException('Minimum order subtotal must be zero or more');
+    }
 
     if (discountType === 'PERCENTAGE' && value > 100) {
       throw new BadRequestException('Percentage discount cannot exceed 100%');
     }
 
+    if (dto.maxDiscountAmount != null && (!Number.isFinite(dto.maxDiscountAmount) || dto.maxDiscountAmount <= 0)) {
+      throw new BadRequestException('Maximum discount must be greater than zero');
+    }
+    if (dto.perCustomerLimit != null && (!Number.isInteger(dto.perCustomerLimit) || dto.perCustomerLimit < 1)) {
+      throw new BadRequestException('Per-customer limit must be a positive whole number');
+    }
     if (dto.customerSegmentId) {
       await this.segmentsService.findOne(dto.customerSegmentId);
     }
 
-    return this.prisma.discount.update({
-      where: { id },
-      data: {
-        description: dto.description,
-        discountType: dto.discountType,
-        value: dto.value !== undefined ? new Prisma.Decimal(dto.value) : undefined,
-        maxDiscountAmount:
-          dto.maxDiscountAmount !== undefined
-            ? dto.maxDiscountAmount
-              ? new Prisma.Decimal(dto.maxDiscountAmount)
-              : null
-            : undefined,
-        minOrderSubtotal:
-          dto.minOrderSubtotal !== undefined
-            ? dto.minOrderSubtotal
-              ? new Prisma.Decimal(dto.minOrderSubtotal)
-              : null
-            : undefined,
-        usageLimit: dto.usageLimit,
-        perCustomerLimit: dto.perCustomerLimit,
-        startsAt: dto.startsAt ? new Date(dto.startsAt) : undefined,
-        expiresAt: expiryUpdate,
-        isActive: dto.isActive,
-        isExclusive: dto.isExclusive,
-        applicableCategoryIds: dto.applicableCategoryIds,
-        applicableProductIds: dto.applicableProductIds,
-        customerSegmentId: dto.customerSegmentId,
-        campaignId: dto.campaignId,
-      },
-      include: {
-        campaign: true,
-        customerSegment: true,
-      },
-    });
+    try {
+      return await this.prisma.discount.update({
+        where: { id },
+        data: {
+          code,
+          description: dto.description,
+          discountType: dto.discountType,
+          value: dto.value !== undefined ? new Prisma.Decimal(dto.value) : undefined,
+          maxDiscountAmount:
+            dto.maxDiscountAmount !== undefined
+              ? dto.maxDiscountAmount
+                ? new Prisma.Decimal(dto.maxDiscountAmount)
+                : null
+              : undefined,
+          minOrderSubtotal:
+            dto.minOrderSubtotal !== undefined
+              ? dto.minOrderSubtotal
+                ? new Prisma.Decimal(dto.minOrderSubtotal)
+                : null
+              : undefined,
+          usageLimit: dto.usageLimit,
+          perCustomerLimit: dto.perCustomerLimit,
+          startsAt: startUpdate,
+          expiresAt: expiryUpdate,
+          isActive: dto.isActive,
+          isExclusive: dto.isExclusive,
+          applicableCategoryIds: dto.applicableCategoryIds,
+          applicableProductIds: dto.applicableProductIds,
+          customerSegmentId: dto.customerSegmentId,
+          campaignId: dto.campaignId,
+        },
+        include: {
+          campaign: true,
+          customerSegment: true,
+        },
+      });
+    } catch (error) {
+      if ((error as { code?: string }).code === 'P2002') {
+        throw new ConflictException('That discount code already exists');
+      }
+      throw error;
+    }
   }
 
   async delete(id: string) {
