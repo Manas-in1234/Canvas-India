@@ -15,6 +15,8 @@ export interface SelectSizeShapeModalProps {
   productName: string;
   /** Styles added from the admin have no size list of their own; show the Single Print one. */
   singlePrintMode?: boolean;
+  /** A style built around one uploaded (traced) shape: every size is drawn in that shape, like Heart Canvas. */
+  shapeStyle?: { id: string; name: string; clipPathType: string; clipPathValue: string } | null;
   currentShapeId?: string;
   currentSizeId?: string;
   isCustomSize?: boolean;
@@ -47,6 +49,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   productId,
   productName,
   singlePrintMode = false,
+  shapeStyle = null,
   currentShapeId = 'shape-square',
   currentSizeId = '',
   isCustomSize = false,
@@ -69,7 +72,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   const isSinglePrint = useMemo(() => {
     const norm = productId.toLowerCase();
     return (
-      singlePrintMode ||
+      (singlePrintMode && !shapeStyle) ||
       norm === 'canvas-single' ||
       norm === 'canvas-classic' ||
       norm === 'acrylic-print' ||
@@ -81,7 +84,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
       norm.includes('lyric') ||
       norm.includes('pop')
     );
-  }, [productId, singlePrintMode]);
+  }, [productId, singlePrintMode, shapeStyle]);
 
   // Active Category Tab for Single Print: RECOMMENDED (default), SQUARE, PANORAMIC, LARGE, SMALL
   const [activeCategory, setActiveCategory] = useState<SinglePrintCategory>('RECOMMENDED');
@@ -1013,8 +1016,12 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
 
   // Options for shaped products (Round, Triangle, Heart, Oval)
   const shapedProductOptions = useMemo(() => {
+    if (shapeStyle) {
+      // One uploaded shape: offer the square sizes, each in that shape.
+      return singlePrintSizes.SQUARE.map((o) => ({ ...o, shapeId: shapeStyle.id, shapeName: shapeStyle.name }));
+    }
     return getProductSizeShapeOptions(productId, material);
-  }, [productId, material]);
+  }, [productId, material, shapeStyle, singlePrintSizes]);
 
   // All valid options to pick from
   const currentCategoryOptions = useMemo(() => {
@@ -1129,6 +1136,20 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
 
     const strokeColor = isSelected ? '#0E4A93' : '#94a3b8';
     const fillColor = isSelected ? '#eff6ff' : '#f8fafc';
+
+    // 0. The style's own traced shape (path is in 0-1 space)
+    if (shapeStyle && opt.shapeId === shapeStyle.id && shapeStyle.clipPathType === 'SVG_PATH') {
+      return (
+        <svg viewBox="0 0 160 110" className="w-full h-full max-h-24">
+          <g transform="translate(40 7) scale(80 96)">
+            <path d={shapeStyle.clipPathValue} fill={fillColor} stroke={strokeColor} strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+          </g>
+          <text x="80" y="58" fill="#0E4A93" fontSize="10" fontWeight="bold" textAnchor="middle">
+            {opt.widthInches}&quot;
+          </text>
+        </svg>
+      );
+    }
 
     // 1. Round Canvas
     if (isRound) {

@@ -15837,6 +15837,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         productId={selectedProductTypeId}
         productName={selectedProductType.name}
         singlePrintMode={isAdminAddedStyle}
+        shapeStyle={(() => {
+          // A style built around one uploaded shape (its id is 'custom-<id>') gets that shape drawn on every size.
+          if (!isAdminAddedStyle) return null;
+          const ids = selectedProductType.supportedShapeIds;
+          const key = ids && ids.length === 1 ? ids[0] : selectedProductType.defaultShape;
+          if (!key || !key.startsWith('custom-')) return null;
+          const found = customShapes.find((c) => `custom-${c.id}` === key);
+          return found ? { id: key, name: found.name, clipPathType: found.clipPathType, clipPathValue: found.clipPathValue } : null;
+        })()}
         currentShapeId={selectedShapeId}
         currentSizeId={selectedSizeId}
         isCustomSize={isCustomSize}

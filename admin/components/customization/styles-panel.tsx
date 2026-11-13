@@ -23,7 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShapeDetectDialog, ShapeManagerDialog, ShapeThumb, ShapeToolbar, useShapes, type ShapeApprovedHandler } from '@/components/customization/shape-manager';
+import { ShapeDetectDialog, ShapeManagerDialog, ShapeThumb, ShapeToolbar, shapeKey, useShapes, type ShapeApprovedHandler } from '@/components/customization/shape-manager';
 import type { CustomShapeListItem } from '@/lib/types/shape';
 import { formatCurrency } from '@/lib/format';
 
@@ -44,12 +44,6 @@ const SHAPES: Array<{ id: string; label: string }> = [
   { id: 'shape-hexagon', label: 'Hexagon' },
   { id: 'shape-triangle', label: 'Triangle' },
 ];
-
-/**
- * The id a style stores for a shape. The storefront names built-in shapes by their own id
- * ('shape-heart') but refers to an uploaded, traced shape as 'custom-<id>'.
- */
-const shapeKey = (s: Pick<CustomShapeListItem, 'id' | 'origin'>) => (s.origin === 'ADMIN_UPLOADED' ? `custom-${s.id}` : s.id);
 
 /** The tabs and views a style can switch on or off, worded like the customizer's sidebar. */
 const FEATURES: Array<{ key: string; label: string; canvasOnly?: boolean }> = [

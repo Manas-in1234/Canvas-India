@@ -363,7 +363,7 @@ export default {
         const shapes = new WorkerShapes(prisma);
         const review = pathname.match(/^\/api\/v1\/admin\/shapes\/([^/]+)\/(approve|reject)$/);
         const upload = pathname === '/api/v1/admin/shapes/upload' && method === 'POST';
-        const permission = upload ? 'shapes.create' : review && method === 'POST'
+        const permission = upload || method === 'PATCH' || method === 'DELETE' ? 'shapes.create' : review && method === 'POST'
           ? `shapes.${review[2]}` : 'shapes.view';
         const denied = checkPermission(user, [permission], request);
         if (denied) return denied;
@@ -376,6 +376,8 @@ export default {
           return jsonResponse(await shapes.list(query.status), 200, request);
         const detail = pathname.match(/^\/api\/v1\/admin\/shapes\/([^/]+)$/);
         if (method === 'GET' && detail) return jsonResponse(await shapes.get(detail[1]), 200, request);
+        if (method === 'PATCH' && detail) return jsonResponse(await shapes.updateMetadata(detail[1], await request.json(), user.id), 200, request);
+        if (method === 'DELETE' && detail) return jsonResponse(await shapes.remove(detail[1], user.id), 200, request);
         return jsonResponse({ message: 'Not found' }, 404, request);
       }
       // -------------------------------------------------------------

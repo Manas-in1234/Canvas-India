@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { ArrowLeft, ScanLine, Upload } from "lucide-react";
 import { apiClient, ApiError } from "@/lib/api-client";
 import type { CustomShapeListItem, ShapePriceMode } from "@/lib/types/shape";
+import type { CustomizerProductType } from "@/lib/types/customizer-product-type";
 import { usePermission } from "@/lib/auth/use-permission";
 import { formatDate } from "@/lib/format";
 import { StatusBadge } from "@/components/status-badge";
@@ -28,6 +29,13 @@ import {
  * Customization page's Add / Edit style dialog. It replaces the old standalone
  * "Shape detection" screen; the same endpoints, rules and permissions apply.
  */
+
+/**
+ * The id a style stores for a shape. The storefront names built-in shapes by their own id
+ * ('shape-heart') but refers to an uploaded, traced shape as 'custom-<id>'.
+ */
+export const shapeKey = (s: Pick<CustomShapeListItem, "id" | "origin">) =>
+  s.origin === "ADMIN_UPLOADED" ? `custom-${s.id}` : s.id;
 
 /** Called after a shape is approved. addAsStyle = the admin also wants it as a card on the Products tab. */
 export type ShapeApprovedHandler = (
@@ -260,6 +268,7 @@ function ShapeDetail({
       shape={shape}
       id={id}
       back={back}
+      onBack={onBack}
       onApproved={onApproved}
       styleLabel={styleLabel}
     />
@@ -270,12 +279,14 @@ function ShapeDetailBody({
   shape,
   id,
   back,
+  onBack,
   onApproved,
   styleLabel,
 }: {
   shape: CustomShapeListItem;
   id: string;
   back: React.ReactNode;
+  onBack: () => void;
   onApproved?: ShapeApprovedHandler;
   styleLabel?: string;
 }) {
@@ -350,6 +361,42 @@ function ShapeDetailBody({
     },
     onError: (err: unknown) =>
       toast.error(errorText(err, "Failed to update shape")),
+  });
+
+  // Removing a shape also tidies the style cards that depend on it.
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const stylesQuery = useQuery({
+    queryKey: ["customizer-product-types"],
+    enabled: confirmRemove,
+    queryFn: () => apiClient.get<CustomizerProductType[]>("/admin/customizer-product-types"),
+  });
+  const key = shapeKey(shape);
+  const usingStyles = (stylesQuery.data ?? []).filter((st) => st.supportedShapeIds?.includes(key) || st.defaultShapeId === key);
+  const soleStyles = usingStyles.filter((st) => (st.supportedShapeIds ?? []).every((x) => x === key));
+  const sharedStyles = usingStyles.filter((st) => !soleStyles.includes(st));
+
+  const remove = useMutation({
+    mutationFn: async () => {
+      // Cards that offer only this shape go away; cards that offer others just lose it.
+      for (const st of soleStyles) await apiClient.delete(`/admin/customizer-product-types/${st.id}`);
+      for (const st of sharedStyles) {
+        const left = (st.supportedShapeIds ?? []).filter((x) => x !== key);
+        await apiClient.patch(`/admin/customizer-product-types/${st.id}`, {
+          supportedShapeIds: left,
+          defaultShapeId: st.defaultShapeId === key ? (left[0] ?? null) : st.defaultShapeId,
+        });
+      }
+      return apiClient.delete(`/admin/shapes/${id}`);
+    },
+    onSuccess: () => {
+      toast.success(soleStyles.length ? `Shape and ${soleStyles.length} style card(s) removed` : "Shape removed");
+      queryClient.invalidateQueries({ queryKey: ["shapes"] });
+      queryClient.invalidateQueries({ queryKey: ["customizer-product-types"] });
+      queryClient.invalidateQueries({ queryKey: ["size-presets"] });
+      setConfirmRemove(false);
+      onBack();
+    },
+    onError: (err: unknown) => toast.error(errorText(err, "Failed to remove shape")),
   });
 
   const isBuiltIn = shape.origin === "BUILT_IN";
@@ -475,6 +522,11 @@ function ShapeDetailBody({
                   : "Disable shape"}
               </Button>
             )}
+            {!isBuiltIn && (
+              <Button variant="destructive" className="ml-auto" onClick={() => setConfirmRemove(true)}>
+                Remove shape
+              </Button>
+            )}
           </div>
         </div>
       )}
@@ -499,6 +551,46 @@ function ShapeDetailBody({
           </div>
         )}
       </div>
+
+      <Dialog open={confirmRemove} onOpenChange={setConfirmRemove}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove &quot;{shape.name}&quot;?</DialogTitle>
+            <DialogDescription>
+              The shape and its uploaded image are deleted for good. Customers can no longer pick it. To keep it but
+              hide it, use Disable shape instead.
+            </DialogDescription>
+          </DialogHeader>
+          {stylesQuery.isLoading ? (
+            <Skeleton className="h-10 w-full" />
+          ) : (
+            <div className="space-y-2 text-sm">
+              {soleStyles.length > 0 && (
+                <p>
+                  These style cards offer only this shape and will be removed from the Products tab:{" "}
+                  <strong>{soleStyles.map((st) => st.name).join(", ")}</strong>.
+                </p>
+              )}
+              {sharedStyles.length > 0 && (
+                <p>
+                  These styles keep working and just lose this shape:{" "}
+                  <strong>{sharedStyles.map((st) => st.name).join(", ")}</strong>.
+                </p>
+              )}
+              {usingStyles.length === 0 && !stylesQuery.isError && <p className="text-muted-foreground">No style uses this shape.</p>}
+              {stylesQuery.isError && <p className="text-destructive">Could not check which styles use it. Remove them first, or try again.</p>}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmRemove(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" disabled={remove.isPending || stylesQuery.isLoading || stylesQuery.isError} onClick={() => remove.mutate()}>
+              {remove.isPending ? "Removing…" : "Remove shape"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {canReview && (
         <div className="space-y-3 rounded-md border p-4">
