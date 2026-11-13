@@ -231,6 +231,12 @@ export interface CustomizerPanelProps {
   // reachable below it rather than hidden behind an overlay.
   mobileMode?: 'overlay' | 'inline';
   onCloseMobile?: () => void;
+  // Mobile-only "Back"/"Continue" footer so there's a clear way to move to
+  // the next toolbar step without hunting for the sidebar tab strip behind
+  // the overlay. Desktop already has equivalent chevrons on the canvas
+  // itself, so these only render when the panel is an overlay on mobile.
+  prevStep?: { label: string; disabled: boolean; onClick: () => void };
+  nextStep?: { label: string; disabled: boolean; onClick: () => void };
 }
 
 export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
@@ -239,7 +245,9 @@ export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
   badge,
   children,
   mobileMode = 'overlay',
-  onCloseMobile
+  onCloseMobile,
+  prevStep,
+  nextStep
 }) => {
   const resolvedMeta = metaText || badge;
   const isOverlay = mobileMode === 'overlay';
@@ -266,6 +274,40 @@ export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
       <div className="flex-1 md:flex-1 overflow-y-auto min-h-0 flex flex-col pb-[max(1rem,env(safe-area-inset-bottom,16px))]">
         {children}
       </div>
+      {isOverlay && (prevStep || nextStep) && (
+        <div className="md:hidden shrink-0 border-t border-stone-200 bg-white p-3 flex items-center gap-2 pb-[max(0.75rem,env(safe-area-inset-bottom,12px))]">
+          {prevStep && (
+            <button
+              type="button"
+              onClick={prevStep.onClick}
+              disabled={prevStep.disabled}
+              className={`flex-1 min-w-0 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-colors ${
+                prevStep.disabled
+                  ? 'opacity-40 cursor-not-allowed border-stone-200 text-stone-400'
+                  : 'border-stone-300 text-stone-700 hover:bg-stone-50 cursor-pointer'
+              }`}
+            >
+              <ChevronLeft className="w-4 h-4 shrink-0" />
+              <span className="truncate">{prevStep.label}</span>
+            </button>
+          )}
+          {nextStep && (
+            <button
+              type="button"
+              onClick={nextStep.onClick}
+              disabled={nextStep.disabled}
+              className={`flex-1 min-w-0 py-2.5 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-colors ${
+                nextStep.disabled
+                  ? 'opacity-40 cursor-not-allowed bg-stone-200 text-stone-400'
+                  : 'bg-[#0E4A93] hover:bg-[#09356A] text-white shadow-xs cursor-pointer'
+              }`}
+            >
+              <span className="truncate">Continue: {nextStep.label}</span>
+              <ChevronRight className="w-4 h-4 shrink-0" />
+            </button>
+          )}
+        </div>
+      )}
     </section>
   );
 };

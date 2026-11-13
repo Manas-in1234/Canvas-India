@@ -9586,6 +9586,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           }
           mobileMode={activeTab === mobileRestingTab ? 'inline' : 'overlay'}
           onCloseMobile={() => setActiveTab(mobileRestingTab)}
+          prevStep={{
+            label: prevTab.label,
+            disabled: activeTabIndex === 0,
+            onClick: () => handleSelectTab(prevTab.id)
+          }}
+          nextStep={{
+            label: nextTab.label,
+            disabled: activeTabIndex === toolbarItems.length - 1,
+            onClick: () => handleSelectTab(nextTab.id)
+          }}
         >
           {/* ---------------------------- PRODUCTS ---------------------------- */}
           {activeTab === 'PRODUCTS' && (
