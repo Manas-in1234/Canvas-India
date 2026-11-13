@@ -141,7 +141,11 @@ export class DiscountsService {
     const current = await this.findOne(id);
 
     const startsAt = dto.startsAt ? new Date(dto.startsAt) : current.startsAt;
-    const expiresAt = dto.expiresAt ? new Date(dto.expiresAt) : current.expiresAt;
+    const expiryUpdate = dto.expiresAt == null ? dto.expiresAt : new Date(dto.expiresAt);
+    if (expiryUpdate instanceof Date && Number.isNaN(expiryUpdate.getTime())) {
+      throw new BadRequestException('Enter a valid expiration date');
+    }
+    const expiresAt = expiryUpdate === undefined ? current.expiresAt : expiryUpdate;
 
     if (startsAt && expiresAt && startsAt >= expiresAt) {
       throw new BadRequestException('Expiration date must be after start date');
@@ -179,7 +183,7 @@ export class DiscountsService {
         usageLimit: dto.usageLimit,
         perCustomerLimit: dto.perCustomerLimit,
         startsAt: dto.startsAt ? new Date(dto.startsAt) : undefined,
-        expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
+        expiresAt: expiryUpdate,
         isActive: dto.isActive,
         isExclusive: dto.isExclusive,
         applicableCategoryIds: dto.applicableCategoryIds,

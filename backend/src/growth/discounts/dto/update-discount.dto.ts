@@ -51,7 +51,7 @@ export class UpdateDiscountDto {
 
   @IsDateString()
   @IsOptional()
-  expiresAt?: string;
+  expiresAt?: string | null;
 
   @IsBoolean()
   @IsOptional()
