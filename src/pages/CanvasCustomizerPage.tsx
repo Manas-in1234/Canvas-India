@@ -2418,8 +2418,13 @@ const renderFloatingFrameContainer = (
     isMultiPanel?: boolean;
     scale?: number;
     // Pass the canvas shape's own clip-path when the frame should follow a
-    // round/oval/heart/triangle shape instead of the default rectangle.
+    // heart/triangle shape instead of the default rectangle.
     shapeClipPath?: string;
+    // Round/oval shapes use CSS border-radius instead of clip-path - clip-path
+    // combined with the drop-shadow filter rasterizes circles/ellipses as a
+    // visibly faceted polygon at small sizes (e.g. Room View), while
+    // border-radius stays smooth at any size.
+    shapeBorderRadius?: string;
   }
 ) => {
   const frame = FRAME_OPTIONS.find((f) => f.id === opts.frameId);
@@ -2464,6 +2469,37 @@ const renderFloatingFrameContainer = (
   // at each nested, padded layer, so each layer traces a smaller copy of the
   // same shape and the padding between them reads as a shape-following ring
   // instead of a rectangular frame around a round print.
+  if (opts.shapeBorderRadius) {
+    const radius = opts.shapeBorderRadius;
+    return (
+      <div
+        className="relative select-none"
+        style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.42)) drop-shadow(0 6px 14px rgba(0,0,0,0.26))' }}
+      >
+        <div
+          className="relative"
+          style={{
+            padding: `${mouldingPadding}px`,
+            background: mouldingGradient,
+            borderRadius: radius
+          }}
+        >
+          <div
+            className="relative bg-[#0b0c0e] overflow-hidden"
+            style={{
+              padding: `${gapPadding}px`,
+              borderRadius: radius
+            }}
+          >
+            <div className="relative overflow-hidden" style={{ borderRadius: radius }}>
+              {content}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (opts.shapeClipPath) {
     const clip = opts.shapeClipPath;
     return (
@@ -13069,7 +13105,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         displayWidthInches,
                         displayHeightInches,
                         aspectRatio: printAspect,
-                        shapeClipPath: isRectangularShape ? undefined : currentShape.clipPathStyle
+                        shapeBorderRadius: !isRectangularShape && currentShape.id === 'shape-circle'
+                          ? '9999px'
+                          : !isRectangularShape && currentShape.id === 'shape-oval'
+                          ? '50%'
+                          : undefined,
+                        shapeClipPath: !isRectangularShape && !['shape-circle', 'shape-oval'].includes(currentShape.id)
+                          ? currentShape.clipPathStyle
+                          : undefined
                       }
                     )}
                   </div>
@@ -14641,7 +14684,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           displayWidthInches: geom.widthInches,
                           displayHeightInches: geom.heightInches,
                           aspectRatio: previewAspect,
-                          shapeClipPath: clipStyle
+                          shapeBorderRadius: currentShape.id === 'shape-circle'
+                            ? '9999px'
+                            : currentShape.id === 'shape-oval'
+                            ? '50%'
+                            : undefined,
+                          shapeClipPath: !['shape-circle', 'shape-oval'].includes(currentShape.id) ? clipStyle : undefined
                         })
                       : singleCanvasContent}
                   </div>
