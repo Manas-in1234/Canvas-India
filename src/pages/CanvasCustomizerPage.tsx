@@ -10391,7 +10391,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                             {/* Price text */}
                             <div className="text-[11px] text-[#0E4A93] text-center font-extrabold">
-                              ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(opt.price + popStyleAdjustment, quantity) : opt.price + popStyleAdjustment).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              ₹{(() => { const shown = areaPriced(opt.widthInches, opt.heightInches, opt.price) + popStyleAdjustment; return quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(shown, quantity) : shown; })().toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                           </div>
                         );
