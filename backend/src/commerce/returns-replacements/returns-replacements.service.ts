@@ -93,6 +93,21 @@ export class ReturnsReplacementsService {
     return this.createReturnRequest(dto);
   }
 
+  /** Customer files a replacement; verifies ownership and blocks duplicates. */
+  async createReplacementForCustomer(customerId: string, dto: { orderId: string; orderItemId: string; complaintReason: string }) {
+    const order = await this.prisma.order.findFirst({ where: { id: dto.orderId, customerId } });
+    if (!order) {
+      throw new NotFoundException('Order not found for this customer');
+    }
+    const open = await this.prisma.replacementRequest.findFirst({
+      where: { orderItemId: dto.orderItemId, status: { in: ['REQUESTED', 'REVIEW', 'APPROVED'] } },
+    });
+    if (open) {
+      throw new BadRequestException('A replacement request is already open for this item');
+    }
+    return this.createReplacementRequest(dto);
+  }
+
   async rejectReturn(id: string) {
     const request = await this.findReturnRequest(id);
     if (!['REQUESTED', 'REVIEW', 'APPROVED'].includes(request.status)) {

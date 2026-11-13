@@ -1661,7 +1661,9 @@ export default {
 
       // Storefront: a customer looks up their order (by order number + the email on it),
       // files a return (saved immediately, shown to admins) and tracks its status.
-      if (pathname === '/api/v1/storefront/returns' && (method === 'GET' || method === 'POST')) {
+      const aftercareStoreMatch = pathname.match(/^\/api\/v1\/storefront\/(returns|replacements)$/);
+      if (aftercareStoreMatch && (method === 'GET' || method === 'POST')) {
+        const isReturn = aftercareStoreMatch[1] === 'returns';
         const body = method === 'POST' ? ((await request.json().catch(() => ({}))) as any) : {};
         const orderNumber = String(method === 'POST' ? body.orderNumber ?? '' : query.orderNumber ?? '').trim();
         const email = String(method === 'POST' ? body.email ?? '' : query.email ?? '').trim().toLowerCase();
@@ -1672,22 +1674,30 @@ export default {
         });
         if (method === 'GET') {
           if (!order) return jsonResponse({ found: false }, 200, request);
-          const returns = await prisma.returnRequest.findMany({
-            where: { orderId: order.id }, orderBy: { createdAt: 'desc' },
-            select: { id: true, orderItemId: true, reason: true, status: true, createdAt: true },
-          });
+          const requests = isReturn
+            ? await prisma.returnRequest.findMany({
+                where: { orderId: order.id }, orderBy: { createdAt: 'desc' },
+                select: { id: true, orderItemId: true, reason: true, status: true, createdAt: true },
+              })
+            : (await prisma.replacementRequest.findMany({
+                where: { orderId: order.id }, orderBy: { createdAt: 'desc' },
+                select: { id: true, orderItemId: true, complaintReason: true, status: true, createdAt: true },
+              })).map((r) => ({ id: r.id, orderItemId: r.orderItemId, reason: r.complaintReason, status: r.status, createdAt: r.createdAt }));
           return jsonResponse({
             found: true, orderId: order.id, delivered: order.shippingStatus === 'DELIVERED',
-            items: order.items, returns,
+            items: order.items, returns: requests,
           }, 200, request);
         }
         if (!order) return jsonResponse({ message: 'Order not found for this customer' }, 404, request);
         if (order.shippingStatus !== 'DELIVERED') {
-          return jsonResponse({ message: 'Returns can be requested once the order has been delivered.' }, 400, request);
+          return jsonResponse({ message: `${isReturn ? 'Returns' : 'Replacements'} can be requested once the order has been delivered.` }, 400, request);
         }
-        return jsonResponse(await services.returnsReplacements.createReturnForCustomer(order.customerId, {
-          orderId: order.id, orderItemId: String(body.orderItemId ?? ''), reason: String(body.reason ?? ''),
-        }), 201, request);
+        const orderItemId = String(body.orderItemId ?? '');
+        const reason = String(body.reason ?? '');
+        return jsonResponse(isReturn
+          ? await services.returnsReplacements.createReturnForCustomer(order.customerId, { orderId: order.id, orderItemId, reason })
+          : await services.returnsReplacements.createReplacementForCustomer(order.customerId, { orderId: order.id, orderItemId, complaintReason: reason }),
+        201, request);
       }
 
       // -------------------------------------------------------------

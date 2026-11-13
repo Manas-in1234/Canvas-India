@@ -53,8 +53,8 @@ export async function mirrorOrderToBackend(
   }
 }
 
-export async function getReturnInfo(orderNumber: string, email: string): Promise<ReturnInfo> {
-  const url = `${buildApiUrl('storefront/returns')}?orderNumber=${encodeURIComponent(orderNumber)}&email=${encodeURIComponent(email)}`;
+export async function getReturnInfo(orderNumber: string, email: string, kind: 'returns' | 'replacements' = 'returns'): Promise<ReturnInfo> {
+  const url = `${buildApiUrl(`storefront/${kind}`)}?orderNumber=${encodeURIComponent(orderNumber)}&email=${encodeURIComponent(email)}`;
   const res = await fetch(url);
   if (!res.ok) return { found: false };
   return res.json();
@@ -65,8 +65,9 @@ export async function requestReturn(
   email: string,
   orderItemId: string,
   reason: string,
+  kind: 'returns' | 'replacements' = 'returns',
 ): Promise<void> {
-  const res = await fetch(buildApiUrl('storefront/returns'), {
+  const res = await fetch(buildApiUrl(`storefront/${kind}`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ orderNumber, email, orderItemId, reason }),

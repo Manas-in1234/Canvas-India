@@ -32,6 +32,8 @@ export const OrderDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const [returnInfo, setReturnInfo] = useState<ReturnInfo | null>(null);
+  const [replacementInfo, setReplacementInfo] = useState<ReturnInfo | null>(null);
+  const [formKind, setFormKind] = useState<'returns' | 'replacements'>('returns');
   const [returnItemId, setReturnItemId] = useState<string | null>(null);
   const [returnReason, setReturnReason] = useState('');
   const [returnBusy, setReturnBusy] = useState(false);
@@ -84,6 +86,7 @@ export const OrderDetailPage: React.FC = () => {
   const loadReturns = async () => {
     if (!order || !contactEmail) return;
     setReturnInfo(await getReturnInfo(order.order_number, contactEmail).catch(() => null));
+    setReplacementInfo(await getReturnInfo(order.order_number, contactEmail, 'replacements').catch(() => null));
   };
   useEffect(() => {
     void loadReturns();
@@ -95,7 +98,7 @@ export const OrderDetailPage: React.FC = () => {
     setReturnBusy(true);
     setReturnError(null);
     try {
-      await requestReturn(order.order_number, contactEmail, returnItemId, returnReason.trim());
+      await requestReturn(order.order_number, contactEmail, returnItemId, returnReason.trim(), formKind);
       setReturnItemId(null);
       setReturnReason('');
       await loadReturns();
@@ -423,28 +426,48 @@ export const OrderDetailPage: React.FC = () => {
         {/* Returns */}
         {returnInfo?.found && (
           <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm print:hidden">
-            <h2 className="text-base font-bold text-[#002B49] mb-1">Returns</h2>
+            <h2 className="text-base font-bold text-[#002B49] mb-1">Returns &amp; replacements</h2>
             {!returnInfo.delivered && (
-              <p className="text-xs text-gray-500 mb-3">You can request a return once your order has been delivered.</p>
+              <p className="text-xs text-gray-500 mb-3">You can request a return or replacement once your order has been delivered.</p>
             )}
             <div className="divide-y divide-gray-100">
               {returnInfo.items?.map((item) => {
                 const existing = returnInfo.returns?.find((r) => r.orderItemId === item.id);
+                const existingRepl = replacementInfo?.returns?.find((r) => r.orderItemId === item.id);
+                const badge = (label: string, status: string) => (
+                  <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-blue-100 text-blue-800">
+                    {label} {status.toLowerCase()}
+                  </span>
+                );
+                const openForm = (kind: 'returns' | 'replacements') => {
+                  setFormKind(kind);
+                  setReturnItemId(item.id);
+                  setReturnReason('');
+                  setReturnError(null);
+                };
                 return (
                   <div key={item.id} className="py-3 flex flex-wrap items-center justify-between gap-3">
                     <span className="text-sm text-gray-800">{item.productNameSnapshot}</span>
-                    {existing ? (
-                      <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-blue-100 text-blue-800">
-                        Return {existing.status.toLowerCase()}
-                      </span>
-                    ) : returnInfo.delivered ? (
-                      <button
-                        onClick={() => { setReturnItemId(item.id); setReturnError(null); }}
-                        className="px-4 py-1.5 border border-[#002B49] text-[#002B49] rounded-lg text-xs font-semibold hover:bg-gray-50"
-                      >
-                        Request return
-                      </button>
-                    ) : null}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {existing && badge('Return', existing.status)}
+                      {existingRepl && badge('Replacement', existingRepl.status)}
+                      {returnInfo.delivered && !existing && !existingRepl && (
+                        <>
+                          <button
+                            onClick={() => openForm('returns')}
+                            className="px-4 py-1.5 border border-[#002B49] text-[#002B49] rounded-lg text-xs font-semibold hover:bg-gray-50"
+                          >
+                            Request return
+                          </button>
+                          <button
+                            onClick={() => openForm('replacements')}
+                            className="px-4 py-1.5 border border-[#002B49] text-[#002B49] rounded-lg text-xs font-semibold hover:bg-gray-50"
+                          >
+                            Request replacement
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -452,7 +475,7 @@ export const OrderDetailPage: React.FC = () => {
             {returnItemId && (
               <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
                 <label className="text-xs font-semibold text-gray-700 block" htmlFor="return-reason">
-                  Why are you returning this item?
+                  {formKind === 'returns' ? 'Why are you returning this item?' : 'What is wrong with this item?'}
                 </label>
                 <textarea
                   id="return-reason"
@@ -469,7 +492,7 @@ export const OrderDetailPage: React.FC = () => {
                     onClick={submitReturn}
                     className="px-4 py-2 bg-[#002B49] text-white rounded-lg text-xs font-semibold disabled:opacity-50"
                   >
-                    {returnBusy ? 'Submitting…' : 'Submit return request'}
+                    {returnBusy ? 'Submitting…' : formKind === 'returns' ? 'Submit return request' : 'Submit replacement request'}
                   </button>
                   <button onClick={() => setReturnItemId(null)} className="px-4 py-2 text-xs text-gray-600">Cancel</button>
                 </div>
