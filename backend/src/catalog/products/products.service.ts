@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { AuditService } from '../../audit/audit.service.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
@@ -38,6 +38,9 @@ export class ProductsService {
   }
 
   create(dto: CreateProductDto) {
+    if (dto.status !== undefined && dto.status !== 'DRAFT' && dto.status !== 'ACTIVE') {
+      throw new BadRequestException('Choose draft or live visibility.');
+    }
     return this.prisma.product.create({
       data: {
         name: dto.name,
@@ -47,6 +50,7 @@ export class ProductsService {
         basePrice: dto.basePrice,
         costPrice: dto.costPrice,
         storefront: dto.storefront,
+        status: dto.status,
       },
     });
   }

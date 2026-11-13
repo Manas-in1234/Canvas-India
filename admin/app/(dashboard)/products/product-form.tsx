@@ -213,11 +213,13 @@ export function ProductForm({
   form,
   setForm,
   canEdit,
+  canPublish = true,
   typeName,
 }: {
   form: ProductFormState;
   setForm: (next: ProductFormState) => void;
   canEdit: boolean;
+  canPublish?: boolean;
   typeName?: string;
 }) {
   const sf = form.storefront;
@@ -255,7 +257,7 @@ export function ProductForm({
               disabled={!canEdit}
               onChange={(e) => setForm({ ...form, status: e.target.value })}
             >
-              <option value="ACTIVE">Live on website</option>
+              <option value="ACTIVE" disabled={!canPublish}>Live on website</option>
               <option value="DRAFT">Hidden (draft)</option>
             </select>
           </Field>

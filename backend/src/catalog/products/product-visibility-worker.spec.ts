@@ -166,3 +166,21 @@ describe('categories (product types)', () => {
     expect(prisma.productType.update).not.toHaveBeenCalled();
   });
 });
+
+it('allows a creator to save storefront options as a draft and requires edit permission to publish', async () => {
+  const create = vi.fn(async input => ({ id: 'new-product', ...input }));
+  services.products.create = create;
+  permissions = ['products.create'];
+  const storefront = { images: ['/example.webp'], sizes: ['8x10'], specifications: [{ label: 'Origin', value: 'India' }] };
+  const submit = (status: 'DRAFT' | 'ACTIVE') => call('/products', {
+    admin: true, method: 'POST',
+    body: JSON.stringify({ name: 'Example', slug: 'example', productTypeId: 't1', basePrice: '499', status, storefront }),
+  });
+  expect((await submit('DRAFT')).status).toBe(201);
+  expect(create).toHaveBeenCalledWith(expect.objectContaining({ status: 'DRAFT', storefront }));
+  expect((await submit('ACTIVE')).status).toBe(403);
+  expect(create).toHaveBeenCalledTimes(1);
+  permissions.push('products.edit');
+  expect((await submit('ACTIVE')).status).toBe(201);
+  expect(create).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'ACTIVE', storefront }));
+});

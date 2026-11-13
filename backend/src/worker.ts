@@ -791,28 +791,43 @@ export default {
           return jsonResponse({ statusCode: 400, message: 'refreshToken is required' }, 400, request);
         }
 
-        const tokenHash = await sha256Hex(refreshToken);
-        const matchedSession = await prisma.session.findFirst({
-          where: { refreshTokenHash: tokenHash, revokedAt: null, expiresAt: { gt: new Date() } },
-        });
-
-        if (!matchedSession) {
+        if (typeof refreshToken !== 'string' || !/^[a-f0-9]{96}$/i.test(refreshToken)) {
           return jsonResponse({ statusCode: 401, message: 'Invalid or expired refresh token' }, 401, request);
         }
-
-        await prisma.session.update({ where: { id: matchedSession.id }, data: { revokedAt: new Date() } });
-
-        const newRefreshToken = randomBytes(48).toString('hex');
+        const tokenHash = await sha256Hex(refreshToken);
+        const now = new Date();
+        const newRefreshToken = createHmac('sha384', env.JWT_ACCESS_SECRET)
+          .update('admin-refresh-successor:' + refreshToken).digest('hex');
         const newRefreshTokenHash = await sha256Hex(newRefreshToken);
-        await prisma.session.create({
-          data: {
-            adminUserId: matchedSession.adminUserId,
-            refreshTokenHash: newRefreshTokenHash,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          },
+        const adminUserId = await prisma.$transaction(async tx => {
+          const previous = await tx.session.findFirst({
+            where: { refreshTokenHash: tokenHash, expiresAt: { gt: now }, adminUser: { isActive: true } },
+          });
+          if (!previous) return null;
+          const rotated = await tx.session.updateMany({
+            where: { id: previous.id, revokedAt: null },
+            data: { revokedAt: now },
+          });
+          if (rotated.count) {
+            await tx.session.create({ data: {
+              adminUserId: previous.adminUserId,
+              refreshTokenHash: newRefreshTokenHash,
+              expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+            } });
+            return previous.adminUserId;
+          }
+          // A retry can recover a recently rotated token if the first response was lost.
+          // An explicitly logged-out token has no active successor to recover.
+          const successor = await tx.session.findFirst({
+            where: { adminUserId: previous.adminUserId, refreshTokenHash: newRefreshTokenHash,
+              revokedAt: null, expiresAt: { gt: now }, createdAt: { gte: new Date(now.getTime() - 60000) } },
+          });
+          return successor?.adminUserId ?? null;
         });
-
-        const accessToken = await signJwt({ sub: matchedSession.adminUserId }, env.JWT_ACCESS_SECRET || 'change-me', 15 * 60);
+        if (!adminUserId) {
+          return jsonResponse({ statusCode: 401, message: 'Invalid or expired refresh token' }, 401, request);
+        }
+        const accessToken = await signJwt({ sub: adminUserId }, env.JWT_ACCESS_SECRET, 15 * 60);
         return jsonResponse({ accessToken, refreshToken: newRefreshToken }, 200, request);
       }
 
@@ -960,7 +975,11 @@ export default {
           if (error) return error;
           const permError = checkPermission(user, ['products.create'], request);
           if (permError) return permError;
-          const body = await request.json();
+          const body = await request.json() as import('./catalog/products/dto/create-product.dto.js').CreateProductDto;
+          if (body.status === 'ACTIVE') {
+            const denied = checkPermission(user, ['products.edit'], request);
+            if (denied) return denied;
+          }
           return jsonResponse(await services.products.create(body), 201, request);
         }
       }

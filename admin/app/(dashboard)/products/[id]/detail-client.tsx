@@ -21,7 +21,7 @@ import {
   validateForm,
   defaultSpecifications,
   type ProductFormState,
-} from "./product-form";
+} from "../product-form";
 import {
   Dialog,
   DialogContent,
