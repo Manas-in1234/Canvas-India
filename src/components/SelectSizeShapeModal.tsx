@@ -72,7 +72,8 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   const isSinglePrint = useMemo(() => {
     const norm = productId.toLowerCase();
     return (
-      (singlePrintMode && !shapeStyle) ||
+      singlePrintMode ||
+      !!shapeStyle ||
       norm === 'canvas-single' ||
       norm === 'canvas-classic' ||
       norm === 'acrylic-print' ||
@@ -1016,20 +1017,17 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
 
   // Options for shaped products (Round, Triangle, Heart, Oval)
   const shapedProductOptions = useMemo(() => {
-    if (shapeStyle) {
-      // One uploaded shape: offer the square sizes, each in that shape.
-      return singlePrintSizes.SQUARE.map((o) => ({ ...o, shapeId: shapeStyle.id, shapeName: shapeStyle.name }));
-    }
     return getProductSizeShapeOptions(productId, material);
-  }, [productId, material, shapeStyle, singlePrintSizes]);
+  }, [productId, material]);
 
   // All valid options to pick from
   const currentCategoryOptions = useMemo(() => {
     if (isSinglePrint) {
-      return singlePrintSizes[activeCategory];
+      const list = singlePrintSizes[activeCategory];
+      return shapeStyle ? list.map((o) => ({ ...o, shapeId: shapeStyle.id, shapeName: shapeStyle.name })) : list;
     }
     return shapedProductOptions;
-  }, [isSinglePrint, activeCategory, singlePrintSizes, shapedProductOptions]);
+  }, [isSinglePrint, activeCategory, singlePrintSizes, shapedProductOptions, shapeStyle]);
 
   // Selected Option state
   const defaultOptionId = isSinglePrint
@@ -1137,15 +1135,25 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
     const strokeColor = isSelected ? '#0E4A93' : '#94a3b8';
     const fillColor = isSelected ? '#eff6ff' : '#f8fafc';
 
-    // 0. The style's own traced shape (path is in 0-1 space)
+    // 0. The style's own traced shape (path is in 0-1 space), stretched into the same
+    // box a plain Single Print card uses so every size keeps its real proportions.
     if (shapeStyle && opt.shapeId === shapeStyle.id && shapeStyle.clipPathType === 'SVG_PATH') {
+      const r = opt.widthInches / (opt.heightInches || 1);
+      let w = 70;
+      let h = 70;
+      if (r >= 2) { w = 120; h = 44; }
+      else if (r >= 1.5) { w = 110; h = 55; }
+      else if (r > 1.05) { w = 100; h = 70; }
+      else if (r < 0.95) { w = 66; h = 84; }
+      const x = (160 - w) / 2;
+      const y = (110 - h) / 2;
       return (
         <svg viewBox="0 0 160 110" className="w-full h-full max-h-24">
-          <g transform="translate(40 7) scale(80 96)">
+          <g transform={`translate(${x} ${y}) scale(${w} ${h})`}>
             <path d={shapeStyle.clipPathValue} fill={fillColor} stroke={strokeColor} strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
           </g>
-          <text x="80" y="58" fill="#0E4A93" fontSize="10" fontWeight="bold" textAnchor="middle">
-            {opt.widthInches}&quot;
+          <text x="80" y="58" fill="#0E4A93" fontSize="8" fontWeight="bold" textAnchor="middle">
+            {opt.widthInches}&quot;×{opt.heightInches}&quot;
           </text>
         </svg>
       );
