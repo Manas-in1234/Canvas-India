@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { InventoryService } from './inventory.service.js';
 import { AdjustInventoryDto } from './dto/adjust-inventory.dto.js';
+import { AddStockDto } from './dto/add-stock.dto.js';
 import { ReserveInventoryDto } from './dto/reserve-inventory.dto.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../common/guards/permissions.guard.js';
@@ -23,6 +24,12 @@ export class InventoryController {
   @RequirePermissions('inventory.view')
   findBySku(@Param('sku') sku: string) {
     return this.inventoryService.findBySku(sku);
+  }
+
+  @Post('add-stock')
+  @RequirePermissions('inventory.adjust')
+  addStock(@Body() dto: AddStockDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.inventoryService.addStock(dto.productId, dto.quantity, user.id, dto.reason);
   }
 
   @Post('adjust')

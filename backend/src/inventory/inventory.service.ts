@@ -29,6 +29,56 @@ export class InventoryService {
     return item;
   }
 
+  /**
+   * Adds stock for a product. Uses the product's first variant (creating a default
+   * variant + inventory record when the product has none yet), so any catalog
+   * product can be stocked without extra setup.
+   */
+  async addStock(productId: string, quantity: number, performedBy?: string, reason?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const product = await tx.product.findUnique({
+        where: { id: productId },
+        include: { variants: { orderBy: { createdAt: 'asc' }, take: 1 } },
+      });
+      if (!product) {
+        throw new NotFoundException(`Product ${productId} not found`);
+      }
+
+      let variant = product.variants[0];
+      if (!variant) {
+        variant = await tx.productVariant.create({
+          data: {
+            productId,
+            sku: `${product.slug}-default`.toUpperCase().slice(0, 100),
+            price: product.basePrice,
+          },
+        });
+      }
+
+      const item = await tx.inventoryItem.upsert({
+        where: { variantId: variant.id },
+        create: { variantId: variant.id },
+        update: {},
+      });
+
+      const afterQuantity = item.available + quantity;
+      await tx.inventoryItem.update({ where: { id: item.id }, data: { available: afterQuantity } });
+      await tx.inventoryMovement.create({
+        data: {
+          inventoryItemId: item.id,
+          movementType: 'PURCHASE',
+          quantity,
+          beforeQuantity: item.available,
+          afterQuantity,
+          performedBy,
+          referenceType: reason ? 'ManualStockIn' : undefined,
+        },
+      });
+
+      return tx.inventoryItem.findUnique({ where: { id: item.id }, include: { variant: { select: { sku: true, productId: true } } } });
+    });
+  }
+
   async adjust(variantId: string, quantity: number, performedBy?: string, reason?: string) {
     return this.prisma.$transaction(async (tx) => {
       const item = await tx.inventoryItem.findUnique({ where: { variantId } });

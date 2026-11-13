@@ -59,6 +59,9 @@ export interface ProfitabilityAnalytics {
     refunds: number;
     netRevenue: number;
     availableProductCost: number;
+    costsAvailable?: boolean;
+    itemsWithoutCost?: number;
+    totalItems?: number;
     grossProfit: number;
     profitMargin: number;
   };

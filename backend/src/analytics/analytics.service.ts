@@ -527,9 +527,14 @@ export class AnalyticsService {
 
     // Calculate COGS from available Product.costPrice * quantity
     let totalCOGS = new Prisma.Decimal(0);
+    let itemsWithoutCost = 0;
     for (const item of orderItems) {
-      const cost = item.variant?.product?.costPrice ?? new Prisma.Decimal(0);
-      totalCOGS = totalCOGS.plus(cost.times(item.quantity));
+      const rawCost = item.variant?.product?.costPrice;
+      if (rawCost == null) {
+        itemsWithoutCost += 1;
+        continue;
+      }
+      totalCOGS = totalCOGS.plus(rawCost.times(item.quantity));
     }
 
     const availableProductCost = totalCOGS.toNumber();
@@ -543,7 +548,9 @@ export class AnalyticsService {
         discounts,
         refunds,
         netRevenue,
-        costsAvailable: true,
+        costsAvailable: itemsWithoutCost === 0,
+        itemsWithoutCost,
+        totalItems: orderItems.length,
         availableProductCost,
         grossProfit,
         profitMargin,

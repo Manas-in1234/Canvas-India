@@ -479,6 +479,8 @@ describe('AnalyticsService', () => {
         refunds: 50,
         netRevenue: 900,
         costsAvailable: true,
+        itemsWithoutCost: 0,
+        totalItems: 2,
         availableProductCost: 350,
         grossProfit: 550,
         profitMargin: 61.11,

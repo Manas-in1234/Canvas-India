@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import type { ProductListItem } from '@/lib/types/product';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -35,7 +34,31 @@ export default function InventoryPage() {
   });
 
   const products = useQuery({ queryKey: ['products'], queryFn: () => apiClient.get<ProductListItem[]>('/products?admin=1') });
-  const untracked = (products.data ?? []).filter(product => !(data ?? []).some(item => item.variant.productId === product.id));
+  const productName = (id: string) => (products.data ?? []).find((p) => p.id === id)?.name;
+  const [addOpen, setAddOpen] = useState(false);
+  const [addProductId, setAddProductId] = useState('');
+  const [addQty, setAddQty] = useState('');
+  const [addReason, setAddReason] = useState('');
+  const [addSearch, setAddSearch] = useState('');
+  const addMutation = useMutation({
+    mutationFn: (input: { productId: string; quantity: number; reason?: string }) =>
+      apiClient.post('/inventory/add-stock', input),
+    onSuccess: () => {
+      toast.success('Stock added');
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      setAddOpen(false);
+      setAddProductId('');
+      setAddQty('');
+      setAddReason('');
+      setAddSearch('');
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof ApiError ? err.message : 'Failed to add stock');
+    },
+  });
+  const matches = (products.data ?? [])
+    .filter((p) => p.name.toLowerCase().includes(addSearch.toLowerCase()))
+    .slice(0, 8);
   const [adjustItem, setAdjustItem] = useState<InventoryItem | null>(null);
   const [quantity, setQuantity] = useState('');
   const [reason, setReason] = useState('');
@@ -64,6 +87,7 @@ export default function InventoryPage() {
   };
 
   const columns: DataTableColumn<InventoryItem>[] = [
+    { header: 'Product', cell: (row) => productName(row.variant.productId) ?? '—' },
     { header: 'SKU', cell: (row) => <span className="font-mono text-xs">{row.variant.sku}</span> },
     { header: 'Available', cell: (row) => row.available },
     { header: 'Reserved', cell: (row) => row.reserved },
@@ -105,9 +129,14 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Inventory</h1>
-        <p className="text-sm text-muted-foreground">Stock levels per product variant.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Inventory</h1>
+          <p className="text-sm text-muted-foreground">
+            Stock levels per product. Orders reserve and release stock automatically; use Add stock when new stock arrives.
+          </p>
+        </div>
+        {canAdjust && <Button onClick={() => setAddOpen(true)}>Add stock</Button>}
       </div>
 
       {isLoading ? (
@@ -122,16 +151,70 @@ export default function InventoryPage() {
         <DataTable columns={columns} data={data ?? []} getRowKey={(row) => row.id} emptyMessage="No inventory items yet." />
       )}
 
-      {!isLoading && !isError && <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Products without stock tracking</h2>
-        <p className="text-sm text-muted-foreground">These products are in your catalog but have no SKU stock records. Quantities are unknown, not zero. Made-to-order availability is managed in Products.</p>
-        {products.isLoading ? <Skeleton className="h-10 w-full" /> : products.isError ? <p className="text-destructive">Could not load catalog products.</p> : <DataTable data={untracked} getRowKey={row => row.id} columns={[
-          {header: 'Product', cell: row => <Link className="underline" href={`/products/placeholder?id=${encodeURIComponent(row.id)}`}>{row.name}</Link>},
-          {header: 'Category', cell: row => row.storefront?.category ?? row.productType?.name},
-          {header: 'Storefront availability', cell: row => row.storefront?.stockStatus ?? 'Not specified'},
-          {header: 'Stock quantity', cell: () => 'Not tracked'},
-        ]} />}
-      </section>}
+      <Dialog open={addOpen} onOpenChange={(open) => !open && setAddOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add stock</DialogTitle>
+            <DialogDescription>Choose a product and the quantity received. New products start tracking automatically.</DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const qty = Number(addQty);
+              if (!addProductId || !Number.isInteger(qty) || qty < 1) return;
+              addMutation.mutate({ productId: addProductId, quantity: qty, reason: addReason || undefined });
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="add-product">Product</Label>
+              <Input
+                id="add-product"
+                placeholder="Search products…"
+                value={addSearch}
+                onChange={(e) => {
+                  setAddSearch(e.target.value);
+                  setAddProductId('');
+                }}
+              />
+              {addSearch && !addProductId && (
+                <div className="max-h-48 overflow-auto rounded-md border">
+                  {matches.length === 0 ? (
+                    <p className="p-2 text-sm text-muted-foreground">No matching products.</p>
+                  ) : (
+                    matches.map((p) => (
+                      <button
+                        type="button"
+                        key={p.id}
+                        className="block w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                        onClick={() => {
+                          setAddProductId(p.id);
+                          setAddSearch(p.name);
+                        }}
+                      >
+                        {p.name}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="add-qty">Quantity to add</Label>
+              <Input id="add-qty" type="number" min={1} value={addQty} onChange={(e) => setAddQty(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="add-reason">Note (optional)</Label>
+              <Input id="add-reason" value={addReason} onChange={(e) => setAddReason(e.target.value)} />
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={addMutation.isPending || !addProductId}>
+                {addMutation.isPending ? 'Saving…' : 'Add stock'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       <Dialog open={adjustItem !== null} onOpenChange={(open) => !open && setAdjustItem(null)}>
         <DialogContent>
           <DialogHeader>

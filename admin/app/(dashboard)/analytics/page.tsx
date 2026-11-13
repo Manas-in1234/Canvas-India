@@ -370,15 +370,30 @@ export default function AnalyticsPage() {
                     },
                     {
                       label: 'Product Cost',
-                      value: formatCurrencyNumber(profitabilityQuery.data.summary.availableProductCost),
+                      value: (profitabilityQuery.data.summary.totalItems ?? 0) > 0 && profitabilityQuery.data.summary.itemsWithoutCost === profitabilityQuery.data.summary.totalItems
+                        ? 'Not set'
+                        : formatCurrencyNumber(profitabilityQuery.data.summary.availableProductCost),
                     },
                     {
                       label: 'Gross Profit',
-                      value: formatCurrencyNumber(profitabilityQuery.data.summary.grossProfit),
+                      value: (profitabilityQuery.data.summary.totalItems ?? 0) > 0 && profitabilityQuery.data.summary.itemsWithoutCost === profitabilityQuery.data.summary.totalItems
+                        ? 'Not available'
+                        : formatCurrencyNumber(profitabilityQuery.data.summary.grossProfit),
                     },
-                    { label: 'Profit Margin', value: `${profitabilityQuery.data.summary.profitMargin}%` },
+                    {
+                      label: 'Profit Margin',
+                      value: (profitabilityQuery.data.summary.totalItems ?? 0) > 0 && profitabilityQuery.data.summary.itemsWithoutCost === profitabilityQuery.data.summary.totalItems
+                        ? 'Not available'
+                        : `${profitabilityQuery.data.summary.profitMargin}%`,
+                    },
                   ]}
                 />
+                {!!profitabilityQuery.data.summary.itemsWithoutCost && (
+                  <p className="text-xs text-amber-700">
+                    {profitabilityQuery.data.summary.itemsWithoutCost} of {profitabilityQuery.data.summary.totalItems} sold items have no
+                    cost price set, so profit is overstated (or unavailable). Set the Cost Price on each product to get real profit.
+                  </p>
+                )}
                 {profitabilityQuery.data.unavailableCostComponents.length > 0 && (
                   <p className="text-xs text-muted-foreground">
                     Not included in this figure (not tracked yet):{' '}
