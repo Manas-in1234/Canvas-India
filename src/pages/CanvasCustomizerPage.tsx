@@ -13105,12 +13105,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         displayWidthInches,
                         displayHeightInches,
                         aspectRatio: printAspect,
+                        // Circle's real shape (circle(50% at 50% 50%)) touches
+                        // all 4 box edges, so border-radius: 9999px reproduces
+                        // it exactly. Oval's real shape (ellipse(50% 38%)) is
+                        // INSET within its box (38% < 50%, margin top/bottom) -
+                        // border-radius can only round a box's own edges, never
+                        // draw a shape smaller than the box, so it can't match
+                        // that inset and leaves a gap. Oval keeps clip-path.
                         shapeBorderRadius: !isRectangularShape && currentShape.id === 'shape-circle'
                           ? '9999px'
-                          : !isRectangularShape && currentShape.id === 'shape-oval'
-                          ? '50% / 38%' // matches the oval's actual clip-path: ellipse(50% 38% at 50% 50%)
                           : undefined,
-                        shapeClipPath: !isRectangularShape && !['shape-circle', 'shape-oval'].includes(currentShape.id)
+                        shapeClipPath: !isRectangularShape && currentShape.id !== 'shape-circle'
                           ? currentShape.clipPathStyle
                           : undefined
                       }
@@ -14693,12 +14698,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           displayWidthInches: geom.widthInches,
                           displayHeightInches: geom.heightInches,
                           aspectRatio: previewAspect,
-                          shapeBorderRadius: currentShape.id === 'shape-circle'
-                            ? '9999px'
-                            : currentShape.id === 'shape-oval'
-                            ? '50% / 38%' // matches the oval's actual clip-path: ellipse(50% 38% at 50% 50%)
-                            : undefined,
-                          shapeClipPath: !['shape-circle', 'shape-oval'].includes(currentShape.id) ? clipStyle : undefined
+                          // Oval's real shape is inset within its box (ellipse
+                          // 50% 38%, margin top/bottom) - border-radius can't
+                          // reproduce a shape smaller than its own box, so oval
+                          // keeps clip-path; only circle (which touches all 4
+                          // edges) maps exactly onto border-radius: 9999px.
+                          shapeBorderRadius: currentShape.id === 'shape-circle' ? '9999px' : undefined,
+                          shapeClipPath: currentShape.id !== 'shape-circle' ? clipStyle : undefined
                         })
                       : singleCanvasContent}
                   </div>
