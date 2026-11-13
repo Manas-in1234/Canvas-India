@@ -13108,7 +13108,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         shapeBorderRadius: !isRectangularShape && currentShape.id === 'shape-circle'
                           ? '9999px'
                           : !isRectangularShape && currentShape.id === 'shape-oval'
-                          ? '50%'
+                          ? '50% / 38%' // matches the oval's actual clip-path: ellipse(50% 38% at 50% 50%)
                           : undefined,
                         shapeClipPath: !isRectangularShape && !['shape-circle', 'shape-oval'].includes(currentShape.id)
                           ? currentShape.clipPathStyle
@@ -14696,7 +14696,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           shapeBorderRadius: currentShape.id === 'shape-circle'
                             ? '9999px'
                             : currentShape.id === 'shape-oval'
-                            ? '50%'
+                            ? '50% / 38%' // matches the oval's actual clip-path: ellipse(50% 38% at 50% 50%)
                             : undefined,
                           shapeClipPath: !['shape-circle', 'shape-oval'].includes(currentShape.id) ? clipStyle : undefined
                         })
