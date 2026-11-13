@@ -2835,6 +2835,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const handleSelectTab = (tabId: ToolbarTab) => {
     setActiveTab(tabId);
     setIsPanelHiddenMobile(false);
+    // Desktop keeps the branded preloader beat on tab switches (the panel
+    // is always visible there, so it's a deliberate transition, not a
+    // blocking interruption). Mobile skips it - the panel is a full-screen
+    // overlay there, so the same beat would blackout the whole screen.
+    if (window.innerWidth >= 768) {
+      beginPreloader();
+      endPreloader(PRELOADER_MIN_MS);
+    }
     if (tabId === 'POP ART STYLE') {
       setIsPopArtStyleModalOpen(true);
       return;
