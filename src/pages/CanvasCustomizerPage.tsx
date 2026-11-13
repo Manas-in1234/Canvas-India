@@ -11087,72 +11087,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </div>
               )}
 
-              {/* ==================== EDGE WRAP (admin-managed via wrap_style, canvas only) ==================== */}
-              {activeMaterial === 'canvas' && selectedProductTypeId !== 'canvas-banner' && (
-                <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
-                  <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider">Edge Wrap</span>
-                    <span className="text-[11px] font-semibold text-stone-200">{liveOrFallbackWrapStyles.length} options</span>
-                  </div>
-                  <div className="p-3">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {liveOrFallbackWrapStyles.map((w) => (
-                        <CustomizerOptionCard
-                          key={w.id}
-                          selected={selectedWrapId === w.id}
-                          onClick={() => {
-                            setSelectedWrapId(w.id);
-                            // Keep the Border section's own color swatch in
-                            // sync with Black/White Border Wrap, but only when
-                            // a border is already active - otherwise this would
-                            // visually turn a border on the user never chose.
-                            if (selectedBorderWidthId !== 'none') {
-                              if (w.id === 'black-border') {
-                                setSelectedBorderColor('#000000');
-                              } else if (w.id === 'white-border') {
-                                setSelectedBorderColor('#FFFFFF');
-                              }
-                            }
-                          }}
-                          title={w.name}
-                          priceText={w.price === 0 ? 'Included' : `+₹${w.price}`}
-                          previewHeightClass="h-16 p-1.5"
-                          preview={
-                            <div className="w-12 h-12 mx-auto relative flex items-center justify-center">
-                              <div className="w-10 h-10 rounded border border-stone-300 relative overflow-hidden bg-stone-100 flex items-center justify-center">
-                                {w.id === 'full-bleed' && (
-                                  <div className="w-full h-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500" />
-                                )}
-                                {w.id === 'clear-edge' && (
-                                  <div className="w-full h-full p-1 bg-stone-200">
-                                    <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 rounded-xs border border-dashed border-white" />
-                                  </div>
-                                )}
-                                {w.id === 'white-border' && (
-                                  <div className="w-full h-full p-1.5 bg-white border border-stone-300">
-                                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
-                                  </div>
-                                )}
-                                {w.id === 'black-border' && (
-                                  <div className="w-full h-full p-1.5 bg-[#0F172A]">
-                                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
-                                  </div>
-                                )}
-                                {w.id === 'no-wrap' && (
-                                  <div className="w-full h-full p-1 bg-stone-300">
-                                    <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xs" />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          }
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* ==================== 2. BORDER SECTION (Matching Screenshot 1 & 3) ==================== */}
               <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
                 {/* Dark Section Header Bar */}
@@ -11311,6 +11245,72 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   )}
                 </div>
               </div>
+
+              {/* ==================== EDGE WRAP (admin-managed via wrap_style, canvas only) ==================== */}
+              {activeMaterial === 'canvas' && selectedProductTypeId !== 'canvas-banner' && (
+                <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
+                  <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider">Edge Wrap</span>
+                    <span className="text-[11px] font-semibold text-stone-200">{liveOrFallbackWrapStyles.length} options</span>
+                  </div>
+                  <div className="p-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {liveOrFallbackWrapStyles.map((w) => (
+                        <CustomizerOptionCard
+                          key={w.id}
+                          selected={selectedWrapId === w.id}
+                          onClick={() => {
+                            setSelectedWrapId(w.id);
+                            // Keep the Border section's own color swatch in
+                            // sync with Black/White Border Wrap, but only when
+                            // a border is already active - otherwise this would
+                            // visually turn a border on the user never chose.
+                            if (selectedBorderWidthId !== 'none') {
+                              if (w.id === 'black-border') {
+                                setSelectedBorderColor('#000000');
+                              } else if (w.id === 'white-border') {
+                                setSelectedBorderColor('#FFFFFF');
+                              }
+                            }
+                          }}
+                          title={w.name}
+                          priceText={w.price === 0 ? 'Included' : `+₹${w.price}`}
+                          previewHeightClass="h-16 p-1.5"
+                          preview={
+                            <div className="w-12 h-12 mx-auto relative flex items-center justify-center">
+                              <div className="w-10 h-10 rounded border border-stone-300 relative overflow-hidden bg-stone-100 flex items-center justify-center">
+                                {w.id === 'full-bleed' && (
+                                  <div className="w-full h-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500" />
+                                )}
+                                {w.id === 'clear-edge' && (
+                                  <div className="w-full h-full p-1 bg-stone-200">
+                                    <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 rounded-xs border border-dashed border-white" />
+                                  </div>
+                                )}
+                                {w.id === 'white-border' && (
+                                  <div className="w-full h-full p-1.5 bg-white border border-stone-300">
+                                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
+                                  </div>
+                                )}
+                                {w.id === 'black-border' && (
+                                  <div className="w-full h-full p-1.5 bg-[#0F172A]">
+                                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
+                                  </div>
+                                )}
+                                {w.id === 'no-wrap' && (
+                                  <div className="w-full h-full p-1 bg-stone-300">
+                                    <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xs" />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          }
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* ==================== 3. FRAMES SECTION (Matching Screenshot 3) ==================== */}
               {!isMultiFrameProduct && (
