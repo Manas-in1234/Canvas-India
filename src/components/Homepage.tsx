@@ -118,7 +118,7 @@ const arrowBtn =
   'w-10 h-10 rounded-full bg-white border border-stone-200 shadow-md flex items-center justify-center text-[#0E4A93] hover:bg-[#E8752A] hover:text-white hover:border-[#E8752A] transition-colors cursor-pointer shrink-0';
 
 export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCart, allProducts, onCustomize, onOpenQuote, wishlistIds, onToggleWishlist }) => {
-  const { occasions } = useOccasions();
+  const { entries, occasions } = useOccasions();
   const [promotion, setPromotion] = React.useState({ saleName: 'Festive Sale', percentage: 20, coupons: [] as { code: string; desc: string }[] });
   React.useEffect(() => {
     const controller = new AbortController();
@@ -154,7 +154,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
     // Dedicated "Festive Offers" landing page (its own occasion entry,
     // separate from Diwali) with format tiles — each tile's own "Shop Now"
     // is what opens the customizer.
-    navigate('/occasions/festive-offers');
+    navigate(entries.some(row => row.slug === 'festive-offers') ? '/occasions/festive-offers' : '/occasions');
   };
 
   const scrollRow = (ref: React.RefObject<HTMLDivElement>, dir: 1 | -1) => {

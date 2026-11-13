@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useOccasions } from '../context/OccasionsContext';
 import {
   Phone,
   Mail,
@@ -17,6 +18,7 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, onOpenAccount, onTrackOrder }) => {
+  const { entries } = useOccasions();
   return (
     <footer className="bg-[#0B1727] text-stone-300 pt-12 pb-8 text-xs font-manrope">
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14">
@@ -103,13 +105,13 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
           <div className="space-y-2.5">
             <h4 className="font-bold text-xs uppercase tracking-wider text-white">Occasions & Gifting</h4>
             <ul className="space-y-2 text-stone-400 text-xs">
-              <li><Link to="/occasions/birthday" className="hover:text-white transition-colors">Birthday Gifts</Link></li>
-              <li><Link to="/occasions/anniversary" className="hover:text-white transition-colors">Anniversary Frames</Link></li>
-              <li><Link to="/occasions/wedding" className="hover:text-white transition-colors">Wedding Keepsakes</Link></li>
-              <li><Link to="/occasions/valentines-day" className="hover:text-white transition-colors">Valentine's Day Gifts</Link></li>
-              <li><Link to="/occasions/housewarming" className="hover:text-white transition-colors">Housewarming Art</Link></li>
-              <li><Link to="/occasions/festive-offers" className="hover:text-white transition-colors">Festive &amp; Diwali Specials</Link></li>
-              <li><Link to="/occasions/mothers-day" className="hover:text-white transition-colors">Mother's &amp; Father's Day</Link></li>
+              {entries.some(row => row.slug === 'birthday') && <li><Link to="/occasions/birthday" className="hover:text-white transition-colors">Birthday Gifts</Link></li>}
+              {entries.some(row => row.slug === 'anniversary') && <li><Link to="/occasions/anniversary" className="hover:text-white transition-colors">Anniversary Frames</Link></li>}
+              {entries.some(row => row.slug === 'wedding') && <li><Link to="/occasions/wedding" className="hover:text-white transition-colors">Wedding Keepsakes</Link></li>}
+              {entries.some(row => row.slug === 'valentines-day') && <li><Link to="/occasions/valentines-day" className="hover:text-white transition-colors">Valentine's Day Gifts</Link></li>}
+              {entries.some(row => row.slug === 'housewarming') && <li><Link to="/occasions/housewarming" className="hover:text-white transition-colors">Housewarming Art</Link></li>}
+              {entries.some(row => row.slug === 'festive-offers') && <li><Link to="/occasions/festive-offers" className="hover:text-white transition-colors">Festive &amp; Diwali Specials</Link></li>}
+              {entries.some(row => row.slug === 'mothers-day') && <li><Link to="/occasions/mothers-day" className="hover:text-white transition-colors">Mother's &amp; Father's Day</Link></li>}
               <li><Link to="/bulk-order" className="hover:text-white transition-colors">Corporate Hampers</Link></li>
             </ul>
           </div>

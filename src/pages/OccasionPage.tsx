@@ -102,7 +102,7 @@ export const OccasionPage: React.FC = () => {
   const navigate = useNavigate();
   const { allProducts, isCategoryVisible } = useShop();
 
-  const { entries, occasions, loading } = useOccasions();
+  const { entries, occasions, loading, unavailable } = useOccasions();
   const occasion = entries.find(row => row.slug === slug);
   const heroTitle = occasion?.heroTitle || (occasion ? `${occasion.name} Gifts & Prints` : '');
 
@@ -143,6 +143,10 @@ export const OccasionPage: React.FC = () => {
 
   if (!occasion && loading) {
     return <div role="status" className="min-h-[60vh] py-20 text-center">Loading occasion…</div>;
+  }
+
+  if (unavailable) {
+    return <div role="alert" className="min-h-[60vh] py-20 text-center">Couldn’t load this occasion. Refresh the page to try again.</div>;
   }
 
   if (!occasion) {
@@ -332,7 +336,7 @@ export const OccasionPage: React.FC = () => {
               <p className="text-xs sm:text-sm text-stone-500 mt-1.5">Pick any special day to start a personalized gift for it</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-              {ALL_FESTIVALS.map((f) => {
+              {ALL_FESTIVALS.filter(f => entries.some(row => row.slug === f.slug)).map((f) => {
                 const FIcon = f.icon;
                 return (
                 <button
