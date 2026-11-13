@@ -187,8 +187,9 @@ export const OrderSuccessPage: React.FC = () => {
         )}
 
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 text-center">
-          <strong>Cancellation policy:</strong> you can cancel this order from the order page until production begins.
-          Once printing and framing has started, the order can no longer be cancelled.
+          <strong>Cancellation policy:</strong> you can cancel this order from the order page only until production begins.
+          Once printing and framing has started, or the order has been dispatched, it can no longer be cancelled.
+          If you cancel in time and paid online, an eligible refund goes to your original payment method (5-10 business days).
         </div>
 
         {/* Action Buttons */}

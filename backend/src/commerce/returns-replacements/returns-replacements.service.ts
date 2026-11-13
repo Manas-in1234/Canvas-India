@@ -291,9 +291,14 @@ export class ReturnsReplacementsService {
       );
     }
 
-    const amount = new Prisma.Decimal(request.orderItem.priceSnapshot)
-      .mul(request.orderItem.quantity)
-      .toFixed(2);
+    // The item's price, less its share of any order-level discount. Shipping is not refunded here.
+    const itemTotal = new Prisma.Decimal(request.orderItem.priceSnapshot).mul(request.orderItem.quantity);
+    const orderSubtotal = new Prisma.Decimal(request.order.subtotal);
+    const orderDiscount = new Prisma.Decimal(request.order.discount);
+    const amount = (orderSubtotal.greaterThan(0) && orderDiscount.greaterThan(0)
+      ? itemTotal.mul(orderSubtotal.minus(orderDiscount)).div(orderSubtotal)
+      : itemTotal
+    ).toFixed(2);
 
     await this.ordersService.refund(
       request.orderId,

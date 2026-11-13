@@ -36,6 +36,7 @@ export const OrderDetailPage: React.FC = () => {
   const [formKind, setFormKind] = useState<'returns' | 'replacements'>('returns');
   const [returnItemId, setReturnItemId] = useState<string | null>(null);
   const [returnReason, setReturnReason] = useState('');
+  const [reasonKind, setReasonKind] = useState('');
   const [returnBusy, setReturnBusy] = useState(false);
   const [returnError, setReturnError] = useState<string | null>(null);
   const contactEmail = user?.email || order?.guest_email || null;
@@ -98,9 +99,10 @@ export const OrderDetailPage: React.FC = () => {
     setReturnBusy(true);
     setReturnError(null);
     try {
-      await requestReturn(order.order_number, contactEmail, returnItemId, returnReason.trim(), formKind);
+      await requestReturn(order.order_number, contactEmail, returnItemId, `${reasonKind}: ${returnReason.trim()}`, formKind);
       setReturnItemId(null);
       setReturnReason('');
+      setReasonKind('');
       await loadReturns();
     } catch (err: any) {
       setReturnError(err.message);
@@ -287,8 +289,9 @@ export const OrderDetailPage: React.FC = () => {
 
         {!live?.found && shownStatus !== 'cancelled' && (
           <div className="print:hidden rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
-            <strong>Cancellation policy:</strong> an order can be cancelled until production begins. Once printing and
-            framing has started, it can no longer be cancelled. To cancel, contact support.
+            <strong>Cancellation policy:</strong> an order can be cancelled only before production begins. Once production
+            (printing and framing) has started, or the order has been dispatched, it can no longer be cancelled. To request a
+            cancellation, contact info@canvassindia.com, 040-29303344 or WhatsApp 78930 51555 with your order number.
           </div>
         )}
         {live?.found && shownStatus !== 'cancelled' && (
@@ -296,7 +299,8 @@ export const OrderDetailPage: React.FC = () => {
             {live.cancellable ? (
               <>
                 <p className="text-xs text-gray-600 max-w-md">
-                  You can cancel this order until production starts. Once printing and framing begins, it can no longer be cancelled.
+                  You can cancel this order until production starts. Once printing and framing begins, or the order is dispatched, it can no longer be cancelled.
+                  If you paid online, an eligible refund goes back to your original payment method and may take 5-10 business days to show.
                 </p>
                 <button
                   onClick={handleCancel}
@@ -308,7 +312,8 @@ export const OrderDetailPage: React.FC = () => {
               </>
             ) : (
               <p className="text-xs text-gray-600">
-                This order can no longer be cancelled because production (printing and framing) has started.
+                This order can no longer be cancelled because production (printing and framing) has started or it has been dispatched.
+                If you believe there is a problem with it, contact info@canvassindia.com, 040-29303344 or WhatsApp 78930 51555.
               </p>
             )}
             {cancelError && <p className="w-full text-xs text-red-600">{cancelError}</p>}
@@ -316,7 +321,8 @@ export const OrderDetailPage: React.FC = () => {
         )}
         {shownStatus === 'cancelled' && (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs text-red-800">
-            This order has been cancelled. If you paid online, contact support about your refund.
+            This order has been cancelled. If you paid online, your refund has been initiated to the original payment method and may
+            take 5-10 business days to show, depending on your bank. Questions: info@canvassindia.com, 040-29303344 or WhatsApp 78930 51555.
           </div>
         )}
 
@@ -434,15 +440,25 @@ export const OrderDetailPage: React.FC = () => {
               {returnInfo.items?.map((item) => {
                 const existing = returnInfo.returns?.find((r) => r.orderItemId === item.id);
                 const existingRepl = replacementInfo?.returns?.find((r) => r.orderItemId === item.id);
+                const STATUS_TEXT: Record<string, string> = {
+                  REQUESTED: 'received, under review',
+                  REVIEW: 'under review',
+                  APPROVED: 'approved - wait for our instructions',
+                  RETURNED: 'item received, being inspected',
+                  REFUNDED: 'refunded (5-10 business days)',
+                  COMPLETED: 'completed',
+                  REJECTED: 'not approved',
+                };
                 const badge = (label: string, status: string) => (
                   <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-blue-100 text-blue-800">
-                    {label} {status.toLowerCase()}
+                    {label} {STATUS_TEXT[status] ?? status.toLowerCase()}
                   </span>
                 );
                 const openForm = (kind: 'returns' | 'replacements') => {
                   setFormKind(kind);
                   setReturnItemId(item.id);
                   setReturnReason('');
+                  setReasonKind('');
                   setReturnError(null);
                 };
                 return (
@@ -474,13 +490,45 @@ export const OrderDetailPage: React.FC = () => {
             </div>
             {returnItemId && (
               <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
-                <label className="text-xs font-semibold text-gray-700 block" htmlFor="return-reason">
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[11px] leading-relaxed text-amber-900 space-y-1">
+                  <p>
+                    <strong>Before you submit:</strong> returns and replacements are for products that are damaged in transit, defective,
+                    incorrectly made or printed by us, the wrong product, materially different from what you ordered, or missing parts.
+                  </p>
+                  <p>
+                    Customised products are generally not returnable for a change of mind, a wrong or low-quality photo, or text or
+                    measurements you supplied. All requests are subject to verification.
+                  </p>
+                  <p>
+                    Please report damage within 48 hours of delivery. We may ask for photos or videos of the outer packaging, the shipping
+                    label and the product. <strong>Do not send the product back until we approve your request and give you return instructions.</strong>
+                  </p>
+                </div>
+                <label className="text-xs font-semibold text-gray-700 block" htmlFor="return-kind">
                   {formKind === 'returns' ? 'Why are you returning this item?' : 'What is wrong with this item?'}
+                </label>
+                <select
+                  id="return-kind"
+                  value={reasonKind}
+                  onChange={(e) => setReasonKind(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 p-2 text-sm bg-white"
+                >
+                  <option value="">Choose a reason</option>
+                  <option>Damaged during transit</option>
+                  <option>Defective</option>
+                  <option>Incorrectly manufactured or printed by Canvas India</option>
+                  <option>Wrong product received</option>
+                  <option>Materially different from what I ordered</option>
+                  <option>Missing parts or components</option>
+                  <option>Other</option>
+                </select>
+                <label className="text-xs font-semibold text-gray-700 block" htmlFor="return-reason">
+                  Describe the issue
                 </label>
                 <textarea
                   id="return-reason"
                   rows={3}
-                  maxLength={2000}
+                  maxLength={1900}
                   value={returnReason}
                   onChange={(e) => setReturnReason(e.target.value)}
                   className="w-full rounded-lg border border-gray-200 p-2 text-sm"
@@ -488,7 +536,7 @@ export const OrderDetailPage: React.FC = () => {
                 {returnError && <p className="text-xs text-red-600">{returnError}</p>}
                 <div className="flex gap-2">
                   <button
-                    disabled={returnBusy || !returnReason.trim()}
+                    disabled={returnBusy || !returnReason.trim() || !reasonKind}
                     onClick={submitReturn}
                     className="px-4 py-2 bg-[#002B49] text-white rounded-lg text-xs font-semibold disabled:opacity-50"
                   >

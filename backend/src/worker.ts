@@ -44,6 +44,23 @@ async function getServices(env: Env): Promise<{ prisma: PrismaClient; services: 
     }
   }
   const services = createServicesContainer(prisma);
+  services.orders.setRefundGateway(async (gatewayPaymentId, amountPaise, notes) => {
+    if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET) {
+      throw new Error('Razorpay credentials are not configured');
+    }
+    const auth = btoa(`${env.RAZORPAY_KEY_ID.trim()}:${env.RAZORPAY_KEY_SECRET.trim()}`);
+    const response = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(gatewayPaymentId)}/refund`, {
+      method: 'POST',
+      headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: amountPaise, speed: 'normal', notes }),
+      signal: AbortSignal.timeout(15000),
+    });
+    const data = (await response.json().catch(() => ({}))) as { id?: string; status?: string; error?: { description?: string } };
+    if (!response.ok || !data.id) {
+      throw new Error(data.error?.description || `Razorpay refund failed (${response.status})`);
+    }
+    return { id: data.id, status: data.status ?? 'created' };
+  });
   return { prisma, services };
 }
 
@@ -1541,13 +1558,17 @@ export default {
         return jsonResponse(await services.orders.findOne(orderId), 200, request);
       }
 
-      const orderActionMatch = pathname.match(/^\/api\/v1\/orders\/([^/]+)\/(accept|cancel)$/);
+      const orderActionMatch = pathname.match(/^\/api\/v1\/orders\/([^/]+)\/(accept|cancel|refund)$/);
       if (orderActionMatch && method === 'POST') {
         const [, orderId, action] = orderActionMatch;
         const { user, error } = await authenticate(request, env, prisma);
         if (error) return error;
-        const permError = checkPermission(user, [action === 'accept' ? 'orders.edit' : 'orders.cancel'], request);
+        const permError = checkPermission(user, [action === 'accept' ? 'orders.edit' : action === 'refund' ? 'orders.refund' : 'orders.cancel'], request);
         if (permError) return permError;
+        if (action === 'refund') {
+          const body = (await request.json().catch(() => ({}))) as { amount?: string; reason?: string };
+          return jsonResponse(await services.orders.refund(orderId, String(body.amount ?? ''), body.reason), 200, request);
+        }
         return jsonResponse(
           action === 'accept' ? await services.orders.accept(orderId, user.id) : await services.orders.cancel(orderId, user.id),
           200, request);

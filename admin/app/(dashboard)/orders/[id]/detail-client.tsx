@@ -114,7 +114,7 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
               variant="destructive"
               size="sm"
               disabled={cancelMutation.isPending}
-              onClick={() => confirm("Cancel this order?") && cancelMutation.mutate()}
+              onClick={() => confirm("Cancel this order? If it was paid online, the full amount will be refunded to the customer automatically.") && cancelMutation.mutate()}
             >
               {cancelMutation.isPending ? "Cancelling…" : "Cancel Order"}
             </Button>

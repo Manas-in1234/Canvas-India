@@ -36,8 +36,8 @@ const ACTIONS: Record<Kind, Record<string, { action: string; label: string; dang
   returns: {
     REQUESTED: [{ action: "approve", label: "Accept" }, { action: "reject", label: "Reject", danger: true }],
     REVIEW: [{ action: "approve", label: "Accept" }, { action: "reject", label: "Reject", danger: true }],
-    APPROVED: [{ action: "returned", label: "Mark item received" }, { action: "reject", label: "Reject", danger: true }],
-    RETURNED: [{ action: "refund", label: "Issue refund" }],
+    APPROVED: [{ action: "returned", label: "Item received & inspected" }, { action: "reject", label: "Reject", danger: true }],
+    RETURNED: [{ action: "refund", label: "Refund to customer" }],
   },
   replacements: {
     REQUESTED: [{ action: "approve", label: "Accept" }, { action: "reject", label: "Reject", danger: true }],
@@ -208,7 +208,7 @@ export default function ReturnsPage() {
                   key={a.action}
                   variant={a.danger ? "outline" : "default"}
                   disabled={act.isPending}
-                  onClick={() => act.mutate(a.action)}
+                  onClick={() => (a.action !== "refund" || confirm("Send the refund to the original payment method now? This cannot be undone.")) && act.mutate(a.action)}
                 >
                   {a.label}
                 </Button>

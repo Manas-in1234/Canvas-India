@@ -7,8 +7,21 @@ import { AuditService } from '../../audit/audit.service.js';
 import { DiscountsService } from '../../growth/discounts/discounts.service.js';
 import { AbandonedCartsService } from '../../growth/abandoned-carts/abandoned-carts.service.js';
 
+/** Sends a refund to the payment gateway. Wired up per request in the worker, where the gateway keys live. */
+export type RefundGateway = (
+  gatewayPaymentId: string,
+  amountPaise: number,
+  notes: Record<string, string>,
+) => Promise<{ id: string; status: string }>;
+
 @Injectable()
 export class OrdersService {
+  private refundGateway?: RefundGateway;
+
+  setRefundGateway(gateway: RefundGateway) {
+    this.refundGateway = gateway;
+  }
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly cartService: CartService,
@@ -240,14 +253,113 @@ export class OrdersService {
       entityId: id,
     });
 
+    // Cancellation policy: an eligible cancellation initiates a refund to the original payment method.
+    await this.autoRefundCancelledOrder(id);
+
     return updated;
   }
 
-  async refund(_id: string, _amount: string, _reason?: string) {
-    throw new NotImplementedException(
-      'Refunds require a configured payment gateway adapter; not available until Razorpay credentials are provisioned',
+  /**
+   * Refunds money to the customer's original payment method (Razorpay). Never refunds more than
+   * was paid, counting earlier refunds, so repeating the call cannot pay out twice.
+   */
+  async refund(id: string, amount: string, reason?: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      include: { payments: { include: { transactions: true } } },
+    });
+    if (!order) {
+      throw new NotFoundException(`Order ${id} not found`);
+    }
+    const payment = order.payments.find(
+      (p) => p.provider === 'RAZORPAY' && (p.status === 'PAID' || p.status === 'PARTIALLY_REFUNDED') && p.providerRef,
     );
+    if (!payment) {
+      throw new BadRequestException(
+        'There is no online payment to refund for this order (cash on delivery and fully discounted orders have nothing to refund).',
+      );
+    }
+    if (!this.refundGateway) {
+      throw new NotImplementedException('The payment gateway is not configured for refunds');
+    }
+
+    const requested = new Prisma.Decimal(amount);
+    if (requested.lessThanOrEqualTo(0)) {
+      throw new BadRequestException('Refund amount must be greater than zero');
+    }
+    const alreadyRefunded = payment.transactions
+      .filter((t) => t.type === 'REFUND')
+      .reduce((sum, t) => sum.plus(new Prisma.Decimal(((t.rawPayload as { amount?: string } | null)?.amount) ?? 0)), new Prisma.Decimal(0));
+    const remaining = new Prisma.Decimal(payment.amount).minus(alreadyRefunded);
+    if (requested.greaterThan(remaining)) {
+      throw new BadRequestException(`Cannot refund more than the remaining ₹${remaining.toFixed(2)} paid for this order`);
+    }
+
+    const result = await this.refundGateway(payment.providerRef!, Math.round(requested.times(100).toNumber()), {
+      order: order.orderNumber,
+      reason: (reason ?? 'Refund').slice(0, 200),
+    });
+
+    const refundedTotal = alreadyRefunded.plus(requested);
+    const fully = refundedTotal.greaterThanOrEqualTo(payment.amount);
+    const status = fully ? 'REFUNDED' : 'PARTIALLY_REFUNDED';
+    await this.prisma.$transaction(async (tx) => {
+      await tx.paymentTransaction.create({
+        data: {
+          paymentId: payment.id,
+          type: 'REFUND',
+          status: result.status ?? 'created',
+          rawPayload: { amount: requested.toFixed(2), refundId: result.id, reason: reason ?? null },
+        },
+      });
+      await tx.payment.update({ where: { id: payment.id }, data: { status } });
+      await tx.order.update({
+        where: { id },
+        data: {
+          paymentStatus: status,
+          events: {
+            create: {
+              type: 'order.refunded',
+              message: `Refund of ₹${requested.toFixed(2)} sent to the original payment method (may take 5-10 business days to show)`,
+              metadata: { refundId: result.id, amount: requested.toFixed(2) },
+            },
+          },
+        },
+      });
+    });
+    return { refundId: result.id, amount: requested.toFixed(2), status };
   }
+
+  /** Refunds whatever is still unrefunded on a cancelled order; a failure is logged on the order, never thrown. */
+  private async autoRefundCancelledOrder(id: string) {
+    try {
+      const order = await this.prisma.order.findUnique({
+        where: { id },
+        include: { payments: { include: { transactions: true } } },
+      });
+      const payment = order?.payments.find(
+        (p) => p.provider === 'RAZORPAY' && (p.status === 'PAID' || p.status === 'PARTIALLY_REFUNDED') && p.providerRef,
+      );
+      if (!order || !payment) return;
+      const done = payment.transactions
+        .filter((t) => t.type === 'REFUND')
+        .reduce((sum, t) => sum.plus(new Prisma.Decimal(((t.rawPayload as { amount?: string } | null)?.amount) ?? 0)), new Prisma.Decimal(0));
+      const left = new Prisma.Decimal(payment.amount).minus(done);
+      if (left.lessThanOrEqualTo(0)) return;
+      await this.refund(id, left.toFixed(2), 'Order cancelled');
+    } catch (error) {
+      await this.prisma.orderEvent
+        .create({
+          data: {
+            orderId: id,
+            type: 'refund.failed',
+            message: `Automatic refund could not be completed (${error instanceof Error ? error.message : 'unknown error'}). Please refund this order manually.`,
+          },
+        })
+        .catch(() => undefined);
+    }
+  }
+
   async addNote(orderId: string, note: string, adminUserId?: string) {
     return this.prisma.orderNote.create({ data: { orderId, note, adminUserId } });
   }
