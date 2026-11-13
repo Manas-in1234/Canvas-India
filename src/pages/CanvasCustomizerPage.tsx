@@ -9604,7 +9604,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             onClick: () => handleSelectTab(nextTab.id)
           }}
           previewAction={
-            (activeTab === 'SELECT SIZE' || activeTab === 'LAYOUTS & DESIGNS')
+            (activeTab === 'SELECT SIZE' || activeTab === 'LAYOUTS & DESIGNS' || activeTab === 'WRAP & BORDER')
               ? { label: 'View Preview', onClick: () => setIsPanelHiddenMobile(true) }
               : undefined
           }
@@ -12075,10 +12075,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               onClick: () => handleSelectTab(nextTab.id)
             }}
             reselectAction={
-              toolbarItems.some((t) => t.id === 'SELECT SIZE')
+              activeTab === 'LAYOUTS & DESIGNS'
+                ? { label: 'Select Layouts & Design', onClick: () => handleSelectTab('LAYOUTS & DESIGNS') }
+                : activeTab === 'WRAP & BORDER'
+                ? { label: 'Select Another Wrap or Border', onClick: () => handleSelectTab('WRAP & BORDER') }
+                : toolbarItems.some((t) => t.id === 'SELECT SIZE')
                 ? { label: 'Select Another Size', onClick: () => handleSelectTab('SELECT SIZE') }
                 : toolbarItems.some((t) => t.id === 'LAYOUTS & DESIGNS')
-                ? { label: 'Select Another Layout', onClick: () => handleSelectTab('LAYOUTS & DESIGNS') }
+                ? { label: 'Select Layouts & Design', onClick: () => handleSelectTab('LAYOUTS & DESIGNS') }
                 : undefined
             }
             onPointerMove={handlePointerMove}
