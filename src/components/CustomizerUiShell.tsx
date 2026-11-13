@@ -237,6 +237,11 @@ export interface CustomizerPanelProps {
   // itself, so these only render when the panel is an overlay on mobile.
   prevStep?: { label: string; disabled: boolean; onClick: () => void };
   nextStep?: { label: string; disabled: boolean; onClick: () => void };
+  // "View Preview" - closes the overlay to reveal the canvas with whatever
+  // size/layout/etc was just picked already applied, so the customer can
+  // actually see the effect of their choice instead of staying stuck behind
+  // the drawer. Mobile overlay tabs only (Select Size, Layouts & Designs).
+  previewAction?: { label: string; onClick: () => void };
 }
 
 export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
@@ -247,7 +252,8 @@ export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
   mobileMode = 'overlay',
   onCloseMobile,
   prevStep,
-  nextStep
+  nextStep,
+  previewAction
 }) => {
   const resolvedMeta = metaText || badge;
   const isOverlay = mobileMode === 'overlay';
@@ -274,6 +280,18 @@ export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
       <div className="flex-1 md:flex-1 overflow-y-auto min-h-0 flex flex-col pb-[max(1rem,env(safe-area-inset-bottom,16px))]">
         {children}
       </div>
+      {isOverlay && previewAction && (
+        <div className="md:hidden shrink-0 px-3 pt-3">
+          <button
+            type="button"
+            onClick={previewAction.onClick}
+            className="w-full py-3 px-3 rounded-xl text-xs font-black uppercase tracking-wide flex items-center justify-center gap-2 bg-[#E8752A] hover:bg-[#d6651d] text-white shadow-sm cursor-pointer"
+          >
+            <Eye className="w-4 h-4 shrink-0" />
+            <span className="truncate">{previewAction.label}</span>
+          </button>
+        </div>
+      )}
       {(prevStep || nextStep) && (
         <div className="md:hidden shrink-0 border-t border-stone-200 bg-white p-3 flex items-center gap-2 pb-[max(0.75rem,env(safe-area-inset-bottom,12px))]">
           {prevStep && (
@@ -662,6 +680,10 @@ export interface CustomizerPreviewControlsProps {
   isContain?: boolean;
   onToggleFit?: () => void;
   onReset?: () => void;
+  // "Select Another Size"/"Select Another Layout" - reopens that tab's
+  // overlay from the canvas itself, so the customer can go back and forth
+  // between picking and previewing without hunting for the sidebar tabs.
+  reselectAction?: { label: string; onClick: () => void };
 }
 
 export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps> = ({
@@ -672,6 +694,7 @@ export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps>
   onRotateRight,
   extraControls,
   bottomSlot,
+  reselectAction,
   isContain,
   onToggleFit,
   onReset
@@ -685,6 +708,17 @@ export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps>
       >
         {sizeLabel}
       </div>
+
+      {reselectAction && (
+        <button
+          type="button"
+          onClick={reselectAction.onClick}
+          className="md:hidden mt-1.5 inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full border border-[#0E4A93]/30 bg-white text-[#0E4A93] text-[10px] font-bold hover:bg-blue-50 transition-colors cursor-pointer"
+        >
+          <RotateCcw className="w-3 h-3 shrink-0" />
+          <span className="truncate">{reselectAction.label}</span>
+        </button>
+      )}
 
       {/* Image Controls: [ − ] [ + ] [ ↶ ] [ ↷ ] [ Fit/Fill ] [ Reset ] directly below the Size Indicator */}
       <div
@@ -800,6 +834,7 @@ export interface CustomizerPreviewAreaProps {
   onReset?: () => void;
   prevStep?: { label: string; disabled: boolean; onClick: () => void };
   nextStep?: { label: string; disabled: boolean; onClick: () => void };
+  reselectAction?: { label: string; onClick: () => void };
   onPointerMove?: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerUp?: (e: React.PointerEvent<HTMLDivElement>) => void;
   onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
@@ -822,6 +857,7 @@ export const CustomizerPreviewArea: React.FC<CustomizerPreviewAreaProps> = ({
   onReset,
   prevStep,
   nextStep,
+  reselectAction,
   onPointerMove,
   onPointerUp,
   onClick,
@@ -902,6 +938,7 @@ export const CustomizerPreviewArea: React.FC<CustomizerPreviewAreaProps> = ({
           onRotateRight={onRotateRight}
           extraControls={extraControls}
           bottomSlot={bottomSlot}
+          reselectAction={reselectAction}
           isContain={isContain}
           onToggleFit={onToggleFit}
           onReset={onReset}

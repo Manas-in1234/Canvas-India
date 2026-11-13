@@ -9596,6 +9596,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             disabled: activeTabIndex === toolbarItems.length - 1,
             onClick: () => handleSelectTab(nextTab.id)
           }}
+          previewAction={
+            (activeTab === 'SELECT SIZE' || activeTab === 'LAYOUTS & DESIGNS')
+              ? { label: 'View Preview', onClick: () => setActiveTab(mobileRestingTab) }
+              : undefined
+          }
         >
           {/* ---------------------------- PRODUCTS ---------------------------- */}
           {activeTab === 'PRODUCTS' && (
@@ -12062,6 +12067,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               disabled: activeTabIndex === toolbarItems.length - 1,
               onClick: () => handleSelectTab(nextTab.id)
             }}
+            reselectAction={
+              toolbarItems.some((t) => t.id === 'SELECT SIZE')
+                ? { label: 'Select Another Size', onClick: () => handleSelectTab('SELECT SIZE') }
+                : toolbarItems.some((t) => t.id === 'LAYOUTS & DESIGNS')
+                ? { label: 'Select Another Layout', onClick: () => handleSelectTab('LAYOUTS & DESIGNS') }
+                : undefined
+            }
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             bottomSlot={
