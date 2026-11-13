@@ -3163,7 +3163,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // untouched whenever the fetch returns nothing (unmigrated product,
   // network hiccup, etc.) so a gap in seeded data degrades to "same as
   // today" rather than a broken size picker.
+  // A style built around exactly one uploaded shape has that shape's own sizes (set in the admin).
+  const customShapeKey = (() => {
+    if (!isAdminAddedStyle) return null;
+    const ids = selectedProductType.supportedShapeIds;
+    return ids && ids.length === 1 && ids[0].startsWith('custom-') ? ids[0] : null;
+  })();
+
   const sizePresetQuery = useMemo((): { productTypeId: string; shapeId?: string } | null => {
+    if (customShapeKey) {
+      return { productTypeId: SHAPE_GENERIC_PRODUCT_TYPE_ID, shapeId: customShapeKey };
+    }
     if (isSinglePrintCanvas) {
       return activeMaterial === 'acrylic' ? { productTypeId: 'acrylic-print' } : { productTypeId: 'canvas-single' };
     }
@@ -3187,6 +3197,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
     return { productTypeId: SHAPE_GENERIC_PRODUCT_TYPE_ID, shapeId: selectedShapeId };
   }, [
+    customShapeKey,
     isSinglePrintCanvas,
     isQuotesProduct,
     isDigitalPaintingProduct,
@@ -15846,6 +15857,24 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         productId={selectedProductTypeId}
         productName={selectedProductType.name}
         singlePrintMode={isAdminAddedStyle}
+        shapeSizes={
+          customShapeKey && liveSizeOptions.length > 0
+            ? liveSizeOptions.map((o) => ({
+                id: o.id,
+                shapeId: customShapeKey,
+                shapeName: selectedProductType.name,
+                label: o.dimensionsSummary || o.label,
+                dimensionsSummary: o.dimensionsSummary || o.label,
+                widthInches: o.widthInches ?? 0,
+                heightInches: o.heightInches ?? 0,
+                price: o.price,
+                aspectRatio: (o.widthInches ?? 1) / (o.heightInches || 1),
+                category: 'SPECIAL' as const,
+                panelsCount: 1,
+                diagramType: 'single-shape',
+              }))
+            : null
+        }
         shapeChoices={(() => {
           // A style added from the admin offers the shapes ticked for it. Uploaded shapes
           // (id 'custom-<id>') carry their traced outline; built-in ones are drawn by name.

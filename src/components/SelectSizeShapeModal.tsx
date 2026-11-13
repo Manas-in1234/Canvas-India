@@ -17,6 +17,8 @@ export interface SelectSizeShapeModalProps {
   singlePrintMode?: boolean;
   /** A style built around one uploaded (traced) shape: every size is drawn in that shape, like Heart Canvas. */
   shapeChoices?: Array<{ id: string; name: string; clipPathType: string; clipPathValue: string }> | null;
+  /** A style built around one uploaded shape lists that shape's own sizes here (no category or shape chips). */
+  shapeSizes?: SizeShapeOption[] | null;
   currentShapeId?: string;
   currentSizeId?: string;
   isCustomSize?: boolean;
@@ -50,6 +52,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   productName,
   singlePrintMode = false,
   shapeChoices = null,
+  shapeSizes = null,
   currentShapeId = 'shape-square',
   currentSizeId = '',
   isCustomSize = false,
@@ -77,6 +80,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
 
   const isSinglePrint = useMemo(() => {
     const norm = productId.toLowerCase();
+    if (shapeSizes && shapeSizes.length > 0) return false;
     return (
       singlePrintMode ||
       !!shapeStyle ||
@@ -91,7 +95,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
       norm.includes('lyric') ||
       norm.includes('pop')
     );
-  }, [productId, singlePrintMode, shapeStyle]);
+  }, [productId, singlePrintMode, shapeStyle, shapeSizes]);
 
   // Active Category Tab for Single Print: RECOMMENDED (default), SQUARE, PANORAMIC, LARGE, SMALL
   const [activeCategory, setActiveCategory] = useState<SinglePrintCategory>('RECOMMENDED');
@@ -1023,8 +1027,9 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
 
   // Options for shaped products (Round, Triangle, Heart, Oval)
   const shapedProductOptions = useMemo(() => {
+    if (shapeSizes && shapeSizes.length > 0) return shapeSizes;
     return getProductSizeShapeOptions(productId, material);
-  }, [productId, material]);
+  }, [productId, material, shapeSizes]);
 
   // All valid options to pick from
   const currentCategoryOptions = useMemo(() => {

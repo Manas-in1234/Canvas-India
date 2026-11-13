@@ -23,7 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShapeDetectDialog, ShapeManagerDialog, ShapeThumb, ShapeToolbar, shapeKey, useShapes, type ShapeApprovedHandler } from '@/components/customization/shape-manager';
+import { ShapeDetectDialog, ShapeManagerDialog, ShapeThumb, ShapeToolbar, seedShapeSizes, shapeKey, useShapes, type ShapeApprovedHandler } from '@/components/customization/shape-manager';
 import type { CustomShapeListItem } from '@/lib/types/shape';
 import { formatCurrency } from '@/lib/format';
 
@@ -317,7 +317,8 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
         capabilities: template?.capabilities ?? {},
         isActive: true,
       });
-      if (template) await copySizePresets(template.slug, created.slug);
+      // The shape's own sizes (add or remove them under Manage shapes). Not Single Print's list.
+      await seedShapeSizes(key).catch(() => undefined);
       return created;
     },
     onSuccess: (created) => {

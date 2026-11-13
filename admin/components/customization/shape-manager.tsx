@@ -7,6 +7,7 @@ import { ArrowLeft, ScanLine, Upload } from "lucide-react";
 import { apiClient, ApiError } from "@/lib/api-client";
 import type { CustomShapeListItem, ShapePriceMode } from "@/lib/types/shape";
 import type { CustomizerProductType } from "@/lib/types/customizer-product-type";
+import type { SizePresetListItem } from "@/lib/types/size-preset";
 import { usePermission } from "@/lib/auth/use-permission";
 import { formatDate } from "@/lib/format";
 import { StatusBadge } from "@/components/status-badge";
@@ -221,6 +222,164 @@ function ShapeDetectForm({
   );
 }
 
+/** Sizes that belong to one shape are stored against this scope, keyed by the shape's own id. */
+const SHAPE_SIZE_SCOPE = "__shape_generic__";
+
+async function fetchShapeSizes(key: string) {
+  const all = await apiClient.get<SizePresetListItem[]>(`/admin/size-presets?productTypeId=${SHAPE_SIZE_SCOPE}`);
+  return all.filter((p) => p.shapeId === key);
+}
+
+const sizeBody = (key: string, w: number, h: number, canvasPrice: string | number, acrylicPrice: string | number) => ({
+  productTypeId: SHAPE_SIZE_SCOPE,
+  shapeId: key,
+  label: `${w}" × ${h}"`,
+  dimensionsSummary: `${w}" × ${h}"`,
+  widthInches: String(w),
+  heightInches: String(h),
+  canvasPrice: String(canvasPrice),
+  acrylicPrice: String(acrylicPrice),
+  category: "RECOMMENDED",
+});
+
+/**
+ * Gives a new shape a starting list of sizes: Single Print's square sizes and prices when there
+ * are any, otherwise a small standard set. The admin then adds or removes sizes for that shape.
+ */
+export async function seedShapeSizes(key: string) {
+  let seed: Array<{ w: number; canvas: string | number; acrylic: string | number }> = [];
+  try {
+    const single = await apiClient.get<SizePresetListItem[]>("/admin/size-presets?productTypeId=canvas-single");
+    const seen = new Set<number>();
+    seed = single
+      .filter((p) => Number(p.widthInches) === Number(p.heightInches) && !seen.has(Number(p.widthInches)) && !!seen.add(Number(p.widthInches)))
+      .map((p) => ({ w: Number(p.widthInches), canvas: p.canvasPrice, acrylic: p.acrylicPrice }));
+  } catch {
+    /* fall back to the standard set below */
+  }
+  if (seed.length === 0) {
+    const sizes = [8, 10, 12, 16, 20, 24];
+    const canvas = [349, 499, 699, 999, 1499, 2099];
+    const acrylic = [699, 999, 1399, 1999, 2999, 4199];
+    seed = sizes.map((w, i) => ({ w, canvas: canvas[i], acrylic: acrylic[i] }));
+  }
+  for (const row of seed) await apiClient.post("/admin/size-presets", sizeBody(key, row.w, row.w, row.canvas, row.acrylic));
+}
+
+/** Add and remove the sizes a customer can pick for this one shape. */
+function ShapeSizesEditor({ shapeKey: key }: { shapeKey: string }) {
+  const queryClient = useQueryClient();
+  const { hasPermission } = usePermission();
+  const canManage = hasPermission("size_presets.manage");
+  const queryKey = ["size-presets", "shape", key];
+  const { data, isLoading, isError } = useQuery({ queryKey, queryFn: () => fetchShapeSizes(key), enabled: hasPermission("size_presets.view") });
+  const [w, setW] = useState("");
+  const [h, setH] = useState("");
+  const [canvas, setCanvas] = useState("");
+  const [acrylic, setAcrylic] = useState("");
+
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey });
+    queryClient.invalidateQueries({ queryKey: ["size-presets"] });
+  };
+  const valid = Number(w) > 0 && Number(h) > 0 && canvas !== "" && Number(canvas) >= 0 && acrylic !== "" && Number(acrylic) >= 0;
+  const add = useMutation({
+    mutationFn: () => apiClient.post("/admin/size-presets", sizeBody(key, Number(w), Number(h), canvas, acrylic)),
+    onSuccess: () => {
+      toast.success("Size added");
+      setW("");
+      setH("");
+      setCanvas("");
+      setAcrylic("");
+      refresh();
+    },
+    onError: (err: unknown) => toast.error(errorText(err, "Failed to add size")),
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/admin/size-presets/${id}`),
+    onSuccess: () => {
+      toast.success("Size removed");
+      refresh();
+    },
+    onError: (err: unknown) => toast.error(errorText(err, "Failed to remove size")),
+  });
+  const seed = useMutation({
+    mutationFn: () => seedShapeSizes(key),
+    onSuccess: () => {
+      toast.success("Standard sizes added");
+      refresh();
+    },
+    onError: (err: unknown) => toast.error(errorText(err, "Failed to add sizes")),
+  });
+
+  if (!hasPermission("size_presets.view")) return null;
+  const sizes = data ?? [];
+  return (
+    <div className="space-y-3 rounded-md border p-4">
+      <div>
+        <div className="text-sm font-medium">Sizes for this shape</div>
+        <p className="text-[11px] text-muted-foreground">
+          The sizes customers pick in the Select Size popup when they choose this shape, with the price for each. Changes show on the
+          storefront straight away.
+        </p>
+      </div>
+      {isLoading ? (
+        <Skeleton className="h-16 w-full" />
+      ) : isError ? (
+        <p className="text-sm text-destructive">Could not load this shape&apos;s sizes.</p>
+      ) : sizes.length === 0 ? (
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">No sizes yet. Customers see a standard set until you add some.</p>
+          {canManage && (
+            <Button size="sm" variant="outline" disabled={seed.isPending} onClick={() => seed.mutate()}>
+              {seed.isPending ? "Adding…" : "Add standard sizes"}
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="divide-y rounded-md border text-sm">
+          {sizes.map((p) => (
+            <div key={p.id} className="flex items-center gap-3 px-3 py-2">
+              <span className="w-24 font-medium">{p.dimensionsSummary}</span>
+              <span className="flex-1 text-xs text-muted-foreground">
+                Canvas Rs.{p.canvasPrice} · Acrylic Rs.{p.acrylicPrice}
+              </span>
+              {canManage && (
+                <Button size="sm" variant="ghost" disabled={remove.isPending} onClick={() => remove.mutate(p.id)}>
+                  Remove
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      {canManage && (
+        <div className="grid grid-cols-2 items-end gap-2 sm:grid-cols-5">
+          <div className="space-y-1">
+            <Label className="text-xs">Width (in)</Label>
+            <Input type="number" min="1" step="0.5" value={w} onChange={(e) => setW(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Height (in)</Label>
+            <Input type="number" min="1" step="0.5" value={h} onChange={(e) => setH(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Canvas Rs.</Label>
+            <Input type="number" min="0" step="0.01" value={canvas} onChange={(e) => setCanvas(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Acrylic Rs.</Label>
+            <Input type="number" min="0" step="0.01" value={acrylic} onChange={(e) => setAcrylic(e.target.value)} />
+          </div>
+          <Button disabled={!valid || add.isPending} onClick={() => add.mutate()}>
+            {add.isPending ? "Adding…" : "Add size"}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ShapeDetail({
   id,
   onBack,
@@ -386,6 +545,12 @@ function ShapeDetailBody({
           defaultShapeId: st.defaultShapeId === key ? (left[0] ?? null) : st.defaultShapeId,
         });
       }
+      // The shape's own sizes go with it (skipped quietly if this admin may not manage sizes).
+      try {
+        for (const p of await fetchShapeSizes(key)) await apiClient.delete(`/admin/size-presets/${p.id}`);
+      } catch {
+        /* nothing to clean up, or not permitted */
+      }
       return apiClient.delete(`/admin/shapes/${id}`);
     },
     onSuccess: () => {
@@ -530,6 +695,8 @@ function ShapeDetailBody({
           </div>
         </div>
       )}
+
+      {!isBuiltIn && <ShapeSizesEditor shapeKey={key} />}
 
       <div className="space-y-1.5 text-sm">
         <div className="flex justify-between">
