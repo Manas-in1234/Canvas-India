@@ -1889,6 +1889,20 @@ export default {
         }
       }
 
+      const discountIdMatch = pathname.match(/^\/api\/v1\/growth\/discounts\/([^/]+)$/);
+      if (discountIdMatch && (method === 'PATCH' || method === 'DELETE')) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, ['discounts.manage'], request);
+        if (permError) return permError;
+        const id = decodeURIComponent(discountIdMatch[1]);
+        if (method === 'PATCH') {
+          return jsonResponse(await services.discounts.update(id, await request.json()), 200, request);
+        }
+        await services.discounts.delete(id);
+        return jsonResponse({ success: true }, 200, request);
+      }
+
       if (pathname === '/api/v1/growth/segments') {
         const { user, error } = await authenticate(request, env, prisma);
         if (error) return error;
