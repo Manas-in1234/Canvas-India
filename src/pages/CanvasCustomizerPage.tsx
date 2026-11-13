@@ -11100,7 +11100,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         <CustomizerOptionCard
                           key={w.id}
                           selected={selectedWrapId === w.id}
-                          onClick={() => setSelectedWrapId(w.id)}
+                          onClick={() => {
+                            setSelectedWrapId(w.id);
+                            // Keep the Border section's own color swatch in
+                            // sync with Black/White Border Wrap - otherwise
+                            // whatever color was already active there (e.g.
+                            // white) visually overrides the wrap's color.
+                            if (w.id === 'black-border') {
+                              setSelectedBorderColor('#000000');
+                            } else if (w.id === 'white-border') {
+                              setSelectedBorderColor('#FFFFFF');
+                            }
+                          }}
                           title={w.name}
                           priceText={w.price === 0 ? 'Included' : `+₹${w.price}`}
                           previewHeightClass="h-16 p-1.5"
