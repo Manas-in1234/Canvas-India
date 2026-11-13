@@ -14600,10 +14600,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                 const singleCanvasContent = (
                   <div
-                    className={`relative w-full h-full overflow-hidden bg-white pointer-events-none select-none ${
+                    className={`relative overflow-hidden bg-white pointer-events-none select-none ${
                       !hasClip ? (shapeApplies ? currentShape.borderRadiusClass : 'rounded-xs') : ''
                     }`}
                     style={{
+                      // Explicit pixel size instead of w-full/h-full: when this
+                      // is wrapped in a floating frame, the frame's moulding/gap
+                      // divs have no size of their own (they shrink-wrap to
+                      // their content), so a percentage width/height here has
+                      // no definite ancestor to resolve against and the photo
+                      // inside falls back to its own full natural resolution
+                      // instead of the locked Room View scale.
+                      width: `${productPixelSize?.width || roomProductWidth}px`,
+                      height: `${productPixelSize?.height || roomProductWidth}px`,
                       clipPath: clipStyle,
                       WebkitClipPath: clipStyle,
                       boxShadow: !hasClip && !hasOuterFrame
