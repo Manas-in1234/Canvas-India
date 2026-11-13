@@ -71,6 +71,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   const isDigitalPainting = productId.toLowerCase() === 'canvas-digital-painting';
   const isLyric = productId.toLowerCase() === 'canvas-lyric' || productId.toLowerCase().includes('lyric');
   const isPopArt = productId.toLowerCase().includes('pop');
+  const isRoundShape = currentShapeId === 'shape-circle' || productId.toLowerCase().includes('round');
 
   // Which of the style's shapes the customer is looking at (a style may offer several).
   const [chosenShapeId, setChosenShapeId] = useState<string>(
@@ -1053,10 +1054,14 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
     return defaultOptionId;
   });
 
-  // Custom size state
+  // Custom size state - kept as the raw typed string (not a coerced number)
+  // so the field can actually be cleared and retyped. Coercing every
+  // keystroke to a number meant backspacing to an empty field instantly
+  // snapped back to the fallback default, making it impossible to clear
+  // and type a fresh value - the field basically couldn't be hand-edited.
   const [showCustomSize, setShowCustomSize] = useState<boolean>(isCustomSize);
-  const [localCustomW, setLocalCustomW] = useState<number>(customWidth || 10);
-  const [localCustomH, setLocalCustomH] = useState<number>(customHeight || 10);
+  const [localCustomW, setLocalCustomW] = useState<string>(String(customWidth || 10));
+  const [localCustomH, setLocalCustomH] = useState<string>(String(customHeight || 10));
 
   // If category changes, keep selection if present or default to first
   useEffect(() => {
@@ -1414,8 +1419,9 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
             })}
           </div>
 
-          {/* Custom Size Section (Available for single print) */}
-          {isSinglePrint && (
+          {/* Custom Size Section - available for single print and every
+              shaped product (Round, Triangle, Heart, Oval) alike. */}
+          {(
             <div className="pt-2">
               <div
                 onClick={() => setShowCustomSize(!showCustomSize)}
@@ -1436,7 +1442,9 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
                   <div>
                     <h4 className="text-xs sm:text-sm font-black text-stone-900">Custom Size</h4>
                     <p className="text-[11px] text-stone-500">
-                      Need custom dimensions? Enter width and height (8&quot; to 48&quot;)
+                      {isRoundShape
+                        ? 'Need a custom diameter? Enter it yourself (8" to 48")'
+                        : 'Need custom dimensions? Enter width and height (8" to 48")'}
                     </p>
                   </div>
                 </div>
@@ -1444,41 +1452,67 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
                   <span className="text-xs font-bold text-[#0E4A93]">
                     ₹
                     {Math.round(
-                      Math.max(8, localCustomW) * Math.max(8, localCustomH) * (material === 'acrylic' ? 4.5 : 2.5)
+                      Math.max(8, Number(localCustomW) || 0) * Math.max(8, Number(localCustomH) || 0) * (material === 'acrylic' ? 4.5 : 2.5)
                     ).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                 )}
               </div>
 
               {showCustomSize && (
-                <div className="mt-3 p-4 rounded-xl bg-white border border-stone-200 shadow-inner grid grid-cols-2 gap-3 animate-in fade-in duration-150">
-                  <div>
+                isRoundShape ? (
+                  <div className="mt-3 p-4 rounded-xl bg-white border border-stone-200 shadow-inner animate-in fade-in duration-150">
                     <label className="text-[11px] font-extrabold text-stone-600 block mb-1">
-                      WIDTH (INCHES)
+                      DIAMETER (INCHES)
                     </label>
                     <input
                       type="number"
                       min={8}
                       max={48}
                       value={localCustomW}
-                      onChange={(e) => setLocalCustomW(Number(e.target.value) || 8)}
+                      onChange={(e) => {
+                        setLocalCustomW(e.target.value);
+                        setLocalCustomH(e.target.value);
+                      }}
+                      onBlur={() => {
+                        const clamped = String(Math.max(8, Math.min(48, Number(localCustomW) || 10)));
+                        setLocalCustomW(clamped);
+                        setLocalCustomH(clamped);
+                      }}
                       className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
                     />
                   </div>
-                  <div>
-                    <label className="text-[11px] font-extrabold text-stone-600 block mb-1">
-                      HEIGHT (INCHES)
-                    </label>
-                    <input
-                      type="number"
-                      min={8}
-                      max={48}
-                      value={localCustomH}
-                      onChange={(e) => setLocalCustomH(Number(e.target.value) || 8)}
-                      className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
-                    />
+                ) : (
+                  <div className="mt-3 p-4 rounded-xl bg-white border border-stone-200 shadow-inner grid grid-cols-2 gap-3 animate-in fade-in duration-150">
+                    <div>
+                      <label className="text-[11px] font-extrabold text-stone-600 block mb-1">
+                        WIDTH (INCHES)
+                      </label>
+                      <input
+                        type="number"
+                        min={8}
+                        max={48}
+                        value={localCustomW}
+                        onChange={(e) => setLocalCustomW(e.target.value)}
+                        onBlur={() => setLocalCustomW(String(Math.max(8, Math.min(48, Number(localCustomW) || 10))))}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-extrabold text-stone-600 block mb-1">
+                        HEIGHT (INCHES)
+                      </label>
+                      <input
+                        type="number"
+                        min={8}
+                        max={48}
+                        value={localCustomH}
+                        onChange={(e) => setLocalCustomH(e.target.value)}
+                        onBlur={() => setLocalCustomH(String(Math.max(8, Math.min(48, Number(localCustomH) || 10))))}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
+                      />
+                    </div>
                   </div>
-                </div>
+                )
               )}
             </div>
           )}
@@ -1498,7 +1532,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
               {showCustomSize
                 ? displayPrice(
                     Math.round(
-                      Math.max(8, localCustomW) * Math.max(8, localCustomH) * (material === 'acrylic' ? 4.5 : 2.5)
+                      Math.max(8, Number(localCustomW) || 0) * Math.max(8, Number(localCustomH) || 0) * (material === 'acrylic' ? 4.5 : 2.5)
                     )
                   ).toLocaleString('en-IN', { minimumFractionDigits: 2 })
                 : currentSelectedOption && displayPrice(currentSelectedOption.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
