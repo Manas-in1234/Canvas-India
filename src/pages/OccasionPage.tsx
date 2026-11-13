@@ -6,7 +6,7 @@ import {
   Check, ShieldCheck, Smile, Image as ImageIcon, RectangleHorizontal, Square, Circle, Plus,
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
-import { OCCASIONS, getOccasionBySlug } from '../data/occasionsData';
+import { useOccasions } from '../context/OccasionsContext';
 import { GIFT_TILE_CATEGORIES } from '../data/shopCategories';
 
 const OCCASION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -101,13 +101,15 @@ export const OccasionPage: React.FC = () => {
   const navigate = useNavigate();
   const { allProducts, isCategoryVisible } = useShop();
 
-  const occasion = getOccasionBySlug(slug);
+  const { entries, occasions, loading } = useOccasions();
+  const occasion = entries.find(row => row.slug === slug);
+  const heroTitle = occasion?.heroTitle || (occasion ? `${occasion.name} Gifts & Prints` : '');
 
   useEffect(() => {
     if (occasion) {
-      document.title = `${occasion.name} Gifts & Prints | Canvas India`;
+      document.title = `${heroTitle} | Canvas India`;
     }
-  }, [occasion]);
+  }, [occasion, heroTitle]);
 
   // Every festival tile leads to the same live customizer — there's no
   // per-festival product catalogue yet, so this is a functional "start a
@@ -137,6 +139,10 @@ export const OccasionPage: React.FC = () => {
         return { ...cat, destination, image: occasion.tileImages?.[cat.categorySlug] || occasion.bannerImage };
       });
   }, [occasion, allProducts, isCategoryVisible]);
+
+  if (!occasion && loading) {
+    return <div role="status" className="min-h-[60vh] py-20 text-center">Loading occasion…</div>;
+  }
 
   if (!occasion) {
     return (
@@ -205,7 +211,7 @@ export const OccasionPage: React.FC = () => {
 
           <div className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-10 lg:px-14 max-w-[64%] sm:max-w-xl">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight drop-shadow-sm" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
-              {occasion.name} Gifts &amp; Prints
+              {heroTitle}
             </h1>
             <p className="text-sm sm:text-base text-white/90 max-w-xl mt-3 leading-relaxed drop-shadow-sm">
               {occasion.tagline}
@@ -235,7 +241,7 @@ export const OccasionPage: React.FC = () => {
 
       {/* OTHER OCCASIONS QUICK SWITCH */}
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-6 flex flex-wrap items-center justify-center gap-2.5">
-        {OCCASIONS.map((o) => {
+        {occasions.map((o) => {
           const OIcon = OCCASION_ICONS[o.slug] || Sparkles;
           const active = o.slug === occasion.slug;
           return (
@@ -344,7 +350,7 @@ export const OccasionPage: React.FC = () => {
                   >
                     <FIcon className="w-5 h-5" style={{ color: occasion.accent }} />
                   </span>
-                  <span className="text-xs font-bold text-stone-800 leading-tight">{f.name}</span>
+                  <span className="text-xs font-bold text-stone-800 leading-tight">{entries.find(row => row.slug === f.slug)?.name ?? f.name}</span>
                   <span className="text-[10px] text-stone-400 mt-0.5">{f.date}</span>
                 </button>
                 );
