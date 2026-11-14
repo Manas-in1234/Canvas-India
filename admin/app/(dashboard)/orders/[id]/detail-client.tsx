@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft } from "lucide-react";
 import { OrderShippingPanel } from "@/components/delivery/order-shipping-panel";
+import { InvoiceButton } from "@/components/orders/invoice";
 import { OrderEditor } from "@/components/order-editor";
 
 export function OrderDetailClient({ id: initialId }: { id: string }) {
@@ -115,7 +116,8 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
             Order {order.orderNumber}
           </h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <InvoiceButton orderId={order.id} />
           <StatusBadge status={order.orderStatus} />
           <StatusBadge status={order.paymentLabel ?? order.paymentStatus} />
           <StatusBadge status={order.shippingStatus} />

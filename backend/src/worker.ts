@@ -13,6 +13,8 @@ import { resolveAdminRead } from './common/admin-read-routes.js';
 import { HeroImages } from './catalog/hero-images.js';
 import { HERO_IMAGE_SLOTS, isHeroImageSlot } from './catalog/hero-image-slots.js';
 import { WorkerShipping } from './shipping/worker-shipping.js';
+import { sendOrderEmail, type OrderEmailEnv } from './common/order-emails.js';
+import { buildInvoice, loadBusinessProfile } from './commerce/invoice.js';
 import { verifyCapturedOrderPayment } from './commerce/orders/razorpay-capture.js';
 import { AdminOrders } from './commerce/orders/admin-orders.js';
 
@@ -41,6 +43,23 @@ export interface Env {
   DELHIVERY_WEBHOOK_SECRET?: string;
   DELIVERY_GRAMS_PER_SQ_IN_CANVAS?: string;
   DELIVERY_GRAMS_PER_SQ_IN_ACRYLIC?: string;
+  RESEND_API_KEY?: string;
+  MAIL_FROM?: string;
+  MAIL_REPLY_TO?: string;
+  ADMIN_NOTIFY_EMAIL?: string;
+  STORE_NAME?: string;
+  STORE_URL?: string;
+  ADMIN_URL?: string;
+  BUSINESS_LEGAL_NAME?: string;
+  BUSINESS_ADDRESS?: string;
+  BUSINESS_STATE?: string;
+  BUSINESS_GSTIN?: string;
+  BUSINESS_PHONE?: string;
+  BUSINESS_EMAIL?: string;
+  INVOICE_PREFIX?: string;
+  PRICES_INCLUDE_GST?: string;
+  GST_RATE?: string;
+  INVOICE_HSN_CODE?: string;
 }
 
 let cachedWasmModule: any = null;
@@ -306,6 +325,11 @@ export default {
     const pathname = url.pathname.replace(/\/+$/, '') || '/';
     const method = request.method;
     const query = Object.fromEntries(url.searchParams.entries());
+    // Emails run after the response is sent and can never fail the request.
+    const background = (task: Promise<unknown>) => {
+      if (ctx?.waitUntil) ctx.waitUntil(task);
+      else void task.catch(() => undefined);
+    };
 
     let requestPrisma: PrismaClient | undefined;
     try {
@@ -1665,6 +1689,10 @@ export default {
           throw error;
         });
 
+        // Confirmation only once the order is really confirmed: Cash on Delivery, or payment received.
+        if (isCod || (newOrder as { paymentStatus?: string }).paymentStatus === 'PAID') {
+          background(Promise.all([sendOrderEmail(prisma, env as OrderEmailEnv, newOrder.id, 'confirmed'), sendOrderEmail(prisma, env as OrderEmailEnv, newOrder.id, 'admin_new')]));
+        }
         return jsonResponse(isCod ? codReceipt(newOrder) : newOrder, 201, request);
       }
 
@@ -1707,6 +1735,20 @@ export default {
           const body = await request.json();
           return jsonResponse(await services.orders.createFromCart(body.customerId, body.cartId), 201, request);
         }
+      }
+
+      const invoiceMatch = pathname.match(/^\/api\/v1\/orders\/([^/]+)\/invoice$/);
+      if (invoiceMatch && method === 'GET') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, ['orders.view'], request);
+        if (permError) return permError;
+        const invoiceOrder = await prisma.order.findUnique({
+          where: { id: invoiceMatch[1] },
+          include: { items: true, addresses: true, customer: true, payments: true },
+        });
+        if (!invoiceOrder) return jsonResponse({ statusCode: 404, message: 'Order not found' }, 404, request);
+        return jsonResponse(buildInvoice(invoiceOrder as never, loadBusinessProfile(env)), 200, request);
       }
 
       const orderMatch = pathname.match(/^\/api\/v1\/orders\/([^/]+)$/);
@@ -1766,9 +1808,9 @@ export default {
           const body = (await request.json().catch(() => ({}))) as { amount?: string; reason?: string };
           return jsonResponse(await services.orders.refund(orderId, String(body.amount ?? ''), body.reason), 200, request);
         }
-        return jsonResponse(
-          action === 'accept' ? await services.orders.accept(orderId, user.id) : await services.orders.cancel(orderId, user.id),
-          200, request);
+        const actionResult = action === 'accept' ? await services.orders.accept(orderId, user.id) : await services.orders.cancel(orderId, user.id);
+        if (action === 'cancel') background(sendOrderEmail(prisma, env as OrderEmailEnv, orderId, 'cancelled'));
+        return jsonResponse(actionResult, 200, request);
       }
 
       // Storefront: live order status, and customer cancellation (only before production starts).
@@ -1781,6 +1823,7 @@ export default {
         if (!order) return jsonResponse(method === 'GET' ? { found: false } : { message: 'Order not found for this customer' }, method === 'GET' ? 200 : 404, request);
         if (method === 'POST') {
           await services.orders.cancelByCustomer(order.id);
+          background(sendOrderEmail(prisma, env as OrderEmailEnv, order.id, 'cancelled'));
           return jsonResponse({ cancelled: true }, 200, request);
         }
         return jsonResponse({
@@ -2044,7 +2087,7 @@ export default {
         if (!secret) return jsonResponse({ message: 'Webhook is not enabled' }, 503, request);
         const given = (request.headers.get('Authorization') || '').replace(/^Token\s+/i, '').trim() || url.searchParams.get('token') || '';
         if (given !== secret) return jsonResponse({ message: 'Unauthorized' }, 401, request);
-        const result = await new WorkerShipping(prisma, env).applyWebhook(await request.json().catch(() => ({})));
+        const result = await new WorkerShipping(prisma, env, undefined, (kind, orderId) => background(sendOrderEmail(prisma, env as OrderEmailEnv, orderId, kind))).applyWebhook(await request.json().catch(() => ({})));
         return jsonResponse({ success: true, ...result }, 200, request);
       }
       const shipRoute = pathname.match(/^\/api\/v1\/shipping(?:\/(config|summary|pickups|sync|shipments|test-connection)|\/preview\/([0-9a-fA-F-]{36})|\/([0-9a-fA-F-]{36})(?:\/(refresh|cancel|label|ndr-action|rto-received))?)?$/);
@@ -2060,7 +2103,7 @@ export default {
           : 'shipping.view';
         const denied = checkPermission(user, [perm], request);
         if (denied) return denied;
-        const ship = new WorkerShipping(prisma, env);
+        const ship = new WorkerShipping(prisma, env, undefined, (kind, orderId) => background(sendOrderEmail(prisma, env as OrderEmailEnv, orderId, kind)));
         if (!named && !previewOrderId && !shipmentId && method === 'GET') return jsonResponse(await ship.list(query), 200, request);
         if (named === 'config' && method === 'GET') return jsonResponse(ship.config(), 200, request);
         if (named === 'summary' && method === 'GET') return jsonResponse(await ship.summary(), 200, request);
@@ -2424,7 +2467,10 @@ export default {
     const run = async () => {
       try {
         const { prisma } = await getServices(env);
-        const result = await new WorkerShipping(prisma, env).syncActive(20);
+        const result = await new WorkerShipping(prisma, env, undefined, (kind, orderId) => {
+          const task = sendOrderEmail(prisma, env as OrderEmailEnv, orderId, kind);
+          if (ctx?.waitUntil) ctx.waitUntil(task);
+        }).syncActive(20);
         console.log('delivery sync', JSON.stringify(result));
       } catch (err) {
         console.error('delivery sync failed', err);

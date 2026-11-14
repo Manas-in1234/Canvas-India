@@ -36,6 +36,8 @@ export class WorkerShipping {
     private readonly prisma: any,
     private readonly env: DelhiveryEnv,
     fetchFn?: FetchLike,
+    /** Called when a parcel is first on its way or is delivered, so the customer can be emailed. Must not throw. */
+    private readonly notify?: (kind: 'shipped' | 'delivered', orderId: string) => void,
   ) {
     this.client = new DelhiveryClient(loadDelhiveryConfig(env), fetchFn);
   }
@@ -388,6 +390,10 @@ export class WorkerShipping {
         await tx.rtoCase.create({ data: { shipmentId, warehouseId: shipment.warehouseId } });
       }
     });
+    if (statusChanged) {
+      if (current === 'PICKED_UP' || current === 'IN_TRANSIT' || current === 'OUT_FOR_DELIVERY') this.notify?.('shipped', shipment.orderId);
+      if (current === 'DELIVERED') this.notify?.('delivered', shipment.orderId);
+    }
     return { changed: true, status: current };
   }
 
