@@ -14,7 +14,7 @@ export default function OrdersPage() {
   const [status, setStatus] = useState("ALL");
   const router = useRouter();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ["orders"],
     queryFn: () => apiClient.get<OrderListItem[]>("/orders"),
   });

@@ -33,7 +33,7 @@ async function getServices(env: Env): Promise<{ prisma: PrismaClient; services: 
     return { prisma: (env as any)._prisma, services: (env as any)._services };
   }
   const connectionString = env.HYPERDRIVE?.connectionString || env.DATABASE_URL;
-  const adapter = new PrismaPg({ connectionString });
+  const adapter = new PrismaPg({ connectionString, max: 4, connectionTimeoutMillis: 5000 });
   const prisma = new PrismaClient({ adapter });
   const engineConfig = (prisma as any)._engine?.config || (prisma as any)._engineConfig;
   if (engineConfig?.compilerWasm) {
@@ -111,6 +111,7 @@ function corsHeaders(request: Request): Record<string, string> {
 function jsonResponse(data: any, status = 200, request?: Request): Response {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-store',
     ...(request ? corsHeaders(request) : {}),
   };
   return new Response(JSON.stringify(data), { status, headers });
@@ -279,7 +280,7 @@ async function findPublicProductTypes(prisma: PrismaClient) {
 }
 
 export default {
-  async fetch(request: Request, env: Env, ctx: any): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx?: { waitUntil(promise: Promise<unknown>): void }): Promise<Response> {
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders(request) });
     }
@@ -289,9 +290,10 @@ export default {
     const method = request.method;
     const query = Object.fromEntries(url.searchParams.entries());
 
-    const { prisma, services } = await getServices(env);
-
+    let requestPrisma: PrismaClient | undefined;
     try {
+      const { prisma, services } = await getServices(env);
+      if (!(env as Env & { _prisma?: PrismaClient })._prisma) requestPrisma = prisma;
       if (pathname === '/api/v1/occasions' && method === 'GET') {
         return jsonResponse(await new Occasions(prisma).list(), 200, request);
       }
@@ -1070,7 +1072,10 @@ export default {
             if (error) return error;
             const denied = checkPermission(user, ['products.view'], request);
             if (denied) return denied;
-            return jsonResponse(await services.products.findAll(true), 200, request);
+            const products = query.view === 'summary'
+              ? await services.products.findAdminSummaries()
+              : await services.products.findAll(true);
+            return jsonResponse(products, 200, request);
           }
           if (await isSignedInAdmin(request, env, prisma)) {
             return jsonResponse(await services.products.findAll(true), 200, request);
@@ -2280,10 +2285,29 @@ export default {
 
       return jsonResponse({ statusCode: 404, message: `Cannot ${method} ${pathname}`, error: 'Not Found' }, 404, request);
     } catch (err: any) {
-      console.error('API Error Stack:', err?.stack || err);
-      const status = typeof err?.getStatus === 'function' ? err.getStatus() : err?.status || (err?.code === 'P2025' ? 404 : 500);
-      const message = err?.message || 'Internal server error';
+      const status = typeof err?.getStatus === 'function' ? err.getStatus() : err?.status
+        || (err?.code === 'P2025' ? 404 : isDatabaseUnavailable(err) ? 503 : 500);
+      if (status >= 500) {
+        console.error('API request failed', { method, pathname, status, code: err?.code, ray: request.headers.get('cf-ray') });
+      }
+      const message = status >= 500 && env.NODE_ENV !== 'development'
+        ? status === 503 ? 'The service is temporarily unavailable. Try again shortly.' : 'The server could not complete the request.'
+        : err?.message || 'Internal server error';
       return jsonResponse({ statusCode: status, message, stack: env.NODE_ENV === 'development' ? err?.stack : undefined }, status, request);
+    } finally {
+      if (requestPrisma) {
+        const cleanup = requestPrisma.$disconnect().catch(() => {
+          console.warn('Database cleanup failed', { method, pathname, ray: request.headers.get('cf-ray') });
+        });
+        if (ctx) ctx.waitUntil(cleanup);
+        else await cleanup;
+      }
     }
   },
 };
+
+function isDatabaseUnavailable(error: any) {
+  const code = error?.code ?? error?.cause?.code;
+  return /^(?:P100[12]|P1017|P2024|08\d{3}|53300|57P0[123]|ECONNRESET|ECONNREFUSED|ETIMEDOUT)$/.test(String(code))
+    || /^(?:timeout exceeded when trying to connect|connection terminated(?: unexpectedly)?)$/i.test(String(error?.message));
+}

@@ -39,7 +39,7 @@ export default function DiscountsPage() {
     applicableCategoryIds: '', applicableProductIds: '', customerSegmentId: '', campaignId: '',
   });
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ['discounts'],
     queryFn: () => apiClient.get<Discount[]>('/growth/discounts'),
   });

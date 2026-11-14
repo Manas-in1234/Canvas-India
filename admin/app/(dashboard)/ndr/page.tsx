@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function NdrPage() {
   const router = useRouter();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ["ndr-cases"],
     queryFn: () => apiClient.get<NdrCase[]>("/shipping/ndr"),
   });

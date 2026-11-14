@@ -3,6 +3,13 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { AuditService } from '../../audit/audit.service.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
+import type { Prisma, ProductStatus } from '../../generated/prisma/client.js';
+
+type AdminProductRow = {
+  id: string; name: string; status: ProductStatus; basePrice: Prisma.Decimal;
+  createdAt: Date; productType: { id: string; name: string; isActive: boolean };
+  storefront: { image: string | null };
+};
 
 @Injectable()
 export class ProductsService {
@@ -17,6 +24,18 @@ export class ProductsService {
       include: { productType: true, categories: { include: { category: true } } },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  findAdminSummaries() {
+    return this.prisma.$queryRaw<AdminProductRow[]>`
+      SELECT p.id, p.name, p.status::text AS status, p.base_price AS "basePrice", p.created_at AS "createdAt",
+        jsonb_build_object('id', t.id, 'name', t.name, 'isActive', t.is_active) AS "productType",
+        jsonb_build_object('image', p.storefront ->> 'image') AS storefront
+      FROM products p
+      JOIN product_types t ON t.id = p.product_type_id
+      WHERE p.deleted_at IS NULL
+      ORDER BY p.created_at DESC, p.id DESC
+    `;
   }
 
   async findOne(id: string) {
