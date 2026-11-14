@@ -8,6 +8,9 @@ import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { downloadCsv } from "@/lib/csv";
+import { Download } from "lucide-react";
 
 export default function CustomersPage() {
   const router = useRouter();
@@ -16,6 +19,13 @@ export default function CustomersPage() {
     queryKey: ["customers"],
     queryFn: () => apiClient.get<CustomerListItem[]>("/customers"),
   });
+
+  const exportCsv = () =>
+    downloadCsv(
+      `customers-${new Date().toISOString().slice(0, 10)}.csv`,
+      ["Name", "Email", "Phone", "Type", "Joined"],
+      (data ?? []).map((c) => [c.name, c.email ?? "", c.phone ?? "", c.isGuest ? "Guest" : "Registered", new Date(c.createdAt).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })]),
+    );
 
   const columns: DataTableColumn<CustomerListItem>[] = [
     {

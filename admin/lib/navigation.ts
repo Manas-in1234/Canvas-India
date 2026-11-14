@@ -1,4 +1,6 @@
 import {
+  History,
+  LayoutTemplate,
   Truck,
   PackageX,
   Settings2,
@@ -119,6 +121,12 @@ export const NAV_SECTIONS: NavSection[] = [
         permissions: ["discounts.manage"],
       },
       {
+        href: "/homepage-layout",
+        label: "Homepage layout",
+        icon: LayoutTemplate,
+        permissions: ["products.edit"],
+      },
+      {
         href: "/hero-images",
         label: "Hero Images",
         icon: ImageIcon,
@@ -162,6 +170,12 @@ export const NAV_SECTIONS: NavSection[] = [
         href: "/users",
         label: "Team members",
         icon: UserCog,
+        permissions: ["users.view"],
+      },
+      {
+        href: "/activity-log",
+        label: "Activity log",
+        icon: History,
         permissions: ["users.view"],
       },
       {

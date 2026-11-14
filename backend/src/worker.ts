@@ -1,5 +1,6 @@
 import { Occasions, isOccasionSlug } from './catalog/occasions.js';
 import { HomepagePromotions } from './catalog/homepage-promotions.js';
+import { HomepageLayout } from './catalog/homepage-layout.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, Prisma } from './generated/prisma/client.js';
 import { getQueryCompilerWasm } from './common/prisma-wasm/wasm-loader.js';
@@ -359,6 +360,33 @@ export default {
       }
       if (pathname === '/api/v1/homepage-promotions' && method === 'GET') {
         return jsonResponse(await new HomepagePromotions(prisma).storefront(), 200, request);
+      }
+      // Activity log: who changed what. Read-only; audit rows can never be edited or deleted from the API.
+      if (pathname === '/api/v1/audit-logs' && method === 'GET') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, ['users.view'], request);
+        if (denied) return denied;
+        const q = (query.q || '').trim().slice(0, 60);
+        const rows = await prisma.auditLog.findMany({
+          where: q ? { OR: [{ action: { contains: q, mode: 'insensitive' } }, { entityType: { contains: q, mode: 'insensitive' } }] } : undefined,
+          include: { adminUser: { select: { name: true, email: true } } },
+          orderBy: { createdAt: 'desc' },
+          take: Math.min(Math.max(Number(query.take) || 200, 1), 500),
+        });
+        return jsonResponse(rows, 200, request);
+      }
+      if (pathname === '/api/v1/homepage-layout' && method === 'GET') {
+        return jsonResponse(await new HomepageLayout(prisma).settings(), 200, request);
+      }
+      if (pathname === '/api/v1/admin/homepage-layout' && (method === 'GET' || method === 'PUT')) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, [method === 'GET' ? 'products.view' : 'products.edit'], request);
+        if (denied) return denied;
+        const layout = new HomepageLayout(prisma);
+        const result = method === 'GET' ? await layout.settings() : await layout.save(await request.json(), user.id);
+        return jsonResponse(result, 200, request);
       }
       if (pathname === '/api/v1/admin/homepage-promotions' && (method === 'GET' || method === 'PUT')) {
         const { user, error } = await authenticate(request, env, prisma);
