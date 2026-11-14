@@ -16,6 +16,7 @@ export interface SelectLayoutModalProps {
   productId: string;
   productName: string;
   currentLayoutId?: string;
+  layouts?: ProductLayoutDefinition[];
   onSelectLayout: (layout: LayoutModalOption) => void;
   onHighlightLayout?: (layout: LayoutModalOption) => void;
   /** When set to a bulk quantity (>= MIN_BULK_QTY), every layout's displayed
@@ -60,29 +61,32 @@ const HEXAGON_PANEL_FILTERS: Array<{ id: string; label: string; min?: number; ma
   { id: '10', label: '10 Panels', min: 10, max: 10 }
 ];
 
-export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
+export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = props =>
+  props.isOpen ? <LayoutPicker key={props.productId} {...props} /> : null;
+
+const LayoutPicker: React.FC<SelectLayoutModalProps> = ({
   isOpen,
   onClose,
   material,
   productId,
   productName,
   currentLayoutId = '',
+  layouts,
   onSelectLayout,
   onHighlightLayout,
   bulkQuantity
 }) => {
   const hasBulkDiscount = bulkQuantity !== undefined && bulkQuantity >= MIN_BULK_QTY;
-  if (!isOpen) return null;
 
   // Single source of truth for layouts
   const productLayouts: ProductLayoutDefinition[] = useMemo(() => {
-    return getProductLayouts(productId);
-  }, [productId]);
+    return layouts ?? getProductLayouts(productId);
+  }, [productId, layouts]);
 
-  const isCollageProduct = productId.includes('collage') || productLayouts.some((l) => Boolean(l.collageCategory));
-  const isWallDisplay = productId.includes('wall') || productId.includes('display');
-  const isSplitCanvas = productId.includes('split');
-  const isHexagon = productId.includes('hexagon');
+  const isCollageProduct = !layouts && (productId.includes('collage') || productLayouts.some((l) => Boolean(l.collageCategory)));
+  const isWallDisplay = !layouts && (productId.includes('wall') || productId.includes('display'));
+  const isSplitCanvas = !layouts && productId.includes('split');
+  const isHexagon = !layouts && productId.includes('hexagon');
 
   // Category state for Photo Collage
   const [selectedCategory, setSelectedCategory] = useState<'landscape' | 'panoramic' | 'portrait' | 'square'>(() => {
@@ -137,6 +141,7 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
   }, [isOpen, productLayouts, selectedId]);
 
   const filteredLayouts = useMemo(() => {
+    if (layouts) return panelFilter === 'ALL' ? layouts : layouts.filter(l => l.panelsCount === Number(panelFilter));
     if (isCollageProduct) {
       return productLayouts.filter((l) => l.collageCategory === selectedCategory);
     }
@@ -174,7 +179,11 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
       });
     }
     return productLayouts;
-  }, [isCollageProduct, isWallDisplay, isSplitCanvas, isHexagon, productLayouts, selectedCategory, panelFilter]);
+  }, [isCollageProduct, isWallDisplay, isSplitCanvas, isHexagon, productLayouts, selectedCategory, panelFilter, layouts]);
+  const countFilters = layouts
+    ? [{ id: 'ALL', label: 'All' }, ...[...new Set(layouts.map(l => l.panelsCount))].sort((a, b) => a - b)
+      .map(count => ({ id: String(count), label: count === 1 ? 'Single' : `${count} Panels`, min: count, max: count }))]
+    : isWallDisplay ? WALL_PANEL_FILTERS : isSplitCanvas ? SPLIT_PANEL_FILTERS : HEXAGON_PANEL_FILTERS;
 
   const currentSelected = useMemo(() => {
     return productLayouts.find((l) => l.id === selectedId) || filteredLayouts[0] || productLayouts[0];
@@ -284,9 +293,9 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
             </div>
 
             {/* Panel Count Filters for Wall Display, Split Canvas, and Hexagon Prints */}
-            {(isWallDisplay || isSplitCanvas || isHexagon) && (
+            {(layouts || isWallDisplay || isSplitCanvas || isHexagon) && (
               <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 mb-3.5 no-scrollbar">
-                {(isWallDisplay ? WALL_PANEL_FILTERS : isSplitCanvas ? SPLIT_PANEL_FILTERS : HEXAGON_PANEL_FILTERS).map((filter) => {
+                {countFilters.map((filter) => {
                   const isActive = panelFilter === filter.id;
                   const count =
                     filter.id === 'ALL'
@@ -354,7 +363,18 @@ export const SelectLayoutModal: React.FC<SelectLayoutModalProps> = ({
 
                     {/* Diagram / Preview Box */}
                     <div className="h-28 sm:h-32 p-3 bg-stone-50/60 border-b border-stone-100 flex items-center justify-center relative select-none group-hover:scale-102 transition-transform">
-                      {renderProductLayoutDiagram(layout, isSelected)}
+                      {layout.outline ? (
+                        <svg viewBox={`0 0 ${layout.aspectRatio} 1`} className="h-full max-h-24 w-full" aria-hidden="true">
+                          {layout.panels.map(panel => {
+                            const x = panel.x * layout.aspectRatio;
+                            const width = panel.w * layout.aspectRatio;
+                            return <g key={panel.id} transform={`rotate(${panel.rotation ?? 0} ${x + width / 2} ${panel.y + panel.h / 2})`}>
+                              <path d={layout.outline} transform={`translate(${x} ${panel.y}) scale(${width} ${panel.h})`}
+                                fill={isSelected ? '#dbeafe' : '#e2e8f0'} stroke="#0e4a93" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+                            </g>;
+                          })}
+                        </svg>
+                      ) : renderProductLayoutDiagram(layout, isSelected)}
                     </div>
 
                     {/* Details Bottom Box */}

@@ -169,6 +169,8 @@ import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
 import { AcrylicRoomViewModal, RoomPlacementState } from '../components/AcrylicRoomViewModal';
 import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
 import { SelectLayoutModal, LayoutModalOption } from '../components/SelectLayoutModal';
+import { fetchStyleLayouts } from '../api/styleLayoutsApi';
+import { EmptyLayoutPanel, ShapedLayoutWorkspace } from '../components/ShapedLayoutWorkspace';
 import { AcrylicLiveTextEditor, TextElement } from '../components/AcrylicLiveTextEditor';
 import { AcrylicClipartModal, ClipartElement } from '../components/AcrylicClipartModal';
 import { getProductSizeShapeOptions, getSizesForProductAndShape } from '../data/productSizeShapeConfig';
@@ -2792,6 +2794,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const wordArtColorSchemes = useCatalogOptions('word_art_colors', DEFAULT_WORD_ART_COLOR_SCHEMES);
   const WORD_ART_SIZE_CATALOG = useMemo(() => Object.fromEntries(Object.keys(DEFAULT_WORD_ART_SIZE_CATALOG).map((key) => [key, wordArtSizes.filter((size) => size.ratioTab === key)])) as typeof DEFAULT_WORD_ART_SIZE_CATALOG, [wordArtSizes]);
   const [activeMaterial, setActiveMaterial] = useState<'canvas' | 'acrylic'>(routeMaterial);
+  const [publishedLayouts, setPublishedLayouts] = useState<{ material: string; layouts: LayoutModalOption[] }>();
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchStyleLayouts(activeMaterial, AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]))
+      .then(layouts => { if (!controller.signal.aborted) setPublishedLayouts({ material: activeMaterial, layouts }); })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [activeMaterial]);
 
   // Options this specific product has customized in the admin. Each product keeps its own
   // independent copy, so nothing here ever mixes with another product's options or prices.
@@ -2945,6 +2955,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       return;
     }
     if (tabId === 'LAYOUTS & DESIGNS') {
+      if (usesStyleLayouts) {
+        setIsLayoutModalOpen(true);
+        setActiveTab('UPLOAD');
+        return;
+      }
       if (isLayoutProduct) {
         setLayoutSubTab('LAYOUTS');
       }
@@ -2973,15 +2988,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
   }, [productId, activeMaterial, liveCanvasStyles, liveAcrylicStyles]);
 
-  const isHexagonProduct = activeMaterial === 'canvas' && selectedProductTypeId.includes('hexagon');
-  const isWallArtProduct = selectedProductTypeId.includes('wall') || selectedProductTypeId.includes('display');
-  const isCollageProduct = selectedProductTypeId.includes('collage');
-  const isSplitProduct = selectedProductTypeId.includes('split');
-  const isMosaicProduct = selectedProductTypeId.includes('mosaic');
-  const isLyricProduct = selectedProductTypeId.includes('lyric');
-  const isDigitalPaintingProduct = selectedProductTypeId.includes('digital') || selectedProductTypeId.includes('painting');
-  const isQuotesProduct = selectedProductTypeId.includes('quote');
-  const isBusRollProduct = selectedProductTypeId.includes('bus');
+  const styleLayouts = useMemo(() => publishedLayouts?.material === activeMaterial
+    ? publishedLayouts.layouts.filter(layout => layout.productTypeId === selectedProductTypeId) : [],
+  [publishedLayouts, activeMaterial, selectedProductTypeId]);
+  const usesStyleLayouts = styleLayouts.length > 0;
+  const isHexagonProduct = activeMaterial === 'canvas' && selectedProductTypeId === 'canvas-hexagon';
+  const isWallArtProduct = !usesStyleLayouts && selectedProductTypeId.includes('wall') || (!usesStyleLayouts && selectedProductTypeId.includes('display'));
+  const isCollageProduct = !usesStyleLayouts && selectedProductTypeId.includes('collage');
+  const isSplitProduct = !usesStyleLayouts && selectedProductTypeId.includes('split');
+  const isMosaicProduct = !usesStyleLayouts && selectedProductTypeId.includes('mosaic');
+  const isLyricProduct = !usesStyleLayouts && selectedProductTypeId.includes('lyric');
+  const isDigitalPaintingProduct = !usesStyleLayouts && selectedProductTypeId.includes('digital') || (!usesStyleLayouts && selectedProductTypeId.includes('painting'));
+  const isQuotesProduct = !usesStyleLayouts && selectedProductTypeId.includes('quote');
+  const isBusRollProduct = !usesStyleLayouts && selectedProductTypeId.includes('bus');
   // The tab the mobile config panel treats as "home" - rendered inline after
   // the canvas instead of as a closeable overlay. Upload is disabled/hidden
   // entirely for prefilled/readymade products (there's nothing to upload),
@@ -2990,9 +3009,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // bounced straight into another overlay (Products) by the
   // invalid-tab-fallback effect further down - looking like it never closes.
   const mobileRestingTab: ToolbarTab = isBusRollProduct ? 'CREATE BUS ROLL' : isPrefillMode ? 'SELECT SIZE' : 'UPLOAD';
-  const isWordArtProduct = selectedProductTypeId.includes('word');
-  const isPopArtProduct = selectedProductTypeId.includes('pop');
-  const isBannerProduct = selectedProductTypeId.includes('banner');
+  const isWordArtProduct = !usesStyleLayouts && selectedProductTypeId.includes('word');
+  const isPopArtProduct = !usesStyleLayouts && selectedProductTypeId.includes('pop');
+  const isBannerProduct = !usesStyleLayouts && selectedProductTypeId.includes('banner');
   // A style added from the admin dashboard has no special editor, so it uses
   // the standard single-panel one, same as Single Print.
   const isAdminAddedStyle = Boolean(selectedProductTypeId) && !BUILT_IN_STYLE_IDS.has(selectedProductTypeId);
@@ -3181,7 +3200,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       // the moment the product is picked, and "Change Size"/"Change
       // Layout" buttons elsewhere still open the same modals either way;
       // this only hides the redundant sidebar entry, not the feature.
-      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSingleOrShapedCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct || isWordArtProduct || isBannerProduct },
+      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: !usesStyleLayouts && (isSingleOrShapedCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct || isWordArtProduct || isBannerProduct) },
       { id: 'EFFECTS & OPTIONS', label: 'EFFECTS & OPTIONS', icon: Palette, enabled: productCapabilities.effects === true },
       { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: (isSinglePrintCanvas || isPopArtProduct || isLyricProduct) && !isQuotesProduct && !isWordArtProduct && !isDigitalPaintingProduct },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
@@ -3189,7 +3208,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false && !isDigitalPaintingProduct }
     ];
     return items.filter((item) => item.enabled);
-  }, [activeMaterial, productCapabilities, isSingleOrShapedCanvas, isBusRollProduct, isPopArtProduct, isLyricProduct, isWordArtProduct, isQuotesProduct, isPrefillMode, isSinglePrintCanvas, isDigitalPaintingProduct]);
+  }, [activeMaterial, productCapabilities, isSingleOrShapedCanvas, isBusRollProduct, isPopArtProduct, isLyricProduct, isWordArtProduct, isQuotesProduct, isPrefillMode, isSinglePrintCanvas, isDigitalPaintingProduct, usesStyleLayouts]);
 
   // Names, visibility and order of the left-hand tabs, as set in the admin (Customization → Tabs & buttons).
   const toolbarItems = useMemo(() => {
@@ -3561,6 +3580,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   });
 
   useEffect(() => {
+    if (usesStyleLayouts) return;
     if (!availableSizeOptions.some((s) => s.id === selectedSizeId)) {
       if (isSinglePrintCanvas || isQuotesProduct || isDigitalPaintingProduct || isBusRollProduct || isBannerProduct || isPopArtProduct || isLyricProduct) {
         const matchingInCat = availableSizeOptions.filter((opt) => opt.categories.includes(sizeCategoryFilter));
@@ -3582,11 +3602,22 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         setSelectedSizeId(availableSizeOptions[0]?.id || (activeMaterial === 'acrylic' ? 'rec-10x10' : 'single-10x10'));
       }
     }
-  }, [availableSizeOptions, selectedSizeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isLyricProduct, sizeCategoryFilter, activeMaterial]);
+  }, [availableSizeOptions, selectedSizeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isLyricProduct, sizeCategoryFilter, activeMaterial, usesStyleLayouts]);
 
   const currentSizeOption = useMemo(() => {
+    const layout = styleLayouts.find(row => row.id === selectedSizeId) ?? styleLayouts[0];
+    if (layout) return {
+      id: layout.id, productTypeId: layout.productTypeId, label: layout.name,
+      dimensionsSummary: layout.dimensionsSummary, price: layout.price,
+      categories: ['RECOMMENDED'] as SizeCategory[],
+      widthInches: layout.overallWidthInches, heightInches: layout.overallHeightInches,
+      panelsCount: layout.panelsCount, diagramType: undefined, arrangement: undefined,
+      panels: layout.panels.map(panel => ({ ...panel, dimension: panel.dimension ?? '',
+        widthRatio: panel.widthRatio ?? 1, heightRatio: panel.heightRatio ?? 1 })),
+    };
     return availableSizeOptions.find((s) => s.id === selectedSizeId) || availableSizeOptions[0] || SIZE_OPTIONS[0];
-  }, [availableSizeOptions, selectedSizeId]);
+  }, [availableSizeOptions, selectedSizeId, styleLayouts]);
+  const activeStyleLayout = styleLayouts.find(layout => layout.id === currentSizeOption.id);
 
   // Custom Size (only meaningful for single-panel products)
   const [isCustomSize, setIsCustomSize] = useState<boolean>(false);
@@ -3606,14 +3637,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   useEffect(() => { setCustomWidthDraft(String(customWidth)); }, [customWidth]);
   useEffect(() => { setCustomHeightDraft(String(customHeight)); }, [customHeight]);
 
-  const canUseCustomSize = currentSizeOption.panels.length === 1;
+  const canUseCustomSize = !usesStyleLayouts && currentSizeOption.panels.length === 1;
 
   // Panels for the current size layout
   const panels = currentSizeOption.panels;
 
   // Shapes, borders and outer frames only apply to single-panel canvases
   // (multi-panel collage / split / wall-art layouts stay rectangular slots).
-  const shapeApplies = panels.length === 1 && selectedProductTypeId !== 'canvas-banner' && selectedProductTypeId !== 'canvas-bus-roll';
+  const shapeApplies = !usesStyleLayouts && panels.length === 1 && selectedProductTypeId !== 'canvas-banner' && selectedProductTypeId !== 'canvas-bus-roll';
 
   // Product-specific customization session store (Requirement 5)
   // Maintains per-product panel images, uploaded photos, and active panel indices
@@ -4504,15 +4535,22 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [isSizeShapeModalOpen, setIsSizeShapeModalOpen] = useState<boolean>(false);
   const [isLayoutModalOpen, setIsLayoutModalOpen] = useState<boolean>(false);
 
+  useEffect(() => {
+    if (usesStyleLayouts && isSizeShapeModalOpen) {
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(true);
+    }
+  }, [usesStyleLayouts, isSizeShapeModalOpen]);
+
   // The Select Layout modal only makes sense for products with real, distinct multi-panel
   // arrangements. Everything else falls back to a single generic layout internally, which
   // would just show up as a pointless 4-option "Single Full Image" picker — close it if open.
   useEffect(() => {
-    const hasRealLayouts = isLayoutProduct;
+    const hasRealLayouts = isLayoutProduct || usesStyleLayouts;
     if (!hasRealLayouts) {
       setIsLayoutModalOpen(false);
     }
-  }, [isLayoutProduct]);
+  }, [isLayoutProduct, usesStyleLayouts]);
 
   // Word Art Flow State (Size + Ratio -> Details / Personalization -> Product Workspace)
   const [isWordArtSizeModalOpen, setIsWordArtSizeModalOpen] = useState<boolean>(false);
@@ -5055,6 +5093,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         setSelectedShapeId(pt.defaultShape || 'shape-rectangle');
       }
     }
+    if (usesStyleLayouts) return;
     const layouts = getProductLayouts(selectedProductTypeId);
     if (!layouts.some((l) => l.id === selectedLayoutId)) {
       if (layouts[0]) {
@@ -5069,6 +5108,25 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const pt = productTypeList.find((p) => p.id === productId);
     if (!pt) return;
     switchProductSession(activeMaterial, productId);
+
+    const layouts = publishedLayouts?.material === activeMaterial
+      ? publishedLayouts.layouts.filter(layout => layout.productTypeId === productId) : [];
+    if (layouts.length) {
+      setSelectedProductTypeId(productId);
+      setSelectedShapeId(layouts[0].shapeId ?? 'shape-square');
+      setSelectedSizeId(layouts[0].id);
+      setSelectedLayoutId(layouts[0].id);
+      setActivePanelIndex(0);
+      setIsCustomSize(false);
+      setViewerMode(null);
+      setSelectedFrameId('no-frame');
+      setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
+      if (pt.defaultThicknessId) setSelectedThicknessId(pt.defaultThicknessId);
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(true);
+      navigate(`/customize/${activeMaterial}/${productId}${location.search}`, { replace: true });
+      return;
+    }
 
     if (productId.includes('word')) {
       setSelectedProductTypeId(productId);
@@ -5503,7 +5561,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const handleApplyLayoutFromModal = (layout: LayoutModalOption) => {
     setSelectedLayoutId(layout.id);
     setExpandedLayoutId(layout.id);
-    if (!isSinglePrintCanvas) {
+    if (!isSinglePrintCanvas || layout.outline) {
       setSelectedSizeId(layout.id);
       const targetShape = layout.shapeId || (layout.aspectRatio === 1 ? 'shape-square' : 'shape-rectangle');
       setSelectedShapeId(targetShape);
@@ -5512,6 +5570,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       }
     }
     setIsLayoutModalOpen(false);
+    if (layout.outline) {
+      setActiveTab('UPLOAD');
+      return;
+    }
 
     const activeImg =
       panelImages[0]?.imageUrl ||
@@ -5850,7 +5912,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const selectedPopStyle = (POP_ART_STYLES.find((style) => style.id === popArtConfig.selectedStyleId) ?? getPopArtStyle(popArtConfig.selectedStyleId));
   const popStyleAdjustment = isPopArtProduct ? (selectedPopStyle?.priceAdjustment || 0) : 0;
   const lyricPriceAdjustment = isLyricProduct ? (selectedLyricTemplate?.priceAdjustment || 0) : 0;
-  const sizePrice = isWordArtProduct
+  const sizePrice = activeStyleLayout ? activeStyleLayout.price : isWordArtProduct
     ? (isCustomSize && canUseCustomSize ? customSizePrice : wordArtSizeOption.price)
     : isBannerProduct
     ? (bannerConfig.isCustom
@@ -6011,7 +6073,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return panels.filter((_, idx) => Boolean(panelImages[idx]?.imageUrl)).length;
   }, [panels, panelImages]);
 
-  const isComplete = hasUploadedImage || filledPanelsCount >= 1;
+  const isComplete = activeStyleLayout ? filledPanelsCount === panels.length : hasUploadedImage || filledPanelsCount >= 1;
 
   // If all uploaded images are removed, automatically close 3D / 360 / Room View
   useEffect(() => {
@@ -7101,7 +7163,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Add to Cart Action
   const handleAddToCart = () => {
     if (!isComplete) {
-      setValidationWarning('Please upload or select at least one photograph to customize your canvas print.');
+      setValidationWarning(activeStyleLayout ? 'Add a photo to every panel before adding the layout to your cart.' :
+        'Please upload or select at least one photograph to customize your canvas print.');
       setTimeout(() => setValidationWarning(null), 4000);
       setActiveTab('UPLOAD');
       return;
@@ -7172,7 +7235,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       customizationDetails: {
         material: activeMaterial,
         productTypeId: selectedProductTypeId,
-        sizeId: selectedSizeId,
+        sizeId: activeStyleLayout?.id ?? selectedSizeId,
+        customLayout: activeStyleLayout ? {
+          id: activeStyleLayout.id, name: activeStyleLayout.name, outline: activeStyleLayout.outline,
+          shapeId: activeStyleLayout.shapeId, width: activeStyleLayout.overallWidthInches,
+          height: activeStyleLayout.overallHeightInches, panels: activeStyleLayout.panels,
+        } : undefined,
         shape: shapeApplies ? currentShape.name : undefined,
         thickness: activeMaterial === 'acrylic'
           ? (ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || `${selectedThicknessId.toUpperCase()} Optical Acrylic`)
@@ -12099,7 +12167,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               }}
               isRoomViewActive={viewerMode === 'room'}
               isRoomViewDisabled={!hasUploadedImage}
-              onToggleRoomView={productCapabilities.roomView ? () => {
+              onToggleRoomView={!usesStyleLayouts && productCapabilities.roomView ? () => {
                 if (!hasUploadedImage || !productCapabilities.roomView) return;
                 setViewerRotation(0);
                 setViewerTiltX(0);
@@ -12107,7 +12175,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 setViewerMode('room');
               } : undefined}
               is3DViewActive={viewerMode === '3d'}
-              onOpen3DView={activeMaterial !== 'acrylic' && productCapabilities.view3D ? () => {
+              onOpen3DView={!usesStyleLayouts && activeMaterial !== 'acrylic' && productCapabilities.view3D ? () => {
                 if (!hasUploadedImage || !productCapabilities.view3D) return;
                 setPreset3DAngle('top-left');
                 setViewerRotation(35);
@@ -12116,7 +12184,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 setViewerMode('3d');
               } : undefined}
               is360ViewActive={viewerMode === '360'}
-              onOpen360View={activeMaterial !== 'acrylic' && productCapabilities.view360 ? () => {
+              onOpen360View={!usesStyleLayouts && activeMaterial !== 'acrylic' && productCapabilities.view360 ? () => {
                 if (!hasUploadedImage || !productCapabilities.view360) return;
                 setViewerRotation(36);
                 setViewerTiltX(-18);
@@ -12419,10 +12487,31 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               {isMosaicProduct && renderMosaicCanvas()}
 
               {/* HEXAGON PRINTS (1 or Multi-piece Hexagon Bundles) */}
-              {isHexagonProduct && renderHexagonCluster()}
+              {isHexagonProduct && !usesStyleLayouts && renderHexagonCluster()}
+              {activeStyleLayout && <button type="button" className="my-2 rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold text-[#0E4A93]"
+                onClick={() => setIsLayoutModalOpen(true)}>Change layout</button>}
+              {activeStyleLayout && <ShapedLayoutWorkspace layout={activeStyleLayout} mobile={isMobile}>
+                {index => {
+                  const photo = panelImages[index];
+                  return <div className={`relative h-full w-full overflow-hidden bg-slate-100 ${activePanelIndex === index ? 'opacity-100' : 'opacity-95'}`}
+                    {...panelHandlers(index)} ref={registerWheelRef(index)}>
+                    {photo?.imageUrl ? <img src={photo.imageUrl} alt={`Photo in panel ${index + 1}`} draggable={false}
+                      className="pointer-events-none h-full w-full" style={{
+                        objectFit: photo.fitMode === 'contain' ? 'contain' : 'cover',
+                        transform: `translate(${photo.panX}px, ${photo.panY}px) scale(${photo.scale}) rotate(${photo.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                        filter: getFilterCss(photo.filter),
+                      }} /> : <EmptyLayoutPanel index={index} onUpload={() => {
+                      setActivePanelIndex(index);
+                      uploadTargetRef.current = index;
+                      fileInputRef.current?.click();
+                    }} />}
+                    {renderPanelTextItems(index)}
+                  </div>;
+                }}
+              </ShapedLayoutWorkspace>}
 
               {/* SINGLE PANEL LAYOUTS (Single Print, Round, Triangle, Heart, Oval, etc.) */}
-              {!isWallArtProduct &&
+              {!usesStyleLayouts && !isWallArtProduct &&
                 !isCollageProduct &&
                 !isMosaicProduct &&
                 !isSplitProduct &&
@@ -16191,9 +16280,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         material={activeMaterial}
         productId={selectedProductTypeId}
         productName={selectedProductType.name}
-        currentLayoutId={selectedLayoutId}
+        currentLayoutId={activeStyleLayout?.id ?? selectedLayoutId}
+        layouts={usesStyleLayouts ? styleLayouts : undefined}
         onSelectLayout={handleApplyLayoutFromModal}
-        onHighlightLayout={handleHighlightLayoutFromModal}
+        onHighlightLayout={usesStyleLayouts ? undefined : handleHighlightLayoutFromModal}
         bulkQuantity={quantity}
       />
 
