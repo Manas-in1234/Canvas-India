@@ -13267,7 +13267,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
         const isHexagonCluster = isHexagonProduct && panels.length > 1;
         const isRectShape = !geom.clipPath && ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
-        const activeClipPath = shapeApplies && currentShape.shapeType === 'custom'
+        // productGeometry's own oval clip-path (ellipse(50% 50%)) is a
+        // separate, non-orientation-aware duplicate of the shape catalog's
+        // real oval clip-path - always prefer effectiveShapeClipPath for
+        // oval so this matches the main customizer stage exactly.
+        const activeClipPath = currentShape.id === 'shape-oval'
+          ? effectiveShapeClipPath
+          : shapeApplies && currentShape.shapeType === 'custom'
           ? effectiveShapeClipPath
           : isHexagonProduct
           ? (geom.clipPath || HEXAGON_HORIZONTAL_CLIP_PATH)
@@ -14605,7 +14611,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 }
 
                 // 4. Single Non-Rectangular or Rectangular Canvas & Acrylic on Room Wall
-                const clipStyle = shapeApplies && currentShape.shapeType === 'custom'
+                // productGeometry's own oval clip-path (ellipse(50% 50%)) is a
+                // separate, non-orientation-aware duplicate of the shape
+                // catalog's real oval clip-path - always prefer
+                // effectiveShapeClipPath for oval so Room View matches the
+                // main customizer stage exactly.
+                const clipStyle = currentShape.id === 'shape-oval'
+                  ? effectiveShapeClipPath
+                  : shapeApplies && currentShape.shapeType === 'custom'
                   ? effectiveShapeClipPath
                   : isHexagonProduct ? HEXAGON_CLIP_PATH : (isRectangularShape ? undefined : (geom.clipPath || (shapeApplies ? effectiveShapeClipPath : undefined)));
                 const hasClip = Boolean(clipStyle);
