@@ -26,6 +26,7 @@ export interface OrderListItem {
   id: string;
   orderNumber: string;
   orderStatus: OrderStatus;
+  adminVisibility?: 'VISIBLE' | 'HIDDEN' | 'ARCHIVED';
   paymentStatus: PaymentStatus;
   paymentLabel?: PaymentStatus | 'NO_PAYMENT_REQUIRED' | 'UNVERIFIED';
   shippingStatus: ShippingStatus;

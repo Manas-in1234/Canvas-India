@@ -9,15 +9,29 @@ import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { OrderEditor } from "@/components/order-editor";
+import { usePermission } from "@/lib/auth/use-permission";
 
 export default function OrdersPage() {
   const [status, setStatus] = useState("ALL");
+  const [adding, setAdding] = useState(false);
+  const { hasPermission } = usePermission();
   const router = useRouter();
 
   const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ["orders"],
     queryFn: () => apiClient.get<OrderListItem[]>("/orders"),
   });
+  const matches = (row: OrderListItem, filter: string) => {
+    const visibility = row.adminVisibility ?? "VISIBLE";
+    if (filter === "HIDDEN" || filter === "ARCHIVED") return visibility === filter;
+    if (visibility !== "VISIBLE") return false;
+    if (filter === "PENDING_PAYMENT") {
+      return row.orderStatus !== "CANCELLED" && row.orderStatus !== "DRAFT" && ["PENDING", "AUTHORIZED"].includes(row.paymentStatus);
+    }
+    return filter === "ALL" || row.orderStatus === filter;
+  };
 
   const columns: DataTableColumn<OrderListItem>[] = [
     {
@@ -43,21 +57,27 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
-        <p className="text-sm text-muted-foreground">
-          All orders placed on the storefront.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
+          <p className="text-sm text-muted-foreground">Storefront orders and manual drafts.</p>
+        </div>
+        {hasPermission("orders.create") && <Button onClick={() => setAdding(true)}>Add order</Button>}
       </div>
+      {adding && <OrderEditor onClose={() => setAdding(false)}
+        onSaved={id => router.push(`/orders/placeholder?id=${encodeURIComponent(id)}`)} />}
 
       <div className="status-filters" aria-label="Filter orders">
         {[
           ["ALL", "All orders"],
+          ["DRAFT", "Drafts"],
           ["PENDING_PAYMENT", "Awaiting payment"],
           ["CONFIRMED", "Confirmed"],
           ["PROCESSING", "In production"],
           ["COMPLETED", "Completed"],
           ["CANCELLED", "Cancelled"],
+          ["HIDDEN", "Hidden"],
+          ["ARCHIVED", "Archived"],
         ].map(([value, label]) => (
           <button
             key={value}
@@ -68,14 +88,7 @@ export default function OrdersPage() {
             {label}
             <span>
               {
-                (data || []).filter(
-                  (row) =>
-                    value === "ALL" ||
-                    (value === "PENDING_PAYMENT"
-                      ? ["PENDING", "AUTHORIZED"].includes(row.paymentStatus) &&
-                        row.orderStatus !== "CANCELLED"
-                      : row.orderStatus === value),
-                ).length
+                (data ?? []).filter(row => matches(row, value)).length
               }
             </span>
           </button>
@@ -93,14 +106,7 @@ export default function OrdersPage() {
       ) : (
         <DataTable
           columns={columns}
-          data={(data ?? []).filter(
-            (row) =>
-              status === "ALL" ||
-              (status === "PENDING_PAYMENT"
-                ? ["PENDING", "AUTHORIZED"].includes(row.paymentStatus) &&
-                  row.orderStatus !== "CANCELLED"
-                : row.orderStatus === status),
-          )}
+          data={(data ?? []).filter(row => matches(row, status))}
           getRowKey={(row) => row.id}
           onRowClick={(row) =>
             router.push(`/orders/placeholder?id=${encodeURIComponent(row.id)}`)

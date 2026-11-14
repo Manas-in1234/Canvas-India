@@ -13,6 +13,7 @@ import { HeroImages } from './catalog/hero-images.js';
 import { HERO_IMAGE_SLOTS, isHeroImageSlot } from './catalog/hero-image-slots.js';
 import { WorkerShipping } from './shipping/worker-shipping.js';
 import { verifyCapturedOrderPayment } from './commerce/orders/razorpay-capture.js';
+import { AdminOrders } from './commerce/orders/admin-orders.js';
 
 export interface Env {
   DATABASE_URL: string;
@@ -1681,13 +1682,49 @@ export default {
       }
 
       const orderMatch = pathname.match(/^\/api\/v1\/orders\/([^/]+)$/);
-      if (orderMatch) {
+      if (orderMatch && method === 'GET') {
         const orderId = orderMatch[1];
         const { user, error } = await authenticate(request, env, prisma);
         if (error) return error;
         const permError = checkPermission(user, ['orders.view'], request);
         if (permError) return permError;
         return jsonResponse(await services.orders.findOne(orderId), 200, request);
+      }
+
+      if (method === 'GET' && ['/api/v1/admin/orders/catalog', '/api/v1/admin/orders/customers'].includes(pathname)) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permission = pathname.endsWith('/customers') || !user.permissions.includes('orders.edit')
+          ? 'orders.create' : 'orders.edit';
+        const denied = checkPermission(user, [permission], request);
+        if (denied) return denied;
+        const entries = pathname.endsWith('/catalog')
+          ? await prisma.product.findMany({ where: { status: 'ACTIVE', deletedAt: null },
+              select: { id: true, name: true, basePrice: true }, orderBy: { name: 'asc' } })
+          : await prisma.customer.findMany({ select: { id: true, name: true, email: true }, orderBy: { name: 'asc' } });
+        return jsonResponse(entries, 200, request);
+      }
+
+      const orderManagement = pathname.match(/^\/api\/v1\/admin\/orders(?:\/([^/]+)(\/visibility)?)?$/);
+      if (orderManagement) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const [, orderId, visibility] = orderManagement;
+        const management = new AdminOrders(prisma);
+        const denied = checkPermission(user, [orderId ? 'orders.edit' : 'orders.create'], request);
+        if (denied) return denied;
+        if (!orderId && method === 'POST') {
+          return jsonResponse(await management.create(await request.json(), user.id), 201, request);
+        }
+        if (orderId && !visibility && method === 'PATCH') {
+          await management.edit(orderId, await request.json(), user.id);
+          return new Response(null, { status: 204, headers: corsHeaders(request) });
+        }
+        if (orderId && visibility && method === 'PUT') {
+          const body = await request.json() as { action?: unknown };
+          await management.setVisibility(orderId, body?.action, user.id);
+          return new Response(null, { status: 204, headers: corsHeaders(request) });
+        }
       }
 
       const orderActionMatch = pathname.match(/^\/api\/v1\/orders\/([^/]+)\/(accept|cancel|refund)$/);
