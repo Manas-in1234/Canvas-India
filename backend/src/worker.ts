@@ -7,6 +7,7 @@ import { createServicesContainer, ServicesContainer } from './common/services-co
 import { hashPassword, verifyPassword, sha256Hex } from './common/crypto/password.js';
 import { randomBytes, createHmac } from 'node:crypto';
 import { WorkerShapes } from './customization/shapes/worker-shapes.js';
+import { StyleLayouts } from './customization/style-layouts.js';
 import { resolveAdminRead } from './common/admin-read-routes.js';
 import { HeroImages } from './catalog/hero-images.js';
 import { HERO_IMAGE_SLOTS, isHeroImageSlot } from './catalog/hero-image-slots.js';
@@ -736,6 +737,27 @@ export default {
       // Customizer product types — the cards on the customizer's PRODUCTS
       // tab (Single Print, Wall Display, ...), per material.
       // -------------------------------------------------------------
+      if (pathname === '/api/v1/customizer-layouts' && method === 'GET') {
+        const material = query.material === 'ACRYLIC' ? 'ACRYLIC' : 'CANVAS';
+        return jsonResponse(await new StyleLayouts(prisma).list(material), 200, request);
+      }
+      const styleLayouts = pathname.match(/^\/api\/v1\/admin\/customizer-product-types\/([a-zA-Z0-9-]+)\/layouts(?:\/([a-zA-Z0-9-]+))?$/);
+      if (styleLayouts) {
+        const [, styleId, layoutId] = styleLayouts;
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, [method === 'GET' ? 'option_catalog.view' : 'option_catalog.manage'], request);
+        if (denied) return denied;
+        const layouts = new StyleLayouts(prisma);
+        if (!layoutId && method === 'GET') return jsonResponse(await layouts.list('CANVAS', styleId), 200, request);
+        if (layoutId && method === 'PUT') {
+          return jsonResponse(await layouts.save(styleId, layoutId, await request.json(), user.id), 200, request);
+        }
+        if (layoutId && method === 'DELETE') {
+          await layouts.remove(styleId, layoutId, user.id);
+          return new Response(null, { status: 204, headers: corsHeaders(request) });
+        }
+      }
       if (pathname === '/api/v1/customizer-product-types' && method === 'GET') {
         const material = query.material as 'ACRYLIC' | 'CANVAS' | undefined;
         const types = await prisma.customizerProductType.findMany({
