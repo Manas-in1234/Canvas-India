@@ -26,6 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ShapeDetectDialog, ShapeManagerDialog, ShapeThumb, ShapeToolbar, seedShapeSizes, shapeKey, useShapes, type ShapeApprovedHandler } from '@/components/customization/shape-manager';
 import type { CustomShapeListItem } from '@/lib/types/shape';
 import { formatCurrency } from '@/lib/format';
+import { StyleLayoutsDialog } from './style-layouts-dialog';
 
 const ICON_TYPES = [
   'print', 'panel', 'block', 'wall', 'collage', 'split', 'mosaic', 'round', 'triangle', 'heart',
@@ -180,6 +181,7 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CustomizerProductType | null>(null);
+  const [layoutStyle, setLayoutStyle] = useState<{ style: CustomizerProductType; shape: CustomShapeListItem }>();
   const [form, setForm] = useState<FormState>(BLANK);
   const [slugTouched, setSlugTouched] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<CustomizerProductType | null>(null);
@@ -368,7 +370,10 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
         <p className="text-sm text-muted-foreground">No {material.toLowerCase()} styles yet.</p>
       ) : (
         <div className="space-y-2">
-          {styles.map((style, index) => (
+          {styles.map((style, index) => {
+            const detected = libraryShapes.find(shape => shapeKey(shape) === style.defaultShapeId &&
+              shape.origin === 'ADMIN_UPLOADED' && shape.status === 'APPROVED' && shape.clipPathType === 'SVG_PATH');
+            return (
             <Card key={style.id}>
               <CardContent className="flex items-center gap-4 p-3">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
@@ -403,6 +408,7 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
                       <Pencil className="mr-1.5 h-3.5 w-3.5" />
                       Edit
                     </Button>
+                    {detected && <Button size="sm" variant="outline" onClick={() => setLayoutStyle({ style, shape: detected })}>Layouts</Button>}
                     <Button size="sm" variant="ghost" onClick={() => setPendingDelete(style)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -410,10 +416,12 @@ export function StylesPanel({ material }: { material: CustomizerMaterial }) {
                 )}
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 
+      {layoutStyle && <StyleLayoutsDialog {...layoutStyle} onClose={() => setLayoutStyle(undefined)} />}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
