@@ -6,6 +6,7 @@ import { InventoryService } from '../../inventory/inventory.service.js';
 import { AuditService } from '../../audit/audit.service.js';
 import { DiscountsService } from '../../growth/discounts/discounts.service.js';
 import { AbandonedCartsService } from '../../growth/abandoned-carts/abandoned-carts.service.js';
+import { orderVisibility, visibilityEvents } from './admin-orders.js';
 
 /** Sends a refund to the payment gateway. Wired up per request in the worker, where the gateway keys live. */
 export type RefundGateway = (
@@ -48,12 +49,13 @@ export class OrdersService {
     const orders = await this.prisma.order.findMany({
       orderBy: { createdAt: 'desc' },
       include: { customer: { select: { id: true, name: true } },
-        events: { where: { type: 'order.payment_unverified' }, select: { type: true } },
+        events: { where: { type: { in: [...visibilityEvents, 'order.payment_unverified'] } },
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { type: true } },
         payments: { select: { provider: true, status: true, providerRef: true } } },
     });
     return orders.map(order => {
       const { payments: _payments, events: _events, ...summary } = withPaymentLabel(order);
-      return summary;
+      return { ...summary, adminVisibility: orderVisibility(order.events.filter(event => visibilityEvents.includes(event.type))) };
     });
   }
 
@@ -64,7 +66,7 @@ export class OrdersService {
         customer: true,
         items: true,
         addresses: true,
-        events: { orderBy: { createdAt: 'asc' } },
+        events: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
         notes: { orderBy: { createdAt: 'desc' } },
         payments: { include: { transactions: true } },
       },
@@ -73,7 +75,8 @@ export class OrdersService {
     if (!order) {
       throw new NotFoundException(`Order ${id} not found`);
     }
-    return withPaymentLabel(order);
+    return { ...withPaymentLabel(order),
+      adminVisibility: orderVisibility(order.events.filter(event => visibilityEvents.includes(event.type)).reverse()) };
   }
 
   /**

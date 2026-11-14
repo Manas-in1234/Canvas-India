@@ -10,17 +10,50 @@ import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { OrderEditor } from "@/components/order-editor";
+import { usePermission } from "@/lib/auth/use-permission";
 import { downloadCsv } from "@/lib/csv";
 import { Download } from "lucide-react";
 
 export default function OrdersPage() {
   const [status, setStatus] = useState("ALL");
+  const [adding, setAdding] = useState(false);
+  const { hasPermission } = usePermission();
   const router = useRouter();
 
   const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ["orders"],
     queryFn: () => apiClient.get<OrderListItem[]>("/orders"),
   });
+  const matches = (row: OrderListItem, filter: string) => {
+    const visibility = row.adminVisibility ?? "VISIBLE";
+    if (filter === "HIDDEN" || filter === "ARCHIVED") return visibility === filter;
+    if (visibility !== "VISIBLE") return false;
+    if (filter === "PENDING_PAYMENT") {
+      return row.orderStatus !== "CANCELLED" && row.orderStatus !== "DRAFT" && ["PENDING", "AUTHORIZED"].includes(row.paymentStatus);
+    }
+    return filter === "ALL" || row.orderStatus === filter;
+  };
+
+  const visibleRows = (data ?? []).filter((row) => matches(row, status));
+  const exportCsv = () =>
+    downloadCsv(
+      `orders-${new Date().toISOString().slice(0, 10)}.csv`,
+      ["Order #", "Date", "Customer", "Order status", "Payment status", "Shipping status", "Subtotal", "Discount", "Tax", "Shipping fee", "Total"],
+      visibleRows.map((r) => [
+        r.orderNumber,
+        new Date(r.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+        r.customer.name,
+        r.orderStatus,
+        r.paymentLabel ?? r.paymentStatus,
+        r.shippingStatus,
+        r.subtotal,
+        r.discount,
+        r.tax,
+        r.shipping,
+        r.total,
+      ]),
+    );
 
   const columns: DataTableColumn<OrderListItem>[] = [
     {
@@ -44,55 +77,35 @@ export default function OrdersPage() {
     { header: "Created", cell: (row) => formatDate(row.createdAt) },
   ];
 
-  const visibleRows = (data ?? []).filter(
-    (row) =>
-      status === "ALL" ||
-      (status === "PENDING_PAYMENT"
-        ? ["PENDING", "AUTHORIZED"].includes(row.paymentStatus) && row.orderStatus !== "CANCELLED"
-        : row.orderStatus === status),
-  );
-  const exportCsv = () =>
-    downloadCsv(
-      `orders-${new Date().toISOString().slice(0, 10)}.csv`,
-      ["Order #", "Date", "Customer", "Order status", "Payment status", "Shipping status", "Subtotal", "Discount", "Tax", "Shipping fee", "Total"],
-      visibleRows.map((r) => [
-        r.orderNumber,
-        new Date(r.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
-        r.customer.name,
-        r.orderStatus,
-        r.paymentLabel ?? r.paymentStatus,
-        r.shippingStatus,
-        r.subtotal,
-        r.discount,
-        r.tax,
-        r.shipping,
-        r.total,
-      ]),
-    );
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
-          <p className="text-sm text-muted-foreground">
-            All orders placed on the storefront.
-          </p>
+          <p className="text-sm text-muted-foreground">Storefront orders and manual drafts.</p>
         </div>
-        <Button variant="outline" disabled={visibleRows.length === 0} onClick={exportCsv}>
-          <Download className="mr-2 h-4 w-4" />
-          Export CSV ({visibleRows.length})
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" disabled={visibleRows.length === 0} onClick={exportCsv}>
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV ({visibleRows.length})
+          </Button>
+          {hasPermission("orders.create") && <Button onClick={() => setAdding(true)}>Add order</Button>}
+        </div>
       </div>
+      {adding && <OrderEditor onClose={() => setAdding(false)}
+        onSaved={id => router.push(`/orders/placeholder?id=${encodeURIComponent(id)}`)} />}
 
       <div className="status-filters" aria-label="Filter orders">
         {[
           ["ALL", "All orders"],
+          ["DRAFT", "Drafts"],
           ["PENDING_PAYMENT", "Awaiting payment"],
           ["CONFIRMED", "Confirmed"],
           ["PROCESSING", "In production"],
           ["COMPLETED", "Completed"],
           ["CANCELLED", "Cancelled"],
+          ["HIDDEN", "Hidden"],
+          ["ARCHIVED", "Archived"],
         ].map(([value, label]) => (
           <button
             key={value}
@@ -103,14 +116,7 @@ export default function OrdersPage() {
             {label}
             <span>
               {
-                (data || []).filter(
-                  (row) =>
-                    value === "ALL" ||
-                    (value === "PENDING_PAYMENT"
-                      ? ["PENDING", "AUTHORIZED"].includes(row.paymentStatus) &&
-                        row.orderStatus !== "CANCELLED"
-                      : row.orderStatus === value),
-                ).length
+                (data ?? []).filter(row => matches(row, value)).length
               }
             </span>
           </button>
@@ -128,14 +134,7 @@ export default function OrdersPage() {
       ) : (
         <DataTable
           columns={columns}
-          data={(data ?? []).filter(
-            (row) =>
-              status === "ALL" ||
-              (status === "PENDING_PAYMENT"
-                ? ["PENDING", "AUTHORIZED"].includes(row.paymentStatus) &&
-                  row.orderStatus !== "CANCELLED"
-                : row.orderStatus === status),
-          )}
+          data={(data ?? []).filter(row => matches(row, status))}
           getRowKey={(row) => row.id}
           onRowClick={(row) =>
             router.push(`/orders/placeholder?id=${encodeURIComponent(row.id)}`)

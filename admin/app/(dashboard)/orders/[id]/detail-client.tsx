@@ -2,6 +2,8 @@
 import { useRecordId } from "@/lib/use-record-id";
 
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
@@ -14,11 +16,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft } from "lucide-react";
 import { OrderShippingPanel } from "@/components/delivery/order-shipping-panel";
+import { OrderEditor } from "@/components/order-editor";
 
 export function OrderDetailClient({ id: initialId }: { id: string }) {
   const id = useRecordId(initialId);
   const { hasPermission } = usePermission();
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const [editing, setEditing] = useState(false);
 
   const {
     data: order,
@@ -56,6 +61,16 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
     },
   });
 
+  const visibilityMutation = useMutation({
+    mutationFn: (action: "hide" | "show" | "archive" | "restore") => apiClient.put(`/admin/orders/${id}/visibility`, { action }),
+    onSuccess: async (_, action) => {
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast.success({ hide: "Order hidden", show: "Order shown", archive: "Order moved to Archived", restore: "Order restored" }[action]);
+      if (action === "archive") router.push("/orders");
+    },
+    onError: error => toast.error(error.message),
+  });
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -69,13 +84,16 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
     return <p className="text-sm text-destructive">Failed to load order.</p>;
   }
 
+  const archived = order.adminVisibility === "ARCHIVED";
+  const canEdit = hasPermission("orders.edit");
   const canCancel =
+    !archived &&
     hasPermission("orders.cancel") &&
     order.orderStatus !== "CANCELLED" &&
     order.orderStatus !== "COMPLETED";
 
   const canAccept =
-    hasPermission("orders.edit") &&
+    canEdit && !archived &&
     order.paymentLabel !== "UNVERIFIED" &&
     (order.orderStatus === "CONFIRMED" || order.orderStatus === "PAID");
 
@@ -101,11 +119,25 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
           <StatusBadge status={order.orderStatus} />
           <StatusBadge status={order.paymentLabel ?? order.paymentStatus} />
           <StatusBadge status={order.shippingStatus} />
+          {order.adminVisibility && order.adminVisibility !== "VISIBLE" && <StatusBadge status={order.adminVisibility} />}
         </div>
       </div>
 
-      {(canAccept || canCancel) && (
+      {editing && <OrderEditor order={order} onClose={() => setEditing(false)} />}
+      {(canAccept || canCancel || canEdit) && (
         <div className="flex flex-wrap items-center gap-2">
+          {canEdit && (archived ? (
+            <Button size="sm" variant="outline" disabled={visibilityMutation.isPending} onClick={() => visibilityMutation.mutate("restore")}>Restore order</Button>
+          ) : <>
+            <Button size="sm" variant="outline" disabled={visibilityMutation.isPending} onClick={() => setEditing(true)}>Edit order</Button>
+            <Button size="sm" variant="outline" disabled={visibilityMutation.isPending}
+              onClick={() => visibilityMutation.mutate(order.adminVisibility === "HIDDEN" ? "show" : "hide")}>
+              {order.adminVisibility === "HIDDEN" ? "Show order" : "Hide order"}
+            </Button>
+            <Button size="sm" variant="outline" disabled={visibilityMutation.isPending} onClick={() => {
+              if (confirm("Move this order to Archived? You can restore it later. Payment and order history will be kept.")) visibilityMutation.mutate("archive");
+            }}>Delete order</Button>
+          </>)}
           {canAccept && (
             <Button size="sm" disabled={acceptMutation.isPending} onClick={() => acceptMutation.mutate()}>
               {acceptMutation.isPending ? "Accepting…" : "Accept Order"}
