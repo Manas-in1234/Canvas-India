@@ -9,10 +9,13 @@ it('creates an unpaid catalog-priced draft and keeps visibility changes separate
     findUnique: vi.fn(async () => ({ updatedAt: new Date(), events })),
     create: draft,
     updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+    update: vi.fn(),
   };
   const tx = {
     order,
     orderEvent: { create: async ({ data }: { data: { type: string } }) => events.unshift(data) },
+    orderNote: { create: vi.fn() },
+    orderAddress: { create: vi.fn() },
     customer: { findUnique: async () => ({ id: 'customer' }) },
     product: { findMany: async () => [{ id: 'print', name: 'Print', slug: 'print', basePrice: new Prisma.Decimal(99.5) }] },
   };
@@ -37,4 +40,14 @@ it('creates an unpaid catalog-priced draft and keeps visibility changes separate
   expect(orderVisibility(events)).toBe('VISIBLE');
   expect(order.updateMany).toHaveBeenCalledTimes(3);
   expect(order.updateMany.mock.calls.every(([argument]) => !('paymentStatus' in argument.data))).toBe(true);
+
+  const shippingAddress = { name: 'Test', line1: 'Road', city: 'City', state: 'State', postalCode: '123456', country: 'IN' };
+  const existing = { updatedAt: new Date(), events: [], addresses: [], orderStatus: 'CONFIRMED', paymentStatus: 'PAID', shippingStatus: 'NOT_SHIPPED' };
+  order.findUnique.mockResolvedValueOnce(existing);
+  await expect(service.edit('existing-order', { items: [{ productId: 'print', quantity: 1 }] }, 'admin')).rejects.toThrow('manual draft');
+  order.findUnique.mockResolvedValueOnce(existing);
+  await service.edit('existing-order', { shippingAddress, note: 'Contact before delivery' }, 'admin');
+  expect(tx.orderAddress.create).toHaveBeenCalled();
+  expect(tx.orderNote.create).toHaveBeenCalled();
+  expect(order.update).not.toHaveBeenCalled();
 });
