@@ -31,7 +31,7 @@ export default function CategoriesPage() {
   const [pendingDelete, setPendingDelete] = useState<ProductTypeSummary | null>(null);
   const [pendingHide, setPendingHide] = useState<ProductTypeSummary | null>(null);
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError, isRefetchError, isFetching, refetch } = useQuery({
     queryKey: ['product-types'],
     queryFn: () => apiClient.get<ProductTypeSummary[]>('/product-types'),
   });
@@ -94,12 +94,19 @@ export default function CategoriesPage() {
           <Skeleton className="h-16 w-full" />
           <Skeleton className="h-16 w-full" />
         </div>
-      ) : isError ? (
-        <p className="text-sm text-destructive">Failed to load categories.</p>
+      ) : isLoadingError ? (
+        <div role="alert" className="flex items-center gap-3">
+          <p className="text-sm text-destructive">Failed to load categories.</p>
+          <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>Try again</Button>
+        </div>
       ) : categories.length === 0 ? (
         <p className="text-sm text-muted-foreground">No categories yet.</p>
       ) : (
         <>
+          {isRefetchError && <div role="status" className="flex items-center gap-3 text-sm text-muted-foreground">
+            <p>Showing the last loaded categories. Refresh to check for updates.</p>
+            <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>Refresh categories</Button>
+          </div>}
           <p className="text-xs text-muted-foreground">
             {categories.length} categories{hiddenCount > 0 ? `, ${hiddenCount} hidden from the website` : ''}
           </p>

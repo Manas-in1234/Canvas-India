@@ -59,6 +59,7 @@ beforeEach(() => {
     audit: { record: vi.fn() },
     products: {
       findAll: vi.fn(async () => [LIVE, DRAFT, IN_HIDDEN_TYPE]),
+      findAdminSummaries: vi.fn(async () => [{ ...LIVE, storefront: { image: '/cover.webp' } }]),
       findOne: vi.fn(async (id: string) => PRODUCTS[id]),
     },
     productTypes: { findAll: vi.fn(async () => [{ id: 't1', name: 'Canvas', isActive: true }, { id: 't2', name: 'Cork', isActive: false }]) },
@@ -104,6 +105,19 @@ describe('public website vs admin product list', () => {
     expect(response.status).toBe(200);
     expect(services.products.findAll).not.toHaveBeenCalled();
     expect(prisma.product.findMany).toHaveBeenCalled();
+  });
+
+  it('returns the table projection only to an authorized admin and identifies temporary database errors', async () => {
+    const path = '/products?admin=1&view=summary';
+    expect((await call(path)).status).toBe(401);
+    const response = await call(path, { admin: true });
+    expect(await response.json()).toMatchObject([{ id: LIVE.id, storefront: { image: '/cover.webp' } }]);
+    expect(services.products.findAll).not.toHaveBeenCalled();
+    services.products.findAdminSummaries.mockRejectedValueOnce(Object.assign(new Error('socket reset'), { code: 'ECONNRESET' }));
+    const failure = await call(path, { admin: true });
+    expect(failure.status).toBe(503);
+    expect(failure.headers.get('Cache-Control')).toBe('no-store');
+    expect(await failure.text()).not.toContain('socket reset');
   });
 
   it('still hides draft products if the visibility column is not migrated yet', async () => {

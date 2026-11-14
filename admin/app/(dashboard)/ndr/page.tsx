@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 /** Parcels that need a person: delivery failed, or the parcel is coming back. Open one to act on it. */
 export default function DeliveryProblemsPage() {
   const router = useRouter();
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ["shipments"],
     queryFn: () => apiClient.get<ShipmentListItem[]>("/shipping"),
     refetchInterval: 60000,

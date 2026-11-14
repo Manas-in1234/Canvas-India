@@ -76,6 +76,7 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
 
   const canAccept =
     hasPermission("orders.edit") &&
+    order.paymentLabel !== "UNVERIFIED" &&
     (order.orderStatus === "CONFIRMED" || order.orderStatus === "PAID");
 
   const shippingAddress = order.addresses.find((a) => a.type === "SHIPPING");
@@ -98,7 +99,7 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge status={order.orderStatus} />
-          <StatusBadge status={order.paymentStatus} />
+          <StatusBadge status={order.paymentLabel ?? order.paymentStatus} />
           <StatusBadge status={order.shippingStatus} />
         </div>
       </div>
@@ -247,7 +248,11 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
             </Card>
           )}
 
-          {order.payments.map((payment) => (
+          {order.paymentLabel === 'UNVERIFIED' && <p className="text-sm text-muted-foreground">
+            No captured payment is linked to this order. The total reflects the original order record.
+          </p>}
+          {order.payments.filter(payment => order.paymentLabel !== 'UNVERIFIED' ||
+            payment.provider !== 'RAZORPAY' || Boolean(payment.providerRef)).map((payment) => (
             <Card key={payment.id}>
               <CardHeader>
                 <CardTitle className="text-base">

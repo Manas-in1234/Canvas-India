@@ -36,9 +36,9 @@ export default function ProductsPage() {
   const canDelete = hasPermission("products.delete");
   const canEdit = hasPermission("products.edit");
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError, isRefetchError, isFetching, refetch } = useQuery({
     queryKey: ["products"],
-    queryFn: () => apiClient.get<ProductListItem[]>("/products?admin=1"),
+    queryFn: () => apiClient.get<ProductListItem[]>("/products?admin=1&view=summary"),
   });
 
   // Categories (product types) tell us which products are hidden because their
@@ -220,10 +220,17 @@ export default function ProductsPage() {
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
         </div>
-      ) : isError ? (
-        <p className="text-sm text-destructive">Failed to load products.</p>
+      ) : isLoadingError ? (
+        <div role="alert" className="flex items-center gap-3">
+          <p className="text-sm text-destructive">Failed to load products.</p>
+          <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>Try again</Button>
+        </div>
       ) : (
         <>
+          {isRefetchError && <div role="status" className="flex items-center gap-3 text-sm text-muted-foreground">
+            <p>Showing the last loaded products. Refresh to check for updates.</p>
+            <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>Refresh products</Button>
+          </div>}
           <div className="status-filters" aria-label="Filter products">
             {[
               ["ALL", "All products"],

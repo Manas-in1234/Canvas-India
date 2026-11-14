@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function CustomersPage() {
   const router = useRouter();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ["customers"],
     queryFn: () => apiClient.get<CustomerListItem[]>("/customers"),
   });

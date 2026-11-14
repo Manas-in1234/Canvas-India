@@ -29,7 +29,7 @@ export default function MaterialsPage() {
   const queryClient = useQueryClient();
   const canAdjust = hasPermission('materials.adjust');
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ['materials'],
     queryFn: () => apiClient.get<RawMaterial[]>('/production/materials'),
   });

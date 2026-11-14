@@ -174,7 +174,7 @@ export default function PricingPage() {
   const { hasPermission } = usePermission();
   const canManage = hasPermission('pricing.manage');
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ['pricing-settings'],
     queryFn: () => apiClient.get<PricingSettingItem[]>('/admin/pricing-settings'),
   });

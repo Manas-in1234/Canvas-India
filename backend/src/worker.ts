@@ -11,6 +11,7 @@ import { resolveAdminRead } from './common/admin-read-routes.js';
 import { HeroImages } from './catalog/hero-images.js';
 import { HERO_IMAGE_SLOTS, isHeroImageSlot } from './catalog/hero-image-slots.js';
 import { WorkerShipping } from './shipping/worker-shipping.js';
+import { verifyCapturedOrderPayment } from './commerce/orders/razorpay-capture.js';
 
 export interface Env {
   DATABASE_URL: string;
@@ -46,7 +47,7 @@ async function getServices(env: Env): Promise<{ prisma: PrismaClient; services: 
     return { prisma: (env as any)._prisma, services: (env as any)._services };
   }
   const connectionString = env.HYPERDRIVE?.connectionString || env.DATABASE_URL;
-  const adapter = new PrismaPg({ connectionString });
+  const adapter = new PrismaPg({ connectionString, max: 4, connectionTimeoutMillis: 5000 });
   const prisma = new PrismaClient({ adapter });
   const engineConfig = (prisma as any)._engine?.config || (prisma as any)._engineConfig;
   if (engineConfig?.compilerWasm) {
@@ -124,6 +125,7 @@ function corsHeaders(request: Request): Record<string, string> {
 function jsonResponse(data: any, status = 200, request?: Request): Response {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-store',
     ...(request ? corsHeaders(request) : {}),
   };
   return new Response(JSON.stringify(data), { status, headers });
@@ -292,7 +294,7 @@ async function findPublicProductTypes(prisma: PrismaClient) {
 }
 
 export default {
-  async fetch(request: Request, env: Env, ctx: any): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx?: { waitUntil(promise: Promise<unknown>): void }): Promise<Response> {
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders(request) });
     }
@@ -302,28 +304,31 @@ export default {
     const method = request.method;
     const query = Object.fromEntries(url.searchParams.entries());
 
-    const { prisma, services } = await getServices(env);
-
+    let requestPrisma: PrismaClient | undefined;
     try {
+      const { prisma, services } = await getServices(env);
+      if (!(env as Env & { _prisma?: PrismaClient })._prisma) requestPrisma = prisma;
       if (pathname === '/api/v1/occasions' && method === 'GET') {
         return jsonResponse(await new Occasions(prisma).list(), 200, request);
       }
       const publicOccasionCover = pathname.match(/^\/api\/v1\/occasions\/([^/]+)\/cover$/);
       if (publicOccasionCover && method === 'GET' && isOccasionSlug(publicOccasionCover[1])) {
-        const cover = await new Occasions(prisma).images.get(publicOccasionCover[1]);
+        const occasions = new Occasions(prisma);
+        const slug = publicOccasionCover[1];
+        const cover = await occasions.exists(slug) ? await occasions.images.get(slug) : null;
         if (!cover?.contentBytes) return jsonResponse({ message: 'Cover not found.' }, 404, request);
         return new Response(new Uint8Array(cover.contentBytes), { headers: {
           ...corsHeaders(request), 'Content-Type': cover.mimeType, 'X-Content-Type-Options': 'nosniff',
           'Cache-Control': 'public, no-cache', ETag: `"${cover.checksum}"`,
         } });
       }
-      const adminOccasion = pathname.match(/^\/api\/v1\/admin\/occasions(?:\/([^/]+)(\/cover)?)?$/);
+      const adminOccasion = pathname.match(/^\/api\/v1\/admin\/occasions(?:\/([^/]+)(\/cover|\/visibility)?)?$/);
       if (adminOccasion) {
         const { user, error } = await authenticate(request, env, prisma);
         if (error) return error;
         const denied = checkPermission(user, ['products.edit'], request);
         if (denied) return denied;
-        const [, slug, cover] = adminOccasion;
+        const [, slug, action] = adminOccasion;
         const occasions = new Occasions(prisma);
         if (!slug && method === 'GET') return jsonResponse(await occasions.list(true), 200, request);
         if (slug && !isOccasionSlug(slug)) return jsonResponse({ message: 'Invalid occasion URL.' }, 400, request);
@@ -331,10 +336,20 @@ export default {
           const body = await request.json() as { slug?: string };
           return jsonResponse(await occasions.save(typeof body?.slug === 'string' ? body.slug : '', body, true, user.id), 201, request);
         }
-        if (slug && !cover && method === 'PUT') {
+        if (slug && !action && method === 'PUT') {
           return jsonResponse(await occasions.save(slug, await request.json(), false, user.id), 200, request);
         }
-        if (slug && cover && (method === 'POST' || method === 'DELETE')) {
+        if (slug && !action && method === 'DELETE') {
+          await occasions.setVisibility(slug, 'deleted', user.id);
+          return new Response(null, { status: 204, headers: corsHeaders(request) });
+        }
+        if (slug && action === '/visibility' && method === 'PUT') {
+          const body = await request.json() as { hidden?: unknown };
+          if (typeof body?.hidden !== 'boolean') return jsonResponse({ message: 'Choose whether to hide or show the occasion.' }, 400, request);
+          await occasions.setVisibility(slug, body.hidden ? 'hidden' : 'visible', user.id);
+          return new Response(null, { status: 204, headers: corsHeaders(request) });
+        }
+        if (slug && action === '/cover' && (method === 'POST' || method === 'DELETE')) {
           if (!await occasions.exists(slug)) return jsonResponse({ message: 'Occasion not found.' }, 404, request);
           if (method === 'POST') return jsonResponse(await occasions.images.upload(slug, request, user.id), 200, request);
           await occasions.images.reset(slug, user.id);
@@ -1071,7 +1086,10 @@ export default {
             if (error) return error;
             const denied = checkPermission(user, ['products.view'], request);
             if (denied) return denied;
-            return jsonResponse(await services.products.findAll(true), 200, request);
+            const products = query.view === 'summary'
+              ? await services.products.findAdminSummaries()
+              : await services.products.findAll(true);
+            return jsonResponse(products, 200, request);
           }
           if (await isSignedInAdmin(request, env, prisma)) {
             return jsonResponse(await services.products.findAll(true), 200, request);
@@ -1477,7 +1495,17 @@ export default {
           : (Number(body.total) || (subtotal - discount + shippingFee + tax)));
 
         const isFree = !isCod && !!appliedDiscountId && total <= 0;
-        const isPaid = isFree || (!isCod && (body.payment?.status === 'captured' || Boolean(body.payment?.razorpayPaymentId)));
+        if (!isCod && !isFree && total <= 0) {
+          return jsonResponse({ message: 'A zero-total order needs a valid coupon.' }, 400, request);
+        }
+        if (!isCod && !isFree && !mirroredNumber) {
+          return jsonResponse({ message: 'A valid storefront order number is required.' }, 400, request);
+        }
+        const paymentRef = isCod || isFree ? null : body.payment?.razorpayPaymentId;
+        if (!isCod && !isFree) {
+          await verifyCapturedOrderPayment(env, paymentRef, orderNumber, total);
+        }
+        const isPaid = !isCod;
 
         const newOrder = await prisma.$transaction(async (tx) => {
           const order = await tx.order.create({
@@ -1547,7 +1575,7 @@ export default {
                 create: [
                   { type: 'order.created', message: `Order ${orderNumber} placed via storefront checkout` },
                   ...(isCod ? [{ type: 'order.cod', message: 'Cash on Delivery · collect payment on delivery' }] : []),
-                  ...(isPaid ? [{ type: 'order.paid', message: isFree ? `Order fully covered by coupon ${body.couponCode}` : `Payment verified via Razorpay (${body.payment?.razorpayPaymentId || 'PAID'})` }] : []),
+                  ...(isPaid ? [{ type: 'order.paid', message: isFree ? `Order fully covered by coupon ${body.couponCode}` : `Payment verified via Razorpay (${paymentRef})` }] : []),
                 ],
               },
               ...(isCod || (isPaid && !isFree) ? {
@@ -1558,7 +1586,7 @@ export default {
                       status: isCod ? 'PENDING' : 'PAID',
                       amount: total,
                       currency: 'INR',
-                      providerRef: isCod ? null : body.payment?.razorpayPaymentId || null,
+                      providerRef: paymentRef,
                     },
                   ],
                 },
@@ -1577,6 +1605,10 @@ export default {
         }).catch(async error => {
           if (isCod && error?.code === 'P2002') {
             const existing = await findCodOrder();
+            if (existing) return existing;
+          }
+          if (mirroredNumber && error?.code === 'P2002') {
+            const existing = await prisma.order.findUnique({ where: { orderNumber: mirroredNumber }, include: { items: true, addresses: true, customer: true } });
             if (existing) return existing;
           }
           throw error;
@@ -1608,44 +1640,6 @@ export default {
           },
         });
         return jsonResponse(orders, 200, request);
-      }
-
-      const storefrontPaymentMatch = pathname.match(/^\/api\/v1\/storefront\/orders\/([^/]+)\/payment$/);
-      if (storefrontPaymentMatch && method === 'POST') {
-        const orderId = storefrontPaymentMatch[1];
-        const body = (await request.json().catch(() => ({}))) as any;
-        const status = body.status === 'captured' ? 'PAID' : (body.status === 'failed' ? 'FAILED' : 'PENDING');
-
-        await prisma.payment.create({
-          data: {
-            orderId,
-            provider: 'RAZORPAY',
-            status: status as any,
-            amount: Number(body.amount) || 0,
-            currency: body.currency || 'INR',
-            providerRef: body.razorpayPaymentId || null,
-          },
-        }).catch(() => null);
-
-        if (status === 'PAID') {
-          await prisma.order.update({
-            where: { id: orderId },
-            data: {
-              paymentStatus: 'PAID',
-              orderStatus: 'CONFIRMED',
-            },
-          }).catch(() => null);
-
-          await prisma.orderEvent.create({
-            data: {
-              orderId,
-              type: 'order.paid',
-              message: `Payment confirmed via Razorpay: ${body.razorpayPaymentId || 'PAID'}`,
-            },
-          }).catch(() => null);
-        }
-
-        return jsonResponse({ success: true }, 200, request);
       }
 
       if (pathname === '/api/v1/orders') {
@@ -2318,10 +2312,23 @@ export default {
 
       return jsonResponse({ statusCode: 404, message: `Cannot ${method} ${pathname}`, error: 'Not Found' }, 404, request);
     } catch (err: any) {
-      console.error('API Error Stack:', err?.stack || err);
-      const status = typeof err?.getStatus === 'function' ? err.getStatus() : err?.status || (err?.code === 'P2025' ? 404 : 500);
-      const message = err?.message || 'Internal server error';
+      const status = typeof err?.getStatus === 'function' ? err.getStatus() : err?.status
+        || (err?.code === 'P2025' ? 404 : isDatabaseUnavailable(err) ? 503 : 500);
+      if (status >= 500) {
+        console.error('API request failed', { method, pathname, status, code: err?.code, ray: request.headers.get('cf-ray') });
+      }
+      const message = status >= 500 && env.NODE_ENV !== 'development'
+        ? status === 503 ? 'The service is temporarily unavailable. Try again shortly.' : 'The server could not complete the request.'
+        : err?.message || 'Internal server error';
       return jsonResponse({ statusCode: status, message, stack: env.NODE_ENV === 'development' ? err?.stack : undefined }, status, request);
+    } finally {
+      if (requestPrisma) {
+        const cleanup = requestPrisma.$disconnect().catch(() => {
+          console.warn('Database cleanup failed', { method, pathname, ray: request.headers.get('cf-ray') });
+        });
+        if (ctx) ctx.waitUntil(cleanup);
+        else await cleanup;
+      }
     }
   },
 
@@ -2340,3 +2347,9 @@ export default {
     else await run();
   },
 };
+
+function isDatabaseUnavailable(error: any) {
+  const code = error?.code ?? error?.cause?.code;
+  return /^(?:P100[12]|P1017|P2024|08\d{3}|53300|57P0[123]|ECONNRESET|ECONNREFUSED|ETIMEDOUT)$/.test(String(code))
+    || /^(?:timeout exceeded when trying to connect|connection terminated(?: unexpectedly)?)$/i.test(String(error?.message));
+}

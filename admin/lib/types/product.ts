@@ -14,21 +14,13 @@ export interface ProductTypeSummary extends ProductType {
   liveCount: number;
 }
 
-export interface ProductCategoryLink {
-  categoryId: string;
-  category: { id: string; name: string; slug: string };
-}
-
 export interface ProductListItem {
-  storefront?: Record<string, any>;
+  storefront?: { image?: string | null };
   id: string;
   name: string;
-  slug: string;
   status: ProductStatus;
   basePrice: string;
-  costPrice: string | null;
   productType: ProductType;
-  categories: ProductCategoryLink[];
   createdAt: string;
 }
 
@@ -51,7 +43,10 @@ export interface ProductOptionGroupLink {
   optionGroup: { id: string; name: string; values: { id: string; value: string }[] };
 }
 
-export interface ProductDetail extends Omit<ProductListItem, 'categories'> {
+export interface ProductDetail extends Omit<ProductListItem, 'storefront'> {
+  storefront?: Record<string, any>;
+  slug: string;
+  costPrice: string | null;
   description: string | null;
   options: ProductOptionGroupLink[];
   variants: ProductVariant[];

@@ -19,6 +19,8 @@ const STATUS_STYLES: Record<string, string> = {
   AUTHORIZED: "bg-blue-100 text-blue-800",
   FAILED: "bg-red-100 text-red-800",
   PARTIALLY_REFUNDED: "bg-orange-100 text-orange-800",
+  UNVERIFIED: "bg-amber-100 text-amber-800",
+  NO_PAYMENT_REQUIRED: "bg-muted text-muted-foreground",
   // Shipping status
   NOT_SHIPPED: "bg-muted text-muted-foreground",
   READY: "bg-blue-100 text-blue-800",

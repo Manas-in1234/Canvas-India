@@ -19,7 +19,7 @@ export default function PromotionsPage() {
   const queryClient = useQueryClient();
   const canManage = hasPermission('promotions.manage');
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ['promotions'],
     queryFn: () => apiClient.get<Promotion[]>('/growth/promotions'),
   });
