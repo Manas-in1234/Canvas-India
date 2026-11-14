@@ -323,7 +323,9 @@ export const CheckoutPage: React.FC = () => {
 
       // 2a. Fully discounted order: nothing to charge, so skip the payment gateway.
       if (total <= 0 && appliedCode) {
-        await mirrorOrderToBackend(order, user?.email || guestEmail || null, {}, appliedCode);
+        if (!await mirrorOrderToBackend(order, user?.email || guestEmail || null, {}, appliedCode)) {
+          throw new Error('The store could not confirm the coupon order. Please try again.');
+        }
         clearCart();
         navigate(`/order-success/${order.id}`);
         return;

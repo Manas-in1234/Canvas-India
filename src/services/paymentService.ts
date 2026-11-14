@@ -96,21 +96,10 @@ export const paymentService = {
         throw new Error('Invalid order amount.');
       }
 
-      let razorpayOrderId: string | undefined;
-
-      try {
-        const razorpayOrder = await createRazorpayOrder(
-          amountInRupees,
-          'INR',
-          order.order_number,
-        );
-        razorpayOrderId = razorpayOrder?.clientSecretOrOrderId;
-      } catch (orderErr) {
-        console.warn(
-          '[PaymentService] Backend Razorpay order endpoint note; launching direct Razorpay checkout:',
-          orderErr,
-        );
-      }
+      const { clientSecretOrOrderId: razorpayOrderId } = await createRazorpayOrder(
+        amountInRupees, 'INR', order.order_number,
+      );
+      if (!razorpayOrderId) throw new Error('Could not start Razorpay checkout. Please try again.');
 
       const razorpayKey = this.getRazorpayKey();
 
@@ -122,7 +111,7 @@ export const paymentService = {
         name: 'Canvas India',
         description: `Payment for Order #${order.order_number}`,
         image: 'https://canvasindia.in/favicon.ico',
-        ...(razorpayOrderId ? { order_id: razorpayOrderId } : {}),
+        order_id: razorpayOrderId,
 
         prefill: {
           name: prefillName,
@@ -143,21 +132,12 @@ export const paymentService = {
           response: RazorpaySuccessResponse,
         ) {
           try {
-            if (response.razorpay_order_id && response.razorpay_signature) {
-              try {
-                await verifyRazorpayPayment(
-                  response.razorpay_order_id,
-                  response.razorpay_payment_id,
-                  response.razorpay_signature,
-                );
-              } catch (verifyErr) {
-                console.warn(
-                  '[PaymentService] Backend verification note:',
-                  verifyErr,
-                );
-              }
+            if (response.razorpay_order_id !== razorpayOrderId) {
+              throw new Error('The payment reference could not be matched to this order.');
             }
-
+            await verifyRazorpayPayment(
+              razorpayOrderId, response.razorpay_payment_id, response.razorpay_signature,
+            );
             onSuccess(response);
           } catch (error) {
             console.error(

@@ -21,6 +21,7 @@ export async function mirrorOrderToBackend(
   couponCode?: string | null,
 ): Promise<boolean> {
   if (!email) return false;
+  if (!payment.razorpayPaymentId && !(couponCode && Number(order.total) === 0)) return false;
   try {
     const response = await fetch(buildApiUrl('storefront/orders'), {
       method: 'POST',
@@ -45,7 +46,7 @@ export async function mirrorOrderToBackend(
         total: order.total,
         shippingAddress: order.shipping_address,
         couponCode: couponCode || undefined,
-        payment: { status: 'captured', razorpayPaymentId: payment.razorpayPaymentId },
+        payment: payment.razorpayPaymentId ? { razorpayPaymentId: payment.razorpayPaymentId } : undefined,
       }),
     });
     return response.ok;
