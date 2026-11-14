@@ -2468,7 +2468,13 @@ const renderFloatingFrameContainer = (
   // all re-apply the same (percentage/objectBoundingBox-based) shape clip-path
   // at each nested, padded layer, so each layer traces a smaller copy of the
   // same shape and the padding between them reads as a shape-following ring
-  // instead of a rectangular frame around a round print.
+  // instead of a rectangular frame around a round print. A shaped ring reads
+  // much thicker than the same padding does on a rectangular frame (it's
+  // visible along the whole curve, not just 4 straight edges), so this ring
+  // is noticeably thinner than the rectangular default below.
+  const shapeMouldingPadding = opts.scale ? Math.max(5, Math.round(9 * opts.scale)) : 9;
+  const shapeGapPadding = opts.scale ? Math.max(2, Math.round(4 * opts.scale)) : 4;
+
   if (opts.shapeBorderRadius) {
     const radius = opts.shapeBorderRadius;
     return (
@@ -2479,7 +2485,7 @@ const renderFloatingFrameContainer = (
         <div
           className="relative"
           style={{
-            padding: `${mouldingPadding}px`,
+            padding: `${shapeMouldingPadding}px`,
             background: mouldingGradient,
             borderRadius: radius
           }}
@@ -2487,7 +2493,7 @@ const renderFloatingFrameContainer = (
           <div
             className="relative bg-[#0b0c0e] overflow-hidden"
             style={{
-              padding: `${gapPadding}px`,
+              padding: `${shapeGapPadding}px`,
               borderRadius: radius
             }}
           >
@@ -2510,7 +2516,7 @@ const renderFloatingFrameContainer = (
         <div
           className="relative"
           style={{
-            padding: `${mouldingPadding}px`,
+            padding: `${shapeMouldingPadding}px`,
             background: mouldingGradient,
             clipPath: clip,
             WebkitClipPath: clip
@@ -2519,7 +2525,7 @@ const renderFloatingFrameContainer = (
           <div
             className="relative bg-[#0b0c0e] overflow-hidden"
             style={{
-              padding: `${gapPadding}px`,
+              padding: `${shapeGapPadding}px`,
               clipPath: clip,
               WebkitClipPath: clip
             }}
