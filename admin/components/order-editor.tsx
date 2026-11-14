@@ -98,7 +98,7 @@ export function OrderEditor({ order, onClose, onSaved }: {
             <div className="flex items-center justify-between gap-3">
               <Button type="button" variant="outline" size="sm" disabled={lines.length >= 100}
                 onClick={() => setLines(rows => [...rows, { key: crypto.randomUUID(), productId: "", quantity: 1 }])}>Add item</Button>
-              <span className="text-sm font-medium">Draft total {formatCurrency(total)}</span>
+              <span className="text-sm font-medium">Draft total {formatCurrency(total.toFixed(2))}</span>
             </div>
           </fieldset>}
           {canEditAddress && <fieldset className="grid gap-3 sm:grid-cols-2">
