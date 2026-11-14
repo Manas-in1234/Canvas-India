@@ -3,59 +3,56 @@
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import type { NdrCase } from "@/lib/types/shipping";
+import type { ShipmentListItem } from "@/lib/types/shipping";
+import { SHIPMENT_STATUS_LABEL } from "@/lib/types/shipping";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { StatusBadge } from "@/components/status-badge";
-import { formatDate } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function NdrPage() {
+/** Parcels that need a person: delivery failed, or the parcel is coming back. Open one to act on it. */
+export default function DeliveryProblemsPage() {
   const router = useRouter();
-
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["ndr-cases"],
-    queryFn: () => apiClient.get<NdrCase[]>("/shipping/ndr"),
+    queryKey: ["shipments"],
+    queryFn: () => apiClient.get<ShipmentListItem[]>("/shipping"),
+    refetchInterval: 60000,
   });
 
-  const columns: DataTableColumn<NdrCase>[] = [
-    {
-      header: "Order #",
-      cell: (row) => (
-        <span className="font-medium">{row.shipment.order.orderNumber}</span>
-      ),
-    },
-    { header: "AWB", cell: (row) => row.shipment.awbNumber ?? "—" },
-    { header: "Reason", cell: (row) => row.reason },
-    { header: "Attempt", cell: (row) => `#${row.attemptNumber}` },
+  const rows = (data ?? [])
+    .filter((s) => s.status === "NDR" || s.status === "RTO")
+    .sort((a, b) => (a.status === b.status ? +new Date(b.updatedAt) - +new Date(a.updatedAt) : a.status === "NDR" ? -1 : 1));
+
+  const columns: DataTableColumn<ShipmentListItem>[] = [
+    { header: "Order #", cell: (row) => <span className="font-medium">{row.order.orderNumber}</span> },
+    { header: "AWB", cell: (row) => <span className="font-mono text-xs">{row.awbNumber ?? "—"}</span> },
+    { header: "Problem", cell: (row) => <span>{SHIPMENT_STATUS_LABEL[row.status]}</span> },
     { header: "Status", cell: (row) => <StatusBadge status={row.status} /> },
-    { header: "Raised", cell: (row) => formatDate(row.createdAt) },
+    { header: "Failed attempts", cell: (row) => row._count?.ndrCases ?? 0 },
+    { header: "Amount", cell: (row) => formatCurrency(row.order.total) },
+    { header: "Last update", cell: (row) => formatDate(row.updatedAt) },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">NDR Cases</h1>
+        <div className="page-eyebrow">DELIVERY</div>
+        <h1 className="text-2xl font-semibold tracking-tight">Delivery problems</h1>
         <p className="text-sm text-muted-foreground">
-          Failed delivery attempts needing action.
+          Parcels where delivery failed, or that are returning to you. Failed deliveries are returned to you if no one acts, so check this page daily.
         </p>
       </div>
-
       {isLoading ? (
-        <div className="space-y-2">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-        </div>
+        <Skeleton className="h-24 w-full" />
       ) : isError ? (
-        <p className="text-sm text-destructive">Failed to load NDR cases.</p>
+        <p className="text-sm text-destructive">Failed to load.</p>
       ) : (
         <DataTable
           columns={columns}
-          data={data ?? []}
+          data={rows}
           getRowKey={(row) => row.id}
-          onRowClick={(row) =>
-            router.push(`/ndr/placeholder?id=${encodeURIComponent(row.id)}`)
-          }
-          emptyMessage="No NDR cases."
+          onRowClick={(row) => router.push(`/shipments/placeholder?id=${encodeURIComponent(row.id)}`)}
+          emptyMessage="No delivery problems. Every parcel is on track."
         />
       )}
     </div>

@@ -14,7 +14,8 @@
 /orders/*           /orders/placeholder           200
 /customers/*        /customers/placeholder        200
 /products/:id         /products/placeholder         200
-/ndr/*              /ndr/placeholder              200
+/shipments/*        /shipments/placeholder        200
+/ndr/*              /ndr                          302
 /roles/:id            /roles/placeholder            200
 /segments/:id         /segments/placeholder         200
 /artwork/*          /artwork/placeholder          200

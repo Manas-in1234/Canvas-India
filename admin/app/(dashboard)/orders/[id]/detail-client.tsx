@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft } from "lucide-react";
+import { OrderShippingPanel } from "@/components/delivery/order-shipping-panel";
 
 export function OrderDetailClient({ id: initialId }: { id: string }) {
   const id = useRecordId(initialId);
@@ -189,6 +190,7 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
         </Card>
 
         <div className="space-y-4">
+          <OrderShippingPanel orderId={order.id} />
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Customer</CardTitle>

@@ -50,6 +50,14 @@ const STATUS_STYLES: Record<string, string> = {
   REJECTED: "bg-red-100 text-red-800",
 };
 
+// Courier terms a shop owner should not have to decode.
+const STATUS_LABELS: Record<string, string> = {
+  NDR: "Delivery failed",
+  RTO: "Returning to seller",
+  NOT_SHIPPED: "Not shipped",
+  READY: "Ready for pickup",
+};
+
 export function StatusBadge({ status }: { status: string }) {
   return (
     <Badge
@@ -60,10 +68,11 @@ export function StatusBadge({ status }: { status: string }) {
       )}
     >
       <span className="mr-1 inline-block h-1 w-1 rounded-full bg-current opacity-70" />
-      {status
-        .toLowerCase()
-        .replaceAll("_", " ")
-        .replace(/^./, (letter) => letter.toUpperCase())}
+      {STATUS_LABELS[status] ??
+        status
+          .toLowerCase()
+          .replaceAll("_", " ")
+          .replace(/^./, (letter) => letter.toUpperCase())}
     </Badge>
   );
 }

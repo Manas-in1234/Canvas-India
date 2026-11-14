@@ -10,6 +10,7 @@ import { WorkerShapes } from './customization/shapes/worker-shapes.js';
 import { resolveAdminRead } from './common/admin-read-routes.js';
 import { HeroImages } from './catalog/hero-images.js';
 import { HERO_IMAGE_SLOTS, isHeroImageSlot } from './catalog/hero-image-slots.js';
+import { WorkerShipping } from './shipping/worker-shipping.js';
 
 export interface Env {
   DATABASE_URL: string;
@@ -24,6 +25,18 @@ export interface Env {
   RAZORPAY_WEBHOOK_SECRET?: string;
   DELHIVERY_API_TOKEN?: string;
   DELHIVERY_PICKUP_LOCATION?: string;
+  DELHIVERY_MODE?: string;
+  DELHIVERY_PICKUP_PINCODE?: string;
+  DELHIVERY_PICKUP_PHONE?: string;
+  DELHIVERY_PICKUP_ADDRESS?: string;
+  DELHIVERY_PICKUP_CITY?: string;
+  DELHIVERY_PICKUP_STATE?: string;
+  DELHIVERY_SELLER_NAME?: string;
+  DELHIVERY_SELLER_GST?: string;
+  DELHIVERY_HSN_CODE?: string;
+  DELHIVERY_WEBHOOK_SECRET?: string;
+  DELIVERY_GRAMS_PER_SQ_IN_CANVAS?: string;
+  DELIVERY_GRAMS_PER_SQ_IN_ACRYLIC?: string;
 }
 
 let cachedWasmModule: any = null;
@@ -1941,14 +1954,51 @@ export default {
       // -------------------------------------------------------------
       // 9. Shipping & NDR/RTO
       // -------------------------------------------------------------
-      if (pathname === '/api/v1/shipping') {
+      // -------------------------------------------------------------
+      // Delivery: Delhivery bookings, tracking, labels, pickups, failed-delivery actions
+      // -------------------------------------------------------------
+      if (pathname === '/api/v1/shipping/webhook/delhivery' && method === 'POST') {
+        // Public endpoint for Delhivery's push tracking. Refuses to run unless a shared secret is configured.
+        const secret = env.DELHIVERY_WEBHOOK_SECRET?.trim();
+        if (!secret) return jsonResponse({ message: 'Webhook is not enabled' }, 503, request);
+        const given = (request.headers.get('Authorization') || '').replace(/^Token\s+/i, '').trim() || url.searchParams.get('token') || '';
+        if (given !== secret) return jsonResponse({ message: 'Unauthorized' }, 401, request);
+        const result = await new WorkerShipping(prisma, env).applyWebhook(await request.json().catch(() => ({})));
+        return jsonResponse({ success: true, ...result }, 200, request);
+      }
+      const shipRoute = pathname.match(/^\/api\/v1\/shipping(?:\/(config|summary|pickups|sync|shipments|test-connection)|\/preview\/([0-9a-fA-F-]{36})|\/([0-9a-fA-F-]{36})(?:\/(refresh|cancel|label|ndr-action|rto-received))?)?$/);
+      if (shipRoute) {
         const { user, error } = await authenticate(request, env, prisma);
         if (error) return error;
-        if (method === 'GET') {
-          const permError = checkPermission(user, ['shipping.view'], request);
-          if (permError) return permError;
-          return jsonResponse(await services.shipping.findAll(), 200, request);
+        const [, named, previewOrderId, shipmentId, action] = shipRoute;
+        const writes = method === 'POST' || method === 'PATCH' || method === 'PUT' || method === 'DELETE';
+        const perm =
+          action === 'cancel' ? 'shipping.cancel'
+          : action === 'ndr-action' || action === 'rto-received' ? 'ndr.action'
+          : writes ? 'shipping.create'
+          : 'shipping.view';
+        const denied = checkPermission(user, [perm], request);
+        if (denied) return denied;
+        const ship = new WorkerShipping(prisma, env);
+        if (!named && !previewOrderId && !shipmentId && method === 'GET') return jsonResponse(await ship.list(query), 200, request);
+        if (named === 'config' && method === 'GET') return jsonResponse(ship.config(), 200, request);
+        if (named === 'summary' && method === 'GET') return jsonResponse(await ship.summary(), 200, request);
+        if (named === 'test-connection' && method === 'POST') return jsonResponse(await ship.testConnection(), 200, request);
+        if (named === 'pickups' && method === 'GET') return jsonResponse(await ship.recentPickups(), 200, request);
+        if (named === 'pickups' && method === 'POST') return jsonResponse(await ship.requestPickup(user.id, await request.json().catch(() => ({}))), 201, request);
+        if (named === 'sync' && method === 'POST') return jsonResponse(await ship.syncActive(30), 200, request);
+        if (named === 'shipments' && method === 'POST') {
+          const body = (await request.json().catch(() => ({}))) as any;
+          if (!body.orderId) return jsonResponse({ statusCode: 400, message: 'orderId is required' }, 400, request);
+          return jsonResponse(await ship.createForOrder(String(body.orderId), body, user.id), 201, request);
         }
+        if (previewOrderId && method === 'GET') return jsonResponse(await ship.preview(previewOrderId), 200, request);
+        if (shipmentId && !action && method === 'GET') return jsonResponse(await ship.get(shipmentId), 200, request);
+        if (shipmentId && action === 'refresh' && method === 'POST') return jsonResponse(await ship.refresh(shipmentId), 200, request);
+        if (shipmentId && action === 'cancel' && method === 'POST') return jsonResponse(await ship.cancel(shipmentId, user.id), 200, request);
+        if (shipmentId && action === 'label' && method === 'GET') return jsonResponse(await ship.label(shipmentId), 200, request);
+        if (shipmentId && action === 'ndr-action' && method === 'POST') return jsonResponse(await ship.ndrAction(shipmentId, await request.json().catch(() => ({})), user.id), 200, request);
+        if (shipmentId && action === 'rto-received' && method === 'POST') return jsonResponse(await ship.markRtoReceived(shipmentId, user.id), 200, request);
       }
 
       if (pathname === '/api/v1/shipping/ndr') {
@@ -2273,5 +2323,20 @@ export default {
       const message = err?.message || 'Internal server error';
       return jsonResponse({ statusCode: status, message, stack: env.NODE_ENV === 'development' ? err?.stack : undefined }, status, request);
     }
+  },
+
+  /** Cron: pull Delhivery tracking for active shipments so statuses move on their own. */
+  async scheduled(_event: unknown, env: Env, ctx: any): Promise<void> {
+    const run = async () => {
+      try {
+        const { prisma } = await getServices(env);
+        const result = await new WorkerShipping(prisma, env).syncActive(20);
+        console.log('delivery sync', JSON.stringify(result));
+      } catch (err) {
+        console.error('delivery sync failed', err);
+      }
+    };
+    if (ctx?.waitUntil) ctx.waitUntil(run());
+    else await run();
   },
 };

@@ -1,4 +1,7 @@
 import {
+  Truck,
+  PackageX,
+  Settings2,
   LayoutDashboard,
   ShoppingBag,
   Package,
@@ -62,6 +65,30 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Customers",
         icon: Users,
         permissions: ["customers.view"],
+      },
+    ],
+  },
+  {
+    label: "Delivery",
+    links: [
+      {
+        href: "/shipments",
+        label: "Shipments",
+        icon: Truck,
+        permissions: ["shipping.view"],
+        alsoMatches: ["/shipments"],
+      },
+      {
+        href: "/ndr",
+        label: "Delivery problems",
+        icon: PackageX,
+        permissions: ["ndr.view"],
+      },
+      {
+        href: "/delivery-settings",
+        label: "Delivery settings",
+        icon: Settings2,
+        permissions: ["shipping.view"],
       },
     ],
   },
