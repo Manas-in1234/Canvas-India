@@ -27,6 +27,7 @@ export interface OrderListItem {
   orderNumber: string;
   orderStatus: OrderStatus;
   paymentStatus: PaymentStatus;
+  paymentLabel?: PaymentStatus | 'NO_PAYMENT_REQUIRED' | 'UNVERIFIED';
   shippingStatus: ShippingStatus;
   subtotal: string;
   discount: string;

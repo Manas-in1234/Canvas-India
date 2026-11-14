@@ -31,7 +31,7 @@ export default function OrdersPage() {
     },
     {
       header: "Payment",
-      cell: (row) => <StatusBadge status={row.paymentStatus} />,
+      cell: (row) => <StatusBadge status={row.paymentLabel ?? row.paymentStatus} />,
     },
     {
       header: "Shipping",

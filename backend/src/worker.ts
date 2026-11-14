@@ -10,6 +10,7 @@ import { WorkerShapes } from './customization/shapes/worker-shapes.js';
 import { resolveAdminRead } from './common/admin-read-routes.js';
 import { HeroImages } from './catalog/hero-images.js';
 import { HERO_IMAGE_SLOTS, isHeroImageSlot } from './catalog/hero-image-slots.js';
+import { verifyCapturedOrderPayment } from './commerce/orders/razorpay-capture.js';
 
 export interface Env {
   DATABASE_URL: string;
@@ -1481,7 +1482,17 @@ export default {
           : (Number(body.total) || (subtotal - discount + shippingFee + tax)));
 
         const isFree = !isCod && !!appliedDiscountId && total <= 0;
-        const isPaid = isFree || (!isCod && (body.payment?.status === 'captured' || Boolean(body.payment?.razorpayPaymentId)));
+        if (!isCod && !isFree && total <= 0) {
+          return jsonResponse({ message: 'A zero-total order needs a valid coupon.' }, 400, request);
+        }
+        if (!isCod && !isFree && !mirroredNumber) {
+          return jsonResponse({ message: 'A valid storefront order number is required.' }, 400, request);
+        }
+        const paymentRef = isCod || isFree ? null : body.payment?.razorpayPaymentId;
+        if (!isCod && !isFree) {
+          await verifyCapturedOrderPayment(env, paymentRef, orderNumber, total);
+        }
+        const isPaid = !isCod;
 
         const newOrder = await prisma.$transaction(async (tx) => {
           const order = await tx.order.create({
@@ -1551,7 +1562,7 @@ export default {
                 create: [
                   { type: 'order.created', message: `Order ${orderNumber} placed via storefront checkout` },
                   ...(isCod ? [{ type: 'order.cod', message: 'Cash on Delivery · collect payment on delivery' }] : []),
-                  ...(isPaid ? [{ type: 'order.paid', message: isFree ? `Order fully covered by coupon ${body.couponCode}` : `Payment verified via Razorpay (${body.payment?.razorpayPaymentId || 'PAID'})` }] : []),
+                  ...(isPaid ? [{ type: 'order.paid', message: isFree ? `Order fully covered by coupon ${body.couponCode}` : `Payment verified via Razorpay (${paymentRef})` }] : []),
                 ],
               },
               ...(isCod || (isPaid && !isFree) ? {
@@ -1562,7 +1573,7 @@ export default {
                       status: isCod ? 'PENDING' : 'PAID',
                       amount: total,
                       currency: 'INR',
-                      providerRef: isCod ? null : body.payment?.razorpayPaymentId || null,
+                      providerRef: paymentRef,
                     },
                   ],
                 },
@@ -1581,6 +1592,10 @@ export default {
         }).catch(async error => {
           if (isCod && error?.code === 'P2002') {
             const existing = await findCodOrder();
+            if (existing) return existing;
+          }
+          if (mirroredNumber && error?.code === 'P2002') {
+            const existing = await prisma.order.findUnique({ where: { orderNumber: mirroredNumber }, include: { items: true, addresses: true, customer: true } });
             if (existing) return existing;
           }
           throw error;
@@ -1612,44 +1627,6 @@ export default {
           },
         });
         return jsonResponse(orders, 200, request);
-      }
-
-      const storefrontPaymentMatch = pathname.match(/^\/api\/v1\/storefront\/orders\/([^/]+)\/payment$/);
-      if (storefrontPaymentMatch && method === 'POST') {
-        const orderId = storefrontPaymentMatch[1];
-        const body = (await request.json().catch(() => ({}))) as any;
-        const status = body.status === 'captured' ? 'PAID' : (body.status === 'failed' ? 'FAILED' : 'PENDING');
-
-        await prisma.payment.create({
-          data: {
-            orderId,
-            provider: 'RAZORPAY',
-            status: status as any,
-            amount: Number(body.amount) || 0,
-            currency: body.currency || 'INR',
-            providerRef: body.razorpayPaymentId || null,
-          },
-        }).catch(() => null);
-
-        if (status === 'PAID') {
-          await prisma.order.update({
-            where: { id: orderId },
-            data: {
-              paymentStatus: 'PAID',
-              orderStatus: 'CONFIRMED',
-            },
-          }).catch(() => null);
-
-          await prisma.orderEvent.create({
-            data: {
-              orderId,
-              type: 'order.paid',
-              message: `Payment confirmed via Razorpay: ${body.razorpayPaymentId || 'PAID'}`,
-            },
-          }).catch(() => null);
-        }
-
-        return jsonResponse({ success: true }, 200, request);
       }
 
       if (pathname === '/api/v1/orders') {

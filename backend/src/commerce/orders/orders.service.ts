@@ -14,6 +14,19 @@ export type RefundGateway = (
   notes: Record<string, string>,
 ) => Promise<{ id: string; status: string }>;
 
+function withPaymentLabel<T extends {
+  paymentStatus: string; total: unknown; events: { type: string }[];
+  payments: { provider: string; status: string; providerRef: string | null }[];
+}>(order: T) {
+  const hasPayment = order.payments.some(payment => payment.status === 'PAID' &&
+    (payment.provider !== 'RAZORPAY' || /^pay_[a-zA-Z0-9]+$/.test(payment.providerRef ?? '')));
+  const paymentLabel = order.paymentStatus === 'PAID' && Number(order.total) === 0 ? 'NO_PAYMENT_REQUIRED'
+    : (order.paymentStatus === 'PAID' && !hasPayment) ||
+      (order.paymentStatus === 'PENDING' && order.events.some(event => event.type === 'order.payment_unverified'))
+      ? 'UNVERIFIED' : order.paymentStatus;
+  return { ...order, paymentLabel };
+}
+
 @Injectable()
 export class OrdersService {
   private refundGateway?: RefundGateway;
@@ -31,10 +44,16 @@ export class OrdersService {
     private readonly abandonedCartsService: AbandonedCartsService,
   ) {}
 
-  findAll() {
-    return this.prisma.order.findMany({
+  async findAll() {
+    const orders = await this.prisma.order.findMany({
       orderBy: { createdAt: 'desc' },
-      include: { customer: { select: { id: true, name: true } } },
+      include: { customer: { select: { id: true, name: true } },
+        events: { where: { type: 'order.payment_unverified' }, select: { type: true } },
+        payments: { select: { provider: true, status: true, providerRef: true } } },
+    });
+    return orders.map(order => {
+      const { payments: _payments, events: _events, ...summary } = withPaymentLabel(order);
+      return summary;
     });
   }
 
@@ -54,7 +73,7 @@ export class OrdersService {
     if (!order) {
       throw new NotFoundException(`Order ${id} not found`);
     }
-    return order;
+    return withPaymentLabel(order);
   }
 
   /**
@@ -189,12 +208,18 @@ export class OrdersService {
 
   /** Admin accepts a confirmed order: production starts, so customers can no longer cancel it. */
   async accept(id: string, actingAdminId?: string) {
-    const order = await this.prisma.order.findUnique({ where: { id } });
+    const order = await this.prisma.order.findUnique({ where: { id }, include: {
+      events: { where: { type: 'order.payment_unverified' }, select: { type: true } },
+      payments: { select: { provider: true, status: true, providerRef: true } },
+    } });
     if (!order) {
       throw new NotFoundException(`Order ${id} not found`);
     }
     if (order.orderStatus !== 'CONFIRMED' && order.orderStatus !== 'PAID') {
       throw new BadRequestException(`Cannot accept an order in status ${order.orderStatus}`);
+    }
+    if (withPaymentLabel(order).paymentLabel === 'UNVERIFIED') {
+      throw new BadRequestException('Verify the payment before starting production.');
     }
     const updated = await this.prisma.order.update({
       where: { id },
