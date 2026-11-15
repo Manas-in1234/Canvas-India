@@ -34,6 +34,7 @@ interface ShopContextType {
   accountModalOpen: boolean;
   selectedProductForCustomize: Product | null;
   allProducts: Product[];
+  productsFromApi: boolean;
   /** False when the admin has hidden this category (or every product in it) from the website. */
   isCategoryVisible: (categorySlug: string) => boolean;
   totalCartCount: number;
@@ -451,6 +452,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         accountModalOpen,
         selectedProductForCustomize,
         allProducts,
+        productsFromApi,
         isCategoryVisible,
         totalCartCount,
        isLoadingProducts,
