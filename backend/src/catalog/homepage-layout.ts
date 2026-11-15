@@ -3,6 +3,10 @@ import type { PrismaClient } from '../generated/prisma/client.js';
 
 const storageKey = 'storefront/homepage-layout';
 const ownerType = 'HomepageLayout';
+const curatedKey = /^curated-[a-z0-9-]{1,64}$/;
+const maxCuratedRows = 12;
+const maxProductsPerRow = 24;
+const productId = /^[a-zA-Z0-9_-]{1,100}$/;
 
 /** The homepage blocks an admin can show, hide, reorder and rename. The hero banner always comes first. */
 export const HOMEPAGE_SECTIONS = [
@@ -22,6 +26,7 @@ export interface HomepageSectionSetting {
   enabled: boolean;
   /** Replaces the section heading on the storefront; empty keeps the built-in heading. */
   title: string;
+  productIds?: string[];
 }
 
 export interface HomepageLayoutSettings {
@@ -49,13 +54,21 @@ export function normalizeLayout(raw: unknown): HomepageLayoutSettings {
   const input = (raw && typeof raw === 'object' ? raw : {}) as Partial<HomepageLayoutSettings>;
   const seen = new Set<string>();
   const sections: HomepageSectionSetting[] = [];
+  let curatedCount = 0;
   for (const item of Array.isArray(input.sections) ? input.sections : []) {
-    if (!item || typeof item !== 'object' || !KNOWN.has((item as any).key) || seen.has((item as any).key)) continue;
-    seen.add((item as any).key);
+    if (!item || typeof item.key !== 'string' || seen.has(item.key)) continue;
+    const curated = curatedKey.test(item.key);
+    if (!KNOWN.has(item.key) && !curated) continue;
+    const title = typeof item.title === 'string' ? item.title.trim().slice(0, 80) : '';
+    const ids = Array.isArray(item.productIds) ? [...new Set(item.productIds.filter(id => typeof id === 'string' && productId.test(id)))].slice(0, maxProductsPerRow) : [];
+    if (curated && (!title || !ids.length || curatedCount >= maxCuratedRows)) continue;
+    if (curated) curatedCount++;
+    seen.add(item.key);
     sections.push({
-      key: (item as any).key,
-      enabled: (item as any).enabled !== false,
-      title: typeof (item as any).title === 'string' ? (item as any).title.trim().slice(0, 80) : '',
+      key: item.key,
+      enabled: item.enabled !== false,
+      title,
+      ...(curated ? { productIds: ids } : {}),
     });
   }
   for (const s of HOMEPAGE_SECTIONS) if (!seen.has(s.key)) sections.push({ key: s.key, enabled: true, title: '' });
@@ -80,10 +93,23 @@ export class HomepageLayout {
     const input = (body ?? {}) as Partial<HomepageLayoutSettings>;
     if (typeof input.storeOpen !== 'boolean') throw new BadRequestException('Choose whether the store is open or closed.');
     if (!Array.isArray(input.sections)) throw new BadRequestException('The section list is missing.');
-    for (const item of input.sections as any[]) {
-      if (!item || !KNOWN.has(item.key)) throw new BadRequestException('Unknown homepage section.');
+    const seen = new Set<string>();
+    let curatedCount = 0;
+    for (const item of input.sections) {
+      if (!item || typeof item.key !== 'string' || (!KNOWN.has(item.key) && !curatedKey.test(item.key))) {
+        throw new BadRequestException('Unknown homepage section.');
+      }
+      if (seen.has(item.key)) throw new BadRequestException('Each homepage section must have a unique key.');
+      seen.add(item.key);
       if (typeof item.enabled !== 'boolean') throw new BadRequestException('Each section must be shown or hidden.');
       if (item.title !== undefined && (typeof item.title !== 'string' || item.title.length > 80)) throw new BadRequestException('A section heading can be at most 80 characters.');
+      if (curatedKey.test(item.key)) {
+        if (++curatedCount > maxCuratedRows) throw new BadRequestException('Add up to 12 curated rows.');
+        if (!item.title?.trim() || !Array.isArray(item.productIds) || item.productIds.length < 1 ||
+          item.productIds.length > maxProductsPerRow || item.productIds.some(id => typeof id !== 'string' || !productId.test(id))) {
+          throw new BadRequestException('Each curated row needs a heading and 1 to 24 products.');
+        }
+      }
     }
     if (input.closedMessage !== undefined && (typeof input.closedMessage !== 'string' || input.closedMessage.length > 240)) {
       throw new BadRequestException('The closed message can be at most 240 characters.');

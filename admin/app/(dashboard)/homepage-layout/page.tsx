@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const ENDPOINT = "/admin/homepage-layout";
 const META = new Map(HOMEPAGE_SECTIONS.map((s) => [s.key, s]));
+type CatalogProduct = { id: string; name: string; status: string; productType?: { name: string; isActive?: boolean } };
 
 export default function HomepageLayoutPage() {
   const query = useQuery({ queryKey: ["homepage-layout"], queryFn: () => apiClient.get<HomepageLayoutSettings>(ENDPOINT) });
@@ -30,6 +31,13 @@ function LayoutEditor({ saved }: { saved: HomepageLayoutSettings }) {
   const canEdit = hasPermission("products.edit");
   const [draft, setDraft] = useState<HomepageLayoutSettings>(saved);
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
+  const curatedCount = draft.sections.filter(section => section.productIds).length;
+  const invalid = draft.sections.some(section => section.productIds && (!section.title.trim() || !section.productIds.length));
+  const catalog = useQuery({
+    queryKey: ["homepage-curated-products"],
+    queryFn: () => apiClient.get<CatalogProduct[]>("/products?admin=1&view=summary"),
+    enabled: curatedCount > 0,
+  });
 
   const save = useMutation({
     mutationFn: () => apiClient.put<HomepageLayoutSettings>(ENDPOINT, draft),
@@ -71,7 +79,7 @@ function LayoutEditor({ saved }: { saved: HomepageLayoutSettings }) {
             </Button>
           </a>
           {canEdit && (
-            <Button disabled={!dirty || save.isPending} onClick={() => save.mutate()}>
+            <Button disabled={!dirty || invalid || save.isPending} onClick={() => save.mutate()}>
               {save.isPending ? "Publishing…" : dirty ? "Publish changes" : "Published"}
             </Button>
           )}
@@ -128,26 +136,27 @@ function LayoutEditor({ saved }: { saved: HomepageLayoutSettings }) {
           </div>
           {draft.sections.map((section, index) => {
             const meta = META.get(section.key);
-            if (!meta) return null;
+            const ids = section.productIds;
+            const label = meta?.label ?? (section.title || "Curated row");
             return (
               <div key={section.key} className={`flex flex-wrap items-center gap-3 rounded-md border px-3 py-2 text-sm ${section.enabled ? "" : "bg-muted/30 opacity-70"}`}>
                 <div className="flex flex-col">
-                  <Button size="icon-sm" variant="ghost" aria-label={`Move ${meta.label} up`} disabled={!canEdit || index === 0} onClick={() => move(index, -1)}>
+                  <Button size="icon-sm" variant="ghost" aria-label={`Move ${label} up`} disabled={!canEdit || index === 0} onClick={() => move(index, -1)}>
                     <ArrowUp className="h-3.5 w-3.5" />
                   </Button>
-                  <Button size="icon-sm" variant="ghost" aria-label={`Move ${meta.label} down`} disabled={!canEdit || index === draft.sections.length - 1} onClick={() => move(index, 1)}>
+                  <Button size="icon-sm" variant="ghost" aria-label={`Move ${label} down`} disabled={!canEdit || index === draft.sections.length - 1} onClick={() => move(index, 1)}>
                     <ArrowDown className="h-3.5 w-3.5" />
                   </Button>
                 </div>
                 <div className="min-w-[10rem] flex-1">
-                  <div className="font-medium">{meta.label}</div>
-                  <div className="text-xs text-muted-foreground">{meta.hint}</div>
+                  <div className="font-medium">{label}</div>
+                  <div className="text-xs text-muted-foreground">{meta?.hint ?? "Hand-picked products"}</div>
                 </div>
-                {meta.renamable ? (
+                {ids || meta?.renamable ? (
                   <Input
-                    aria-label={`Heading for ${meta.label}`}
+                    aria-label={ids ? "Curated row heading" : `Heading for ${label}`}
                     className="max-w-xs"
-                    placeholder={meta.label}
+                    placeholder={meta?.label ?? "e.g. Staff Picks"}
                     maxLength={80}
                     disabled={!canEdit}
                     value={section.title}
@@ -160,11 +169,65 @@ function LayoutEditor({ saved }: { saved: HomepageLayoutSettings }) {
                   <input type="checkbox" checked={section.enabled} disabled={!canEdit} onChange={(e) => patch(section.key, { enabled: e.target.checked })} />
                   <span>{section.enabled ? "Shown" : "Hidden"}</span>
                 </label>
+                {ids && <div className="w-full space-y-2 border-t pt-3">
+                  <CuratedProducts ids={ids} products={catalog.data} canEdit={canEdit}
+                    onChange={productIds => patch(section.key, { productIds })} />
+                  {catalog.isError && <Button size="sm" variant="outline" onClick={() => void catalog.refetch()}>Retry loading products</Button>}
+                  {canEdit && <Button size="sm" variant="outline" onClick={() => {
+                    if (confirm("Remove this curated row from the homepage on publish?")) {
+                      setDraft(current => ({ ...current, sections: current.sections.filter(item => item.key !== section.key) }));
+                    }
+                  }}>Remove row</Button>}
+                </div>}
               </div>
             );
           })}
+          {canEdit && <Button variant="outline" disabled={curatedCount >= 12} onClick={() => {
+            const key = "curated-" + crypto.randomUUID();
+            setDraft(current => ({ ...current, sections: [...current.sections, { key, enabled: true, title: "", productIds: [] }] }));
+          }}>Add curated row</Button>}
         </CardContent>
       </Card>
     </div>
   );
+}
+
+function CuratedProducts({ ids, products, canEdit, onChange }: {
+  ids: string[]; products?: CatalogProduct[]; canEdit: boolean; onChange: (ids: string[]) => void;
+}) {
+  const [search, setSearch] = useState("");
+  const query = search.trim().toLowerCase();
+  const byId = new Map(products?.map(product => [product.id, product]));
+  const live = (p: CatalogProduct) => p.status === "ACTIVE" && p.productType?.isActive !== false;
+  const matches = query ? (products ?? []).filter(p => live(p) && !ids.includes(p.id)
+    && (p.name + " " + (p.productType?.name ?? "")).toLowerCase().includes(query)).slice(0, 20) : [];
+  return <>
+    {ids.length === 0 && <p className="text-sm text-muted-foreground">Choose at least one product and enter a heading to publish.</p>}
+    <ol className="space-y-1">
+      {ids.map((id, index) => {
+        const product = byId.get(id);
+        return <li key={id} className="flex flex-wrap items-center gap-2 rounded-md bg-muted/50 px-2 py-1">
+          <span className="grow">{product?.name ?? "Selected product"}{products && (!product || !live(product)) ? " (Unavailable)" : ""}</span>
+          {canEdit && <>
+            {([-1, 1] as const).map(direction => <Button key={direction} size="icon-sm" variant="ghost"
+              aria-label={direction < 0 ? "Move product up" : "Move product down"} disabled={index + direction < 0 || index + direction >= ids.length}
+              onClick={() => {
+                const next = [...ids];
+                [next[index], next[index + direction]] = [next[index + direction], next[index]];
+                onChange(next);
+              }}>{direction < 0 ? <ArrowUp /> : <ArrowDown />}</Button>)}
+            <Button size="sm" variant="ghost" onClick={() => onChange(ids.filter(value => value !== id))}>Remove product</Button>
+          </>}
+        </li>;
+      })}
+    </ol>
+    {canEdit && ids.length < 24 && <>
+      <Input aria-label="Search products for curated row" placeholder={products ? "Search live products by name or category" : "Loading product catalog…"}
+        disabled={!products} value={search} onChange={event => setSearch(event.target.value)} />
+      {query && products && (matches.length ? <div className="max-h-48 space-y-1 overflow-y-auto">
+        {matches.map(product => <Button key={product.id} variant="outline" size="sm" className="w-full justify-start"
+          onClick={() => { onChange([...ids, product.id]); setSearch(""); }}>{product.name} · {product.productType?.name}</Button>)}
+      </div> : <p className="text-sm text-muted-foreground">No matching live products.</p>)}
+    </>}
+  </>;
 }

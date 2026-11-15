@@ -6,6 +6,8 @@ import { ArrowRight, ChevronLeft, ChevronRight, Tag, Copy, Check, Palette, Leaf,
 import { Product } from '../types';
 import { useOccasions } from '../context/OccasionsContext';
 import { useHomepageLayout } from '../api/homepageLayoutApi';
+import { ProductCard } from './ProductCard';
+import { useShop } from '../context/ShopContext';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 import { ACRYLIC_PRODUCT_TYPES } from '../data/acrylicCustomizerData';
 import { ACRYLIC_STYLE_LANDING_DATA, getAcrylicLandingDataByProductId } from '../data/acrylicStyleLandingData';
@@ -119,9 +121,11 @@ const arrowBtn =
   'w-10 h-10 rounded-full bg-white border border-stone-200 shadow-md flex items-center justify-center text-[#0E4A93] hover:bg-[#E8752A] hover:text-white hover:border-[#E8752A] transition-colors cursor-pointer shrink-0';
 
 export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCart, allProducts, onCustomize, onOpenQuote, wishlistIds, onToggleWishlist }) => {
-  const { occasions } = useOccasions();
+  const { entries, occasions } = useOccasions();
   // Admin-controlled layout (Homepage layout in the dashboard): which sections show, in what order, under which heading.
   const layout = useHomepageLayout();
+  const { productsFromApi } = useShop();
+  const productsById = React.useMemo(() => new Map(allProducts.map(product => [product.id, product])), [allProducts]);
   const layoutShows = (key: string) => layout.sections.find((x) => x.key === key)?.enabled !== false;
   const layoutOrder = (key: string) => {
     const i = layout.sections.findIndex((x) => x.key === key);
@@ -163,7 +167,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
     // Dedicated "Festive Offers" landing page (its own occasion entry,
     // separate from Diwali) with format tiles — each tile's own "Shop Now"
     // is what opens the customizer.
-    navigate('/occasions/festive-offers');
+    navigate(entries.some(row => row.slug === 'festive-offers') ? '/occasions/festive-offers' : '/occasions');
   };
 
   const scrollRow = (ref: React.RefObject<HTMLDivElement>, dir: 1 | -1) => {
@@ -865,6 +869,27 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       )}
 
       {/* CORPORATE & BULK ORDERS */}
+      {productsFromApi && layout.sections.map((section, index) => {
+        if (!section.enabled || !section.productIds?.length) return null;
+        const products = section.productIds.flatMap(id => {
+          const product = productsById.get(id);
+          return product ? [product] : [];
+        });
+        if (!products.length) return null;
+        return (
+          <section key={section.key} style={{ order: index + 1 }} aria-labelledby={section.key}
+            className="mx-auto w-full max-w-[1680px] px-4 py-8 sm:px-8 lg:px-12 xl:px-14">
+            <h2 id={section.key} className="mb-5 text-2xl font-bold text-[#1A4F53] sm:text-3xl" style={{ fontFamily: SERIF }}>{section.title}</h2>
+            <div className="flex snap-x gap-3 overflow-x-auto pb-3">
+              {products.map(product => <div key={product.id} className="w-[160px] shrink-0 snap-start sm:w-[220px]">
+                <ProductCard product={product} variant="listing" isWishlisted={wishlistIds.includes(product.id)}
+                  onToggleWishlist={onToggleWishlist} onAddToCart={onAddToCart} onCustomize={onCustomize} />
+              </div>)}
+            </div>
+          </section>
+        );
+      })}
+
       {layoutShows('bulk') && (
         <div style={{ order: layoutOrder('bulk') }}>
       <section className="py-10 sm:py-14">

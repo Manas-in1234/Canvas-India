@@ -64,4 +64,15 @@ describe('homepage layout', () => {
     await expect(layout.save({ storeOpen: true, closedMessage: 'x'.repeat(241), sections: ok }, 'a')).rejects.toThrow(/240/);
     expect(tx.asset.upsert).not.toHaveBeenCalled();
   });
+
+  it('preserves curated rows and product order alongside existing sections', async () => {
+    const tx = { asset: { upsert: vi.fn() }, auditLog: { create: vi.fn() } };
+    const layout = new HomepageLayout({ $transaction: (fn: any) => fn(tx) } as never);
+    const curated = { key: 'curated-picks', enabled: true, title: ' Staff picks ', productIds: ['two', 'one', 'two'] };
+    const sections = [{ key: 'canvas', enabled: true, title: '' }, curated];
+    const saved = await layout.save({ storeOpen: true, sections }, 'admin');
+    expect(saved.sections[1]).toEqual({ ...curated, title: 'Staff picks', productIds: ['two', 'one'] });
+    expect(normalizeLayout(saved)).toEqual(saved);
+    await expect(layout.save({ storeOpen: true, sections: [{ ...curated, productIds: [] }] }, 'admin')).rejects.toThrow(/1 to 24/);
+  });
 });

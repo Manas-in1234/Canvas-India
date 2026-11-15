@@ -19,6 +19,7 @@ export interface HomepageSectionSetting {
   key: string;
   enabled: boolean;
   title: string;
+  productIds?: string[];
 }
 
 export interface HomepageLayoutSettings {

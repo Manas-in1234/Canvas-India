@@ -6,6 +6,7 @@ export interface HomepageSectionSetting {
   enabled: boolean;
   /** Replaces the section heading when not empty. */
   title: string;
+  productIds?: string[];
 }
 
 export interface HomepageLayout {
