@@ -1,6 +1,7 @@
 import { Occasions, isOccasionSlug } from './catalog/occasions.js';
 import { HomepagePromotions } from './catalog/homepage-promotions.js';
 import { HomepageLayout } from './catalog/homepage-layout.js';
+import { isSupportPage, SupportPages } from './catalog/support-pages.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, Prisma } from './generated/prisma/client.js';
 import { getQueryCompilerWasm } from './common/prisma-wasm/wasm-loader.js';
@@ -400,6 +401,20 @@ export default {
           take: Math.min(Math.max(Number(query.take) || 200, 1), 500),
         });
         return jsonResponse(rows, 200, request);
+      }
+      const support = pathname.match(/^\/api\/v1\/(admin\/)?support-pages\/([a-z-]+)$/);
+      const supportPage = support?.[2];
+      if (support && supportPage && isSupportPage(supportPage)) {
+        const adminPrefix = support[1];
+        const pages = new SupportPages(prisma);
+        if (!adminPrefix && method === 'GET') return jsonResponse(await pages.read(supportPage), 200, request);
+        if (adminPrefix && (method === 'GET' || method === 'PUT')) {
+          const { user, error } = await authenticate(request, env, prisma);
+          if (error) return error;
+          const denied = checkPermission(user, [method === 'GET' ? 'products.view' : 'products.edit'], request);
+          if (denied) return denied;
+          return jsonResponse(method === 'GET' ? await pages.admin(supportPage) : await pages.save(supportPage, await request.json(), user.id), 200, request);
+        }
       }
       if (pathname === '/api/v1/homepage-layout' && method === 'GET') {
         return jsonResponse(await new HomepageLayout(prisma).settings(), 200, request);

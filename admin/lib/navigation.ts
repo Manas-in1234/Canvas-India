@@ -1,6 +1,7 @@
 import {
   History,
   LayoutTemplate,
+  FileText,
   Truck,
   PackageX,
   Settings2,
@@ -131,6 +132,12 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Hero Images",
         icon: ImageIcon,
         permissions: ["products.edit"],
+      },
+      {
+        href: "/support-pages",
+        label: "Support pages",
+        icon: FileText,
+        permissions: ["products.view"],
       },
       {
         href: "/occasions",
