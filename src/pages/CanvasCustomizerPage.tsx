@@ -2912,24 +2912,28 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // long that actually takes, plus a short minimum so the brief, instant
   // section switches still get a visible (but not artificially stretched) beat.
   const [preloaderActive, setPreloaderActive] = useState(false);
-  const preloaderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const preloaderPendingRef = useRef(0);
 
   const beginPreloader = () => {
     preloaderPendingRef.current += 1;
-    if (preloaderTimerRef.current) {
-      clearTimeout(preloaderTimerRef.current);
-      preloaderTimerRef.current = null;
-    }
     setPreloaderActive(true);
   };
   const endPreloader = (minMs: number = 0) => {
+    // Each begin/end pair owns its own release - every begin() increments
+    // the counter and every matching end() must decrement it exactly once.
+    // A previous version cancelled the PENDING release timer here (via a
+    // single shared timer ref) whenever a new begin() fired, e.g. when
+    // handleStepNav's begin+end wrapped a handleSelectTab call that itself
+    // also begins+ends. That discarded the earlier release's decrement
+    // permanently, leaving the counter stuck above 0 forever - the
+    // preloader then never hides again. Let every scheduled release fire
+    // independently instead of cancelling earlier ones.
     const release = () => {
       preloaderPendingRef.current = Math.max(0, preloaderPendingRef.current - 1);
       if (preloaderPendingRef.current === 0) setPreloaderActive(false);
     };
     if (minMs > 0) {
-      preloaderTimerRef.current = setTimeout(release, minMs);
+      setTimeout(release, minMs);
     } else {
       release();
     }
