@@ -33,10 +33,10 @@ export class SupportPages {
 
   async read(page: SupportPage) {
     const asset = await this.prisma.asset.findUnique({
-      where: { storageKey: 'storefront/support-pages/' + page }, select: { contentBytes: true, updatedAt: true },
+      where: { storageKey: 'storefront/support-pages/' + page }, select: { contentBytes: true },
     });
     const content: Record<string, string> = asset?.contentBytes ? JSON.parse(new TextDecoder().decode(asset.contentBytes)) : {};
-    return { content, updatedAt: asset?.updatedAt ?? null };
+    return { content };
   }
 
   async admin(page: SupportPage) {
