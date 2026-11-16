@@ -179,7 +179,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         (product.name && product.name.toLowerCase().includes('cork')) ||
         product.customizationAvailable === false ? (
           <a
-            href={`https://wa.me/917893051555?text=${encodeURIComponent(`Hi Canvas India, I would like to get a quote / order in bulk for ${product.name}`)}`}
+            href={`https://wa.me/917893946464?text=${encodeURIComponent(`Hi Canvas India, I would like to get a quote / order in bulk for ${product.name}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}

@@ -92,7 +92,7 @@ export const DesignersArchitectsPage: React.FC = () => {
               </button>
 
               <a
-                href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20am%20an%20interior%20designer%2Farchitect%20interested%20in%20production%20partnership"
+                href="https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20am%20an%20interior%20designer%2Farchitect%20interested%20in%20production%20partnership"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-5 py-3.5 rounded-xl border border-stone-300 hover:bg-stone-100 text-stone-800 font-bold text-sm flex items-center gap-2 transition-colors cursor-pointer"

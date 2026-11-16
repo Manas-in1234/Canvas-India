@@ -27,7 +27,7 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({
         <div className="hidden lg:flex items-center gap-4">
           <span className="inline-flex items-center gap-1.5 opacity-90 hover:opacity-100 transition-opacity">
             <Phone className="w-3.5 h-3.5 text-[var(--accent-light)]" />
-            <span>Architect & Trade Desk: <strong className="text-white">+91 (080) 4122-8900</strong></span>
+            <span>Architect & Trade Desk: <strong className="text-white">+91 78939 46464</strong></span>
           </span>
           <span className="opacity-30">|</span>
           <span className="inline-flex items-center gap-1 text-[var(--accent-light)]">
