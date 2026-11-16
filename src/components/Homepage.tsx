@@ -134,6 +134,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   const layoutTitle = (key: string, fallback: string) => layout.sections.find((x) => x.key === key)?.title?.trim() || fallback;
   const [promotion, setPromotion] = React.useState({ saleName: 'Festive Sale', percentage: 20, coupons: [] as { code: string; desc: string }[] });
   React.useEffect(() => {
+    document.title = 'Canvas India | Online Custom Printing Store';
+  }, []);
+  React.useEffect(() => {
     const controller = new AbortController();
     fetch(buildApiUrl('/homepage-promotions'), { signal: controller.signal })
       .then(response => response.ok ? response.json() : null)

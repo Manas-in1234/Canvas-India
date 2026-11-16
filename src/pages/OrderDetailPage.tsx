@@ -28,6 +28,11 @@ import {
 
 export const OrderDetailPage: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
+
+  useEffect(() => {
+    document.title = 'Order Details | Canvas India';
+  }, []);
+
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();

@@ -20,6 +20,10 @@ export const OrderSuccessPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = 'Order Confirmed | Canvas India';
+  }, []);
+
+  useEffect(() => {
     const fetchOrder = async () => {
       if (!orderId) return;
       setLoading(true);

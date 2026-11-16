@@ -34,6 +34,10 @@ export const CheckoutPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const isGuestModeParam = searchParams.get('guest') === 'true';
 
+  useEffect(() => {
+    document.title = 'Checkout | Canvas India';
+  }, []);
+
   // Checkout step: 1 = Details, 2 = Address, 3 = Shipping & Review, 4 = Payment
   const [step, setStep] = useState<number>(user ? 2 : 1);
 

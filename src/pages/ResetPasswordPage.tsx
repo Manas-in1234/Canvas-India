@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
@@ -6,6 +6,10 @@ import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, ArrowRight } from 'lucide-
 export const ResetPasswordPage: React.FC = () => {
   const { updatePassword } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = 'Reset Password | Canvas India';
+  }, []);
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

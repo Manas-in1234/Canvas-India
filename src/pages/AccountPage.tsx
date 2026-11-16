@@ -41,6 +41,10 @@ export const AccountPage: React.FC = () => {
 
   const activeTab = searchParams.get('tab') || 'orders';
 
+  useEffect(() => {
+    document.title = 'My Account | Canvas India';
+  }, []);
+
   // Addresses state
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loadingAddresses, setLoadingAddresses] = useState(false);

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { StorefrontHeroImage } from '../components/StorefrontHeroImage';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -30,6 +30,10 @@ export const CanvasCategoryPage: React.FC = () => {
     onOpenCustomize,
     onToggleWishlist
   } = useShop();
+
+  useEffect(() => {
+    document.title = 'Canvas Prints | Canvas India';
+  }, []);
 
   // Filter States
   const [minPrice, setMinPrice] = useState<number>(PRICE_MIN_DEFAULT);

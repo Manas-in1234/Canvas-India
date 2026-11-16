@@ -2759,6 +2759,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const location = useLocation();
   const { allProducts, onAddToCartCustomized } = useShop();
 
+  useEffect(() => {
+    document.title = 'Customize Your Canvas | Canvas India';
+  }, []);
+
   // Arrived from a catalogue design's "Customize this Product" button — the
   // artwork is fixed, so there's nothing to upload: the Upload tab is
   // hidden entirely rather than just pre-filled and still reachable.

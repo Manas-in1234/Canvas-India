@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   Upload, 
@@ -51,7 +51,11 @@ const createCompressedBase64 = (file: File, maxDim = 1280, quality = 0.8): Promi
 
 export const MobileUploadPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
-  
+
+  useEffect(() => {
+    document.title = 'Upload Photo | Canvas India';
+  }, []);
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);

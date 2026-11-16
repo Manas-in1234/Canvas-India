@@ -22,6 +22,10 @@ export const LoginPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '/account';
 
+  useEffect(() => {
+    document.title = 'Login | Canvas India';
+  }, []);
+
   // Email form state (Pure OTP flow, no passwords)
   const [email, setEmail] = useState('');
   const [emailOtp, setEmailOtp] = useState('');
