@@ -143,7 +143,7 @@ export const SharedFooter: React.FC<SharedFooterProps> = ({
             <div className="space-y-2.5 text-stone-400">
               <div className="flex items-start gap-2">
                 <MapPin className="w-3.5 h-3.5 text-[var(--accent)] shrink-0 mt-0.5" />
-                <span>H NO 4-9-197/8184, HMT Nagar, HMT Nagar Main Road, Nacharam, Hyderabad, Telangana – 500076</span>
+                <span>H NO 4-9-197/B/84, HMT Nagar, HMT Nagar Main Road, Nacharam, Hyderabad, Telangana – 500076</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
