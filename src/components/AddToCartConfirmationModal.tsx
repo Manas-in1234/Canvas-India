@@ -54,6 +54,11 @@ export const AddToCartConfirmationModal: React.FC = () => {
     (product.name && product.name.toLowerCase().includes('cork')) ||
     product.customizationAvailable === false;
 
+  const details = item.customizationDetails || {};
+  const borderPill = details.borderWidth && details.borderWidth !== 'No Border'
+    ? `${details.borderWidth}${details.borderColor ? ` (${details.borderColor})` : ''}`
+    : details.borderWidth;
+
   const unitPrice = product.price || 0;
   const totalPrice = unitPrice * item.quantity;
   const thumbnail = item.photoUrl || product.image;
@@ -189,6 +194,56 @@ export const AddToCartConfirmationModal: React.FC = () => {
                 {item.base && (
                   <span className="px-2 py-0.5 rounded bg-white border border-stone-200 text-stone-700 font-semibold">
                     Hardware: <strong>{item.base}</strong>
+                  </span>
+                )}
+                {details.shape && (
+                  <span className="px-2 py-0.5 rounded bg-white border border-stone-200 text-stone-700 font-semibold">
+                    Shape: <strong>{details.shape}</strong>
+                  </span>
+                )}
+                {details.wrap && (
+                  <span className="px-2 py-0.5 rounded bg-white border border-stone-200 text-stone-700 font-semibold">
+                    Wrap: <strong>{details.wrap}</strong>
+                  </span>
+                )}
+                {borderPill && (
+                  <span className="px-2 py-0.5 rounded bg-white border border-stone-200 text-stone-700 font-semibold">
+                    Border: <strong>{borderPill}</strong>
+                  </span>
+                )}
+                {details.frame && (
+                  <span className="px-2 py-0.5 rounded bg-white border border-stone-200 text-stone-700 font-semibold">
+                    Frame: <strong>{details.frame}</strong>
+                  </span>
+                )}
+                {details.display && (
+                  <span className="px-2 py-0.5 rounded bg-white border border-stone-200 text-stone-700 font-semibold">
+                    Display: <strong>{details.display}</strong>
+                  </span>
+                )}
+                {details.lamination && (
+                  <span className="px-2 py-0.5 rounded bg-white border border-stone-200 text-stone-700 font-semibold">
+                    Lamination: <strong>{details.lamination}</strong>
+                  </span>
+                )}
+                {details.backing && (
+                  <span className="px-2 py-0.5 rounded bg-white border border-stone-200 text-stone-700 font-semibold">
+                    Backing: <strong>{details.backing}</strong>
+                  </span>
+                )}
+                {details.surfaceFinish && (
+                  <span className="px-2 py-0.5 rounded bg-white border border-stone-200 text-stone-700 font-semibold">
+                    Surface: <strong>{details.surfaceFinish}</strong>
+                  </span>
+                )}
+                {details.template && (
+                  <span className="px-2 py-0.5 rounded bg-white border border-stone-200 text-stone-700 font-semibold">
+                    Layout: <strong>{details.template}</strong>
+                  </span>
+                )}
+                {details.mirrorImage && (
+                  <span className="px-2 py-0.5 rounded bg-white border border-stone-200 text-stone-700 font-semibold">
+                    Mirror Image: <strong>Yes</strong>
                   </span>
                 )}
                 <span className="px-2 py-0.5 rounded bg-blue-50 border border-blue-200 text-[#0E4A93] font-bold">
