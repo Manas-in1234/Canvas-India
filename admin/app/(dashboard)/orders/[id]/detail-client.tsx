@@ -84,20 +84,136 @@ function getConfigEntries(configurationSnapshot: Record<string, unknown> | null)
     ]);
 }
 
+// Pure frontend mock - no API call, no database row. Visit /orders/qa-dummy
+// in the admin to see every customization spec (border, color, finish,
+// layout/template, display, frame, wrap, mirror image, backing, surface
+// finish) rendered on this page, for visual QA only.
+const QA_DUMMY_ORDER: OrderDetail = {
+  id: "qa-dummy",
+  orderNumber: "QA-DUMMY-0001",
+  orderStatus: "CONFIRMED",
+  paymentStatus: "PENDING",
+  shippingStatus: "NOT_SHIPPED",
+  subtotal: "4998.00",
+  discount: "0.00",
+  tax: "899.64",
+  shipping: "0.00",
+  total: "5897.64",
+  createdAt: new Date().toISOString(),
+  customer: {
+    id: "qa-dummy-customer",
+    name: "QA Dummy Order - DO NOT SHIP",
+    email: "qa-dummy-order@canvassindia.com",
+    phone: "9999999999",
+  },
+  items: [
+    {
+      id: "qa-dummy-item-1",
+      orderId: "qa-dummy",
+      variantId: null,
+      productNameSnapshot: "QA TEST - Oval Canvas (DO NOT SHIP)",
+      variantSnapshot: {
+        sku: "QA-CANVAS-OVAL",
+        options: [
+          { group: "Size", value: "12x16" },
+          { group: "Style", value: "Black Border Wrap" },
+        ],
+      },
+      priceSnapshot: "1999.00",
+      configurationSnapshot: {
+        material: "canvas",
+        productTypeId: "canvas-oval",
+        sizeId: "oval-12x16",
+        shape: "Oval",
+        thickness: 'Thick Gallery Wrap (1.5")',
+        wrap: "Black Border Wrap",
+        borderWidth: "Medium (6mm)",
+        borderColor: "#000000",
+        frame: "Brushed Gold Frame",
+        mirrorImage: true,
+        display: "Ready to Hang Kit",
+        lamination: "Matte Laminate",
+        retouching: ["Skin Smoothing", "Color Correction"],
+        majorRetouchText: "Please remove the background person on the left",
+        proofRequested: true,
+        template: "Golden Hour Template",
+        hardware: "Ready to Hang Kit",
+      },
+      designVersionSnapshot: null,
+      taxSnapshot: "0.00",
+      quantity: 1,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "qa-dummy-item-2",
+      orderId: "qa-dummy",
+      variantId: null,
+      productNameSnapshot: "QA TEST - Acrylic Print (DO NOT SHIP)",
+      variantSnapshot: {
+        sku: "QA-ACRYLIC-RECT",
+        options: [
+          { group: "Size", value: "16x20" },
+          { group: "Style", value: "Standard" },
+        ],
+      },
+      priceSnapshot: "2999.00",
+      configurationSnapshot: {
+        material: "acrylic",
+        productTypeId: "acrylic-print",
+        sizeId: "rec-16x20",
+        shape: "Rectangle",
+        thickness: "5mm Optical Acrylic",
+        borderWidth: "Thin (3mm)",
+        borderColor: "#FFFFFF",
+        backing: "Brushed Aluminum Backing",
+        surfaceFinish: "High Gloss",
+        display: "Acrylic Standoffs",
+        hardware: "Acrylic Standoffs",
+        studQuantity: 4,
+        proofRequested: false,
+      },
+      designVersionSnapshot: null,
+      taxSnapshot: "0.00",
+      quantity: 1,
+      createdAt: new Date().toISOString(),
+    },
+  ],
+  addresses: [
+    {
+      id: "qa-dummy-address",
+      type: "SHIPPING",
+      name: "QA Dummy Order",
+      line1: "Test Street 1",
+      line2: null,
+      city: "Hyderabad",
+      state: "Telangana",
+      postalCode: "500076",
+      country: "IN",
+      phone: "9999999999",
+    },
+  ],
+  events: [],
+  notes: [],
+  payments: [],
+};
+
 export function OrderDetailClient({ id: initialId }: { id: string }) {
   const id = useRecordId(initialId);
+  const isQaDummy = id === "qa-dummy";
   const { hasPermission } = usePermission();
   const queryClient = useQueryClient();
 
   const {
-    data: order,
+    data: fetchedOrder,
     isLoading,
     isError,
   } = useQuery({
     queryKey: ["orders", id],
-    enabled: !!id && id !== "placeholder",
+    enabled: !!id && id !== "placeholder" && !isQaDummy,
     queryFn: () => apiClient.get<OrderDetail>(`/orders/${id}`),
   });
+
+  const order = isQaDummy ? QA_DUMMY_ORDER : fetchedOrder;
 
   const cancelMutation = useMutation({
     mutationFn: () => apiClient.post(`/orders/${id}/cancel`),
@@ -139,11 +255,13 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
   }
 
   const canCancel =
+    !isQaDummy &&
     hasPermission("orders.cancel") &&
     order.orderStatus !== "CANCELLED" &&
     order.orderStatus !== "COMPLETED";
 
   const canAccept =
+    !isQaDummy &&
     hasPermission("orders.edit") &&
     (order.orderStatus === "CONFIRMED" || order.orderStatus === "PAID");
 
