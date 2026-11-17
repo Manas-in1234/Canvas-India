@@ -59,12 +59,20 @@ export class Occasions {
   async save(slug: string, body: unknown, creating: boolean, adminUserId: string) {
     const input = (body ?? {}) as Record<string, unknown>;
     if (!isOccasionSlug(slug)) throw new BadRequestException('Use a URL slug with lowercase letters, numbers and hyphens.');
-    const text = Object.fromEntries(Object.entries(fields).map(([key, max]) => {
+    const text: Record<string, string> = Object.fromEntries(Object.entries(fields).map(([key, max]) => {
       const raw = input[key];
       const value = typeof raw === 'string' ? raw.trim() : '';
       if (!value || value.length > max) throw new BadRequestException(`Fill in ${key} using up to ${max} characters.`);
       return [key, value];
     }));
+    // Only taken when creating: an existing occasion's group (e.g. a default festival) is never
+    // changed by editing its text, since an edit never sends this field.
+    if (creating) {
+      if (input.group !== undefined && input.group !== 'occasion' && input.group !== 'festival') {
+        throw new BadRequestException("group must be 'occasion' or 'festival'.");
+      }
+      text.group = input.group === 'festival' ? 'festival' : 'occasion';
+    }
     const exists = await this.exists(slug);
     if (creating && exists) throw new ConflictException('An occasion with this URL already exists.');
     if (!creating && !exists) throw new BadRequestException('Occasion not found.');

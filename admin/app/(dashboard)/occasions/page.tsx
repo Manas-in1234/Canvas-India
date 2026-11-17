@@ -40,6 +40,9 @@ function errorMessage(error: unknown) {
 function OccasionEditor({ occasion, onCreated }: { occasion?: Occasion; onCreated: (slug: string) => void }) {
   const [details, setDetails] = useState<Details>(occasion ?? empty);
   const [slug, setSlug] = useState(occasion?.slug ?? '');
+  // Only asked when creating: an existing occasion's group can't be changed from here, and
+  // the backend ignores this field on an edit.
+  const [group, setGroup] = useState<'occasion' | 'festival'>('occasion');
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState('');
   const [fileError, setFileError] = useState('');
@@ -60,7 +63,7 @@ function OccasionEditor({ occasion, onCreated }: { occasion?: Occasion; onCreate
   const save = useMutation({
     mutationFn: () => occasion
       ? apiClient.put<{ slug: string }>(route + '/' + occasion.slug, details)
-      : apiClient.post<{ slug: string }>(route, { ...details, slug }),
+      : apiClient.post<{ slug: string }>(route, { ...details, slug, group }),
     onSuccess: async result => {
       await client.invalidateQueries({ queryKey });
       if (!occasion) onCreated(result.slug);
@@ -128,6 +131,16 @@ function OccasionEditor({ occasion, onCreated }: { occasion?: Occasion; onCreate
               : <Input id="occasion-url" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxLength={64} value={slug}
                   onChange={event => setSlug(event.target.value)} placeholder="e.g. graduation" />}
           </div>
+          {!occasion && (
+            <div className="space-y-1.5">
+              <Label htmlFor="occasion-group">Show under</Label>
+              <select id="occasion-group" className={control} value={group}
+                onChange={event => setGroup(event.target.value as 'occasion' | 'festival')}>
+                <option value="occasion">Special occasions</option>
+                <option value="festival">Festivals</option>
+              </select>
+            </div>
+          )}
         </fieldset>
         {save.error && <p role="alert" className="text-sm text-destructive">{errorMessage(save.error)}</p>}
         <Button disabled={busy} type="submit">{save.isPending ? 'Publishing…' : occasion ? 'Save and publish' : 'Create and publish'}</Button>
