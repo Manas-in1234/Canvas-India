@@ -609,6 +609,9 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                     <span className="underline decoration-stone-300">({product.reviewsCount || 48} reviews)</span>
                   </div>
                 )}
+                {product.shortDescription && (
+                  <p className="text-sm text-stone-600 mt-1.5">{product.shortDescription}</p>
+                )}
               </div>
 
               <div className="flex items-baseline gap-3">

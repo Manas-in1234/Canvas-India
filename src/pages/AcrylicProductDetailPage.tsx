@@ -526,6 +526,9 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                   <span className="underline decoration-stone-300">({totalReviewsCount} reviews)</span>
                 </div>
               )}
+              {product.shortDescription && (
+                <p className="text-sm text-stone-600 mt-1.5">{product.shortDescription}</p>
+              )}
             </div>
 
             <div className="flex items-baseline gap-3">
