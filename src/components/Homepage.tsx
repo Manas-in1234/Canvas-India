@@ -178,7 +178,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
     if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: 'smooth' });
   };
 
-  const bestsellers = allProducts.slice(0, 10);
+  const bestsellers = allProducts.filter((p) => p.bestseller);
 
   return (
     <div className="w-full bg-[#FFF9F1] text-[#1f2937] font-manrope flex flex-col">
@@ -791,7 +791,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       )}
 
       {/* BEST SELLERS */}
-      {layoutShows('bestsellers') && (
+      {layoutShows('bestsellers') && bestsellers.length > 0 && (
         <div style={{ order: layoutOrder('bestsellers') }}>
       <section id="bestsellers-unboxed" className="pb-12 sm:pb-16">
         <Container>
