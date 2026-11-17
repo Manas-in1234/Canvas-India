@@ -232,7 +232,8 @@ export const AccountPage: React.FC = () => {
       loadAddresses();
     } catch (err) {
       console.error('Failed to save address:', err);
-      alert('Could not save address. Please try again.');
+      const reason = err instanceof Error ? err.message : (err as { message?: string } | null)?.message;
+      alert(reason ? `Could not save address: ${reason}` : 'Could not save address. Please try again.');
     }
   };
 

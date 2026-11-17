@@ -267,6 +267,58 @@ export const CheckoutPage: React.FC = () => {
     setStep(3);
   };
 
+  // Explicit "Save Address" button: saves the address to the account right
+  // away instead of only on "Continue to Review & Shipping" (which also
+  // immediately advances past this step) - lets the customer save without
+  // committing to move forward yet.
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [addressSavedNotice, setAddressSavedNotice] = useState(false);
+
+  const handleSaveAddressNow = async () => {
+    if (!user) return;
+    if (!shippingName.trim()) {
+      alert('Please enter recipient full name.');
+      return;
+    }
+    if (shippingPhone.replace(/\D/g, '').length !== 10) {
+      alert('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    if (!streetAddress.trim() || !city.trim() || !state.trim() || postalCode.length !== 6) {
+      alert('Please complete all required address fields including 6-digit PIN code.');
+      return;
+    }
+
+    setSavingAddress(true);
+    try {
+      const created = await addressService.addAddress(
+        {
+          name: shippingName,
+          phone: shippingPhone,
+          street_address: streetAddress,
+          apartment,
+          city,
+          state,
+          postal_code: postalCode,
+          country: 'India',
+          address_type: addressType,
+          is_default: savedAddresses.length === 0,
+        },
+        user.id
+      );
+      setSavedAddresses((prev) => [created, ...prev]);
+      if (created.id) setSelectedAddressId(created.id);
+      setAddressSavedNotice(true);
+      setTimeout(() => setAddressSavedNotice(false), 4000);
+    } catch (err) {
+      console.error('Failed to save address:', err);
+      const reason = err instanceof Error ? err.message : (err as { message?: string } | null)?.message;
+      alert(reason ? `Could not save this address: ${reason}` : 'Could not save this address. Please try again.');
+    } finally {
+      setSavingAddress(false);
+    }
+  };
+
   const checkoutPin = getEffectiveShippingAddress().postal_code;
   const codAvailable = codAvailability?.pin === checkoutPin && codAvailability.available;
   const codEligible = !couponApplied && cartItems.every(item => !item.customizationDetails && !item.photoUrl);
@@ -780,7 +832,7 @@ export const CheckoutPage: React.FC = () => {
                       </div>
 
                       {user && (
-                        <div className="pt-2">
+                        <div className="pt-2 flex flex-wrap items-center gap-3">
                           <label className="inline-flex items-center gap-2 text-xs text-gray-700 cursor-pointer">
                             <input
                               type="checkbox"
@@ -790,6 +842,19 @@ export const CheckoutPage: React.FC = () => {
                             />
                             Save this address to my account for faster future checkouts
                           </label>
+                          <button
+                            type="button"
+                            onClick={handleSaveAddressNow}
+                            disabled={savingAddress}
+                            className="text-xs font-semibold text-[#002B49] border border-[#002B49]/30 hover:bg-[#002B49]/5 rounded-lg px-3 py-1.5 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                          >
+                            {savingAddress ? 'Saving…' : 'Save Address'}
+                          </button>
+                          {addressSavedNotice && (
+                            <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+                              <CheckCircle className="w-3.5 h-3.5" /> Address saved
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
