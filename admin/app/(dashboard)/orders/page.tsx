@@ -10,6 +10,26 @@ import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Pure frontend mock row, pinned to the top of the list - clicking it opens
+// /orders/qa-dummy, which renders every customization spec (border, color,
+// finish, layout/template, display, frame, wrap, mirror image, backing,
+// surface finish) with no API call or database row involved. For visual QA
+// only - never sent to or read from the backend.
+const QA_DUMMY_LIST_ITEM: OrderListItem = {
+  id: "qa-dummy",
+  orderNumber: "QA-DUMMY-0001",
+  orderStatus: "CONFIRMED",
+  paymentStatus: "PENDING",
+  shippingStatus: "NOT_SHIPPED",
+  subtotal: "4998.00",
+  discount: "0.00",
+  tax: "899.64",
+  shipping: "0.00",
+  total: "5897.64",
+  createdAt: new Date().toISOString(),
+  customer: { id: "qa-dummy-customer", name: "QA Dummy Order - DO NOT SHIP" },
+};
+
 export default function OrdersPage() {
   const [status, setStatus] = useState("ALL");
   const router = useRouter();
@@ -18,6 +38,8 @@ export default function OrdersPage() {
     queryKey: ["orders"],
     queryFn: () => apiClient.get<OrderListItem[]>("/orders"),
   });
+
+  const rowsWithQaDummy = [QA_DUMMY_LIST_ITEM, ...(data ?? [])];
 
   const columns: DataTableColumn<OrderListItem>[] = [
     {
@@ -68,7 +90,7 @@ export default function OrdersPage() {
             {label}
             <span>
               {
-                (data || []).filter(
+                rowsWithQaDummy.filter(
                   (row) =>
                     value === "ALL" ||
                     (value === "PENDING_PAYMENT"
@@ -88,25 +110,30 @@ export default function OrdersPage() {
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
         </div>
-      ) : isError ? (
-        <p className="text-sm text-destructive">Failed to load orders.</p>
       ) : (
-        <DataTable
-          columns={columns}
-          data={(data ?? []).filter(
-            (row) =>
-              status === "ALL" ||
-              (status === "PENDING_PAYMENT"
-                ? ["PENDING", "AUTHORIZED"].includes(row.paymentStatus) &&
-                  row.orderStatus !== "CANCELLED"
-                : row.orderStatus === status),
+        <>
+          {isError && (
+            <p className="text-sm text-destructive">
+              Failed to load real orders - showing the QA dummy order below only.
+            </p>
           )}
-          getRowKey={(row) => row.id}
-          onRowClick={(row) =>
-            router.push(`/orders/placeholder?id=${encodeURIComponent(row.id)}`)
-          }
-          emptyMessage="No orders yet."
-        />
+          <DataTable
+            columns={columns}
+            data={rowsWithQaDummy.filter(
+              (row) =>
+                status === "ALL" ||
+                (status === "PENDING_PAYMENT"
+                  ? ["PENDING", "AUTHORIZED"].includes(row.paymentStatus) &&
+                    row.orderStatus !== "CANCELLED"
+                  : row.orderStatus === status),
+            )}
+            getRowKey={(row) => row.id}
+            onRowClick={(row) =>
+              router.push(`/orders/placeholder?id=${encodeURIComponent(row.id)}`)
+            }
+            emptyMessage="No orders yet."
+          />
+        </>
       )}
     </div>
   );
