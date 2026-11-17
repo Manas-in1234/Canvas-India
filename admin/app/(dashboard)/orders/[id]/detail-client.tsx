@@ -14,6 +14,76 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft } from "lucide-react";
 
+// variantSnapshot.options only ever carries two generic Size/Style entries
+// (set by the backend as a fallback) - the customer's actual picks (border,
+// frame, wrap, display, lamination, layout, etc.) are stored verbatim on
+// configurationSnapshot but were never rendered, so production had no way
+// to see what the customer actually configured. Render every simple
+// (non-nested) field from it instead.
+const CONFIG_LABEL_OVERRIDES: Record<string, string> = {
+  sizeId: "Size",
+  productTypeId: "Product Type",
+  customThicknessMm: "Custom Thickness (mm)",
+  customThicknessInches: "Custom Thickness (in)",
+  borderWidth: "Border Width",
+  borderColor: "Border Color",
+  mirrorImage: "Mirror Image",
+  majorRetouchText: "Retouch Notes",
+  proofRequested: "Proof Requested",
+  quotePreference: "Quote Preference",
+  quoteTemplate: "Quote Template",
+  quoteCustomText: "Quote Text",
+  quoteAuthor: "Quote Author",
+  quoteBgColor: "Quote Background Color",
+  quoteFontFamily: "Quote Font",
+  quoteTextColor: "Quote Text Color",
+  digitalPaintingEffect: "Digital Painting Effect",
+  digitalPaintingSubject: "Digital Painting Subject",
+  digitalPaintingBackground: "Digital Painting Background",
+  peopleCount: "People Count",
+  petsCount: "Pets Count",
+  busRollLines: "Bus Roll Lines",
+  busRollBackgroundColor: "Bus Roll Background Color",
+  busRollPattern: "Bus Roll Pattern",
+  busRollFont: "Bus Roll Font",
+  bannerUnit: "Banner Unit",
+  bannerWidthInches: "Banner Width (in)",
+  bannerHeightInches: "Banner Height (in)",
+  bannerBackgroundColor: "Banner Background Color",
+  bannerHardware: "Banner Hardware",
+  studQuantity: "Stud Quantity",
+  hardwarePrice: "Hardware Price",
+  popArtStyleName: "Pop Art Style",
+  lyricTemplateName: "Lyric Template",
+  lyricTitle: "Lyric Title",
+  lyricArtist: "Lyric Artist",
+  lyricDateOrNames: "Lyric Date/Names",
+  lyricFontFamily: "Lyric Font",
+  lyricTextColor: "Lyric Text Color",
+  lyricLayout: "Lyric Layout",
+};
+
+function formatConfigLabel(key: string): string {
+  if (CONFIG_LABEL_OVERRIDES[key]) return CONFIG_LABEL_OVERRIDES[key];
+  return key
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/^./, (c) => c.toUpperCase());
+}
+
+function getConfigEntries(configurationSnapshot: Record<string, unknown> | null): [string, string][] {
+  if (!configurationSnapshot) return [];
+  return Object.entries(configurationSnapshot)
+    .filter(([, value]) => {
+      if (value === null || value === undefined || value === "") return false;
+      if (Array.isArray(value)) return value.length > 0 && value.every((v) => typeof v === "string" || typeof v === "number");
+      return typeof value !== "object";
+    })
+    .map(([key, value]): [string, string] => [
+      formatConfigLabel(key),
+      Array.isArray(value) ? value.join(", ") : typeof value === "boolean" ? (value ? "Yes" : "No") : String(value),
+    ]);
+}
+
 export function OrderDetailClient({ id: initialId }: { id: string }) {
   const id = useRecordId(initialId);
   const { hasPermission } = usePermission();
@@ -153,6 +223,15 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
                   <div className="text-sm text-muted-foreground">
                     Qty: {item.quantity}
                   </div>
+                  {getConfigEntries(item.configurationSnapshot).length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      {getConfigEntries(item.configurationSnapshot).map(([label, value]) => (
+                        <span key={label}>
+                          <span className="font-medium text-foreground/80">{label}:</span> {value}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="text-right text-sm">
                   <div>{formatCurrency(item.priceSnapshot)}</div>
