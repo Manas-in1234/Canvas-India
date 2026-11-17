@@ -566,9 +566,18 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                       />
                     )}
 
-                    {!uploadedFile && effectiveDiscount > 0 && (
-                      <div className="absolute top-4 left-4 bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider z-10">
-                        {effectiveDiscount}% OFF
+                    {!uploadedFile && (effectiveDiscount > 0 || product.badge) && (
+                      <div className="absolute top-4 left-4 z-10 flex flex-col items-start gap-1.5">
+                        {effectiveDiscount > 0 && (
+                          <div className="bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider">
+                            {effectiveDiscount}% OFF
+                          </div>
+                        )}
+                        {product.badge && (
+                          <div className="bg-[#0E4A93] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider">
+                            {product.badge}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -628,9 +637,21 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 )}
               </div>
 
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-600">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Lowest Price Guaranteed</span>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-600">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>Lowest Price Guaranteed</span>
+                </div>
+                {product.stockStatus && (
+                  <div
+                    className={`flex items-center gap-1.5 text-xs font-semibold ${
+                      product.stockStatus === 'Out of Stock' ? 'text-rose-600' : 'text-emerald-600'
+                    }`}
+                  >
+                    <Package className="w-4 h-4" />
+                    <span>{product.stockStatus}</span>
+                  </div>
+                )}
               </div>
 
               {productCode && (
@@ -962,12 +983,26 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
           </div>
 
         {/* ========================================================================= */}
+        {/* 2b. PRODUCT DESCRIPTION                                                   */}
+        {/* ========================================================================= */}
+        {product.description && (
+          <div className="mt-16 sm:mt-20 pt-12 border-t border-stone-200 text-left">
+            <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight mb-4">
+              Product Description
+            </h2>
+            <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-line max-w-3xl">
+              {product.description}
+            </p>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
         {/* 3. PRODUCT SPECIFICATIONS & APPLICATIONS                                  */}
         {/* ========================================================================= */}
-        <div className="mt-16 sm:mt-20 pt-12 border-t border-stone-200 text-left">
-          
+        <div className={`${product.description ? 'mt-12 sm:mt-16' : 'mt-16 sm:mt-20 pt-12 border-t border-stone-200'} text-left`}>
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            
+
             {/* Specifications Table */}
             <div className="lg:col-span-12 space-y-4">
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">

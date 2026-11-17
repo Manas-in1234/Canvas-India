@@ -485,9 +485,18 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                 />
               )}
 
-              {discountPercent > 0 && (
-                <div className="absolute top-4 left-4 bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider">
-                  {discountPercent}% OFF
+              {(discountPercent > 0 || product.badge) && (
+                <div className="absolute top-4 left-4 flex flex-col items-start gap-1.5">
+                  {discountPercent > 0 && (
+                    <div className="bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider">
+                      {discountPercent}% OFF
+                    </div>
+                  )}
+                  {product.badge && (
+                    <div className="bg-[#0E4A93] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider">
+                      {product.badge}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -541,9 +550,21 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
               )}
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-600">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Lowest Price Guaranteed</span>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-600">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <span>Lowest Price Guaranteed</span>
+              </div>
+              {product.stockStatus && (
+                <div
+                  className={`flex items-center gap-1.5 text-xs font-semibold ${
+                    product.stockStatus === 'Out of Stock' ? 'text-rose-600' : 'text-emerald-600'
+                  }`}
+                >
+                  <Package className="w-4 h-4" />
+                  <span>{product.stockStatus}</span>
+                </div>
+              )}
             </div>
 
             {productCode && (
@@ -906,15 +927,21 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                 <h3 className="text-base font-bold text-stone-900">
                   About {product.name}
                 </h3>
-                <p>
-                  Custom photo acrylic blocks, crafted with {selectedThickness} clear, diamond-polished optical acrylic, allow natural light to filter through for a striking 3D glass effect that stands proudly on any desk, shelf, or mantelpiece.
-                </p>
-                <p>
-                  Create a contemporary, vibrant look for your favorite photographs. These crystal pieces capture ambient lighting to enhance color saturation and optical depth in portraits, wedding snapshots, family milestones, and architectural cityscapes.
-                </p>
-                <p>
-                  Choose from custom size options, finishes, and optional solid wooden or crystal acrylic bases. Sub-surface archival UV printing seals every pigment against moisture and UV light, ensuring vibrant color fidelity that never fades or wrinkles.
-                </p>
+                {product.description ? (
+                  <p className="whitespace-pre-line">{product.description}</p>
+                ) : (
+                  <>
+                    <p>
+                      Custom photo acrylic blocks, crafted with {selectedThickness} clear, diamond-polished optical acrylic, allow natural light to filter through for a striking 3D glass effect that stands proudly on any desk, shelf, or mantelpiece.
+                    </p>
+                    <p>
+                      Create a contemporary, vibrant look for your favorite photographs. These crystal pieces capture ambient lighting to enhance color saturation and optical depth in portraits, wedding snapshots, family milestones, and architectural cityscapes.
+                    </p>
+                    <p>
+                      Choose from custom size options, finishes, and optional solid wooden or crystal acrylic bases. Sub-surface archival UV printing seals every pigment against moisture and UV light, ensuring vibrant color fidelity that never fades or wrinkles.
+                    </p>
+                  </>
+                )}
               </div>
             )}
 
@@ -923,7 +950,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div className="flex justify-between py-2 border-b border-stone-200">
                     <span className="text-stone-500 font-medium">Material</span>
-                    <span className="font-bold text-stone-900">Solid Optical Cast Acrylic</span>
+                    <span className="font-bold text-stone-900">{product.material || 'Solid Optical Cast Acrylic'}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-stone-200">
                     <span className="text-stone-500 font-medium">Thickness</span>
