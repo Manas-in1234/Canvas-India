@@ -768,6 +768,62 @@ export default {
         }
       }
       // -------------------------------------------------------------
+      // Support/legal pages — per-field text overrides for the storefront's About Us, Privacy
+      // Policy, Terms & Conditions and Cancellation Policy pages. Each page already renders every
+      // paragraph as content[fN] ?? <hardcoded default>, so a missing or empty override here just
+      // means that field falls back to its default; nothing has to be filled in to go live.
+      // -------------------------------------------------------------
+      const SUPPORT_PAGE_SLUGS = ['about-us', 'privacy-policy', 'terms-and-conditions', 'cancellation-policy'];
+      const supportPageMatch = pathname.match(/^\/api\/v1\/support-pages\/([^/]+)$/);
+      if (supportPageMatch && method === 'GET') {
+        const page = await prisma.supportPageContent.findUnique({ where: { slug: supportPageMatch[1] } });
+        return jsonResponse({ slug: supportPageMatch[1], content: page?.content ?? {} }, 200, request);
+      }
+      if (pathname === '/api/v1/admin/support-pages' && method === 'GET') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, ['cms.view'], request);
+        if (denied) return denied;
+        const pages = await prisma.supportPageContent.findMany();
+        const bySlug = new Map(pages.map(p => [p.slug, p]));
+        return jsonResponse(SUPPORT_PAGE_SLUGS.map(slug => ({
+          slug, content: bySlug.get(slug)?.content ?? {}, updatedAt: bySlug.get(slug)?.updatedAt ?? null,
+        })), 200, request);
+      }
+      const adminSupportPageMatch = pathname.match(/^\/api\/v1\/admin\/support-pages\/([^/]+)$/);
+      if (adminSupportPageMatch && (method === 'GET' || method === 'PUT')) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const slug = adminSupportPageMatch[1];
+        if (!SUPPORT_PAGE_SLUGS.includes(slug)) {
+          return jsonResponse({ message: 'Unknown support page.' }, 404, request);
+        }
+        const denied = checkPermission(user, [method === 'PUT' ? 'cms.manage' : 'cms.view'], request);
+        if (denied) return denied;
+        if (method === 'GET') {
+          const page = await prisma.supportPageContent.findUnique({ where: { slug } });
+          return jsonResponse({ slug, content: page?.content ?? {} }, 200, request);
+        }
+        const body = (await request.json().catch(() => ({}))) as any;
+        if (!body.content || typeof body.content !== 'object' || Array.isArray(body.content)) {
+          return jsonResponse({ message: 'content must be an object of field key to text.' }, 400, request);
+        }
+        const content: Record<string, string> = {};
+        for (const [key, value] of Object.entries(body.content)) {
+          if (typeof value === 'string' && value.trim()) content[key] = value;
+        }
+        const updated = await prisma.supportPageContent.upsert({
+          where: { slug },
+          update: { content, updatedBy: user.id },
+          create: { slug, content, updatedBy: user.id },
+        });
+        await services.audit.record({
+          adminUserId: user.id, action: 'SUPPORT_PAGE_UPDATED', entityType: 'SupportPageContent', entityId: slug,
+          reason: `Updated ${Object.keys(content).length} field(s)`,
+        });
+        return jsonResponse({ slug: updated.slug, content: updated.content }, 200, request);
+      }
+      // -------------------------------------------------------------
       // Size presets — admin-managed size/panel options the storefront
       // customize page live-fetches per product type.
       // -------------------------------------------------------------

@@ -25,6 +25,7 @@ import {
   Truck,
   Palette,
   UsersRound,
+  FileText,
   type LucideIcon,
 } from "lucide-react";
 export interface NavLink {
@@ -214,6 +215,12 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Roles & permissions",
         icon: ShieldCheck,
         permissions: ["roles.view"],
+      },
+      {
+        href: "/legal-pages",
+        label: "Legal Pages",
+        icon: FileText,
+        permissions: ["cms.view"],
       },
       { href: "/settings", label: "Settings", icon: Settings, permissions: [] },
       {

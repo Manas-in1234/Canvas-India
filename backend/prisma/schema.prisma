@@ -337,6 +337,19 @@ model StoreSetting {
   @@map("store_settings")
 }
 
+// Per-field text overrides for the storefront's legal/support pages (About Us, Privacy Policy,
+// Terms & Conditions, Cancellation Policy). Each page already renders every paragraph/heading as
+// content[fN] ?? <hardcoded default>, keyed by slug — this just persists the overrides; an empty
+// or missing content map means every field falls back to its hardcoded default.
+model SupportPageContent {
+  slug      String   @id
+  content   Json
+  updatedBy String?  @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("support_page_content")
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // ADMIN-MANAGED CUSTOMIZER OPTIONS — content the admin edits that the
 // storefront customize page (canvas/acrylic) live-fetches, replacing what
