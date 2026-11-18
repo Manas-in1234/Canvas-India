@@ -14,6 +14,7 @@ import {
   SlidersHorizontal,
   IndianRupee,
   ImageIcon,
+  Star,
   type LucideIcon,
 } from "lucide-react";
 export interface NavLink {
@@ -62,6 +63,12 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Customers",
         icon: Users,
         permissions: ["customers.view"],
+      },
+      {
+        href: "/reviews",
+        label: "Reviews",
+        icon: Star,
+        permissions: ["reviews.view"],
       },
     ],
   },

@@ -12,6 +12,7 @@ import {
   type ReturnInfo,
   type LiveOrderStatus,
 } from '../api/returnsApi';
+import { getReviewEligibility, submitReview, type ReviewEligibility } from '../api/reviewsApi';
 import {
   Package,
   MapPin,
@@ -98,6 +99,49 @@ export const OrderDetailPage: React.FC = () => {
     void loadReturns();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [order?.order_number, contactEmail]);
+
+  const [reviewEligibility, setReviewEligibility] = useState<ReviewEligibility | null>(null);
+  const [reviewItemId, setReviewItemId] = useState<string | null>(null);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [reviewedItemIds, setReviewedItemIds] = useState<string[]>([]);
+
+  const loadReviewEligibility = async () => {
+    if (!order || !contactEmail) return;
+    setReviewEligibility(await getReviewEligibility(order.order_number, contactEmail).catch(() => null));
+  };
+  useEffect(() => {
+    void loadReviewEligibility();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order?.order_number, contactEmail]);
+
+  const openReviewForm = (itemId: string) => {
+    setReviewItemId(itemId);
+    setReviewRating(0);
+    setReviewComment('');
+    setReviewError(null);
+  };
+
+  const submitReviewForItem = async () => {
+    if (!order || !contactEmail || !reviewItemId) return;
+    setReviewBusy(true);
+    setReviewError(null);
+    try {
+      await submitReview(order.order_number, contactEmail, reviewItemId, reviewRating, reviewComment.trim());
+      // The item disappears from "can review" the next time this order is opened fresh anyway —
+      // tracked locally too so the form closes immediately without waiting on a second round trip.
+      setReviewedItemIds((prev) => [...prev, reviewItemId]);
+      setReviewItemId(null);
+      setReviewRating(0);
+      setReviewComment('');
+    } catch (err: any) {
+      setReviewError(err.message);
+    } finally {
+      setReviewBusy(false);
+    }
+  };
 
   const submitReturn = async () => {
     if (!order || !contactEmail || !returnItemId) return;
@@ -548,6 +592,95 @@ export const OrderDetailPage: React.FC = () => {
                     {returnBusy ? 'Submitting…' : formKind === 'returns' ? 'Submit return request' : 'Submit replacement request'}
                   </button>
                   <button onClick={() => setReturnItemId(null)} className="px-4 py-2 text-xs text-gray-600">Cancel</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Reviews */}
+        {reviewEligibility?.found && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm print:hidden">
+            <h2 className="text-base font-bold text-[#002B49] mb-1">Write a review</h2>
+            {!reviewEligibility.delivered && (
+              <p className="text-xs text-gray-500 mb-3">You can review an item once your order has been delivered.</p>
+            )}
+            {reviewEligibility.delivered && (reviewEligibility.items?.length ?? 0) === 0 && reviewedItemIds.length === 0 && (
+              <p className="text-xs text-gray-500">
+                Nothing left to review on this order — either it was placed before we started tracking
+                reviews, or you&apos;ve already reviewed everything here.
+              </p>
+            )}
+            <div className="divide-y divide-gray-100">
+              {reviewEligibility.items
+                ?.filter((item) => !reviewedItemIds.includes(item.orderItemId))
+                .map((item) => (
+                  <div key={item.orderItemId} className="py-3 flex flex-wrap items-center justify-between gap-3">
+                    <span className="text-sm text-gray-800">{item.productName}</span>
+                    <button
+                      onClick={() => openReviewForm(item.orderItemId)}
+                      className="px-4 py-1.5 border border-[#002B49] text-[#002B49] rounded-lg text-xs font-semibold hover:bg-gray-50"
+                    >
+                      Write a review
+                    </button>
+                  </div>
+                ))}
+              {reviewedItemIds.map((id) => {
+                const item = reviewEligibility.items?.find((i) => i.orderItemId === id);
+                if (!item) return null;
+                return (
+                  <div key={id} className="py-3 flex flex-wrap items-center justify-between gap-3">
+                    <span className="text-sm text-gray-800">{item.productName}</span>
+                    <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">
+                      Review submitted — pending approval
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {reviewItemId && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
+                <label className="text-xs font-semibold text-gray-700 block">Your rating</label>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setReviewRating(n)}
+                      aria-label={`${n} star${n === 1 ? '' : 's'}`}
+                      className="p-0.5"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        className={`w-6 h-6 ${n <= reviewRating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`}
+                      >
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+                <label className="text-xs font-semibold text-gray-700 block" htmlFor="review-comment">
+                  Your review
+                </label>
+                <textarea
+                  id="review-comment"
+                  rows={3}
+                  maxLength={2000}
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  placeholder="What did you think of this product?"
+                  className="w-full rounded-lg border border-gray-200 p-2 text-sm"
+                />
+                {reviewError && <p className="text-xs text-red-600">{reviewError}</p>}
+                <div className="flex gap-2">
+                  <button
+                    disabled={reviewBusy || !reviewRating || !reviewComment.trim()}
+                    onClick={submitReviewForItem}
+                    className="px-4 py-2 bg-[#002B49] text-white rounded-lg text-xs font-semibold disabled:opacity-50"
+                  >
+                    {reviewBusy ? 'Submitting…' : 'Submit review'}
+                  </button>
+                  <button onClick={() => setReviewItemId(null)} className="px-4 py-2 text-xs text-gray-600">Cancel</button>
                 </div>
               </div>
             )}

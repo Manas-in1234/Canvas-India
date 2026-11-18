@@ -114,6 +114,7 @@ model Customer {
   segmentMemberships  CustomerSegmentMember[]
   discountRedemptions DiscountRedemption[]
   cartRecoveries      AbandonedCartRecovery[]
+  reviews             Review[]
   createdAt           DateTime                @default(now()) @map("created_at")
   updatedAt           DateTime                @updatedAt @map("updated_at")
   deletedAt           DateTime?               @map("deleted_at")
@@ -603,6 +604,9 @@ model OrderItem {
   variant   ProductVariant? @relation(fields: [variantId], references: [id])
 
   productNameSnapshot   String  @map("product_name_snapshot")
+  // Nullable: only orders placed after this was added carry it. Used to gate review eligibility
+  // and to group reviews by product; never used for pricing or display priority over the name.
+  productSlug           String? @map("product_slug")
   variantSnapshot       Json    @map("variant_snapshot")
   priceSnapshot         Decimal @map("price_snapshot") @db.Decimal(12, 2)
   configurationSnapshot Json?   @map("configuration_snapshot")
@@ -620,6 +624,7 @@ model OrderItem {
   shipmentItems       ShipmentItem[]
   returnRequests      ReturnRequest[]
   replacementRequests ReplacementRequest[]
+  review              Review?
 
   @@map("order_items")
 }
@@ -721,6 +726,37 @@ enum ReplacementStatus {
   REVIEW
   APPROVED
   COMPLETED
+  REJECTED
+}
+
+// Anchored to the exact order item bought, so a review always proves a real purchase.
+// One review per order item (@@unique): a customer can rate each thing they bought once.
+model Review {
+  id          String       @id @default(uuid())
+  customerId  String       @map("customer_id")
+  customer    Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orderItemId String       @unique @map("order_item_id")
+  orderItem   OrderItem    @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  // Copied from the order item at review time: lets the storefront group and count reviews by
+  // product without a live Product row, same reasoning as OrderItem.productNameSnapshot.
+  productSlug String       @map("product_slug")
+  rating      Int // 1-5
+  comment     String       @db.VarChar(2000)
+  status      ReviewStatus @default(PENDING)
+  rejectionReason String?  @map("rejection_reason")
+  moderatedBy String?      @map("moderated_by")
+  moderatedAt DateTime?    @map("moderated_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@index([productSlug, status])
+  @@index([customerId])
+  @@map("reviews")
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
   REJECTED
 }
 

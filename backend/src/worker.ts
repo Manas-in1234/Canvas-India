@@ -1,4 +1,5 @@
 import { Occasions, isOccasionSlug } from './catalog/occasions.js';
+import { Reviews } from './commerce/reviews.js';
 import { HomepagePromotions } from './catalog/homepage-promotions.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, Prisma } from './generated/prisma/client.js';
@@ -328,6 +329,60 @@ export default {
           return new Response(null, { status: 204, headers: corsHeaders(request) });
         }
       }
+      // Public: approved reviews shown on a product page.
+      const productReviews = pathname.match(/^\/api\/v1\/products\/([^/]+)\/reviews$/);
+      if (productReviews && method === 'GET') {
+        return jsonResponse(await new Reviews(prisma).listApprovedForProduct(productReviews[1]), 200, request);
+      }
+
+      // Storefront: a customer proves an order is theirs with its order number + email (same
+      // check used for order status/cancellation), then sees what they can review or submits one.
+      if (pathname === '/api/v1/storefront/reviews/eligible' && method === 'POST') {
+        const body = (await request.json().catch(() => ({}))) as { orderNumber?: string; email?: string };
+        if (!body.orderNumber || !body.email) return jsonResponse({ message: 'orderNumber and email are required' }, 400, request);
+        return jsonResponse(await new Reviews(prisma).listReviewable(body.orderNumber, body.email), 200, request);
+      }
+      if (pathname === '/api/v1/storefront/reviews' && method === 'POST') {
+        const body = (await request.json().catch(() => ({}))) as {
+          orderNumber?: string; email?: string; orderItemId?: string; rating?: number; comment?: string;
+        };
+        if (!body.orderNumber || !body.email || !body.orderItemId) {
+          return jsonResponse({ message: 'orderNumber, email and orderItemId are required' }, 400, request);
+        }
+        return jsonResponse(
+          await new Reviews(prisma).create(body.orderNumber, body.email, body.orderItemId, Number(body.rating), String(body.comment ?? '')),
+          201, request,
+        );
+      }
+
+      // Admin: moderation queue.
+      const adminReviews = pathname.match(/^\/api\/v1\/admin\/reviews(?:\/([^/]+))?$/);
+      if (adminReviews) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const [, id] = adminReviews;
+        const reviews = new Reviews(prisma);
+        if (!id && method === 'GET') {
+          const denied = checkPermission(user, ['reviews.view'], request);
+          if (denied) return denied;
+          return jsonResponse(await reviews.listForModeration(typeof query.status === 'string' ? query.status : undefined), 200, request);
+        }
+        if (id && method === 'PATCH') {
+          const denied = checkPermission(user, ['reviews.manage'], request);
+          if (denied) return denied;
+          const body = (await request.json().catch(() => ({}))) as { status?: string; rejectionReason?: string };
+          if (body.status !== 'APPROVED' && body.status !== 'REJECTED') {
+            return jsonResponse({ message: "status must be 'APPROVED' or 'REJECTED'" }, 400, request);
+          }
+          return jsonResponse(await reviews.moderate(id, body.status, user.id, body.rejectionReason), 200, request);
+        }
+        if (id && method === 'DELETE') {
+          const denied = checkPermission(user, ['reviews.manage'], request);
+          if (denied) return denied;
+          return jsonResponse(await reviews.remove(id), 200, request);
+        }
+      }
+
       if (pathname === '/api/v1/homepage-promotions' && method === 'GET') {
         return jsonResponse(await new HomepagePromotions(prisma).storefront(), 200, request);
       }
@@ -1375,7 +1430,7 @@ export default {
           if (items.length) {
             const products = await prisma.product.findMany({
               where: { id: { in: items.map(item => item.productId) }, status: 'ACTIVE', deletedAt: null, productType: { isActive: true } },
-              select: { id: true, name: true, basePrice: true, storefront: true },
+              select: { id: true, name: true, slug: true, basePrice: true, storefront: true },
             });
             const byId = new Map(products.map(product => [product.id, product]));
             if (items.some(item => {
@@ -1388,7 +1443,7 @@ export default {
             }
             items = items.map(item => {
               const product = byId.get(item.productId)!;
-              return { productId: product.id, title: product.name, price: Number(product.basePrice), quantity: item.quantity,
+              return { productId: product.id, productSlug: product.slug, title: product.name, price: Number(product.basePrice), quantity: item.quantity,
                 imageUrl: (product.storefront as { image?: string } | null)?.image };
             });
             const subtotal = Math.round(items.reduce((sum, item) => sum + item.price * item.quantity, 0) * 100) / 100;
@@ -1486,8 +1541,10 @@ export default {
                   const itemPrice = Number(item.price) || 0;
                   const itemQty = Number(item.quantity) || 1;
                   const custDetails = item.customizationDetails || {};
+                  const itemSlug = typeof item.productSlug === 'string' && item.productSlug.trim() ? item.productSlug.trim() : null;
                   return {
                     productNameSnapshot: itemTitle,
+                    productSlug: itemSlug,
                     variantSnapshot: {
                       sku: item.sku || `PROD-${idx + 1}`,
                       options: [

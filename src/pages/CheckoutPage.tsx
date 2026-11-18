@@ -351,6 +351,7 @@ export const CheckoutPage: React.FC = () => {
         guestPhone: profile?.phone || guestPhone || null,
         items: cartItems.map((ci) => ({
           productId: ci.product.id,
+          productSlug: ci.product.slug,
           title: ci.product.name,
           price: ci.product.price,
           quantity: ci.quantity,

@@ -10,6 +10,9 @@ export interface CreateOrderParams {
   guestPhone?: string | null;
   items: Array<{
     productId: string;
+    // Used to let a customer review this item once delivered. Optional: not every catalog
+    // entry has one (see Product.slug), and older code paths may omit it.
+    productSlug?: string;
     title: string;
     price: number;
     quantity: number;

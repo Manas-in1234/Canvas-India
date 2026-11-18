@@ -26,6 +26,7 @@ import { Product } from '../types';
 import { FrameSwatch, HookIcon, HOOK_OPTIONS, FRAME_LOOK, getFrameCategory, FrameCategory } from '../components/FrameHookVisuals';
 import { getBulkItem, QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
+import { getProductReviews, type ProductReviews } from '../api/reviewsApi';
 
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
 // the "Room View" thumbnail renders a live WallPreview instead of a static image.
@@ -73,6 +74,17 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   } = useShop();
 
   const isWishlisted = wishlistIds.includes(product.id);
+
+  const [productReviews, setProductReviews] = useState<ProductReviews>({ count: 0, average: 0, reviews: [] });
+  useEffect(() => {
+    let cancelled = false;
+    if (product.slug) {
+      getProductReviews(product.slug).then((data) => { if (!cancelled) setProductReviews(data); });
+    } else {
+      setProductReviews({ count: 0, average: 0, reviews: [] });
+    }
+    return () => { cancelled = true; };
+  }, [product.slug]);
 
   // Catalogue designs are named "<Name> <code>" or "<Name> <code> - <Material>"
   // (e.g. "Tribal Art Print 001 - Canvas") — pull the numeric code out so it
@@ -609,14 +621,20 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
             <div className="order-3 lg:col-span-6 min-w-0 flex flex-col gap-3.5 text-left">
               <div>
                 <h1 className="text-lg sm:text-xl font-extrabold text-stone-900 tracking-tight">{displayName}</h1>
-                {product.rating !== null && product.rating > 0 && (
-                  <div className="flex items-center gap-2 text-xs text-stone-600 mt-1">
+                {productReviews.count > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('product-reviews')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="flex items-center gap-2 text-xs text-stone-600 mt-1 cursor-pointer"
+                  >
                     <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded text-amber-800 font-bold">
                       <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      <span>{product.rating}</span>
+                      <span>{productReviews.average}</span>
                     </div>
-                    <span className="underline decoration-stone-300">({product.reviewsCount || 48} reviews)</span>
-                  </div>
+                    <span className="underline decoration-stone-300">
+                      ({productReviews.count} review{productReviews.count === 1 ? '' : 's'})
+                    </span>
+                  </button>
                 )}
                 {product.shortDescription && (
                   <p className="text-sm text-stone-600 mt-1.5">{product.shortDescription}</p>
@@ -1060,6 +1078,60 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
 
           </div>
 
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 3b. CUSTOMER REVIEWS                                                       */}
+        {/* ========================================================================= */}
+        <div id="product-reviews" className="mt-12 sm:mt-16 pt-12 border-t border-stone-200 text-left">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
+                Customer Reviews{productReviews.count > 0 ? ` (${productReviews.count})` : ''}
+              </h2>
+              {productReviews.count > 0 && (
+                <div className="flex items-center gap-1.5 mt-1 text-sm text-stone-600">
+                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  <span className="font-bold text-stone-900">{productReviews.average}</span>
+                  <span>average rating</span>
+                </div>
+              )}
+            </div>
+            <Link
+              to="/orders"
+              className="inline-flex items-center justify-center rounded-lg border border-[#0E4A93] px-4 py-2 text-sm font-bold text-[#0E4A93] hover:bg-blue-50 transition-colors"
+              title="Open your orders to review something you've bought and received"
+            >
+              Write a review
+            </Link>
+          </div>
+          {productReviews.reviews.length === 0 ? (
+            <p className="text-sm text-stone-500">
+              No reviews yet. If you&apos;ve bought this, be the first to share what you think.
+            </p>
+          ) : (
+            <div className="space-y-4 max-w-3xl">
+              {productReviews.reviews.map((review) => (
+                <div key={review.id} className="rounded-lg border border-stone-200 p-4">
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <Star
+                          key={n}
+                          className={`w-3.5 h-3.5 ${n <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-stone-300'}`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-stone-400">
+                      {new Date(review.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </span>
+                  </div>
+                  <p className="text-sm text-stone-700 leading-relaxed">{review.comment}</p>
+                  <p className="text-xs font-bold text-stone-500 mt-2">{review.customerName}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* ========================================================================= */}
