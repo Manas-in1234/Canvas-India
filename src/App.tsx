@@ -7,15 +7,33 @@ import { RootLayout } from './components/RootLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { RouteLoadingFallback } from './components/RouteLoadingFallback';
+import { OrderSuccessPage } from './pages/OrderSuccessPage';
 
 // Helper to support both default and named exports transparently with React.lazy
+// Automatically recovers from chunk load errors caused by new deployments
 function lazyNamed<P = {}>(
   loader: () => Promise<any>,
   name: string
 ): React.LazyExoticComponent<React.ComponentType<P>> {
-  return React.lazy(() =>
-    loader().then((mod) => ({ default: (mod.default || mod[name]) as React.ComponentType<P> }))
-  );
+  return React.lazy(async () => {
+    try {
+      const mod = await loader();
+      return { default: (mod.default || mod[name]) as React.ComponentType<P> };
+    } catch (err: any) {
+      const isChunkError =
+        /dynamically imported module/i.test(err?.message || '') ||
+        /loading chunk/i.test(err?.message || '') ||
+        err?.name === 'ChunkLoadError';
+      const retryKey = `ci_chunk_reload_${name}`;
+      if (isChunkError && !sessionStorage.getItem(retryKey)) {
+        sessionStorage.setItem(retryKey, '1');
+        window.location.reload();
+        return new Promise(() => {}); // pause until page reloads
+      }
+      sessionStorage.removeItem(retryKey);
+      throw err;
+    }
+  });
 }
 
 // Full-Screen / Heavy interactive customizers
@@ -63,7 +81,6 @@ const AccountPage = lazyNamed(() => import('./pages/AccountPage'), 'AccountPage'
 const OrdersPage = lazyNamed(() => import('./pages/OrdersPage'), 'OrdersPage');
 const OrderDetailPage = lazyNamed(() => import('./pages/OrderDetailPage'), 'OrderDetailPage');
 const CheckoutPage = lazyNamed(() => import('./pages/CheckoutPage'), 'CheckoutPage');
-const OrderSuccessPage = lazyNamed(() => import('./pages/OrderSuccessPage'), 'OrderSuccessPage');
 
 export function App() {
   return (
