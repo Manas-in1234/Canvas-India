@@ -263,8 +263,12 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
 
   // Dynamic Price Calculation — shared with ProductCard's default-selection
   // price via src/utils/pricing.ts so the listing and detail page never
-  // disagree on what the default selections cost.
+  // disagree on what the default selections cost. Catalogue designs are the
+  // one exception: every size is the same fixed artwork (see
+  // isCatalogueDesign above), so they always stay at the flat base price
+  // here — any real pricing happens once the shopper is in the customizer.
   const unitPrice = useMemo(() => {
+    if (isCatalogueDesign) return product.price;
     return (
       product.price +
       acrylicSizeSurcharge(selectedSize) +
@@ -272,7 +276,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
       acrylicBaseSurcharge(selectedBase) +
       acrylicPaperSurcharge(selectedPaper)
     );
-  }, [product.price, selectedSize, selectedThickness, selectedBase, selectedPaper]);
+  }, [product.price, selectedSize, selectedThickness, selectedBase, selectedPaper, isCatalogueDesign]);
 
   const originalUnitPrice = useMemo(() => {
     return Math.round(unitPrice * 1.4);

@@ -1,5 +1,22 @@
 import { Product } from '../types';
 
+// Pre-designed Print World catalogue art (Devotional Art, Line Art, etc.) has
+// no real size variants of its own — every size is the same fixed artwork —
+// so it's always priced flat, never by size. Mirrors the identical check in
+// ProductDetailPage.tsx and AcrylicProductDetailPage.tsx; kept here too so
+// ProductCard doesn't apply size surcharges these products were never meant
+// to have.
+const CATALOGUE_DESIGN_SLUGS = [
+  'devotional-art',
+  'line-art',
+  'motivational-posters',
+  'scenery-landscape-art',
+  'tribal-ethnic-art',
+];
+export function isCatalogueDesign(product: Product): boolean {
+  return CATALOGUE_DESIGN_SLUGS.includes(product.categorySlug) || CATALOGUE_DESIGN_SLUGS.some((slug) => product.id.includes(slug));
+}
+
 /** Parses a size label like `12x18 inch`, `12" x 18"`, or `24X36` into inches. Returns null if unparseable. */
 export function parseSizeInches(size: string | undefined): { width: number; height: number } | null {
   if (!size) return null;
@@ -20,6 +37,7 @@ export function parseSizeInches(size: string | undefined): { width: number; heig
  * larger sizes add the area difference at `areaRatePerSqIn`.
  */
 export function priceForSize(product: Product, size: string | undefined, areaRatePerSqIn: number): number {
+  if (isCatalogueDesign(product)) return product.price;
   const sizes = (product.availableSizes?.length ? product.availableSizes : product.sizes) ?? [];
   const baseSize = sizes[0];
   const target = parseSizeInches(size);
@@ -94,6 +112,7 @@ const ACRYLIC_FALLBACK_BASES = ['Without Base', 'Acrylic Base', 'Solid Wood Base
  * should show too, so the two never mismatch.
  */
 export function acrylicDefaultSelectionPrice(product: Product): number {
+  if (isCatalogueDesign(product)) return product.price;
   if (product.material !== 'acrylic' && product.categorySlug !== 'acrylic') return product.price;
   const sizes = product.availableSizes?.length ? product.availableSizes : product.sizes?.length ? product.sizes : ACRYLIC_FALLBACK_SIZES;
   const defaultSize = sizes[sizes.length - 1];

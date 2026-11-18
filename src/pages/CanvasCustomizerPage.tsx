@@ -10464,6 +10464,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             <div className="p-4 space-y-4">
               {isSinglePrintCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct || isWordArtProduct ? (
                 <>
+                  {/* Shown only when arriving from a catalogue design's fixed "preview"
+                      price — explains why the price here differs from the one the
+                      shopper already saw, instead of looking like a pricing error. */}
+                  {isPrefillMode && (
+                    <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-xl border border-amber-200 mb-3">
+                      <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-900 leading-relaxed">
+                        The price you saw on the product page is the starting price for this design. Pick your size and finish below to see the price for your actual order.
+                      </p>
+                    </div>
+                  )}
                   {/* Selected Size Summary Card */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 sm:p-3.5 bg-blue-50/70 rounded-2xl border border-blue-100 mb-3">
                     <div>

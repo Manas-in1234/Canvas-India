@@ -479,11 +479,15 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   // Priced from the selected size (custom W×H when set), same area-rate model
   // the customizer uses, so this page's price always matches what the
   // customizer would charge for the same size — never a flat price regardless
-  // of the size picked.
+  // of the size picked. Catalogue designs are the one exception: every size
+  // is the same fixed artwork (see isCatalogueDesign above), so they always
+  // stay at the flat base price here — any real pricing happens once the
+  // shopper is in the customizer.
   const unitPrice = useMemo(() => {
+    if (isCatalogueDesign) return product.price;
     const size = isCustomSize ? `${customWidth}x${customHeight} inch` : selectedSize;
     return priceForSize(product, size, areaRate);
-  }, [product, selectedSize, isCustomSize, customWidth, customHeight, areaRate]);
+  }, [product, selectedSize, isCustomSize, customWidth, customHeight, areaRate, isCatalogueDesign]);
 
   // The struck-through price and the % off both come from the two prices set in the
   // admin, so they always agree. No discount is shown when there isn't one.
