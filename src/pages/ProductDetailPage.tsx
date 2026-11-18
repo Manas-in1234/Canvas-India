@@ -139,13 +139,13 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   );
 
   // Pre-designed Print World catalogue art (Devotional Art, Line Art, etc.)
-  // has no real Size/Shape/Frame/Hook variants of its own — every size is
-  // the same fixed artwork — so instead of a buy-as-is flow it sends the
-  // shopper straight into the customizer with this exact design preloaded.
-  // These designs are also re-offered as plain Canvas/Acrylic products
-  // (catalogueCanvasAcrylicProducts.ts) with categorySlug just 'canvas' or
-  // 'acrylic' — those are identified by their id instead, e.g.
-  // "canvas-tribal-ethnic-art-a-a-001".
+  // used to have no real Size/Shape/Frame/Hook variants of its own, so
+  // instead of a buy-as-is flow it sent the shopper straight into the
+  // customizer with the design preloaded. That's no longer always true —
+  // admins can (and do) set real sizes/finishes on these products — so the
+  // no-picker flow now only applies when a product genuinely has none,
+  // regardless of its category. A product with its own sizes always gets
+  // the normal picker, even inside these categories.
   const CATALOGUE_DESIGN_SLUGS = [
     'devotional-art',
     'line-art',
@@ -153,9 +153,11 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     'scenery-landscape-art',
     'tribal-ethnic-art'
   ];
+  const hasOwnSizes = (product.availableSizes && product.availableSizes.length > 0) || (product.sizes && product.sizes.length > 0);
   const isCatalogueDesign =
-    CATALOGUE_DESIGN_SLUGS.includes(product.categorySlug) ||
-    CATALOGUE_DESIGN_SLUGS.some((slug) => product.id.includes(slug));
+    (CATALOGUE_DESIGN_SLUGS.includes(product.categorySlug) ||
+      CATALOGUE_DESIGN_SLUGS.some((slug) => product.id.includes(slug))) &&
+    !hasOwnSizes;
 
   const isCorkPattern =
     product.categorySlug === 'cork-art-patterns' ||

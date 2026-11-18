@@ -1,11 +1,12 @@
 import { Product } from '../types';
 
-// Pre-designed Print World catalogue art (Devotional Art, Line Art, etc.) has
-// no real size variants of its own — every size is the same fixed artwork —
-// so it's always priced flat, never by size. Mirrors the identical check in
-// ProductDetailPage.tsx and AcrylicProductDetailPage.tsx; kept here too so
-// ProductCard doesn't apply size surcharges these products were never meant
-// to have.
+// Pre-designed Print World catalogue art (Devotional Art, Line Art, etc.)
+// used to have no real size variants of its own, so it was always priced
+// flat, never by size. Admins can (and do) set real sizes on these now, so
+// this only still applies when a product genuinely has none of its own —
+// same rule as ProductDetailPage.tsx and AcrylicProductDetailPage.tsx, kept
+// here too so ProductCard doesn't apply size surcharges to a product that
+// was never meant to have them.
 const CATALOGUE_DESIGN_SLUGS = [
   'devotional-art',
   'line-art',
@@ -14,7 +15,9 @@ const CATALOGUE_DESIGN_SLUGS = [
   'tribal-ethnic-art',
 ];
 export function isCatalogueDesign(product: Product): boolean {
-  return CATALOGUE_DESIGN_SLUGS.includes(product.categorySlug) || CATALOGUE_DESIGN_SLUGS.some((slug) => product.id.includes(slug));
+  const matchesSlug = CATALOGUE_DESIGN_SLUGS.includes(product.categorySlug) || CATALOGUE_DESIGN_SLUGS.some((slug) => product.id.includes(slug));
+  const hasOwnSizes = (product.availableSizes && product.availableSizes.length > 0) || (product.sizes && product.sizes.length > 0);
+  return matchesSlug && !hasOwnSizes;
 }
 
 /** Parses a size label like `12x18 inch`, `12" x 18"`, or `24X36` into inches. Returns null if unparseable. */

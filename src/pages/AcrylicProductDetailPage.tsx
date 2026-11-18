@@ -177,19 +177,19 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   const bulkItem = useMemo(() => getBulkItem('acrylic', product.categorySlug), [product.categorySlug]);
 
   // Pre-designed Print World catalogue art (Devotional Art, Line Art, etc.),
-  // re-offered here as a plain Acrylic product (categorySlug is just
-  // 'acrylic'), has no real Size/Shape/Hook variants of its own — every
-  // size is the same fixed artwork. Identified by id, e.g.
-  // "acrylic-tribal-ethnic-art-a-a-001" — same detection as the Canvas
-  // product page, so both formats of these designs get the Customize
-  // button instead of a buy-as-is flow.
-  const isCatalogueDesign = [
-    'devotional-art',
-    'line-art',
-    'motivational-posters',
-    'scenery-landscape-art',
-    'tribal-ethnic-art'
-  ].some((slug) => product.id.includes(slug));
+  // re-offered here as a plain Acrylic product, used to have no real
+  // Size/Shape/Hook variants of its own. Admins can (and do) set real sizes
+  // on these now, so the no-picker flow only applies when a product
+  // genuinely has none — same rule as the Canvas product page.
+  const isCatalogueDesign =
+    [
+      'devotional-art',
+      'line-art',
+      'motivational-posters',
+      'scenery-landscape-art',
+      'tribal-ethnic-art'
+    ].some((slug) => product.id.includes(slug)) &&
+    !((product.availableSizes && product.availableSizes.length > 0) || (product.sizes && product.sizes.length > 0));
 
   // Bottom Tabs State ('description' | 'specifications' | 'shipping' | 'reviews')
   const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'shipping' | 'reviews'>('description');
