@@ -23,7 +23,7 @@ import { ProductImage } from '../components/ProductImage';
 import { WallPreview } from '../components/WallPreview';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { Product } from '../types';
-import { FrameSwatch, HookIcon, HOOK_OPTIONS, FRAME_LOOK, getFrameCategory, FrameCategory } from '../components/FrameHookVisuals';
+import { FrameSwatch, HookIcon, HOOK_OPTIONS, FRAME_LOOK, getFrameCategory } from '../components/FrameHookVisuals';
 import { getBulkItem, QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
 import { getProductReviews, type ProductReviews } from '../api/reviewsApi';
@@ -103,7 +103,10 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   // Variant state
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedFinish, setSelectedFinish] = useState<string>('');
-  const [selectedFrame, setSelectedFrame] = useState<FrameCategory>('No Frame');
+  // Holds the raw finish string the shopper picked (e.g. "Teak Wood Frame"),
+  // not a fixed category - frameOptions now offers every one of the
+  // product's own finishes as its own option, so this can be any of them.
+  const [selectedFrame, setSelectedFrame] = useState<string>('No Frame');
   const [selectedMaterial, setSelectedMaterial] = useState<string>('');
   const [selectedShape, setSelectedShape] = useState<string>('');
   const [customWidth, setCustomWidth] = useState<number>(8);
@@ -240,28 +243,15 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     return /yoga|mat|brick|roller|ball|peanut|wedge|massage|knee pad|bag|fitness/.test(text);
   }, [product]);
 
-  // Frame picker — groups this product's real `finishes` values (which vary
-  // a lot in wording across the catalogue) into the frame looks customers
-  // actually choose between, using the same keyword matching as the live
-  // preview's frame border (see finishStyle.ts), so a pick here always has
-  // a matching real finish value to send to cart. Every category present in
-  // the product's own finishes list is offered — nothing invented.
-  const FRAME_CATEGORY_ORDER: { label: FrameCategory; test: (f: string) => boolean }[] = [
-    { label: 'No Frame', test: (f) => /print only|rolled|gallery wrap|satin|lustre|matte canvas|no frame/.test(f) },
-    { label: 'Black Frame', test: (f) => /black/.test(f) },
-    { label: 'Wooden Frame', test: (f) => !/cork|eva|latex|rubber|foam/.test(f) && (/teak|oak|walnut|brown|rustic/.test(f) || (/wood/.test(f) && !/black|white|gold/.test(f)) || (/natural/.test(f) && /wood|frame|finish/.test(f))) },
-    { label: 'White Frame', test: (f) => /white/.test(f) },
-    { label: 'Gold Frame', test: (f) => /gold/.test(f) },
-  ];
+  // Frame picker — offers every one of the product's own `finishes` values
+  // as its own option (not grouped into shared categories), so a product
+  // with 5 finishes shows 5 pickable options, each labeled exactly as the
+  // admin entered it. Its swatch visual still falls back to the closest of
+  // the 5 known frame looks via getFrameCategory, same keyword matching the
+  // live preview's frame border uses (see finishStyle.ts).
   const frameOptions = useMemo(() => {
     if (!product?.finishes || isCorkWellnessProduct) return [];
-    const lower = product.finishes.map((f) => ({ raw: f, l: f.toLowerCase() }));
-    return FRAME_CATEGORY_ORDER
-      .map((cat) => {
-        const match = lower.find(({ l }) => cat.test(l));
-        return match ? { label: cat.label, value: match.raw } : null;
-      })
-      .filter((o): o is { label: FrameCategory; value: string } => Boolean(o));
+    return product.finishes.map((finish) => ({ label: finish, value: finish }));
   }, [product, isCorkWellnessProduct]);
 
   // Same catalogue design also offered as Canvas / Acrylic — siblings share a
@@ -289,10 +279,9 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     if (product) {
       const defaultShape = product.shape || availableShapes[0] || '';
       const initialFinish = product.finishes?.[0] || 'Standard Finish';
-      const initialFrameCat = isCorkWellnessProduct ? 'No Frame' : getFrameCategory(initialFinish);
       setSelectedSize(pickDefaultSize(product.availableSizes) || pickDefaultSize(product.sizes) || '12x18 inch');
       setSelectedFinish(initialFinish);
-      setSelectedFrame(initialFrameCat);
+      setSelectedFrame(isCorkWellnessProduct ? 'No Frame' : initialFinish);
       setSelectedMaterial(availableMaterials[0] || 'Standard');
       setSelectedShape(defaultShape);
       setSelectedHook('Sawtooth Hanger');
@@ -554,8 +543,9 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
             {/* Main Image */}
             <div className="order-1 lg:order-2 lg:col-span-5 min-w-0">
               {(() => {
-                const currentFrameLook = FRAME_LOOK[selectedFrame] || FRAME_LOOK['No Frame'];
-                const hasSelectedFrame = !isCorkWellnessProduct && selectedFrame !== 'No Frame';
+                const selectedFrameCategory = getFrameCategory(selectedFrame);
+                const currentFrameLook = FRAME_LOOK[selectedFrameCategory] || FRAME_LOOK['No Frame'];
+                const hasSelectedFrame = !isCorkWellnessProduct && selectedFrameCategory !== 'No Frame';
                 const containerAspectVal = selectedShape === 'Square' ? 1 : selectedShape === 'Panoramic' ? 16 / 9 : 4 / 5;
 
                 return (
