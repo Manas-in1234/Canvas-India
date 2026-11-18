@@ -15,6 +15,8 @@ import {
   IndianRupee,
   ImageIcon,
   Star,
+  PackageSearch,
+  History,
   type LucideIcon,
 } from "lucide-react";
 export interface NavLink {
@@ -87,6 +89,12 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: Boxes,
         permissions: ["products.view"],
       },
+      {
+        href: "/inventory",
+        label: "Inventory",
+        icon: PackageSearch,
+        permissions: ["inventory.view"],
+      },
     ],
   },
   {
@@ -151,6 +159,12 @@ export const NAV_SECTIONS: NavSection[] = [
         permissions: ["roles.view"],
       },
       { href: "/settings", label: "Settings", icon: Settings, permissions: [] },
+      {
+        href: "/audit-log",
+        label: "Audit log",
+        icon: History,
+        permissions: ["audit.view"],
+      },
     ],
   },
 ];

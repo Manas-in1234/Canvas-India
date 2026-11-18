@@ -383,6 +383,24 @@ export default {
         }
       }
 
+      if (pathname === '/api/v1/admin/audit-log' && method === 'GET') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, ['audit.view'], request);
+        if (denied) return denied;
+        const where: Record<string, unknown> = {};
+        if (typeof query.entityType === 'string' && query.entityType) where.entityType = query.entityType;
+        if (typeof query.action === 'string' && query.action) where.action = query.action;
+        const take = Math.min(Number(query.limit) || 100, 200);
+        const logs = await prisma.auditLog.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          take,
+          include: { adminUser: { select: { name: true, email: true } } },
+        });
+        return jsonResponse(logs, 200, request);
+      }
+
       if (pathname === '/api/v1/homepage-promotions' && method === 'GET') {
         return jsonResponse(await new HomepagePromotions(prisma).storefront(), 200, request);
       }
@@ -1097,6 +1115,23 @@ export default {
         if (permError) return permError;
         const body = await request.json();
         return jsonResponse(await services.inventory.adjust(body.variantId, body.quantity, user.id, body.reason), 201, request);
+      }
+
+      if (pathname === '/api/v1/inventory/stock-in' && method === 'POST') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, ['inventory.adjust'], request);
+        if (permError) return permError;
+        const body = await request.json();
+        return jsonResponse(await services.inventory.addStock(body.productId, Number(body.quantity), user.id, body.reason), 201, request);
+      }
+
+      if (pathname === '/api/v1/inventory/movements') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, ['inventory.view'], request);
+        if (permError) return permError;
+        return jsonResponse(await services.inventory.listMovements(typeof query.variantId === 'string' ? query.variantId : undefined), 200, request);
       }
 
       // -------------------------------------------------------------
@@ -2061,6 +2096,50 @@ export default {
         }
       }
 
+      const segmentDetail = pathname.match(/^\/api\/v1\/growth\/segments\/([^/]+)$/);
+      if (segmentDetail) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const [, id] = segmentDetail;
+        if (method === 'GET') {
+          const permError = checkPermission(user, ['segments.view'], request);
+          if (permError) return permError;
+          return jsonResponse(await services.customerSegments.findOne(id), 200, request);
+        }
+        if (method === 'PATCH') {
+          const permError = checkPermission(user, ['segments.manage'], request);
+          if (permError) return permError;
+          return jsonResponse(await services.customerSegments.update(id, await request.json()), 200, request);
+        }
+        if (method === 'DELETE') {
+          const permError = checkPermission(user, ['segments.manage'], request);
+          if (permError) return permError;
+          await services.customerSegments.delete(id);
+          return jsonResponse({ success: true }, 200, request);
+        }
+      }
+
+      const segmentMembers = pathname.match(/^\/api\/v1\/growth\/segments\/([^/]+)\/members$/);
+      if (segmentMembers && method === 'POST') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, ['segments.manage'], request);
+        if (permError) return permError;
+        const [, id] = segmentMembers;
+        const body = await request.json();
+        return jsonResponse(await services.customerSegments.addMembers(id, body.customerIds ?? []), 200, request);
+      }
+
+      const segmentMember = pathname.match(/^\/api\/v1\/growth\/segments\/([^/]+)\/members\/([^/]+)$/);
+      if (segmentMember && method === 'DELETE') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, ['segments.manage'], request);
+        if (permError) return permError;
+        const [, id, customerId] = segmentMember;
+        return jsonResponse(await services.customerSegments.removeMember(id, customerId), 200, request);
+      }
+
       if (pathname === '/api/v1/growth/campaigns') {
         const { user, error } = await authenticate(request, env, prisma);
         if (error) return error;
@@ -2073,6 +2152,40 @@ export default {
           const permError = checkPermission(user, ['campaigns.manage'], request);
           if (permError) return permError;
           return jsonResponse(await services.campaigns.create(await request.json()), 201, request);
+        }
+      }
+
+      const campaignStatus = pathname.match(/^\/api\/v1\/growth\/campaigns\/([^/]+)\/status$/);
+      if (campaignStatus && method === 'POST') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, ['campaigns.manage'], request);
+        if (permError) return permError;
+        const [, id] = campaignStatus;
+        const body = await request.json();
+        return jsonResponse(await services.campaigns.changeStatus(id, body, user.id), 200, request);
+      }
+
+      const campaignDetail = pathname.match(/^\/api\/v1\/growth\/campaigns\/([^/]+)$/);
+      if (campaignDetail) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const [, id] = campaignDetail;
+        if (method === 'GET') {
+          const permError = checkPermission(user, ['campaigns.view'], request);
+          if (permError) return permError;
+          return jsonResponse(await services.campaigns.findOne(id), 200, request);
+        }
+        if (method === 'PATCH') {
+          const permError = checkPermission(user, ['campaigns.manage'], request);
+          if (permError) return permError;
+          return jsonResponse(await services.campaigns.update(id, await request.json()), 200, request);
+        }
+        if (method === 'DELETE') {
+          const permError = checkPermission(user, ['campaigns.manage'], request);
+          if (permError) return permError;
+          await services.campaigns.delete(id);
+          return jsonResponse({ success: true }, 200, request);
         }
       }
 

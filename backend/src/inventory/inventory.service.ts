@@ -18,6 +18,17 @@ export class InventoryService {
     });
   }
 
+  listMovements(variantId?: string) {
+    return this.prisma.inventoryMovement.findMany({
+      where: variantId ? { inventoryItem: { variantId } } : undefined,
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+      include: {
+        inventoryItem: { select: { variant: { select: { sku: true, productId: true, product: { select: { name: true } } } } } },
+      },
+    });
+  }
+
   async findBySku(sku: string) {
     const item = await this.prisma.inventoryItem.findFirst({
       where: { variant: { sku } },

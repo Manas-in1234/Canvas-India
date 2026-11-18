@@ -3,7 +3,7 @@ import type { PrismaClient } from '../generated/prisma/client.js';
 import { Reviews } from './reviews.js';
 
 type OrderRow = { id: string; customerId: string; orderNumber: string; shippingStatus: string };
-type ItemRow = { id: string; orderId: string; productNameSnapshot: string; productSlug: string | null; variantSnapshot: unknown; createdAt: Date };
+type ItemRow = { id: string; orderId: string; productNameSnapshot: string; variantSnapshot: { productSlug?: string; imageUrl?: string }; createdAt: Date };
 type ReviewRow = {
   id: string; customerId: string; orderItemId: string; productSlug: string; rating: number; comment: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED'; rejectionReason: string | null; moderatedBy: string | null; moderatedAt: Date | null; createdAt: Date;
@@ -20,10 +20,10 @@ function makeFakePrisma() {
     ['ord-3', { id: 'ord-3', customerId: 'cust-2', orderNumber: 'CI-1003', shippingStatus: 'DELIVERED' }],
   ]);
   const items = new Map<string, ItemRow>([
-    ['item-1', { id: 'item-1', orderId: 'ord-1', productNameSnapshot: 'Canvas Heart', productSlug: 'canvas-heart', variantSnapshot: { imageUrl: 'https://x/img.jpg' }, createdAt: new Date('2026-11-01') }],
-    ['item-2', { id: 'item-2', orderId: 'ord-1', productNameSnapshot: 'Old Legacy Print', productSlug: null, variantSnapshot: {}, createdAt: new Date('2026-11-01') }],
-    ['item-3', { id: 'item-3', orderId: 'ord-2', productNameSnapshot: 'Not Yet Delivered', productSlug: 'acrylic-square', variantSnapshot: {}, createdAt: new Date('2026-11-02') }],
-    ['item-4', { id: 'item-4', orderId: 'ord-3', productNameSnapshot: 'Someone Elses Item', productSlug: 'canvas-heart', variantSnapshot: {}, createdAt: new Date('2026-11-03') }],
+    ['item-1', { id: 'item-1', orderId: 'ord-1', productNameSnapshot: 'Canvas Heart', variantSnapshot: { productSlug: 'canvas-heart', imageUrl: 'https://x/img.jpg' }, createdAt: new Date('2026-11-01') }],
+    ['item-2', { id: 'item-2', orderId: 'ord-1', productNameSnapshot: 'Old Legacy Print', variantSnapshot: {}, createdAt: new Date('2026-11-01') }],
+    ['item-3', { id: 'item-3', orderId: 'ord-2', productNameSnapshot: 'Not Yet Delivered', variantSnapshot: { productSlug: 'acrylic-square' }, createdAt: new Date('2026-11-02') }],
+    ['item-4', { id: 'item-4', orderId: 'ord-3', productNameSnapshot: 'Someone Elses Item', variantSnapshot: { productSlug: 'canvas-heart' }, createdAt: new Date('2026-11-03') }],
   ]);
   const reviews = new Map<string, ReviewRow>();
   let nextId = 1;
@@ -41,7 +41,6 @@ function makeFakePrisma() {
       findMany: async ({ where }: any) => {
         return [...items.values()].filter(i => {
           if (where.orderId && i.orderId !== where.orderId) return false;
-          if (where.productSlug?.not === null && i.productSlug === null) return false;
           if (where.review === null && reviews.has(reviewIdForItem(i.id))) return false;
           return true;
         });
