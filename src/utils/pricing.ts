@@ -37,20 +37,25 @@ export function smallestSize(product: Product): string | undefined {
 }
 
 /**
- * Acrylic "buy as-is" surcharge table — kept in sync with the identical
- * switch in AcrylicProductDetailPage's `unitPrice` memo. Pulled out here so
- * ProductCard can show the same total the detail page lands on for its
- * default selections, instead of the bare base price.
+ * Acrylic "buy as-is" surcharge table, keyed by parsed width×height rather
+ * than the exact label text — the hand-built acrylic product set uses
+ * labels like `6" x 6"`, but the generated catalogue (tribal/devotional/etc.
+ * re-offered as acrylic) uses labels like `20x30 inch`; matching on the
+ * literal substring silently priced every catalogue size at +0, which is
+ * what caused the listing/detail mismatch this is fixing. Kept in sync with
+ * the identical table in AcrylicProductDetailPage's `unitPrice` memo.
  */
 export function acrylicSizeSurcharge(size: string | undefined): number {
-  if (!size) return 0;
-  if (size.includes('6" x 6"') || size.includes('5" x 7"') || size.includes('7" x 5"')) return 200;
-  if (size.includes('8" x 8"') || size.includes('8" x 10"') || size.includes('10" x 8"')) return 450;
-  if (size.includes('12" x 8"') || size.includes('8" x 12"') || size.includes('12" x 12"')) return 700;
-  if (size.includes('12" x 18"') || size.includes('16" x 24"')) return 1100;
-  if (size.includes('20" x 30"') || size.includes('24" x 36"') || size.includes('Set of 3')) return 1800;
-  if (size.includes('30" x 48"') || size.includes('36" x 60"')) return 2600;
-  return 0;
+  const parsed = parseSizeInches(size);
+  if (!parsed) return 0;
+  const area = parsed.width * parsed.height;
+  if (area <= 16) return 0; // e.g. 4x4
+  if (area <= 36) return 200; // 6x6, 5x7, 7x5
+  if (area <= 80) return 450; // 8x8, 8x10, 10x8
+  if (area <= 144) return 700; // 12x8, 8x12, 12x12
+  if (area <= 384) return 1100; // 12x18, 16x24
+  if (area <= 864) return 1800; // 20x30, 24x36
+  return 2600; // 30x48, 36x60 and larger
 }
 
 export function acrylicThicknessSurcharge(thickness: string | undefined): number {
@@ -71,6 +76,18 @@ export function acrylicPaperSurcharge(paper: string | undefined): number {
   return paper === 'Metallic Pearl Paper' ? 150 : 0;
 }
 
+// Mirrors AcrylicProductDetailPage's own fallback lists exactly — when a
+// product has no sizes/papers/bases of its own, that page still shows a
+// picker (defaulting to its largest size) instead of hiding one, so the
+// card has to assume the same fallback or it'll show a lower price than
+// the detail page lands on by default.
+const ACRYLIC_FALLBACK_SIZES = [
+  '4" x 4"', '6" x 4"', '4" x 6"', '5" x 5"', '5" x 7"', '7" x 5"',
+  '6" x 6"', '8" x 8"', '10" x 8"', '8" x 10"', '12" x 8"', '8" x 12"',
+];
+const ACRYLIC_FALLBACK_PAPERS = ['White Luster Photo Paper', 'Metallic Pearl Paper'];
+const ACRYLIC_FALLBACK_BASES = ['Without Base', 'Acrylic Base', 'Solid Wood Base'];
+
 /**
  * The price AcrylicProductDetailPage would show for its default selections
  * (largest size, first thickness/base/paper) — i.e. what the listing card
@@ -78,11 +95,11 @@ export function acrylicPaperSurcharge(paper: string | undefined): number {
  */
 export function acrylicDefaultSelectionPrice(product: Product): number {
   if (product.material !== 'acrylic' && product.categorySlug !== 'acrylic') return product.price;
-  const sizes = product.availableSizes?.length ? product.availableSizes : product.sizes;
-  const defaultSize = sizes?.length ? sizes[sizes.length - 1] : undefined;
-  const defaultThickness = product.availableThicknesses?.[0];
-  const defaultBase = product.availableBases?.[0];
-  const defaultPaper = product.availablePapers?.[0];
+  const sizes = product.availableSizes?.length ? product.availableSizes : product.sizes?.length ? product.sizes : ACRYLIC_FALLBACK_SIZES;
+  const defaultSize = sizes[sizes.length - 1];
+  const defaultThickness = product.availableThicknesses?.[0]; // page defaults to '3mm', which carries no surcharge anyway
+  const defaultBase = product.availableBases?.length ? product.availableBases[0] : ACRYLIC_FALLBACK_BASES[0];
+  const defaultPaper = product.availablePapers?.length ? product.availablePapers[0] : ACRYLIC_FALLBACK_PAPERS[0];
   return (
     product.price +
     acrylicSizeSurcharge(defaultSize) +
