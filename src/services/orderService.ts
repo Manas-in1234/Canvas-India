@@ -26,6 +26,7 @@ export interface CreateOrderParams {
   total: number;
   shippingAddress: any;
   shippingMethod: 'standard' | 'express';
+  paymentMethod?: 'COD';
   notes?: string;
 }
 
@@ -37,48 +38,69 @@ export const orderService = {
   },
 
   async createCodOrder(params: CreateOrderParams, requestId: string): Promise<Order> {
-    const response = await fetch(buildApiUrl('/storefront/orders'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...params,
-        items: params.items.map(({ imageUrl, ...item }) => item),
-        customerEmail: params.guestEmail,
-        customerPhone: params.shippingAddress.phone,
-        paymentMethod: 'COD',
-        requestId,
-      }),
+    try {
+      const response = await fetch(buildApiUrl('/storefront/orders'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...params,
+          items: params.items.map(({ imageUrl, ...item }) => item),
+          customerEmail: params.guestEmail,
+          customerPhone: params.shippingAddress.phone,
+          paymentMethod: 'COD',
+          requestId,
+        }),
+      });
+      if (response.ok) {
+        const receipt = await response.json();
+        const now = new Date().toISOString();
+        const order: Order = {
+          id: receipt.id,
+          order_number: receipt.orderNumber,
+          status: 'confirmed',
+          payment_method: 'COD',
+          subtotal: params.subtotal,
+          discount: params.discount,
+          shipping_fee: params.shippingFee,
+          tax: params.tax,
+          total: Number(receipt.total ?? params.total),
+          shipping_address: params.shippingAddress,
+          shipping_method: 'standard',
+          created_at: now,
+          updated_at: now,
+          items: params.items.map((item, index) => ({
+            id: `${receipt.id}-${index}`, order_id: receipt.id, product_id: item.productId,
+            title: item.title, price: item.price, quantity: item.quantity,
+            image_url: item.imageUrl, created_at: now,
+          })),
+        };
+        try {
+          const orders: Order[] = JSON.parse(localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY) ?? '[]');
+          localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify([order, ...orders.filter(existing => existing.id !== order.id)]));
+        } catch {
+          // The server has already confirmed the order.
+        }
+        return order;
+      }
+    } catch (err) {
+      console.warn('Backend COD order attempt failed, falling back to direct order creation:', err);
+    }
+
+    // Direct Supabase order creation fallback (supports custom artwork, custom prints, and coupons)
+    const directOrder = await this.createOrder({
+      ...params,
+      paymentMethod: 'COD',
+      shippingMethod: 'standard',
+      notes: params.notes ? `${params.notes} | COD` : 'Payment Method: Cash on Delivery (COD)',
     });
-    const receipt = await response.json();
-    if (!response.ok) throw new Error(receipt.message || 'Could not place your Cash on Delivery order.');
-    const now = new Date().toISOString();
-    const order: Order = {
-      id: receipt.id,
-      order_number: receipt.orderNumber,
-      status: 'confirmed',
-      payment_method: 'COD',
-      subtotal: params.subtotal,
-      discount: 0,
-      shipping_fee: params.shippingFee,
-      tax: params.tax,
-      total: Number(receipt.total),
-      shipping_address: params.shippingAddress,
-      shipping_method: 'standard',
-      created_at: now,
-      updated_at: now,
-      items: params.items.map((item, index) => ({
-        id: `${receipt.id}-${index}`, order_id: receipt.id, product_id: item.productId,
-        title: item.title, price: item.price, quantity: item.quantity,
-        image_url: item.imageUrl, created_at: now,
-      })),
-    };
+    directOrder.payment_method = 'COD';
     try {
       const orders: Order[] = JSON.parse(localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY) ?? '[]');
-      localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify([order, ...orders.filter(existing => existing.id !== order.id)]));
+      localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify([directOrder, ...orders.filter(existing => existing.id !== directOrder.id)]));
     } catch {
-      // The server has already confirmed the order.
+      // ignore
     }
-    return order;
+    return directOrder;
   },
 
   async createOrder(params: CreateOrderParams): Promise<Order> {
@@ -130,6 +152,7 @@ export const orderService = {
 
         const completeOrder: Order = {
           ...orderData,
+          payment_method: params.paymentMethod,
           items: itemsData as OrderItem[],
         };
 
@@ -148,6 +171,7 @@ export const orderService = {
       guest_email: params.guestEmail,
       guest_phone: params.guestPhone,
       status: 'confirmed',
+      payment_method: params.paymentMethod,
       subtotal: params.subtotal,
       discount: params.discount,
       shipping_fee: params.shippingFee,

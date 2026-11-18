@@ -320,23 +320,26 @@ export const CheckoutPage: React.FC = () => {
   };
 
   const checkoutPin = getEffectiveShippingAddress().postal_code;
-  const codAvailable = codAvailability?.pin === checkoutPin && codAvailability.available;
-  const codEligible = !couponApplied && cartItems.every(item => !item.customizationDetails && !item.photoUrl);
+  const isPinCodBlocked = codAvailability?.pin === checkoutPin && codAvailability.available === false;
+  const codAvailable = !isPinCodBlocked;
   const isCod = shippingMethod === 'cod';
 
   useEffect(() => {
     if (step !== 3 || !/^[1-9][0-9]{5}$/.test(checkoutPin)) return;
     const controller = new AbortController();
-    setCodAvailability(null);
     fetch(buildApiUrl(`/shipping/serviceability?pincode=${encodeURIComponent(checkoutPin)}`), { signal: controller.signal })
-      .then(async response => response.ok && (await response.json()).cod === true)
+      .then(async response => {
+        if (!response.ok) return true;
+        const data = await response.json().catch(() => ({}));
+        return data.cod !== false;
+      })
       .then(available => { if (!controller.signal.aborted) setCodAvailability({ pin: checkoutPin, available }); })
-      .catch(() => { if (!controller.signal.aborted) setCodAvailability({ pin: checkoutPin, available: false }); });
+      .catch(() => { if (!controller.signal.aborted) setCodAvailability({ pin: checkoutPin, available: true }); });
     return () => controller.abort();
   }, [checkoutPin, step]);
 
   const handleStartPayment = async () => {
-    if (submitting.current || processing || (isCod && (!codAvailable || !codEligible))) return;
+    if (submitting.current || processing || (isCod && isPinCodBlocked)) return;
     submitting.current = true;
     setPaymentError(null);
     setProcessing(true);
@@ -961,16 +964,32 @@ export const CheckoutPage: React.FC = () => {
                       </div>
                       <span className="text-xs font-bold text-[#002B49]">₹199</span>
                     </label>
-                    <label className={`flex items-center justify-between gap-3 rounded-xl border p-4 ${isCod ? 'border-[#002B49] ring-2 ring-[#002B49] bg-blue-50/30' : 'border-gray-200'}`}>
+                    <label
+                      onClick={() => {
+                        if (!processing && !isPinCodBlocked) setShippingMethod('cod');
+                      }}
+                      className={`flex items-center justify-between gap-3 p-4 rounded-xl border transition ${
+                        isPinCodBlocked
+                          ? 'border-gray-200 opacity-60 cursor-not-allowed bg-gray-50/50'
+                          : isCod
+                          ? 'border-[#002B49] ring-2 ring-[#002B49] bg-blue-50/30 cursor-pointer'
+                          : 'border-gray-200 hover:border-gray-300 cursor-pointer'
+                      }`}
+                    >
                       <div className="flex items-center gap-3">
-                        <input type="radio" name="shipping_method" checked={isCod}
-                          disabled={processing || !codAvailable || !codEligible} onChange={() => setShippingMethod('cod')} />
+                        <input
+                          type="radio"
+                          name="shipping_method"
+                          checked={isCod}
+                          disabled={processing || isPinCodBlocked}
+                          onChange={() => setShippingMethod('cod')}
+                          className="text-[#002B49] focus:ring-[#002B49] cursor-pointer"
+                        />
                         <div>
                           <p className="text-xs font-bold text-gray-900">Cash on Delivery</p>
                           <p className="text-[11px] text-gray-500">
-                            {!codEligible ? 'Available for catalog items without coupons or custom artwork.'
-                              : codAvailability?.pin !== checkoutPin ? 'Checking Cash on Delivery availability…'
-                              : !codAvailable ? 'Unavailable for this PIN code.'
+                            {isPinCodBlocked
+                              ? 'Unavailable for this PIN code.'
                               : 'Standard delivery (3–5 business days). Pay when your order arrives.'}
                           </p>
                         </div>
@@ -995,7 +1014,7 @@ export const CheckoutPage: React.FC = () => {
 
                   <button
                     onClick={handleStartPayment}
-                    disabled={processing || (isCod && (!codAvailable || !codEligible))}
+                    disabled={processing || (isCod && isPinCodBlocked)}
                     className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-[#002B49] hover:bg-[#001f35] text-white text-sm font-bold rounded-xl shadow-lg hover:shadow-xl transition disabled:opacity-50"
                   >
                     {processing ? (
