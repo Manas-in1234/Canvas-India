@@ -1462,6 +1462,28 @@ export default {
             !item || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 100)) {
             return jsonResponse({ message: 'Invalid items in cart.' }, 400, request);
           }
+          const catalogItems = items.filter(item => !item.customizationDetails && !item.customization_details);
+          if (catalogItems.length) {
+            const products = await prisma.product.findMany({
+              where: { id: { in: catalogItems.map(item => item.productId || item.product_id) }, status: 'ACTIVE', deletedAt: null, productType: { isActive: true } },
+              select: { id: true, basePrice: true, storefront: true },
+            });
+            const byId = new Map(products.map(product => [product.id, product]));
+            if (catalogItems.some(item => {
+              const product = byId.get(item.productId || item.product_id);
+              return !product || Number(product.basePrice) !== Number(item.price) ||
+                Number(product.basePrice) <= 0 ||
+                (product.storefront as { stockStatus?: string } | null)?.stockStatus === 'Out of Stock';
+            })) {
+              return jsonResponse({ message: 'An item or price changed. Refresh your cart before placing a Cash on Delivery order.' }, 409, request);
+            }
+          }
+          const expectedSubtotal = Math.round(items.reduce((sum, item) => sum + (Number(item.price) || 0) * item.quantity, 0) * 100) / 100;
+          const expectedShipping = expectedSubtotal >= 999 ? 0 : 99;
+          const expectedTotal = Math.round((expectedSubtotal + expectedShipping) * 100) / 100;
+          if (Math.round(Number(body.total) * 100) !== Math.round(expectedTotal * 100)) {
+            return jsonResponse({ message: 'The order total changed. Review your cart and try again.' }, 409, request);
+          }
           if (env.DELHIVERY_API_TOKEN?.trim()) {
             const postalCode = await delhiveryPostalCode(pin, env.DELHIVERY_API_TOKEN).catch(() => undefined);
             if (postalCode && postalCode.cod === 'N') {
@@ -1513,7 +1535,7 @@ export default {
           const already = await prisma.order.findUnique({ where: { orderNumber: mirroredNumber }, include: { items: true, addresses: true, customer: true } });
           if (already) return jsonResponse(isCod ? codReceipt(already) : already, 200, request);
         }
-        const orderCount = mirroredNumber ? 0 : await prisma.order.count();
+        const orderCount = mirroredNumber || isCod ? 0 : await prisma.order.count();
         const orderNumber = mirroredNumber ?? (isCod ? `CC-COD-${codId.slice(0, 8).toUpperCase()}` : `CC${10000 + orderCount + 1}`);
 
         const subtotal = Math.round((Number(body.subtotal) || items.reduce((sum: number, item: any) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1), 0)) * 100) / 100;
