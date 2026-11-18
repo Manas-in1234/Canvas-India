@@ -210,8 +210,8 @@ export const TermsConditionsPage: React.FC = () => {
         <p>{content["f117"] ?? <>Landline number: 040-29303344</>}</p>
         <p>{content["f118"] ?? <>WhatsApp: 78930 51555</>}</p>
         <p>{content["f119"] ?? <>
-          Address: Building No./Flat No. H NO 4-9-197/B/84, HMT Nagar, HMT Nagar Main Road, Nacharam, Hyderabad,
-          Hyderabad District, Telangana &ndash; 500076
+          Address: Building No./Flat No. H NO 4-9-197/B/84, HMT Nagar, Nacharam, Hyderabad,
+          Telangana &ndash; 500076
         </>}</p>
       </PolicySection>
     </PolicyPageLayout>

@@ -83,7 +83,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
                 <MapPin className="w-3.5 h-3.5 text-[#E8752A] shrink-0 mt-0.5" />
                 <div className="leading-snug text-stone-300">
                   <span className="text-stone-400 mr-1">Address:</span>
-                  H NO 4-9-197/B/84, HMT Nagar, HMT Nagar Main Road, Nacharam, Hyderabad, Hyderabad District, Telangana – 500076
+                  H NO 4-9-197/B/84, HMT Nagar, Nacharam, Hyderabad, Telangana – 500076
                 </div>
               </div>
             </div>
