@@ -17,6 +17,14 @@ import {
   Star,
   PackageSearch,
   History,
+  Factory,
+  Megaphone,
+  BadgePercent,
+  ShoppingCart,
+  TriangleAlert,
+  Truck,
+  Palette,
+  UsersRound,
   type LucideIcon,
 } from "lucide-react";
 export interface NavLink {
@@ -55,6 +63,18 @@ export const NAV_SECTIONS: NavSection[] = [
         permissions: ["orders.view"],
       },
       {
+        href: "/shipments",
+        label: "Shipments",
+        icon: Truck,
+        permissions: ["shipping.view"],
+      },
+      {
+        href: "/ndr",
+        label: "Delivery exceptions (NDR)",
+        icon: TriangleAlert,
+        permissions: ["ndr.view"],
+      },
+      {
         href: "/returns",
         label: "Returns & replacements",
         icon: RotateCcw,
@@ -65,6 +85,12 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Customers",
         icon: Users,
         permissions: ["customers.view"],
+      },
+      {
+        href: "/segments",
+        label: "Customer segments",
+        icon: UsersRound,
+        permissions: ["segments.view"],
       },
       {
         href: "/reviews",
@@ -95,6 +121,19 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: PackageSearch,
         permissions: ["inventory.view"],
       },
+      {
+        href: "/artwork",
+        label: "Artwork approvals",
+        icon: Palette,
+        permissions: ["artwork.view"],
+      },
+      {
+        href: "/production",
+        label: "Production",
+        icon: Factory,
+        permissions: ["production.view"],
+        alsoMatches: ["/production/batches", "/production/board", "/production/jobs", "/production/machines", "/production/materials"],
+      },
     ],
   },
   {
@@ -123,6 +162,24 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Discount codes",
         icon: Tag,
         permissions: ["discounts.view"],
+      },
+      {
+        href: "/promotions",
+        label: "Promotions",
+        icon: BadgePercent,
+        permissions: ["promotions.view"],
+      },
+      {
+        href: "/campaigns",
+        label: "Campaigns",
+        icon: Megaphone,
+        permissions: ["campaigns.view"],
+      },
+      {
+        href: "/abandoned-carts",
+        label: "Abandoned carts",
+        icon: ShoppingCart,
+        permissions: ["abandoned_carts.view"],
       },
     ],
   },
