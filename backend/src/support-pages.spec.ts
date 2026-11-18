@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import worker from './worker.js';
 
-const env = { _services: {}, DATABASE_URL: '' } as never;
+const env = { _services: {}, DATABASE_URL: '' };
 
 it('serves empty content for a page with no overrides, so every field falls back to its default', async () => {
   const prisma = { supportPageContent: { findUnique: async () => null } };

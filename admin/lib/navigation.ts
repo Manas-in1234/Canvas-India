@@ -26,6 +26,7 @@ import {
   Palette,
   UsersRound,
   FileText,
+  Mail,
   type LucideIcon,
 } from "lucide-react";
 export interface NavLink {
@@ -181,6 +182,12 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Abandoned carts",
         icon: ShoppingCart,
         permissions: ["abandoned_carts.view"],
+      },
+      {
+        href: "/broadcasts",
+        label: "Broadcasts",
+        icon: Mail,
+        permissions: ["broadcasts.view"],
       },
     ],
   },

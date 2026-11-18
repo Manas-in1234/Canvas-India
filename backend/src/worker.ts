@@ -1,5 +1,6 @@
 import { Occasions, isOccasionSlug } from './catalog/occasions.js';
 import { Reviews } from './commerce/reviews.js';
+import { Broadcasts } from './growth/broadcasts.js';
 import { HomepagePromotions } from './catalog/homepage-promotions.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, Prisma } from './generated/prisma/client.js';
@@ -25,6 +26,8 @@ export interface Env {
   RAZORPAY_WEBHOOK_SECRET?: string;
   DELHIVERY_API_TOKEN?: string;
   DELHIVERY_PICKUP_LOCATION?: string;
+  RESEND_API_KEY?: string;
+  RESEND_FROM_EMAIL?: string;
 }
 
 let cachedWasmModule: any = null;
@@ -2358,6 +2361,38 @@ export default {
           await services.campaigns.delete(id);
           return jsonResponse({ success: true }, 200, request);
         }
+      }
+
+      if (pathname === '/api/v1/growth/broadcasts' && (method === 'GET' || method === 'POST')) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, [method === 'POST' ? 'broadcasts.send' : 'broadcasts.view'], request);
+        if (denied) return denied;
+        const broadcasts = new Broadcasts(prisma, env.RESEND_API_KEY, env.RESEND_FROM_EMAIL);
+        if (method === 'GET') return jsonResponse(await broadcasts.list(), 200, request);
+        const body = (await request.json().catch(() => ({}))) as any;
+        return jsonResponse(await broadcasts.create(body.subject, body.body, body.targetSegmentId || null, user.id), 201, request);
+      }
+
+      const broadcastSend = pathname.match(/^\/api\/v1\/growth\/broadcasts\/([^/]+)\/send$/);
+      if (broadcastSend && method === 'POST') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, ['broadcasts.send'], request);
+        if (denied) return denied;
+        const broadcasts = new Broadcasts(prisma, env.RESEND_API_KEY, env.RESEND_FROM_EMAIL);
+        return jsonResponse(await broadcasts.send(broadcastSend[1]), 200, request);
+      }
+
+      const broadcastDetail = pathname.match(/^\/api\/v1\/growth\/broadcasts\/([^/]+)$/);
+      if (broadcastDetail && method === 'DELETE') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, ['broadcasts.send'], request);
+        if (denied) return denied;
+        const broadcasts = new Broadcasts(prisma, env.RESEND_API_KEY, env.RESEND_FROM_EMAIL);
+        await broadcasts.remove(broadcastDetail[1]);
+        return jsonResponse({ success: true }, 200, request);
       }
 
       if (pathname === '/api/v1/growth/abandoned-carts') {

@@ -1501,6 +1501,7 @@ model CustomerSegment {
   campaigns   Campaign[]
   discounts   Discount[]
   promotions  Promotion[]
+  broadcasts  Broadcast[]
   createdAt   DateTime                @default(now()) @map("created_at")
   updatedAt   DateTime                @updatedAt @map("updated_at")
 
@@ -1539,6 +1540,36 @@ model Campaign {
 
   @@index([status])
   @@map("campaigns")
+}
+
+// A one-off email sent to a set of customers (everyone with an email, or one segment).
+// Distinct from Campaign, which just tracks a marketing initiative's status/budget/revenue -
+// nothing about Campaign ever sends anything. Sent via Resend; see broadcasts.ts.
+model Broadcast {
+  id              String          @id @default(uuid())
+  subject         String
+  body            String
+  targetSegmentId String?         @map("target_segment_id")
+  targetSegment   CustomerSegment? @relation(fields: [targetSegmentId], references: [id])
+  status          BroadcastStatus @default(DRAFT)
+  recipientCount  Int             @default(0) @map("recipient_count")
+  sentCount       Int             @default(0) @map("sent_count")
+  failedCount     Int             @default(0) @map("failed_count")
+  errorMessage    String?         @map("error_message")
+  createdBy       String?         @map("created_by")
+  sentAt          DateTime?       @map("sent_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("broadcasts")
+}
+
+enum BroadcastStatus {
+  DRAFT
+  SENDING
+  SENT
+  FAILED
 }
 
 model Discount {
