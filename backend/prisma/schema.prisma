@@ -325,6 +325,18 @@ model PricingSetting {
   @@map("pricing_settings")
 }
 
+// Generic store-wide policy toggles (e.g. minimum order value) — distinct
+// from PricingSetting, which is customizer price-component knobs, not
+// checkout policy.
+model StoreSetting {
+  key         String   @id
+  value       String
+  updatedBy   String?  @map("updated_by")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("store_settings")
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // ADMIN-MANAGED CUSTOMIZER OPTIONS — content the admin edits that the
 // storefront customize page (canvas/acrylic) live-fetches, replacing what

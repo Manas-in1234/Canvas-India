@@ -85,6 +85,12 @@ const PERMISSIONS = [
   'reviews.view',
   'reviews.manage',
   'audit.view',
+  'store_settings.view',
+  'store_settings.manage',
+  'broadcasts.view',
+  'broadcasts.send',
+  'cms.view',
+  'cms.manage',
 ];
 
 // Rs. per sq. inch — non-rectangular shapes (heart, hexagon, custom traced

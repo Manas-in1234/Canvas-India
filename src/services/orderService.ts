@@ -4,6 +4,11 @@ import { Order, OrderItem, PaymentRecord } from '../types/auth';
 
 const LOCAL_STORAGE_ORDERS_KEY = 'ci_guest_orders';
 
+// Thrown when the backend was reachable and explicitly rejected the order (bad address,
+// price/total mismatch, PIN not serviceable, below the minimum order value, etc.). Must
+// propagate to the customer, never be swallowed into a fallback that bypasses the rejection.
+class OrderRejectedError extends Error {}
+
 export interface CreateOrderParams {
   userId?: string | null;
   guestEmail?: string | null;
@@ -35,6 +40,36 @@ export const orderService = {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const randomPart = Math.floor(1000 + Math.random() * 9000);
     return `CI-${datePart}-${randomPart}`;
+  },
+
+  // Prepaid orders are written straight to Supabase and only mirrored to the backend after
+  // payment succeeds, so by then it's too late to reject a bad order (price mismatch, below the
+  // minimum order value, etc.) - this checks before Razorpay even opens. Network/server errors
+  // here fail open (resolve, don't throw): if the backend is unreachable, checkout shouldn't be
+  // blocked by a check that can't run - the mirror step and COD's own route still enforce this.
+  async validateOrder(params: Pick<CreateOrderParams, 'items' | 'subtotal'>): Promise<void> {
+    try {
+      const response = await fetch(buildApiUrl('/storefront/orders/validate'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: params.items.map((item) => ({
+            productId: item.productId,
+            price: item.price,
+            quantity: item.quantity,
+            customizationDetails: item.customizationDetails,
+          })),
+          subtotal: params.subtotal,
+        }),
+      });
+      if (response.status >= 400 && response.status < 500) {
+        const body = await response.json().catch(() => ({}));
+        throw new OrderRejectedError(body.message || 'Your order could not be placed. Please review your cart and try again.');
+      }
+    } catch (err) {
+      if (err instanceof OrderRejectedError) throw err;
+      console.warn('Could not validate order before payment, proceeding:', err);
+    }
   },
 
   async createCodOrder(params: CreateOrderParams, requestId: string): Promise<Order> {
@@ -125,11 +160,17 @@ export const orderService = {
         }
         return order;
       }
+      if (response.status >= 400 && response.status < 500) {
+        const body = await response.json().catch(() => ({}));
+        throw new OrderRejectedError(body.message || 'Your order could not be placed. Please review your cart and try again.');
+      }
     } catch (err) {
+      if (err instanceof OrderRejectedError) throw err;
       console.warn('Backend COD order attempt failed, falling back to direct order creation:', err);
     }
 
-    // Direct Supabase order creation fallback (supports custom artwork, custom prints, and coupons)
+    // Direct Supabase order creation fallback (supports custom artwork, custom prints, and coupons) -
+    // only reached when the backend was unreachable or had a server error, never on an explicit rejection.
     const directOrder = await this.createOrder({
       ...params,
       paymentMethod: 'COD',

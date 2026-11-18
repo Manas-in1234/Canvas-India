@@ -379,6 +379,7 @@ export const CheckoutPage: React.FC = () => {
         navigate(`/order-success/${order.id}`, { state: { order } });
         return;
       }
+      await orderService.validateOrder(orderParams);
       const order = await orderService.createOrder(orderParams);
 
       // 2a. Fully discounted order: nothing to charge, so skip the payment gateway.

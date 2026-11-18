@@ -76,6 +76,36 @@ async function delhiveryPostalCode(pin: string, token: string) {
   return data.delivery_codes?.[0]?.postal_code ?? null;
 }
 
+// Shared by COD checkout and the pre-payment validation endpoint: re-verifies catalog item
+// prices/stock against the real product record (custom/customized items are exempt - they have
+// no fixed catalog price), and enforces the store-wide minimum order value. Returns a rejection
+// message + HTTP status if the order should be refused, or null if it's fine to proceed.
+async function validateOrderEligibility(prisma: PrismaClient, items: any[]): Promise<{ message: string; status: number } | null> {
+  const catalogItems = items.filter(item => !item.customizationDetails && !item.customization_details);
+  if (catalogItems.length) {
+    const products = await prisma.product.findMany({
+      where: { id: { in: catalogItems.map(item => item.productId || item.product_id) }, status: 'ACTIVE', deletedAt: null, productType: { isActive: true } },
+      select: { id: true, basePrice: true, storefront: true },
+    });
+    const byId = new Map(products.map(product => [product.id, product]));
+    if (catalogItems.some(item => {
+      const product = byId.get(item.productId || item.product_id);
+      return !product || Number(product.basePrice) !== Number(item.price) ||
+        Number(product.basePrice) <= 0 ||
+        (product.storefront as { stockStatus?: string } | null)?.stockStatus === 'Out of Stock';
+    })) {
+      return { message: 'An item or price changed. Refresh your cart and try again.', status: 409 };
+    }
+  }
+  const subtotal = Math.round(items.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1), 0) * 100) / 100;
+  const minOrderSetting = await prisma.storeSetting.findUnique({ where: { key: 'min_order_value' } }).catch(() => null);
+  const minOrderValue = Number(minOrderSetting?.value) || 0;
+  if (minOrderValue > 0 && subtotal < minOrderValue) {
+    return { message: `Minimum order value is ₹${minOrderValue}. Add more items to your cart to checkout.`, status: 400 };
+  }
+  return null;
+}
+
 const ALLOWED_ORIGIN_PATTERNS = [
   /^http:\/\/localhost:(3000|3001|5173|5174)$/,
   /^http:\/\/127\.0\.0\.1:(3000|3001|5173|5174)$/,
@@ -695,6 +725,47 @@ export default {
           throw err;
         }
         return jsonResponse({ message: 'Not found' }, 404, request);
+      }
+      // -------------------------------------------------------------
+      // Store settings — generic store-wide policy toggles (currently just
+      // minimum order value). Public GET so checkout can enforce it; a
+      // single admin endpoint to read/update the whole set.
+      // -------------------------------------------------------------
+      if (pathname === '/api/v1/store-settings' && method === 'GET') {
+        const settings = await prisma.storeSetting.findMany({ select: { key: true, value: true } });
+        return jsonResponse(Object.fromEntries(settings.map(s => [s.key, s.value])), 200, request);
+      }
+      if (pathname === '/api/v1/admin/store-settings') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const isManage = method === 'PUT';
+        const denied = checkPermission(user, [isManage ? 'store_settings.manage' : 'store_settings.view'], request);
+        if (denied) return denied;
+        if (method === 'GET') {
+          const settings = await prisma.storeSetting.findMany();
+          return jsonResponse(Object.fromEntries(settings.map(s => [s.key, s.value])), 200, request);
+        }
+        if (method === 'PUT') {
+          const body = (await request.json().catch(() => ({}))) as any;
+          if ('min_order_value' in body) {
+            const raw = body.min_order_value;
+            if (raw !== null && raw !== '' && (!Number.isFinite(Number(raw)) || Number(raw) < 0)) {
+              return jsonResponse({ message: 'Minimum order value must be a non-negative number, or empty to disable it.' }, 400, request);
+            }
+            const value = raw === null || raw === '' ? '0' : String(Number(raw));
+            await prisma.storeSetting.upsert({
+              where: { key: 'min_order_value' },
+              update: { value, updatedBy: user.id },
+              create: { key: 'min_order_value', value, updatedBy: user.id },
+            });
+            await services.audit.record({
+              adminUserId: user.id, action: 'STORE_SETTING_UPDATED', entityType: 'StoreSetting', entityId: 'min_order_value',
+              reason: `Set to ${value}`,
+            });
+          }
+          const settings = await prisma.storeSetting.findMany();
+          return jsonResponse(Object.fromEntries(settings.map(s => [s.key, s.value])), 200, request);
+        }
       }
       // -------------------------------------------------------------
       // Size presets — admin-managed size/panel options the storefront
@@ -1429,6 +1500,22 @@ export default {
         return jsonResponse(customer, 201, request);
       }
 
+      // Checked before a prepaid order's Razorpay payment is even opened, since prepaid orders
+      // are written straight to the storefront's own database and only mirrored here afterwards -
+      // by the time that mirror call runs, the customer has already paid, so it's too late to
+      // reject the order then. COD doesn't need this: the real order-creation route below already
+      // validates it synchronously, before anything is charged.
+      if (pathname === '/api/v1/storefront/orders/validate' && method === 'POST') {
+        const body = (await request.json().catch(() => ({}))) as any;
+        const items = Array.isArray(body.items) ? body.items : [];
+        if (items.length === 0) {
+          return jsonResponse({ message: 'Order items are required' }, 400, request);
+        }
+        const rejection = await validateOrderEligibility(prisma, items);
+        if (rejection) return jsonResponse({ message: rejection.message }, rejection.status, request);
+        return jsonResponse({ valid: true }, 200, request);
+      }
+
       if (pathname === '/api/v1/storefront/orders' && method === 'POST') {
         const body = (await request.json().catch(() => ({}))) as any;
         let items: any[] = Array.isArray(body.items) ? body.items : [];
@@ -1557,6 +1644,12 @@ export default {
         const shippingFee = Number(body.shippingFee) || 0;
         const tax = Number(body.tax) || 0;
         const total = Math.round((Number(body.total) || Math.max(0, subtotal - discount + shippingFee + tax)) * 100) / 100;
+
+        const minOrderSetting = await prisma.storeSetting.findUnique({ where: { key: 'min_order_value' } }).catch(() => null);
+        const minOrderValue = Number(minOrderSetting?.value) || 0;
+        if (minOrderValue > 0 && subtotal < minOrderValue) {
+          return jsonResponse({ message: `Minimum order value is ₹${minOrderValue}. Add more items to your cart to checkout.` }, 400, request);
+        }
 
         const isFree = !isCod && !!appliedDiscountId && total <= 0;
         const isPaid = isFree || (!isCod && (body.payment?.status === 'captured' || Boolean(body.payment?.razorpayPaymentId)));
