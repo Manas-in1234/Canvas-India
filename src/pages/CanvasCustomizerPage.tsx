@@ -5634,7 +5634,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   };
 
   // OPTIONS tab
-  const [selectedLaminationId, setSelectedLaminationId] = useState<string>('standard');
+  const [selectedLaminationId, setSelectedLaminationId] = useState<string>('none');
   const [retouchChecks, setRetouchChecks] = useState<Record<string, boolean>>({});
   const [majorRetouchText, setMajorRetouchText] = useState<string>('');
   const [proofRequested, setProofRequested] = useState<boolean>(false);

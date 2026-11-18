@@ -188,7 +188,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         number: '01',
         name: '3-Panel Living Room Gallery Set',
         description: 'A harmonious 3-panel multi-photo gallery display (18" × 24" overall) featuring 3 distinct photos — a 12"×18" tall centerpiece canvas balanced by dual 10"×8" accent photo panels.',
-        price: 1005.9,
+        price: 856.9,
         image: PHOTO.wallDisplay3PanelLivingRoom,
         customizeHref: '/customize/canvas/canvas-wall-art?layout=wall-display-3a'
       },
@@ -197,7 +197,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         number: '02',
         name: '4-Panel Gallery Showcase',
         description: 'An architectural 4-panel layout (34" × 24" overall) with 4 individual photos — featuring a 24"×16" portrait canvas, an 11"×17" horizontal header, and dual 12"×8" side-by-side bases.',
-        price: 1842.85,
+        price: 1693.85,
         image: PHOTO.wallDisplay4PanelLivingRoom,
         customizeHref: '/customize/canvas/canvas-wall-art?layout=wall-display-4a'
       },
@@ -206,7 +206,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         number: '03',
         name: '5-Panel Stepped Pyramid Wall Display',
         description: 'A dramatic 5-panel layout (62" × 36" overall) where each panel holds a separate picture — anchored by a commanding 20"×16" center apex canvas flanked by stepped 14"×11" and 10"×8" side panels.',
-        price: 1921.7,
+        price: 1772.7,
         image: PHOTO.wallDisplay5PanelLivingRoom,
         customizeHref: '/customize/canvas/canvas-wall-art?layout=wall-display-5a'
       },
@@ -215,7 +215,7 @@ export const CANVAS_STYLE_LANDING_DATA: Record<string, CanvasStyleLandingData> =
         number: '04',
         name: '7-Panel Centerpiece Halo Wall Display',
         description: 'A breathtaking 7-panel story wall (44" × 26" overall) showcasing 7 different photos — a prominent 26"×26" square hero canvas encircled by six 8"×8" mini satellite canvases.',
-        price: 2148,
+        price: 1999,
         image: PHOTO.wallDisplay7PanelLivingRoom,
         customizeHref: '/customize/canvas/canvas-wall-art?layout=wall-display-7a'
       }

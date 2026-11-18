@@ -363,11 +363,7 @@ export const CANVAS_PRODUCT_TYPES: CanvasProductType[] = [
   {
     id: 'canvas-wall-art',
     name: 'Wall Display',
-    // Lamination defaults to "Standard" (+Rs.149) in the customizer for every
-    // canvas product, so the advertised price needs that baked in here too -
-    // otherwise what's shown on the storefront never matches what the
-    // customer actually pays by default once they reach checkout.
-    startingPrice: 1005.90,
+    startingPrice: 856.90,
     image: '',
     iconType: 'wall',
     panelsCount: 3,
