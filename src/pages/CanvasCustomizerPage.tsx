@@ -9714,6 +9714,48 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <span className="font-bold text-stone-900">+₹{(() => { const p = liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.price || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
                 </div>
               )}
+              {activeMaterial !== 'acrylic' && selectedProductTypeId !== 'canvas-banner' && getCanvasThicknessPrice(selectedThicknessId, customThicknessMm) > 0 && (
+                <div className="flex justify-between">
+                  <span>Thickness ({CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.name ?? 'Frame depth'}):</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = getCanvasThicknessPrice(selectedThicknessId, customThicknessMm); return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(2); })()}</span>
+                </div>
+              )}
+              {shapeApplies && !NON_RECTANGULAR_SHAPE_TYPES.has(currentShape.shapeType) && currentShape.priceAddon > 0 && (
+                <div className="flex justify-between">
+                  <span>Shape ({currentShape.name ?? currentShape.shapeType}):</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = currentShape.priceAddon; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
+                </div>
+              )}
+              {shapeApplies && (liveBorderWidthPrices[selectedBorderWidthId] || 0) > 0 && (
+                <div className="flex justify-between">
+                  <span>Border:</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = liveBorderWidthPrices[selectedBorderWidthId] || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
+                </div>
+              )}
+              {shapeApplies && (() => { const frame = liveOrFallbackFrames.find((f) => f.id === selectedFrameId); return frame && frame.price > 0; })() && (
+                <div className="flex justify-between">
+                  <span>Frame:</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = liveOrFallbackFrames.find((f) => f.id === selectedFrameId)?.price || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
+                </div>
+              )}
+              {activeMaterial === 'acrylic' && (() => { const backing = liveOrFallbackBacking.find((b) => b.id === selectedBackingId); return backing && backing.price > 0; })() && (
+                <div className="flex justify-between">
+                  <span>Backing:</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = liveOrFallbackBacking.find((b) => b.id === selectedBackingId)?.price || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
+                </div>
+              )}
+              {activeMaterial === 'acrylic' && (() => { const finish = liveOrFallbackFinish.find((f) => f.id === selectedFinishId); return finish && finish.price > 0; })() && (
+                <div className="flex justify-between">
+                  <span>Finish:</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = liveOrFallbackFinish.find((f) => f.id === selectedFinishId)?.price || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
+                </div>
+              )}
+              {(selectedMaterialId === 'premium-cotton' || selectedMaterialId === 'archival-cotton') && (
+                <div className="flex justify-between">
+                  <span>Material ({selectedMaterialId === 'premium-cotton' ? 'Premium Cotton' : 'Archival Cotton'}):</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = selectedMaterialId === 'premium-cotton' ? 250 : 450; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
+                </div>
+              )}
               {(selectedHardwareId !== 'no-hooks' || activeMaterial === 'acrylic') && (
                 <div className="flex justify-between">
                   <span>{activeMaterial === 'acrylic' ? `Hardware (${acrylicStudQuantity} studs):` : 'Hardware:'}</span>
