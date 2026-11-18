@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
+import { RouteLoadingFallback } from './RouteLoadingFallback';
 import { PhonePrompt } from './PhonePrompt';
 import { Outlet, Link, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { Header } from './Header';
@@ -186,7 +187,9 @@ export const RootLayout: React.FC = () => {
 
       {/* Main Routed Page Content */}
       <main className="flex-1">
-        <Outlet />
+        <Suspense fallback={<RouteLoadingFallback />}>
+          <Outlet />
+        </Suspense>
         <PhonePrompt />
       </main>
 

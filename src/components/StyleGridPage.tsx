@@ -54,7 +54,11 @@ export const StyleGridPage: React.FC<StyleGridPageProps> = ({ pageTitle, breadcr
               </div>
               <div className="mt-2 font-semibold text-sm group-hover:text-[#0E4A93]">{c.name}</div>
               {c.price !== undefined && (
-                <div className="text-xs text-stone-500">Starts at ₹{c.price.toLocaleString('en-IN')}</div>
+                <div className="text-xs text-stone-500">
+                  Starts at ₹{c.price % 1 !== 0
+                    ? c.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    : c.price.toLocaleString('en-IN')}
+                </div>
               )}
             </button>
           ))}
