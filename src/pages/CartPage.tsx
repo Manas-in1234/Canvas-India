@@ -34,6 +34,9 @@ export const CartPage: React.FC = () => {
   const remainingForFreeDelivery = Math.max(0, freeDeliveryThreshold - subtotal);
   const deliveryCharges = subtotal >= freeDeliveryThreshold ? 0 : 99;
   const finalTotal = subtotal + deliveryCharges;
+  // Prices already include GST - extract the GST portion out of the
+  // tax-inclusive total instead of just labelling the rate.
+  const gstAmount = Math.round((finalTotal * 18) / 118);
 
   const handleCheckout = () => {
     navigate('/checkout');
@@ -237,8 +240,8 @@ export const CartPage: React.FC = () => {
                 </div>
 
                 <div className="flex justify-between text-stone-600">
-                  <span>Applicable GST (Included)</span>
-                  <span className="font-semibold text-stone-500">18% included</span>
+                  <span>Applicable GST (18%, Included)</span>
+                  <span className="font-semibold text-stone-500">₹{gstAmount.toLocaleString('en-IN')}</span>
                 </div>
 
                 <div className="pt-3 border-t border-stone-200 flex justify-between text-base font-extrabold text-stone-900">
