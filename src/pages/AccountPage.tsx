@@ -107,14 +107,14 @@ export const AccountPage: React.FC = () => {
           // Older orders can return one payment record or a list.
           const payments = ([] as any[]).concat((order as any).payment ?? []);
           const paid = payments.find((p) => p?.status === 'captured' && p.razorpay_payment_id);
-          if (!paid || order.payment_method === 'COD') continue;
+          if (!paid && order.payment_method !== 'COD') continue;
           const key = `ci_synced_${order.order_number}`;
           try {
             if (localStorage.getItem(key)) continue;
           } catch {
             // storage unavailable: just sync
           }
-          void mirrorOrderToBackend(order, user.email, { razorpayPaymentId: paid?.razorpay_payment_id }).then((ok) => {
+          void mirrorOrderToBackend(order, user.email, paid?.razorpay_payment_id ? { razorpayPaymentId: paid.razorpay_payment_id } : {}).then((ok) => {
             if (!ok) return;
             try {
               localStorage.setItem(key, '1');

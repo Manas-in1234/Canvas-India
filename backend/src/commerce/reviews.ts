@@ -50,19 +50,22 @@ export class Reviews {
   async listReviewable(orderNumber: string, email: string) {
     const order = await this.findOrderForCustomer(orderNumber, email);
     const items = await this.prisma.orderItem.findMany({
-      where: { orderId: order.id, productSlug: { not: null }, review: null },
+      where: { orderId: order.id, review: null },
       orderBy: { createdAt: 'desc' },
-      select: { id: true, productNameSnapshot: true, productSlug: true, createdAt: true, variantSnapshot: true },
+      select: { id: true, productNameSnapshot: true, createdAt: true, variantSnapshot: true },
     });
-    return {
-      delivered: order.shippingStatus === 'DELIVERED',
-      items: order.shippingStatus === 'DELIVERED' ? items.map(item => ({
+    const reviewableItems = items
+      .filter(item => (item.variantSnapshot as { productSlug?: string } | null)?.productSlug)
+      .map(item => ({
         orderItemId: item.id,
         productName: item.productNameSnapshot,
-        productSlug: item.productSlug!,
+        productSlug: (item.variantSnapshot as { productSlug: string }).productSlug,
         imageUrl: (item.variantSnapshot as { imageUrl?: string } | null)?.imageUrl ?? null,
         purchasedAt: item.createdAt,
-      })) : [],
+      }));
+    return {
+      delivered: order.shippingStatus === 'DELIVERED',
+      items: order.shippingStatus === 'DELIVERED' ? reviewableItems : [],
     };
   }
 
@@ -82,13 +85,14 @@ export class Reviews {
     }
     const item = await this.prisma.orderItem.findUnique({ where: { id: orderItemId }, include: { review: true } });
     if (!item || item.orderId !== order.id) throw new NotFoundException('That item is not on this order.');
-    if (!item.productSlug) {
+    const productSlug = (item.variantSnapshot as { productSlug?: string } | null)?.productSlug;
+    if (!productSlug) {
       throw new BadRequestException('This order was placed before reviews were tracked and cannot be reviewed.');
     }
     if (item.review) throw new ConflictException('You already reviewed this item.');
 
     return this.prisma.review.create({
-      data: { customerId: order.customerId, orderItemId, productSlug: item.productSlug, rating, comment: text },
+      data: { customerId: order.customerId, orderItemId, productSlug, rating, comment: text },
     });
   }
 

@@ -38,15 +38,17 @@ export const orderService = {
   },
 
   async createCodOrder(params: CreateOrderParams, requestId: string): Promise<Order> {
+    const orderNumber = this.generateOrderNumber();
     try {
       const response = await fetch(buildApiUrl('/storefront/orders'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...params,
-          items: params.items.map(({ imageUrl, ...item }) => item),
+          orderNumber,
           customerEmail: params.guestEmail,
           customerPhone: params.shippingAddress.phone,
+          customerName: params.shippingAddress.name,
           paymentMethod: 'COD',
           requestId,
         }),
@@ -55,8 +57,8 @@ export const orderService = {
         const receipt = await response.json();
         const now = new Date().toISOString();
         const order: Order = {
-          id: receipt.id,
-          order_number: receipt.orderNumber,
+          id: receipt.id || requestId,
+          order_number: receipt.orderNumber || orderNumber,
           status: 'confirmed',
           payment_method: 'COD',
           subtotal: params.subtotal,
@@ -69,11 +71,52 @@ export const orderService = {
           created_at: now,
           updated_at: now,
           items: params.items.map((item, index) => ({
-            id: `${receipt.id}-${index}`, order_id: receipt.id, product_id: item.productId,
-            title: item.title, price: item.price, quantity: item.quantity,
-            image_url: item.imageUrl, created_at: now,
+            id: `${receipt.id || requestId}-${index}`,
+            order_id: receipt.id || requestId,
+            product_id: item.productId,
+            title: item.title,
+            price: item.price,
+            quantity: item.quantity,
+            image_url: item.imageUrl,
+            customization_details: item.customizationDetails,
+            created_at: now,
           })),
         };
+
+        // Mirror to Supabase for customer order history
+        if (isSupabaseConfigured) {
+          try {
+            await supabase.from('orders').insert([{
+              id: order.id,
+              order_number: order.order_number,
+              user_id: params.userId || null,
+              guest_email: params.guestEmail || null,
+              guest_phone: params.guestPhone || null,
+              status: 'confirmed',
+              subtotal: params.subtotal,
+              discount: params.discount,
+              shipping_fee: params.shippingFee,
+              tax: params.tax,
+              total: order.total,
+              shipping_address: params.shippingAddress,
+              shipping_method: 'standard',
+              notes: 'Payment Method: Cash on Delivery (COD)',
+            }]);
+            const itemsToInsert = params.items.map((item) => ({
+              order_id: order.id,
+              product_id: item.productId,
+              title: item.title,
+              price: item.price,
+              quantity: item.quantity,
+              image_url: item.imageUrl || null,
+              customization_details: item.customizationDetails || null,
+            }));
+            await supabase.from('order_items').insert(itemsToInsert);
+          } catch (supErr) {
+            console.warn('Could not mirror COD order to Supabase:', supErr);
+          }
+        }
+
         try {
           const orders: Order[] = JSON.parse(localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY) ?? '[]');
           localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify([order, ...orders.filter(existing => existing.id !== order.id)]));

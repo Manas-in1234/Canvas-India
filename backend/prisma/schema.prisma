@@ -604,9 +604,6 @@ model OrderItem {
   variant   ProductVariant? @relation(fields: [variantId], references: [id])
 
   productNameSnapshot   String  @map("product_name_snapshot")
-  // Nullable: only orders placed after this was added carry it. Used to gate review eligibility
-  // and to group reviews by product; never used for pricing or display priority over the name.
-  productSlug           String? @map("product_slug")
   variantSnapshot       Json    @map("variant_snapshot")
   priceSnapshot         Decimal @map("price_snapshot") @db.Decimal(12, 2)
   configurationSnapshot Json?   @map("configuration_snapshot")

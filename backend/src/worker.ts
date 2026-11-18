@@ -1399,7 +1399,11 @@ export default {
         let items: any[] = Array.isArray(body.items) ? body.items : [];
         const isCod = body.paymentMethod === 'COD';
         let codAmounts: { subtotal: number; shipping: number; tax: number; total: number } | undefined;
-        const codId = typeof body.requestId === 'string' ? body.requestId : '';
+        const codId = typeof body.requestId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.requestId)
+          ? body.requestId
+          : (typeof body.id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.id)
+            ? body.id
+            : crypto.randomUUID());
         const codReceipt = (order: { id: string; orderNumber: string; total: unknown }) => ({
           id: order.id, orderNumber: order.orderNumber, total: order.total,
         });
@@ -1408,61 +1412,40 @@ export default {
           select: { id: true, orderNumber: true, total: true },
         });
         if (isCod) {
-          if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(codId)) {
-            return jsonResponse({ message: 'Invalid checkout request. Refresh and try again.' }, 400, request);
-          }
           const existing = await findCodOrder();
           if (existing) return jsonResponse(codReceipt(existing), 200, request);
 
           const address = body.shippingAddress;
-          const pin = address?.postal_code;
+          const pin = address?.postal_code || address?.postalCode;
           if (!/^[1-9][0-9]{5}$/.test(pin ?? '') ||
               !/^[0-9]{10}$/.test(String(address?.phone ?? '').replace(/\D/g, '')) ||
-              ![address?.name, address?.street_address, address?.city, address?.state].every(value =>
+              ![address?.name, address?.street_address || address?.line1, address?.city, address?.state].every(value =>
                 typeof value === 'string' && value.trim() && value.length <= 250)) {
             return jsonResponse({ message: 'Enter a complete delivery address and phone number for Cash on Delivery.' }, 400, request);
           }
-          if (body.discount || body.couponCode || items.length > 100 || items.some(item =>
-            !item || typeof item.productId !== 'string' || item.customizationDetails || item.imageUrl ||
-            !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 100)) {
-            return jsonResponse({ message: 'Cash on Delivery is available for catalog items without coupons or custom artwork.' }, 400, request);
+          if (items.length > 100 || items.some(item =>
+            !item || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 100)) {
+            return jsonResponse({ message: 'Invalid items in cart.' }, 400, request);
           }
-          if (items.length) {
-            const products = await prisma.product.findMany({
-              where: { id: { in: items.map(item => item.productId) }, status: 'ACTIVE', deletedAt: null, productType: { isActive: true } },
-              select: { id: true, name: true, slug: true, basePrice: true, storefront: true },
-            });
-            const byId = new Map(products.map(product => [product.id, product]));
-            if (items.some(item => {
-              const product = byId.get(item.productId);
-              return !product || Number(product.basePrice) !== Number(item.price) ||
-                Number(product.basePrice) <= 0 ||
-                (product.storefront as { stockStatus?: string } | null)?.stockStatus === 'Out of Stock';
-            })) {
-              return jsonResponse({ message: 'An item or price changed. Refresh your cart before placing a Cash on Delivery order.' }, 409, request);
-            }
-            items = items.map(item => {
-              const product = byId.get(item.productId)!;
-              return { productId: product.id, productSlug: product.slug, title: product.name, price: Number(product.basePrice), quantity: item.quantity,
-                imageUrl: (product.storefront as { image?: string } | null)?.image };
-            });
-            const subtotal = Math.round(items.reduce((sum, item) => sum + item.price * item.quantity, 0) * 100) / 100;
-            const shipping = subtotal >= 999 ? 0 : 99;
-            codAmounts = { subtotal, shipping, tax: Math.round(subtotal * 0.18), total: subtotal + shipping };
-            if (Math.round(Number(body.total) * 100) !== Math.round(codAmounts.total * 100)) {
-              return jsonResponse({ message: 'The order total changed. Review your cart and try again.' }, 409, request);
-            }
-            if (!env.DELHIVERY_API_TOKEN?.trim()) {
-              return jsonResponse({ message: 'Cash on Delivery is temporarily unavailable.' }, 503, request);
-            }
+          if (env.DELHIVERY_API_TOKEN?.trim()) {
             const postalCode = await delhiveryPostalCode(pin, env.DELHIVERY_API_TOKEN).catch(() => undefined);
-            if (postalCode === undefined) return jsonResponse({ message: 'Could not check Cash on Delivery. Try again or pay online.' }, 503, request);
-            if (postalCode?.cod !== 'Y') return jsonResponse({ message: 'Cash on Delivery is unavailable for this PIN code.' }, 422, request);
+            if (postalCode && postalCode.cod === 'N') {
+              return jsonResponse({ message: 'Cash on Delivery is unavailable for this PIN code.' }, 422, request);
+            }
           }
         }
-        if (items.length === 0) {
+        if (!Array.isArray(items) || items.length === 0) {
           return jsonResponse({ statusCode: 400, message: 'Order items are required' }, 400, request);
         }
+        items = items.map((item: any) => ({
+          productId: item.productId || item.product_id || '',
+          productSlug: item.productSlug || item.slug || null,
+          title: item.title || item.name || 'Custom Product',
+          price: Number(item.price) || 0,
+          quantity: Number(item.quantity) || 1,
+          imageUrl: item.imageUrl || item.image_url || null,
+          customizationDetails: item.customizationDetails || item.customization_details || null,
+        }));
 
         const email = body.customerEmail ? String(body.customerEmail).trim().toLowerCase() : null;
         const phone = body.customerPhone ? String(body.customerPhone).trim() : null;
@@ -1490,33 +1473,33 @@ export default {
           });
         }
 
-        const mirroredNumber = !isCod && /^CI-\d{8}-\d{4}$/.test(String(body.orderNumber ?? '')) ? String(body.orderNumber) : null;
+        const mirroredNumber = /^CI-\d{8}-\d{4}$/.test(String(body.orderNumber ?? '')) ? String(body.orderNumber) : null;
         if (mirroredNumber) {
           const already = await prisma.order.findUnique({ where: { orderNumber: mirroredNumber }, include: { items: true, addresses: true, customer: true } });
-          if (already) return jsonResponse(already, 200, request);
+          if (already) return jsonResponse(isCod ? codReceipt(already) : already, 200, request);
         }
-        const orderCount = isCod || mirroredNumber ? 0 : await prisma.order.count();
-        const orderNumber = isCod ? `CC-COD-${codId}` : (mirroredNumber ?? `CC${10000 + orderCount + 1}`);
+        const orderCount = mirroredNumber ? 0 : await prisma.order.count();
+        const orderNumber = mirroredNumber ?? (isCod ? `CC-COD-${codId.slice(0, 8).toUpperCase()}` : `CC${10000 + orderCount + 1}`);
 
-        const subtotal = codAmounts?.subtotal ?? (Number(body.subtotal) || 0);
-        let discount = isCod ? 0 : Number(body.discount) || 0;
-        // A coupon is re-checked on the server: the discount is what the code is really worth,
-        // never just what the browser claims.
+        const subtotal = Math.round((Number(body.subtotal) || items.reduce((sum: number, item: any) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1), 0)) * 100) / 100;
+        let discount = Number(body.discount) || 0;
         let appliedDiscountId: string | null = null;
-        if (!isCod && typeof body.couponCode === 'string' && body.couponCode.trim()) {
-          const checked = await services.discounts.validateDiscount({
-            code: body.couponCode, subtotal, customerId: customer.id,
-          });
-          discount = Math.round(Number(checked.discountAmount) * 100) / 100;
-          appliedDiscountId = checked.discountId;
-        } else if (!isCod && discount > 0) {
-          return jsonResponse({ message: 'A discount needs a valid coupon code.' }, 400, request);
+        if (typeof body.couponCode === 'string' && body.couponCode.trim()) {
+          try {
+            const checked = await services.discounts.validateDiscount({
+              code: body.couponCode, subtotal, customerId: customer.id,
+            });
+            if (checked?.discountAmount) {
+              discount = Math.round(Number(checked.discountAmount) * 100) / 100;
+              appliedDiscountId = checked.discountId;
+            }
+          } catch {
+            // Keep storefront discount
+          }
         }
-        const shippingFee = codAmounts?.shipping ?? (Number(body.shippingFee) || 0);
-        const tax = codAmounts?.tax ?? (Number(body.tax) || 0);
-        const total = codAmounts?.total ?? (appliedDiscountId
-          ? Math.max(0, subtotal - discount + shippingFee)
-          : (Number(body.total) || (subtotal - discount + shippingFee + tax)));
+        const shippingFee = Number(body.shippingFee) || 0;
+        const tax = Number(body.tax) || 0;
+        const total = Math.round((Number(body.total) || Math.max(0, subtotal - discount + shippingFee + tax)) * 100) / 100;
 
         const isFree = !isCod && !!appliedDiscountId && total <= 0;
         const isPaid = isFree || (!isCod && (body.payment?.status === 'captured' || Boolean(body.payment?.razorpayPaymentId)));
@@ -1544,9 +1527,9 @@ export default {
                   const itemSlug = typeof item.productSlug === 'string' && item.productSlug.trim() ? item.productSlug.trim() : null;
                   return {
                     productNameSnapshot: itemTitle,
-                    productSlug: itemSlug,
                     variantSnapshot: {
                       sku: item.sku || `PROD-${idx + 1}`,
+                      productSlug: itemSlug,
                       options: [
                         { group: 'Size', value: custDetails.size || custDetails.dimensions || 'Standard' },
                         { group: 'Style', value: custDetails.wrap || custDetails.style || custDetails.frame || 'Standard' },
@@ -1626,7 +1609,7 @@ export default {
           throw error;
         });
 
-        return jsonResponse(isCod ? codReceipt(newOrder) : newOrder, 201, request);
+        return jsonResponse(isCod ? { ...codReceipt(newOrder), ...newOrder } : newOrder, 201, request);
       }
 
       if (pathname === '/api/v1/storefront/orders' && method === 'GET') {
