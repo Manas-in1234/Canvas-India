@@ -19,6 +19,8 @@ const NEW_PERMISSIONS = [
   'broadcasts.send',
   'cms.view',
   'cms.manage',
+  'homepage_layout.view',
+  'homepage_layout.manage',
   'inventory.view',
   'inventory.adjust',
 ];

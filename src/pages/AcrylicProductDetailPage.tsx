@@ -29,6 +29,12 @@ import { HookIcon, HOOK_OPTIONS } from '../components/FrameHookVisuals';
 import { getBulkItem, QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import { getRelatedAcrylicProducts } from '../data/acrylicReviews';
 import { getProductReviews, type ProductReviews } from '../api/reviewsApi';
+import {
+  acrylicSizeSurcharge,
+  acrylicThicknessSurcharge,
+  acrylicBaseSurcharge,
+  acrylicPaperSurcharge,
+} from '../utils/pricing';
 
 export interface AcrylicProductDetailPageProps {
   product: Product;
@@ -255,32 +261,17 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
     return getRelatedAcrylicProducts(product.id, allProducts, 4);
   }, [product.id, allProducts]);
 
-  // Dynamic Price Calculation
+  // Dynamic Price Calculation — shared with ProductCard's default-selection
+  // price via src/utils/pricing.ts so the listing and detail page never
+  // disagree on what the default selections cost.
   const unitPrice = useMemo(() => {
-    let price = product.price;
-
-    // Size adjustment
-    if (selectedSize.includes('6" x 6"') || selectedSize.includes('5" x 7"') || selectedSize.includes('7" x 5"')) price += 200;
-    else if (selectedSize.includes('8" x 8"') || selectedSize.includes('8" x 10"') || selectedSize.includes('10" x 8"')) price += 450;
-    else if (selectedSize.includes('12" x 8"') || selectedSize.includes('8" x 12"') || selectedSize.includes('12" x 12"')) price += 700;
-    else if (selectedSize.includes('12" x 18"') || selectedSize.includes('16" x 24"')) price += 1100;
-    else if (selectedSize.includes('20" x 30"') || selectedSize.includes('24" x 36"') || selectedSize.includes('Set of 3')) price += 1800;
-    else if (selectedSize.includes('30" x 48"') || selectedSize.includes('36" x 60"')) price += 2600;
-
-    // Thickness adjustment (3mm: 0, 5mm: +150, 6mm: +200, 8mm: +250)
-    if (selectedThickness === '5mm') price += 150;
-    else if (selectedThickness === '6mm') price += 200;
-    else if (selectedThickness === '8mm') price += 250;
-
-    // Base adjustment
-    if (selectedBase === 'Acrylic Base') price += 200;
-    else if (selectedBase === 'Solid Wood Base') price += 250;
-    else if (selectedBase === 'Chrome Floating Standoffs') price += 200;
-
-    // Paper adjustment
-    if (selectedPaper === 'Metallic Pearl Paper') price += 150;
-
-    return price;
+    return (
+      product.price +
+      acrylicSizeSurcharge(selectedSize) +
+      acrylicThicknessSurcharge(selectedThickness) +
+      acrylicBaseSurcharge(selectedBase) +
+      acrylicPaperSurcharge(selectedPaper)
+    );
   }, [product.price, selectedSize, selectedThickness, selectedBase, selectedPaper]);
 
   const originalUnitPrice = useMemo(() => {

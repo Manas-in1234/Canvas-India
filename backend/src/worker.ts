@@ -2,6 +2,7 @@ import { Occasions, isOccasionSlug } from './catalog/occasions.js';
 import { Reviews } from './commerce/reviews.js';
 import { Broadcasts } from './growth/broadcasts.js';
 import { HomepagePromotions } from './catalog/homepage-promotions.js';
+import { HomepageLayout } from './catalog/homepage-layout.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, Prisma } from './generated/prisma/client.js';
 import { getQueryCompilerWasm } from './common/prisma-wasm/wasm-loader.js';
@@ -444,6 +445,19 @@ export default {
         if (denied) return denied;
         const promotions = new HomepagePromotions(prisma);
         const result = method === 'GET' ? await promotions.settings() : await promotions.save(await request.json(), user.id);
+        return jsonResponse(result, 200, request);
+      }
+
+      if (pathname === '/api/v1/homepage-layout' && method === 'GET') {
+        return jsonResponse(await new HomepageLayout(prisma).storefront(), 200, request);
+      }
+      if (pathname === '/api/v1/admin/homepage-layout' && (method === 'GET' || method === 'PUT')) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, [method === 'PUT' ? 'homepage_layout.manage' : 'homepage_layout.view'], request);
+        if (denied) return denied;
+        const layout = new HomepageLayout(prisma);
+        const result = method === 'GET' ? await layout.settings() : await layout.save(await request.json(), user.id);
         return jsonResponse(result, 200, request);
       }
       const heroImage = pathname.match(/^\/api\/v1\/(admin\/)?hero-images(?:\/([^/]+))?$/);

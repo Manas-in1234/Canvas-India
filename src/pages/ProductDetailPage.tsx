@@ -27,6 +27,8 @@ import { FrameSwatch, HookIcon, HOOK_OPTIONS, FRAME_LOOK, getFrameCategory, Fram
 import { getBulkItem, QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
 import { getProductReviews, type ProductReviews } from '../api/reviewsApi';
+import { fetchPricingRates, SHAPE_AREA_RATE_FALLBACK } from '../api/pricingSettingsApi';
+import { priceForSize } from '../utils/pricing';
 
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
 // the "Room View" thumbnail renders a live WallPreview instead of a static image.
@@ -114,6 +116,18 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   const [customSizeW, setCustomSizeW] = useState<string>('');
   const [customSizeH, setCustomSizeH] = useState<string>('');
   const [selectedHook, setSelectedHook] = useState<string>('Sawtooth Hanger');
+
+  // Same ₹-per-sq.inch rate the full customizer bills by, fetched once so a
+  // size picked here and the identical size picked in the customizer always
+  // cost the same (see src/utils/pricing.ts).
+  const [areaRate, setAreaRate] = useState(SHAPE_AREA_RATE_FALLBACK);
+  useEffect(() => {
+    let cancelled = false;
+    fetchPricingRates().then((rates) => {
+      if (!cancelled) setAreaRate(product?.material === 'acrylic' ? rates.shapeAreaRates.acrylic : rates.shapeAreaRates.canvas);
+    });
+    return () => { cancelled = true; };
+  }, [product?.material]);
 
   // The Bulk & Corporate Orders catalogue keys its items by material+slug —
   // matches this exact style when it has one, so "Order this item in bulk"
@@ -392,11 +406,12 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
 
   const handleAddToCartWithVariants = () => {
     if (!product) return;
-    // At bulk quantities, charge the same discounted per-unit price shown
-    // in the bulk panel — never show one price and charge another.
+    // Charge the size-adjusted unit price shown on screen — including the
+    // bulk-discounted rate at bulk quantities — never show one price and
+    // charge another.
     const cartProduct = quantity >= MIN_BULK_QTY
-      ? { ...product, price: bulkUnitPriceFor(product.price, quantity) }
-      : product;
+      ? { ...product, price: bulkUnitPriceFor(unitPrice, quantity) }
+      : { ...product, price: unitPrice };
     const defaultThickness = isCorkProduct ? undefined : 'Thin Gallery Wrap (0.75")';
     onAddToCart(
       cartProduct,
@@ -461,12 +476,23 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   const categoryName = product.category || 'Prints';
   const categoryLink = `/${product.categorySlug || 'canvas'}`;
 
+  // Priced from the selected size (custom W×H when set), same area-rate model
+  // the customizer uses, so this page's price always matches what the
+  // customizer would charge for the same size — never a flat price regardless
+  // of the size picked.
+  const unitPrice = useMemo(() => {
+    const size = isCustomSize ? `${customWidth}x${customHeight} inch` : selectedSize;
+    return priceForSize(product, size, areaRate);
+  }, [product, selectedSize, isCustomSize, customWidth, customHeight, areaRate]);
+
   // The struck-through price and the % off both come from the two prices set in the
   // admin, so they always agree. No discount is shown when there isn't one.
   const effectiveOriginalPrice =
-    product.originalPrice && product.originalPrice > product.price ? product.originalPrice : 0;
+    product.originalPrice && product.originalPrice > product.price
+      ? Math.round(unitPrice * (product.originalPrice / product.price))
+      : 0;
   const effectiveDiscount = effectiveOriginalPrice
-    ? Math.round(((effectiveOriginalPrice - product.price) / effectiveOriginalPrice) * 100)
+    ? Math.round(((effectiveOriginalPrice - unitPrice) / effectiveOriginalPrice) * 100)
     : 0;
 
   return (
@@ -642,7 +668,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
               </div>
 
               <div className="flex items-baseline gap-3">
-                <span className="text-2xl sm:text-3xl font-extrabold text-stone-950">₹{product.price.toLocaleString('en-IN')}</span>
+                <span className="text-2xl sm:text-3xl font-extrabold text-stone-950">₹{unitPrice.toLocaleString('en-IN')}</span>
                 {effectiveOriginalPrice > 0 && (
                   <span className="text-base text-stone-400 line-through">
                     ₹{effectiveOriginalPrice.toLocaleString('en-IN')}

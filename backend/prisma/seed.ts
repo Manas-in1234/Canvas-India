@@ -91,6 +91,8 @@ const PERMISSIONS = [
   'broadcasts.send',
   'cms.view',
   'cms.manage',
+  'homepage_layout.view',
+  'homepage_layout.manage',
 ];
 
 // Rs. per sq. inch — non-rectangular shapes (heart, hexagon, custom traced

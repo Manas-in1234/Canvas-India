@@ -27,6 +27,7 @@ import {
   UsersRound,
   FileText,
   Mail,
+  LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
 export interface NavLink {
@@ -152,6 +153,12 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Hero Images",
         icon: ImageIcon,
         permissions: ["products.edit"],
+      },
+      {
+        href: "/homepage-sections",
+        label: "Homepage Sections",
+        icon: LayoutGrid,
+        permissions: ["homepage_layout.view"],
       },
       {
         href: "/occasions",
