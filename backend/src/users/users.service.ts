@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import * as argon2 from 'argon2';
+import { hashPassword } from '../common/crypto/password.js';
 import { PrismaService } from '../database/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 
@@ -24,7 +24,7 @@ export class UsersService {
   }
 
   async create(name: string, email: string, password: string, roleId: string, actingAdminId?: string) {
-    const passwordHash = await argon2.hash(password);
+    const passwordHash = await hashPassword(password);
     const user = await this.prisma.adminUser.create({
       data: { name, email, passwordHash, roleId },
       select: { id: true, name: true, email: true, roleId: true, createdAt: true },

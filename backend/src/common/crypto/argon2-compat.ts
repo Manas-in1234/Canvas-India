@@ -1,6 +1,4 @@
-
-import { argon2id, argon2Verify } from 'hash-wasm';
-import { randomBytes } from 'node:crypto';
+import { hashPassword, verifyPassword } from './password.js';
 
 export enum argon2d {
   argon2d = 0,
@@ -18,29 +16,13 @@ export interface Options {
   salt?: Buffer;
 }
 
-export async function hash(plain: string, options?: Options): Promise<string> {
-  const salt = options?.salt ?? randomBytes(16);
-  const timeCost = options?.timeCost ?? 3;
-  const memoryCost = options?.memoryCost ?? 65536;
-  const parallelism = options?.parallelism ?? 4;
-  const hashLength = options?.hashLength ?? 32;
-
-  return argon2id({
-    password: plain,
-    salt: new Uint8Array(salt),
-    parallelism,
-    iterations: timeCost,
-    memorySize: memoryCost,
-    hashLength,
-    outputType: 'encoded',
-  });
+export async function hash(plain: string, _options?: Options): Promise<string> {
+  return hashPassword(plain);
 }
 
 export async function verify(digest: string, plain: string): Promise<boolean> {
-  return argon2Verify({
-    password: plain,
-    hash: digest,
-  });
+  const result = await verifyPassword(digest, plain);
+  return result.valid;
 }
 
 export default {
