@@ -6070,7 +6070,47 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     quantity
   ]);
 
-  const totalPrice = unitPrice * quantity;
+  // The customizer always has *something* selected internally (size, wrap,
+  // thickness, etc. default to the cheapest real option) so the live preview
+  // always has valid dimensions to render — but showing that priced default
+  // the instant the page opens, before the shopper has chosen anything,
+  // reads as if they're being charged for a choice they never made. So the
+  // displayed price (and every option's "selected" highlight) stays at ₹0 /
+  // unselected until they've actually touched a picker, even though the
+  // real underlying state is already valid and the preview renders normally
+  // throughout. The very first value each of these takes on page load is
+  // captured once as the "untouched" baseline; any later change away from
+  // that baseline (a real click) flips hasCustomized permanently on.
+  const initialSelectionSnapshot = useRef({
+    selectedSizeId, selectedShapeId, selectedWrapId, selectedThicknessId,
+    selectedHardwareId, selectedFrameId, selectedBackingId, selectedFinishId,
+    selectedMaterialId, selectedLaminationId, selectedDisplayOptionId, selectedBorderWidthId,
+  });
+  const [hasCustomized, setHasCustomized] = useState(false);
+  useEffect(() => {
+    if (hasCustomized) return;
+    const baseline = initialSelectionSnapshot.current;
+    const changed =
+      selectedSizeId !== baseline.selectedSizeId ||
+      selectedShapeId !== baseline.selectedShapeId ||
+      selectedWrapId !== baseline.selectedWrapId ||
+      selectedThicknessId !== baseline.selectedThicknessId ||
+      selectedHardwareId !== baseline.selectedHardwareId ||
+      selectedFrameId !== baseline.selectedFrameId ||
+      selectedBackingId !== baseline.selectedBackingId ||
+      selectedFinishId !== baseline.selectedFinishId ||
+      selectedMaterialId !== baseline.selectedMaterialId ||
+      selectedLaminationId !== baseline.selectedLaminationId ||
+      selectedDisplayOptionId !== baseline.selectedDisplayOptionId ||
+      selectedBorderWidthId !== baseline.selectedBorderWidthId;
+    if (changed) setHasCustomized(true);
+  }, [
+    hasCustomized, selectedSizeId, selectedShapeId, selectedWrapId, selectedThicknessId,
+    selectedHardwareId, selectedFrameId, selectedBackingId, selectedFinishId,
+    selectedMaterialId, selectedLaminationId, selectedDisplayOptionId, selectedBorderWidthId,
+  ]);
+
+  const totalPrice = hasCustomized ? unitPrice * quantity : 0;
   const acrylicHardwarePrice = selectedHardwareId === 'acrylic-standoffs'
     ? studsPrice(acrylicStudQuantity)
     : 0;
@@ -9716,6 +9756,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
+            {!hasCustomized ? (
+              <p className="py-2.5 text-stone-500">Choose a size and your other options to see pricing.</p>
+            ) : (
             <div className="space-y-1.5 py-2.5 text-stone-600">
               <div className="flex justify-between">
                 <span>Base ({selectedProductTypeId === 'canvas-banner' ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}` : isCustomSize && canUseCustomSize ? `${customWidth}"×${customHeight}"` : currentSizeOption.dimensionsSummary}):</span>
@@ -9801,6 +9844,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 <span className="text-[#0E4A93]">₹{totalPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
             </div>
+            )}
           </div>
         )}
       </div>
@@ -10538,7 +10582,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         {isCustomSize ? `${customWidth}" × ${customHeight}" (Custom)` : currentSizeOption?.label || selectedSizeId}
                       </div>
                       <div className="text-xs font-black text-[#0E4A93]">
-                        ₹{sizePrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        {hasCustomized ? `₹${sizePrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'Select a size to see price'}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
