@@ -37,7 +37,7 @@ export interface InitiatePaymentOptions {
   onDismiss?: () => void;
 }
 
-const DEFAULT_RAZORPAY_KEY = 'rzp_live_TecyaExpRewIqU';
+const DEFAULT_RAZORPAY_KEY = 'rzp_live_U1wQAnOva5Angg';
 
 export const paymentService = {
   getRazorpayKey(): string {
