@@ -26,6 +26,16 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     console.error('Unhandled error caught by ErrorBoundary:', error, info);
     this.setState({ componentStack: info.componentStack || '' });
 
+    const isChunkError =
+      /dynamically imported module/i.test(err.message) ||
+      /loading chunk/i.test(err.message) ||
+      err.name === 'ChunkLoadError';
+    if (isChunkError && !sessionStorage.getItem('ci_boundary_chunk_reload')) {
+      sessionStorage.setItem('ci_boundary_chunk_reload', '1');
+      window.location.reload();
+      return;
+    }
+
     try {
       localStorage.setItem(
         CRASH_LOG_KEY,

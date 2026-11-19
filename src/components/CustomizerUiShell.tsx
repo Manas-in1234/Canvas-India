@@ -708,6 +708,11 @@ export interface CustomizerPreviewControlsProps {
   // overlay from the canvas itself, so the customer can go back and forth
   // between picking and previewing without hunting for the sidebar tabs.
   reselectAction?: { label: string; onClick: () => void };
+  // Back/Continue, mirrored here from the panel footer - once the panel is
+  // hidden (View Preview / the X button), that footer isn't rendered at
+  // all, so without this there'd be no way to move steps from the canvas.
+  prevStep?: { label: string; disabled: boolean; onClick: () => void };
+  nextStep?: { label: string; disabled: boolean; onClick: () => void };
 }
 
 export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps> = ({
@@ -719,6 +724,8 @@ export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps>
   extraControls,
   bottomSlot,
   reselectAction,
+  prevStep,
+  nextStep,
   isContain,
   onToggleFit,
   onReset
@@ -742,6 +749,41 @@ export const CustomizerPreviewControls: React.FC<CustomizerPreviewControlsProps>
           <RotateCcw className="w-3 h-3 shrink-0" />
           <span className="truncate">{reselectAction.label}</span>
         </button>
+      )}
+
+      {(prevStep || nextStep) && (
+        <div className="md:hidden mt-1.5 flex items-center gap-1.5 w-full max-w-[280px] px-2">
+          {prevStep && (
+            <button
+              type="button"
+              onClick={prevStep.onClick}
+              disabled={prevStep.disabled}
+              className={`flex-1 min-w-0 py-1.5 px-2 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 border transition-colors ${
+                prevStep.disabled
+                  ? 'opacity-40 cursor-not-allowed border-stone-200 text-stone-400 bg-white'
+                  : 'border-stone-300 text-stone-700 bg-white hover:bg-stone-50 cursor-pointer'
+              }`}
+            >
+              <ChevronLeft className="w-3 h-3 shrink-0" />
+              <span className="truncate">{prevStep.label}</span>
+            </button>
+          )}
+          {nextStep && (
+            <button
+              type="button"
+              onClick={nextStep.onClick}
+              disabled={nextStep.disabled}
+              className={`flex-1 min-w-0 py-1.5 px-2 rounded-lg text-[10px] font-black flex items-center justify-center gap-1 transition-colors ${
+                nextStep.disabled
+                  ? 'opacity-40 cursor-not-allowed bg-stone-200 text-stone-400'
+                  : 'bg-[#0E4A93] hover:bg-[#09356A] text-white shadow-xs cursor-pointer'
+              }`}
+            >
+              <span className="truncate">Continue</span>
+              <ChevronRight className="w-3 h-3 shrink-0" />
+            </button>
+          )}
+        </div>
       )}
 
       {/* Image Controls: [ − ] [ + ] [ ↶ ] [ ↷ ] [ Fit/Fill ] [ Reset ] directly below the Size Indicator */}
@@ -963,6 +1005,8 @@ export const CustomizerPreviewArea: React.FC<CustomizerPreviewAreaProps> = ({
           extraControls={extraControls}
           bottomSlot={bottomSlot}
           reselectAction={reselectAction}
+          prevStep={prevStep}
+          nextStep={nextStep}
           isContain={isContain}
           onToggleFit={onToggleFit}
           onReset={onReset}

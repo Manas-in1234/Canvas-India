@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useOccasions } from '../context/OccasionsContext';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -111,6 +112,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAccount,
   onTrackOrder,
 }) => {
+  const { giftMenu } = useOccasions();
+  const menus: typeof MEGA_MENUS_DATA = { ...MEGA_MENUS_DATA, gifts: giftMenu };
   const navigate = useNavigate();
   const location = useLocation();
   const { isCategoryVisible } = useShop();
@@ -333,7 +336,7 @@ export const Header: React.FC<HeaderProps> = ({
       megaMenuTimeoutRef.current = null;
     }
     const isCorporate = slug === 'corporate-orders';
-    const menuData = MEGA_MENUS_DATA[slug];
+    const menuData = menus[slug];
     const targetWidth = isCorporate ? 360 : menuData?.groups && menuData.groups[3] ? 1260 : menuData?.groups && menuData.groups[2] ? 1050 : 850;
     const estWidth = Math.min(targetWidth, window.innerWidth - 32);
     const left = Math.max(16, Math.min(rect.left, window.innerWidth - estWidth - 16));
@@ -467,7 +470,7 @@ export const Header: React.FC<HeaderProps> = ({
                         <div
                           key={product.id}
                           onClick={() => {
-                            onOpenCustomize(product);
+                            navigate(`/products/${product.id}`);
                             setSearchOpen(false);
                           }}
                           className="p-2 flex items-center gap-3 hover:bg-stone-50 rounded-lg cursor-pointer transition-colors"
@@ -848,7 +851,7 @@ export const Header: React.FC<HeaderProps> = ({
                 const Icon = getCategoryIcon(cat.iconName);
                 const isActive = activeNav === cat.slug;
                 const isMenuOpen = activeMegaMenu === cat.slug;
-                const menuData = MEGA_MENUS_DATA[cat.slug];
+                const menuData = menus[cat.slug];
 
                 return (
                   <React.Fragment key={cat.slug}>
@@ -924,7 +927,7 @@ export const Header: React.FC<HeaderProps> = ({
                             </p>
 
                             <a
-                              href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                              href="https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={() => setActiveMegaMenu(null)}
@@ -1240,7 +1243,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>Track Your Order</span>
               </button>
               <a
-                href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                href="https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setMobileMenuOpen(false)}
@@ -1267,7 +1270,7 @@ export const Header: React.FC<HeaderProps> = ({
                 const Icon = getCategoryIcon(cat.iconName);
                 const isActive = activeNav === cat.slug;
                 const isExpanded = expandedMobileCategory === cat.slug;
-                const menuData = MEGA_MENUS_DATA[cat.slug];
+                const menuData = menus[cat.slug];
 
                 return (
                   <div key={cat.slug} className="rounded-xl overflow-hidden border border-stone-200/60 bg-stone-50/50 my-1">
@@ -1305,7 +1308,7 @@ export const Header: React.FC<HeaderProps> = ({
                               Custom employee welcome kits, company branded prints, uniform displays, and corporate gifting.
                             </p>
                             <a
-                              href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                              href="https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={() => setMobileMenuOpen(false)}

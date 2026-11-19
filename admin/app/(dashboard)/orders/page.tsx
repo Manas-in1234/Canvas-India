@@ -9,15 +9,73 @@ import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { OrderEditor } from "@/components/order-editor";
+import { usePermission } from "@/lib/auth/use-permission";
+import { downloadCsv } from "@/lib/csv";
+import { Download } from "lucide-react";
+
+// Pure frontend mock row, pinned to the top of the list - clicking it opens
+// /orders/qa-dummy, which renders every customization spec (border, color,
+// finish, layout/template, display, frame, wrap, mirror image, backing,
+// surface finish) with no API call or database row involved. For visual QA
+// only - never sent to or read from the backend.
+const QA_DUMMY_LIST_ITEM: OrderListItem = {
+  id: "qa-dummy",
+  orderNumber: "QA-DUMMY-0001",
+  orderStatus: "CONFIRMED",
+  paymentStatus: "PENDING",
+  shippingStatus: "NOT_SHIPPED",
+  subtotal: "4998.00",
+  discount: "0.00",
+  tax: "899.64",
+  shipping: "0.00",
+  total: "5897.64",
+  createdAt: new Date().toISOString(),
+  customer: { id: "qa-dummy-customer", name: "QA Dummy Order - DO NOT SHIP" },
+};
 
 export default function OrdersPage() {
   const [status, setStatus] = useState("ALL");
+  const [adding, setAdding] = useState(false);
+  const { hasPermission } = usePermission();
   const router = useRouter();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ["orders"],
     queryFn: () => apiClient.get<OrderListItem[]>("/orders"),
   });
+  const matches = (row: OrderListItem, filter: string) => {
+    const visibility = row.adminVisibility ?? "VISIBLE";
+    if (filter === "HIDDEN" || filter === "ARCHIVED") return visibility === filter;
+    if (visibility !== "VISIBLE") return false;
+    if (filter === "PENDING_PAYMENT") {
+      return row.orderStatus !== "CANCELLED" && row.orderStatus !== "DRAFT" && ["PENDING", "AUTHORIZED"].includes(row.paymentStatus);
+    }
+    return filter === "ALL" || row.orderStatus === filter;
+  };
+
+  const visibleRows = (data ?? []).filter((row) => matches(row, status));
+  const exportCsv = () =>
+    downloadCsv(
+      `orders-${new Date().toISOString().slice(0, 10)}.csv`,
+      ["Order #", "Date", "Customer", "Order status", "Payment status", "Shipping status", "Subtotal", "Discount", "Tax", "Shipping fee", "Total"],
+      visibleRows.map((r) => [
+        r.orderNumber,
+        new Date(r.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+        r.customer.name,
+        r.orderStatus,
+        r.paymentLabel ?? r.paymentStatus,
+        r.shippingStatus,
+        r.subtotal,
+        r.discount,
+        r.tax,
+        r.shipping,
+        r.total,
+      ]),
+    );
+
+  const rowsWithQaDummy = [QA_DUMMY_LIST_ITEM, ...(data ?? [])];
 
   const columns: DataTableColumn<OrderListItem>[] = [
     {
@@ -31,7 +89,7 @@ export default function OrdersPage() {
     },
     {
       header: "Payment",
-      cell: (row) => <StatusBadge status={row.paymentStatus} />,
+      cell: (row) => <StatusBadge status={row.paymentLabel ?? row.paymentStatus} />,
     },
     {
       header: "Shipping",
@@ -43,21 +101,33 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
-        <p className="text-sm text-muted-foreground">
-          All orders placed on the storefront.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
+          <p className="text-sm text-muted-foreground">Storefront orders and manual drafts.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" disabled={visibleRows.length === 0} onClick={exportCsv}>
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV ({visibleRows.length})
+          </Button>
+          {hasPermission("orders.create") && <Button onClick={() => setAdding(true)}>Add order</Button>}
+        </div>
       </div>
+      {adding && <OrderEditor onClose={() => setAdding(false)}
+        onSaved={id => router.push(`/orders/placeholder?id=${encodeURIComponent(id)}`)} />}
 
       <div className="status-filters" aria-label="Filter orders">
         {[
           ["ALL", "All orders"],
+          ["DRAFT", "Drafts"],
           ["PENDING_PAYMENT", "Awaiting payment"],
           ["CONFIRMED", "Confirmed"],
           ["PROCESSING", "In production"],
           ["COMPLETED", "Completed"],
           ["CANCELLED", "Cancelled"],
+          ["HIDDEN", "Hidden"],
+          ["ARCHIVED", "Archived"],
         ].map(([value, label]) => (
           <button
             key={value}
@@ -68,14 +138,7 @@ export default function OrdersPage() {
             {label}
             <span>
               {
-                (data || []).filter(
-                  (row) =>
-                    value === "ALL" ||
-                    (value === "PENDING_PAYMENT"
-                      ? ["PENDING", "AUTHORIZED"].includes(row.paymentStatus) &&
-                        row.orderStatus !== "CANCELLED"
-                      : row.orderStatus === value),
-                ).length
+                rowsWithQaDummy.filter(row => matches(row, value)).length
               }
             </span>
           </button>
@@ -88,25 +151,24 @@ export default function OrdersPage() {
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
         </div>
-      ) : isError ? (
-        <p className="text-sm text-destructive">Failed to load orders.</p>
       ) : (
-        <DataTable
-          columns={columns}
-          data={(data ?? []).filter(
-            (row) =>
-              status === "ALL" ||
-              (status === "PENDING_PAYMENT"
-                ? ["PENDING", "AUTHORIZED"].includes(row.paymentStatus) &&
-                  row.orderStatus !== "CANCELLED"
-                : row.orderStatus === status),
+        <>
+          {isError && (
+            <p className="text-sm text-destructive">
+              Failed to load real orders - showing the QA dummy order below only.
+            </p>
           )}
-          getRowKey={(row) => row.id}
-          onRowClick={(row) =>
-            router.push(`/orders/placeholder?id=${encodeURIComponent(row.id)}`)
-          }
-          emptyMessage="No orders yet."
-        />
+          <DataTable
+            columns={columns}
+            data={rowsWithQaDummy.filter((row) => matches(row, status))}
+            getRowKey={(row) => row.id}
+            onRowClick={(row) =>
+              router.push(`/orders/placeholder?id=${encodeURIComponent(row.id)}`)
+            }
+            emptyMessage="No orders yet."
+          />
+        </>
+
       )}
     </div>
   );

@@ -2,6 +2,8 @@
 import { useRecordId } from "@/lib/use-record-id";
 
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
@@ -13,21 +15,212 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft } from "lucide-react";
+import { OrderShippingPanel } from "@/components/delivery/order-shipping-panel";
+import { InvoiceButton } from "@/components/orders/invoice";
+import { OrderEditor } from "@/components/order-editor";
+
+// variantSnapshot.options only ever carries two generic Size/Style entries
+// (set by the backend as a fallback) - the customer's actual picks (border,
+// frame, wrap, display, lamination, layout, etc.) are stored verbatim on
+// configurationSnapshot but were never rendered, so production had no way
+// to see what the customer actually configured. Render every simple
+// (non-nested) field from it instead.
+const CONFIG_LABEL_OVERRIDES: Record<string, string> = {
+  sizeId: "Size",
+  productTypeId: "Product Type",
+  customThicknessMm: "Custom Thickness (mm)",
+  customThicknessInches: "Custom Thickness (in)",
+  borderWidth: "Border Width",
+  borderColor: "Border Color",
+  mirrorImage: "Mirror Image",
+  majorRetouchText: "Retouch Notes",
+  proofRequested: "Proof Requested",
+  quotePreference: "Quote Preference",
+  quoteTemplate: "Quote Template",
+  quoteCustomText: "Quote Text",
+  quoteAuthor: "Quote Author",
+  quoteBgColor: "Quote Background Color",
+  quoteFontFamily: "Quote Font",
+  quoteTextColor: "Quote Text Color",
+  digitalPaintingEffect: "Digital Painting Effect",
+  digitalPaintingSubject: "Digital Painting Subject",
+  digitalPaintingBackground: "Digital Painting Background",
+  peopleCount: "People Count",
+  petsCount: "Pets Count",
+  busRollLines: "Bus Roll Lines",
+  busRollBackgroundColor: "Bus Roll Background Color",
+  busRollPattern: "Bus Roll Pattern",
+  busRollFont: "Bus Roll Font",
+  bannerUnit: "Banner Unit",
+  bannerWidthInches: "Banner Width (in)",
+  bannerHeightInches: "Banner Height (in)",
+  bannerBackgroundColor: "Banner Background Color",
+  bannerHardware: "Banner Hardware",
+  studQuantity: "Stud Quantity",
+  hardwarePrice: "Hardware Price",
+  popArtStyleName: "Pop Art Style",
+  lyricTemplateName: "Lyric Template",
+  lyricTitle: "Lyric Title",
+  lyricArtist: "Lyric Artist",
+  lyricDateOrNames: "Lyric Date/Names",
+  lyricFontFamily: "Lyric Font",
+  lyricTextColor: "Lyric Text Color",
+  lyricLayout: "Lyric Layout",
+};
+
+function formatConfigLabel(key: string): string {
+  if (CONFIG_LABEL_OVERRIDES[key]) return CONFIG_LABEL_OVERRIDES[key];
+  return key
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/^./, (c) => c.toUpperCase());
+}
+
+function getConfigEntries(configurationSnapshot: Record<string, unknown> | null): [string, string][] {
+  if (!configurationSnapshot) return [];
+  return Object.entries(configurationSnapshot)
+    .filter(([, value]) => {
+      if (value === null || value === undefined || value === "") return false;
+      if (Array.isArray(value)) return value.length > 0 && value.every((v) => typeof v === "string" || typeof v === "number");
+      return typeof value !== "object";
+    })
+    .map(([key, value]): [string, string] => [
+      formatConfigLabel(key),
+      Array.isArray(value) ? value.join(", ") : typeof value === "boolean" ? (value ? "Yes" : "No") : String(value),
+    ]);
+}
+
+// Pure frontend mock - no API call, no database row. Visit /orders/qa-dummy
+// in the admin to see every customization spec (border, color, finish,
+// layout/template, display, frame, wrap, mirror image, backing, surface
+// finish) rendered on this page, for visual QA only.
+const QA_DUMMY_ORDER: OrderDetail = {
+  id: "qa-dummy",
+  orderNumber: "QA-DUMMY-0001",
+  orderStatus: "CONFIRMED",
+  paymentStatus: "PENDING",
+  shippingStatus: "NOT_SHIPPED",
+  subtotal: "4998.00",
+  discount: "0.00",
+  tax: "899.64",
+  shipping: "0.00",
+  total: "5897.64",
+  createdAt: new Date().toISOString(),
+  customer: {
+    id: "qa-dummy-customer",
+    name: "QA Dummy Order - DO NOT SHIP",
+    email: "qa-dummy-order@canvassindia.com",
+    phone: "9999999999",
+  },
+  items: [
+    {
+      id: "qa-dummy-item-1",
+      orderId: "qa-dummy",
+      variantId: null,
+      productNameSnapshot: "QA TEST - Oval Canvas (DO NOT SHIP)",
+      variantSnapshot: {
+        sku: "QA-CANVAS-OVAL",
+        options: [
+          { group: "Size", value: "12x16" },
+          { group: "Style", value: "Black Border Wrap" },
+        ],
+      },
+      priceSnapshot: "1999.00",
+      configurationSnapshot: {
+        material: "canvas",
+        productTypeId: "canvas-oval",
+        sizeId: "oval-12x16",
+        shape: "Oval",
+        thickness: 'Thick Gallery Wrap (1.5")',
+        wrap: "Black Border Wrap",
+        borderWidth: "Medium (6mm)",
+        borderColor: "#000000",
+        frame: "Brushed Gold Frame",
+        mirrorImage: true,
+        display: "Ready to Hang Kit",
+        lamination: "Matte Laminate",
+        retouching: ["Skin Smoothing", "Color Correction"],
+        majorRetouchText: "Please remove the background person on the left",
+        proofRequested: true,
+        template: "Golden Hour Template",
+        hardware: "Ready to Hang Kit",
+      },
+      designVersionSnapshot: null,
+      taxSnapshot: "0.00",
+      quantity: 1,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "qa-dummy-item-2",
+      orderId: "qa-dummy",
+      variantId: null,
+      productNameSnapshot: "QA TEST - Acrylic Print (DO NOT SHIP)",
+      variantSnapshot: {
+        sku: "QA-ACRYLIC-RECT",
+        options: [
+          { group: "Size", value: "16x20" },
+          { group: "Style", value: "Standard" },
+        ],
+      },
+      priceSnapshot: "2999.00",
+      configurationSnapshot: {
+        material: "acrylic",
+        productTypeId: "acrylic-print",
+        sizeId: "rec-16x20",
+        shape: "Rectangle",
+        thickness: "5mm Optical Acrylic",
+        borderWidth: "Thin (3mm)",
+        borderColor: "#FFFFFF",
+        backing: "Brushed Aluminum Backing",
+        surfaceFinish: "High Gloss",
+        display: "Acrylic Standoffs",
+        hardware: "Acrylic Standoffs",
+        studQuantity: 4,
+        proofRequested: false,
+      },
+      designVersionSnapshot: null,
+      taxSnapshot: "0.00",
+      quantity: 1,
+      createdAt: new Date().toISOString(),
+    },
+  ],
+  addresses: [
+    {
+      id: "qa-dummy-address",
+      type: "SHIPPING",
+      name: "QA Dummy Order",
+      line1: "Test Street 1",
+      line2: null,
+      city: "Hyderabad",
+      state: "Telangana",
+      postalCode: "500076",
+      country: "IN",
+      phone: "9999999999",
+    },
+  ],
+  events: [],
+  notes: [],
+  payments: [],
+};
 
 export function OrderDetailClient({ id: initialId }: { id: string }) {
   const id = useRecordId(initialId);
+  const isQaDummy = id === "qa-dummy";
   const { hasPermission } = usePermission();
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const [editing, setEditing] = useState(false);
 
   const {
-    data: order,
+    data: fetchedOrder,
     isLoading,
     isError,
   } = useQuery({
     queryKey: ["orders", id],
-    enabled: !!id && id !== "placeholder",
+    enabled: !!id && id !== "placeholder" && !isQaDummy,
     queryFn: () => apiClient.get<OrderDetail>(`/orders/${id}`),
   });
+
+  const order = isQaDummy ? QA_DUMMY_ORDER : fetchedOrder;
 
   const cancelMutation = useMutation({
     mutationFn: () => apiClient.post(`/orders/${id}/cancel`),
@@ -55,6 +248,16 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
     },
   });
 
+  const visibilityMutation = useMutation({
+    mutationFn: (action: "hide" | "show" | "archive" | "restore") => apiClient.put(`/admin/orders/${id}/visibility`, { action }),
+    onSuccess: async (_, action) => {
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast.success({ hide: "Order hidden", show: "Order shown", archive: "Order moved to Archived", restore: "Order restored" }[action]);
+      if (action === "archive") router.push("/orders");
+    },
+    onError: error => toast.error(error.message),
+  });
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -68,13 +271,19 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
     return <p className="text-sm text-destructive">Failed to load order.</p>;
   }
 
+  const archived = order.adminVisibility === "ARCHIVED";
+  const canEdit = hasPermission("orders.edit");
   const canCancel =
+    !archived &&
+    !isQaDummy &&
     hasPermission("orders.cancel") &&
     order.orderStatus !== "CANCELLED" &&
     order.orderStatus !== "COMPLETED";
 
   const canAccept =
-    hasPermission("orders.edit") &&
+    canEdit && !archived &&
+    !isQaDummy &&
+    order.paymentLabel !== "UNVERIFIED" &&
     (order.orderStatus === "CONFIRMED" || order.orderStatus === "PAID");
 
   const shippingAddress = order.addresses.find((a) => a.type === "SHIPPING");
@@ -95,15 +304,30 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
             Order {order.orderNumber}
           </h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <InvoiceButton orderId={order.id} />
           <StatusBadge status={order.orderStatus} />
-          <StatusBadge status={order.paymentStatus} />
+          <StatusBadge status={order.paymentLabel ?? order.paymentStatus} />
           <StatusBadge status={order.shippingStatus} />
+          {order.adminVisibility && order.adminVisibility !== "VISIBLE" && <StatusBadge status={order.adminVisibility} />}
         </div>
       </div>
 
-      {(canAccept || canCancel) && (
+      {editing && <OrderEditor order={order} onClose={() => setEditing(false)} />}
+      {(canAccept || canCancel || canEdit) && (
         <div className="flex flex-wrap items-center gap-2">
+          {canEdit && (archived ? (
+            <Button size="sm" variant="outline" disabled={visibilityMutation.isPending} onClick={() => visibilityMutation.mutate("restore")}>Restore order</Button>
+          ) : <>
+            <Button size="sm" variant="outline" disabled={visibilityMutation.isPending} onClick={() => setEditing(true)}>Edit order</Button>
+            <Button size="sm" variant="outline" disabled={visibilityMutation.isPending}
+              onClick={() => visibilityMutation.mutate(order.adminVisibility === "HIDDEN" ? "show" : "hide")}>
+              {order.adminVisibility === "HIDDEN" ? "Show order" : "Hide order"}
+            </Button>
+            <Button size="sm" variant="outline" disabled={visibilityMutation.isPending} onClick={() => {
+              if (confirm("Move this order to Archived? You can restore it later. Payment and order history will be kept.")) visibilityMutation.mutate("archive");
+            }}>Delete order</Button>
+          </>)}
           {canAccept && (
             <Button size="sm" disabled={acceptMutation.isPending} onClick={() => acceptMutation.mutate()}>
               {acceptMutation.isPending ? "Accepting…" : "Accept Order"}
@@ -153,6 +377,15 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
                   <div className="text-sm text-muted-foreground">
                     Qty: {item.quantity}
                   </div>
+                  {getConfigEntries(item.configurationSnapshot).length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      {getConfigEntries(item.configurationSnapshot).map(([label, value]) => (
+                        <span key={label}>
+                          <span className="font-medium text-foreground/80">{label}:</span> {value}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="text-right text-sm">
                   <div>{formatCurrency(item.priceSnapshot)}</div>
@@ -189,6 +422,7 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
         </Card>
 
         <div className="space-y-4">
+          <OrderShippingPanel orderId={order.id} />
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Customer</CardTitle>
@@ -245,7 +479,11 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
             </Card>
           )}
 
-          {order.payments.map((payment) => (
+          {order.paymentLabel === 'UNVERIFIED' && <p className="text-sm text-muted-foreground">
+            No captured payment is linked to this order. The total reflects the original order record.
+          </p>}
+          {order.payments.filter(payment => order.paymentLabel !== 'UNVERIFIED' ||
+            payment.provider !== 'RAZORPAY' || Boolean(payment.providerRef)).map((payment) => (
             <Card key={payment.id}>
               <CardHeader>
                 <CardTitle className="text-base">

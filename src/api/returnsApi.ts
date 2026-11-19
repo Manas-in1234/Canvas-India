@@ -17,19 +17,25 @@ export interface ReturnInfo {
 export async function mirrorOrderToBackend(
   order: Order,
   email: string | null,
-  payment: { razorpayPaymentId?: string },
+  payment: { razorpayPaymentId?: string } = {},
   couponCode?: string | null,
 ): Promise<boolean> {
-  if (!email) return false;
+  const customerEmail = email || (order as any).guest_email || (order as any).customerEmail || 'customer@canvassindia.com';
+  const isCod = order.payment_method === 'COD';
+  if (!isCod && !payment.razorpayPaymentId && !(couponCode && Number(order.total) === 0)) {
+    return false;
+  }
   try {
     const response = await fetch(buildApiUrl('storefront/orders'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        requestId: order.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(order.id) ? order.id : undefined,
         orderNumber: order.order_number,
-        customerEmail: email,
+        customerEmail,
         customerPhone: order.shipping_address?.phone ?? order.guest_phone ?? undefined,
         customerName: order.shipping_address?.name,
+        paymentMethod: isCod ? 'COD' : undefined,
         items: (order.items ?? []).map((item) => ({
           productId: item.product_id,
           title: item.title,
@@ -45,7 +51,9 @@ export async function mirrorOrderToBackend(
         total: order.total,
         shippingAddress: order.shipping_address,
         couponCode: couponCode || undefined,
-        payment: { status: 'captured', razorpayPaymentId: payment.razorpayPaymentId },
+        payment: payment.razorpayPaymentId
+          ? { razorpayPaymentId: payment.razorpayPaymentId, status: 'captured' }
+          : (isCod ? { provider: 'COD', status: 'pending' } : undefined),
       }),
     });
     return response.ok;

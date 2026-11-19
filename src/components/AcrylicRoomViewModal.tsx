@@ -478,15 +478,15 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
       />
 
       {/* Top Header Bar */}
-      <header className="min-h-14 py-2 bg-stone-900 border-b border-stone-800 px-4 flex flex-wrap items-center justify-between gap-2 z-30 text-white shrink-0">
+      <header className="py-2 bg-stone-900 border-b border-stone-800 px-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 z-30 text-white shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-[#0E4A93] flex items-center justify-center font-bold shrink-0">
             <Eye className="w-4 h-4 text-white" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h2 className="text-sm font-black tracking-tight flex items-center gap-2 flex-wrap">
               <span>Room View</span>
-              <span className="text-[10px] font-semibold bg-[#0E4A93] px-2 py-0.5 rounded-full text-white">
+              <span className="text-[10px] font-semibold bg-[#0E4A93] px-2 py-0.5 rounded-full text-white whitespace-nowrap">
                 {productName} • {shapeName} • {productDimensionLabel}
               </span>
             </h2>
@@ -497,7 +497,7 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
         </div>
 
         {/* Room Selector: ONLY OFFICE, HOME / LIVING ROOM, and Upload Room Image */}
-        <div className="flex items-center gap-1.5 bg-stone-800/90 p-1 rounded-xl border border-stone-700">
+        <div className="flex items-center gap-1.5 bg-stone-800/90 p-1 rounded-xl border border-stone-700 overflow-x-auto">
           {PRESET_ROOMS.map((r) => {
             const isSelected = !customRoomUrl && roomPreset === r.id;
             return (
@@ -509,7 +509,7 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
                   setCustomRoomUrl(null);
                   setPosition(r.defaultPosition);
                 }}
-                className={`px-3 py-1.5 text-xs font-extrabold rounded-lg transition-colors cursor-pointer uppercase tracking-wide ${
+                className={`shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-extrabold rounded-lg transition-colors cursor-pointer uppercase tracking-wide ${
                   isSelected
                     ? 'bg-[#0E4A93] text-white shadow-xs'
                     : 'text-stone-300 hover:text-white hover:bg-stone-700'
@@ -523,20 +523,20 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
           <button
             type="button"
             onClick={() => roomFileInputRef.current?.click()}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+            className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
               customRoomUrl
                 ? 'bg-[#E8752A] text-white shadow-xs'
                 : 'bg-stone-700 hover:bg-stone-600 text-stone-100'
             }`}
             title="Upload your own room photograph (JPG, JPEG, PNG, WEBP)"
           >
-            <Upload className="w-3.5 h-3.5 stroke-[2.5]" />
+            <Upload className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
             <span>Upload Room Image</span>
           </button>
         </div>
 
         {/* Action Controls & Close */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-end sm:self-auto">
           <button
             type="button"
             onClick={handleResetPosition}

@@ -78,10 +78,10 @@ export const WishlistPage: React.FC = () => {
             </p>
             <div className="pt-2">
               <Link
-                to="/canvas"
+                to="/search"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-xs rounded-lg shadow-sm transition-all"
               >
-                <span>Browse Canvas Prints</span>
+                <span>Explore Catalog</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>

@@ -1,9 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
 import type { PrismaClient } from '../generated/prisma/client.js';
-import { HERO_IMAGE_MAX_BYTES, type HeroImageSlot } from './hero-image-slots.js';
+import { HERO_IMAGE_MAX_BYTES } from './hero-image-slots.js';
 
 const ownerType = 'StorefrontHeroImage';
-const key = (slot: HeroImageSlot) => `storefront/hero-images/${slot}`;
 
 export function heroImageMime(bytes: Uint8Array): string | null {
   if (bytes.length < 24) return null;
@@ -20,23 +19,31 @@ export function heroImageMime(bytes: Uint8Array): string | null {
 }
 
 export class HeroImages {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly assetOwnerType = ownerType,
+    private readonly storagePrefix = 'storefront/hero-images/',
+  ) {}
+
+  private key(slot: string) {
+    return this.storagePrefix + slot;
+  }
 
   list() {
     return this.prisma.asset.findMany({
-      where: { ownerType, uploadStatus: 'READY' },
+      where: { ownerType: this.assetOwnerType, uploadStatus: 'READY' },
       select: { ownerId: true, fileName: true, checksum: true },
     });
   }
 
-  get(slot: HeroImageSlot) {
+  get(slot: string) {
     return this.prisma.asset.findUnique({
-      where: { storageKey: key(slot), ownerType, uploadStatus: 'READY' },
+      where: { storageKey: this.key(slot), ownerType: this.assetOwnerType, uploadStatus: 'READY' },
       select: { contentBytes: true, mimeType: true, checksum: true },
     });
   }
 
-  async upload(slot: HeroImageSlot, request: Request, adminUserId: string) {
+  async upload(slot: string, request: Request, adminUserId: string) {
     const maxSizeMessage = 'Choose an image no larger than 4 MB.';
     if (Number(request.headers.get('Content-Length')) > HERO_IMAGE_MAX_BYTES + 16_384) {
       throw new BadRequestException(maxSizeMessage);
@@ -82,23 +89,23 @@ export class HeroImages {
 
     return this.prisma.$transaction(async (tx) => {
       const saved = await tx.asset.upsert({
-        where: { storageKey: key(slot) },
-        create: { ...image, ownerType, ownerId: slot, storageKey: key(slot), assetType: 'ORIGINAL', uploadStatus: 'READY' },
+        where: { storageKey: this.key(slot) },
+        create: { ...image, ownerType: this.assetOwnerType, ownerId: slot, storageKey: this.key(slot), assetType: 'ORIGINAL', uploadStatus: 'READY' },
         update: image,
         select: { ownerId: true, fileName: true, checksum: true },
       });
       await tx.auditLog.create({ data: {
-        adminUserId, action: 'HERO_IMAGE_REPLACED', entityType: ownerType, entityId: slot,
+        adminUserId, action: 'HERO_IMAGE_REPLACED', entityType: this.assetOwnerType, entityId: slot,
       } });
       return saved;
     });
   }
 
-  async reset(slot: HeroImageSlot, adminUserId: string) {
+  async reset(slot: string, adminUserId: string) {
     await this.prisma.$transaction(async (tx) => {
-      const deleted = await tx.asset.deleteMany({ where: { storageKey: key(slot), ownerType } });
+      const deleted = await tx.asset.deleteMany({ where: { storageKey: this.key(slot), ownerType: this.assetOwnerType } });
       if (deleted.count) await tx.auditLog.create({ data: {
-        adminUserId, action: 'HERO_IMAGE_RESET', entityType: ownerType, entityId: slot,
+        adminUserId, action: 'HERO_IMAGE_RESET', entityType: this.assetOwnerType, entityId: slot,
       } });
     });
   }

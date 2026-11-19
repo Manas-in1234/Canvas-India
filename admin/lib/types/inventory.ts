@@ -9,27 +9,25 @@ export interface InventoryItem {
   variant: { sku: string; productId: string };
 }
 
-export interface Warehouse {
-  id: string;
-  name: string;
-  code: string;
-  addressLine1: string;
-  addressLine2: string | null;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
-  isActive: boolean;
-  createdAt: string;
-}
+export type MovementType =
+  | "PURCHASE"
+  | "RESERVATION"
+  | "RELEASE"
+  | "CONSUMPTION"
+  | "RETURN"
+  | "DAMAGE"
+  | "TRANSFER"
+  | "ADJUSTMENT";
 
-export interface CreateWarehouseInput {
-  name: string;
-  code: string;
-  addressLine1: string;
-  addressLine2?: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country?: string;
+export interface InventoryMovement {
+  id: string;
+  movementType: MovementType;
+  quantity: number;
+  beforeQuantity: number;
+  afterQuantity: number;
+  referenceType: string | null;
+  referenceId: string | null;
+  performedBy: string | null;
+  createdAt: string;
+  inventoryItem: { variant: { sku: string; productId: string; product: { name: string } } };
 }

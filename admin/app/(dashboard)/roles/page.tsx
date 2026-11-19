@@ -17,7 +17,7 @@ export default function RolesPage() {
   const { hasPermission } = usePermission();
   const canManage = hasPermission("roles.manage");
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ["roles"],
     queryFn: () => apiClient.get<Role[]>("/roles"),
   });

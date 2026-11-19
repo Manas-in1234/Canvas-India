@@ -16,7 +16,7 @@ export default function AbandonedCartsPage() {
   const queryClient = useQueryClient();
   const canManage = hasPermission('abandoned_carts.manage');
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ['abandoned-carts'],
     queryFn: () => apiClient.get<AbandonedCart[]>('/growth/abandoned-carts'),
   });

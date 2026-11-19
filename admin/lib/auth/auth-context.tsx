@@ -9,7 +9,7 @@ const REFRESH_TOKEN_KEY = 'canvaschamp_admin_refresh_token';
 
 // How many times to try to restore a saved session on page load before telling
 // the user the server cannot be reached (it never sends them to the login page).
-const RESTORE_ATTEMPTS = 4;
+const RESTORE_ATTEMPTS = 2;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 interface AuthContextValue {
@@ -30,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [serverUnavailable, setServerUnavailable] = useState(false);
   const accessTokenRef = useRef<string | null>(null);
   const refreshInFlight = useRef<Promise<RefreshOutcome> | null>(null);
+  const restoring = useRef(false);
   const router = useRouter();
 
   const clearSession = useCallback(() => {
@@ -69,9 +70,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    const exchange = async (): Promise<RefreshOutcome> => navigator.locks
-      ? await navigator.locks.request(REFRESH_TOKEN_KEY, run)
-      : run();
+    const exchange = async (): Promise<RefreshOutcome> => {
+      try {
+        return await (navigator.locks ? navigator.locks.request(REFRESH_TOKEN_KEY, run) : run());
+      } catch {
+        return 'unavailable';
+      }
+    };
     const promise = exchange().finally(() => {
       refreshInFlight.current = null;
     });
@@ -91,31 +96,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRefreshHandler(refresh);
   }, [clearSession, refresh, router]);
 
-  const restoreSession = useCallback(async () => {
-    setServerUnavailable(false);
-    setIsLoading(true);
-
-    let outcome: RefreshOutcome = 'unavailable';
-    for (let attempt = 0; attempt < RESTORE_ATTEMPTS && outcome === 'unavailable'; attempt++) {
-      if (attempt > 0) await sleep(1200 * attempt);
-      outcome = await refresh();
+  const restoreSession = useCallback(async (background = false) => {
+    if (restoring.current) return;
+    restoring.current = true;
+    if (!background) {
+      setServerUnavailable(false);
+      setIsLoading(true);
     }
 
-    if (outcome === 'ok') {
-      try {
-        setUser(await apiClient.get<AuthenticatedUser>('/auth/me'));
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 401) {
-          clearSession();
-        } else {
-          setServerUnavailable(true);
-        }
+    try {
+      let outcome: RefreshOutcome = 'unavailable';
+      for (let attempt = 0; attempt < RESTORE_ATTEMPTS && outcome === 'unavailable'; attempt++) {
+        if (attempt > 0) await sleep(1200 * attempt);
+        outcome = await refresh();
       }
-    } else if (outcome === 'unavailable') {
-      setServerUnavailable(true);
-    }
 
-    setIsLoading(false);
+      if (outcome === 'ok') {
+        try {
+          setUser(await apiClient.get<AuthenticatedUser>('/auth/me'));
+          setServerUnavailable(false);
+        } catch (err) {
+          if (err instanceof ApiError && err.status === 401) {
+            clearSession();
+          } else {
+            setServerUnavailable(true);
+          }
+        }
+      } else if (outcome === 'unavailable') {
+        setServerUnavailable(true);
+      } else {
+        setServerUnavailable(false);
+      }
+
+    } finally {
+      setIsLoading(false);
+      restoring.current = false;
+    }
   }, [clearSession, refresh]);
 
   // On first load, try to rehydrate the session from a stored refresh token.
@@ -127,9 +143,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!serverUnavailable) return;
-    const reconnect = () => { void restoreSession(); };
+    const reconnect = () => {
+      if (navigator.onLine && document.visibilityState === 'visible') void restoreSession(true);
+    };
     window.addEventListener('online', reconnect);
-    return () => window.removeEventListener('online', reconnect);
+    document.addEventListener('visibilitychange', reconnect);
+    const timer = window.setInterval(reconnect, 15000);
+    return () => {
+      window.removeEventListener('online', reconnect);
+      document.removeEventListener('visibilitychange', reconnect);
+      window.clearInterval(timer);
+    };
   }, [serverUnavailable, restoreSession]);
 
   const login = useCallback(async (email: string, password: string) => {

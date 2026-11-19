@@ -20,7 +20,7 @@ export default function CampaignsPage() {
   const queryClient = useQueryClient();
   const canManage = hasPermission('campaigns.manage');
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ['campaigns'],
     queryFn: () => apiClient.get<Campaign[]>('/growth/campaigns'),
   });

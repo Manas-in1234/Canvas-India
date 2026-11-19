@@ -18,7 +18,7 @@ export default function SegmentsPage() {
   const { hasPermission } = usePermission();
   const canManage = hasPermission("segments.manage");
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ["segments"],
     queryFn: () => apiClient.get<CustomerSegment[]>("/growth/segments"),
   });

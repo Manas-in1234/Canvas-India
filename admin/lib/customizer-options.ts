@@ -47,14 +47,12 @@ export const SECTION_EXTRAS: Record<string, ExtraField[]> = {
     { key: "borderWidth", label: "Edge width (px)", kind: "number" },
   ],
   canvas_thickness: [
-    { key: "name", label: "Short name", kind: "text" },
     { key: "badge", label: "Badge", kind: "text", hint: "e.g. Recommended" },
     { key: "thicknessInches", label: "Thickness (inches)", kind: "number" },
     { key: "depthPx", label: "Preview depth (px)", kind: "number" },
     { key: "id", label: "Internal id", kind: "text", hint: "Leave blank to create automatically" },
   ],
   acrylic_thickness: [
-    { key: "name", label: "Short name", kind: "text" },
     { key: "badge", label: "Badge", kind: "text", hint: "e.g. Recommended" },
     { key: "thicknessMm", label: "Thickness (mm)", kind: "number" },
     { key: "id", label: "Internal id", kind: "text", hint: "Leave blank to create automatically" },

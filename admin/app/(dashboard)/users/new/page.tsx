@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Mail } from 'lucide-react';
 import { apiClient, ApiError } from '@/lib/api-client';
 import type { CreateAdminUserInput, Role } from '@/lib/types/admin-user';
 import { Button } from '@/components/ui/button';
@@ -29,8 +29,14 @@ export default function NewUserPage() {
 
   const createMutation = useMutation({
     mutationFn: (input: CreateAdminUserInput) => apiClient.post('/users', input),
-    onSuccess: () => {
-      toast.success('User created');
+    onSuccess: (res: any) => {
+      if (res?.emailSent) {
+        toast.success(`User created! Credentials email sent to ${res.email}`);
+      } else if (res?.emailError) {
+        toast.warning(`User created, but email could not be sent: ${res.emailError}`);
+      } else {
+        toast.success('User created');
+      }
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       router.push('/users');
     },
@@ -101,6 +107,13 @@ export default function NewUserPage() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="rounded-lg bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 p-3 text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2.5">
+              <Mail className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
+              <div>
+                An automated welcome email with the admin portal link (<code>admin.canvassindia.com</code>) and these login credentials will be sent to <strong>{email.trim() || 'the user’s email'}</strong>.
+              </div>
             </div>
 
             <Button type="submit" disabled={createMutation.isPending}>

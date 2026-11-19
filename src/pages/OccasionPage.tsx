@@ -6,7 +6,8 @@ import {
   Check, ShieldCheck, Smile, Image as ImageIcon, RectangleHorizontal, Square, Circle, Plus,
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
-import { OCCASIONS, getOccasionBySlug } from '../data/occasionsData';
+import { useOccasions } from '../context/OccasionsContext';
+import { bannerTextColor } from '../utils/bannerTextColor';
 import { GIFT_TILE_CATEGORIES } from '../data/shopCategories';
 
 const OCCASION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -101,13 +102,15 @@ export const OccasionPage: React.FC = () => {
   const navigate = useNavigate();
   const { allProducts, isCategoryVisible } = useShop();
 
-  const occasion = getOccasionBySlug(slug);
+  const { entries, occasions, loading, unavailable } = useOccasions();
+  const occasion = entries.find(row => row.slug === slug);
+  const heroTitle = occasion?.heroTitle || (occasion ? `${occasion.name} Gifts & Prints` : '');
 
   useEffect(() => {
     if (occasion) {
-      document.title = `${occasion.name} Gifts & Prints | Canvas India`;
+      document.title = `${heroTitle} | Canvas India`;
     }
-  }, [occasion]);
+  }, [occasion, heroTitle]);
 
   // Every festival tile leads to the same live customizer — there's no
   // per-festival product catalogue yet, so this is a functional "start a
@@ -137,6 +140,14 @@ export const OccasionPage: React.FC = () => {
         return { ...cat, destination, image: occasion.tileImages?.[cat.categorySlug] || occasion.bannerImage };
       });
   }, [occasion, allProducts, isCategoryVisible]);
+
+  if (!occasion && loading) {
+    return <div role="status" className="min-h-[60vh] py-20 text-center">Loading occasion…</div>;
+  }
+
+  if (unavailable) {
+    return <div role="alert" className="min-h-[60vh] py-20 text-center">Couldn’t load this occasion. Refresh the page to try again.</div>;
+  }
 
   if (!occasion) {
     return (
@@ -183,13 +194,11 @@ export const OccasionPage: React.FC = () => {
         </nav>
       </div>
 
-      {/* HERO BANNER — flat solid color in the occasion's own accent, the
-          occasion photo on the right, text vertically centered. No pattern
-          texture or doodles — kept clean. */}
+      {/* Hero photo fades into the selected background color. */}
       <div className="relative mt-4 mx-auto max-w-[1680px] px-4 sm:px-8 lg:px-12 xl:px-14">
         <section
           className="relative w-full overflow-hidden rounded-3xl h-[280px] sm:h-[320px] lg:h-[360px]"
-          style={{ backgroundColor: occasion.accent }}
+          style={{ backgroundColor: occasion.bannerColor ?? occasion.accent, color: bannerTextColor(occasion.bannerColor) }}
         >
           {/* The occasion photo, full-bleed on the right, fading into the
               solid color on the left so the headline stays readable */}
@@ -204,10 +213,10 @@ export const OccasionPage: React.FC = () => {
           />
 
           <div className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-10 lg:px-14 max-w-[64%] sm:max-w-xl">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight drop-shadow-sm" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
-              {occasion.name} Gifts &amp; Prints
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight drop-shadow-sm" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+              {heroTitle}
             </h1>
-            <p className="text-sm sm:text-base text-white/90 max-w-xl mt-3 leading-relaxed drop-shadow-sm">
+            <p className={`text-sm sm:text-base max-w-xl mt-3 leading-relaxed drop-shadow-sm ${occasion.bannerColor ? '' : 'text-white/90'}`}>
               {occasion.tagline}
             </p>
           </div>
@@ -235,7 +244,7 @@ export const OccasionPage: React.FC = () => {
 
       {/* OTHER OCCASIONS QUICK SWITCH */}
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 py-6 flex flex-wrap items-center justify-center gap-2.5">
-        {OCCASIONS.map((o) => {
+        {occasions.map((o) => {
           const OIcon = OCCASION_ICONS[o.slug] || Sparkles;
           const active = o.slug === occasion.slug;
           return (
@@ -327,7 +336,7 @@ export const OccasionPage: React.FC = () => {
               <p className="text-xs sm:text-sm text-stone-500 mt-1.5">Pick any special day to start a personalized gift for it</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-              {ALL_FESTIVALS.map((f) => {
+              {ALL_FESTIVALS.filter(f => entries.some(row => row.slug === f.slug)).map((f) => {
                 const FIcon = f.icon;
                 return (
                 <button
@@ -344,7 +353,7 @@ export const OccasionPage: React.FC = () => {
                   >
                     <FIcon className="w-5 h-5" style={{ color: occasion.accent }} />
                   </span>
-                  <span className="text-xs font-bold text-stone-800 leading-tight">{f.name}</span>
+                  <span className="text-xs font-bold text-stone-800 leading-tight">{entries.find(row => row.slug === f.slug)?.name ?? f.name}</span>
                   <span className="text-[10px] text-stone-400 mt-0.5">{f.date}</span>
                 </button>
                 );

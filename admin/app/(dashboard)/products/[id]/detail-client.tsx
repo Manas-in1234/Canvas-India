@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 import { apiClient, ApiError } from "@/lib/api-client";
 import type { ProductDetail } from "@/lib/types/product";
 import { StatusBadge } from "@/components/status-badge";
@@ -190,6 +190,14 @@ export function ProductDetailClient({ id: initialId }: { id: string }) {
           <p className="text-sm text-muted-foreground">/{product.slug}</p>
         </div>
         <div className="flex items-center gap-3">
+          <a
+            href={`https://canvassindia.com/products/${product.id}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+          >
+            View on storefront <ExternalLink className="h-3.5 w-3.5" />
+          </a>
           <StatusBadge status={product.status} />
           {canDelete && (
             <Button

@@ -21,7 +21,7 @@ export default function UsersPage() {
   const queryClient = useQueryClient();
   const canManage = hasPermission('users.manage');
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ['admin-users'],
     queryFn: () => apiClient.get<AdminUserListItem[]>('/users'),
   });

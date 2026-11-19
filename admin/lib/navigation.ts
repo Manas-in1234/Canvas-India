@@ -1,20 +1,30 @@
 import {
+  History,
+  LayoutTemplate,
+  FileText,
+  Truck,
+  PackageX,
+  Settings2,
   LayoutDashboard,
   ShoppingBag,
   Package,
   Boxes,
-  Warehouse,
   Tag,
+  Gift,
   Users,
   UserCog,
   ShieldCheck,
   BarChart3,
-  ScanLine,
   Settings,
   RotateCcw,
   SlidersHorizontal,
   IndianRupee,
   ImageIcon,
+  Star,
+  PackageSearch,
+  Megaphone,
+  BadgePercent,
+  Mail,
   type LucideIcon,
 } from "lucide-react";
 export interface NavLink {
@@ -44,7 +54,7 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    label: "Store management",
+    label: "Sales & customers",
     links: [
       {
         href: "/orders",
@@ -59,6 +69,47 @@ export const NAV_SECTIONS: NavSection[] = [
         permissions: ["returns.view"],
       },
       {
+        href: "/customers",
+        label: "Customers",
+        icon: Users,
+        permissions: ["customers.view"],
+      },
+      {
+        href: "/reviews",
+        label: "Reviews",
+        icon: Star,
+        permissions: ["reviews.view"],
+      },
+    ],
+  },
+  {
+    label: "Delivery",
+    links: [
+      {
+        href: "/shipments",
+        label: "Shipments",
+        icon: Truck,
+        permissions: ["shipping.view"],
+        alsoMatches: ["/shipments"],
+      },
+      {
+        href: "/ndr",
+        label: "Delivery problems",
+        icon: PackageX,
+        permissions: ["ndr.view"],
+      },
+      {
+        href: "/delivery-settings",
+        label: "Delivery settings",
+        icon: Settings2,
+        permissions: ["shipping.view"],
+      },
+    ],
+  },
+  {
+    label: "Catalog",
+    links: [
+      {
         href: "/products",
         label: "Products",
         icon: Package,
@@ -71,10 +122,27 @@ export const NAV_SECTIONS: NavSection[] = [
         permissions: ["products.view"],
       },
       {
+        href: "/inventory",
+        label: "Inventory",
+        icon: PackageSearch,
+        permissions: ["inventory.view"],
+      },
+    ],
+  },
+  {
+    label: "Storefront & promotions",
+    links: [
+      {
         href: "/homepage-promotions",
         label: "Homepage Promotions",
         icon: ImageIcon,
         permissions: ["discounts.manage"],
+      },
+      {
+        href: "/homepage-layout",
+        label: "Homepage layout",
+        icon: LayoutTemplate,
+        permissions: ["products.edit"],
       },
       {
         href: "/hero-images",
@@ -83,10 +151,16 @@ export const NAV_SECTIONS: NavSection[] = [
         permissions: ["products.edit"],
       },
       {
-        href: "/customers",
-        label: "Customers",
-        icon: Users,
-        permissions: ["customers.view"],
+        href: "/support-pages",
+        label: "Support pages",
+        icon: FileText,
+        permissions: ["products.view"],
+      },
+      {
+        href: "/occasions",
+        label: "Gifts & Occasions",
+        icon: Gift,
+        permissions: ["products.edit"],
       },
       {
         href: "/discounts",
@@ -95,16 +169,22 @@ export const NAV_SECTIONS: NavSection[] = [
         permissions: ["discounts.view"],
       },
       {
-        href: "/inventory",
-        label: "Inventory",
-        icon: Boxes,
-        permissions: ["inventory.view"],
+        href: "/promotions",
+        label: "Promotions",
+        icon: BadgePercent,
+        permissions: ["promotions.view"],
       },
       {
-        href: "/warehouses",
-        label: "Warehouses",
-        icon: Warehouse,
-        permissions: ["warehouses.view"],
+        href: "/campaigns",
+        label: "Campaigns",
+        icon: Megaphone,
+        permissions: ["campaigns.view"],
+      },
+      {
+        href: "/broadcasts",
+        label: "Broadcasts",
+        icon: Mail,
+        permissions: ["broadcasts.view"],
       },
     ],
   },
@@ -118,14 +198,8 @@ export const NAV_SECTIONS: NavSection[] = [
         permissions: ["option_catalog.view"],
       },
       {
-        href: "/shapes",
-        label: "Shape detection",
-        icon: ScanLine,
-        permissions: ["shapes.view"],
-      },
-      {
         href: "/pricing",
-        label: "Pricing",
+        label: "Customizer pricing",
         icon: IndianRupee,
         permissions: ["pricing.view"],
       },
@@ -141,12 +215,24 @@ export const NAV_SECTIONS: NavSection[] = [
         permissions: ["users.view"],
       },
       {
+        href: "/activity-log",
+        label: "Activity log",
+        icon: History,
+        permissions: ["users.view"],
+      },
+      {
         href: "/roles",
         label: "Roles & permissions",
         icon: ShieldCheck,
         permissions: ["roles.view"],
       },
       { href: "/settings", label: "Settings", icon: Settings, permissions: [] },
+      {
+        href: "/audit-log",
+        label: "Audit log",
+        icon: History,
+        permissions: ["audit.view"],
+      },
     ],
   },
 ];

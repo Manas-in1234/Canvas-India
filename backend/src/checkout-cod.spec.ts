@@ -11,6 +11,7 @@ it('prices COD from the catalog, leaves payment pending and reuses the same orde
   const prisma = {
     product: { findMany: async () => [{ id: 'canvas-1', name: 'Canvas', basePrice: '500', storefront: {} }] },
     customer: { findFirst: async () => ({ id: 'customer' }) },
+    storeSetting: { findUnique: async () => null },
     order: { findFirst, create },
     $transaction: async (run: (tx: unknown) => unknown) => run({ order: { create } }),
   };

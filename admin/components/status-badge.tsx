@@ -19,6 +19,8 @@ const STATUS_STYLES: Record<string, string> = {
   AUTHORIZED: "bg-blue-100 text-blue-800",
   FAILED: "bg-red-100 text-red-800",
   PARTIALLY_REFUNDED: "bg-orange-100 text-orange-800",
+  UNVERIFIED: "bg-amber-100 text-amber-800",
+  NO_PAYMENT_REQUIRED: "bg-muted text-muted-foreground",
   // Shipping status
   NOT_SHIPPED: "bg-muted text-muted-foreground",
   READY: "bg-blue-100 text-blue-800",
@@ -48,6 +50,17 @@ const STATUS_STYLES: Record<string, string> = {
   PREFLIGHT_FAILED: "bg-red-100 text-red-800",
   APPROVED: "bg-emerald-100 text-emerald-800",
   REJECTED: "bg-red-100 text-red-800",
+  // Broadcast status
+  SENDING: "bg-blue-100 text-blue-800",
+  SENT: "bg-emerald-100 text-emerald-800",
+};
+
+// Courier terms a shop owner should not have to decode.
+const STATUS_LABELS: Record<string, string> = {
+  NDR: "Delivery failed",
+  RTO: "Returning to seller",
+  NOT_SHIPPED: "Not shipped",
+  READY: "Ready for pickup",
 };
 
 export function StatusBadge({ status }: { status: string }) {
@@ -60,10 +73,11 @@ export function StatusBadge({ status }: { status: string }) {
       )}
     >
       <span className="mr-1 inline-block h-1 w-1 rounded-full bg-current opacity-70" />
-      {status
-        .toLowerCase()
-        .replaceAll("_", " ")
-        .replace(/^./, (letter) => letter.toUpperCase())}
+      {STATUS_LABELS[status] ??
+        status
+          .toLowerCase()
+          .replaceAll("_", " ")
+          .replace(/^./, (letter) => letter.toUpperCase())}
     </Badge>
   );
 }

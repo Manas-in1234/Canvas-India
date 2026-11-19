@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { StorefrontHeroImage } from '../components/StorefrontHeroImage';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -30,6 +30,10 @@ export const CorkCategoryPage: React.FC = () => {
     onOpenCustomize,
     onToggleWishlist
   } = useShop();
+
+  useEffect(() => {
+    document.title = 'Cork Prints | Canvas India';
+  }, []);
 
   const location = useLocation();
   // Landing directly on /cork-art-patterns (the "Cork Pattern Print" card's

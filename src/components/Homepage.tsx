@@ -4,7 +4,10 @@ import { StorefrontHeroImage } from './StorefrontHeroImage';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight, Tag, Copy, Check, Palette, Leaf, Heart, MapPin, Star, ShoppingCart, Sparkles, Quote, Image as ImageIcon, LayoutGrid, Grid2x2, Columns3, Grid3x3, Music, Type, Rows3 } from 'lucide-react';
 import { Product } from '../types';
-import { OCCASIONS } from '../data/occasionsData';
+import { useOccasions } from '../context/OccasionsContext';
+import { useHomepageLayout } from '../api/homepageLayoutApi';
+import { ProductCard } from './ProductCard';
+import { useShop } from '../context/ShopContext';
 import { CANVAS_STYLE_LANDING_DATA } from '../data/canvasStyleLandingData';
 import { ACRYLIC_PRODUCT_TYPES } from '../data/acrylicCustomizerData';
 import { ACRYLIC_STYLE_LANDING_DATA, getAcrylicLandingDataByProductId } from '../data/acrylicStyleLandingData';
@@ -32,6 +35,12 @@ export interface HomepageProps {
 const SERIF = '"Playfair Display", Georgia, serif';
 const BLUE = '#0E4A93';
 const ORANGE = '#E8752A';
+
+const formatStartsAtPrice = (price: number): string => {
+  return price % 1 !== 0
+    ? price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : price.toLocaleString('en-IN');
+};
 
 const u = (id: string, w = 1200) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=90`;
 
@@ -118,7 +127,21 @@ const arrowBtn =
   'w-10 h-10 rounded-full bg-white border border-stone-200 shadow-md flex items-center justify-center text-[#0E4A93] hover:bg-[#E8752A] hover:text-white hover:border-[#E8752A] transition-colors cursor-pointer shrink-0';
 
 export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCart, allProducts, onCustomize, onOpenQuote, wishlistIds, onToggleWishlist }) => {
+  const { entries, occasions } = useOccasions();
+  // Admin-controlled layout (Homepage layout in the dashboard): which sections show, in what order, under which heading.
+  const layout = useHomepageLayout();
+  const { productsFromApi } = useShop();
+  const productsById = React.useMemo(() => new Map(allProducts.map(product => [product.id, product])), [allProducts]);
+  const layoutShows = (key: string) => layout.sections.find((x) => x.key === key)?.enabled !== false;
+  const layoutOrder = (key: string) => {
+    const i = layout.sections.findIndex((x) => x.key === key);
+    return i < 0 ? 99 : i + 1;
+  };
+  const layoutTitle = (key: string, fallback: string) => layout.sections.find((x) => x.key === key)?.title?.trim() || fallback;
   const [promotion, setPromotion] = React.useState({ saleName: 'Festive Sale', percentage: 20, coupons: [] as { code: string; desc: string }[] });
+  React.useEffect(() => {
+    document.title = 'Canvas India | Online Custom Printing Store';
+  }, []);
   React.useEffect(() => {
     const controller = new AbortController();
     fetch(buildApiUrl('/homepage-promotions'), { signal: controller.signal })
@@ -153,7 +176,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
     // Dedicated "Festive Offers" landing page (its own occasion entry,
     // separate from Diwali) with format tiles — each tile's own "Shop Now"
     // is what opens the customizer.
-    navigate('/occasions/festive-offers');
+    navigate(entries.some(row => row.slug === 'festive-offers') ? '/occasions/festive-offers' : '/occasions');
   };
 
   const scrollRow = (ref: React.RefObject<HTMLDivElement>, dir: 1 | -1) => {
@@ -161,14 +184,20 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
     if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: 'smooth' });
   };
 
-  const bestsellers = allProducts.slice(0, 10);
+  const bestsellers = allProducts.filter((p) => p.bestseller);
 
   return (
-    <div className="w-full bg-[#FFF9F1] text-[#1f2937] font-manrope">
+    <div className="w-full bg-[#FFF9F1] text-[#1f2937] font-manrope flex flex-col">
       <style>{`
         @keyframes ci-float { 0%,100% { transform: translateY(0) rotate(var(--r,0deg)); } 50% { transform: translateY(-10px) rotate(var(--r,0deg)); } }
         .ci-float { animation: ci-float 5s ease-in-out infinite; }
       `}</style>
+
+      {!layout.storeOpen && (
+        <div role="status" style={{ order: -1 }} className="w-full bg-amber-100 border-b border-amber-300 text-amber-950 text-center text-sm font-semibold px-4 py-2.5">
+          {layout.closedMessage?.trim() || 'We are currently closed. You can still browse and design, and we will process your order when we reopen.'}
+        </div>
+      )}
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#F7F1E5] border-b border-stone-200/60">
@@ -390,12 +419,14 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       </section>
 
       {/* SHOP BY CATEGORY */}
+      {layoutShows('categories') && (
+        <div style={{ order: layoutOrder('categories') }}>
       <section id="shop-categories" className="py-8 sm:py-10 bg-[#FDFCF8]">
         <Container>
           <div className="text-center mb-5 sm:mb-6">
             <div className="flex items-center justify-center gap-4">
               <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Shop by Category</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>{layoutTitle('categories', 'Shop by Category')}</h2>
               <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
             </div>
             <p className="text-sm mt-2 text-[#567477]">Explore our wide range of creative handmade products</p>
@@ -462,14 +493,18 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           </button>
         </Container>
       </section>
+        </div>
+      )}
 
       {/* CANVAS & BOARDS */}
+      {layoutShows('canvas') && (
+        <div style={{ order: layoutOrder('canvas') }}>
       <section id="shop-format-canvas" className="py-8 sm:py-10">
         <Container>
           <div className="text-center mb-5 sm:mb-6">
             <div className="flex items-center justify-center gap-4">
               <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Canvas &amp; Boards</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>{layoutTitle('canvas', 'Canvas & Boards')}</h2>
               <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
             </div>
             <p className="text-sm mt-2 text-[#567477]">For Every Art Idea</p>
@@ -496,7 +531,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                   <div className="min-w-0">
                     <h3 className="text-[#1A4F53] font-bold text-[11px] sm:text-[17px] leading-tight mb-0.5 truncate">{c.name}</h3>
                     <p className="text-[10px] sm:text-[13px] text-[#567477] truncate">
-                      {c.price ? `Starts at ₹${c.price.toLocaleString('en-IN')}` : 'Custom Sizes Available'}
+                      {c.price ? `Starts at ₹${formatStartsAtPrice(c.price)}` : 'Custom Sizes Available'}
                     </p>
                   </div>
                   <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
@@ -533,14 +568,18 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           </button>
         </Container>
       </section>
+        </div>
+      )}
 
       {/* ACRYLIC PRINTS */}
+      {layoutShows('acrylic') && (
+        <div style={{ order: layoutOrder('acrylic') }}>
       <section id="shop-format-acrylic" className="py-8 sm:py-10 bg-[#FDFCF8]">
         <Container>
           <div className="text-center mb-5 sm:mb-6">
             <div className="flex items-center justify-center gap-4">
               <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Acrylic Prints</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>{layoutTitle('acrylic', 'Acrylic Prints')}</h2>
               <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
             </div>
             <p className="text-sm mt-2 text-[#567477]">Vibrant Colors | Endless Possibilities</p>
@@ -573,7 +612,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                   <div className="min-w-0">
                     <h3 className="text-[#1A4F53] font-bold text-[11px] sm:text-[17px] leading-tight mb-0.5 truncate">{c.name}</h3>
                     <p className="text-[10px] sm:text-[13px] text-[#567477] truncate">
-                      {c.price ? `Starts at ₹${c.price.toLocaleString('en-IN')}` : 'Custom Sizes Available'}
+                      {c.price ? `Starts at ₹${formatStartsAtPrice(c.price)}` : 'Custom Sizes Available'}
                     </p>
                   </div>
                   <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
@@ -610,15 +649,19 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           </button>
         </Container>
       </section>
+        </div>
+      )}
 
       {/* CORK PRODUCTS */}
+      {layoutShows('cork') && (
+        <div style={{ order: layoutOrder('cork') }}>
       {CORK_PRODUCT_CARDS.length > 0 && (
         <section id="shop-format-cork" className="py-8 sm:py-10">
           <Container>
             <div className="text-center mb-5 sm:mb-6">
               <div className="flex items-center justify-center gap-4">
                 <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
-                <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>Cork Products</h2>
+                <h2 className="text-3xl sm:text-4xl font-bold text-[#1A4F53]" style={{ fontFamily: SERIF }}>{layoutTitle('cork', 'Cork Products')}</h2>
                 <span className="hidden sm:block h-[1px] w-12 bg-[#1A4F53]" />
               </div>
               <p className="text-sm mt-2 text-[#567477]">Natural | Durable | Stylish</p>
@@ -645,7 +688,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                     <div className="min-w-0">
                       <h3 className="text-[#1A4F53] font-bold text-[11px] sm:text-[17px] leading-tight mb-0.5 truncate">{c.name}</h3>
                       <p className="text-[10px] sm:text-[13px] text-[#567477] truncate">
-                        {c.price ? `Starts at ₹${c.price.toLocaleString('en-IN')}` : 'Eco-Friendly'}
+                        {c.price ? `Starts at ₹${formatStartsAtPrice(c.price)}` : 'Eco-Friendly'}
                       </p>
                     </div>
                     <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
@@ -683,11 +726,15 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           </Container>
         </section>
       )}
+        </div>
+      )}
 
       {/* SHOP BY OCCASION */}
+      {layoutShows('occasions') && (
+        <div style={{ order: layoutOrder('occasions') }}>
       <section id="shop-occasions" className="py-8 sm:py-10">
         <Container>
-          <SectionTitle title="Shop by Occasion" sub="Thoughtful personalized gifts for life's most precious celebrations" />
+          <SectionTitle title={layoutTitle('occasions', 'Shop by Occasion')} sub="Thoughtful personalized gifts for life's most precious celebrations" />
         </Container>
 
         <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
@@ -697,7 +744,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               </button>
             </div>
             <div ref={occasionRowRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
-              {OCCASIONS.map((o) => (
+              {occasions.map((o) => (
                 <button
                   key={o.slug}
                   type="button"
@@ -746,11 +793,15 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           </button>
         </Container>
       </section>
+        </div>
+      )}
 
       {/* BEST SELLERS */}
+      {layoutShows('bestsellers') && bestsellers.length > 0 && (
+        <div style={{ order: layoutOrder('bestsellers') }}>
       <section id="bestsellers-unboxed" className="pb-12 sm:pb-16">
         <Container>
-          <SectionTitle title="Best Sellers" sub="Loved by artists, creators and home decorators" />
+          <SectionTitle title={layoutTitle('bestsellers', 'Best Sellers')} sub="Loved by artists, creators and home decorators" />
         </Container>
         <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center gap-3 px-3 sm:px-4">
             <div className="hidden sm:block">
@@ -823,8 +874,33 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           </div>
         </Container>
       </section>
+        </div>
+      )}
 
       {/* CORPORATE & BULK ORDERS */}
+      {productsFromApi && layout.sections.map((section, index) => {
+        if (!section.enabled || !section.productIds?.length) return null;
+        const products = section.productIds.flatMap(id => {
+          const product = productsById.get(id);
+          return product ? [product] : [];
+        });
+        if (!products.length) return null;
+        return (
+          <section key={section.key} style={{ order: index + 1 }} aria-labelledby={section.key}
+            className="mx-auto w-full max-w-[1680px] px-4 py-8 sm:px-8 lg:px-12 xl:px-14">
+            <h2 id={section.key} className="mb-5 text-2xl font-bold text-[#1A4F53] sm:text-3xl" style={{ fontFamily: SERIF }}>{section.title}</h2>
+            <div className="flex snap-x gap-3 overflow-x-auto pb-3">
+              {products.map(product => <div key={product.id} className="w-[160px] shrink-0 snap-start sm:w-[220px]">
+                <ProductCard product={product} variant="listing" isWishlisted={wishlistIds.includes(product.id)}
+                  onToggleWishlist={onToggleWishlist} onAddToCart={onAddToCart} onCustomize={onCustomize} />
+              </div>)}
+            </div>
+          </section>
+        );
+      })}
+
+      {layoutShows('bulk') && (
+        <div style={{ order: layoutOrder('bulk') }}>
       <section className="py-10 sm:py-14">
         <Container>
           <div className="relative overflow-hidden rounded-3xl bg-[#0A1C3D] text-white min-h-[380px] sm:min-h-[420px] flex items-center">
@@ -848,7 +924,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               </p>
               <div className="mt-6">
                 <a
-                  href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                  href="https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-sm font-bold text-white bg-[#E8752A] hover:bg-[#D3631A] rounded-full px-6 py-3 shadow-lg shadow-orange-950/40 transition-colors cursor-pointer"
@@ -860,8 +936,12 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           </div>
         </Container>
       </section>
+        </div>
+      )}
 
       {/* WHY CHOOSE */}
+      {layoutShows('why') && (
+        <div style={{ order: layoutOrder('why') }}>
       <section className="relative overflow-hidden bg-gradient-to-br from-[#0A3573] via-[#0E4A93] to-[#5B2BB8] text-white py-14 sm:py-16">
         <div className="absolute -right-16 -top-16 w-72 h-72 rounded-full bg-[#E8752A]/30 blur-3xl" />
         <div className="absolute -left-16 bottom-0 w-72 h-72 rounded-full bg-[#EC4899]/25 blur-3xl" />
@@ -900,11 +980,15 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           </div>
         </Container>
       </section>
+        </div>
+      )}
 
       {/* TESTIMONIALS */}
+      {layoutShows('testimonials') && (
+        <div style={{ order: layoutOrder('testimonials') }}>
       <section className="py-12 sm:py-16 bg-[radial-gradient(ellipse_at_bottom,#FFE9D2_0%,#FFF9F1_60%)]">
         <Container>
-          <SectionTitle title="What Our Customers Say" sub="Real people. Real art. Real stories." />
+          <SectionTitle title={layoutTitle('testimonials', 'What Our Customers Say')} sub="Real people. Real art. Real stories." />
           <div className="flex items-center gap-3">
             <button type="button" aria-label="Previous" onClick={() => scrollRow(testiRef, -1)} className={arrowBtn}>
               <ChevronLeft className="w-5 h-5" />
@@ -931,6 +1015,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
           </div>
         </Container>
       </section>
+        </div>
+      )}
+
     </div>
   );
 };

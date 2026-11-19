@@ -51,7 +51,7 @@ export const CorporateSection: React.FC<CorporateSectionProps> = () => {
               <button
                 type="button"
                 onClick={() => {
-                  window.open('https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20talk%20about%20a%20corporate%20order', '_blank');
+                  window.open('https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20talk%20about%20a%20corporate%20order', '_blank');
                 }}
                 className="px-5 py-2.5 bg-stone-900 hover:bg-[var(--accent)] text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors cursor-pointer"
               >

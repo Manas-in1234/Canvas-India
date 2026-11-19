@@ -130,10 +130,10 @@ export const ShippingDeliveryPage: React.FC = () => {
       <PolicySection heading="Contact Us">
         <p>Email: info@canvassindia.com</p>
         <p>Landline number: 040-29303344</p>
-        <p>WhatsApp: 78930 51555</p>
+        <p>WhatsApp: 78939 46464</p>
         <p>
-          Address: Building No./Flat No. H NO 4-9-197/8184, HMT Nagar, HMT Nagar Main Road, Nacharam, Hyderabad,
-          Hyderabad District, Telangana &ndash; 500076
+          Address: Building No./Flat No. H NO 4-9-197/B/84, HMT Nagar, Nacharam, Hyderabad,
+          Telangana &ndash; 500076
         </p>
       </PolicySection>
     </PolicyPageLayout>

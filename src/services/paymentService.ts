@@ -37,12 +37,16 @@ export interface InitiatePaymentOptions {
   onDismiss?: () => void;
 }
 
-const DEFAULT_RAZORPAY_KEY = 'rzp_live_U1wQAnOva5Angg';
-
 export const paymentService = {
+  // No hardcoded fallback key here on purpose: this key must always match
+  // whatever RAZORPAY_KEY_ID/SECRET the backend Worker is configured with
+  // (order creation and payment verification happen server-side with that
+  // pair), so a mismatched or stale key baked into the bundle would create
+  // Razorpay orders under one merchant account and open checkout under a
+  // different one. Missing this env var should fail loudly (no Razorpay
+  // button) rather than silently falling back to some other live key.
   getRazorpayKey(): string {
-    const envKey = ((import.meta.env.VITE_RAZORPAY_KEY_ID as string | undefined) || '').trim();
-    return envKey || DEFAULT_RAZORPAY_KEY;
+    return ((import.meta.env.VITE_RAZORPAY_KEY_ID as string | undefined) || '').trim();
   },
 
   isRazorpayConfigured(): boolean {
@@ -96,21 +100,10 @@ export const paymentService = {
         throw new Error('Invalid order amount.');
       }
 
-      let razorpayOrderId: string | undefined;
-
-      try {
-        const razorpayOrder = await createRazorpayOrder(
-          amountInRupees,
-          'INR',
-          order.order_number,
-        );
-        razorpayOrderId = razorpayOrder?.clientSecretOrOrderId;
-      } catch (orderErr) {
-        console.warn(
-          '[PaymentService] Backend Razorpay order endpoint note; launching direct Razorpay checkout:',
-          orderErr,
-        );
-      }
+      const { clientSecretOrOrderId: razorpayOrderId } = await createRazorpayOrder(
+        amountInRupees, 'INR', order.order_number,
+      );
+      if (!razorpayOrderId) throw new Error('Could not start Razorpay checkout. Please try again.');
 
       const razorpayKey = this.getRazorpayKey();
 
@@ -122,7 +115,7 @@ export const paymentService = {
         name: 'Canvas India',
         description: `Payment for Order #${order.order_number}`,
         image: 'https://canvasindia.in/favicon.ico',
-        ...(razorpayOrderId ? { order_id: razorpayOrderId } : {}),
+        order_id: razorpayOrderId,
 
         prefill: {
           name: prefillName,
@@ -143,21 +136,12 @@ export const paymentService = {
           response: RazorpaySuccessResponse,
         ) {
           try {
-            if (response.razorpay_order_id && response.razorpay_signature) {
-              try {
-                await verifyRazorpayPayment(
-                  response.razorpay_order_id,
-                  response.razorpay_payment_id,
-                  response.razorpay_signature,
-                );
-              } catch (verifyErr) {
-                console.warn(
-                  '[PaymentService] Backend verification note:',
-                  verifyErr,
-                );
-              }
+            if (response.razorpay_order_id !== razorpayOrderId) {
+              throw new Error('The payment reference could not be matched to this order.');
             }
-
+            await verifyRazorpayPayment(
+              razorpayOrderId, response.razorpay_payment_id, response.razorpay_signature,
+            );
             onSuccess(response);
           } catch (error) {
             console.error(

@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ArtworkPage() {
   const router = useRouter();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError: isError } = useQuery({
     queryKey: ["artwork"],
     queryFn: () => apiClient.get<ArtworkListItem[]>("/customization/artwork"),
   });

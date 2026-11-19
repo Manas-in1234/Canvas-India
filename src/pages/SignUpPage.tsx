@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -19,6 +19,10 @@ export const SignUpPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '/account';
+
+  useEffect(() => {
+    document.title = 'Sign Up | Canvas India';
+  }, []);
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');

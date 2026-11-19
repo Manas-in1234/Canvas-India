@@ -39,8 +39,12 @@ export function configureApiClient(getters: { getAccessToken: () => string | nul
 }
 
 // 500 is included because Cloudflare reports a worker that ran out of CPU time (error 1102) as a 500.
-const TRANSIENT_STATUSES = new Set([500, 502, 503, 504, 522, 523, 524]);
+const TRANSIENT_STATUSES = new Set([408, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524]);
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export function isTemporaryApiError(error: unknown) {
+  return error instanceof ApiError && (error.status === 0 || TRANSIENT_STATUSES.has(error.status));
+}
 
 /**
  * Only requests that are safe to repeat are retried: reads, and the session
@@ -48,26 +52,28 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * repeating it could create a duplicate; those surface the error instead.
  */
 function maxAttempts(path: string, method: string | undefined) {
-  return (method ?? 'GET') === 'GET' || path === '/auth/refresh' ? 5 : 1;
+  return (method ?? 'GET') === 'GET' ? 3 : path === '/auth/refresh' ? 2 : 1;
 }
 
 async function fetchWithRetry(path: string, init: RequestInit): Promise<Response> {
   const attempts = maxAttempts(path, init.method);
-  let lastError: unknown;
   for (let attempt = 1; attempt <= attempts; attempt++) {
+    const delay = 300 * 2 ** (attempt - 1) + Math.random() * 250;
     try {
       const useAlternate = process.env.NODE_ENV === 'production' && attempts > 1 && attempt % 2 === 0;
-      const response = await fetch(useAlternate ? alternateApiUrl(path) : buildAdminApiUrl(path), { ...init, signal: init.signal ?? AbortSignal.timeout(30000) });
-      if (!TRANSIENT_STATUSES.has(response.status) || attempt === attempts) return response;
-    } catch (err) {
-      lastError = err;
-      if (attempt === attempts) {
+      const response = await fetch(useAlternate ? alternateApiUrl(path) : buildAdminApiUrl(path), {
+        ...init, signal: init.signal ?? AbortSignal.timeout(attempts > 1 ? 8000 : 30000),
+      });
+      if (!TRANSIENT_STATUSES.has(response.status) || attempt === attempts || response.status === 429) return response;
+      await response.body?.cancel().catch(() => {});
+    } catch {
+      if (attempt === attempts || init.signal?.aborted) {
         throw new ApiError(0, 'Cannot reach the server. Check your connection and try again.');
       }
     }
-    await sleep(300 * attempt);
+    await sleep(delay);
   }
-  throw lastError instanceof Error ? lastError : new ApiError(0, 'Cannot reach the server.');
+  throw new ApiError(0, 'Cannot reach the server.');
 }
 
 async function request<T>(path: string, options: RequestInit = {}, isRetry = false): Promise<T> {
@@ -101,7 +107,12 @@ async function request<T>(path: string, options: RequestInit = {}, isRetry = fal
     return undefined as T;
   }
 
-  const data = await response.json().catch(() => null);
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    if (response.ok) throw new ApiError(502, 'The server returned an incomplete response. Try again shortly.');
+  }
 
   if (!response.ok) {
     const fallback = TRANSIENT_STATUSES.has(response.status)

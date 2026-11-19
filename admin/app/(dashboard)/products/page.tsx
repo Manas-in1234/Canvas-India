@@ -36,9 +36,9 @@ export default function ProductsPage() {
   const canDelete = hasPermission("products.delete");
   const canEdit = hasPermission("products.edit");
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isLoadingError, isRefetchError, isFetching, refetch } = useQuery({
     queryKey: ["products"],
-    queryFn: () => apiClient.get<ProductListItem[]>("/products?admin=1"),
+    queryFn: () => apiClient.get<ProductListItem[]>("/products?admin=1&view=summary"),
   });
 
   // Categories (product types) tell us which products are hidden because their
@@ -64,6 +64,25 @@ export default function ProductsPage() {
     },
     onError: (err: unknown) => {
       toast.error(err instanceof ApiError ? err.message : "Could not change visibility");
+    },
+  });
+
+  // Ticking this adds the product to the homepage's Best Sellers row;
+  // unticking removes it immediately. storefront is a single JSON blob per
+  // product, so the PATCH must send the whole thing back with just
+  // `bestseller` flipped - sending `{ storefront: { bestseller: true } }`
+  // alone would wipe every other storefront field (image, price, etc.).
+  const bestsellerMutation = useMutation({
+    mutationFn: ({ id, storefront, bestseller }: { id: string; storefront: Record<string, any>; bestseller: boolean }) =>
+      apiClient.patch(`/products/${id}`, { storefront: { ...storefront, bestseller } }),
+    onSuccess: (_result, { id, bestseller }) => {
+      queryClient.setQueryData<ProductListItem[]>(["products"], (old) =>
+        old?.map((p) => (p.id === id ? { ...p, storefront: { ...p.storefront, bestseller } } : p)),
+      );
+      toast.success(bestseller ? "Added to Best Sellers on the homepage" : "Removed from Best Sellers on the homepage");
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof ApiError ? err.message : "Could not change Best Seller status");
     },
   });
 
@@ -126,6 +145,30 @@ export default function ProductsPage() {
             <span className={dot} />
             {live ? "Live" : "Hidden"}
           </button>
+        );
+      },
+    },
+    {
+      header: "Best Seller",
+      cell: (row) => {
+        if (row.status === "ARCHIVED") return null;
+        const isBestseller = Boolean(row.storefront?.bestseller);
+        return (
+          <input
+            type="checkbox"
+            checked={isBestseller}
+            disabled={!canEdit || bestsellerMutation.isPending}
+            title={isBestseller ? "Remove from Best Sellers on the homepage" : "Show in Best Sellers on the homepage"}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) =>
+              bestsellerMutation.mutate({
+                id: row.id,
+                storefront: row.storefront ?? {},
+                bestseller: e.target.checked,
+              })
+            }
+            className="h-4 w-4 cursor-pointer rounded border-input accent-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          />
         );
       },
     },
@@ -220,10 +263,17 @@ export default function ProductsPage() {
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
         </div>
-      ) : isError ? (
-        <p className="text-sm text-destructive">Failed to load products.</p>
+      ) : isLoadingError ? (
+        <div role="alert" className="flex items-center gap-3">
+          <p className="text-sm text-destructive">Failed to load products.</p>
+          <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>Try again</Button>
+        </div>
       ) : (
         <>
+          {isRefetchError && <div role="status" className="flex items-center gap-3 text-sm text-muted-foreground">
+            <p>Showing the last loaded products. Refresh to check for updates.</p>
+            <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>Refresh products</Button>
+          </div>}
           <div className="status-filters" aria-label="Filter products">
             {[
               ["ALL", "All products"],

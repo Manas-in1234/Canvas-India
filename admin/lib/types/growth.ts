@@ -15,6 +15,10 @@ export interface Discount {
   expiresAt: string | null;
   isActive: boolean;
   isExclusive: boolean;
+  applicableCategoryIds?: string[];
+  applicableProductIds?: string[];
+  customerSegmentId?: string | null;
+  campaignId?: string | null;
   createdAt: string;
 }
 

@@ -85,7 +85,7 @@ export const BulkOrdersPage: React.FC = () => {
   }, []);
 
   const whatsappQuoteUrl =
-    'https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Bulk%20%26%20Corporate%20Orders';
+    'https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Bulk%20%26%20Corporate%20Orders';
 
   return (
     <div className="w-full min-h-[70vh] bg-[#FFFDF9] text-stone-900 font-manrope flex flex-col justify-center">

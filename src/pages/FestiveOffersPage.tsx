@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Gift, Clock, Percent } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
+import { useOccasions } from '../context/OccasionsContext';
 import { ProductCard } from '../components/ProductCard';
 
 const SERIF = '"Playfair Display", Georgia, serif';
@@ -23,6 +24,7 @@ const Container: React.FC<{ children: React.ReactNode; className?: string }> = (
 
 export const FestiveOffersPage: React.FC = () => {
   const navigate = useNavigate();
+  const { entries } = useOccasions();
   const { allProducts, wishlistIds, onToggleWishlist, onAddToCart, onOpenCustomize } = useShop();
 
   useEffect(() => {
@@ -95,7 +97,7 @@ export const FestiveOffersPage: React.FC = () => {
       <section className="py-6 sm:py-8 border-y border-stone-200/60">
         <Container>
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-            {FESTIVALS.map((f) => (
+            {FESTIVALS.filter(f => entries.some(row => row.slug === f.slug)).map((f) => (
               <button
                 key={f.name}
                 type="button"

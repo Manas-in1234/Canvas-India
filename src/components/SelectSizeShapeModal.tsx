@@ -13,6 +13,12 @@ export interface SelectSizeShapeModalProps {
   material: 'canvas' | 'acrylic';
   productId: string;
   productName: string;
+  /** Styles added from the admin have no size list of their own; show the Single Print one. */
+  singlePrintMode?: boolean;
+  /** A style built around one uploaded (traced) shape: every size is drawn in that shape, like Heart Canvas. */
+  shapeChoices?: Array<{ id: string; name: string; clipPathType: string; clipPathValue: string }> | null;
+  /** A style built around one uploaded shape lists that shape's own sizes here (no category or shape chips). */
+  shapeSizes?: SizeShapeOption[] | null;
   currentShapeId?: string;
   currentSizeId?: string;
   isCustomSize?: boolean;
@@ -38,12 +44,15 @@ export interface SelectSizeShapeModalProps {
 
 export type SinglePrintCategory = 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL';
 
-export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
+const SelectSizeShapeModalContent: React.FC<SelectSizeShapeModalProps> = ({
   isOpen,
   onClose,
   material,
   productId,
   productName,
+  singlePrintMode = false,
+  shapeChoices = null,
+  shapeSizes = null,
   currentShapeId = 'shape-square',
   currentSizeId = '',
   isCustomSize = false,
@@ -53,7 +62,6 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   bulkQuantity,
   onResetSize
 }) => {
-  if (!isOpen) return null;
 
   const hasBulkDiscount = bulkQuantity !== undefined && bulkQuantity >= MIN_BULK_QTY;
   const displayPrice = (price: number) => (hasBulkDiscount ? bulkUnitPriceFor(price, bulkQuantity!) : price);
@@ -62,10 +70,20 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
   const isDigitalPainting = productId.toLowerCase() === 'canvas-digital-painting';
   const isLyric = productId.toLowerCase() === 'canvas-lyric' || productId.toLowerCase().includes('lyric');
   const isPopArt = productId.toLowerCase().includes('pop');
+  const isRoundShape = currentShapeId === 'shape-circle' || productId.toLowerCase().includes('round');
+
+  // Which of the style's shapes the customer is looking at (a style may offer several).
+  const [chosenShapeId, setChosenShapeId] = useState<string>(
+    () => shapeChoices?.find((c) => c.id === currentShapeId)?.id ?? shapeChoices?.[0]?.id ?? '',
+  );
+  const shapeStyle = shapeChoices?.find((c) => c.id === chosenShapeId) ?? shapeChoices?.[0] ?? null;
 
   const isSinglePrint = useMemo(() => {
     const norm = productId.toLowerCase();
+    if (shapeSizes && shapeSizes.length > 0) return false;
     return (
+      singlePrintMode ||
+      !!shapeStyle ||
       norm === 'canvas-single' ||
       norm === 'canvas-classic' ||
       norm === 'acrylic-print' ||
@@ -77,7 +95,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
       norm.includes('lyric') ||
       norm.includes('pop')
     );
-  }, [productId]);
+  }, [productId, singlePrintMode, shapeStyle, shapeSizes]);
 
   // Active Category Tab for Single Print: RECOMMENDED (default), SQUARE, PANORAMIC, LARGE, SMALL
   const [activeCategory, setActiveCategory] = useState<SinglePrintCategory>('RECOMMENDED');
@@ -1009,16 +1027,18 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
 
   // Options for shaped products (Round, Triangle, Heart, Oval)
   const shapedProductOptions = useMemo(() => {
+    if (shapeSizes && shapeSizes.length > 0) return shapeSizes;
     return getProductSizeShapeOptions(productId, material);
-  }, [productId, material]);
+  }, [productId, material, shapeSizes]);
 
   // All valid options to pick from
   const currentCategoryOptions = useMemo(() => {
     if (isSinglePrint) {
-      return singlePrintSizes[activeCategory];
+      const list = singlePrintSizes[activeCategory];
+      return shapeStyle ? list.map((o) => ({ ...o, shapeId: shapeStyle.id, shapeName: shapeStyle.name })) : list;
     }
     return shapedProductOptions;
-  }, [isSinglePrint, activeCategory, singlePrintSizes, shapedProductOptions]);
+  }, [isSinglePrint, activeCategory, singlePrintSizes, shapedProductOptions, shapeStyle]);
 
   // Selected Option state
   const defaultOptionId = isSinglePrint
@@ -1033,10 +1053,14 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
     return defaultOptionId;
   });
 
-  // Custom size state
+  // Custom size state - kept as the raw typed string (not a coerced number)
+  // so the field can actually be cleared and retyped. Coercing every
+  // keystroke to a number meant backspacing to an empty field instantly
+  // snapped back to the fallback default, making it impossible to clear
+  // and type a fresh value - the field basically couldn't be hand-edited.
   const [showCustomSize, setShowCustomSize] = useState<boolean>(isCustomSize);
-  const [localCustomW, setLocalCustomW] = useState<number>(customWidth || 10);
-  const [localCustomH, setLocalCustomH] = useState<number>(customHeight || 10);
+  const [localCustomW, setLocalCustomW] = useState<string>(String(customWidth || 10));
+  const [localCustomH, setLocalCustomH] = useState<string>(String(customHeight || 10));
 
   // If category changes, keep selection if present or default to first
   useEffect(() => {
@@ -1125,6 +1149,30 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
 
     const strokeColor = isSelected ? '#0E4A93' : '#94a3b8';
     const fillColor = isSelected ? '#eff6ff' : '#f8fafc';
+
+    // 0. The style's own traced shape (path is in 0-1 space), stretched into the same
+    // box a plain Single Print card uses so every size keeps its real proportions.
+    if (shapeStyle && opt.shapeId === shapeStyle.id && shapeStyle.clipPathType === 'SVG_PATH') {
+      const r = opt.widthInches / (opt.heightInches || 1);
+      let w = 70;
+      let h = 70;
+      if (r >= 2) { w = 120; h = 44; }
+      else if (r >= 1.5) { w = 110; h = 55; }
+      else if (r > 1.05) { w = 100; h = 70; }
+      else if (r < 0.95) { w = 66; h = 84; }
+      const x = (160 - w) / 2;
+      const y = (110 - h) / 2;
+      return (
+        <svg viewBox="0 0 160 110" className="w-full h-full max-h-24">
+          <g transform={`translate(${x} ${y}) scale(${w} ${h})`}>
+            <path d={shapeStyle.clipPathValue} fill={fillColor} stroke={strokeColor} strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+          </g>
+          <text x="80" y="58" fill="#0E4A93" fontSize="8" fontWeight="bold" textAnchor="middle">
+            {opt.widthInches}&quot;×{opt.heightInches}&quot;
+          </text>
+        </svg>
+      );
+    }
 
     // 1. Round Canvas
     if (isRound) {
@@ -1304,6 +1352,30 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
           </div>
         )}
 
+        {/* Shapes this style offers (only when there is more than one to pick from) */}
+        {shapeChoices && shapeChoices.length > 1 && (
+          <div className="px-6 py-2 bg-white border-b border-stone-200">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-stone-500 mr-2 hidden sm:inline">Shape:</span>
+              {shapeChoices.map((c) => {
+                const on = shapeStyle?.id === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setChosenShapeId(c.id)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-bold border cursor-pointer transition-colors ${
+                      on ? 'bg-[#0E4A93] text-white border-[#0E4A93]' : 'bg-white text-stone-700 border-stone-300 hover:border-[#0E4A93]'
+                    }`}
+                  >
+                    {c.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Content: Cards Grid */}
         <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh] space-y-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -1346,8 +1418,9 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
             })}
           </div>
 
-          {/* Custom Size Section (Available for single print) */}
-          {isSinglePrint && (
+          {/* Custom Size Section - available for single print and every
+              shaped product (Round, Triangle, Heart, Oval) alike. */}
+          {(
             <div className="pt-2">
               <div
                 onClick={() => setShowCustomSize(!showCustomSize)}
@@ -1368,7 +1441,9 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
                   <div>
                     <h4 className="text-xs sm:text-sm font-black text-stone-900">Custom Size</h4>
                     <p className="text-[11px] text-stone-500">
-                      Need custom dimensions? Enter width and height (8&quot; to 48&quot;)
+                      {isRoundShape
+                        ? 'Need a custom diameter? Enter it yourself (8" to 48")'
+                        : 'Need custom dimensions? Enter width and height (8" to 48")'}
                     </p>
                   </div>
                 </div>
@@ -1376,41 +1451,67 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
                   <span className="text-xs font-bold text-[#0E4A93]">
                     ₹
                     {Math.round(
-                      Math.max(8, localCustomW) * Math.max(8, localCustomH) * (material === 'acrylic' ? 4.5 : 2.5)
+                      Math.max(8, Number(localCustomW) || 0) * Math.max(8, Number(localCustomH) || 0) * (material === 'acrylic' ? 4.5 : 2.5)
                     ).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                 )}
               </div>
 
               {showCustomSize && (
-                <div className="mt-3 p-4 rounded-xl bg-white border border-stone-200 shadow-inner grid grid-cols-2 gap-3 animate-in fade-in duration-150">
-                  <div>
+                isRoundShape ? (
+                  <div className="mt-3 p-4 rounded-xl bg-white border border-stone-200 shadow-inner animate-in fade-in duration-150">
                     <label className="text-[11px] font-extrabold text-stone-600 block mb-1">
-                      WIDTH (INCHES)
+                      DIAMETER (INCHES)
                     </label>
                     <input
                       type="number"
                       min={8}
                       max={48}
                       value={localCustomW}
-                      onChange={(e) => setLocalCustomW(Number(e.target.value) || 8)}
+                      onChange={(e) => {
+                        setLocalCustomW(e.target.value);
+                        setLocalCustomH(e.target.value);
+                      }}
+                      onBlur={() => {
+                        const clamped = String(Math.max(8, Math.min(48, Number(localCustomW) || 10)));
+                        setLocalCustomW(clamped);
+                        setLocalCustomH(clamped);
+                      }}
                       className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
                     />
                   </div>
-                  <div>
-                    <label className="text-[11px] font-extrabold text-stone-600 block mb-1">
-                      HEIGHT (INCHES)
-                    </label>
-                    <input
-                      type="number"
-                      min={8}
-                      max={48}
-                      value={localCustomH}
-                      onChange={(e) => setLocalCustomH(Number(e.target.value) || 8)}
-                      className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
-                    />
+                ) : (
+                  <div className="mt-3 p-4 rounded-xl bg-white border border-stone-200 shadow-inner grid grid-cols-2 gap-3 animate-in fade-in duration-150">
+                    <div>
+                      <label className="text-[11px] font-extrabold text-stone-600 block mb-1">
+                        WIDTH (INCHES)
+                      </label>
+                      <input
+                        type="number"
+                        min={8}
+                        max={48}
+                        value={localCustomW}
+                        onChange={(e) => setLocalCustomW(e.target.value)}
+                        onBlur={() => setLocalCustomW(String(Math.max(8, Math.min(48, Number(localCustomW) || 10))))}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-extrabold text-stone-600 block mb-1">
+                        HEIGHT (INCHES)
+                      </label>
+                      <input
+                        type="number"
+                        min={8}
+                        max={48}
+                        value={localCustomH}
+                        onChange={(e) => setLocalCustomH(e.target.value)}
+                        onBlur={() => setLocalCustomH(String(Math.max(8, Math.min(48, Number(localCustomH) || 10))))}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
+                      />
+                    </div>
                   </div>
-                </div>
+                )
               )}
             </div>
           )}
@@ -1430,7 +1531,7 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
               {showCustomSize
                 ? displayPrice(
                     Math.round(
-                      Math.max(8, localCustomW) * Math.max(8, localCustomH) * (material === 'acrylic' ? 4.5 : 2.5)
+                      Math.max(8, Number(localCustomW) || 0) * Math.max(8, Number(localCustomH) || 0) * (material === 'acrylic' ? 4.5 : 2.5)
                     )
                   ).toLocaleString('en-IN', { minimumFractionDigits: 2 })
                 : currentSelectedOption && displayPrice(currentSelectedOption.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
@@ -1458,3 +1559,10 @@ export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = ({
     </div>
   );
 };
+
+/**
+ * Renders nothing while closed. The body is a separate component so its hooks always run in the same
+ * order (a hook-bearing component must not return early before them), and so each opening starts fresh.
+ */
+export const SelectSizeShapeModal: React.FC<SelectSizeShapeModalProps> = (props) =>
+  props.isOpen ? <SelectSizeShapeModalContent {...props} /> : null;

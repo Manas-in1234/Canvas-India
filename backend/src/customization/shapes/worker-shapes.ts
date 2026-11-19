@@ -114,4 +114,54 @@ export class WorkerShapes {
     });
     return this.get(id);
   }
+
+  /** Rename, reprice or enable/disable a shape. Only the fields below are ever written. */
+  async updateMetadata(id: string, body: any, userId: string) {
+    const data: Record<string, unknown> = {};
+    if (body.name !== undefined) {
+      const name = typeof body.name === 'string' ? body.name.trim() : '';
+      if (!name || name.length > 120) badRequest('Provide a name of 1–120 characters');
+      data.name = name;
+    }
+    if (body.priceMode !== undefined) {
+      if (!['FLAT', 'AREA_RATE'].includes(body.priceMode)) badRequest('priceMode must be FLAT or AREA_RATE');
+      data.priceMode = body.priceMode;
+    }
+    const money = (value: unknown, label: string) => {
+      const n = Number(value);
+      if (value === '' || value === null || !Number.isFinite(n) || n < 0) badRequest(`${label} must be a number of 0 or more`);
+      return String(value);
+    };
+    if (body.flatPrice !== undefined) data.flatPrice = money(body.flatPrice, 'Flat price');
+    if (body.areaRatePerSqIn !== undefined && body.areaRatePerSqIn !== null) data.areaRatePerSqIn = money(body.areaRatePerSqIn, 'Rate per sq. inch');
+    if (data.priceMode === 'AREA_RATE' && !(Number(data.areaRatePerSqIn) > 0)) badRequest('Rate per sq. inch must be greater than 0');
+    if (body.status !== undefined && !['APPROVED', 'REJECTED'].includes(body.status)) badRequest('status must be APPROVED or REJECTED');
+    if (!Object.keys(data).length && body.status === undefined) badRequest('Nothing to update');
+
+    await this.prisma.$transaction(async (tx: any) => {
+      const existing = await tx.customShape.findUnique({ where: { id } });
+      if (!existing) throw Object.assign(new Error('Shape not found'), { status: 404 });
+      if (body.status !== undefined) {
+        if (existing.status === 'PENDING') badRequest('Review this shape (approve or reject) before enabling or disabling it');
+        data.status = body.status;
+      }
+      await tx.customShape.update({ where: { id }, data });
+      await tx.auditLog.create({ data: { adminUserId: userId, action: 'CUSTOM_SHAPE_METADATA_UPDATED', entityType: 'CustomShape', entityId: id } });
+    });
+    return this.get(id);
+  }
+
+  /** Delete an uploaded shape and its stored images. Built-in shapes are never removed. */
+  async remove(id: string, userId: string) {
+    await this.prisma.$transaction(async (tx: any) => {
+      const shape = await tx.customShape.findUnique({ where: { id } });
+      if (!shape) throw Object.assign(new Error('Shape not found'), { status: 404 });
+      if (shape.origin !== 'ADMIN_UPLOADED') badRequest('Built-in shapes cannot be removed. Disable them instead');
+      await tx.customShape.delete({ where: { id } });
+      const assetIds = [shape.sourceAssetId, shape.previewAssetId].filter(Boolean);
+      if (assetIds.length) await tx.asset.deleteMany({ where: { id: { in: assetIds } } });
+      await tx.auditLog.create({ data: { adminUserId: userId, action: 'CUSTOM_SHAPE_REMOVED', entityType: 'CustomShape', entityId: id } });
+    });
+    return { id, removed: true };
+  }
 }
