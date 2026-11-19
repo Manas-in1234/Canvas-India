@@ -811,6 +811,30 @@ export default {
           return jsonResponse(Object.fromEntries(settings.map(s => [s.key, s.value])), 200, request);
         }
       }
+
+      if (pathname === '/api/v1/admin/test-email' && method === 'POST') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, ['store_settings.manage'], request);
+        if (denied) return denied;
+        const body = (await request.json().catch(() => ({}))) as any;
+        const targetEmail = body.to || user.email;
+
+        const result = await sendAdminWelcomeEmail({
+          recipientEmail: targetEmail,
+          recipientName: user.name || 'Admin',
+          roleName: 'Administrator',
+          temporaryPassword: 'Test-Password-123!',
+          resendApiKey: env.RESEND_API_KEY,
+          resendFromEmail: env.RESEND_FROM_EMAIL,
+          prisma,
+        });
+
+        if (!result.sent) {
+          return jsonResponse({ success: false, message: result.error || 'Failed to send test email' }, 400, request);
+        }
+        return jsonResponse({ success: true, message: `Test email successfully sent to ${targetEmail}!` }, 200, request);
+      }
       // -------------------------------------------------------------
       // Support/legal pages — per-field text overrides for the storefront's About Us, Privacy
       // Policy, Terms & Conditions and Cancellation Policy pages. Each page already renders every

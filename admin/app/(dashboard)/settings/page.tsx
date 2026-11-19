@@ -73,11 +73,13 @@ function StorePoliciesCard() {
 
 function EmailDeliveryCard() {
   const { hasPermission } = usePermission();
+  const { user } = useAuth();
   const canManage = hasPermission('store_settings.manage');
   const [apiKey, setApiKey] = useState('');
   const [fromEmail, setFromEmail] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
 
   useEffect(() => {
     apiClient.get<Record<string, string>>('/admin/store-settings')
@@ -106,12 +108,34 @@ function EmailDeliveryCard() {
     }
   };
 
+  const handleTestEmail = async () => {
+    if (!apiKey.trim()) {
+      toast.error('Please enter a Resend API Key first and save it.');
+      return;
+    }
+    setTesting(true);
+    try {
+      await apiClient.put('/admin/store-settings', {
+        resend_api_key: apiKey.trim(),
+        resend_from_email: fromEmail.trim(),
+      });
+      const res = await apiClient.post<{ success: boolean; message: string }>('/admin/test-email', {
+        to: user?.email,
+      });
+      toast.success(res.message || `Test email sent to ${user?.email}!`);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Failed to send test email');
+    } finally {
+      setTesting(false);
+    }
+  };
+
   return (
     <Card className="max-w-md">
       <CardHeader>
         <CardTitle className="text-base">Email Delivery (Resend)</CardTitle>
         <CardDescription>
-          Configures email sending for admin onboarding credentials and customer broadcasts.
+          Required for admin onboarding credentials emails and customer broadcasts.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -126,26 +150,31 @@ function EmailDeliveryCard() {
             onChange={(e) => setApiKey(e.target.value)}
           />
           <p className="text-xs text-muted-foreground">
-            Get your API key from <a href="https://resend.com/api-keys" target="_blank" rel="noreferrer" className="underline text-primary">resend.com</a>.
+            Get your free API key from <a href="https://resend.com/api-keys" target="_blank" rel="noreferrer" className="underline text-primary">resend.com</a>.
           </p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="resendFromEmail">Sender Email / Name</Label>
           <Input
             id="resendFromEmail"
-            placeholder="Canvas India <admin@canvassindia.com>"
+            placeholder="Canvas India <onboarding@resend.dev>"
             value={fromEmail}
             disabled={loading || !canManage}
             onChange={(e) => setFromEmail(e.target.value)}
           />
           <p className="text-xs text-muted-foreground">
-            Must be a verified domain on Resend (e.g. <code>Canvas India &lt;admin@canvassindia.com&gt;</code>).
+            Use <code>onboarding@resend.dev</code> for testing, or your verified domain sender (e.g. <code>Canvas India &lt;admin@canvassindia.com&gt;</code>).
           </p>
         </div>
         {canManage && (
-          <Button onClick={handleSave} disabled={loading || saving}>
-            {saving ? 'Saving…' : 'Save Email Settings'}
-          </Button>
+          <div className="flex items-center gap-2 pt-1">
+            <Button onClick={handleSave} disabled={loading || saving || testing}>
+              {saving ? 'Saving…' : 'Save Email Settings'}
+            </Button>
+            <Button variant="outline" onClick={handleTestEmail} disabled={loading || saving || testing}>
+              {testing ? 'Sending…' : 'Send Test Email'}
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>
