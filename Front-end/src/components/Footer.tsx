@@ -67,10 +67,23 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
               <div className="flex items-center gap-2">
                 <MessageCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span className="text-stone-400">WhatsApp:</span>
-                <a 
-                  href="https://wa.me/917893051555" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href="https://wa.me/917893946464"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-stone-200 hover:text-emerald-400 transition-colors"
+                >
+                  78939 46464
+                </a>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="text-stone-400">Contact Number 2:</span>
+                <a
+                  href="https://wa.me/917893051555"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-stone-200 hover:text-emerald-400 transition-colors"
                 >
                   78930 51555
@@ -81,7 +94,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
                 <MapPin className="w-3.5 h-3.5 text-[#E8752A] shrink-0 mt-0.5" />
                 <div className="leading-snug text-stone-300">
                   <span className="text-stone-400 mr-1">Address:</span>
-                  H NO 4-9-197/8184, HMT Nagar, HMT Nagar Main Road, Nacharam, Hyderabad, Hyderabad District, Telangana – 500076
+                  H NO 4-9-197/B/84, HMT Nagar, Nacharam, Hyderabad, Telangana – 500076
                 </div>
               </div>
             </div>

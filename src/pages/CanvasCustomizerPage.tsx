@@ -4504,6 +4504,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [selectedThicknessId, setSelectedThicknessId] = useState<string>(
     () => cheapestOption(routeMaterial === 'acrylic' ? BASE_ACRYLIC_THICKNESS_OPTIONS : BASE_CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery',
   );
+  // selectedThicknessId always holds a real id (defaults to the cheapest
+  // option so the preview has something valid to render), but the shopper
+  // hasn't necessarily chosen a thickness yet - only the 3 actual thickness
+  // picker cards should count as a real choice. Everything else that writes
+  // selectedThicknessId is a programmatic default/sync and must NOT flip
+  // this, so the price only reflects thickness once they've genuinely
+  // picked one.
+  const [thicknessTouched, setThicknessTouched] = useState(false);
   // If the selected thickness was hidden or deleted in the admin (or isn't
   // valid yet for this material), fall back to the cheapest one shown.
   useEffect(() => {
@@ -5903,6 +5911,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       }
       if (saved?.selectedThicknessId) {
         setSelectedThicknessId(saved.selectedThicknessId);
+        setThicknessTouched(true);
       }
       if (saved?.selectedBackingId) {
         setSelectedBackingId(saved.selectedBackingId);
@@ -5981,10 +5990,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       } else if (acrylicThickness) {
         price += acrylicThickness.price;
       }
-    } else {
+    } else if (thicknessTouched) {
       // getCanvasThicknessPrice handles the 'custom-thickness' option's
       // per-mm extra charge beyond the 25mm baseline; every other canvas
-      // thickness id just returns its flat price.
+      // thickness id just returns its flat price. selectedThicknessId
+      // always holds a real (cheapest-default) id even before the shopper
+      // has touched the thickness picker, so this only charges for it once
+      // they've actually made that choice - otherwise a bare size pick
+      // would silently add a thickness charge they never selected.
       price += getCanvasThicknessPrice(selectedThicknessId, customThicknessMm);
     }
 
@@ -6061,6 +6074,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     activeMaterial,
     selectedWrapId,
     selectedThicknessId,
+    thicknessTouched,
     selectedBorderWidthId,
     selectedFrameId,
     selectedHardwareId,
@@ -7280,6 +7294,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         : isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary,
       finish: activeMaterial === 'acrylic'
         ? (ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || `${selectedThicknessId.toUpperCase()} Optical Acrylic`)
+        : !thicknessTouched
+        ? undefined
         : selectedThicknessId === 'custom-thickness'
         ? `Custom Thickness (${customThicknessMm}mm)`
         : (CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Thin Gallery Wrap (0.75")'),
@@ -7321,11 +7337,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         shape: shapeApplies ? currentShape.name : undefined,
         thickness: activeMaterial === 'acrylic'
           ? (ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || `${selectedThicknessId.toUpperCase()} Optical Acrylic`)
+          : !thicknessTouched
+          ? undefined
           : selectedThicknessId === 'custom-thickness'
           ? `Custom Thickness (${customThicknessMm}mm)`
           : (CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Thin Gallery Wrap (0.75")'),
-        customThicknessMm: activeMaterial === 'canvas' && selectedThicknessId === 'custom-thickness' ? customThicknessMm : undefined,
-        customThicknessInches: activeMaterial === 'canvas' && selectedThicknessId === 'custom-thickness' ? customThicknessInches : undefined,
+        customThicknessMm: activeMaterial === 'canvas' && thicknessTouched && selectedThicknessId === 'custom-thickness' ? customThicknessMm : undefined,
+        customThicknessInches: activeMaterial === 'canvas' && thicknessTouched && selectedThicknessId === 'custom-thickness' ? customThicknessInches : undefined,
         wrap: activeMaterial === 'canvas' ? liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.label : undefined,
         borderWidth: shapeApplies ? liveOrFallbackBorderWidths.find((b) => b.id === selectedBorderWidthId)?.label : undefined,
         borderColor: shapeApplies && selectedBorderWidthId !== 'none' ? selectedBorderColor : undefined,
@@ -9786,7 +9804,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <span className="font-bold text-stone-900">+₹{(() => { const p = liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.price || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
                 </div>
               )}
-              {activeMaterial !== 'acrylic' && selectedProductTypeId !== 'canvas-banner' && getCanvasThicknessPrice(selectedThicknessId, customThicknessMm) > 0 && (
+              {activeMaterial !== 'acrylic' && selectedProductTypeId !== 'canvas-banner' && thicknessTouched && getCanvasThicknessPrice(selectedThicknessId, customThicknessMm) > 0 && (
                 <div className="flex justify-between">
                   <span>Thickness ({CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.name ?? 'Frame depth'}):</span>
                   <span className="font-bold text-stone-900">+₹{(() => { const p = getCanvasThicknessPrice(selectedThicknessId, customThicknessMm); return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(2); })()}</span>
@@ -11327,7 +11345,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           <CustomizerOptionCard
                             key={th.id}
                             selected={isSelected}
-                            onClick={() => setSelectedThicknessId(th.id)}
+                            onClick={() => { setSelectedThicknessId(th.id); setThicknessTouched(true); }}
                             badge={th.badge}
                             title={displayTitle}
                             subtitle={displaySub}
@@ -11344,7 +11362,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       <div className="pt-2 border-t border-stone-100">
                         <button
                           type="button"
-                          onClick={() => setSelectedThicknessId(selectedThicknessId === 'custom-thickness' ? 'thin-gallery' : 'custom-thickness')}
+                          onClick={() => { setSelectedThicknessId(selectedThicknessId === 'custom-thickness' ? 'thin-gallery' : 'custom-thickness'); setThicknessTouched(true); }}
                           className={`w-full py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-between border transition-all ${
                             selectedThicknessId === 'custom-thickness'
                               ? 'border-[#0E4A93] bg-blue-50/50 text-[#0E4A93]'
@@ -11726,7 +11744,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         <CustomizerOptionCard
                           key={th.id}
                           selected={isSelected}
-                          onClick={() => setSelectedThicknessId(th.id)}
+                          onClick={() => { setSelectedThicknessId(th.id); setThicknessTouched(true); }}
                           badge={th.badge}
                           title={cardTitle}
                           priceText={cardPrice}
@@ -12566,14 +12584,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       </>
                     ) : (
                       <>
-                        <span>•</span>
-                        <span>
-                          Thickness: <strong className="text-stone-900">
-                            {selectedThicknessId === 'custom-thickness'
-                              ? `Custom (${customThicknessMm}mm / ${(customThicknessMm / 25.4).toFixed(2)}")`
-                              : (THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Thin Gallery Wrap (0.75")')}
-                          </strong>
-                        </span>
+                        {thicknessTouched && (
+                          <>
+                            <span>•</span>
+                            <span>
+                              Thickness: <strong className="text-stone-900">
+                                {selectedThicknessId === 'custom-thickness'
+                                  ? `Custom (${customThicknessMm}mm / ${(customThicknessMm / 25.4).toFixed(2)}")`
+                                  : (THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Thin Gallery Wrap (0.75")')}
+                              </strong>
+                            </span>
+                          </>
+                        )}
                         <span>•</span>
                         <span>
                           Wrap: <strong className="text-stone-900">{liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.name}</strong>

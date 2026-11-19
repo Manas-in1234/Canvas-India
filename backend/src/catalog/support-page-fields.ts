@@ -88,7 +88,7 @@ const fields = {
     {"key": "f83", "label": "Text", "value": "WhatsApp:", "kind": "text", "group": "Contact Us"},
     {"key": "f84", "label": "Link destination", "value": "https://wa.me/917893051555", "kind": "link", "group": "Contact Us"},
     {"key": "f85", "label": "Link or button label", "value": "78930 51555", "kind": "text", "group": "Contact Us"},
-    {"key": "f86", "label": "Paragraph", "value": "Address: H NO 4-9-197/8184, HMT Nagar, HMT Nagar Main Road, Nacharam, Hyderabad, Hyderabad District, Telangana – 500076", "kind": "text", "group": "Contact Us"},
+    {"key": "f86", "label": "Paragraph", "value": "Address: H NO 4-9-197/B/84, HMT Nagar, Nacharam, Hyderabad, Telangana – 500076", "kind": "text", "group": "Contact Us"},
     {"key": "f87", "label": "Heading", "value": "Have a Memory Worth Framing?", "kind": "text", "group": "Closing section"},
     {"key": "f88", "label": "Paragraph", "value": "Create something special with Canvas India. Bring your favorite moments to life today.", "kind": "text", "group": "Closing section"},
     {"key": "f89", "label": "Button destination (optional)", "value": "", "kind": "link", "group": "Closing section"},
@@ -190,7 +190,7 @@ const fields = {
     {"key": "f91", "label": "Paragraph", "value": "Email: info@canvassindia.com", "kind": "text", "group": "Contact Us"},
     {"key": "f92", "label": "Paragraph", "value": "Landline number: 040-29303344", "kind": "text", "group": "Contact Us"},
     {"key": "f93", "label": "Paragraph", "value": "WhatsApp: 78930 51555", "kind": "text", "group": "Contact Us"},
-    {"key": "f94", "label": "Paragraph", "value": "Address: Building No./Flat No. H NO 4-9-197/8184, HMT Nagar, HMT Nagar Main Road, Nacharam, Hyderabad, Hyderabad District, Telangana – 500076", "kind": "text", "group": "Contact Us"}
+    {"key": "f94", "label": "Paragraph", "value": "Address: Building No./Flat No. H NO 4-9-197/B/84, HMT Nagar, Nacharam, Hyderabad, Telangana – 500076", "kind": "text", "group": "Contact Us"}
   ],
   "cancellation-policy": [
     {"key": "f1", "label": "Page title", "value": "Cancellation Policy", "kind": "text", "group": "Page introduction"},
@@ -346,7 +346,7 @@ const fields = {
     {"key": "f96", "label": "Paragraph", "value": "Email: info@canvassindia.com", "kind": "text", "group": "Contact Us"},
     {"key": "f97", "label": "Paragraph", "value": "Landline number: 040-29303344", "kind": "text", "group": "Contact Us"},
     {"key": "f98", "label": "Paragraph", "value": "WhatsApp: 78930 51555", "kind": "text", "group": "Contact Us"},
-    {"key": "f99", "label": "Paragraph", "value": "Address: Building No./Flat No. H NO 4-9-197/8184, HMT Nagar, HMT Nagar Main Road, Nacharam, Hyderabad, Hyderabad District, Telangana – 500076", "kind": "text", "group": "Contact Us"}
+    {"key": "f99", "label": "Paragraph", "value": "Address: Building No./Flat No. H NO 4-9-197/B/84, HMT Nagar, Nacharam, Hyderabad, Telangana – 500076", "kind": "text", "group": "Contact Us"}
   ],
   "terms-and-conditions": [
     {"key": "f1", "label": "Page title", "value": "Terms & Conditions", "kind": "text", "group": "Page introduction"},
@@ -467,7 +467,7 @@ const fields = {
     {"key": "f116", "label": "Paragraph", "value": "Email: info@canvassindia.com", "kind": "text", "group": "Contact Us"},
     {"key": "f117", "label": "Paragraph", "value": "Landline number: 040-29303344", "kind": "text", "group": "Contact Us"},
     {"key": "f118", "label": "Paragraph", "value": "WhatsApp: 78930 51555", "kind": "text", "group": "Contact Us"},
-    {"key": "f119", "label": "Paragraph", "value": "Address: Building No./Flat No. H NO 4-9-197/8184, HMT Nagar, HMT Nagar Main Road, Nacharam, Hyderabad, Hyderabad District, Telangana – 500076", "kind": "text", "group": "Contact Us"}
+    {"key": "f119", "label": "Paragraph", "value": "Address: Building No./Flat No. H NO 4-9-197/B/84, HMT Nagar, Nacharam, Hyderabad, Telangana – 500076", "kind": "text", "group": "Contact Us"}
   ]
 } satisfies Record<string, SupportField[]>;
 

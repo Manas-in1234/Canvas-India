@@ -15510,8 +15510,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
               <div className="pt-4 border-t border-stone-100 space-y-2 text-xs text-stone-500">
                 <div className="font-bold text-stone-900">Official Company Details</div>
-                <div>H NO 4-9-197/8184, HMT Nagar Main Road, Nacharam, Hyderabad, Telangana – 500076</div>
-                <div>Landline: 040-29303344 | WhatsApp: 78930 51555</div>
+                <div>H NO 4-9-197/B/84, HMT Nagar, Nacharam, Hyderabad, Telangana – 500076</div>
+                <div>Landline: 040-29303344 | WhatsApp: 78939 46464 | Contact Number 2: 78930 51555</div>
                 <div>Email: info@canvassindia.com</div>
               </div>
             </div>
