@@ -9,6 +9,7 @@ import { mirrorOrderToBackend } from '../api/returnsApi';
 import { paymentService } from '../services/paymentService';
 import { delhiveryService, PincodeServiceabilityResult } from '../services/delhiveryService';
 import { validateDiscountCode, DiscountValidationError } from '../api/discountsApi';
+import { fetchStoreSettings, type StoreSettings } from '../api/storeSettingsApi';
 import { Address } from '../types/auth';
 import {
   ShieldCheck,
@@ -67,6 +68,21 @@ export const CheckoutPage: React.FC = () => {
   const [codAvailability, setCodAvailability] = useState<{ pin: string; available: boolean } | null>(null);
   const codRequest = React.useRef<{ fingerprint: string; id: string } | null>(null);
   const submitting = React.useRef(false);
+
+  // Admin-controlled: whether COD is allowed for orders containing a
+  // customized product, and the flat surcharge added to any COD order.
+  const [storeSettings, setStoreSettings] = useState<StoreSettings>({
+    cod_enabled_for_customizer: false,
+    cod_surcharge: 0,
+    min_order_value: 0,
+  });
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchStoreSettings(controller.signal).then((settings) => {
+      if (!controller.signal.aborted) setStoreSettings(settings);
+    });
+    return () => controller.abort();
+  }, []);
 
   // Coupon
   const [couponCode, setCouponCode] = useState('');
@@ -142,7 +158,8 @@ export const CheckoutPage: React.FC = () => {
   const totalDiscount = couponDiscount;
   const taxableAmount = Math.max(0, Math.round((subtotal - totalDiscount) * 100) / 100);
   const tax = Math.round(taxableAmount * 0.18); // 18% GST calculation (displayed clearly)
-  const total = taxableAmount + shippingFee;
+  const codSurcharge = shippingMethod === 'cod' ? storeSettings.cod_surcharge : 0;
+  const total = taxableAmount + shippingFee + codSurcharge;
 
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -322,8 +339,18 @@ export const CheckoutPage: React.FC = () => {
 
   const checkoutPin = getEffectiveShippingAddress().postal_code;
   const isPinCodBlocked = codAvailability?.pin === checkoutPin && codAvailability.available === false;
-  const codAvailable = !isPinCodBlocked;
+  const hasCustomizedItem = cartItems.some((item) => item.customizationDetails);
+  const isCodBlockedForCustomizer = hasCustomizedItem && !storeSettings.cod_enabled_for_customizer;
+  const codAvailable = !isPinCodBlocked && !isCodBlockedForCustomizer;
   const isCod = shippingMethod === 'cod';
+
+  useEffect(() => {
+    // If the cart changes to include a customized item (or the admin
+    // disables COD for customized orders) while COD is already selected,
+    // fall back to online payment instead of letting checkout proceed with
+    // a now-invalid shipping method.
+    if (isCod && isCodBlockedForCustomizer) setShippingMethod('standard');
+  }, [isCod, isCodBlockedForCustomizer]);
 
   useEffect(() => {
     if (step !== 3 || !/^[1-9][0-9]{5}$/.test(checkoutPin)) return;
@@ -966,38 +993,42 @@ export const CheckoutPage: React.FC = () => {
                       </div>
                       <span className="text-xs font-bold text-[#002B49]">₹199</span>
                     </label>
-                    <label
-                      onClick={() => {
-                        if (!processing && !isPinCodBlocked) setShippingMethod('cod');
-                      }}
-                      className={`flex items-center justify-between gap-3 p-4 rounded-xl border transition ${
-                        isPinCodBlocked
-                          ? 'border-gray-200 opacity-60 cursor-not-allowed bg-gray-50/50'
-                          : isCod
-                          ? 'border-[#002B49] ring-2 ring-[#002B49] bg-blue-50/30 cursor-pointer'
-                          : 'border-gray-200 hover:border-gray-300 cursor-pointer'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="shipping_method"
-                          checked={isCod}
-                          disabled={processing || isPinCodBlocked}
-                          onChange={() => setShippingMethod('cod')}
-                          className="text-[#002B49] focus:ring-[#002B49] cursor-pointer"
-                        />
-                        <div>
-                          <p className="text-xs font-bold text-gray-900">Cash on Delivery</p>
-                          <p className="text-[11px] text-gray-500">
-                            {isPinCodBlocked
-                              ? 'Unavailable for this PIN code.'
-                              : 'Standard delivery (3–5 business days). Pay when your order arrives.'}
-                          </p>
+                    {!isCodBlockedForCustomizer && (
+                      <label
+                        onClick={() => {
+                          if (!processing && !isPinCodBlocked) setShippingMethod('cod');
+                        }}
+                        className={`flex items-center justify-between gap-3 p-4 rounded-xl border transition ${
+                          isPinCodBlocked
+                            ? 'border-gray-200 opacity-60 cursor-not-allowed bg-gray-50/50'
+                            : isCod
+                            ? 'border-[#002B49] ring-2 ring-[#002B49] bg-blue-50/30 cursor-pointer'
+                            : 'border-gray-200 hover:border-gray-300 cursor-pointer'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="radio"
+                            name="shipping_method"
+                            checked={isCod}
+                            disabled={processing || isPinCodBlocked}
+                            onChange={() => setShippingMethod('cod')}
+                            className="text-[#002B49] focus:ring-[#002B49] cursor-pointer"
+                          />
+                          <div>
+                            <p className="text-xs font-bold text-gray-900">Cash on Delivery</p>
+                            <p className="text-[11px] text-gray-500">
+                              {isPinCodBlocked
+                                ? 'Unavailable for this PIN code.'
+                                : 'Standard delivery (3–5 business days). Pay when your order arrives.'}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <span className="text-xs font-bold text-[#002B49]">{subtotal >= 999 ? 'FREE' : '₹99'}</span>
-                    </label>
+                        <span className="text-xs font-bold text-[#002B49]">
+                          {subtotal >= 999 ? 'FREE' : '₹99'}{storeSettings.cod_surcharge > 0 ? ` + ₹${storeSettings.cod_surcharge} COD fee` : ''}
+                        </span>
+                      </label>
+                    )}
                   </div>
                 </div>
 
@@ -1149,6 +1180,12 @@ export const CheckoutPage: React.FC = () => {
                     )}
                   </span>
                 </div>
+                {codSurcharge > 0 && (
+                  <div className="flex justify-between">
+                    <span>Cash on Delivery fee</span>
+                    <span>₹{codSurcharge.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span>Estimated GST (18%)</span>
                   <span>₹{tax.toLocaleString('en-IN')}</span>

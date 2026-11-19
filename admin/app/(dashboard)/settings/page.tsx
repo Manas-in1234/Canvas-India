@@ -15,12 +15,18 @@ function StorePoliciesCard() {
   const { hasPermission } = usePermission();
   const canManage = hasPermission('store_settings.manage');
   const [minOrderValue, setMinOrderValue] = useState('');
+  const [codEnabledForCustomizer, setCodEnabledForCustomizer] = useState(false);
+  const [codSurcharge, setCodSurcharge] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     apiClient.get<Record<string, string>>('/admin/store-settings')
-      .then((settings) => setMinOrderValue(settings.min_order_value ?? ''))
+      .then((settings) => {
+        setMinOrderValue(settings.min_order_value ?? '');
+        setCodEnabledForCustomizer(settings.cod_enabled_for_customizer === '1');
+        setCodSurcharge(settings.cod_surcharge && settings.cod_surcharge !== '0' ? settings.cod_surcharge : '');
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -30,7 +36,11 @@ function StorePoliciesCard() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await apiClient.put('/admin/store-settings', { min_order_value: minOrderValue.trim() || null });
+      await apiClient.put('/admin/store-settings', {
+        min_order_value: minOrderValue.trim() || null,
+        cod_enabled_for_customizer: codEnabledForCustomizer,
+        cod_surcharge: codSurcharge.trim() || null,
+      });
       toast.success('Store policies updated');
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Failed to update store policies');
@@ -59,6 +69,36 @@ function StorePoliciesCard() {
           />
           <p className="text-xs text-muted-foreground">
             Customers must have at least this much in their cart (before shipping/tax) to check out. Leave empty to disable.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={codEnabledForCustomizer}
+              disabled={loading || !canManage}
+              onChange={(e) => setCodEnabledForCustomizer(e.target.checked)}
+              className="h-4 w-4 rounded border-input"
+            />
+            Allow Cash on Delivery for customized products
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Off by default: an order containing a product built in the customizer must be paid online. Turn this on to let customers pay by COD for those too.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="codSurcharge">Cash on Delivery fee (₹)</Label>
+          <Input
+            id="codSurcharge"
+            type="number"
+            min={0}
+            placeholder="No extra fee"
+            value={codSurcharge}
+            disabled={loading || !canManage}
+            onChange={(e) => setCodSurcharge(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Extra flat amount added to any order paid by Cash on Delivery, on top of delivery charges. Leave empty for no extra fee.
           </p>
         </div>
         {canManage && (

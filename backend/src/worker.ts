@@ -890,6 +890,34 @@ export default {
               reason: `Set to ${value}`,
             });
           }
+          if ('cod_enabled_for_customizer' in body) {
+            const value = body.cod_enabled_for_customizer ? '1' : '0';
+            await prisma.storeSetting.upsert({
+              where: { key: 'cod_enabled_for_customizer' },
+              update: { value, updatedBy: user.id },
+              create: { key: 'cod_enabled_for_customizer', value, updatedBy: user.id },
+            });
+            await services.audit.record({
+              adminUserId: user.id, action: 'STORE_SETTING_UPDATED', entityType: 'StoreSetting', entityId: 'cod_enabled_for_customizer',
+              reason: `Set to ${value}`,
+            });
+          }
+          if ('cod_surcharge' in body) {
+            const raw = body.cod_surcharge;
+            if (raw !== null && raw !== '' && (!Number.isFinite(Number(raw)) || Number(raw) < 0)) {
+              return jsonResponse({ message: 'COD surcharge must be a non-negative number, or empty to disable it.' }, 400, request);
+            }
+            const value = raw === null || raw === '' ? '0' : String(Number(raw));
+            await prisma.storeSetting.upsert({
+              where: { key: 'cod_surcharge' },
+              update: { value, updatedBy: user.id },
+              create: { key: 'cod_surcharge', value, updatedBy: user.id },
+            });
+            await services.audit.record({
+              adminUserId: user.id, action: 'STORE_SETTING_UPDATED', entityType: 'StoreSetting', entityId: 'cod_surcharge',
+              reason: `Set to ${value}`,
+            });
+          }
           const settings = await prisma.storeSetting.findMany();
           return jsonResponse(Object.fromEntries(settings.map(s => [s.key, s.value])), 200, request);
         }
@@ -1712,6 +1740,14 @@ export default {
           const existing = await findCodOrder();
           if (existing) return jsonResponse(codReceipt(existing), 200, request);
 
+          const hasCustomizedItem = items.some(item => item.customizationDetails || item.customization_details);
+          if (hasCustomizedItem) {
+            const codSetting = await prisma.storeSetting?.findUnique({ where: { key: 'cod_enabled_for_customizer' } }).catch(() => null);
+            if (codSetting?.value !== '1') {
+              return jsonResponse({ message: 'Cash on Delivery is not available for customized products. Please pay online to check out.' }, 422, request);
+            }
+          }
+
           const address = body.shippingAddress;
           const pin = address?.postal_code || address?.postalCode;
           if (!/^[1-9][0-9]{5}$/.test(pin ?? '') ||
@@ -1742,7 +1778,9 @@ export default {
           }
           const expectedSubtotal = Math.round(items.reduce((sum, item) => sum + (Number(item.price) || 0) * item.quantity, 0) * 100) / 100;
           const expectedShipping = expectedSubtotal >= 999 ? 0 : 99;
-          const expectedTotal = Math.round((expectedSubtotal + expectedShipping) * 100) / 100;
+          const codSurchargeSetting = await prisma.storeSetting?.findUnique({ where: { key: 'cod_surcharge' } }).catch(() => null);
+          const codSurcharge = Number(codSurchargeSetting?.value) || 0;
+          const expectedTotal = Math.round((expectedSubtotal + expectedShipping + codSurcharge) * 100) / 100;
           if (Math.round(Number(body.total) * 100) !== Math.round(expectedTotal * 100)) {
             return jsonResponse({ message: 'The order total changed. Review your cart and try again.' }, 409, request);
           }
