@@ -7223,6 +7223,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Add to Cart Action
   const handleAddToCart = () => {
+    // The live preview always needs a real size/thickness/wrap/etc. selected
+    // internally to render - but a shopper who never touched any picker
+    // shouldn't be charged for whichever option happened to be cheapest by
+    // default. Block checkout entirely until they've made at least one real
+    // choice, rather than silently adding an unrequested default to cart.
+    if (!hasCustomized) {
+      setValidationWarning('Choose a size and your other options before adding this to your cart.');
+      setTimeout(() => setValidationWarning(null), 4000);
+      setActiveTab('SELECT SIZE');
+      return;
+    }
+
     if (!isComplete) {
       setValidationWarning(activeStyleLayout ? 'Add a photo to every panel before adding the layout to your cart.' :
         'Please upload or select at least one photograph to customize your canvas print.');
