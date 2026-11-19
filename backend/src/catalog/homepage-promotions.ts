@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import type { PrismaClient } from '../generated/prisma/client.js';
+import { parseDiscountDescription } from '../growth/discounts/discount-tier.js';
 
 const storageKey = 'storefront/homepage-promotions';
 const ownerType = 'HomepagePromotions';
@@ -21,10 +22,19 @@ export class HomepagePromotions {
       const discount = discounts.find(row => row.code === code);
       if (!discount || (discount.startsAt && discount.startsAt > now) || (discount.expiresAt && discount.expiresAt <= now) ||
           (discount.usageLimit !== null && discount.usageCount >= discount.usageLimit)) return [];
-      const value = Number(discount.value);
-      const desc = discount.discountType === 'PERCENTAGE'
-        ? `${value}% OFF${discount.maxDiscountAmount !== null ? ` (up to ₹${Number(discount.maxDiscountAmount)})` : ''}`
-        : `₹${value} OFF`;
+      const tier = parseDiscountDescription(discount.description);
+      const isInitialActive = Boolean(
+        tier.initialUsersCount &&
+        tier.initialUsersDiscount &&
+        discount.usageCount < tier.initialUsersCount,
+      );
+      const effectiveType = isInitialActive ? (tier.initialUsersDiscountType || discount.discountType) : discount.discountType;
+      const effectiveVal = isInitialActive ? tier.initialUsersDiscount! : Number(discount.value);
+      const desc = isInitialActive
+        ? `First ${tier.initialUsersCount} users get ${effectiveVal}${effectiveType === 'PERCENTAGE' ? '%' : '₹'} OFF!`
+        : (effectiveType === 'PERCENTAGE'
+            ? `${effectiveVal}% OFF${discount.maxDiscountAmount !== null ? ` (up to ₹${Number(discount.maxDiscountAmount)})` : ''}`
+            : `₹${effectiveVal} OFF`);
       return [{ code, desc }];
     }) };
   }
