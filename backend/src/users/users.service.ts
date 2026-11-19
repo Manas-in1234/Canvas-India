@@ -24,9 +24,17 @@ export class UsersService {
   }
 
   async create(name: string, email: string, password: string, roleId: string, actingAdminId?: string) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const existing = await this.prisma.adminUser.findUnique({
+      where: { email: normalizedEmail },
+    });
+    if (existing) {
+      throw new Error(`An admin user with email '${normalizedEmail}' already exists. Please use a different email.`);
+    }
+
     const passwordHash = await hashPassword(password);
     const user = await this.prisma.adminUser.create({
-      data: { name, email, passwordHash, roleId },
+      data: { name: name.trim(), email: normalizedEmail, passwordHash, roleId },
       select: { id: true, name: true, email: true, roleId: true, createdAt: true },
     });
 

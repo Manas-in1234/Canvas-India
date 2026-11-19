@@ -181,15 +181,13 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   // Size/Shape/Hook variants of its own. Admins can (and do) set real sizes
   // on these now, so the no-picker flow only applies when a product
   // genuinely has none — same rule as the Canvas product page.
-  const isCatalogueDesign =
-    [
-      'devotional-art',
-      'line-art',
-      'motivational-posters',
-      'scenery-landscape-art',
-      'tribal-ethnic-art'
-    ].some((slug) => product.id.includes(slug)) &&
-    !((product.availableSizes && product.availableSizes.length > 0) || (product.sizes && product.sizes.length > 0));
+  const isCatalogueDesign = [
+    'devotional-art',
+    'line-art',
+    'motivational-posters',
+    'scenery-landscape-art',
+    'tribal-ethnic-art'
+  ].some((slug) => product.id.includes(slug));
 
   // Bottom Tabs State ('description' | 'specifications' | 'shipping' | 'reviews')
   const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'shipping' | 'reviews'>('description');

@@ -2128,8 +2128,29 @@ export default {
         if (method === 'POST') {
           const permError = checkPermission(user, ['users.manage'], request);
           if (permError) return permError;
-          const body = await request.json();
-          const newUser = await services.users.create(body.name, body.email, body.password, body.roleId, user.id);
+          const body = (await request.json().catch(() => ({}))) as any;
+          const normalizedEmail = String(body.email || '').trim().toLowerCase();
+
+          if (!normalizedEmail) {
+            return jsonResponse({ message: 'Email address is required.' }, 400, request);
+          }
+          if (!body.password || String(body.password).length < 8) {
+            return jsonResponse({ message: 'Password must be at least 8 characters long.' }, 400, request);
+          }
+
+          let newUser;
+          try {
+            newUser = await services.users.create(body.name, normalizedEmail, body.password, body.roleId, user.id);
+          } catch (err: any) {
+            if (err?.code === 'P2002' || err?.message?.includes('already exists') || err?.message?.includes('Unique constraint')) {
+              return jsonResponse({
+                statusCode: 409,
+                error: 'Conflict',
+                message: `An admin user with email '${normalizedEmail}' already exists. Please use a different email or update their role in Team Members.`,
+              }, 409, request);
+            }
+            return jsonResponse({ statusCode: 500, message: err?.message || 'Failed to create user' }, 500, request);
+          }
 
           let roleName = 'Administrator';
           try {
@@ -2138,7 +2159,7 @@ export default {
           } catch {}
 
           const emailResult = await sendAdminWelcomeEmail({
-            recipientEmail: body.email,
+            recipientEmail: normalizedEmail,
             recipientName: body.name,
             roleName,
             temporaryPassword: body.password,
