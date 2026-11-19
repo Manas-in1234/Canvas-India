@@ -13,6 +13,7 @@ import { WorkerShapes } from './customization/shapes/worker-shapes.js';
 import { resolveAdminRead } from './common/admin-read-routes.js';
 import { HeroImages } from './catalog/hero-images.js';
 import { HERO_IMAGE_SLOTS, isHeroImageSlot } from './catalog/hero-image-slots.js';
+import { sendAdminWelcomeEmail } from './common/email/welcome-email.js';
 
 export interface Env {
   DATABASE_URL: string;
@@ -777,6 +778,32 @@ export default {
             });
             await services.audit.record({
               adminUserId: user.id, action: 'STORE_SETTING_UPDATED', entityType: 'StoreSetting', entityId: 'min_order_value',
+              reason: `Set to ${value}`,
+            });
+          }
+          if ('resend_api_key' in body) {
+            const raw = body.resend_api_key;
+            const value = raw === null || raw === '' ? '' : String(raw).trim();
+            await prisma.storeSetting.upsert({
+              where: { key: 'resend_api_key' },
+              update: { value, updatedBy: user.id },
+              create: { key: 'resend_api_key', value, updatedBy: user.id },
+            });
+            await services.audit.record({
+              adminUserId: user.id, action: 'STORE_SETTING_UPDATED', entityType: 'StoreSetting', entityId: 'resend_api_key',
+              reason: 'Updated Resend API Key',
+            });
+          }
+          if ('resend_from_email' in body) {
+            const raw = body.resend_from_email;
+            const value = raw === null || raw === '' ? '' : String(raw).trim();
+            await prisma.storeSetting.upsert({
+              where: { key: 'resend_from_email' },
+              update: { value, updatedBy: user.id },
+              create: { key: 'resend_from_email', value, updatedBy: user.id },
+            });
+            await services.audit.record({
+              adminUserId: user.id, action: 'STORE_SETTING_UPDATED', entityType: 'StoreSetting', entityId: 'resend_from_email',
               reason: `Set to ${value}`,
             });
           }
@@ -2102,7 +2129,29 @@ export default {
           const permError = checkPermission(user, ['users.manage'], request);
           if (permError) return permError;
           const body = await request.json();
-          return jsonResponse(await services.users.create(body.name, body.email, body.password, body.roleId, user.id), 201, request);
+          const newUser = await services.users.create(body.name, body.email, body.password, body.roleId, user.id);
+
+          let roleName = 'Administrator';
+          try {
+            const role = await prisma.role.findUnique({ where: { id: body.roleId }, select: { name: true } });
+            if (role?.name) roleName = role.name;
+          } catch {}
+
+          const emailResult = await sendAdminWelcomeEmail({
+            recipientEmail: body.email,
+            recipientName: body.name,
+            roleName,
+            temporaryPassword: body.password,
+            resendApiKey: env.RESEND_API_KEY,
+            resendFromEmail: env.RESEND_FROM_EMAIL,
+            prisma,
+          });
+
+          return jsonResponse({
+            ...newUser,
+            emailSent: emailResult.sent,
+            emailError: emailResult.error ?? null,
+          }, 201, request);
         }
       }
 

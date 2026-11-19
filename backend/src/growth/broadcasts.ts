@@ -63,8 +63,21 @@ export class Broadcasts {
     if (broadcast.status !== 'DRAFT' && broadcast.status !== 'FAILED') {
       throw new BadRequestException('This broadcast has already been sent.');
     }
-    if (!this.resendApiKey?.trim() || !this.fromEmail?.trim()) {
-      throw new BadRequestException('Email sending is not configured yet. Add RESEND_API_KEY and RESEND_FROM_EMAIL to send broadcasts.');
+    let apiKey = this.resendApiKey?.trim();
+    let fromEmail = this.fromEmail?.trim();
+    if (!apiKey) {
+      const s = await this.prisma.storeSetting.findUnique({ where: { key: 'resend_api_key' } }).catch(() => null);
+      if (s?.value?.trim()) apiKey = s.value.trim();
+    }
+    if (!fromEmail) {
+      const s = await this.prisma.storeSetting.findUnique({ where: { key: 'resend_from_email' } }).catch(() => null);
+      if (s?.value?.trim()) fromEmail = s.value.trim();
+    }
+    if (!apiKey) {
+      throw new BadRequestException('Email sending is not configured yet. Configure your Resend API Key in Admin Settings or worker secrets.');
+    }
+    if (!fromEmail) {
+      fromEmail = 'Canvas India <admin@canvassindia.com>';
     }
 
     const customers = await this.prisma.customer.findMany({
@@ -84,9 +97,9 @@ export class Broadcasts {
       try {
         const response = await fetch('https://api.resend.com/emails/batch', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${this.resendApiKey}`, 'Content-Type': 'application/json' },
+          headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(batch.map(email => ({
-            from: this.fromEmail,
+            from: fromEmail,
             to: [email],
             subject: broadcast.subject,
             html: broadcast.body,
