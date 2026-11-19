@@ -37,12 +37,16 @@ export interface InitiatePaymentOptions {
   onDismiss?: () => void;
 }
 
-const DEFAULT_RAZORPAY_KEY = 'rzp_live_TecyaExpRewIqU';
-
 export const paymentService = {
+  // No hardcoded fallback key here on purpose: this key must always match
+  // whatever RAZORPAY_KEY_ID/SECRET the backend Worker is configured with
+  // (order creation and payment verification happen server-side with that
+  // pair), so a mismatched or stale key baked into the bundle would create
+  // Razorpay orders under one merchant account and open checkout under a
+  // different one. Missing this env var should fail loudly (no Razorpay
+  // button) rather than silently falling back to some other live key.
   getRazorpayKey(): string {
-    const envKey = ((import.meta.env.VITE_RAZORPAY_KEY_ID as string | undefined) || '').trim();
-    return envKey || DEFAULT_RAZORPAY_KEY;
+    return ((import.meta.env.VITE_RAZORPAY_KEY_ID as string | undefined) || '').trim();
   },
 
   isRazorpayConfigured(): boolean {
