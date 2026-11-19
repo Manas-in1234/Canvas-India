@@ -202,9 +202,6 @@ export const LoginPage: React.FC = () => {
                       className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#002B49] focus:border-transparent outline-none transition"
                     />
                   </div>
-                  <p className="mt-1.5 text-[11px] text-gray-500">
-                    We will send a 6-digit verification code to your email. No password needed.
-                  </p>
                 </div>
 
                 <button
