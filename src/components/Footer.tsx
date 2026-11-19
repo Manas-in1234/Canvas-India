@@ -69,13 +69,26 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenQuote, o
               <div className="flex items-center gap-2">
                 <MessageCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span className="text-stone-400">WhatsApp:</span>
-                <a 
-                  href="https://wa.me/917893051555" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href="https://wa.me/917893051555"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-stone-200 hover:text-emerald-400 transition-colors"
                 >
                   78930 51555
+                </a>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="text-stone-400">Corporate &amp; Bulk Orders:</span>
+                <a
+                  href="https://wa.me/917893946464"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-stone-200 hover:text-emerald-400 transition-colors"
+                >
+                  78939 46464
                 </a>
               </div>
 

@@ -157,7 +157,7 @@ export const SharedFooter: React.FC<SharedFooterProps> = ({
               </div>
               
               {/* WhatsApp Quick Chat */}
-              <div className="pt-2">
+              <div className="pt-2 flex flex-wrap gap-2">
                 <a
                   href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20enquire%20about%20custom%20displays"
                   target="_blank"
@@ -166,6 +166,15 @@ export const SharedFooter: React.FC<SharedFooterProps> = ({
                 >
                   <span className="w-2 h-2 rounded-full bg-[var(--accent-light)] animate-pulse" />
                   <span>WhatsApp: +91 78930 51555</span>
+                </a>
+                <a
+                  href="https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--accent)]/20 hover:bg-[var(--accent)]/30 text-[var(--accent-light)] border border-[var(--accent)]/40 text-xs font-semibold transition-colors"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[var(--accent-light)] animate-pulse" />
+                  <span>Corporate: +91 78939 46464</span>
                 </a>
               </div>
 

@@ -408,6 +408,12 @@ export const AboutUsPage: React.FC = () => {
                 78930 51555
               </>}</a>
             </p>
+            <p>
+              {copy("f200", "Corporate & Bulk Orders:")}{' '}
+              <a href={copy("f201", "https://wa.me/917893946464")} target="_blank" rel="noopener noreferrer" className="text-[#0E4A93] font-semibold hover:underline">{content["f202"] ?? <>
+                78939 46464
+              </>}</a>
+            </p>
             <p>{content["f86"] ?? <>
               Address: H NO 4-9-197/B/84, HMT Nagar, Nacharam, Hyderabad, Telangana &ndash; 500076
             </>}</p>
