@@ -134,16 +134,30 @@ export function mapBackendProductToFrontend(raw: any, fallbackCatalog: Product[]
     }
   }
 
-  const sizes = (Array.isArray(raw.sizes) && raw.sizes.length > 0)
+  // A real backend record's own sizes/finishes (however they got set — a
+  // direct `sizes` array, or option-group values) always win over the
+  // static demo catalog's hardcoded ones, even when that's an empty list:
+  // an admin who intentionally left a product's sizes blank should see
+  // blank, not another product's leftover demo sizes just because the ids
+  // happen to collide with an entry in the static catalogue. The static
+  // fallback only ever applies when the backend gave no size/finish data
+  // in any form (e.g. a brand-new, not-yet-configured product).
+  const hasRealSizeData = Array.isArray(raw.sizes) || Array.isArray(raw.options);
+  const sizes = Array.isArray(raw.sizes)
     ? raw.sizes
     : extractedSizes.length > 0
     ? extractedSizes
+    : hasRealSizeData
+    ? []
     : existing?.sizes || ['8x10 inch', '12x18 inch', '16x24 inch', '24x36 inch'];
 
-  const finishes = (Array.isArray(raw.finishes) && raw.finishes.length > 0)
+  const hasRealFinishData = Array.isArray(raw.finishes) || Array.isArray(raw.options);
+  const finishes = Array.isArray(raw.finishes)
     ? raw.finishes
     : extractedFinishes.length > 0
     ? extractedFinishes
+    : hasRealFinishData
+    ? []
     : existing?.finishes || ['Matte Gallery Wrap', 'Satin Lustre', 'Floating Frame'];
 
   // Images
@@ -177,9 +191,9 @@ export function mapBackendProductToFrontend(raw: any, fallbackCatalog: Product[]
     tags: Array.isArray(raw.tags) && raw.tags.length > 0 ? raw.tags : existing?.tags || [categorySlug, 'custom', 'wall art'],
     occasions: raw.occasions || existing?.occasions,
     sizes,
-    availableSizes: raw.availableSizes || existing?.availableSizes || sizes,
+    availableSizes: Array.isArray(raw.availableSizes) ? raw.availableSizes : sizes,
     finishes,
-    availableFinishes: raw.availableFinishes || existing?.availableFinishes || finishes,
+    availableFinishes: Array.isArray(raw.availableFinishes) ? raw.availableFinishes : finishes,
     availableThicknesses: raw.availableThicknesses || existing?.availableThicknesses,
     availableStyles: raw.availableStyles || existing?.availableStyles,
     availableBases: raw.availableBases || existing?.availableBases,
