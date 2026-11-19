@@ -15,7 +15,9 @@ const CATALOGUE_DESIGN_SLUGS = [
   'tribal-ethnic-art',
 ];
 export function isCatalogueDesign(product: Product): boolean {
-  return CATALOGUE_DESIGN_SLUGS.includes(product.categorySlug) || CATALOGUE_DESIGN_SLUGS.some((slug) => product.id.includes(slug));
+  const matchesSlug = CATALOGUE_DESIGN_SLUGS.includes(product.categorySlug) || CATALOGUE_DESIGN_SLUGS.some((slug) => product.id.includes(slug));
+  const hasOwnSizes = (product.availableSizes && product.availableSizes.length > 0) || (product.sizes && product.sizes.length > 0);
+  return matchesSlug && !hasOwnSizes;
 }
 
 /** Parses a size label like `12x18 inch`, `12" x 18"`, or `24X36` into inches. Returns null if unparseable. */

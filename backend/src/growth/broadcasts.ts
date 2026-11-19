@@ -66,11 +66,11 @@ export class Broadcasts {
     let apiKey = this.resendApiKey?.trim();
     let fromEmail = this.fromEmail?.trim();
     if (!apiKey) {
-      const s = await this.prisma.storeSetting.findUnique({ where: { key: 'resend_api_key' } }).catch(() => null);
+      const s = await this.prisma.storeSetting?.findUnique({ where: { key: 'resend_api_key' } }).catch(() => null);
       if (s?.value?.trim()) apiKey = s.value.trim();
     }
     if (!fromEmail) {
-      const s = await this.prisma.storeSetting.findUnique({ where: { key: 'resend_from_email' } }).catch(() => null);
+      const s = await this.prisma.storeSetting?.findUnique({ where: { key: 'resend_from_email' } }).catch(() => null);
       if (s?.value?.trim()) fromEmail = s.value.trim();
     }
     if (!apiKey) {

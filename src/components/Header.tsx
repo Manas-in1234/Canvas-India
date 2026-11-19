@@ -470,7 +470,7 @@ export const Header: React.FC<HeaderProps> = ({
                         <div
                           key={product.id}
                           onClick={() => {
-                            onOpenCustomize(product);
+                            navigate(`/products/${product.id}`);
                             setSearchOpen(false);
                           }}
                           className="p-2 flex items-center gap-3 hover:bg-stone-50 rounded-lg cursor-pointer transition-colors"
