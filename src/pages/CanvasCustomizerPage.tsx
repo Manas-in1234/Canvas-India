@@ -9816,6 +9816,23 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <span className="font-bold text-stone-900">+₹{(() => { const p = currentShape.priceAddon; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
                 </div>
               )}
+              {shapeApplies && NON_RECTANGULAR_SHAPE_TYPES.has(currentShape.shapeType) && (() => {
+                // Circle/oval/heart/hexagon/custom shapes are billed by
+                // their bounding rectangle's area at shapeAreaRate, not a
+                // flat priceAddon - this used to never appear as its own
+                // line, so the total included a charge the breakdown never
+                // itemized (looked identical to an unrequested default).
+                const boundingWidth = isCustomSize && canUseCustomSize ? customWidth : (currentSizeOption.widthInches ?? customWidth);
+                const boundingHeight = isCustomSize && canUseCustomSize ? customHeight : (currentSizeOption.heightInches ?? customHeight);
+                const p = Math.round(boundingWidth * boundingHeight * shapeAreaRate);
+                if (p <= 0) return null;
+                return (
+                  <div className="flex justify-between">
+                    <span>Shape ({currentShape.name ?? currentShape.shapeType}):</span>
+                    <span className="font-bold text-stone-900">+₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0)}</span>
+                  </div>
+                );
+              })()}
               {shapeApplies && (liveBorderWidthPrices[selectedBorderWidthId] || 0) > 0 && (
                 <div className="flex justify-between">
                   <span>Border:</span>
