@@ -470,7 +470,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const text = material 
           ? `Hi Canvas India, I would like to get a quote for ${material}`
           : 'Hi Canvas India, I would like to get a quote';
-        window.open(`https://wa.me/917893051555?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+        window.open(`https://wa.me/917893946464?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
       },
         onOpenCart: () => setCartDrawerOpen(true),
         onOpenWishlist: () => setWishlistDrawerOpen(true),

@@ -340,7 +340,7 @@ export const OrderDetailPage: React.FC = () => {
           <div className="print:hidden rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
             <strong>Cancellation policy:</strong> an order can be cancelled only before production begins. Once production
             (printing and framing) has started, or the order has been dispatched, it can no longer be cancelled. To request a
-            cancellation, contact info@canvassindia.com, 040-29303344 or WhatsApp 78930 51555 with your order number.
+            cancellation, contact info@canvassindia.com, 040-29303344 or WhatsApp 78939 46464 with your order number.
           </div>
         )}
         {live?.found && shownStatus !== 'cancelled' && (
@@ -362,7 +362,7 @@ export const OrderDetailPage: React.FC = () => {
             ) : (
               <p className="text-xs text-gray-600">
                 This order can no longer be cancelled because production (printing and framing) has started or it has been dispatched.
-                If you believe there is a problem with it, contact info@canvassindia.com, 040-29303344 or WhatsApp 78930 51555.
+                If you believe there is a problem with it, contact info@canvassindia.com, 040-29303344 or WhatsApp 78939 46464.
               </p>
             )}
             {cancelError && <p className="w-full text-xs text-red-600">{cancelError}</p>}
@@ -371,7 +371,7 @@ export const OrderDetailPage: React.FC = () => {
         {shownStatus === 'cancelled' && (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs text-red-800">
             This order has been cancelled. If you paid online, your refund has been initiated to the original payment method and may
-            take 5-10 business days to show, depending on your bank. Questions: info@canvassindia.com, 040-29303344 or WhatsApp 78930 51555.
+            take 5-10 business days to show, depending on your bank. Questions: info@canvassindia.com, 040-29303344 or WhatsApp 78939 46464.
           </div>
         )}
 

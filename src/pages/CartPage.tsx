@@ -277,7 +277,7 @@ export const CartPage: React.FC = () => {
                   <div className="text-[11px] text-stone-500">Chat with production specialist</div>
                 </div>
                 <a
-                  href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20need%20help%20with%20my%20cart"
+                  href="https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20need%20help%20with%20my%20cart"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"

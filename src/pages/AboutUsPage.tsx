@@ -404,14 +404,14 @@ export const AboutUsPage: React.FC = () => {
             </p>
             <p>
               {copy("f83", "WhatsApp:")}{' '}
-              <a href={copy("f84", "https://wa.me/917893051555")} target="_blank" rel="noopener noreferrer" className="text-[#0E4A93] font-semibold hover:underline">{content["f85"] ?? <>
-                78930 51555
+              <a href={copy("f84", "https://wa.me/917893946464")} target="_blank" rel="noopener noreferrer" className="text-[#0E4A93] font-semibold hover:underline">{content["f85"] ?? <>
+                78939 46464
               </>}</a>
             </p>
             <p>
-              {copy("f200", "Corporate & Bulk Orders:")}{' '}
-              <a href={copy("f201", "https://wa.me/917893946464")} target="_blank" rel="noopener noreferrer" className="text-[#0E4A93] font-semibold hover:underline">{content["f202"] ?? <>
-                78939 46464
+              {copy("f200", "Extra Contact:")}{' '}
+              <a href={copy("f201", "https://wa.me/917893051555")} target="_blank" rel="noopener noreferrer" className="text-[#0E4A93] font-semibold hover:underline">{content["f202"] ?? <>
+                78930 51555
               </>}</a>
             </p>
             <p>{content["f86"] ?? <>

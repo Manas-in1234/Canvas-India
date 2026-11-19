@@ -85,7 +85,7 @@ export const CancellationPolicyPage: React.FC = () => {
         <p>{content["f44"] ?? <>To request cancellation, contact:</>}</p>
         <p>{content["f45"] ?? <>Email: info@canvassindia.com</>}</p>
         <p>{content["f46"] ?? <>Landline: 040-29303344</>}</p>
-        <p>{content["f47"] ?? <>WhatsApp: 78930 51555</>}</p>
+        <p>{content["f47"] ?? <>WhatsApp: 78939 46464</>}</p>
         <p>{content["f48"] ?? <>Please provide:</>}</p>
         <ul className="list-disc pl-6 space-y-1">
           <li>{content["f49"] ?? <>Order number</>}</li>

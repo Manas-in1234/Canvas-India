@@ -186,7 +186,7 @@ export const PrivacyPolicyPage: React.FC = () => {
       <PolicySection heading={copy("f95", "Contact Us")}>
         <p>{content["f96"] ?? <>Email: info@canvassindia.com</>}</p>
         <p>{content["f97"] ?? <>Landline number: 040-29303344</>}</p>
-        <p>{content["f98"] ?? <>WhatsApp: 78930 51555</>}</p>
+        <p>{content["f98"] ?? <>WhatsApp: 78939 46464</>}</p>
         <p>{content["f99"] ?? <>
           Address: Building No./Flat No. H NO 4-9-197/B/84, HMT Nagar, Nacharam, Hyderabad,
           Telangana &ndash; 500076
