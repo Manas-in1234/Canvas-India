@@ -300,13 +300,26 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
       `${selectedThickness} Acrylic - ${selectedStyle}`,
       quantity,
       undefined,
-      galleryImages[activeImageIndex] || product.image,
+      // Leave photoUrl unset: this is a plain buy-as-is catalog purchase, no
+      // customer upload happened, so there's nothing real to pass here.
+      // The cart/checkout already fall back to the product's own listing
+      // image (item.photoUrl || item.product.image) for display, and
+      // checkout's Cash on Delivery eligibility reads this field to tell a
+      // real custom print apart from an ordinary catalog item - passing the
+      // product's own gallery image here would wrongly mark every acrylic
+      // catalog purchase as "customized" and hide COD for it.
+      undefined,
       product.material,
       selectedThickness,
       selectedStyle,
       selectedBase,
       selectedPaper,
-      { hook: selectedHook }
+      // Same reasoning as photoUrl above: setting customizationDetails at
+      // all (even to cosmetic display info like {hook}) makes the backend
+      // skip price/stock tampering checks for this item and hides Cash on
+      // Delivery at checkout - both meant for a real custom print, not an
+      // ordinary catalog purchase.
+      undefined
     );
   };
 

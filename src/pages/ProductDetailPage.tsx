@@ -416,7 +416,14 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
       undefined,
       undefined,
       undefined,
-      { hook: selectedHook, shape: selectedShape }
+      // Deliberately not {hook, shape} here: this is a plain buy-as-is
+      // catalog purchase, not a real customization. customizationDetails
+      // being set at all - even to cosmetic display info - makes the
+      // backend treat this item as uncheckable for price/stock tampering
+      // (see catalogItems filtering in worker.ts) and hides Cash on
+      // Delivery at checkout, both of which are meant for genuine custom
+      // prints built in the customizer, not an ordinary catalog item.
+      undefined
     );
   };
 
