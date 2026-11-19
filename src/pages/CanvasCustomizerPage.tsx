@@ -5109,7 +5109,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       // default, so switching material never adds a hardware charge the
       // shopper hasn't chosen.
       setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
-      if (pt.defaultThicknessId) setSelectedThicknessId(pt.defaultThicknessId);
+      // Every catalog product type sets its own "recommended" thickness
+      // (almost always Thin Gallery Wrap, +₹193.05), which would silently
+      // re-apply a real charge on top of the cheapest default the instant
+      // this effect ran - same reasoning as the other five thickness
+      // defaults in this file: always start at the cheapest real option,
+      // never a priced "recommended" pick.
+      setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
       if (pt.supportedShapeIds && !pt.supportedShapeIds.includes(selectedShapeId)) {
         setSelectedShapeId(pt.defaultShape || 'shape-rectangle');
       }
@@ -5142,7 +5148,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setViewerMode(null);
       setSelectedFrameId('no-frame');
       setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
-      if (pt.defaultThicknessId) setSelectedThicknessId(pt.defaultThicknessId);
+      setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(true);
       navigate(`/customize/${activeMaterial}/${productId}${location.search}`, { replace: true });
@@ -5174,7 +5180,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedSizeId('quotes-8x8');
       setSizeCategoryFilter('SQUARE');
       setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
-      setSelectedThicknessId(pt.defaultThicknessId || cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id || 'thin-gallery');
+      setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
       const tmpl = getQuoteTemplate(selectedQuoteTemplateId) || getQuoteTemplate('quote-inspire-01');
       if (tmpl && quotesPreference === 'collection') {
         setPanelImages((prev) => ({
@@ -5211,7 +5217,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedSizeId('painting-10x10');
       setSizeCategoryFilter('SQUARE');
       setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
-      setSelectedThicknessId(pt.defaultThicknessId || cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id || 'thin-gallery');
+      setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setActiveTab('UPLOAD');
@@ -5226,7 +5232,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedShapeId('shape-square');
       setSelectedSizeId('bus-21x32');
       setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
-      setSelectedThicknessId(pt.defaultThicknessId || cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id || 'thin-gallery');
+      setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setActiveTab('CREATE BUS ROLL');
@@ -5256,7 +5262,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedShapeId('shape-square');
       setSelectedSizeId('pop-12x12');
       setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
-      setSelectedThicknessId(pt.defaultThicknessId || cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id || 'thin-gallery');
+      setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setIsPopArtStyleModalOpen(true);
@@ -5272,7 +5278,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedShapeId('shape-square');
       setSelectedSizeId('lyric-8x8');
       setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
-      setSelectedThicknessId(pt.defaultThicknessId || cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id || 'thin-gallery');
+      setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setIsLyricTemplateModalOpen(true);
@@ -5349,9 +5355,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
 
     setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
-    if (pt.defaultThicknessId) {
-      setSelectedThicknessId(pt.defaultThicknessId);
-    }
+    setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
 
     if (pt.defaultLayoutId && !isLayoutProduct) {
       setExpandedLayoutId(pt.defaultLayoutId);
