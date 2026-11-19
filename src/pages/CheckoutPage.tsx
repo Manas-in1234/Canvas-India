@@ -157,9 +157,10 @@ export const CheckoutPage: React.FC = () => {
       setCouponDiscount(disc);
       setAppliedCode(result.code);
       setCouponApplied(
-        result.discountType === 'PERCENTAGE'
-          ? `${result.code} (${Number(result.value)}% OFF applied)`
-          : `${result.code} (₹${disc} OFF applied)`
+        result.message ||
+          (result.discountType === 'PERCENTAGE'
+            ? `${result.code} (${Number(result.value)}% OFF applied)`
+            : `${result.code} (₹${disc} OFF applied)`)
       );
     } catch (err) {
       setCouponDiscount(0);

@@ -10,6 +10,7 @@ import { CreateDiscountDto } from './dto/create-discount.dto.js';
 import { UpdateDiscountDto } from './dto/update-discount.dto.js';
 import { ValidateDiscountDto } from './dto/validate-discount.dto.js';
 import { Prisma } from '../../generated/prisma/client.js';
+import { parseDiscountDescription } from './discount-tier.js';
 
 export interface DiscountCalculationResult {
   isValid: boolean;
@@ -259,7 +260,7 @@ export class DiscountsService {
     }
 
     if (discount.usageLimit !== null && discount.usageCount >= discount.usageLimit) {
-      throw new BadRequestException(`Discount code '${normalizedCode}' has reached its usage limit`);
+      throw new BadRequestException(`Discount code '${normalizedCode}' was valid to ${discount.usageLimit} users and has reached its maximum limit.`);
     }
 
     if (dto.customerId && discount.perCustomerLimit !== null) {
@@ -342,31 +343,62 @@ export class DiscountsService {
       );
     }
 
+    // Check initial users tier from description
+    const tier = parseDiscountDescription(discount.description);
+    const hasInitialTier = Boolean(
+      tier.initialUsersCount &&
+      tier.initialUsersCount > 0 &&
+      tier.initialUsersDiscount &&
+      tier.initialUsersDiscount > 0,
+    );
+    const isInitialUser = hasInitialTier && discount.usageCount < tier.initialUsersCount!;
+
+    const effectiveDiscountType = isInitialUser
+      ? (tier.initialUsersDiscountType || discount.discountType)
+      : discount.discountType;
+
+    const effectiveValue = isInitialUser
+      ? new Prisma.Decimal(tier.initialUsersDiscount!)
+      : discount.value;
+
     // Calculate discount amount
     let discountAmount = new Prisma.Decimal(0);
 
-    if (discount.discountType === 'PERCENTAGE') {
-      discountAmount = eligibleSubtotal.times(discount.value).dividedBy(100);
+    if (effectiveDiscountType === 'PERCENTAGE') {
+      discountAmount = eligibleSubtotal.times(effectiveValue).dividedBy(100);
       if (discount.maxDiscountAmount && discountAmount.greaterThan(discount.maxDiscountAmount)) {
         discountAmount = discount.maxDiscountAmount;
       }
     } else {
       // FIXED_AMOUNT
-      discountAmount = Prisma.Decimal.min(discount.value, eligibleSubtotal);
+      discountAmount = Prisma.Decimal.min(effectiveValue, eligibleSubtotal);
     }
 
     // Round to 2 decimal places
     const roundedDiscount = new Prisma.Decimal(discountAmount.toFixed(2));
 
+    let message = `Coupon '${normalizedCode}' applied!`;
+    const symbol = effectiveDiscountType === 'PERCENTAGE' ? '%' : '₹';
+    if (isInitialUser) {
+      const currentRank = discount.usageCount + 1;
+      const spotsLeft = tier.initialUsersCount! - currentRank;
+      message = `🎉 Early Bird Discount: ${effectiveValue}${symbol} OFF applied! (Valid for initial ${tier.initialUsersCount} users — you are user #${currentRank}, ${spotsLeft} spot${spotsLeft === 1 ? '' : 's'} left! Valid to ${discount.usageLimit ? `${discount.usageLimit} users total` : 'all users'}).`;
+    } else if (hasInitialTier) {
+      message = `Coupon '${normalizedCode}' applied: ${effectiveValue}${symbol} OFF. (Initial ${tier.initialUsersCount} users tier ended • Valid to ${discount.usageLimit ? `${discount.usageLimit} users total` : 'all users'}).`;
+    } else if (discount.usageLimit) {
+      message = `Coupon '${normalizedCode}' applied: ${effectiveValue}${symbol} OFF. (Valid to ${discount.usageLimit} users).`;
+    }
+
     return {
       isValid: true,
       discountId: discount.id,
       code: discount.code,
-      discountType: discount.discountType as 'PERCENTAGE' | 'FIXED_AMOUNT',
-      value: discount.value,
+      discountType: effectiveDiscountType as 'PERCENTAGE' | 'FIXED_AMOUNT',
+      value: effectiveValue,
       discountAmount: roundedDiscount,
       eligibleSubtotal,
       isExclusive: discount.isExclusive,
+      message,
     };
   }
 

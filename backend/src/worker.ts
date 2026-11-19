@@ -20,6 +20,7 @@ import { sendOrderEmail, type OrderEmailEnv } from './common/order-emails.js';
 import { buildInvoice, loadBusinessProfile } from './commerce/invoice.js';
 import { verifyCapturedOrderPayment } from './commerce/orders/razorpay-capture.js';
 import { AdminOrders } from './commerce/orders/admin-orders.js';
+import { sendAdminWelcomeEmail } from './common/email/welcome-email.js';
 
 export interface Env {
   DATABASE_URL: string;
@@ -863,9 +864,59 @@ export default {
               reason: `Set to ${value}`,
             });
           }
+          if ('resend_api_key' in body) {
+            const raw = body.resend_api_key;
+            const value = raw === null || raw === '' ? '' : String(raw).trim();
+            await prisma.storeSetting.upsert({
+              where: { key: 'resend_api_key' },
+              update: { value, updatedBy: user.id },
+              create: { key: 'resend_api_key', value, updatedBy: user.id },
+            });
+            await services.audit.record({
+              adminUserId: user.id, action: 'STORE_SETTING_UPDATED', entityType: 'StoreSetting', entityId: 'resend_api_key',
+              reason: 'Updated Resend API Key',
+            });
+          }
+          if ('resend_from_email' in body) {
+            const raw = body.resend_from_email;
+            const value = raw === null || raw === '' ? '' : String(raw).trim();
+            await prisma.storeSetting.upsert({
+              where: { key: 'resend_from_email' },
+              update: { value, updatedBy: user.id },
+              create: { key: 'resend_from_email', value, updatedBy: user.id },
+            });
+            await services.audit.record({
+              adminUserId: user.id, action: 'STORE_SETTING_UPDATED', entityType: 'StoreSetting', entityId: 'resend_from_email',
+              reason: `Set to ${value}`,
+            });
+          }
           const settings = await prisma.storeSetting.findMany();
           return jsonResponse(Object.fromEntries(settings.map(s => [s.key, s.value])), 200, request);
         }
+      }
+
+      if (pathname === '/api/v1/admin/test-email' && method === 'POST') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, ['store_settings.manage'], request);
+        if (denied) return denied;
+        const body = (await request.json().catch(() => ({}))) as any;
+        const targetEmail = body.to || user.email;
+
+        const result = await sendAdminWelcomeEmail({
+          recipientEmail: targetEmail,
+          recipientName: user.name || 'Admin',
+          roleName: 'Administrator',
+          temporaryPassword: 'Test-Password-123!',
+          resendApiKey: env.RESEND_API_KEY,
+          resendFromEmail: env.RESEND_FROM_EMAIL,
+          prisma,
+        });
+
+        if (!result.sent) {
+          return jsonResponse({ success: false, message: result.error || 'Failed to send test email' }, 400, request);
+        }
+        return jsonResponse({ success: true, message: `Test email successfully sent to ${targetEmail}!` }, 200, request);
       }
       // -------------------------------------------------------------
       // Size presets — admin-managed size/panel options the storefront
@@ -2183,8 +2234,51 @@ export default {
         if (method === 'POST') {
           const permError = checkPermission(user, ['users.manage'], request);
           if (permError) return permError;
-          const body = await request.json();
-          return jsonResponse(await services.users.create(body.name, body.email, body.password, body.roleId, user.id), 201, request);
+          const body = (await request.json().catch(() => ({}))) as any;
+          const normalizedEmail = String(body.email || '').trim().toLowerCase();
+
+          if (!normalizedEmail) {
+            return jsonResponse({ message: 'Email address is required.' }, 400, request);
+          }
+          if (!body.password || String(body.password).length < 8) {
+            return jsonResponse({ message: 'Password must be at least 8 characters long.' }, 400, request);
+          }
+
+          let newUser;
+          try {
+            newUser = await services.users.create(body.name, normalizedEmail, body.password, body.roleId, user.id);
+          } catch (err: any) {
+            if (err?.code === 'P2002' || err?.message?.includes('already exists') || err?.message?.includes('Unique constraint')) {
+              return jsonResponse({
+                statusCode: 409,
+                error: 'Conflict',
+                message: `An admin user with email '${normalizedEmail}' already exists. Please use a different email or update their role in Team Members.`,
+              }, 409, request);
+            }
+            return jsonResponse({ statusCode: 500, message: err?.message || 'Failed to create user' }, 500, request);
+          }
+
+          let roleName = 'Administrator';
+          try {
+            const role = await prisma.role.findUnique({ where: { id: body.roleId }, select: { name: true } });
+            if (role?.name) roleName = role.name;
+          } catch {}
+
+          const emailResult = await sendAdminWelcomeEmail({
+            recipientEmail: normalizedEmail,
+            recipientName: body.name,
+            roleName,
+            temporaryPassword: body.password,
+            resendApiKey: env.RESEND_API_KEY,
+            resendFromEmail: env.RESEND_FROM_EMAIL,
+            prisma,
+          });
+
+          return jsonResponse({
+            ...newUser,
+            emailSent: emailResult.sent,
+            emailError: emailResult.error ?? null,
+          }, 201, request);
         }
       }
 

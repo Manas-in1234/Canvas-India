@@ -109,20 +109,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id, session.user.email, session.user.user_metadata);
-      }
-      setLoading(false);
-    }).catch((err) => {
-      console.error('Error getting auth session:', err);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
+    // Only rely on onAuthStateChange, not a separate getSession() call - a
+    // magic-link email lands here with an access token in the URL, which
+    // the Supabase client parses asynchronously (detectSessionInUrl). A
+    // parallel getSession() call could resolve first with a stale/null
+    // session and set loading=false before that URL token finishes being
+    // exchanged, which made ProtectedRoute redirect straight back to
+    // /login even though sign-in had actually just succeeded. Supabase
+    // always fires this listener once immediately with the current
+    // session (including a freshly-detected one from the URL), so it's
+    // the only session check this needs.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, newSession) => {
         setSession(newSession);
