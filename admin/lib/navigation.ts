@@ -22,12 +22,8 @@ import {
   ImageIcon,
   Star,
   PackageSearch,
-  Factory,
   Megaphone,
   BadgePercent,
-  ShoppingCart,
-  Palette,
-  UsersRound,
   Mail,
   type LucideIcon,
 } from "lucide-react";
@@ -77,12 +73,6 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Customers",
         icon: Users,
         permissions: ["customers.view"],
-      },
-      {
-        href: "/segments",
-        label: "Customer segments",
-        icon: UsersRound,
-        permissions: ["segments.view"],
       },
       {
         href: "/reviews",
@@ -137,19 +127,6 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: PackageSearch,
         permissions: ["inventory.view"],
       },
-      {
-        href: "/artwork",
-        label: "Artwork approvals",
-        icon: Palette,
-        permissions: ["artwork.view"],
-      },
-      {
-        href: "/production",
-        label: "Production",
-        icon: Factory,
-        permissions: ["production.view"],
-        alsoMatches: ["/production/batches", "/production/board", "/production/jobs", "/production/machines", "/production/materials"],
-      },
     ],
   },
   {
@@ -202,12 +179,6 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Campaigns",
         icon: Megaphone,
         permissions: ["campaigns.view"],
-      },
-      {
-        href: "/abandoned-carts",
-        label: "Abandoned carts",
-        icon: ShoppingCart,
-        permissions: ["abandoned_carts.view"],
       },
       {
         href: "/broadcasts",
