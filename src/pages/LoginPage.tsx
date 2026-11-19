@@ -7,7 +7,6 @@ import {
   ArrowRight,
   ShieldCheck,
   CheckCircle,
-  KeyRound,
   RotateCw,
 } from 'lucide-react';
 
@@ -15,16 +14,18 @@ export const LoginPage: React.FC = () => {
   const {
     signInWithGoogle,
     signInWithEmailOtp,
-    verifyEmailOtp,
   } = useAuth();
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '/account';
 
-  // Email form state (Pure OTP flow, no passwords)
+  useEffect(() => {
+    document.title = 'Login | Canvas India';
+  }, []);
+
+  // Email form state (passwordless - a magic link is emailed, no code to type in)
   const [email, setEmail] = useState('');
-  const [emailOtp, setEmailOtp] = useState('');
   const [emailOtpSent, setEmailOtpSent] = useState(false);
   const [emailTimer, setEmailTimer] = useState(0);
 
@@ -45,9 +46,9 @@ export const LoginPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [emailTimer]);
 
-  // The email service only lets a few codes go out per hour. Say that plainly, and point to what still works.
+  // The email service only lets a few links go out per hour. Say that plainly, and point to what still works.
   const RATE_LIMIT_MESSAGE =
-    'Too many codes were requested for this email in a short time. The last code we sent is still valid, so check your inbox and spam folder. You can also try again in a few minutes or continue with Google.';
+    'Too many sign-in links were requested for this email in a short time. The last link we sent is still valid, so check your inbox and spam folder. You can also try again in a few minutes or continue with Google.';
   const isRateLimited = (message?: string) => /rate limit|too many|over_email_send_rate_limit|security purposes/i.test(message || '');
 
   // Google OAuth Login
@@ -63,7 +64,12 @@ export const LoginPage: React.FC = () => {
   };
 
   // -------------------------------------------------------------
-  // EMAIL OTP FLOW (PASSWORDLESS)
+  // EMAIL MAGIC LINK FLOW (PASSWORDLESS)
+  // Supabase's email sender only supports its fixed default template, which
+  // sends a clickable sign-in link rather than a visible code - so there's
+  // nothing for the customer to type in here. Clicking the link itself
+  // completes sign-in (the Supabase client auto-detects the session from
+  // the URL it redirects back to), so this page just waits for that.
   // -------------------------------------------------------------
   const handleSendEmailOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -83,39 +89,15 @@ export const LoginPage: React.FC = () => {
     if (sendError) {
       if (isRateLimited(sendError.message)) {
         setError(RATE_LIMIT_MESSAGE);
-        // Keep the code box open: a code sent earlier still works. Make "Resend" wait longer.
+        // A link sent earlier still works. Make "Resend" wait longer.
         setEmailTimer(120);
       } else {
-        setError(sendError.message || 'Unable to send OTP code to this email. Please try again.');
+        setError(sendError.message || 'Unable to send a sign-in link to this email. Please try again.');
       }
     } else {
       setEmailOtpSent(true);
       setEmailTimer(60);
-      setSuccess(`Verification code sent to ${email.trim()}`);
-    }
-  };
-
-  const handleVerifyEmailOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-
-    if (!emailOtp || emailOtp.trim().length < 4) {
-      setError('Please enter the verification code sent to your email.');
-      return;
-    }
-
-    setLoading(true);
-    const { error: verifyError } = await verifyEmailOtp(email.trim(), emailOtp.trim());
-    setLoading(false);
-
-    if (verifyError) {
-      setError(verifyError.message || 'Invalid or expired verification code. Please check your email or resend.');
-    } else {
-      setSuccess('Email verified successfully! Logging you in...');
-      setTimeout(() => {
-        navigate(redirectUrl);
-      }, 600);
+      setSuccess(`A login link has been sent to ${email.trim()}`);
     }
   };
 
@@ -233,87 +215,56 @@ export const LoginPage: React.FC = () => {
                   {loading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Sending OTP...</span>
+                      <span>Sending link...</span>
                     </>
                   ) : (
                     <>
-                      <span>Send Email OTP</span>
+                      <span>Send Login Link</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
                 </button>
               </form>
             ) : (
-              <form className="space-y-4" onSubmit={handleVerifyEmailOtp}>
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700">
-                      Enter Email OTP Code
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEmailOtpSent(false);
-                        setEmailOtp('');
-                        setError(null);
-                      }}
-                      className="text-xs text-[#002B49] font-medium hover:underline cursor-pointer"
-                    >
-                      Change email
-                    </button>
-                  </div>
-
-                  <div className="relative rounded-lg shadow-xs">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                      <KeyRound className="h-5 w-5" />
-                    </div>
-                    <input
-                      type="text"
-                      maxLength={8}
-                      autoFocus
-                      required
-                      value={emailOtp}
-                      onChange={(e) => setEmailOtp(e.target.value)}
-                      placeholder="Enter 6-digit OTP"
-                      className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm tracking-widest font-mono focus:ring-2 focus:ring-[#002B49] focus:border-transparent outline-none transition"
-                    />
-                  </div>
-
-                  <div className="mt-2 flex items-center justify-between text-xs">
-                    <span className="text-gray-500 truncate max-w-[200px]">Sent to {email}</span>
-                    {emailTimer > 0 ? (
-                      <span className="text-gray-500">Resend in {emailTimer}s</span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleSendEmailOtp()}
-                        className="text-[#002B49] font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
-                      >
-                        <RotateCw className="w-3 h-3" />
-                        <span>Resend Code</span>
-                      </button>
-                    )}
-                  </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-gray-700">
+                    Check Your Email
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmailOtpSent(false);
+                      setError(null);
+                    }}
+                    className="text-xs text-[#002B49] font-medium hover:underline cursor-pointer"
+                  >
+                    Change email
+                  </button>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={loading || emailOtp.trim().length === 0}
-                  className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#002B49] hover:bg-[#001f35] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#002B49] disabled:opacity-50 transition cursor-pointer"
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Verifying...</span>
-                    </>
+                <div className="rounded-lg bg-blue-50 border border-blue-100 p-4 text-center">
+                  <Mail className="w-8 h-8 text-[#002B49] mx-auto mb-2" />
+                  <p className="text-sm text-gray-700">
+                    A login link has been sent to <strong>{email}</strong>. Open that email and click the link to sign in.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-center text-xs">
+                  {emailTimer > 0 ? (
+                    <span className="text-gray-500">Resend in {emailTimer}s</span>
                   ) : (
-                    <>
-                      <span>Verify &amp; Sign In</span>
-                      <CheckCircle className="w-4 h-4" />
-                    </>
+                    <button
+                      type="button"
+                      onClick={() => handleSendEmailOtp()}
+                      className="text-[#002B49] font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <RotateCw className="w-3 h-3" />
+                      <span>Resend Link</span>
+                    </button>
                   )}
-                </button>
-              </form>
+                </div>
+              </div>
             )}
           </div>
 

@@ -67,6 +67,11 @@ export function mapBackendProductToFrontend(raw: any, fallbackCatalog: Product[]
       description: raw.description ?? '', price, originalPrice, compareAtPrice: originalPrice,
       discountPercent: originalPrice > 0 ? Math.round((originalPrice - price) / originalPrice * 100) : 0,
       status: raw.status, rating: raw.storefront.rating ?? null,
+      // Both field names are populated: some pages (e.g. ProductDetailPage's
+      // size/shape picker) read `sizes`/`finishes` directly rather than the
+      // `availableX` names, and previously got nothing even when the admin
+      // had entered real sizes, since only availableSizes was ever set here.
+      sizes: raw.storefront.sizes ?? [], finishes: raw.storefront.finishes ?? [],
       availableSizes: raw.storefront.sizes ?? [], availableFinishes: raw.storefront.finishes ?? [],
       customizationAvailable: raw.storefront.customizable ?? raw.storefront.customizationAvailable,
       images: [raw.storefront.image, ...(raw.storefront.images ?? []).filter((url: string) => url !== raw.storefront.image)].filter(Boolean),

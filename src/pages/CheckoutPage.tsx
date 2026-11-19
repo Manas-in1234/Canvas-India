@@ -34,6 +34,10 @@ export const CheckoutPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const isGuestModeParam = searchParams.get('guest') === 'true';
 
+  useEffect(() => {
+    document.title = 'Checkout | Canvas India';
+  }, []);
+
   // Checkout step: 1 = Details, 2 = Address, 3 = Shipping & Review, 4 = Payment
   const [step, setStep] = useState<number>(user ? 2 : 1);
 
@@ -263,24 +267,79 @@ export const CheckoutPage: React.FC = () => {
     setStep(3);
   };
 
+  // Explicit "Save Address" button: saves the address to the account right
+  // away instead of only on "Continue to Review & Shipping" (which also
+  // immediately advances past this step) - lets the customer save without
+  // committing to move forward yet.
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [addressSavedNotice, setAddressSavedNotice] = useState(false);
+
+  const handleSaveAddressNow = async () => {
+    if (!user) return;
+    if (!shippingName.trim()) {
+      alert('Please enter recipient full name.');
+      return;
+    }
+    if (shippingPhone.replace(/\D/g, '').length !== 10) {
+      alert('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    if (!streetAddress.trim() || !city.trim() || !state.trim() || postalCode.length !== 6) {
+      alert('Please complete all required address fields including 6-digit PIN code.');
+      return;
+    }
+
+    setSavingAddress(true);
+    try {
+      const created = await addressService.addAddress(
+        {
+          name: shippingName,
+          phone: shippingPhone,
+          street_address: streetAddress,
+          apartment,
+          city,
+          state,
+          postal_code: postalCode,
+          country: 'India',
+          address_type: addressType,
+          is_default: savedAddresses.length === 0,
+        },
+        user.id
+      );
+      setSavedAddresses((prev) => [created, ...prev]);
+      if (created.id) setSelectedAddressId(created.id);
+      setAddressSavedNotice(true);
+      setTimeout(() => setAddressSavedNotice(false), 4000);
+    } catch (err) {
+      console.error('Failed to save address:', err);
+      const reason = err instanceof Error ? err.message : (err as { message?: string } | null)?.message;
+      alert(reason ? `Could not save this address: ${reason}` : 'Could not save this address. Please try again.');
+    } finally {
+      setSavingAddress(false);
+    }
+  };
+
   const checkoutPin = getEffectiveShippingAddress().postal_code;
-  const codAvailable = codAvailability?.pin === checkoutPin && codAvailability.available;
-  const codEligible = !couponApplied && cartItems.every(item => !item.customizationDetails && !item.photoUrl);
+  const isPinCodBlocked = codAvailability?.pin === checkoutPin && codAvailability.available === false;
+  const codAvailable = !isPinCodBlocked;
   const isCod = shippingMethod === 'cod';
 
   useEffect(() => {
     if (step !== 3 || !/^[1-9][0-9]{5}$/.test(checkoutPin)) return;
     const controller = new AbortController();
-    setCodAvailability(null);
     fetch(buildApiUrl(`/shipping/serviceability?pincode=${encodeURIComponent(checkoutPin)}`), { signal: controller.signal })
-      .then(async response => response.ok && (await response.json()).cod === true)
+      .then(async response => {
+        if (!response.ok) return true;
+        const data = await response.json().catch(() => ({}));
+        return data.cod !== false;
+      })
       .then(available => { if (!controller.signal.aborted) setCodAvailability({ pin: checkoutPin, available }); })
-      .catch(() => { if (!controller.signal.aborted) setCodAvailability({ pin: checkoutPin, available: false }); });
+      .catch(() => { if (!controller.signal.aborted) setCodAvailability({ pin: checkoutPin, available: true }); });
     return () => controller.abort();
   }, [checkoutPin, step]);
 
   const handleStartPayment = async () => {
-    if (submitting.current || processing || (isCod && (!codAvailable || !codEligible))) return;
+    if (submitting.current || processing || (isCod && isPinCodBlocked)) return;
     submitting.current = true;
     setPaymentError(null);
     setProcessing(true);
@@ -295,6 +354,7 @@ export const CheckoutPage: React.FC = () => {
         guestPhone: profile?.phone || guestPhone || null,
         items: cartItems.map((ci) => ({
           productId: ci.product.id,
+          productSlug: ci.product.slug,
           title: ci.product.name,
           price: ci.product.price,
           quantity: ci.quantity,
@@ -319,11 +379,14 @@ export const CheckoutPage: React.FC = () => {
         navigate(`/order-success/${order.id}`, { state: { order } });
         return;
       }
+      await orderService.validateOrder(orderParams);
       const order = await orderService.createOrder(orderParams);
 
       // 2a. Fully discounted order: nothing to charge, so skip the payment gateway.
       if (total <= 0 && appliedCode) {
-        await mirrorOrderToBackend(order, user?.email || guestEmail || null, {}, appliedCode);
+        if (!await mirrorOrderToBackend(order, user?.email || guestEmail || null, {}, appliedCode)) {
+          throw new Error('The store could not confirm the coupon order. Please try again.');
+        }
         clearCart();
         navigate(`/order-success/${order.id}`);
         return;
@@ -774,7 +837,7 @@ export const CheckoutPage: React.FC = () => {
                       </div>
 
                       {user && (
-                        <div className="pt-2">
+                        <div className="pt-2 flex flex-wrap items-center gap-3">
                           <label className="inline-flex items-center gap-2 text-xs text-gray-700 cursor-pointer">
                             <input
                               type="checkbox"
@@ -784,6 +847,19 @@ export const CheckoutPage: React.FC = () => {
                             />
                             Save this address to my account for faster future checkouts
                           </label>
+                          <button
+                            type="button"
+                            onClick={handleSaveAddressNow}
+                            disabled={savingAddress}
+                            className="text-xs font-semibold text-[#002B49] border border-[#002B49]/30 hover:bg-[#002B49]/5 rounded-lg px-3 py-1.5 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                          >
+                            {savingAddress ? 'Saving…' : 'Save Address'}
+                          </button>
+                          {addressSavedNotice && (
+                            <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+                              <CheckCircle className="w-3.5 h-3.5" /> Address saved
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
@@ -889,16 +965,32 @@ export const CheckoutPage: React.FC = () => {
                       </div>
                       <span className="text-xs font-bold text-[#002B49]">₹199</span>
                     </label>
-                    <label className={`flex items-center justify-between gap-3 rounded-xl border p-4 ${isCod ? 'border-[#002B49] ring-2 ring-[#002B49] bg-blue-50/30' : 'border-gray-200'}`}>
+                    <label
+                      onClick={() => {
+                        if (!processing && !isPinCodBlocked) setShippingMethod('cod');
+                      }}
+                      className={`flex items-center justify-between gap-3 p-4 rounded-xl border transition ${
+                        isPinCodBlocked
+                          ? 'border-gray-200 opacity-60 cursor-not-allowed bg-gray-50/50'
+                          : isCod
+                          ? 'border-[#002B49] ring-2 ring-[#002B49] bg-blue-50/30 cursor-pointer'
+                          : 'border-gray-200 hover:border-gray-300 cursor-pointer'
+                      }`}
+                    >
                       <div className="flex items-center gap-3">
-                        <input type="radio" name="shipping_method" checked={isCod}
-                          disabled={processing || !codAvailable || !codEligible} onChange={() => setShippingMethod('cod')} />
+                        <input
+                          type="radio"
+                          name="shipping_method"
+                          checked={isCod}
+                          disabled={processing || isPinCodBlocked}
+                          onChange={() => setShippingMethod('cod')}
+                          className="text-[#002B49] focus:ring-[#002B49] cursor-pointer"
+                        />
                         <div>
                           <p className="text-xs font-bold text-gray-900">Cash on Delivery</p>
                           <p className="text-[11px] text-gray-500">
-                            {!codEligible ? 'Available for catalog items without coupons or custom artwork.'
-                              : codAvailability?.pin !== checkoutPin ? 'Checking Cash on Delivery availability…'
-                              : !codAvailable ? 'Unavailable for this PIN code.'
+                            {isPinCodBlocked
+                              ? 'Unavailable for this PIN code.'
                               : 'Standard delivery (3–5 business days). Pay when your order arrives.'}
                           </p>
                         </div>
@@ -923,7 +1015,7 @@ export const CheckoutPage: React.FC = () => {
 
                   <button
                     onClick={handleStartPayment}
-                    disabled={processing || (isCod && (!codAvailable || !codEligible))}
+                    disabled={processing || (isCod && isPinCodBlocked)}
                     className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-[#002B49] hover:bg-[#001f35] text-white text-sm font-bold rounded-xl shadow-lg hover:shadow-xl transition disabled:opacity-50"
                   >
                     {processing ? (

@@ -1,4 +1,6 @@
 import { Occasions, isOccasionSlug } from './catalog/occasions.js';
+import { Reviews } from './commerce/reviews.js';
+import { Broadcasts } from './growth/broadcasts.js';
 import { HomepagePromotions } from './catalog/homepage-promotions.js';
 import { HomepageLayout } from './catalog/homepage-layout.js';
 import { isSupportPage, SupportPages } from './catalog/support-pages.js';
@@ -45,6 +47,7 @@ export interface Env {
   DELIVERY_GRAMS_PER_SQ_IN_CANVAS?: string;
   DELIVERY_GRAMS_PER_SQ_IN_ACRYLIC?: string;
   RESEND_API_KEY?: string;
+  RESEND_FROM_EMAIL?: string;
   MAIL_FROM?: string;
   MAIL_REPLY_TO?: string;
   ADMIN_NOTIFY_EMAIL?: string;
@@ -110,6 +113,36 @@ async function delhiveryPostalCode(pin: string, token: string) {
   if (!response.ok) throw new Error('Delhivery serviceability check failed');
   const data = await response.json() as { delivery_codes?: { postal_code?: { cod?: string; pre_paid?: string; city?: string; district?: string; state_code?: string } }[] };
   return data.delivery_codes?.[0]?.postal_code ?? null;
+}
+
+// Shared by COD checkout and the pre-payment validation endpoint: re-verifies catalog item
+// prices/stock against the real product record (custom/customized items are exempt - they have
+// no fixed catalog price), and enforces the store-wide minimum order value. Returns a rejection
+// message + HTTP status if the order should be refused, or null if it's fine to proceed.
+async function validateOrderEligibility(prisma: PrismaClient, items: any[]): Promise<{ message: string; status: number } | null> {
+  const catalogItems = items.filter(item => !item.customizationDetails && !item.customization_details);
+  if (catalogItems.length) {
+    const products = await prisma.product.findMany({
+      where: { id: { in: catalogItems.map(item => item.productId || item.product_id) }, status: 'ACTIVE', deletedAt: null, productType: { isActive: true } },
+      select: { id: true, basePrice: true, storefront: true },
+    });
+    const byId = new Map(products.map(product => [product.id, product]));
+    if (catalogItems.some(item => {
+      const product = byId.get(item.productId || item.product_id);
+      return !product || Number(product.basePrice) !== Number(item.price) ||
+        Number(product.basePrice) <= 0 ||
+        (product.storefront as { stockStatus?: string } | null)?.stockStatus === 'Out of Stock';
+    })) {
+      return { message: 'An item or price changed. Refresh your cart and try again.', status: 409 };
+    }
+  }
+  const subtotal = Math.round(items.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1), 0) * 100) / 100;
+  const minOrderSetting = await prisma.storeSetting?.findUnique({ where: { key: 'min_order_value' } }).catch(() => null);
+  const minOrderValue = Number(minOrderSetting?.value) || 0;
+  if (minOrderValue > 0 && subtotal < minOrderValue) {
+    return { message: `Minimum order value is ₹${minOrderValue}. Add more items to your cart to checkout.`, status: 400 };
+  }
+  return null;
 }
 
 const ALLOWED_ORIGIN_PATTERNS = [
@@ -384,6 +417,78 @@ export default {
           return new Response(null, { status: 204, headers: corsHeaders(request) });
         }
       }
+      // Public: approved reviews shown on a product page.
+      const productReviews = pathname.match(/^\/api\/v1\/products\/([^/]+)\/reviews$/);
+      if (productReviews && method === 'GET') {
+        return jsonResponse(await new Reviews(prisma).listApprovedForProduct(productReviews[1]), 200, request);
+      }
+
+      // Storefront: a customer proves an order is theirs with its order number + email (same
+      // check used for order status/cancellation), then sees what they can review or submits one.
+      if (pathname === '/api/v1/storefront/reviews/eligible' && method === 'POST') {
+        const body = (await request.json().catch(() => ({}))) as { orderNumber?: string; email?: string };
+        if (!body.orderNumber || !body.email) return jsonResponse({ message: 'orderNumber and email are required' }, 400, request);
+        return jsonResponse(await new Reviews(prisma).listReviewable(body.orderNumber, body.email), 200, request);
+      }
+      if (pathname === '/api/v1/storefront/reviews' && method === 'POST') {
+        const body = (await request.json().catch(() => ({}))) as {
+          orderNumber?: string; email?: string; orderItemId?: string; rating?: number; comment?: string;
+        };
+        if (!body.orderNumber || !body.email || !body.orderItemId) {
+          return jsonResponse({ message: 'orderNumber, email and orderItemId are required' }, 400, request);
+        }
+        return jsonResponse(
+          await new Reviews(prisma).create(body.orderNumber, body.email, body.orderItemId, Number(body.rating), String(body.comment ?? '')),
+          201, request,
+        );
+      }
+
+      // Admin: moderation queue.
+      const adminReviews = pathname.match(/^\/api\/v1\/admin\/reviews(?:\/([^/]+))?$/);
+      if (adminReviews) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const [, id] = adminReviews;
+        const reviews = new Reviews(prisma);
+        if (!id && method === 'GET') {
+          const denied = checkPermission(user, ['reviews.view'], request);
+          if (denied) return denied;
+          return jsonResponse(await reviews.listForModeration(typeof query.status === 'string' ? query.status : undefined), 200, request);
+        }
+        if (id && method === 'PATCH') {
+          const denied = checkPermission(user, ['reviews.manage'], request);
+          if (denied) return denied;
+          const body = (await request.json().catch(() => ({}))) as { status?: string; rejectionReason?: string };
+          if (body.status !== 'APPROVED' && body.status !== 'REJECTED') {
+            return jsonResponse({ message: "status must be 'APPROVED' or 'REJECTED'" }, 400, request);
+          }
+          return jsonResponse(await reviews.moderate(id, body.status, user.id, body.rejectionReason), 200, request);
+        }
+        if (id && method === 'DELETE') {
+          const denied = checkPermission(user, ['reviews.manage'], request);
+          if (denied) return denied;
+          return jsonResponse(await reviews.remove(id), 200, request);
+        }
+      }
+
+      if (pathname === '/api/v1/admin/audit-log' && method === 'GET') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, ['audit.view'], request);
+        if (denied) return denied;
+        const where: Record<string, unknown> = {};
+        if (typeof query.entityType === 'string' && query.entityType) where.entityType = query.entityType;
+        if (typeof query.action === 'string' && query.action) where.action = query.action;
+        const take = Math.min(Number(query.limit) || 100, 200);
+        const logs = await prisma.auditLog.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          take,
+          include: { adminUser: { select: { name: true, email: true } } },
+        });
+        return jsonResponse(logs, 200, request);
+      }
+
       if (pathname === '/api/v1/homepage-promotions' && method === 'GET') {
         return jsonResponse(await new HomepagePromotions(prisma).storefront(), 200, request);
       }
@@ -437,6 +542,7 @@ export default {
         const result = method === 'GET' ? await promotions.settings() : await promotions.save(await request.json(), user.id);
         return jsonResponse(result, 200, request);
       }
+
       const heroImage = pathname.match(/^\/api\/v1\/(admin\/)?hero-images(?:\/([^/]+))?$/);
       if (heroImage) {
         const [, admin, requestedSlot] = heroImage;
@@ -719,6 +825,47 @@ export default {
           throw err;
         }
         return jsonResponse({ message: 'Not found' }, 404, request);
+      }
+      // -------------------------------------------------------------
+      // Store settings — generic store-wide policy toggles (currently just
+      // minimum order value). Public GET so checkout can enforce it; a
+      // single admin endpoint to read/update the whole set.
+      // -------------------------------------------------------------
+      if (pathname === '/api/v1/store-settings' && method === 'GET') {
+        const settings = await prisma.storeSetting.findMany({ select: { key: true, value: true } });
+        return jsonResponse(Object.fromEntries(settings.map(s => [s.key, s.value])), 200, request);
+      }
+      if (pathname === '/api/v1/admin/store-settings') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const isManage = method === 'PUT';
+        const denied = checkPermission(user, [isManage ? 'store_settings.manage' : 'store_settings.view'], request);
+        if (denied) return denied;
+        if (method === 'GET') {
+          const settings = await prisma.storeSetting.findMany();
+          return jsonResponse(Object.fromEntries(settings.map(s => [s.key, s.value])), 200, request);
+        }
+        if (method === 'PUT') {
+          const body = (await request.json().catch(() => ({}))) as any;
+          if ('min_order_value' in body) {
+            const raw = body.min_order_value;
+            if (raw !== null && raw !== '' && (!Number.isFinite(Number(raw)) || Number(raw) < 0)) {
+              return jsonResponse({ message: 'Minimum order value must be a non-negative number, or empty to disable it.' }, 400, request);
+            }
+            const value = raw === null || raw === '' ? '0' : String(Number(raw));
+            await prisma.storeSetting.upsert({
+              where: { key: 'min_order_value' },
+              update: { value, updatedBy: user.id },
+              create: { key: 'min_order_value', value, updatedBy: user.id },
+            });
+            await services.audit.record({
+              adminUserId: user.id, action: 'STORE_SETTING_UPDATED', entityType: 'StoreSetting', entityId: 'min_order_value',
+              reason: `Set to ${value}`,
+            });
+          }
+          const settings = await prisma.storeSetting.findMany();
+          return jsonResponse(Object.fromEntries(settings.map(s => [s.key, s.value])), 200, request);
+        }
       }
       // -------------------------------------------------------------
       // Size presets — admin-managed size/panel options the storefront
@@ -1162,6 +1309,23 @@ export default {
         return jsonResponse(await services.inventory.adjust(body.variantId, body.quantity, user.id, body.reason), 201, request);
       }
 
+      if (pathname === '/api/v1/inventory/stock-in' && method === 'POST') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, ['inventory.adjust'], request);
+        if (permError) return permError;
+        const body = await request.json();
+        return jsonResponse(await services.inventory.addStock(body.productId, Number(body.quantity), user.id, body.reason), 201, request);
+      }
+
+      if (pathname === '/api/v1/inventory/movements') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, ['inventory.view'], request);
+        if (permError) return permError;
+        return jsonResponse(await services.inventory.listMovements(typeof query.variantId === 'string' ? query.variantId : undefined), 200, request);
+      }
+
       // -------------------------------------------------------------
       // 5. Catalog: Products, Categories, Collections, Product-Types, Variants, Options
       // -------------------------------------------------------------
@@ -1460,12 +1624,32 @@ export default {
         return jsonResponse(customer, 201, request);
       }
 
+      // Checked before a prepaid order's Razorpay payment is even opened, since prepaid orders
+      // are written straight to the storefront's own database and only mirrored here afterwards -
+      // by the time that mirror call runs, the customer has already paid, so it's too late to
+      // reject the order then. COD doesn't need this: the real order-creation route below already
+      // validates it synchronously, before anything is charged.
+      if (pathname === '/api/v1/storefront/orders/validate' && method === 'POST') {
+        const body = (await request.json().catch(() => ({}))) as any;
+        const items = Array.isArray(body.items) ? body.items : [];
+        if (items.length === 0) {
+          return jsonResponse({ message: 'Order items are required' }, 400, request);
+        }
+        const rejection = await validateOrderEligibility(prisma, items);
+        if (rejection) return jsonResponse({ message: rejection.message }, rejection.status, request);
+        return jsonResponse({ valid: true }, 200, request);
+      }
+
       if (pathname === '/api/v1/storefront/orders' && method === 'POST') {
         const body = (await request.json().catch(() => ({}))) as any;
         let items: any[] = Array.isArray(body.items) ? body.items : [];
         const isCod = body.paymentMethod === 'COD';
         let codAmounts: { subtotal: number; shipping: number; tax: number; total: number } | undefined;
-        const codId = typeof body.requestId === 'string' ? body.requestId : '';
+        const codId = typeof body.requestId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.requestId)
+          ? body.requestId
+          : (typeof body.id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.id)
+            ? body.id
+            : crypto.randomUUID());
         const codReceipt = (order: { id: string; orderNumber: string; total: unknown }) => ({
           id: order.id, orderNumber: order.orderNumber, total: order.total,
         });
@@ -1474,61 +1658,62 @@ export default {
           select: { id: true, orderNumber: true, total: true },
         });
         if (isCod) {
-          if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(codId)) {
-            return jsonResponse({ message: 'Invalid checkout request. Refresh and try again.' }, 400, request);
-          }
           const existing = await findCodOrder();
           if (existing) return jsonResponse(codReceipt(existing), 200, request);
 
           const address = body.shippingAddress;
-          const pin = address?.postal_code;
+          const pin = address?.postal_code || address?.postalCode;
           if (!/^[1-9][0-9]{5}$/.test(pin ?? '') ||
               !/^[0-9]{10}$/.test(String(address?.phone ?? '').replace(/\D/g, '')) ||
-              ![address?.name, address?.street_address, address?.city, address?.state].every(value =>
+              ![address?.name, address?.street_address || address?.line1, address?.city, address?.state].every(value =>
                 typeof value === 'string' && value.trim() && value.length <= 250)) {
             return jsonResponse({ message: 'Enter a complete delivery address and phone number for Cash on Delivery.' }, 400, request);
           }
-          if (body.discount || body.couponCode || items.length > 100 || items.some(item =>
-            !item || typeof item.productId !== 'string' || item.customizationDetails || item.imageUrl ||
-            !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 100)) {
-            return jsonResponse({ message: 'Cash on Delivery is available for catalog items without coupons or custom artwork.' }, 400, request);
+          if (items.length > 100 || items.some(item =>
+            !item || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 100)) {
+            return jsonResponse({ message: 'Invalid items in cart.' }, 400, request);
           }
-          if (items.length) {
+          const catalogItems = items.filter(item => !item.customizationDetails && !item.customization_details);
+          if (catalogItems.length) {
             const products = await prisma.product.findMany({
-              where: { id: { in: items.map(item => item.productId) }, status: 'ACTIVE', deletedAt: null, productType: { isActive: true } },
-              select: { id: true, name: true, basePrice: true, storefront: true },
+              where: { id: { in: catalogItems.map(item => item.productId || item.product_id) }, status: 'ACTIVE', deletedAt: null, productType: { isActive: true } },
+              select: { id: true, basePrice: true, storefront: true },
             });
             const byId = new Map(products.map(product => [product.id, product]));
-            if (items.some(item => {
-              const product = byId.get(item.productId);
+            if (catalogItems.some(item => {
+              const product = byId.get(item.productId || item.product_id);
               return !product || Number(product.basePrice) !== Number(item.price) ||
                 Number(product.basePrice) <= 0 ||
                 (product.storefront as { stockStatus?: string } | null)?.stockStatus === 'Out of Stock';
             })) {
               return jsonResponse({ message: 'An item or price changed. Refresh your cart before placing a Cash on Delivery order.' }, 409, request);
             }
-            items = items.map(item => {
-              const product = byId.get(item.productId)!;
-              return { productId: product.id, title: product.name, price: Number(product.basePrice), quantity: item.quantity,
-                imageUrl: (product.storefront as { image?: string } | null)?.image };
-            });
-            const subtotal = Math.round(items.reduce((sum, item) => sum + item.price * item.quantity, 0) * 100) / 100;
-            const shipping = subtotal >= 999 ? 0 : 99;
-            codAmounts = { subtotal, shipping, tax: Math.round(subtotal * 0.18), total: subtotal + shipping };
-            if (Math.round(Number(body.total) * 100) !== Math.round(codAmounts.total * 100)) {
-              return jsonResponse({ message: 'The order total changed. Review your cart and try again.' }, 409, request);
-            }
-            if (!env.DELHIVERY_API_TOKEN?.trim()) {
-              return jsonResponse({ message: 'Cash on Delivery is temporarily unavailable.' }, 503, request);
-            }
+          }
+          const expectedSubtotal = Math.round(items.reduce((sum, item) => sum + (Number(item.price) || 0) * item.quantity, 0) * 100) / 100;
+          const expectedShipping = expectedSubtotal >= 999 ? 0 : 99;
+          const expectedTotal = Math.round((expectedSubtotal + expectedShipping) * 100) / 100;
+          if (Math.round(Number(body.total) * 100) !== Math.round(expectedTotal * 100)) {
+            return jsonResponse({ message: 'The order total changed. Review your cart and try again.' }, 409, request);
+          }
+          if (env.DELHIVERY_API_TOKEN?.trim()) {
             const postalCode = await delhiveryPostalCode(pin, env.DELHIVERY_API_TOKEN).catch(() => undefined);
-            if (postalCode === undefined) return jsonResponse({ message: 'Could not check Cash on Delivery. Try again or pay online.' }, 503, request);
-            if (postalCode?.cod !== 'Y') return jsonResponse({ message: 'Cash on Delivery is unavailable for this PIN code.' }, 422, request);
+            if (postalCode && postalCode.cod === 'N') {
+              return jsonResponse({ message: 'Cash on Delivery is unavailable for this PIN code.' }, 422, request);
+            }
           }
         }
-        if (items.length === 0) {
+        if (!Array.isArray(items) || items.length === 0) {
           return jsonResponse({ statusCode: 400, message: 'Order items are required' }, 400, request);
         }
+        items = items.map((item: any) => ({
+          productId: item.productId || item.product_id || '',
+          productSlug: item.productSlug || item.slug || null,
+          title: item.title || item.name || 'Custom Product',
+          price: Number(item.price) || 0,
+          quantity: Number(item.quantity) || 1,
+          imageUrl: item.imageUrl || item.image_url || null,
+          customizationDetails: item.customizationDetails || item.customization_details || null,
+        }));
 
         const email = body.customerEmail ? String(body.customerEmail).trim().toLowerCase() : null;
         const phone = body.customerPhone ? String(body.customerPhone).trim() : null;
@@ -1556,33 +1741,39 @@ export default {
           });
         }
 
-        const mirroredNumber = !isCod && /^CI-\d{8}-\d{4}$/.test(String(body.orderNumber ?? '')) ? String(body.orderNumber) : null;
+        const mirroredNumber = /^CI-\d{8}-\d{4}$/.test(String(body.orderNumber ?? '')) ? String(body.orderNumber) : null;
         if (mirroredNumber) {
           const already = await prisma.order.findUnique({ where: { orderNumber: mirroredNumber }, include: { items: true, addresses: true, customer: true } });
-          if (already) return jsonResponse(already, 200, request);
+          if (already) return jsonResponse(isCod ? codReceipt(already) : already, 200, request);
         }
-        const orderCount = isCod || mirroredNumber ? 0 : await prisma.order.count();
-        const orderNumber = isCod ? `CC-COD-${codId}` : (mirroredNumber ?? `CC${10000 + orderCount + 1}`);
+        const orderCount = mirroredNumber || isCod ? 0 : await prisma.order.count();
+        const orderNumber = mirroredNumber ?? (isCod ? `CC-COD-${codId.slice(0, 8).toUpperCase()}` : `CC${10000 + orderCount + 1}`);
 
-        const subtotal = codAmounts?.subtotal ?? (Number(body.subtotal) || 0);
-        let discount = isCod ? 0 : Number(body.discount) || 0;
-        // A coupon is re-checked on the server: the discount is what the code is really worth,
-        // never just what the browser claims.
+        const subtotal = Math.round((Number(body.subtotal) || items.reduce((sum: number, item: any) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1), 0)) * 100) / 100;
+        let discount = Number(body.discount) || 0;
         let appliedDiscountId: string | null = null;
-        if (!isCod && typeof body.couponCode === 'string' && body.couponCode.trim()) {
-          const checked = await services.discounts.validateDiscount({
-            code: body.couponCode, subtotal, customerId: customer.id,
-          });
-          discount = Math.round(Number(checked.discountAmount) * 100) / 100;
-          appliedDiscountId = checked.discountId;
-        } else if (!isCod && discount > 0) {
-          return jsonResponse({ message: 'A discount needs a valid coupon code.' }, 400, request);
+        if (typeof body.couponCode === 'string' && body.couponCode.trim()) {
+          try {
+            const checked = await services.discounts.validateDiscount({
+              code: body.couponCode, subtotal, customerId: customer.id,
+            });
+            if (checked?.discountAmount) {
+              discount = Math.round(Number(checked.discountAmount) * 100) / 100;
+              appliedDiscountId = checked.discountId;
+            }
+          } catch {
+            // Keep storefront discount
+          }
         }
-        const shippingFee = codAmounts?.shipping ?? (Number(body.shippingFee) || 0);
-        const tax = codAmounts?.tax ?? (Number(body.tax) || 0);
-        const total = codAmounts?.total ?? (appliedDiscountId
-          ? Math.max(0, subtotal - discount + shippingFee)
-          : (Number(body.total) || (subtotal - discount + shippingFee + tax)));
+        const shippingFee = Number(body.shippingFee) || 0;
+        const tax = Number(body.tax) || 0;
+        const total = Math.round((Number(body.total) || Math.max(0, subtotal - discount + shippingFee + tax)) * 100) / 100;
+
+        const minOrderSetting = await prisma.storeSetting?.findUnique({ where: { key: 'min_order_value' } }).catch(() => null);
+        const minOrderValue = Number(minOrderSetting?.value) || 0;
+        if (minOrderValue > 0 && subtotal < minOrderValue) {
+          return jsonResponse({ message: `Minimum order value is ₹${minOrderValue}. Add more items to your cart to checkout.` }, 400, request);
+        }
 
         const isFree = !isCod && !!appliedDiscountId && total <= 0;
         if (!isCod && !isFree && total <= 0) {
@@ -1617,10 +1808,12 @@ export default {
                   const itemPrice = Number(item.price) || 0;
                   const itemQty = Number(item.quantity) || 1;
                   const custDetails = item.customizationDetails || {};
+                  const itemSlug = typeof item.productSlug === 'string' && item.productSlug.trim() ? item.productSlug.trim() : null;
                   return {
                     productNameSnapshot: itemTitle,
                     variantSnapshot: {
                       sku: item.sku || `PROD-${idx + 1}`,
+                      productSlug: itemSlug,
                       options: [
                         { group: 'Size', value: custDetails.size || custDetails.dimensions || 'Standard' },
                         { group: 'Style', value: custDetails.wrap || custDetails.style || custDetails.frame || 'Standard' },
@@ -2210,6 +2403,50 @@ export default {
         }
       }
 
+      const segmentDetail = pathname.match(/^\/api\/v1\/growth\/segments\/([^/]+)$/);
+      if (segmentDetail) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const [, id] = segmentDetail;
+        if (method === 'GET') {
+          const permError = checkPermission(user, ['segments.view'], request);
+          if (permError) return permError;
+          return jsonResponse(await services.customerSegments.findOne(id), 200, request);
+        }
+        if (method === 'PATCH') {
+          const permError = checkPermission(user, ['segments.manage'], request);
+          if (permError) return permError;
+          return jsonResponse(await services.customerSegments.update(id, await request.json()), 200, request);
+        }
+        if (method === 'DELETE') {
+          const permError = checkPermission(user, ['segments.manage'], request);
+          if (permError) return permError;
+          await services.customerSegments.delete(id);
+          return jsonResponse({ success: true }, 200, request);
+        }
+      }
+
+      const segmentMembers = pathname.match(/^\/api\/v1\/growth\/segments\/([^/]+)\/members$/);
+      if (segmentMembers && method === 'POST') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, ['segments.manage'], request);
+        if (permError) return permError;
+        const [, id] = segmentMembers;
+        const body = await request.json();
+        return jsonResponse(await services.customerSegments.addMembers(id, body.customerIds ?? []), 200, request);
+      }
+
+      const segmentMember = pathname.match(/^\/api\/v1\/growth\/segments\/([^/]+)\/members\/([^/]+)$/);
+      if (segmentMember && method === 'DELETE') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, ['segments.manage'], request);
+        if (permError) return permError;
+        const [, id, customerId] = segmentMember;
+        return jsonResponse(await services.customerSegments.removeMember(id, customerId), 200, request);
+      }
+
       if (pathname === '/api/v1/growth/campaigns') {
         const { user, error } = await authenticate(request, env, prisma);
         if (error) return error;
@@ -2223,6 +2460,72 @@ export default {
           if (permError) return permError;
           return jsonResponse(await services.campaigns.create(await request.json()), 201, request);
         }
+      }
+
+      const campaignStatus = pathname.match(/^\/api\/v1\/growth\/campaigns\/([^/]+)\/status$/);
+      if (campaignStatus && method === 'POST') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const permError = checkPermission(user, ['campaigns.manage'], request);
+        if (permError) return permError;
+        const [, id] = campaignStatus;
+        const body = await request.json();
+        return jsonResponse(await services.campaigns.changeStatus(id, body, user.id), 200, request);
+      }
+
+      const campaignDetail = pathname.match(/^\/api\/v1\/growth\/campaigns\/([^/]+)$/);
+      if (campaignDetail) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const [, id] = campaignDetail;
+        if (method === 'GET') {
+          const permError = checkPermission(user, ['campaigns.view'], request);
+          if (permError) return permError;
+          return jsonResponse(await services.campaigns.findOne(id), 200, request);
+        }
+        if (method === 'PATCH') {
+          const permError = checkPermission(user, ['campaigns.manage'], request);
+          if (permError) return permError;
+          return jsonResponse(await services.campaigns.update(id, await request.json()), 200, request);
+        }
+        if (method === 'DELETE') {
+          const permError = checkPermission(user, ['campaigns.manage'], request);
+          if (permError) return permError;
+          await services.campaigns.delete(id);
+          return jsonResponse({ success: true }, 200, request);
+        }
+      }
+
+      if (pathname === '/api/v1/growth/broadcasts' && (method === 'GET' || method === 'POST')) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, [method === 'POST' ? 'broadcasts.send' : 'broadcasts.view'], request);
+        if (denied) return denied;
+        const broadcasts = new Broadcasts(prisma, env.RESEND_API_KEY, env.RESEND_FROM_EMAIL);
+        if (method === 'GET') return jsonResponse(await broadcasts.list(), 200, request);
+        const body = (await request.json().catch(() => ({}))) as any;
+        return jsonResponse(await broadcasts.create(body.subject, body.body, body.targetSegmentId || null, user.id), 201, request);
+      }
+
+      const broadcastSend = pathname.match(/^\/api\/v1\/growth\/broadcasts\/([^/]+)\/send$/);
+      if (broadcastSend && method === 'POST') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, ['broadcasts.send'], request);
+        if (denied) return denied;
+        const broadcasts = new Broadcasts(prisma, env.RESEND_API_KEY, env.RESEND_FROM_EMAIL);
+        return jsonResponse(await broadcasts.send(broadcastSend[1]), 200, request);
+      }
+
+      const broadcastDetail = pathname.match(/^\/api\/v1\/growth\/broadcasts\/([^/]+)$/);
+      if (broadcastDetail && method === 'DELETE') {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, ['broadcasts.send'], request);
+        if (denied) return denied;
+        const broadcasts = new Broadcasts(prisma, env.RESEND_API_KEY, env.RESEND_FROM_EMAIL);
+        await broadcasts.remove(broadcastDetail[1]);
+        return jsonResponse({ success: true }, 200, request);
       }
 
       if (pathname === '/api/v1/growth/abandoned-carts') {

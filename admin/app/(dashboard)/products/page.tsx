@@ -67,6 +67,25 @@ export default function ProductsPage() {
     },
   });
 
+  // Ticking this adds the product to the homepage's Best Sellers row;
+  // unticking removes it immediately. storefront is a single JSON blob per
+  // product, so the PATCH must send the whole thing back with just
+  // `bestseller` flipped - sending `{ storefront: { bestseller: true } }`
+  // alone would wipe every other storefront field (image, price, etc.).
+  const bestsellerMutation = useMutation({
+    mutationFn: ({ id, storefront, bestseller }: { id: string; storefront: Record<string, any>; bestseller: boolean }) =>
+      apiClient.patch(`/products/${id}`, { storefront: { ...storefront, bestseller } }),
+    onSuccess: (_result, { id, bestseller }) => {
+      queryClient.setQueryData<ProductListItem[]>(["products"], (old) =>
+        old?.map((p) => (p.id === id ? { ...p, storefront: { ...p.storefront, bestseller } } : p)),
+      );
+      toast.success(bestseller ? "Added to Best Sellers on the homepage" : "Removed from Best Sellers on the homepage");
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof ApiError ? err.message : "Could not change Best Seller status");
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/products/${id}`),
     onSuccess: () => {
@@ -126,6 +145,30 @@ export default function ProductsPage() {
             <span className={dot} />
             {live ? "Live" : "Hidden"}
           </button>
+        );
+      },
+    },
+    {
+      header: "Best Seller",
+      cell: (row) => {
+        if (row.status === "ARCHIVED") return null;
+        const isBestseller = Boolean(row.storefront?.bestseller);
+        return (
+          <input
+            type="checkbox"
+            checked={isBestseller}
+            disabled={!canEdit || bestsellerMutation.isPending}
+            title={isBestseller ? "Remove from Best Sellers on the homepage" : "Show in Best Sellers on the homepage"}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) =>
+              bestsellerMutation.mutate({
+                id: row.id,
+                storefront: row.storefront ?? {},
+                bestseller: e.target.checked,
+              })
+            }
+            className="h-4 w-4 cursor-pointer rounded border-input accent-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          />
         );
       },
     },

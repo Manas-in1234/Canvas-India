@@ -78,3 +78,58 @@ it('publishes new occasions and restores existing covers independently of the te
   await expect(occasions.setVisibility('brothers-day', 'visible', 'editor')).rejects.toThrow('Occasion not found');
   await expect(occasions.save('graduation', details, true, 'editor')).rejects.toThrow('previously used');
 });
+
+it('lets a new occasion be created as a festival, and rejects an invalid group', async () => {
+  type Asset = { ownerId: string; ownerType: string; storageKey: string; contentBytes: Uint8Array };
+  const rows = new Map<string, Asset>();
+  const asset = {
+    findUnique: async ({ where }: { where: { storageKey: string } }) => rows.get(where.storageKey),
+    findMany: async ({ where }: { where: { ownerType: string } }) =>
+      [...rows.values()].filter(row => row.ownerType === where.ownerType),
+    create: async ({ data }: { data: Asset }) => rows.set(data.storageKey, data),
+  };
+  const auditLog = { create: vi.fn() };
+  const prisma = { asset, $transaction: async (run: (tx: unknown) => Promise<unknown>) => run({ asset, auditLog }) };
+  const occasions = new Occasions(prisma as unknown as PrismaClient);
+  const details = {
+    name: 'Pride Day', heroTitle: 'Celebrate', tagline: 'Prints', pitchHeadline: 'Headline', pitchText: 'Text.',
+  };
+
+  await occasions.save('pride-day', { ...details, group: 'festival' }, true, 'editor');
+  expect((await occasions.list()).find(row => row.slug === 'pride-day')).toMatchObject({ group: 'festival' });
+
+  await expect(occasions.save('bad-group', { ...details, group: 'holiday' }, true, 'editor'))
+    .rejects.toThrow("group must be 'occasion' or 'festival'");
+
+  // Omitted entirely: defaults to 'occasion', matching every existing call site that never sends it.
+  await occasions.save('no-group-given', details, true, 'editor');
+  expect((await occasions.list()).find(row => row.slug === 'no-group-given')).toMatchObject({ group: 'occasion' });
+});
+
+it('does not change an existing default occasion\'s group when only its text is edited', async () => {
+  const rows = new Map<string, { ownerId: string; ownerType: string; storageKey: string; contentBytes: Uint8Array }>();
+  const asset = {
+    findUnique: async ({ where }: { where: { storageKey: string } }) => rows.get(where.storageKey),
+    findMany: async ({ where }: { where: { ownerType: string } }) =>
+      [...rows.values()].filter(row => row.ownerType === where.ownerType),
+    upsert: async ({ where, create, update }: { where: { storageKey: string }; create: any; update: any }) => {
+      const row = rows.get(where.storageKey);
+      const saved = row ? { ...row, ...update } : create;
+      rows.set(where.storageKey, saved);
+      return saved;
+    },
+  };
+  const auditLog = { create: vi.fn() };
+  const prisma = { asset, $transaction: async (run: (tx: unknown) => Promise<unknown>) => run({ asset, auditLog }) };
+  const occasions = new Occasions(prisma as unknown as PrismaClient);
+  const before = (await occasions.list()).find(row => row.slug === 'diwali');
+  expect(before?.group).toBe('festival');
+
+  await occasions.save('diwali', {
+    name: 'Diwali', heroTitle: 'New title', tagline: 'New tagline', pitchHeadline: 'New headline', pitchText: 'New text.',
+  }, false, 'editor');
+
+  const after = (await occasions.list()).find(row => row.slug === 'diwali');
+  expect(after?.group).toBe('festival');
+  expect(after?.heroTitle).toBe('New title');
+});

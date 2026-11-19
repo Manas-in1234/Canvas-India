@@ -32,7 +32,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose }) => {
       `• Quantity: ${formData.quantity}`,
       formData.notes ? `• Notes: ${formData.notes}` : null,
     ].filter(Boolean).join('\n');
-    window.open(`https://wa.me/917893051555?text=${encodeURIComponent(details)}`, '_blank', 'noopener,noreferrer');
+    window.open(`https://wa.me/917893946464?text=${encodeURIComponent(details)}`, '_blank', 'noopener,noreferrer');
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);

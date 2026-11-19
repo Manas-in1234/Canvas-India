@@ -21,6 +21,7 @@
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
     "prisma:seed": "tsx prisma/seed.ts",
+    "sync-permissions": "tsx prisma/sync-permissions.ts",
     "deploy:worker": "prisma migrate deploy --config prisma7.config.ts && prisma generate --config prisma7.config.ts && npx wrangler deploy --keep-vars"
   },
   "prisma": {
@@ -45,10 +46,10 @@
     "hash-wasm": "^4.12.0",
     "helmet": "^8.3.0",
     "jimp": "^0.14.0",
-    "pngjs": "^3.4.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.23.0",
+    "pngjs": "^3.4.0",
     "potrace": "^2.1.8",
     "razorpay": "^2.9.8",
     "reflect-metadata": "^0.2.2",

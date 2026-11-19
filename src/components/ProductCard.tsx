@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Star, Heart, ArrowRight, Sparkles, ShoppingCart, Package } from 'lucide-react';
 import { Product } from '../types';
+import { acrylicDefaultSelectionPrice } from '../utils/pricing';
 
 interface MaterialOption {
   label: string;
@@ -110,20 +111,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {(product as any).subcategory || product.category}
         </div>
 
-        {/* Pricing Row */}
+        {/* Pricing Row — shows the same total the detail page lands on for
+            its default selections (see src/utils/pricing.ts), never the
+            bare base price, so this card and the detail page always agree. */}
         {(() => {
+          const displayPrice = acrylicDefaultSelectionPrice(product);
           const rawCompare = (product as any).compareAtPrice || product.originalPrice;
           const displayOriginalPrice = rawCompare && rawCompare > product.price
-            ? rawCompare
-            : Math.round(product.price * 1.35);
+            ? Math.round(displayPrice * (rawCompare / product.price))
+            : Math.round(displayPrice * 1.35);
           const displayDiscount = product.discountPercent && product.discountPercent > 0
             ? product.discountPercent
-            : Math.max(15, Math.round(((displayOriginalPrice - product.price) / displayOriginalPrice) * 100));
+            : Math.max(15, Math.round(((displayOriginalPrice - displayPrice) / displayOriginalPrice) * 100));
 
           return (
             <div className="flex items-baseline gap-1.5 mt-1">
               <span className="text-sm sm:text-base font-extrabold text-stone-900">
-                ₹{product.price.toLocaleString('en-IN')}
+                ₹{displayPrice.toLocaleString('en-IN')}
               </span>
               <span className="text-[11px] text-stone-400 line-through">
                 ₹{displayOriginalPrice.toLocaleString('en-IN')}
@@ -179,7 +183,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         (product.name && product.name.toLowerCase().includes('cork')) ||
         product.customizationAvailable === false ? (
           <a
-            href={`https://wa.me/917893051555?text=${encodeURIComponent(`Hi Canvas India, I would like to get a quote / order in bulk for ${product.name}`)}`}
+            href={`https://wa.me/917893946464?text=${encodeURIComponent(`Hi Canvas India, I would like to get a quote / order in bulk for ${product.name}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}

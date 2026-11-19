@@ -23,9 +23,12 @@ import { ProductImage } from '../components/ProductImage';
 import { WallPreview } from '../components/WallPreview';
 import { SmartCropImage } from '../components/SmartCropImage';
 import { Product } from '../types';
-import { FrameSwatch, HookIcon, HOOK_OPTIONS, FRAME_LOOK, getFrameCategory, FrameCategory } from '../components/FrameHookVisuals';
+import { FrameSwatch, HookIcon, HOOK_OPTIONS, FRAME_LOOK, getFrameCategory } from '../components/FrameHookVisuals';
 import { getBulkItem, QTY_PRICE_TIERS, bulkUnitPriceFor, MIN_BULK_QTY } from './BulkOrdersPage';
 import { AcrylicProductDetailPage } from './AcrylicProductDetailPage';
+import { getProductReviews, type ProductReviews } from '../api/reviewsApi';
+import { fetchPricingRates, SHAPE_AREA_RATE_FALLBACK } from '../api/pricingSettingsApi';
+import { priceForSize } from '../utils/pricing';
 
 // Sentinel inserted as the first gallery slot for wall-hangable categories so
 // the "Room View" thumbnail renders a live WallPreview instead of a static image.
@@ -74,6 +77,17 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
 
   const isWishlisted = wishlistIds.includes(product.id);
 
+  const [productReviews, setProductReviews] = useState<ProductReviews>({ count: 0, average: 0, reviews: [] });
+  useEffect(() => {
+    let cancelled = false;
+    if (product.slug) {
+      getProductReviews(product.slug).then((data) => { if (!cancelled) setProductReviews(data); });
+    } else {
+      setProductReviews({ count: 0, average: 0, reviews: [] });
+    }
+    return () => { cancelled = true; };
+  }, [product.slug]);
+
   // Catalogue designs are named "<Name> <code>" or "<Name> <code> - <Material>"
   // (e.g. "Tribal Art Print 001 - Canvas") — pull the numeric code out so it
   // can be shown on its own below Quantity instead of cluttering the title.
@@ -89,7 +103,10 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   // Variant state
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedFinish, setSelectedFinish] = useState<string>('');
-  const [selectedFrame, setSelectedFrame] = useState<FrameCategory>('No Frame');
+  // Holds the raw finish string the shopper picked (e.g. "Teak Wood Frame"),
+  // not a fixed category - frameOptions now offers every one of the
+  // product's own finishes as its own option, so this can be any of them.
+  const [selectedFrame, setSelectedFrame] = useState<string>('No Frame');
   const [selectedMaterial, setSelectedMaterial] = useState<string>('');
   const [selectedShape, setSelectedShape] = useState<string>('');
   const [customWidth, setCustomWidth] = useState<number>(8);
@@ -103,6 +120,18 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   const [customSizeH, setCustomSizeH] = useState<string>('');
   const [selectedHook, setSelectedHook] = useState<string>('Sawtooth Hanger');
 
+  // Same ₹-per-sq.inch rate the full customizer bills by, fetched once so a
+  // size picked here and the identical size picked in the customizer always
+  // cost the same (see src/utils/pricing.ts).
+  const [areaRate, setAreaRate] = useState(SHAPE_AREA_RATE_FALLBACK);
+  useEffect(() => {
+    let cancelled = false;
+    fetchPricingRates().then((rates) => {
+      if (!cancelled) setAreaRate(product?.material === 'acrylic' ? rates.shapeAreaRates.acrylic : rates.shapeAreaRates.canvas);
+    });
+    return () => { cancelled = true; };
+  }, [product?.material]);
+
   // The Bulk & Corporate Orders catalogue keys its items by material+slug —
   // matches this exact style when it has one, so "Order this item in bulk"
   // can jump straight to its dedicated bulk/customize flow instead of just
@@ -113,13 +142,13 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   );
 
   // Pre-designed Print World catalogue art (Devotional Art, Line Art, etc.)
-  // has no real Size/Shape/Frame/Hook variants of its own — every size is
-  // the same fixed artwork — so instead of a buy-as-is flow it sends the
-  // shopper straight into the customizer with this exact design preloaded.
-  // These designs are also re-offered as plain Canvas/Acrylic products
-  // (catalogueCanvasAcrylicProducts.ts) with categorySlug just 'canvas' or
-  // 'acrylic' — those are identified by their id instead, e.g.
-  // "canvas-tribal-ethnic-art-a-a-001".
+  // used to have no real Size/Shape/Frame/Hook variants of its own, so
+  // instead of a buy-as-is flow it sent the shopper straight into the
+  // customizer with the design preloaded. That's no longer always true —
+  // admins can (and do) set real sizes/finishes on these products — so the
+  // no-picker flow now only applies when a product genuinely has none,
+  // regardless of its category. A product with its own sizes always gets
+  // the normal picker, even inside these categories.
   const CATALOGUE_DESIGN_SLUGS = [
     'devotional-art',
     'line-art',
@@ -127,9 +156,11 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     'scenery-landscape-art',
     'tribal-ethnic-art'
   ];
+  const hasOwnSizes = (product.availableSizes && product.availableSizes.length > 0) || (product.sizes && product.sizes.length > 0);
   const isCatalogueDesign =
-    CATALOGUE_DESIGN_SLUGS.includes(product.categorySlug) ||
-    CATALOGUE_DESIGN_SLUGS.some((slug) => product.id.includes(slug));
+    (CATALOGUE_DESIGN_SLUGS.includes(product.categorySlug) ||
+      CATALOGUE_DESIGN_SLUGS.some((slug) => product.id.includes(slug))) &&
+    !hasOwnSizes;
 
   const isCorkPattern =
     product.categorySlug === 'cork-art-patterns' ||
@@ -212,28 +243,15 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     return /yoga|mat|brick|roller|ball|peanut|wedge|massage|knee pad|bag|fitness/.test(text);
   }, [product]);
 
-  // Frame picker — groups this product's real `finishes` values (which vary
-  // a lot in wording across the catalogue) into the frame looks customers
-  // actually choose between, using the same keyword matching as the live
-  // preview's frame border (see finishStyle.ts), so a pick here always has
-  // a matching real finish value to send to cart. Every category present in
-  // the product's own finishes list is offered — nothing invented.
-  const FRAME_CATEGORY_ORDER: { label: FrameCategory; test: (f: string) => boolean }[] = [
-    { label: 'No Frame', test: (f) => /print only|rolled|gallery wrap|satin|lustre|matte canvas|no frame/.test(f) },
-    { label: 'Black Frame', test: (f) => /black/.test(f) },
-    { label: 'Wooden Frame', test: (f) => !/cork|eva|latex|rubber|foam/.test(f) && (/teak|oak|walnut|brown|rustic/.test(f) || (/wood/.test(f) && !/black|white|gold/.test(f)) || (/natural/.test(f) && /wood|frame|finish/.test(f))) },
-    { label: 'White Frame', test: (f) => /white/.test(f) },
-    { label: 'Gold Frame', test: (f) => /gold/.test(f) },
-  ];
+  // Frame picker — offers every one of the product's own `finishes` values
+  // as its own option (not grouped into shared categories), so a product
+  // with 5 finishes shows 5 pickable options, each labeled exactly as the
+  // admin entered it. Its swatch visual still falls back to the closest of
+  // the 5 known frame looks via getFrameCategory, same keyword matching the
+  // live preview's frame border uses (see finishStyle.ts).
   const frameOptions = useMemo(() => {
     if (!product?.finishes || isCorkWellnessProduct) return [];
-    const lower = product.finishes.map((f) => ({ raw: f, l: f.toLowerCase() }));
-    return FRAME_CATEGORY_ORDER
-      .map((cat) => {
-        const match = lower.find(({ l }) => cat.test(l));
-        return match ? { label: cat.label, value: match.raw } : null;
-      })
-      .filter((o): o is { label: FrameCategory; value: string } => Boolean(o));
+    return product.finishes.map((finish) => ({ label: finish, value: finish }));
   }, [product, isCorkWellnessProduct]);
 
   // Same catalogue design also offered as Canvas / Acrylic — siblings share a
@@ -261,10 +279,9 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     if (product) {
       const defaultShape = product.shape || availableShapes[0] || '';
       const initialFinish = product.finishes?.[0] || 'Standard Finish';
-      const initialFrameCat = isCorkWellnessProduct ? 'No Frame' : getFrameCategory(initialFinish);
       setSelectedSize(pickDefaultSize(product.availableSizes) || pickDefaultSize(product.sizes) || '12x18 inch');
       setSelectedFinish(initialFinish);
-      setSelectedFrame(initialFrameCat);
+      setSelectedFrame(isCorkWellnessProduct ? 'No Frame' : initialFinish);
       setSelectedMaterial(availableMaterials[0] || 'Standard');
       setSelectedShape(defaultShape);
       setSelectedHook('Sawtooth Hanger');
@@ -380,11 +397,12 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
 
   const handleAddToCartWithVariants = () => {
     if (!product) return;
-    // At bulk quantities, charge the same discounted per-unit price shown
-    // in the bulk panel — never show one price and charge another.
+    // Charge the size-adjusted unit price shown on screen — including the
+    // bulk-discounted rate at bulk quantities — never show one price and
+    // charge another.
     const cartProduct = quantity >= MIN_BULK_QTY
-      ? { ...product, price: bulkUnitPriceFor(product.price, quantity) }
-      : product;
+      ? { ...product, price: bulkUnitPriceFor(unitPrice, quantity) }
+      : { ...product, price: unitPrice };
     const defaultThickness = isCorkProduct ? undefined : 'Thin Gallery Wrap (0.75")';
     onAddToCart(
       cartProduct,
@@ -449,12 +467,27 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   const categoryName = product.category || 'Prints';
   const categoryLink = `/${product.categorySlug || 'canvas'}`;
 
+  // Priced from the selected size (custom W×H when set), same area-rate model
+  // the customizer uses, so this page's price always matches what the
+  // customizer would charge for the same size — never a flat price regardless
+  // of the size picked. Catalogue designs are the one exception: every size
+  // is the same fixed artwork (see isCatalogueDesign above), so they always
+  // stay at the flat base price here — any real pricing happens once the
+  // shopper is in the customizer.
+  const unitPrice = useMemo(() => {
+    if (isCatalogueDesign) return product.price;
+    const size = isCustomSize ? `${customWidth}x${customHeight} inch` : selectedSize;
+    return priceForSize(product, size, areaRate);
+  }, [product, selectedSize, isCustomSize, customWidth, customHeight, areaRate, isCatalogueDesign]);
+
   // The struck-through price and the % off both come from the two prices set in the
   // admin, so they always agree. No discount is shown when there isn't one.
   const effectiveOriginalPrice =
-    product.originalPrice && product.originalPrice > product.price ? product.originalPrice : 0;
+    product.originalPrice && product.originalPrice > product.price
+      ? Math.round(unitPrice * (product.originalPrice / product.price))
+      : 0;
   const effectiveDiscount = effectiveOriginalPrice
-    ? Math.round(((effectiveOriginalPrice - product.price) / effectiveOriginalPrice) * 100)
+    ? Math.round(((effectiveOriginalPrice - unitPrice) / effectiveOriginalPrice) * 100)
     : 0;
 
   return (
@@ -510,8 +543,9 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
             {/* Main Image */}
             <div className="order-1 lg:order-2 lg:col-span-5 min-w-0">
               {(() => {
-                const currentFrameLook = FRAME_LOOK[selectedFrame] || FRAME_LOOK['No Frame'];
-                const hasSelectedFrame = !isCorkWellnessProduct && selectedFrame !== 'No Frame';
+                const selectedFrameCategory = getFrameCategory(selectedFrame);
+                const currentFrameLook = FRAME_LOOK[selectedFrameCategory] || FRAME_LOOK['No Frame'];
+                const hasSelectedFrame = !isCorkWellnessProduct && selectedFrameCategory !== 'No Frame';
                 const containerAspectVal = selectedShape === 'Square' ? 1 : selectedShape === 'Panoramic' ? 16 / 9 : 4 / 5;
 
                 return (
@@ -566,9 +600,18 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                       />
                     )}
 
-                    {!uploadedFile && effectiveDiscount > 0 && (
-                      <div className="absolute top-4 left-4 bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider z-10">
-                        {effectiveDiscount}% OFF
+                    {!uploadedFile && (effectiveDiscount > 0 || product.badge) && (
+                      <div className="absolute top-4 left-4 z-10 flex flex-col items-start gap-1.5">
+                        {effectiveDiscount > 0 && (
+                          <div className="bg-[#E8752A] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider">
+                            {effectiveDiscount}% OFF
+                          </div>
+                        )}
+                        {product.badge && (
+                          <div className="bg-[#0E4A93] text-white text-xs font-black uppercase px-2.5 py-1 rounded-md shadow-sm tracking-wider">
+                            {product.badge}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -600,19 +643,28 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
             <div className="order-3 lg:col-span-6 min-w-0 flex flex-col gap-3.5 text-left">
               <div>
                 <h1 className="text-lg sm:text-xl font-extrabold text-stone-900 tracking-tight">{displayName}</h1>
-                {product.rating !== null && product.rating > 0 && (
-                  <div className="flex items-center gap-2 text-xs text-stone-600 mt-1">
+                {productReviews.count > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('product-reviews')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="flex items-center gap-2 text-xs text-stone-600 mt-1 cursor-pointer"
+                  >
                     <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded text-amber-800 font-bold">
                       <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      <span>{product.rating}</span>
+                      <span>{productReviews.average}</span>
                     </div>
-                    <span className="underline decoration-stone-300">({product.reviewsCount || 48} reviews)</span>
-                  </div>
+                    <span className="underline decoration-stone-300">
+                      ({productReviews.count} review{productReviews.count === 1 ? '' : 's'})
+                    </span>
+                  </button>
+                )}
+                {product.shortDescription && (
+                  <p className="text-sm text-stone-600 mt-1.5">{product.shortDescription}</p>
                 )}
               </div>
 
               <div className="flex items-baseline gap-3">
-                <span className="text-2xl sm:text-3xl font-extrabold text-stone-950">₹{product.price.toLocaleString('en-IN')}</span>
+                <span className="text-2xl sm:text-3xl font-extrabold text-stone-950">₹{unitPrice.toLocaleString('en-IN')}</span>
                 {effectiveOriginalPrice > 0 && (
                   <span className="text-base text-stone-400 line-through">
                     ₹{effectiveOriginalPrice.toLocaleString('en-IN')}
@@ -625,9 +677,21 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 )}
               </div>
 
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-600">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Lowest Price Guaranteed</span>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-600">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>Lowest Price Guaranteed</span>
+                </div>
+                {product.stockStatus && (
+                  <div
+                    className={`flex items-center gap-1.5 text-xs font-semibold ${
+                      product.stockStatus === 'Out of Stock' ? 'text-rose-600' : 'text-emerald-600'
+                    }`}
+                  >
+                    <Package className="w-4 h-4" />
+                    <span>{product.stockStatus}</span>
+                  </div>
+                )}
               </div>
 
               {productCode && (
@@ -682,7 +746,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                       <span>Add to cart</span>
                     </button>
                     <a
-                      href={`https://wa.me/917893051555?text=${encodeURIComponent(`Hi Canvas India, I would like to get a quote / order in bulk for ${product.name}${productCode ? ` (Code: ${productCode})` : ''}`)}`}
+                      href={`https://wa.me/917893946464?text=${encodeURIComponent(`Hi Canvas India, I would like to get a quote / order in bulk for ${product.name}${productCode ? ` (Code: ${productCode})` : ''}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="py-3 px-3 sm:px-4 rounded-xl border-2 border-[#0E4A93] bg-white hover:bg-blue-50 text-[#0E4A93] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer text-center"
@@ -900,7 +964,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                       <span>Add to cart</span>
                     </button>
                     <a
-                      href={`https://wa.me/917893051555?text=${encodeURIComponent(`Hi Canvas India, I would like to get a quote / order in bulk for ${product.name}${productCode ? ` (Code: ${productCode})` : ''}`)}`}
+                      href={`https://wa.me/917893946464?text=${encodeURIComponent(`Hi Canvas India, I would like to get a quote / order in bulk for ${product.name}${productCode ? ` (Code: ${productCode})` : ''}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="py-3 px-3 sm:px-4 rounded-xl border-2 border-[#0E4A93] bg-white hover:bg-blue-50 text-[#0E4A93] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer text-center"
@@ -959,12 +1023,26 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
           </div>
 
         {/* ========================================================================= */}
+        {/* 2b. PRODUCT DESCRIPTION                                                   */}
+        {/* ========================================================================= */}
+        {product.description && (
+          <div className="mt-16 sm:mt-20 pt-12 border-t border-stone-200 text-left">
+            <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight mb-4">
+              Product Description
+            </h2>
+            <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-line max-w-3xl">
+              {product.description}
+            </p>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
         {/* 3. PRODUCT SPECIFICATIONS & APPLICATIONS                                  */}
         {/* ========================================================================= */}
-        <div className="mt-16 sm:mt-20 pt-12 border-t border-stone-200 text-left">
-          
+        <div className={`${product.description ? 'mt-12 sm:mt-16' : 'mt-16 sm:mt-20 pt-12 border-t border-stone-200'} text-left`}>
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            
+
             {/* Specifications Table */}
             <div className="lg:col-span-12 space-y-4">
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
@@ -1022,6 +1100,60 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
 
           </div>
 
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 3b. CUSTOMER REVIEWS                                                       */}
+        {/* ========================================================================= */}
+        <div id="product-reviews" className="mt-12 sm:mt-16 pt-12 border-t border-stone-200 text-left">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
+                Customer Reviews{productReviews.count > 0 ? ` (${productReviews.count})` : ''}
+              </h2>
+              {productReviews.count > 0 && (
+                <div className="flex items-center gap-1.5 mt-1 text-sm text-stone-600">
+                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  <span className="font-bold text-stone-900">{productReviews.average}</span>
+                  <span>average rating</span>
+                </div>
+              )}
+            </div>
+            <Link
+              to="/orders"
+              className="inline-flex items-center justify-center rounded-lg border border-[#0E4A93] px-4 py-2 text-sm font-bold text-[#0E4A93] hover:bg-blue-50 transition-colors"
+              title="Open your orders to review something you've bought and received"
+            >
+              Write a review
+            </Link>
+          </div>
+          {productReviews.reviews.length === 0 ? (
+            <p className="text-sm text-stone-500">
+              No reviews yet. If you&apos;ve bought this, be the first to share what you think.
+            </p>
+          ) : (
+            <div className="space-y-4 max-w-3xl">
+              {productReviews.reviews.map((review) => (
+                <div key={review.id} className="rounded-lg border border-stone-200 p-4">
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <Star
+                          key={n}
+                          className={`w-3.5 h-3.5 ${n <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-stone-300'}`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-stone-400">
+                      {new Date(review.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </span>
+                  </div>
+                  <p className="text-sm text-stone-700 leading-relaxed">{review.comment}</p>
+                  <p className="text-xs font-bold text-stone-500 mt-2">{review.customerName}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* ========================================================================= */}

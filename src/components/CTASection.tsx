@@ -56,7 +56,7 @@ export const CTASection: React.FC<CTASectionProps> = ({
             <div className="pt-8 border-t border-stone-800/80 flex flex-wrap items-center justify-center gap-6 text-xs text-stone-400">
               <span className="flex items-center gap-1.5 text-stone-300">
                 <Phone className="w-3.5 h-3.5 text-[var(--accent-light)]" />
-                <span>Trade Concierge: <strong>+91 (080) 4122-8900</strong></span>
+                <span>Trade Concierge: <strong>+91 78939 46464</strong></span>
               </span>
               <span className="hidden sm:inline text-stone-600">•</span>
               <span className="flex items-center gap-1.5 text-stone-300">

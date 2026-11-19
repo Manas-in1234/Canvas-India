@@ -927,7 +927,7 @@ export const Header: React.FC<HeaderProps> = ({
                             </p>
 
                             <a
-                              href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                              href="https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={() => setActiveMegaMenu(null)}
@@ -1243,7 +1243,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>Track Your Order</span>
               </button>
               <a
-                href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                href="https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setMobileMenuOpen(false)}
@@ -1308,7 +1308,7 @@ export const Header: React.FC<HeaderProps> = ({
                               Custom employee welcome kits, company branded prints, uniform displays, and corporate gifting.
                             </p>
                             <a
-                              href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                              href="https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={() => setMobileMenuOpen(false)}

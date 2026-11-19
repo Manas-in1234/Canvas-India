@@ -34,6 +34,7 @@ export interface HexPanelLayout {
 }
 
 export interface ProductPanelGeometry {
+  rotation?: number;
   id: string;
   label: string;
   dimension?: string;
@@ -49,6 +50,7 @@ export interface ProductPanelGeometry {
 }
 
 export interface ProductLayoutDefinition {
+  outline?: string;
   id: string;
   productTypeId: string;
   name: string;

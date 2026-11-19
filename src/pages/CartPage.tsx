@@ -34,6 +34,9 @@ export const CartPage: React.FC = () => {
   const remainingForFreeDelivery = Math.max(0, freeDeliveryThreshold - subtotal);
   const deliveryCharges = subtotal >= freeDeliveryThreshold ? 0 : 99;
   const finalTotal = subtotal + deliveryCharges;
+  // Prices already include GST - extract the GST portion out of the
+  // tax-inclusive total instead of just labelling the rate.
+  const gstAmount = Math.round((finalTotal * 18) / 118);
 
   const handleCheckout = () => {
     navigate('/checkout');
@@ -237,8 +240,8 @@ export const CartPage: React.FC = () => {
                 </div>
 
                 <div className="flex justify-between text-stone-600">
-                  <span>Applicable GST (Included)</span>
-                  <span className="font-semibold text-stone-500">18% included</span>
+                  <span>Applicable GST (18%, Included)</span>
+                  <span className="font-semibold text-stone-500">₹{gstAmount.toLocaleString('en-IN')}</span>
                 </div>
 
                 <div className="pt-3 border-t border-stone-200 flex justify-between text-base font-extrabold text-stone-900">
@@ -274,7 +277,7 @@ export const CartPage: React.FC = () => {
                   <div className="text-[11px] text-stone-500">Chat with production specialist</div>
                 </div>
                 <a
-                  href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20need%20help%20with%20my%20cart"
+                  href="https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20need%20help%20with%20my%20cart"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"

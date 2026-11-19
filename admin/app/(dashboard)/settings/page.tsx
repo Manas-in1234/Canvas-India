@@ -1,13 +1,75 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { apiClient, ApiError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth/auth-context';
+import { usePermission } from '@/lib/auth/use-permission';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+function StorePoliciesCard() {
+  const { hasPermission } = usePermission();
+  const canManage = hasPermission('store_settings.manage');
+  const [minOrderValue, setMinOrderValue] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    apiClient.get<Record<string, string>>('/admin/store-settings')
+      .then((settings) => setMinOrderValue(settings.min_order_value ?? ''))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (!hasPermission('store_settings.view')) return null;
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await apiClient.put('/admin/store-settings', { min_order_value: minOrderValue.trim() || null });
+      toast.success('Store policies updated');
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Failed to update store policies');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="max-w-md">
+      <CardHeader>
+        <CardTitle className="text-base">Store Policies</CardTitle>
+        <CardDescription>Store-wide checkout rules.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="minOrderValue">Minimum order value (₹)</Label>
+          <Input
+            id="minOrderValue"
+            type="number"
+            min={0}
+            placeholder="No minimum"
+            value={minOrderValue}
+            disabled={loading || !canManage}
+            onChange={(e) => setMinOrderValue(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Customers must have at least this much in their cart (before shipping/tax) to check out. Leave empty to disable.
+          </p>
+        </div>
+        {canManage && (
+          <Button onClick={handleSave} disabled={loading || saving}>
+            {saving ? 'Saving…' : 'Save'}
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
@@ -50,8 +112,10 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-muted-foreground">Manage your account.</p>
+        <p className="text-sm text-muted-foreground">Manage your account and store policies.</p>
       </div>
+
+      <StorePoliciesCard />
 
       <Card className="max-w-md">
         <CardHeader>

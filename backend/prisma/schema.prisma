@@ -114,6 +114,7 @@ model Customer {
   segmentMemberships  CustomerSegmentMember[]
   discountRedemptions DiscountRedemption[]
   cartRecoveries      AbandonedCartRecovery[]
+  reviews             Review[]
   createdAt           DateTime                @default(now()) @map("created_at")
   updatedAt           DateTime                @updatedAt @map("updated_at")
   deletedAt           DateTime?               @map("deleted_at")
@@ -322,6 +323,31 @@ model PricingSetting {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("pricing_settings")
+}
+
+// Generic store-wide policy toggles (e.g. minimum order value) — distinct
+// from PricingSetting, which is customizer price-component knobs, not
+// checkout policy.
+model StoreSetting {
+  key         String   @id
+  value       String
+  updatedBy   String?  @map("updated_by")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("store_settings")
+}
+
+// Per-field text overrides for the storefront's legal/support pages (About Us, Privacy Policy,
+// Terms & Conditions, Cancellation Policy). Each page already renders every paragraph/heading as
+// content[fN] ?? <hardcoded default>, keyed by slug — this just persists the overrides; an empty
+// or missing content map means every field falls back to its hardcoded default.
+model SupportPageContent {
+  slug      String   @id
+  content   Json
+  updatedBy String?  @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("support_page_content")
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -620,6 +646,7 @@ model OrderItem {
   shipmentItems       ShipmentItem[]
   returnRequests      ReturnRequest[]
   replacementRequests ReplacementRequest[]
+  review              Review?
 
   @@map("order_items")
 }
@@ -721,6 +748,37 @@ enum ReplacementStatus {
   REVIEW
   APPROVED
   COMPLETED
+  REJECTED
+}
+
+// Anchored to the exact order item bought, so a review always proves a real purchase.
+// One review per order item (@@unique): a customer can rate each thing they bought once.
+model Review {
+  id          String       @id @default(uuid())
+  customerId  String       @map("customer_id")
+  customer    Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orderItemId String       @unique @map("order_item_id")
+  orderItem   OrderItem    @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  // Copied from the order item at review time: lets the storefront group and count reviews by
+  // product without a live Product row, same reasoning as OrderItem.productNameSnapshot.
+  productSlug String       @map("product_slug")
+  rating      Int // 1-5
+  comment     String       @db.VarChar(2000)
+  status      ReviewStatus @default(PENDING)
+  rejectionReason String?  @map("rejection_reason")
+  moderatedBy String?      @map("moderated_by")
+  moderatedAt DateTime?    @map("moderated_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@index([productSlug, status])
+  @@index([customerId])
+  @@map("reviews")
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
   REJECTED
 }
 
@@ -1443,6 +1501,7 @@ model CustomerSegment {
   campaigns   Campaign[]
   discounts   Discount[]
   promotions  Promotion[]
+  broadcasts  Broadcast[]
   createdAt   DateTime                @default(now()) @map("created_at")
   updatedAt   DateTime                @updatedAt @map("updated_at")
 
@@ -1481,6 +1540,36 @@ model Campaign {
 
   @@index([status])
   @@map("campaigns")
+}
+
+// A one-off email sent to a set of customers (everyone with an email, or one segment).
+// Distinct from Campaign, which just tracks a marketing initiative's status/budget/revenue -
+// nothing about Campaign ever sends anything. Sent via Resend; see broadcasts.ts.
+model Broadcast {
+  id              String          @id @default(uuid())
+  subject         String
+  body            String
+  targetSegmentId String?         @map("target_segment_id")
+  targetSegment   CustomerSegment? @relation(fields: [targetSegmentId], references: [id])
+  status          BroadcastStatus @default(DRAFT)
+  recipientCount  Int             @default(0) @map("recipient_count")
+  sentCount       Int             @default(0) @map("sent_count")
+  failedCount     Int             @default(0) @map("failed_count")
+  errorMessage    String?         @map("error_message")
+  createdBy       String?         @map("created_by")
+  sentAt          DateTime?       @map("sent_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("broadcasts")
+}
+
+enum BroadcastStatus {
+  DRAFT
+  SENDING
+  SENT
+  FAILED
 }
 
 model Discount {

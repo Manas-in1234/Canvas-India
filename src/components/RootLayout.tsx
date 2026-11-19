@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
+import { RouteLoadingFallback } from './RouteLoadingFallback';
 import { PhonePrompt } from './PhonePrompt';
 import { Outlet, Link, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { Header } from './Header';
@@ -175,7 +176,7 @@ export const RootLayout: React.FC = () => {
         wishlistCount={wishlistedProductsCount}
         onOpenCart={() => setCartDrawerOpen(true)}
         onOpenWishlist={() => setWishlistDrawerOpen(true)}
-        onOpenQuote={() => window.open('https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote', '_blank', 'noopener,noreferrer')}
+        onOpenQuote={() => window.open('https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote', '_blank', 'noopener,noreferrer')}
         onSelectCategory={handleSelectCategory}
         onSearch={handleSearch}
         allProducts={allProducts}
@@ -186,14 +187,16 @@ export const RootLayout: React.FC = () => {
 
       {/* Main Routed Page Content */}
       <main className="flex-1">
-        <Outlet />
+        <Suspense fallback={<RouteLoadingFallback />}>
+          <Outlet />
+        </Suspense>
         <PhonePrompt />
       </main>
 
       {/* Indian E-Commerce Footer */}
       <Footer
         onSelectCategory={handleSelectCategory}
-        onOpenQuote={() => window.open('https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote', '_blank', 'noopener,noreferrer')}
+        onOpenQuote={() => window.open('https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote', '_blank', 'noopener,noreferrer')}
         onOpenAccount={() => navigate('/account')}
         onTrackOrder={() => setAccountModalOpen(true)}
       />

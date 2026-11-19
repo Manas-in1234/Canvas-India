@@ -36,6 +36,12 @@ const SERIF = '"Playfair Display", Georgia, serif';
 const BLUE = '#0E4A93';
 const ORANGE = '#E8752A';
 
+const formatStartsAtPrice = (price: number): string => {
+  return price % 1 !== 0
+    ? price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : price.toLocaleString('en-IN');
+};
+
 const u = (id: string, w = 1200) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=90`;
 
 const CATEGORY_CARDS = [
@@ -134,6 +140,9 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   const layoutTitle = (key: string, fallback: string) => layout.sections.find((x) => x.key === key)?.title?.trim() || fallback;
   const [promotion, setPromotion] = React.useState({ saleName: 'Festive Sale', percentage: 20, coupons: [] as { code: string; desc: string }[] });
   React.useEffect(() => {
+    document.title = 'Canvas India | Online Custom Printing Store';
+  }, []);
+  React.useEffect(() => {
     const controller = new AbortController();
     fetch(buildApiUrl('/homepage-promotions'), { signal: controller.signal })
       .then(response => response.ok ? response.json() : null)
@@ -175,7 +184,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
     if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: 'smooth' });
   };
 
-  const bestsellers = allProducts.slice(0, 10);
+  const bestsellers = allProducts.filter((p) => p.bestseller);
 
   return (
     <div className="w-full bg-[#FFF9F1] text-[#1f2937] font-manrope flex flex-col">
@@ -522,7 +531,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                   <div className="min-w-0">
                     <h3 className="text-[#1A4F53] font-bold text-[11px] sm:text-[17px] leading-tight mb-0.5 truncate">{c.name}</h3>
                     <p className="text-[10px] sm:text-[13px] text-[#567477] truncate">
-                      {c.price ? `Starts at ₹${c.price.toLocaleString('en-IN')}` : 'Custom Sizes Available'}
+                      {c.price ? `Starts at ₹${formatStartsAtPrice(c.price)}` : 'Custom Sizes Available'}
                     </p>
                   </div>
                   <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
@@ -603,7 +612,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                   <div className="min-w-0">
                     <h3 className="text-[#1A4F53] font-bold text-[11px] sm:text-[17px] leading-tight mb-0.5 truncate">{c.name}</h3>
                     <p className="text-[10px] sm:text-[13px] text-[#567477] truncate">
-                      {c.price ? `Starts at ₹${c.price.toLocaleString('en-IN')}` : 'Custom Sizes Available'}
+                      {c.price ? `Starts at ₹${formatStartsAtPrice(c.price)}` : 'Custom Sizes Available'}
                     </p>
                   </div>
                   <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
@@ -679,7 +688,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
                     <div className="min-w-0">
                       <h3 className="text-[#1A4F53] font-bold text-[11px] sm:text-[17px] leading-tight mb-0.5 truncate">{c.name}</h3>
                       <p className="text-[10px] sm:text-[13px] text-[#567477] truncate">
-                        {c.price ? `Starts at ₹${c.price.toLocaleString('en-IN')}` : 'Eco-Friendly'}
+                        {c.price ? `Starts at ₹${formatStartsAtPrice(c.price)}` : 'Eco-Friendly'}
                       </p>
                     </div>
                     <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-[#1A4F53] text-white flex items-center justify-center shrink-0 group-hover:bg-[#E8752A] transition-colors shadow-sm">
@@ -788,7 +797,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
       )}
 
       {/* BEST SELLERS */}
-      {layoutShows('bestsellers') && (
+      {layoutShows('bestsellers') && bestsellers.length > 0 && (
         <div style={{ order: layoutOrder('bestsellers') }}>
       <section id="bestsellers-unboxed" className="pb-12 sm:pb-16">
         <Container>
@@ -915,7 +924,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               </p>
               <div className="mt-6">
                 <a
-                  href="https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
+                  href="https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20I%20would%20like%20to%20get%20a%20quote%20for%20Corporate%20%26%20Bulk%20Orders"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-sm font-bold text-white bg-[#E8752A] hover:bg-[#D3631A] rounded-full px-6 py-3 shadow-lg shadow-orange-950/40 transition-colors cursor-pointer"

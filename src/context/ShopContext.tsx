@@ -280,7 +280,10 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         base,
         paper,
         customText,
-        photoUrl: photoUrl || product.image,
+        // Only a real uploaded/custom photo, never the product's own listing thumbnail: every display
+        // site already falls back to product.image itself, and Cash on Delivery eligibility at checkout
+        // reads this field to tell a plain catalog item apart from a custom print with artwork.
+        photoUrl: photoUrl || undefined,
         customizationDetails,
       };
 
@@ -467,7 +470,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const text = material 
           ? `Hi Canvas India, I would like to get a quote for ${material}`
           : 'Hi Canvas India, I would like to get a quote';
-        window.open(`https://wa.me/917893051555?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+        window.open(`https://wa.me/917893946464?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
       },
         onOpenCart: () => setCartDrawerOpen(true),
         onOpenWishlist: () => setWishlistDrawerOpen(true),

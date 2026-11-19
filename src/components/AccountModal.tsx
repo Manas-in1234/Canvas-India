@@ -188,7 +188,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                   <div className="pt-2 border-t border-blue-200/60 flex items-center justify-between text-[11px]">
                     <span className="text-stone-500">Need immediate update?</span>
                     <a
-                      href={`https://wa.me/917893051555?text=Hi%20Canvas%20India%2C%20please%20update%20me%20on%20Order%20${trackingResult.id}`}
+                      href={`https://wa.me/917893946464?text=Hi%20Canvas%20India%2C%20please%20update%20me%20on%20Order%20${trackingResult.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[#0E4A93] font-bold hover:underline flex items-center gap-1"
@@ -301,7 +301,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
               <span>Canvas India Verified Portal</span>
             </div>
             <a
-              href="https://wa.me/917893051555"
+              href="https://wa.me/917893946464"
               target="_blank"
               rel="noopener noreferrer"
               className="text-emerald-700 font-bold hover:underline flex items-center gap-1"

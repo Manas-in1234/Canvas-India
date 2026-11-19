@@ -50,6 +50,9 @@ const STATUS_STYLES: Record<string, string> = {
   PREFLIGHT_FAILED: "bg-red-100 text-red-800",
   APPROVED: "bg-emerald-100 text-emerald-800",
   REJECTED: "bg-red-100 text-red-800",
+  // Broadcast status
+  SENDING: "bg-blue-100 text-blue-800",
+  SENT: "bg-emerald-100 text-emerald-800",
 };
 
 // Courier terms a shop owner should not have to decode.

@@ -15,7 +15,7 @@ export interface ProductTypeSummary extends ProductType {
 }
 
 export interface ProductListItem {
-  storefront?: { image?: string | null };
+  storefront?: { image?: string | null; bestseller?: boolean };
   id: string;
   name: string;
   status: ProductStatus;
