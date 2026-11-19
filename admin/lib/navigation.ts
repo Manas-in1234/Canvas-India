@@ -25,6 +25,7 @@ import {
   Megaphone,
   BadgePercent,
   Mail,
+  MessageSquareQuote,
   type LucideIcon,
 } from "lucide-react";
 export interface NavLink {
@@ -148,6 +149,12 @@ export const NAV_SECTIONS: NavSection[] = [
         href: "/hero-images",
         label: "Hero Images",
         icon: ImageIcon,
+        permissions: ["products.edit"],
+      },
+      {
+        href: "/testimonials",
+        label: "Testimonials",
+        icon: MessageSquareQuote,
         permissions: ["products.edit"],
       },
       {

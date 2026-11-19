@@ -93,11 +93,14 @@ const CANVAS_STYLE_CARDS = Object.values(CANVAS_STYLE_LANDING_DATA)
     href: `/canvas/${data.slug}`,
   }));
 
-const TESTIMONIALS = [
-  { name: 'Asha S.', city: 'Bengaluru', text: 'Amazing quality and vibrant colours! My canvas turned out even better than I imagined!', img: 'https://randomuser.me/api/portraits/women/44.jpg' },
-  { name: 'Rohit P.', city: 'Mumbai', text: 'Loved the personal touch and quick delivery. Will definitely order again!', img: 'https://randomuser.me/api/portraits/men/32.jpg' },
-  { name: 'Sneha T.', city: 'Hyderabad', text: 'Beautiful products, great service and such unique designs. Highly recommended!', img: 'https://randomuser.me/api/portraits/women/68.jpg' },
-  { name: 'Vikram R.', city: 'Delhi', text: 'The acrylic print looks stunning on our living room wall. Packaging was superb.', img: 'https://randomuser.me/api/portraits/men/75.jpg' },
+// Fallback shown before the admin-managed list loads (or if the fetch
+// fails) - matches the seed data the backend returns on first load, so
+// there's no visible flash between the two.
+const DEFAULT_TESTIMONIALS = [
+  { id: 'seed-1', name: 'Asha S.', city: 'Bengaluru', text: 'Amazing quality and vibrant colours! My canvas turned out even better than I imagined!', img: 'https://randomuser.me/api/portraits/women/44.jpg' },
+  { id: 'seed-2', name: 'Rohit P.', city: 'Mumbai', text: 'Loved the personal touch and quick delivery. Will definitely order again!', img: 'https://randomuser.me/api/portraits/men/32.jpg' },
+  { id: 'seed-3', name: 'Sneha T.', city: 'Hyderabad', text: 'Beautiful products, great service and such unique designs. Highly recommended!', img: 'https://randomuser.me/api/portraits/women/68.jpg' },
+  { id: 'seed-4', name: 'Vikram R.', city: 'Delhi', text: 'The acrylic print looks stunning on our living room wall. Packaging was superb.', img: 'https://randomuser.me/api/portraits/men/75.jpg' },
 ];
 
 const Container: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
@@ -139,6 +142,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   };
   const layoutTitle = (key: string, fallback: string) => layout.sections.find((x) => x.key === key)?.title?.trim() || fallback;
   const [promotion, setPromotion] = React.useState({ saleName: 'Festive Sale', percentage: 20, coupons: [] as { code: string; desc: string }[] });
+  const [testimonials, setTestimonials] = React.useState(DEFAULT_TESTIMONIALS);
   React.useEffect(() => {
     document.title = 'Canvas India | Online Custom Printing Store';
   }, []);
@@ -147,6 +151,14 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
     fetch(buildApiUrl('/homepage-promotions'), { signal: controller.signal })
       .then(response => response.ok ? response.json() : null)
       .then(settings => { if (settings && !controller.signal.aborted) setPromotion(settings); })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
+  React.useEffect(() => {
+    const controller = new AbortController();
+    fetch(buildApiUrl('/homepage-testimonials'), { signal: controller.signal })
+      .then(response => response.ok ? response.json() : null)
+      .then(list => { if (Array.isArray(list) && list.length > 0 && !controller.signal.aborted) setTestimonials(list); })
       .catch(() => {});
     return () => controller.abort();
   }, []);
@@ -994,8 +1006,8 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div ref={testiRef} className="flex gap-5 overflow-x-auto scroll-smooth flex-1 snap-x py-3" style={{ scrollbarWidth: 'none' }}>
-              {TESTIMONIALS.map((t) => (
-                <div key={t.name} className="relative snap-start shrink-0 w-full sm:w-[48%] lg:w-[32%] bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow p-5 border-t-4 border-[#E8752A]">
+              {testimonials.map((t) => (
+                <div key={t.id} className="relative snap-start shrink-0 w-full sm:w-[48%] lg:w-[32%] bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow p-5 border-t-4 border-[#E8752A]">
                   <Quote className="absolute top-4 right-4 w-8 h-8 text-[#E8752A]/20" />
                   <Stars />
                   <p className="text-sm text-stone-700 mt-3 leading-relaxed">"{t.text}"</p>
