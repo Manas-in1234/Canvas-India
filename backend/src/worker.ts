@@ -2,6 +2,7 @@ import { Occasions, isOccasionSlug } from './catalog/occasions.js';
 import { Reviews } from './commerce/reviews.js';
 import { Broadcasts } from './growth/broadcasts.js';
 import { HomepagePromotions } from './catalog/homepage-promotions.js';
+import { HomepageTestimonials } from './catalog/homepage-testimonials.js';
 import { HomepageLayout } from './catalog/homepage-layout.js';
 import { isSupportPage, SupportPages } from './catalog/support-pages.js';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -492,6 +493,18 @@ export default {
 
       if (pathname === '/api/v1/homepage-promotions' && method === 'GET') {
         return jsonResponse(await new HomepagePromotions(prisma).storefront(), 200, request);
+      }
+      if (pathname === '/api/v1/homepage-testimonials' && method === 'GET') {
+        return jsonResponse(await new HomepageTestimonials(prisma).list(), 200, request);
+      }
+      if (pathname === '/api/v1/admin/homepage-testimonials' && (method === 'GET' || method === 'PUT')) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const denied = checkPermission(user, [method === 'GET' ? 'products.view' : 'products.edit'], request);
+        if (denied) return denied;
+        const testimonials = new HomepageTestimonials(prisma);
+        const result = method === 'GET' ? await testimonials.list() : await testimonials.save(await request.json(), user.id);
+        return jsonResponse(result, 200, request);
       }
       // Activity log: who changed what. Read-only; audit rows can never be edited or deleted from the API.
       if (pathname === '/api/v1/audit-logs' && method === 'GET') {
