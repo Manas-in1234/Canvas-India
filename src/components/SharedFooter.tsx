@@ -174,7 +174,7 @@ export const SharedFooter: React.FC<SharedFooterProps> = ({
                   className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--accent)]/20 hover:bg-[var(--accent)]/30 text-[var(--accent-light)] border border-[var(--accent)]/40 text-xs font-semibold transition-colors"
                 >
                   <span className="w-2 h-2 rounded-full bg-[var(--accent-light)] animate-pulse" />
-                  <span>Extra Contact: +91 78930 51555</span>
+                  <span>Contact Number 2: +91 78930 51555</span>
                 </a>
               </div>
 

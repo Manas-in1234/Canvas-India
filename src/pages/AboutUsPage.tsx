@@ -409,7 +409,7 @@ export const AboutUsPage: React.FC = () => {
               </>}</a>
             </p>
             <p>
-              {copy("f200", "Extra Contact:")}{' '}
+              {copy("f200", "Contact Number 2:")}{' '}
               <a href={copy("f201", "https://wa.me/917893051555")} target="_blank" rel="noopener noreferrer" className="text-[#0E4A93] font-semibold hover:underline">{content["f202"] ?? <>
                 78930 51555
               </>}</a>
