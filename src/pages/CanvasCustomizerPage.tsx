@@ -5962,14 +5962,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     let price = sizePrice;
 
     if (shapeApplies) {
-      if (NON_RECTANGULAR_SHAPE_TYPES.has(currentShape.shapeType)) {
-        // Client-specified pricing: a non-rectangular shape (heart, hexagon,
-        // custom admin-traced outlines, ...) is billed by its bounding
-        // rectangle's area, not its actual silhouette area.
-        const boundingWidth = isCustomSize && canUseCustomSize ? customWidth : (currentSizeOption.widthInches ?? customWidth);
-        const boundingHeight = isCustomSize && canUseCustomSize ? customHeight : (currentSizeOption.heightInches ?? customHeight);
-        price += Math.round(boundingWidth * boundingHeight * shapeAreaRate);
-      } else if (currentShape.priceAddon) {
+      // Non-rectangular shapes (circle, oval, heart, hexagon, custom admin-traced
+      // outlines, ...) are the product itself at the size the shopper picked -
+      // no extra surcharge gets added just for picking a shape.
+      if (!NON_RECTANGULAR_SHAPE_TYPES.has(currentShape.shapeType) && currentShape.priceAddon) {
         price += currentShape.priceAddon;
       }
     }
@@ -9827,23 +9823,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <span className="font-bold text-stone-900">+₹{(() => { const p = currentShape.priceAddon; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
                 </div>
               )}
-              {shapeApplies && NON_RECTANGULAR_SHAPE_TYPES.has(currentShape.shapeType) && (() => {
-                // Circle/oval/heart/hexagon/custom shapes are billed by
-                // their bounding rectangle's area at shapeAreaRate, not a
-                // flat priceAddon - this used to never appear as its own
-                // line, so the total included a charge the breakdown never
-                // itemized (looked identical to an unrequested default).
-                const boundingWidth = isCustomSize && canUseCustomSize ? customWidth : (currentSizeOption.widthInches ?? customWidth);
-                const boundingHeight = isCustomSize && canUseCustomSize ? customHeight : (currentSizeOption.heightInches ?? customHeight);
-                const p = Math.round(boundingWidth * boundingHeight * shapeAreaRate);
-                if (p <= 0) return null;
-                return (
-                  <div className="flex justify-between">
-                    <span>Shape ({currentShape.name ?? currentShape.shapeType}):</span>
-                    <span className="font-bold text-stone-900">+₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0)}</span>
-                  </div>
-                );
-              })()}
               {shapeApplies && (liveBorderWidthPrices[selectedBorderWidthId] || 0) > 0 && (
                 <div className="flex justify-between">
                   <span>Border:</span>
