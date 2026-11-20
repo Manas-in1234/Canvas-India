@@ -137,7 +137,10 @@ export const OccasionPage: React.FC = () => {
         // the occasion (e.g. a tribal print showing up on the Anniversary
         // page) — use the occasion's own curated photo instead, which is
         // actually relevant and already verified to load (it's the banner).
-        return { ...cat, destination, image: occasion.tileImages?.[cat.categorySlug] || occasion.bannerImage };
+        // Its `category` name is still useful here though: it's live (from
+        // the current admin ProductType name), unlike cat.name, which is a
+        // snapshot baked into shopCategories.ts that a rename never reaches.
+        return { ...cat, name: firstProduct?.category || cat.name, destination, image: occasion.tileImages?.[cat.categorySlug] || occasion.bannerImage };
       });
   }, [occasion, allProducts, isCategoryVisible]);
 

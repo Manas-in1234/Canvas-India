@@ -155,6 +155,12 @@ export const ReadymadeOffersPage: React.FC = () => {
         <div className="space-y-1">
           {READYMADE_CATEGORIES.map((cat) => {
             const isChecked = selectedCategories.includes(cat.label);
+            // cat.label is also the stable identity used for selection state
+            // and the match filter above, so it's left as-is there - only
+            // the text actually shown gets the live admin category name
+            // (from any matching live product) when one differs, the same
+            // way the other category listings on the site already do.
+            const displayLabel = allProducts.find((p) => cat.match(p))?.category || cat.label;
             return (
               <label
                 key={cat.label}
@@ -173,7 +179,7 @@ export const ReadymadeOffersPage: React.FC = () => {
                   onChange={() => toggleCategory(cat.label)}
                   className="sr-only"
                 />
-                <span className="flex-1">{cat.label}</span>
+                <span className="flex-1">{displayLabel}</span>
               </label>
             );
           })}

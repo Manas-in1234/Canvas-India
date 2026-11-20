@@ -52,7 +52,20 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
     isCategoryVisible 
   } = useShop();
 
-  const config = CATEGORY_CONFIGS[activeSlug] || CATEGORY_CONFIGS['canvas'];
+  const staticConfig = CATEGORY_CONFIGS[activeSlug] || CATEGORY_CONFIGS['canvas'];
+  // CATEGORY_CONFIGS' title/shortTitle is a snapshot that only ever updates
+  // by hand-editing this file - a rename in the admin's Categories page
+  // never reaches it. Any live product for this category already carries
+  // the current admin-set name (mapBackendProductToFrontend resolves it
+  // from the live ProductType, not a frozen value), so prefer that here too,
+  // the same way the individual product listings already do.
+  const liveCategoryName = useMemo(
+    () => allProducts.find((p) => p.categorySlug === activeSlug)?.category,
+    [allProducts, activeSlug],
+  );
+  const config = liveCategoryName && liveCategoryName !== staticConfig.title
+    ? { ...staticConfig, title: liveCategoryName, shortTitle: liveCategoryName }
+    : staticConfig;
 
   // Check if current activeSlug is Cork / Yoga
   const isCorkCategory = activeSlug === 'cork' || activeSlug === 'yoga-fitness' || activeSlug === 'cork-art-patterns';
