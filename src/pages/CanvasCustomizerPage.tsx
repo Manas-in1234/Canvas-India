@@ -11366,7 +11366,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     {/* Thickness Options Grid */}
                     <div className={`grid gap-2 ${activeMaterial === 'acrylic' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
                       {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS.filter((t) => t.id !== 'custom-thickness' && t.id !== 'hanging-canvas')).map((th: any) => {
-                        const isSelected = selectedThicknessId === th.id;
+                        // Don't show a card as "selected" until the shopper has actually
+                        // clicked one - selectedThicknessId silently holds the cheapest
+                        // option by default so pricing/preview math never breaks, but
+                        // that default must stay invisible in the UI until touched.
+                        const isSelected = thicknessTouched && selectedThicknessId === th.id;
                         const displayTitle = th.name || th.label.split('(')[0].trim();
                         const displaySub = th.thicknessInches ? `(${th.thicknessInches.toFixed(2)}")` : th.thicknessMm ? `(${th.thicknessMm}mm)` : '';
                         return (
@@ -11761,7 +11765,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS).map((th: any) => {
-                      const isSelected = selectedThicknessId === th.id;
+                      // Same as the other thickness grid - stay unchecked until actually clicked.
+                      const isSelected = thicknessTouched && selectedThicknessId === th.id;
                       const cardTitle = activeMaterial === 'canvas' && th.id === 'custom-thickness' && selectedThicknessId === 'custom-thickness'
                         ? `Custom (${customThicknessMm}mm)`
                         : th.label;
