@@ -7261,6 +7261,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       return;
     }
 
+    // selectedThicknessId always holds a real id (see its useState above),
+    // but a product that shows the Wrap & Border thickness picker must have
+    // one actually picked, not just some other option touched, before it
+    // can be priced.
+    if (!thicknessTouched && !isBannerProduct) {
+      setValidationWarning('Please select a thickness in Wrap & Border before adding this to your cart.');
+      setTimeout(() => setValidationWarning(null), 4000);
+      setActiveTab('WRAP & BORDER');
+      return;
+    }
+
     const firstImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || catalogProduct.image;
     const retouchLabels = RETOUCH_CHECKS.filter((r) => retouchChecks[r.id]).map((r) => r.label);
 
