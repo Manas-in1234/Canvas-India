@@ -928,7 +928,7 @@ export const MEGA_MENUS_DATA: Record<string, MegaMenuConfig> = {
           { name: 'Line Art', slug: 'bulk-order', href: '/line-art', description: 'Minimal monochrome prints in bulk' },
           { name: 'Motivational Posters', slug: 'bulk-order', href: '/motivational-posters', description: 'Quote posters for offices in bulk' },
           { name: 'Scenery & Landscape Art', slug: 'bulk-order', href: '/scenery-landscape-art', description: 'Landscape prints in bulk for lobbies' },
-          { name: 'Tribal & Ethnic Art', slug: 'bulk-order', href: '/tribal-ethnic-art', description: 'Bold statement prints in bulk' },
+          { name: 'African Arts', slug: 'bulk-order', href: '/tribal-ethnic-art', description: 'Bold statement prints in bulk' },
         ],
       },
     ],
@@ -1048,7 +1048,7 @@ export const PRIMARY_CATEGORIES: PrimaryCategoryItem[] = [
   },
   {
     id: 'cat-tribal',
-    name: 'Tribal & Ethnic Art',
+    name: 'African Arts',
     slug: 'tribal-ethnic-art',
     iconName: 'Globe',
     startingPrice: 249,

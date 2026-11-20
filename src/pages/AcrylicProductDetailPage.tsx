@@ -89,7 +89,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   const isWishlisted = wishlistIds.includes(product.id);
 
   // Catalogue designs are named "<Name> <code>" or "<Name> <code> - <Material>"
-  // (e.g. "Tribal Art Print 001 - Acrylic") — pull the numeric code out so it
+  // (e.g. "African Art Print 001 - Acrylic") — pull the numeric code out so it
   // can be shown on its own below Quantity instead of cluttering the title.
   const { displayName, productCode } = useMemo(() => {
     const match = product.name.match(/^(.*?)\s+(\d{3,4})(\s*-\s*.+)?$/);

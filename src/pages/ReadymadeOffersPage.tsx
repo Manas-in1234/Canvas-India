@@ -47,7 +47,7 @@ interface DisplayGroup {
 }
 
 const READYMADE_CATEGORIES: ReadymadeCategory[] = [
-  { label: 'Tribal & Ethnic Art', match: (p) => p.categorySlug === 'tribal-ethnic-art' },
+  { label: 'African Arts', match: (p) => p.categorySlug === 'tribal-ethnic-art' },
   { label: 'Devotional Art', match: (p) => p.categorySlug === 'devotional-art' },
   { label: 'Line Art', match: (p) => p.categorySlug === 'line-art' },
   { label: 'Motivational Posters', match: (p) => p.categorySlug === 'motivational-posters' },
