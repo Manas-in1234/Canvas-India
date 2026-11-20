@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft } from "lucide-react";
 import { OrderShippingPanel } from "@/components/delivery/order-shipping-panel";
+import { CodCollectionCard } from "@/components/delivery/cod-collection-card";
 import { InvoiceButton } from "@/components/orders/invoice";
 import { OrderEditor } from "@/components/order-editor";
 
@@ -507,6 +508,7 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
                     </span>
                   </div>
                 )}
+                {payment.provider === 'COD' && <CodCollectionCard payment={payment} invalidateKeys={[["orders", order.id]]} />}
               </CardContent>
             </Card>
           ))}

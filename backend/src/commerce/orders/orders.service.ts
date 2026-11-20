@@ -51,11 +51,16 @@ export class OrdersService {
       include: { customer: { select: { id: true, name: true } },
         events: { where: { type: { in: [...visibilityEvents, 'order.payment_unverified'] } },
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { type: true } },
-        payments: { select: { provider: true, status: true, providerRef: true } } },
+        payments: { select: { provider: true, status: true, providerRef: true, codCollectionStatus: true } } },
     });
     return orders.map(order => {
+      const codPayment = order.payments.find(p => p.provider === 'COD');
       const { payments: _payments, events: _events, ...summary } = withPaymentLabel(order);
-      return { ...summary, adminVisibility: orderVisibility(order.events.filter(event => visibilityEvents.includes(event.type))) };
+      return {
+        ...summary,
+        codCollectionStatus: codPayment?.codCollectionStatus ?? null,
+        adminVisibility: orderVisibility(order.events.filter(event => visibilityEvents.includes(event.type))),
+      };
     });
   }
 
@@ -68,7 +73,7 @@ export class OrdersService {
         addresses: true,
         events: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
         notes: { orderBy: { createdAt: 'desc' } },
-        payments: { include: { transactions: true } },
+        payments: { include: { transactions: true, remittanceItems: { include: { remittance: { select: { id: true, status: true, remittanceDate: true, bankReference: true, bankCreditedAt: true } } } } } },
       },
     });
 

@@ -15,7 +15,10 @@ export interface ShipmentListItem {
   status: string;
   createdAt: string;
   updatedAt: string;
-  order: { id: string; orderNumber: string; shippingStatus: string; paymentStatus: string; total: string };
+  order: {
+    id: string; orderNumber: string; shippingStatus: string; paymentStatus: string; total: string;
+    payments?: { provider: string; codCollectionStatus: 'PENDING' | 'COLLECTED' }[];
+  };
   _count?: { ndrCases: number };
 }
 
@@ -41,6 +44,19 @@ export interface NdrCase {
   createdAt: string;
 }
 
+export interface CodPaymentInfo {
+  id: string;
+  provider: string;
+  status: string;
+  amount: string;
+  codCollectionStatus?: 'PENDING' | 'COLLECTED';
+  codCollectedAmount?: string | null;
+  codCollectedAt?: string | null;
+  codCollectedBy?: string | null;
+  codCollectionNote?: string | null;
+  remittanceItems?: { remittance: { id: string; status: 'PENDING' | 'INITIATED' | 'CREDITED'; bankReference: string | null; remittanceDate: string; bankCreditedAt: string | null } }[];
+}
+
 export interface ShipmentDetail extends Omit<ShipmentListItem, 'order'> {
   warehouse: { id: string; name: string; code: string };
   items: { id: string; orderItemId: string; quantity: number; orderItem: { productNameSnapshot: string; quantity: number } }[];
@@ -56,7 +72,7 @@ export interface ShipmentDetail extends Omit<ShipmentListItem, 'order'> {
     total: string;
     customer: { name: string; email: string | null; phone: string | null } | null;
     addresses: ShipmentAddress[];
-    payments: { provider: string; status: string; amount: string }[];
+    payments: CodPaymentInfo[];
   };
 }
 

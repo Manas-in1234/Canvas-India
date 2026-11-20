@@ -11,7 +11,7 @@ import type { ShipmentDetail, ShipmentLabel } from "@/lib/types/shipping";
 import { SHIPMENT_STATUS_LABEL } from "@/lib/types/shipping";
 import { StatusBadge } from "@/components/status-badge";
 import { usePermission } from "@/lib/auth/use-permission";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ShipmentLabelPreview, buildLabelData, printShipmentLabel } from "@/components/delivery/shipment-label";
+import { CodCollectionCard } from "@/components/delivery/cod-collection-card";
 
 const FINAL = new Set(["DELIVERED", "NOT_SHIPPED"]);
 
@@ -101,7 +102,7 @@ export function ShipmentDetailClient({ id: initialId }: { id: string }) {
   if (isError || !shipment) return <p className="text-sm text-destructive">Failed to load this shipment.</p>;
 
   const address = shipment.order.addresses.find((a) => a.type === "SHIPPING");
-  const isCod = shipment.order.payments.some((p) => p.provider === "COD");
+  const codPayment = shipment.order.payments.find((p) => p.provider === "COD") ?? null;
   const events = [...shipment.trackingEvents].sort((a, b) => +new Date(b.occurredAt) - +new Date(a.occurredAt));
   const openNdr = shipment.ndrCases.find((n) => n.status === "NDR");
   const cancellable = !!shipment.awbNumber && ["READY", "PICKED_UP", "IN_TRANSIT"].includes(shipment.status);
@@ -223,11 +224,9 @@ export function ShipmentDetailClient({ id: initialId }: { id: string }) {
             <CardHeader>
               <CardTitle className="text-base">Payment</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1 text-sm">
-              {isCod ? (
-                <div className="rounded bg-amber-50 p-2 text-amber-900">
-                  <strong>Cash on Delivery.</strong> The courier collects {formatCurrency(shipment.order.total)} at the door. Delhivery pays this to you later; it shows as paid here after delivery.
-                </div>
+            <CardContent className="space-y-2 text-sm">
+              {codPayment ? (
+                <CodCollectionCard payment={codPayment} invalidateKeys={[["shipments", shipment.id]]} />
               ) : (
                 <div>Prepaid online. Nothing to collect.</div>
               )}

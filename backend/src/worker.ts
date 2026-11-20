@@ -17,6 +17,7 @@ import { resolveAdminRead } from './common/admin-read-routes.js';
 import { HeroImages } from './catalog/hero-images.js';
 import { HERO_IMAGE_SLOTS, isHeroImageSlot } from './catalog/hero-image-slots.js';
 import { WorkerShipping } from './shipping/worker-shipping.js';
+import { CodFinance } from './shipping/cod-finance.js';
 import { sendOrderEmail, type OrderEmailEnv } from './common/order-emails.js';
 import { buildInvoice, loadBusinessProfile } from './commerce/invoice.js';
 import { verifyCapturedOrderPayment } from './commerce/orders/razorpay-capture.js';
@@ -2463,7 +2464,7 @@ export default {
         if (named === 'test-connection' && method === 'POST') return jsonResponse(await ship.testConnection(), 200, request);
         if (named === 'pickups' && method === 'GET') return jsonResponse(await ship.recentPickups(), 200, request);
         if (named === 'pickups' && method === 'POST') return jsonResponse(await ship.requestPickup(user.id, await request.json().catch(() => ({}))), 201, request);
-        if (named === 'sync' && method === 'POST') return jsonResponse(await ship.syncActive(30), 200, request);
+        if (named === 'sync' && method === 'POST') return jsonResponse(await ship.syncActive(5), 200, request);
         if (named === 'shipments' && method === 'POST') {
           const body = (await request.json().catch(() => ({}))) as any;
           if (!body.orderId) return jsonResponse({ statusCode: 400, message: 'orderId is required' }, 400, request);
@@ -2484,6 +2485,30 @@ export default {
         const permError = checkPermission(user, ['ndr.view'], request);
         if (permError) return permError;
         return jsonResponse(await services.ndrRto.findNdrCases(), 200, request);
+      }
+
+      // -------------------------------------------------------------
+      // 9b. COD cash collection & remittance (manual reconciliation ledger -
+      // Delhivery's API has no endpoint/webhook for this, see cod-finance.ts)
+      // -------------------------------------------------------------
+      const codRoute = pathname.match(/^\/api\/v1\/cod(?:\/(summary|pending-collection|collected-unremitted|remittances)(?:\/([0-9a-fA-F-]{36}))?|\/payments\/([0-9a-fA-F-]{36})\/(collect|undo-collect))?$/);
+      if (codRoute) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const [, named, remittanceId, paymentId, paymentAction] = codRoute;
+        const writes = method === 'POST' || method === 'PATCH' || method === 'PUT';
+        const denied = checkPermission(user, [writes ? 'cod.manage' : 'cod.view'], request);
+        if (denied) return denied;
+        const cod = new CodFinance(prisma);
+        if (named === 'summary' && method === 'GET') return jsonResponse(await cod.summary(), 200, request);
+        if (named === 'pending-collection' && method === 'GET') return jsonResponse(await cod.pendingCollection(), 200, request);
+        if (named === 'collected-unremitted' && method === 'GET') return jsonResponse(await cod.collectedUnremitted(), 200, request);
+        if (named === 'remittances' && !remittanceId && method === 'GET') return jsonResponse(await cod.listRemittances(), 200, request);
+        if (named === 'remittances' && !remittanceId && method === 'POST') return jsonResponse(await cod.createRemittance(await request.json().catch(() => ({})), user.id), 201, request);
+        if (named === 'remittances' && remittanceId && method === 'GET') return jsonResponse(await cod.getRemittance(remittanceId), 200, request);
+        if (named === 'remittances' && remittanceId && method === 'PATCH') return jsonResponse(await cod.updateRemittance(remittanceId, await request.json().catch(() => ({})), user.id), 200, request);
+        if (paymentId && paymentAction === 'collect' && method === 'POST') return jsonResponse(await cod.markCollected(paymentId, await request.json().catch(() => ({})), user.id), 200, request);
+        if (paymentId && paymentAction === 'undo-collect' && method === 'POST') return jsonResponse(await cod.undoCollected(paymentId, user.id), 200, request);
       }
 
       // -------------------------------------------------------------
@@ -2933,7 +2958,7 @@ export default {
         const result = await new WorkerShipping(prisma, env, undefined, (kind, orderId) => {
           const task = sendOrderEmail(prisma, env as OrderEmailEnv, orderId, kind);
           if (ctx?.waitUntil) ctx.waitUntil(task);
-        }).syncActive(20);
+        }).syncActive(20); // up to 20 batches of 30 AWBs (600 shipments) per 20-minute tick
         console.log('delivery sync', JSON.stringify(result));
       } catch (err) {
         console.error('delivery sync failed', err);

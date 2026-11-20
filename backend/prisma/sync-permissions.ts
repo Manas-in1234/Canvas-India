@@ -23,6 +23,8 @@ const NEW_PERMISSIONS = [
   'homepage_layout.manage',
   'inventory.view',
   'inventory.adjust',
+  'cod.view',
+  'cod.manage',
 ];
 
 async function main() {
