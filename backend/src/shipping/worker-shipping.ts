@@ -210,7 +210,7 @@ export class WorkerShipping {
     });
   }
 
-  async createForOrder(orderId: string, body: any, userId: string) {
+  async createForOrder(orderId: string, body: any, userId: string | null) {
     const order = await this.loadOrder(orderId);
     const { problems, paymentMode } = this.readiness(order);
     if (problems.length) fail(409, problems[0]);
@@ -300,7 +300,13 @@ export class WorkerShipping {
             },
           },
         });
-        await tx.auditLog.create({ data: { adminUserId: userId, action: 'SHIPMENT_BOOKED', entityType: 'Shipment', entityId: created.id, changes: { awbNumber: booked.waybill, orderRef } } });
+        await tx.auditLog.create({
+          data: {
+            adminUserId: userId, action: 'SHIPMENT_BOOKED', entityType: 'Shipment', entityId: created.id,
+            changes: { awbNumber: booked.waybill, orderRef },
+            reason: userId === null ? 'Booked automatically on order placement (auto_book_delhivery setting is on)' : undefined,
+          },
+        });
         return created;
       });
       return this.get(shipment.id);

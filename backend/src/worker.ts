@@ -932,6 +932,18 @@ export default {
               reason: `Set to ${value}`,
             });
           }
+          if ('auto_book_delhivery' in body) {
+            const value = body.auto_book_delhivery ? '1' : '0';
+            await prisma.storeSetting.upsert({
+              where: { key: 'auto_book_delhivery' },
+              update: { value, updatedBy: user.id },
+              create: { key: 'auto_book_delhivery', value, updatedBy: user.id },
+            });
+            await services.audit.record({
+              adminUserId: user.id, action: 'STORE_SETTING_UPDATED', entityType: 'StoreSetting', entityId: 'auto_book_delhivery',
+              reason: `Set to ${value}`,
+            });
+          }
           const settings = await prisma.storeSetting.findMany();
           return jsonResponse(Object.fromEntries(settings.map(s => [s.key, s.value])), 200, request);
         }
@@ -2003,6 +2015,20 @@ export default {
         // Confirmation only once the order is really confirmed: Cash on Delivery, or payment received.
         if (isCod || (newOrder as { paymentStatus?: string }).paymentStatus === 'PAID') {
           background(Promise.all([sendOrderEmail(prisma, env as OrderEmailEnv, newOrder.id, 'confirmed'), sendOrderEmail(prisma, env as OrderEmailEnv, newOrder.id, 'admin_new')]));
+          // Off by default (see admin Settings > "Auto-book with Delhivery") -
+          // an admin turns this on only once their Delhivery account is
+          // confirmed active and funded. Never blocks the checkout response:
+          // if Delhivery/booking fails, the order is still placed normally
+          // and can be shipped manually from the order page as always.
+          background((async () => {
+            try {
+              const autoBookSetting = await prisma.storeSetting?.findUnique({ where: { key: 'auto_book_delhivery' } }).catch(() => null);
+              if (autoBookSetting?.value !== '1') return;
+              await new WorkerShipping(prisma, env, undefined, (kind, orderId) => background(sendOrderEmail(prisma, env as OrderEmailEnv, orderId, kind))).createForOrder(newOrder.id, {}, null);
+            } catch (err) {
+              console.error('auto-book with Delhivery failed', { orderId: newOrder.id, err });
+            }
+          })());
         }
         return jsonResponse(isCod ? codReceipt(newOrder) : newOrder, 201, request);
       }

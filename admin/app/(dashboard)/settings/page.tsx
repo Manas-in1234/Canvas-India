@@ -17,6 +17,7 @@ function StorePoliciesCard() {
   const [minOrderValue, setMinOrderValue] = useState('');
   const [codEnabledForCustomizer, setCodEnabledForCustomizer] = useState(false);
   const [codSurcharge, setCodSurcharge] = useState('');
+  const [autoBookDelhivery, setAutoBookDelhivery] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -26,6 +27,7 @@ function StorePoliciesCard() {
         setMinOrderValue(settings.min_order_value ?? '');
         setCodEnabledForCustomizer(settings.cod_enabled_for_customizer === '1');
         setCodSurcharge(settings.cod_surcharge && settings.cod_surcharge !== '0' ? settings.cod_surcharge : '');
+        setAutoBookDelhivery(settings.auto_book_delhivery === '1');
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -40,6 +42,7 @@ function StorePoliciesCard() {
         min_order_value: minOrderValue.trim() || null,
         cod_enabled_for_customizer: codEnabledForCustomizer,
         cod_surcharge: codSurcharge.trim() || null,
+        auto_book_delhivery: autoBookDelhivery,
       });
       toast.success('Store policies updated');
     } catch (err) {
@@ -99,6 +102,23 @@ function StorePoliciesCard() {
           />
           <p className="text-xs text-muted-foreground">
             Extra flat amount added to any order paid by Cash on Delivery, on top of delivery charges. Leave empty for no extra fee.
+          </p>
+        </div>
+        <div className="space-y-2 rounded-md border border-amber-300 bg-amber-50 p-3">
+          <label className="flex items-center gap-2 text-sm font-medium text-amber-900">
+            <input
+              type="checkbox"
+              checked={autoBookDelhivery}
+              disabled={loading || !canManage}
+              onChange={(e) => setAutoBookDelhivery(e.target.checked)}
+              className="h-4 w-4 rounded border-input"
+            />
+            Automatically book with Delhivery when an order is placed
+          </label>
+          <p className="text-xs text-amber-900">
+            Off by default. Only turn this on once your Delhivery account is confirmed active and the wallet is
+            funded - if Delhivery rejects a booking (e.g. low wallet balance), the order still goes through fine,
+            it just won't have a shipment yet and you'll need to book it manually from the order page.
           </p>
         </div>
         {canManage && (
