@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Plus } from 'lucide-react';
+import { Eye, EyeOff, Pencil, Plus } from 'lucide-react';
 import { apiClient, ApiError } from '@/lib/api-client';
 import type { ProductTypeSummary } from '@/lib/types/product';
 import { usePermission } from '@/lib/auth/use-permission';
@@ -30,6 +30,8 @@ export default function CategoriesPage() {
   const [name, setName] = useState('');
   const [pendingDelete, setPendingDelete] = useState<ProductTypeSummary | null>(null);
   const [pendingHide, setPendingHide] = useState<ProductTypeSummary | null>(null);
+  const [editing, setEditing] = useState<ProductTypeSummary | null>(null);
+  const [editName, setEditName] = useState('');
 
   const { data, isLoading, isLoadingError, isRefetchError, isFetching, refetch } = useQuery({
     queryKey: ['product-types'],
@@ -69,6 +71,17 @@ export default function CategoriesPage() {
       toast.success('Category deleted');
     },
     onError: error => toast.error(error.message),
+  });
+  const renameCategory = useMutation({
+    mutationFn: () => apiClient.patch(`/product-types/${encodeURIComponent(editing!.id)}`, { name: editName.trim() }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['product-types'] });
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
+      setEditing(null);
+      setEditName('');
+      toast.success('Category renamed');
+    },
+    onError: (error: unknown) => toast.error(error instanceof ApiError ? error.message : 'Could not rename category'),
   });
 
   const categories = [...(data ?? [])].sort((a, b) => a.name.localeCompare(b.name));
@@ -127,6 +140,14 @@ export default function CategoriesPage() {
                   {canEdit && (
                     <div className="flex flex-wrap justify-end gap-2">
                     <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setEditing(category); setEditName(category.name); }}
+                    >
+                      <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                      Edit
+                    </Button>
+                    <Button
                       variant={category.isActive ? 'outline' : 'default'}
                       size="sm"
                       disabled={visibilityMutation.isPending}
@@ -179,6 +200,32 @@ export default function CategoriesPage() {
             <DialogFooter>
               <Button type="submit" disabled={createCategory.isPending || !name.trim()}>
                 {createCategory.isPending ? 'Creating…' : 'Create category'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editing !== null} onOpenChange={open => { if (!open && !renameCategory.isPending) { setEditing(null); setEditName(''); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename {editing?.name}</DialogTitle>
+            <DialogDescription>Products already in this category keep showing under its new name right away.</DialogDescription>
+          </DialogHeader>
+          <form className="space-y-4" onSubmit={event => {
+            event.preventDefault();
+            if (!renameCategory.isPending && editName.trim()) renameCategory.mutate();
+          }}>
+            <div className="space-y-2">
+              <Label htmlFor="edit-category-name">Category name</Label>
+              <Input id="edit-category-name" required maxLength={80} value={editName} onChange={event => setEditName(event.target.value)} />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" disabled={renameCategory.isPending} onClick={() => { setEditing(null); setEditName(''); }}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={renameCategory.isPending || !editName.trim() || editName.trim() === editing?.name}>
+                {renameCategory.isPending ? 'Saving…' : 'Save'}
               </Button>
             </DialogFooter>
           </form>

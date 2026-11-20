@@ -1576,8 +1576,20 @@ export default {
         const permError = checkPermission(user, ['products.edit'], request);
         if (permError) return permError;
         const body = (await request.json()) as any;
+        if (typeof body.name === 'string') {
+          const before = await prisma.productType.findUnique({ where: { id: productTypeMatch[1] }, select: { name: true } });
+          const updated = await services.productTypes.rename(productTypeMatch[1], body.name);
+          await services.audit.record({
+            adminUserId: user.id,
+            action: 'CATEGORY_RENAMED',
+            entityType: 'ProductType',
+            entityId: updated.id,
+            reason: `${before?.name ?? '?'} -> ${updated.name}`,
+          });
+          return jsonResponse(updated, 200, request);
+        }
         if (typeof body.isActive !== 'boolean') {
-          return jsonResponse({ statusCode: 400, message: 'isActive (true or false) is required' }, 400, request);
+          return jsonResponse({ statusCode: 400, message: 'isActive (true or false), or name (string), is required' }, 400, request);
         }
         try {
           const updated = await prisma.productType.update({ where: { id: productTypeMatch[1] }, data: { isActive: body.isActive } });
