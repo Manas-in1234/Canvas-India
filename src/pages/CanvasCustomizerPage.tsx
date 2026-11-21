@@ -7356,6 +7356,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const firstImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || catalogProduct.image;
     const retouchLabels = RETOUCH_CHECKS.filter((r) => retouchChecks[r.id]).map((r) => r.label);
     const previewImage = await captureDesignPreview();
+    // The storefront product page the shopper came from (if any), so admins can open exactly that page.
+    // Strict match only: catalogProduct itself falls back to an arbitrary product when there is no match.
+    const sourceKey = searchParams.get('product') || productId;
+    const sourceProduct = sourceKey
+      ? (Array.isArray(allProducts) ? allProducts : []).find((p) => p.id === sourceKey || p.slug === sourceKey)
+      : undefined;
 
     onAddToCartCustomized({
       product: {
@@ -7420,6 +7426,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           })(),
       customizationDetails: {
         previewImage,
+        sourceProductId: sourceProduct?.id,
+        sourceProductSlug: sourceProduct?.slug,
         material: activeMaterial,
         productTypeId: selectedProductTypeId,
         sizeId: activeStyleLayout?.id ?? selectedSizeId,

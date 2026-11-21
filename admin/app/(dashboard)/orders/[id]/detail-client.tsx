@@ -69,21 +69,14 @@ const CONFIG_LABEL_OVERRIDES: Record<string, string> = {
   lyricLayout: "Lyric Layout",
 };
 
-// Link to the item on the live storefront.
-// - A customized item (it has a productTypeId in its configuration) opens that style in the customizer.
-//   Its saved product id/slug is NOT used: the customizer falls back to an arbitrary catalogue product when
-//   it was opened without one, which sent admins to unrelated products.
-// - A plain catalogue item opens its product page.
-// - Anything with neither falls back to a storefront search on the product's base name.
+// Link to the product page on the live storefront that the customer started from (customized or not).
+// Orders placed after the customizer began recording its source product use that; older orders use the
+// product reference saved with the order; with neither, fall back to a storefront search on the base name.
 function storeItemLink(item: OrderDetail["items"][number]): { href: string; label: string } {
   const config = item.configurationSnapshot ?? {};
-  const material = config.material === "acrylic" ? "acrylic" : config.material === "canvas" ? "canvas" : null;
-  const typeId = typeof config.productTypeId === "string" ? config.productTypeId : null;
-  if (material && typeId) {
-    return { href: `https://canvassindia.com/customize/${material}/${encodeURIComponent(typeId)}`, label: "Open this style on store ↗" };
-  }
-  const ref = item.variantSnapshot.productSlug || item.variantSnapshot.productId;
-  if (ref) return { href: `https://canvassindia.com/products/${encodeURIComponent(ref)}`, label: "View product on store ↗" };
+  const source = [config.sourceProductSlug, config.sourceProductId, item.variantSnapshot.productSlug, item.variantSnapshot.productId]
+    .find((v): v is string => typeof v === "string" && v.length > 0);
+  if (source) return { href: `https://canvassindia.com/products/${encodeURIComponent(source)}`, label: "View product on store ↗" };
   const baseName = item.productNameSnapshot.split(" - ")[0].trim();
   return { href: `https://canvassindia.com/search?q=${encodeURIComponent(baseName)}`, label: "Find product on store ↗" };
 }
