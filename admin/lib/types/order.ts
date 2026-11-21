@@ -55,6 +55,9 @@ export interface OrderItem {
     // The customer's own uploaded photo / the listing image, and (orders placed after previews were
     // captured) a render of their finished customized design.
     imageUrl?: string | null;
+    // Used to link an order line back to its page on the live storefront.
+    productSlug?: string | null;
+    productId?: string | null;
     previewImage?: string | null;
   };
   priceSnapshot: string;

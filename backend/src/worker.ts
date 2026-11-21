@@ -1946,6 +1946,7 @@ export default {
                     variantSnapshot: {
                       sku: item.sku || `PROD-${idx + 1}`,
                       productSlug: itemSlug,
+                      productId: typeof item.productId === 'string' && item.productId ? item.productId : null,
                       options: [
                         { group: 'Size', value: custDetails.size || custDetails.dimensions || 'Standard' },
                         { group: 'Style', value: custDetails.wrap || custDetails.style || custDetails.frame || 'Standard' },

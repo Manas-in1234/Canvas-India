@@ -384,6 +384,16 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
                   {/* Always render snapshot fields — never re-fetch live product data
                       for a historical order (scope §89/§114). */}
                   <div className="font-medium">{item.productNameSnapshot}</div>
+                  {(item.variantSnapshot.productSlug || item.variantSnapshot.productId) && (
+                    <a
+                      href={`https://canvassindia.com/products/${encodeURIComponent((item.variantSnapshot.productSlug || item.variantSnapshot.productId) as string)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                    >
+                      View product on store ↗
+                    </a>
+                  )}
                   <div className="text-sm text-muted-foreground">
                     SKU: {item.variantSnapshot.sku}
                   </div>
