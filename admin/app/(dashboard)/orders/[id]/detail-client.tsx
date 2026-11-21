@@ -69,13 +69,23 @@ const CONFIG_LABEL_OVERRIDES: Record<string, string> = {
   lyricLayout: "Lyric Layout",
 };
 
-// Link to the product on the live storefront. Orders placed before product ids were saved have neither a
-// slug nor an id, so they fall back to a storefront search on the product's base name.
-function storeProductUrl(item: OrderDetail["items"][number]): string {
+// Link to the item on the live storefront.
+// - A customized item (it has a productTypeId in its configuration) opens that style in the customizer.
+//   Its saved product id/slug is NOT used: the customizer falls back to an arbitrary catalogue product when
+//   it was opened without one, which sent admins to unrelated products.
+// - A plain catalogue item opens its product page.
+// - Anything with neither falls back to a storefront search on the product's base name.
+function storeItemLink(item: OrderDetail["items"][number]): { href: string; label: string } {
+  const config = item.configurationSnapshot ?? {};
+  const material = config.material === "acrylic" ? "acrylic" : config.material === "canvas" ? "canvas" : null;
+  const typeId = typeof config.productTypeId === "string" ? config.productTypeId : null;
+  if (material && typeId) {
+    return { href: `https://canvassindia.com/customize/${material}/${encodeURIComponent(typeId)}`, label: "Open this style on store ↗" };
+  }
   const ref = item.variantSnapshot.productSlug || item.variantSnapshot.productId;
-  if (ref) return `https://canvassindia.com/products/${encodeURIComponent(ref)}`;
+  if (ref) return { href: `https://canvassindia.com/products/${encodeURIComponent(ref)}`, label: "View product on store ↗" };
   const baseName = item.productNameSnapshot.split(" - ")[0].trim();
-  return `https://canvassindia.com/search?q=${encodeURIComponent(baseName)}`;
+  return { href: `https://canvassindia.com/search?q=${encodeURIComponent(baseName)}`, label: "Find product on store ↗" };
 }
 
 function formatConfigLabel(key: string): string {
@@ -393,16 +403,19 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
                   {/* Always render snapshot fields — never re-fetch live product data
                       for a historical order (scope §89/§114). */}
                   <div className="font-medium">{item.productNameSnapshot}</div>
-                  <a
-                    href={storeProductUrl(item)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs font-medium text-primary underline-offset-2 hover:underline"
-                  >
-                    {item.variantSnapshot.productSlug || item.variantSnapshot.productId
-                      ? "View product on store ↗"
-                      : "Find product on store ↗"}
-                  </a>
+                  {(() => {
+                    const link = storeItemLink(item);
+                    return (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                      >
+                        {link.label}
+                      </a>
+                    );
+                  })()}
                   <div className="text-sm text-muted-foreground">
                     SKU: {item.variantSnapshot.sku}
                   </div>
