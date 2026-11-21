@@ -7319,7 +7319,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       const keep = (el: Node): boolean => {
         if (!(el instanceof HTMLElement)) return !(el.nodeType === 3 && /^s*[d.]+s*inch/.test(el.textContent || ''));
         if (el.tagName === 'BUTTON' || el.dataset.noCapture !== undefined) return false;
-        return !(el.children.length === 0 && /^s*[d.]+s*inch/.test(el.textContent || ''));
+        const text = el.textContent || '';
+        return !(text.length < 60 && /^s*[d.]+s*inch/.test(text));
       };
       for (const quality of [0.82, 0.6, 0.4]) {
         const url = await toJpeg(node, { quality, pixelRatio, backgroundColor: '#ffffff', filter: keep });
