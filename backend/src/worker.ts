@@ -1937,7 +1937,7 @@ export default {
                   const itemQty = Number(item.quantity) || 1;
                   // The rendered preview of the customer's finished design travels inside customizationDetails;
                   // keep it on the variant snapshot (for the admin order page) and out of the two config snapshots.
-                  const { previewImage: rawPreview, ...custDetails } = (item.customizationDetails || {}) as Record<string, unknown>;
+                  const { previewImage: rawPreview, ...custDetails } = (item.customizationDetails || {}) as Record<string, any>;
                   const previewImage = typeof rawPreview === 'string' && /^data:image\/(jpeg|png|webp);base64,/.test(rawPreview) && rawPreview.length <= 600_000
                     ? rawPreview : null;
                   const itemSlug = typeof item.productSlug === 'string' && item.productSlug.trim() ? item.productSlug.trim() : null;
