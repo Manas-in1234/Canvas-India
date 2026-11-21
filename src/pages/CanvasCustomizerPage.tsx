@@ -3647,6 +3647,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   const canUseCustomSize = !usesStyleLayouts && currentSizeOption.panels.length === 1;
 
+  // Apply a typed custom dimension straight away once it is a valid size, so the price shown beside
+  // the fields (and the total) update as the shopper types instead of only after leaving the field.
+  // Partial entries such as "1" on the way to "16" are ignored until they are in range.
+  const commitLiveCustomSize = (raw: string, apply: (value: number) => void) => {
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < customSizeSteps[0] || value > customSizeSteps[customSizeSteps.length - 1]) return;
+    setIsCustomSize(true);
+    apply(value);
+  };
+
   // Panels for the current size layout
   const panels = currentSizeOption.panels;
 
@@ -10825,7 +10835,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         min={customSizeSteps[0]}
                         max={customSizeSteps[customSizeSteps.length - 1]}
                         value={customHeightDraft}
-                        onChange={(e) => setCustomHeightDraft(e.target.value)}
+                        onChange={(e) => { setCustomHeightDraft(e.target.value); commitLiveCustomSize(e.target.value, setCustomHeight); }}
                         onBlur={() => {
                           const val = Math.max(customSizeSteps[0], Math.min(customSizeSteps[customSizeSteps.length - 1], Number(customHeightDraft) || customHeight));
                           setIsCustomSize(true);
@@ -10849,7 +10859,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         min={customSizeSteps[0]}
                         max={customSizeSteps[customSizeSteps.length - 1]}
                         value={customWidthDraft}
-                        onChange={(e) => setCustomWidthDraft(e.target.value)}
+                        onChange={(e) => { setCustomWidthDraft(e.target.value); commitLiveCustomSize(e.target.value, setCustomWidth); }}
                         onBlur={() => {
                           const val = Math.max(customSizeSteps[0], Math.min(customSizeSteps[customSizeSteps.length - 1], Number(customWidthDraft) || customWidth));
                           setIsCustomSize(true);
@@ -10955,6 +10965,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           onChange={(e) => {
                             setCustomWidthDraft(e.target.value);
                             setCustomHeightDraft(e.target.value);
+                            commitLiveCustomSize(e.target.value, (v) => { setCustomWidth(v); setCustomHeight(v); });
                           }}
                           onBlur={() => {
                             const val = Math.max(customSizeSteps[0], Math.min(customSizeSteps[customSizeSteps.length - 1], Number(customWidthDraft) || customWidth));
@@ -10975,7 +10986,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           min={customSizeSteps[0]}
                           max={customSizeSteps[customSizeSteps.length - 1]}
                           value={customHeightDraft}
-                          onChange={(e) => setCustomHeightDraft(e.target.value)}
+                          onChange={(e) => { setCustomHeightDraft(e.target.value); commitLiveCustomSize(e.target.value, setCustomHeight); }}
                           onBlur={() => {
                             setIsCustomSize(true);
                             setCustomHeight(Math.max(customSizeSteps[0], Math.min(customSizeSteps[customSizeSteps.length - 1], Number(customHeightDraft) || customHeight)));
@@ -10988,7 +10999,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           min={customSizeSteps[0]}
                           max={customSizeSteps[customSizeSteps.length - 1]}
                           value={customWidthDraft}
-                          onChange={(e) => setCustomWidthDraft(e.target.value)}
+                          onChange={(e) => { setCustomWidthDraft(e.target.value); commitLiveCustomSize(e.target.value, setCustomWidth); }}
                           onBlur={() => {
                             setIsCustomSize(true);
                             setCustomWidth(Math.max(customSizeSteps[0], Math.min(customSizeSteps[customSizeSteps.length - 1], Number(customWidthDraft) || customWidth)));
