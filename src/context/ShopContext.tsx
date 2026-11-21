@@ -250,6 +250,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     paper?: string,
     customizationDetails?: any
   ) => {
+    // Every product must be customized before it can be bought: a plain "add to cart" with no
+    // customization sends the shopper to that product's customizer instead of adding it as-is.
+    if (!customizationDetails) {
+      handleOpenCustomize(product);
+      return;
+    }
     setCartItems((prev) => {
       const selectedSize = size || product.sizes?.[0] || 'Standard Size';
       const selectedFinish = finish || product.finishes?.[0] || 'Standard Finish';

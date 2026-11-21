@@ -395,36 +395,9 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     setActiveImageIndex((idx) => (idx + 1) % galleryImages.length);
   };
 
+  // A product must be customized before it can be bought, so "Add to cart" opens its customizer.
   const handleAddToCartWithVariants = () => {
-    if (!product) return;
-    // Charge the size-adjusted unit price shown on screen — including the
-    // bulk-discounted rate at bulk quantities — never show one price and
-    // charge another.
-    const cartProduct = quantity >= MIN_BULK_QTY
-      ? { ...product, price: bulkUnitPriceFor(unitPrice, quantity) }
-      : { ...product, price: unitPrice };
-    const defaultThickness = isCorkProduct ? undefined : 'Thin Gallery Wrap (0.75")';
-    onAddToCart(
-      cartProduct,
-      selectedSize,
-      selectedFinish,
-      quantity,
-      customText,
-      uploadedFile || undefined,
-      selectedMaterial,
-      defaultThickness,
-      undefined,
-      undefined,
-      undefined,
-      // Deliberately not {hook, shape} here: this is a plain buy-as-is
-      // catalog purchase, not a real customization. customizationDetails
-      // being set at all - even to cosmetic display info - makes the
-      // backend treat this item as uncheckable for price/stock tampering
-      // (see catalogItems filtering in worker.ts) and hides Cash on
-      // Delivery at checkout, both of which are meant for genuine custom
-      // prints built in the customizer, not an ordinary catalog item.
-      undefined
-    );
+    handleCustomizeFirst();
   };
 
   const handleCustomizeFirst = () => {

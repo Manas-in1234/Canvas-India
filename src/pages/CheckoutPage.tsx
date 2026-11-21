@@ -159,7 +159,7 @@ export const CheckoutPage: React.FC = () => {
   const taxableAmount = Math.max(0, Math.round((subtotal - totalDiscount) * 100) / 100);
   const tax = Math.round(taxableAmount * 0.18); // 18% GST calculation (displayed clearly)
   const codSurcharge = shippingMethod === 'cod' ? storeSettings.cod_surcharge : 0;
-  const total = taxableAmount + shippingFee + codSurcharge;
+  const total = Math.round((taxableAmount + tax + shippingFee + codSurcharge) * 100) / 100;
 
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1187,7 +1187,7 @@ export const CheckoutPage: React.FC = () => {
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span>Estimated GST (18%)</span>
+                  <span>GST (18%)</span>
                   <span>₹{tax.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="pt-3 border-t border-gray-200 flex justify-between text-base font-black text-[#002B49]">

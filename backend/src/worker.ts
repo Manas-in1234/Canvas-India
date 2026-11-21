@@ -1793,7 +1793,8 @@ export default {
           const expectedShipping = expectedSubtotal >= 999 ? 0 : 99;
           const codSurchargeSetting = await prisma.storeSetting?.findUnique({ where: { key: 'cod_surcharge' } }).catch(() => null);
           const codSurcharge = Number(codSurchargeSetting?.value) || 0;
-          const expectedTotal = Math.round((expectedSubtotal + expectedShipping + codSurcharge) * 100) / 100;
+          const expectedTax = Math.round(expectedSubtotal * 0.18);
+          const expectedTotal = Math.round((expectedSubtotal + expectedTax + expectedShipping + codSurcharge) * 100) / 100;
           if (Math.round(Number(body.total) * 100) !== Math.round(expectedTotal * 100)) {
             return jsonResponse({ message: 'The order total changed. Review your cart and try again.' }, 409, request);
           }
