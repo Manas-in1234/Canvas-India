@@ -6151,6 +6151,35 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     selectedMaterialId, selectedLaminationId, selectedDisplayOptionId, selectedBorderWidthId, isCustomSize,
   ]);
 
+  // Whole-inch choices for the custom size dropdowns, covering the allowed range (plus the current
+  // value, in case it is not a whole inch).
+  const customSizeDropdownValues = (current: number): number[] => {
+    const lo = Math.ceil(customSizeSteps[0]);
+    const hi = Math.floor(customSizeSteps[customSizeSteps.length - 1]);
+    const values: number[] = [];
+    for (let inches = lo; inches <= hi; inches++) values.push(inches);
+    return values.includes(current) ? values : [...values, current].sort((a, b) => a - b);
+  };
+  const chooseCustomHeight = (val: number) => {
+    setIsCustomSize(true);
+    setCustomHeight(val);
+    if (isWordArtProduct) {
+      setWordArtSizeOption((prev) => ({ ...prev, heightInches: val, label: `${prev.widthInches}" × ${val}"`, aspectRatio: prev.widthInches / val }));
+    }
+  };
+  const chooseCustomWidth = (val: number) => {
+    setIsCustomSize(true);
+    setCustomWidth(val);
+    if (isWordArtProduct) {
+      setWordArtSizeOption((prev) => ({ ...prev, widthInches: val, label: `${val}" × ${prev.heightInches}"`, aspectRatio: val / prev.heightInches }));
+    }
+  };
+  const chooseCustomRoundSize = (val: number) => {
+    setIsCustomSize(true);
+    setCustomWidth(val);
+    setCustomHeight(val);
+  };
+
   // "Set size" button beside the custom size fields: applies whatever is typed and marks the size as
   // chosen, so the price appears in the header total.
   const confirmCustomSize = () => {
@@ -10848,51 +10877,27 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       Custom Size (Height × Width inches)
                     </div>
                     <div className="flex items-center justify-center gap-2 flex-wrap">
-                      <input
-                        type="number"
-                        min={customSizeSteps[0]}
-                        max={customSizeSteps[customSizeSteps.length - 1]}
-                        value={customHeightDraft}
-                        onChange={(e) => { setCustomHeightDraft(e.target.value); commitLiveCustomSize(e.target.value, setCustomHeight); }}
-                        onBlur={() => {
-                          const val = Math.max(customSizeSteps[0], Math.min(customSizeSteps[customSizeSteps.length - 1], Number(customHeightDraft) || customHeight));
-                          setIsCustomSize(true);
-                          setCustomHeight(val);
-                          if (isWordArtProduct) {
-                            setWordArtSizeOption((prev) => ({
-                              ...prev,
-                              heightInches: val,
-                              label: `${prev.widthInches}" × ${val}"`,
-                              aspectRatio: prev.widthInches / val
-                            }));
-                          }
-                        }}
-                        className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93]"
-                      />
+                      <select
+                        value={customHeight}
+                        onChange={(e) => chooseCustomHeight(Number(e.target.value))}
+                        className="w-24 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] cursor-pointer"
+                        >
+                          {customSizeDropdownValues(customHeight).map((inches) => (
+                            <option key={inches} value={inches}>{inches}"</option>
+                          ))}
+                        </select>
 
                       <span className="text-xs text-stone-400 font-bold px-1">×</span>
 
-                      <input
-                        type="number"
-                        min={customSizeSteps[0]}
-                        max={customSizeSteps[customSizeSteps.length - 1]}
-                        value={customWidthDraft}
-                        onChange={(e) => { setCustomWidthDraft(e.target.value); commitLiveCustomSize(e.target.value, setCustomWidth); }}
-                        onBlur={() => {
-                          const val = Math.max(customSizeSteps[0], Math.min(customSizeSteps[customSizeSteps.length - 1], Number(customWidthDraft) || customWidth));
-                          setIsCustomSize(true);
-                          setCustomWidth(val);
-                          if (isWordArtProduct) {
-                            setWordArtSizeOption((prev) => ({
-                              ...prev,
-                              widthInches: val,
-                              label: `${val}" × ${prev.heightInches}"`,
-                              aspectRatio: val / prev.heightInches
-                            }));
-                          }
-                        }}
-                        className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93]"
-                      />
+                      <select
+                        value={customWidth}
+                        onChange={(e) => chooseCustomWidth(Number(e.target.value))}
+                        className="w-24 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] cursor-pointer"
+                        >
+                          {customSizeDropdownValues(customWidth).map((inches) => (
+                            <option key={inches} value={inches}>{inches}"</option>
+                          ))}
+                        </select>
 
                       <div className="text-xs font-black text-[#0E4A93] ml-2">
                         ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(customSizePrice, quantity) : customSizePrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -10982,24 +10987,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     </div>
                     {selectedProductTypeId === 'canvas-round' ? (
                       <div className="flex items-center justify-center gap-2 flex-wrap">
-                        <input
-                          type="number"
-                          min={customSizeSteps[0]}
-                          max={customSizeSteps[customSizeSteps.length - 1]}
-                          value={customWidthDraft}
-                          onChange={(e) => {
-                            setCustomWidthDraft(e.target.value);
-                            setCustomHeightDraft(e.target.value);
-                            commitLiveCustomSize(e.target.value, (v) => { setCustomWidth(v); setCustomHeight(v); });
-                          }}
-                          onBlur={() => {
-                            const val = Math.max(customSizeSteps[0], Math.min(customSizeSteps[customSizeSteps.length - 1], Number(customWidthDraft) || customWidth));
-                            setIsCustomSize(true);
-                            setCustomWidth(val);
-                            setCustomHeight(val);
-                          }}
-                          className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93]"
-                        />
+                        <select
+                          value={customWidth}
+                          onChange={(e) => chooseCustomRoundSize(Number(e.target.value))}
+                          className="w-24 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] cursor-pointer"
+                          >
+                            {customSizeDropdownValues(customWidth).map((inches) => (
+                              <option key={inches} value={inches}>{inches}"</option>
+                            ))}
+                          </select>
                         <div className="text-xs font-black text-[#0E4A93] ml-2">
                           ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(customSizePrice, quantity) : customSizePrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
@@ -11013,31 +11009,25 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       </div>
                     ) : (
                       <div className="flex items-center justify-center gap-2 flex-wrap">
-                        <input
-                          type="number"
-                          min={customSizeSteps[0]}
-                          max={customSizeSteps[customSizeSteps.length - 1]}
-                          value={customHeightDraft}
-                          onChange={(e) => { setCustomHeightDraft(e.target.value); commitLiveCustomSize(e.target.value, setCustomHeight); }}
-                          onBlur={() => {
-                            setIsCustomSize(true);
-                            setCustomHeight(Math.max(customSizeSteps[0], Math.min(customSizeSteps[customSizeSteps.length - 1], Number(customHeightDraft) || customHeight)));
-                          }}
-                          className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93]"
-                        />
+                        <select
+                          value={customHeight}
+                          onChange={(e) => chooseCustomHeight(Number(e.target.value))}
+                          className="w-24 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] cursor-pointer"
+                          >
+                            {customSizeDropdownValues(customHeight).map((inches) => (
+                              <option key={inches} value={inches}>{inches}"</option>
+                            ))}
+                          </select>
                         <span className="text-xs text-stone-400 font-bold px-1">×</span>
-                        <input
-                          type="number"
-                          min={customSizeSteps[0]}
-                          max={customSizeSteps[customSizeSteps.length - 1]}
-                          value={customWidthDraft}
-                          onChange={(e) => { setCustomWidthDraft(e.target.value); commitLiveCustomSize(e.target.value, setCustomWidth); }}
-                          onBlur={() => {
-                            setIsCustomSize(true);
-                            setCustomWidth(Math.max(customSizeSteps[0], Math.min(customSizeSteps[customSizeSteps.length - 1], Number(customWidthDraft) || customWidth)));
-                          }}
-                          className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93]"
-                        />
+                        <select
+                          value={customWidth}
+                          onChange={(e) => chooseCustomWidth(Number(e.target.value))}
+                          className="w-24 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] cursor-pointer"
+                          >
+                            {customSizeDropdownValues(customWidth).map((inches) => (
+                              <option key={inches} value={inches}>{inches}"</option>
+                            ))}
+                          </select>
                         <div className="text-xs font-black text-[#0E4A93] ml-2">
                           ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(customSizePrice, quantity) : customSizePrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>

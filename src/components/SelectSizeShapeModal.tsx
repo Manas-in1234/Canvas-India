@@ -1482,22 +1482,15 @@ const SelectSizeShapeModalContent: React.FC<SelectSizeShapeModalProps> = ({
                     <label className="text-[11px] font-extrabold text-stone-600 block mb-1">
                       DIAMETER (INCHES)
                     </label>
-                    <input
-                      type="number"
-                      min={8}
-                      max={48}
-                      value={localCustomW}
-                      onChange={(e) => {
-                        setLocalCustomW(e.target.value);
-                        setLocalCustomH(e.target.value);
-                      }}
-                      onBlur={() => {
-                        const clamped = String(Math.max(8, Math.min(48, Number(localCustomW) || 10)));
-                        setLocalCustomW(clamped);
-                        setLocalCustomH(clamped);
-                      }}
-                      className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
-                    />
+                    <select
+                      value={String(Math.max(8, Math.min(48, Math.round(Number(localCustomW)) || 10)))}
+                      onChange={(e) => { setLocalCustomW(e.target.value); setLocalCustomH(e.target.value); }}
+                      className="w-full px-3 py-2 border border-stone-300 bg-white rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer"
+                      >
+                        {Array.from({ length: 41 }, (_, i) => 8 + i).map((inches) => (
+                          <option key={inches} value={inches}>{inches}"</option>
+                        ))}
+                      </select>
                   </div>
                 ) : (
                   <div className="mt-3 p-4 rounded-xl bg-white border border-stone-200 shadow-inner grid grid-cols-2 gap-3 animate-in fade-in duration-150">
@@ -1505,29 +1498,29 @@ const SelectSizeShapeModalContent: React.FC<SelectSizeShapeModalProps> = ({
                       <label className="text-[11px] font-extrabold text-stone-600 block mb-1">
                         WIDTH (INCHES)
                       </label>
-                      <input
-                        type="number"
-                        min={8}
-                        max={48}
-                        value={localCustomW}
+                      <select
+                        value={String(Math.max(8, Math.min(48, Math.round(Number(localCustomW)) || 10)))}
                         onChange={(e) => setLocalCustomW(e.target.value)}
-                        onBlur={() => setLocalCustomW(String(Math.max(8, Math.min(48, Number(localCustomW) || 10))))}
-                        className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
-                      />
+                        className="w-full px-3 py-2 border border-stone-300 bg-white rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer"
+                        >
+                          {Array.from({ length: 41 }, (_, i) => 8 + i).map((inches) => (
+                            <option key={inches} value={inches}>{inches}"</option>
+                          ))}
+                        </select>
                     </div>
                     <div>
                       <label className="text-[11px] font-extrabold text-stone-600 block mb-1">
                         HEIGHT (INCHES)
                       </label>
-                      <input
-                        type="number"
-                        min={8}
-                        max={48}
-                        value={localCustomH}
+                      <select
+                        value={String(Math.max(8, Math.min(48, Math.round(Number(localCustomH)) || 10)))}
                         onChange={(e) => setLocalCustomH(e.target.value)}
-                        onBlur={() => setLocalCustomH(String(Math.max(8, Math.min(48, Number(localCustomH) || 10))))}
-                        className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93]"
-                      />
+                        className="w-full px-3 py-2 border border-stone-300 bg-white rounded-lg text-sm font-bold text-stone-900 focus:outline-none focus:border-[#0E4A93] cursor-pointer"
+                        >
+                          {Array.from({ length: 41 }, (_, i) => 8 + i).map((inches) => (
+                            <option key={inches} value={inches}>{inches}"</option>
+                          ))}
+                        </select>
                     </div>
                   </div>
                 )
