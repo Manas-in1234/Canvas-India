@@ -16,7 +16,7 @@ export const SHOP_CATEGORIES: ShopCategoryLink[] = [
   { name: 'Line Art', path: '/line-art', categorySlug: 'line-art', image: '/assets/catalogue/line-art/L-A_010.webp' },
   { name: 'Motivational Posters', path: '/motivational-posters', categorySlug: 'motivational-posters', image: '/assets/catalogue/motivational-posters/M-A_030.webp' },
   { name: 'Scenery & Landscape Art', path: '/scenery-landscape-art', categorySlug: 'scenery-landscape-art', image: '/assets/catalogue/scenery-landscape-art/S-A_010.webp' },
-  { name: 'Tribal & Ethnic Art', path: '/tribal-ethnic-art', categorySlug: 'tribal-ethnic-art', image: '/assets/catalogue/tribal-ethnic-art/A-A_006.webp' },
+  { name: 'African Arts', path: '/tribal-ethnic-art', categorySlug: 'tribal-ethnic-art', image: '/assets/catalogue/tribal-ethnic-art/A-A_006.webp' },
 ];
 
 export const CORK_FILTER_CATEGORIES: ShopCategoryLink[] = [

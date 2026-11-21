@@ -63,10 +63,30 @@ export function mapBackendProductToFrontend(raw: any, fallbackCatalog: Product[]
   if (raw.storefront) {
     const price = Number(raw.basePrice);
     const originalPrice = Math.max(price, Number(raw.storefront.originalPrice ?? price));
+    // Category DISPLAY NAME: the live relation (categories[0], else
+    // productType) always wins over raw.storefront.category, which is a
+    // snapshot frozen at whatever it was when this product was created or
+    // last saved. Without this, renaming a category in the admin's
+    // Categories page would never show up for any product that already had
+    // a storefront blob - which is every catalogue product - because the
+    // spread below would keep dumping the stale saved name back in.
+    //
+    // categorySlug is deliberately NOT re-derived from the (possibly just
+    // renamed) live name - it's a routing/URL identifier (matched exactly by
+    // pages like ReadymadeOffersPage, and baked into /category/:slug links),
+    // so it has to stay stable even while the display name above it changes.
+    // Only a product with no slug recorded anywhere falls back to deriving
+    // one from the live name, so it at least has something to route on.
+    const livePrimaryCat = raw.categories?.[0]?.category;
+    const liveCategoryName = livePrimaryCat?.name || raw.productType?.name;
+    const stableCategorySlug = raw.storefront.categorySlug || raw.categorySlug || livePrimaryCat?.slug
+      || (liveCategoryName ? liveCategoryName.toLowerCase().replace(/\s+/g, '-') : undefined);
     return { ...raw.storefront, id: raw.id, slug: raw.slug, name: raw.name,
       description: raw.description ?? '', price, originalPrice, compareAtPrice: originalPrice,
       discountPercent: originalPrice > 0 ? Math.round((originalPrice - price) / originalPrice * 100) : 0,
       status: raw.status, rating: raw.storefront.rating ?? null,
+      category: liveCategoryName || raw.storefront.category,
+      categorySlug: stableCategorySlug,
       // Both field names are populated: some pages (e.g. ProductDetailPage's
       // size/shape picker) read `sizes`/`finishes` directly rather than the
       // `availableX` names, and previously got nothing even when the admin

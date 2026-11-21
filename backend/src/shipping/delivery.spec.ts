@@ -252,13 +252,14 @@ describe('WorkerShipping tracking', () => {
   };
   const t = (over: any) => ({ awb: '111', status: '', statusType: '', instructions: '', location: '', at: '2026-11-15T10:00:00', code: '', expectedDate: null, scans: [], ...over });
 
-  it('marks delivery, completes the order, and settles Cash on Delivery', async () => {
+  it('marks delivery and completes the order, but never touches COD payment status (no Delhivery API confirms cash was actually collected)', async () => {
     const { prisma, svc } = setup('OUT_FOR_DELIVERY', [{ id: 'cod1', provider: 'COD', status: 'PENDING' }]);
     const r = await svc.applyTracking('sh1', t({ status: 'Delivered', statusType: 'DL' }));
     expect(r).toMatchObject({ changed: true, status: 'DELIVERED' });
-    expect(prisma.payment.update).toHaveBeenCalledWith({ where: { id: 'cod1' }, data: { status: 'PAID' } });
+    expect(prisma.payment.update).not.toHaveBeenCalled();
     const orderUpdate = prisma.order.update.mock.calls.at(-1)[0].data;
-    expect(orderUpdate).toMatchObject({ orderStatus: 'COMPLETED', shippingStatus: 'DELIVERED', paymentStatus: 'PAID' });
+    expect(orderUpdate).toMatchObject({ orderStatus: 'COMPLETED', shippingStatus: 'DELIVERED' });
+    expect(orderUpdate.paymentStatus).toBeUndefined();
   });
 
   it('opens a failed-delivery case once, not again on a repeat poll', async () => {
@@ -324,8 +325,91 @@ describe('WorkerShipping cancel and webhook', () => {
     prisma.shipment.findFirst = vi.fn(async ({ where }: any) => (where.awbNumber === '111' ? { id: 'sh1' } : null));
     const svc = new WorkerShipping(prisma, env, vi.fn());
     const out = await svc.applyWebhook({ Shipment: { AWB: '111', Status: { Status: 'Dispatched', StatusType: 'UD', StatusDateTime: '2026-11-15T10:00:00', StatusLocation: 'Hyd', Instructions: 'Out for delivery' } } });
-    expect(out).toEqual({ received: 1, applied: 1 });
+    expect(out).toEqual({ received: 1, applied: 1, failed: 0 });
     expect(state.shipments[0].status).toBe('OUT_FOR_DELIVERY');
-    expect(await svc.applyWebhook({ Shipment: { AWB: 'nope', Status: {} } })).toEqual({ received: 1, applied: 0 });
+    expect(await svc.applyWebhook({ Shipment: { AWB: 'nope', Status: {} } })).toEqual({ received: 1, applied: 0, failed: 0 });
+  });
+
+  it('re-delivering the same webhook event is a no-op, not a duplicate record', async () => {
+    const { prisma, state } = withShipment('IN_TRANSIT');
+    prisma.shipment.findFirst = vi.fn(async ({ where }: any) => (where.awbNumber === '111' ? { id: 'sh1' } : null));
+    // The shared fakePrisma's trackingEvent.createMany is a bare vi.fn() that
+    // doesn't feed state.shipments[0].trackingEvents back for findUnique to
+    // see on the next call - real Postgres would, and applyTracking's
+    // dedup (`seen`, built from shipment.trackingEvents) depends on that.
+    // Wire it up locally so this test actually exercises the dedup path.
+    prisma.trackingEvent.createMany = vi.fn(async ({ data }: any) => { state.shipments[0].trackingEvents.push(...data); });
+    const svc = new WorkerShipping(prisma, env, vi.fn());
+    const payload = { Shipment: { AWB: '111', Status: { Status: 'Dispatched', StatusType: 'UD', StatusDateTime: '2026-11-15T10:00:00', StatusLocation: 'Hyd', Instructions: 'Out for delivery' } } };
+    await svc.applyWebhook(payload);
+    expect(state.shipments[0].status).toBe('OUT_FOR_DELIVERY');
+    expect(prisma.trackingEvent.createMany).toHaveBeenCalledTimes(1);
+    // Same payload delivered again (Delhivery retry, or a duplicate push): no new tracking event, no second status transition attempt.
+    await svc.applyWebhook(payload);
+    expect(prisma.trackingEvent.createMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('one bad item in a webhook batch does not drop the others', async () => {
+    const { prisma, state } = withShipment('READY');
+    prisma.shipment.findFirst = vi.fn(async ({ where }: any) => (where.awbNumber === '111' ? { id: 'sh1' } : null));
+    const originalUpdate = prisma.shipment.update;
+    let calls = 0;
+    prisma.shipment.update = vi.fn(async (...args: any[]) => { calls++; if (calls === 1) throw new Error('transient db error'); return originalUpdate(...args); });
+    const svc = new WorkerShipping(prisma, env, vi.fn());
+    const out = await svc.applyWebhook([
+      { Shipment: { AWB: '111', Status: { Status: 'Dispatched', StatusType: 'UD', StatusDateTime: '2026-11-15T10:00:00', StatusLocation: 'Hyd', Instructions: 'first (fails)' } } },
+      { Shipment: { AWB: '111', Status: { Status: 'Dispatched', StatusType: 'UD', StatusDateTime: '2026-11-15T11:00:00', StatusLocation: 'Hyd', Instructions: 'second (succeeds)' } } },
+    ]);
+    expect(out).toEqual({ received: 2, applied: 1, failed: 1 });
+    expect(state.shipments[0].status).toBe('OUT_FOR_DELIVERY');
+  });
+});
+
+describe('WorkerShipping syncActive', () => {
+  it('pages through more than one batch of 30 instead of stopping at the first', async () => {
+    const { prisma, state } = fakePrisma(baseOrder());
+    for (let i = 0; i < 45; i++) {
+      state.shipments.push({ id: `sh${i}`, orderId: 'o1', warehouseId: 'wh1', awbNumber: String(100 + i), status: 'IN_TRANSIT', updatedAt: new Date(2026, 0, i), trackingEvents: [], ndrCases: [], rtoCases: [] });
+    }
+    let findManyCalls = 0;
+    prisma.shipment.findMany = vi.fn(async ({ where, take }: any) => {
+      findManyCalls++;
+      const excluded = new Set(where.id?.notIn ?? []);
+      return state.shipments.filter((s) => !excluded.has(s.id)).slice(0, take);
+    });
+    prisma.shipment.findUnique = vi.fn(async ({ where }: any) => {
+      const s = state.shipments.find((x) => x.id === where.id);
+      return s ? { ...s, order: { ...baseOrder(), payments: [] } } : null;
+    });
+    const fetchFn = vi.fn(async (url: string) => {
+      const match = String(url).match(/waybill=([^&]+)/);
+      const waybills = decodeURIComponent(match![1]).split(',');
+      // Delivered has no further scans; keeps the shipment's updatedAt bump happening via a changed status once.
+      return json({ ShipmentData: waybills.map((awb) => ({ Shipment: { AWB: awb, Status: { Status: 'In Transit', StatusType: 'UD', StatusDateTime: '2026-11-16T10:00:00', Instructions: 'Arrived at hub' } } })) });
+    });
+    const svc = new WorkerShipping(prisma, env, fetchFn);
+    const result = await svc.syncActive(10);
+    expect(result.checked).toBe(45);
+    expect(findManyCalls).toBe(2); // 30 + 15, not capped at the first batch of 30
+  });
+
+  it('stops after maxBatches even if more shipments remain, so one run cannot run unbounded', async () => {
+    const { prisma, state } = fakePrisma(baseOrder());
+    for (let i = 0; i < 90; i++) {
+      state.shipments.push({ id: `sh${i}`, orderId: 'o1', warehouseId: 'wh1', awbNumber: String(200 + i), status: 'IN_TRANSIT', updatedAt: new Date(2026, 0, i), trackingEvents: [], ndrCases: [], rtoCases: [] });
+    }
+    prisma.shipment.findMany = vi.fn(async ({ where, take }: any) => {
+      const excluded = new Set(where.id?.notIn ?? []);
+      return state.shipments.filter((s) => !excluded.has(s.id)).slice(0, take);
+    });
+    prisma.shipment.findUnique = vi.fn(async ({ where }: any) => {
+      const s = state.shipments.find((x) => x.id === where.id);
+      return s ? { ...s, order: { ...baseOrder(), payments: [] } } : null;
+    });
+    const fetchFn = vi.fn(async () => json({ ShipmentData: [] }));
+    const svc = new WorkerShipping(prisma, env, fetchFn);
+    const result = await svc.syncActive(2); // 2 batches of 30 = 60, well under the 90 available
+    expect(result.checked).toBe(60);
+    expect(result.batches).toBe(2);
   });
 });

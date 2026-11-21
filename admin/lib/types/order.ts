@@ -30,6 +30,9 @@ export interface OrderListItem {
   paymentStatus: PaymentStatus;
   paymentLabel?: PaymentStatus | 'NO_PAYMENT_REQUIRED' | 'UNVERIFIED';
   shippingStatus: ShippingStatus;
+  // Only set for COD orders (null otherwise) - whether cash has actually been
+  // confirmed collected, kept separate from paymentStatus (see Payment type).
+  codCollectionStatus?: 'PENDING' | 'COLLECTED' | null;
   subtotal: string;
   discount: string;
   tax: string;
@@ -90,6 +93,13 @@ export interface PaymentTransaction {
   createdAt: string;
 }
 
+export type CodCollectionStatus = 'PENDING' | 'COLLECTED';
+export type CodRemittanceStatus = 'PENDING' | 'INITIATED' | 'CREDITED';
+
+export interface RemittanceItemRef {
+  remittance: { id: string; status: CodRemittanceStatus; remittanceDate: string; bankReference: string | null; bankCreditedAt: string | null };
+}
+
 export interface Payment {
   id: string;
   provider: 'RAZORPAY' | 'UPI' | 'COD';
@@ -98,6 +108,16 @@ export interface Payment {
   currency: string;
   providerRef: string | null;
   transactions: PaymentTransaction[];
+  // COD cash lifecycle - only meaningful when provider === 'COD'. Tracked
+  // separately from `status`, which stays PENDING for COD until an admin
+  // confirms collection: Delhivery's API has no endpoint that confirms cash
+  // was actually collected, so this is never set automatically.
+  codCollectionStatus?: CodCollectionStatus;
+  codCollectedAmount?: string | null;
+  codCollectedAt?: string | null;
+  codCollectedBy?: string | null;
+  codCollectionNote?: string | null;
+  remittanceItems?: RemittanceItemRef[];
 }
 
 export interface OrderCustomerDetail {

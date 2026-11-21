@@ -24,8 +24,19 @@ export const ShopByCategoryFilter: React.FC<ShopByCategoryFilterProps> = ({
   onChange,
   onItemClick,
 }) => {
-  const { isCategoryVisible } = useShop();
-  const list = (categories || SHOP_CATEGORIES).filter((cat) => isCategoryVisible(cat.categorySlug));
+  const { isCategoryVisible, allProducts } = useShop();
+  // cat.name is a snapshot that only updates by hand-editing shopCategories.ts
+  // - a rename in the admin's Categories page never reaches it on its own.
+  // Any live product tagged with this categorySlug already carries the
+  // current admin-set name (mapBackendProductToFrontend resolves it from
+  // the live ProductType), so prefer that name here, same as the category
+  // landing pages and the homepage "Shop by Category" cards already do.
+  const list = (categories || SHOP_CATEGORIES)
+    .filter((cat) => isCategoryVisible(cat.categorySlug))
+    .map((cat) => {
+      const liveName = allProducts.find((p) => p.categorySlug === cat.categorySlug)?.category;
+      return liveName && liveName !== cat.name ? { ...cat, name: liveName } : cat;
+    });
 
   const toggle = (slug: string) => {
     const next = selectedSlugs.includes(slug)

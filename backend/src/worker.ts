@@ -17,6 +17,7 @@ import { resolveAdminRead } from './common/admin-read-routes.js';
 import { HeroImages } from './catalog/hero-images.js';
 import { HERO_IMAGE_SLOTS, isHeroImageSlot } from './catalog/hero-image-slots.js';
 import { WorkerShipping } from './shipping/worker-shipping.js';
+import { CodFinance } from './shipping/cod-finance.js';
 import { sendOrderEmail, type OrderEmailEnv } from './common/order-emails.js';
 import { buildInvoice, loadBusinessProfile } from './commerce/invoice.js';
 import { verifyCapturedOrderPayment } from './commerce/orders/razorpay-capture.js';
@@ -931,6 +932,18 @@ export default {
               reason: `Set to ${value}`,
             });
           }
+          if ('auto_book_delhivery' in body) {
+            const value = body.auto_book_delhivery ? '1' : '0';
+            await prisma.storeSetting.upsert({
+              where: { key: 'auto_book_delhivery' },
+              update: { value, updatedBy: user.id },
+              create: { key: 'auto_book_delhivery', value, updatedBy: user.id },
+            });
+            await services.audit.record({
+              adminUserId: user.id, action: 'STORE_SETTING_UPDATED', entityType: 'StoreSetting', entityId: 'auto_book_delhivery',
+              reason: `Set to ${value}`,
+            });
+          }
           const settings = await prisma.storeSetting.findMany();
           return jsonResponse(Object.fromEntries(settings.map(s => [s.key, s.value])), 200, request);
         }
@@ -1563,8 +1576,20 @@ export default {
         const permError = checkPermission(user, ['products.edit'], request);
         if (permError) return permError;
         const body = (await request.json()) as any;
+        if (typeof body.name === 'string') {
+          const before = await prisma.productType.findUnique({ where: { id: productTypeMatch[1] }, select: { name: true } });
+          const updated = await services.productTypes.rename(productTypeMatch[1], body.name);
+          await services.audit.record({
+            adminUserId: user.id,
+            action: 'CATEGORY_RENAMED',
+            entityType: 'ProductType',
+            entityId: updated.id,
+            reason: `${before?.name ?? '?'} -> ${updated.name}`,
+          });
+          return jsonResponse(updated, 200, request);
+        }
         if (typeof body.isActive !== 'boolean') {
-          return jsonResponse({ statusCode: 400, message: 'isActive (true or false) is required' }, 400, request);
+          return jsonResponse({ statusCode: 400, message: 'isActive (true or false), or name (string), is required' }, 400, request);
         }
         try {
           const updated = await prisma.productType.update({ where: { id: productTypeMatch[1] }, data: { isActive: body.isActive } });
@@ -2003,6 +2028,20 @@ export default {
         // Confirmation only once the order is really confirmed: Cash on Delivery, or payment received.
         if (isCod || (newOrder as { paymentStatus?: string }).paymentStatus === 'PAID') {
           background(Promise.all([sendOrderEmail(prisma, env as OrderEmailEnv, newOrder.id, 'confirmed'), sendOrderEmail(prisma, env as OrderEmailEnv, newOrder.id, 'admin_new')]));
+          // Off by default (see admin Settings > "Auto-book with Delhivery") -
+          // an admin turns this on only once their Delhivery account is
+          // confirmed active and funded. Never blocks the checkout response:
+          // if Delhivery/booking fails, the order is still placed normally
+          // and can be shipped manually from the order page as always.
+          background((async () => {
+            try {
+              const autoBookSetting = await prisma.storeSetting?.findUnique({ where: { key: 'auto_book_delhivery' } }).catch(() => null);
+              if (autoBookSetting?.value !== '1') return;
+              await new WorkerShipping(prisma, env, undefined, (kind, orderId) => background(sendOrderEmail(prisma, env as OrderEmailEnv, orderId, kind))).createForOrder(newOrder.id, {}, null);
+            } catch (err) {
+              console.error('auto-book with Delhivery failed', { orderId: newOrder.id, err });
+            }
+          })());
         }
         return jsonResponse(isCod ? codReceipt(newOrder) : newOrder, 201, request);
       }
@@ -2464,7 +2503,7 @@ export default {
         if (named === 'test-connection' && method === 'POST') return jsonResponse(await ship.testConnection(), 200, request);
         if (named === 'pickups' && method === 'GET') return jsonResponse(await ship.recentPickups(), 200, request);
         if (named === 'pickups' && method === 'POST') return jsonResponse(await ship.requestPickup(user.id, await request.json().catch(() => ({}))), 201, request);
-        if (named === 'sync' && method === 'POST') return jsonResponse(await ship.syncActive(30), 200, request);
+        if (named === 'sync' && method === 'POST') return jsonResponse(await ship.syncActive(5), 200, request);
         if (named === 'shipments' && method === 'POST') {
           const body = (await request.json().catch(() => ({}))) as any;
           if (!body.orderId) return jsonResponse({ statusCode: 400, message: 'orderId is required' }, 400, request);
@@ -2485,6 +2524,30 @@ export default {
         const permError = checkPermission(user, ['ndr.view'], request);
         if (permError) return permError;
         return jsonResponse(await services.ndrRto.findNdrCases(), 200, request);
+      }
+
+      // -------------------------------------------------------------
+      // 9b. COD cash collection & remittance (manual reconciliation ledger -
+      // Delhivery's API has no endpoint/webhook for this, see cod-finance.ts)
+      // -------------------------------------------------------------
+      const codRoute = pathname.match(/^\/api\/v1\/cod(?:\/(summary|pending-collection|collected-unremitted|remittances)(?:\/([0-9a-fA-F-]{36}))?|\/payments\/([0-9a-fA-F-]{36})\/(collect|undo-collect))?$/);
+      if (codRoute) {
+        const { user, error } = await authenticate(request, env, prisma);
+        if (error) return error;
+        const [, named, remittanceId, paymentId, paymentAction] = codRoute;
+        const writes = method === 'POST' || method === 'PATCH' || method === 'PUT';
+        const denied = checkPermission(user, [writes ? 'cod.manage' : 'cod.view'], request);
+        if (denied) return denied;
+        const cod = new CodFinance(prisma);
+        if (named === 'summary' && method === 'GET') return jsonResponse(await cod.summary(), 200, request);
+        if (named === 'pending-collection' && method === 'GET') return jsonResponse(await cod.pendingCollection(), 200, request);
+        if (named === 'collected-unremitted' && method === 'GET') return jsonResponse(await cod.collectedUnremitted(), 200, request);
+        if (named === 'remittances' && !remittanceId && method === 'GET') return jsonResponse(await cod.listRemittances(), 200, request);
+        if (named === 'remittances' && !remittanceId && method === 'POST') return jsonResponse(await cod.createRemittance(await request.json().catch(() => ({})), user.id), 201, request);
+        if (named === 'remittances' && remittanceId && method === 'GET') return jsonResponse(await cod.getRemittance(remittanceId), 200, request);
+        if (named === 'remittances' && remittanceId && method === 'PATCH') return jsonResponse(await cod.updateRemittance(remittanceId, await request.json().catch(() => ({})), user.id), 200, request);
+        if (paymentId && paymentAction === 'collect' && method === 'POST') return jsonResponse(await cod.markCollected(paymentId, await request.json().catch(() => ({})), user.id), 200, request);
+        if (paymentId && paymentAction === 'undo-collect' && method === 'POST') return jsonResponse(await cod.undoCollected(paymentId, user.id), 200, request);
       }
 
       // -------------------------------------------------------------
@@ -2934,7 +2997,7 @@ export default {
         const result = await new WorkerShipping(prisma, env, undefined, (kind, orderId) => {
           const task = sendOrderEmail(prisma, env as OrderEmailEnv, orderId, kind);
           if (ctx?.waitUntil) ctx.waitUntil(task);
-        }).syncActive(20);
+        }).syncActive(20); // up to 20 batches of 30 AWBs (600 shipments) per 20-minute tick
         console.log('delivery sync', JSON.stringify(result));
       } catch (err) {
         console.error('delivery sync failed', err);

@@ -26,6 +26,7 @@ const QA_DUMMY_LIST_ITEM: OrderListItem = {
   orderStatus: "CONFIRMED",
   paymentStatus: "PENDING",
   shippingStatus: "NOT_SHIPPED",
+  codCollectionStatus: null,
   subtotal: "4998.00",
   discount: "0.00",
   tax: "899.64",
@@ -94,6 +95,17 @@ export default function OrdersPage() {
     {
       header: "Shipping",
       cell: (row) => <StatusBadge status={row.shippingStatus} />,
+    },
+    {
+      header: "COD",
+      cell: (row) =>
+        !row.codCollectionStatus ? (
+          <span className="text-xs text-muted-foreground">—</span>
+        ) : row.codCollectionStatus === "COLLECTED" ? (
+          <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">Collected</span>
+        ) : (
+          <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Pending</span>
+        ),
     },
     { header: "Total", cell: (row) => formatCurrency(row.total) },
     { header: "Created", cell: (row) => formatDate(row.createdAt) },

@@ -387,10 +387,10 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
   'tribal-ethnic-art': {
     id: 'tribal-ethnic-art',
     slug: 'tribal-ethnic-art',
-    title: 'Tribal & Ethnic Art',
-    shortTitle: 'Tribal & Ethnic Art',
-    seoTitle: 'Tribal & Ethnic Art Prints | Canvas India',
-    description: 'Aboriginal, tribal and ethnic-pattern print art with bold, earthy character.',
+    title: 'African Arts',
+    shortTitle: 'African Arts',
+    seoTitle: 'African Art Prints | Canvas India',
+    description: 'Bold African-inspired print art with earthy, statement character.',
     heroImage: '/assets/catalogue/tribal-ethnic-art/A-A_007.webp',
     subcategories: ['All'],
     features: [
@@ -398,7 +398,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
       'Available across canvas, acrylic and poster formats',
       'Custom sizes on request'
     ],
-    ctaText: 'Shop Tribal & Ethnic Art',
+    ctaText: 'Shop African Arts',
     ctaType: 'shop'
   },
   'line-art': {

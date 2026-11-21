@@ -44,10 +44,16 @@ const formatStartsAtPrice = (price: number): string => {
 
 const u = (id: string, w = 1200) => `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=90`;
 
+// `name` here is only a fallback shown before the live product list has
+// loaded (or if it never does) - once real products are in, the "Shop by
+// Category" cards below look up each slug's current live category name from
+// an actual product instead, so a rename in the admin's Categories page
+// reaches this homepage section too, the same way it already does for
+// individual product listings (see mapBackendProductToFrontend).
 const CATEGORY_CARDS = [
   { name: 'Devotional Art', sub: 'Spiritual Prints for Every Home', price: 249, slug: 'devotional-art', image: '/assets/catalogue/devotional-art/G-A_001.webp', grad: 'from-[#9A3412]/90', chip: 'bg-[#EA580C]' },
   { name: 'Scenery & Landscape Art', sub: 'Bring the Outdoors In', price: 249, slug: 'scenery-landscape-art', image: '/assets/catalogue/scenery-landscape-art/S-A_010.webp', grad: 'from-[#0F766E]/90', chip: 'bg-[#059669]' },
-  { name: 'Tribal & Ethnic Art', sub: 'Bold, Earthy Statement Pieces', price: 249, slug: 'tribal-ethnic-art', image: '/assets/catalogue/tribal-ethnic-art/A-A_006.webp', grad: 'from-[#7C2D12]/90', chip: 'bg-[#B45309]' },
+  { name: 'African Arts', sub: 'Bold, Earthy Statement Pieces', price: 249, slug: 'tribal-ethnic-art', image: '/assets/catalogue/tribal-ethnic-art/A-A_006.webp', grad: 'from-[#7C2D12]/90', chip: 'bg-[#B45309]' },
   { name: 'Line Art', sub: 'Minimal Monochrome Prints', price: 249, slug: 'line-art', image: '/assets/catalogue/line-art/L-A_010.webp', grad: 'from-[#1F2937]/90', chip: 'bg-[#374151]' },
   { name: 'Motivational Posters', sub: 'Quotes That Keep You Going', price: 249, slug: 'motivational-posters', image: '/assets/catalogue/motivational-posters/M-A_030.webp', grad: 'from-[#B91C1C]/90', chip: 'bg-[#DC2626]' },
   { name: 'Cork Art Patterns', sub: 'Textured Natural Finishes', price: 249, slug: 'cork-art-patterns', image: '/assets/catalogue/cork-art-patterns/C-A_003.webp', grad: 'from-[#92400E]/90', chip: 'bg-[#B45309]' },
@@ -135,6 +141,16 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
   const layout = useHomepageLayout();
   const { productsFromApi } = useShop();
   const productsById = React.useMemo(() => new Map(allProducts.map(product => [product.id, product])), [allProducts]);
+  // See the comment on CATEGORY_CARDS above - a live product's `category`
+  // (already resolved from the current admin-set ProductType name, not a
+  // frozen snapshot) overrides the hardcoded card name whenever one exists.
+  const categoryCards = React.useMemo(
+    () => CATEGORY_CARDS.map((c) => {
+      const liveName = allProducts.find((p) => p.categorySlug === c.slug)?.category;
+      return liveName && liveName !== c.name ? { ...c, name: liveName } : c;
+    }),
+    [allProducts],
+  );
   const layoutShows = (key: string) => layout.sections.find((x) => x.key === key)?.enabled !== false;
   const layoutOrder = (key: string) => {
     const i = layout.sections.findIndex((x) => x.key === key);
@@ -456,7 +472,7 @@ export const Homepage: React.FC<HomepageProps> = ({ onSelectCategory, onAddToCar
               </button>
             </div>
             <div ref={categoryRowRef} className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth py-1 flex-1 snap-x" style={{ scrollbarWidth: 'none' }}>
-              {CATEGORY_CARDS.map((c) => (
+              {categoryCards.map((c) => (
                 <button
                   key={c.slug}
                   type="button"

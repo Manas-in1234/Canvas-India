@@ -24,6 +24,28 @@ export class ProductTypesService {
     }
   }
 
+  async rename(id: string, name: unknown) {
+    if (typeof name !== 'string' || !name.trim() || name.trim().length > 80) {
+      throw new BadRequestException('Enter a category name of up to 80 characters.');
+    }
+    const normalized = name.trim();
+    const existing = await this.prisma.productType.findFirst({
+      where: { name: { equals: normalized, mode: 'insensitive' }, id: { not: id } },
+    });
+    if (existing) throw new ConflictException('A category with that name already exists.');
+    try {
+      return await this.prisma.productType.update({ where: { id }, data: { name: normalized } });
+    } catch (error) {
+      if ((error as { code?: string }).code === 'P2002') {
+        throw new ConflictException('A category with that name already exists.');
+      }
+      if ((error as { code?: string }).code === 'P2025') {
+        throw new NotFoundException('Category not found.');
+      }
+      throw error;
+    }
+  }
+
   async deleteEmpty(id: string) {
     const removed = await this.prisma.productType.deleteMany({
       where: { id, products: { none: {} }, slaRules: { none: {} } },

@@ -618,6 +618,23 @@ enum ShippingStatus {
   RTO
 }
 
+// COD cash lifecycle, tracked separately from delivery (ShippingStatus) and
+// from the generic Payment.status: Delhivery's courier API has no endpoint
+// or webhook that confirms COD cash was actually collected or remitted
+// (verified against their public B2C Express docs), so these states are
+// recorded by an admin from Delhivery's finance portal/remittance report,
+// never inferred from a shipment reaching DELIVERED.
+enum CodCollectionStatus {
+  PENDING
+  COLLECTED
+}
+
+enum CodRemittanceStatus {
+  PENDING
+  INITIATED
+  CREDITED
+}
+
 // Historical snapshot fields are mandatory (scope §89, §114): an order must
 // keep displaying the price/name/config that existed at purchase time, even
 // after the live product/variant changes later.
@@ -799,6 +816,18 @@ model Payment {
   createdAt    DateTime             @default(now()) @map("created_at")
   updatedAt    DateTime             @updatedAt @map("updated_at")
 
+  // COD cash lifecycle - only meaningful when provider = COD. Deliberately
+  // separate from `status` (which stays PENDING for COD until genuinely
+  // reconciled - see CodCollectionStatus comment). Set only by an admin
+  // action, never inferred from shipment tracking.
+  codCollectionStatus CodCollectionStatus @default(PENDING) @map("cod_collection_status")
+  codCollectedAmount  Decimal?            @db.Decimal(12, 2) @map("cod_collected_amount")
+  codCollectedAt      DateTime?           @map("cod_collected_at")
+  codCollectedBy      String?             @map("cod_collected_by")
+  codCollectionNote   String?             @map("cod_collection_note")
+  remittanceItems     CodRemittanceItem[]
+
+  @@index([provider, codCollectionStatus])
   @@map("payments")
 }
 
@@ -818,6 +847,47 @@ model PaymentTransaction {
   createdAt  DateTime @default(now()) @map("created_at")
 
   @@map("payment_transactions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// COD REMITTANCE — Delhivery's B2C Express API has no endpoint or webhook
+// for remittance/settlement data (verified against their public docs), so
+// this is a batch an admin records by hand from Delhivery's finance portal
+// statement: one bank credit covering a list of COD payments/AWBs, with the
+// UTR so it can be matched against the actual bank statement.
+// ─────────────────────────────────────────────────────────────────────────
+
+model CodRemittance {
+  id              String               @id @default(uuid())
+  amount          Decimal              @db.Decimal(12, 2)
+  remittanceDate  DateTime             @map("remittance_date")
+  status          CodRemittanceStatus  @default(PENDING)
+  bankReference   String?              @map("bank_reference") // UTR / bank transaction id
+  bankCreditedAt  DateTime?            @map("bank_credited_at")
+  notes           String?
+  createdBy       String?              @map("created_by")
+  items           CodRemittanceItem[]
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([remittanceDate])
+  @@map("cod_remittances")
+}
+
+/** One COD payment covered by a remittance batch - join row so a payment can be looked up by which remittance (if any) paid it out. */
+model CodRemittanceItem {
+  id              String        @id @default(uuid())
+  remittanceId    String        @map("remittance_id")
+  remittance      CodRemittance @relation(fields: [remittanceId], references: [id], onDelete: Cascade)
+  paymentId       String        @map("payment_id")
+  payment         Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  amount          Decimal       @db.Decimal(12, 2)
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@unique([remittanceId, paymentId])
+  @@index([paymentId])
+  @@map("cod_remittance_items")
 }
 
 // ─────────────────────────────────────────────────────────────────────────

@@ -89,7 +89,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   }, [product.slug]);
 
   // Catalogue designs are named "<Name> <code>" or "<Name> <code> - <Material>"
-  // (e.g. "Tribal Art Print 001 - Canvas") — pull the numeric code out so it
+  // (e.g. "African Art Print 001 - Canvas") — pull the numeric code out so it
   // can be shown on its own below Quantity instead of cluttering the title.
   const { displayName, productCode } = useMemo(() => {
     if (!product) return { displayName: '', productCode: null as string | null };

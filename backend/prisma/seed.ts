@@ -39,6 +39,8 @@ const PERMISSIONS = [
   'returns.view',
   'returns.manage',
   'finance.view',
+  'cod.view',
+  'cod.manage',
 
   // Customization Engine (Phase 2)
   'assets.upload',

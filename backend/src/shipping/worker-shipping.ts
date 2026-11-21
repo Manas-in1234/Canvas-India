@@ -91,7 +91,12 @@ export class WorkerShipping {
     return this.prisma.shipment.findMany({
       where,
       include: {
-        order: { select: { id: true, orderNumber: true, shippingStatus: true, paymentStatus: true, total: true } },
+        order: {
+          select: {
+            id: true, orderNumber: true, shippingStatus: true, paymentStatus: true, total: true,
+            payments: { select: { provider: true, codCollectionStatus: true }, where: { provider: 'COD' }, take: 1 },
+          },
+        },
         _count: { select: { ndrCases: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -118,7 +123,13 @@ export class WorkerShipping {
             total: true,
             customer: { select: { name: true, email: true, phone: true } },
             addresses: true,
-            payments: { select: { provider: true, status: true, amount: true } },
+            payments: {
+              select: {
+                id: true, provider: true, status: true, amount: true,
+                codCollectionStatus: true, codCollectedAmount: true, codCollectedAt: true, codCollectedBy: true, codCollectionNote: true,
+                remittanceItems: { select: { remittance: { select: { id: true, status: true, bankReference: true, remittanceDate: true, bankCreditedAt: true } } } },
+              },
+            },
           },
         },
       },
@@ -199,7 +210,7 @@ export class WorkerShipping {
     });
   }
 
-  async createForOrder(orderId: string, body: any, userId: string) {
+  async createForOrder(orderId: string, body: any, userId: string | null) {
     const order = await this.loadOrder(orderId);
     const { problems, paymentMode } = this.readiness(order);
     if (problems.length) fail(409, problems[0]);
@@ -289,7 +300,13 @@ export class WorkerShipping {
             },
           },
         });
-        await tx.auditLog.create({ data: { adminUserId: userId, action: 'SHIPMENT_BOOKED', entityType: 'Shipment', entityId: created.id, changes: { awbNumber: booked.waybill, orderRef } } });
+        await tx.auditLog.create({
+          data: {
+            adminUserId: userId, action: 'SHIPMENT_BOOKED', entityType: 'Shipment', entityId: created.id,
+            changes: { awbNumber: booked.waybill, orderRef },
+            reason: userId === null ? 'Booked automatically on order placement (auto_book_delhivery setting is on)' : undefined,
+          },
+        });
         return created;
       });
       return this.get(shipment.id);
@@ -369,12 +386,13 @@ export class WorkerShipping {
         orderData.events = { create: { type: eventType, message: `Shipment ${shipment.awbNumber ?? ''} ${label[current] ?? current}`.trim(), metadata: { shipmentId, awbNumber: shipment.awbNumber, status: current } } };
         if (current === 'DELIVERED') {
           orderData.orderStatus = 'COMPLETED';
-          // Cash on Delivery: the courier collected the money at the door.
-          const cod = shipment.order.payments.find((p: any) => p.provider === 'COD' && p.status === 'PENDING');
-          if (cod) {
-            await tx.payment.update({ where: { id: cod.id }, data: { status: 'PAID' } });
-            orderData.paymentStatus = 'PAID';
-          }
+          // Deliberately NOT marking COD payments PAID here. Delhivery's
+          // courier API has no endpoint or webhook confirming cash was
+          // actually collected - a DELIVERED scan only means the parcel was
+          // handed over, not that the money reached the delivery agent or
+          // will reach us. COD payment.status stays PENDING until an admin
+          // explicitly marks it collected (see WorkerShipping.markCodCollected),
+          // and separately tracks remittance once Delhivery actually pays out.
         }
         await tx.order.update({ where: { id: shipment.orderId }, data: orderData });
       }
@@ -407,56 +425,105 @@ export class WorkerShipping {
     return this.get(id);
   }
 
-  /** Cron / "Refresh all": one batched tracking call for the shipments that have gone longest without an update. */
-  async syncActive(limit = 20) {
+  /**
+   * Cron / "Refresh all": tracks every active shipment, not just the first
+   * page. Delhivery's tracking endpoint accepts at most 30 AWBs per call
+   * (DelhiveryClient.track slices to 30), so this pages through all eligible
+   * shipments in batches of 30 oldest-updated-first, rather than the single
+   * capped call this used to make (which silently left shipments beyond the
+   * cap stale indefinitely once the active count grew past it). `maxBatches`
+   * bounds total work per run so one invocation can't run unbounded; the
+   * 20-minute cron catches anything left over on its next tick.
+   */
+  async syncActive(maxBatches = 20) {
     if (!this.client.configured) return { checked: 0, updated: 0, skipped: 'Delhivery is not configured' };
-    const rows = await this.prisma.shipment.findMany({
-      where: { awbNumber: { not: null }, status: { in: ACTIVE_STATUSES } },
-      orderBy: { updatedAt: 'asc' },
-      take: Math.min(limit, 30),
-      select: { id: true, awbNumber: true },
-    });
-    if (rows.length === 0) return { checked: 0, updated: 0 };
-    const tracked = await this.client.track(rows.map((r: any) => r.awbNumber));
-    const byAwb = new Map(tracked.map((t) => [t.awb, t]));
+    let checked = 0;
     let updated = 0;
-    for (const row of rows) {
+    let batches = 0;
+    // applyTracking only bumps a shipment's updatedAt when something actually
+    // changed (see its `!statusChanged && newEvents.length === 0` early
+    // return), so a shipment Delhivery reports as unchanged would otherwise
+    // keep sorting first by updatedAt:asc and get re-fetched every batch,
+    // looping forever on the same stuck shipments instead of reaching the
+    // rest. Excluding ids already seen this run guarantees forward progress.
+    const seenIds = new Set<string>();
+    for (;;) {
+      if (batches >= maxBatches) break;
+      const rows = await this.prisma.shipment.findMany({
+        where: { awbNumber: { not: null }, status: { in: ACTIVE_STATUSES }, id: { notIn: [...seenIds] } },
+        orderBy: { updatedAt: 'asc' },
+        take: 30,
+        select: { id: true, awbNumber: true },
+      });
+      if (rows.length === 0) break;
+      for (const row of rows) seenIds.add(row.id);
+      batches++;
+      checked += rows.length;
+      let tracked: TrackedShipment[] = [];
       try {
-        const result = await this.applyTracking(row.id, byAwb.get(row.awbNumber) ?? null);
-        if (result.changed) updated++;
+        tracked = await this.client.track(rows.map((r: any) => r.awbNumber));
       } catch (err) {
-        console.error('shipment sync failed', row.id, err);
+        console.error('shipment tracking batch failed', err);
+        // This batch's AWBs couldn't be fetched; move on rather than retrying
+        // forever in the same run (they stay oldest-updated and get retried
+        // next cron tick, or we'd spin on the same failing batch here).
+        if (rows.length < 30) break;
+        continue;
       }
+      const byAwb = new Map(tracked.map((t) => [t.awb, t]));
+      for (const row of rows) {
+        try {
+          const result = await this.applyTracking(row.id, byAwb.get(row.awbNumber) ?? null);
+          if (result.changed) updated++;
+        } catch (err) {
+          console.error('shipment sync failed', row.id, err);
+        }
+      }
+      if (rows.length < 30) break;
     }
-    return { checked: rows.length, updated };
+    return { checked, updated, batches };
   }
 
-  /** Delhivery push webhook (set up by Delhivery on request). Idempotent; unknown waybills are ignored. */
+  /**
+   * Delhivery push webhook (set up by Delhivery on request). Re-delivering
+   * the same event is safe: applyTracking dedupes by (status, description,
+   * occurredAt) before writing anything, so a replayed or duplicate webhook
+   * call for an already-applied scan is a no-op, not a duplicate record.
+   * Unknown waybills are ignored. Each item is isolated in its own
+   * try/catch so one bad/unrecognized entry in a batch (or a transient DB
+   * error on one shipment) can't drop the rest of the same delivery.
+   */
   async applyWebhook(payload: any) {
     const list = Array.isArray(payload) ? payload : [payload];
     let applied = 0;
+    let failed = 0;
     for (const item of list) {
-      const s = item?.Shipment ?? item?.shipment ?? item;
-      const awb = String(s?.AWB ?? s?.awb ?? s?.waybill ?? '');
-      if (!awb) continue;
-      const st = s?.Status ?? {};
-      const shipment = await this.prisma.shipment.findFirst({ where: { awbNumber: awb }, select: { id: true } });
-      if (!shipment) continue;
-      const tracked: TrackedShipment = {
-        awb,
-        status: String(st.Status ?? s?.status ?? ''),
-        statusType: String(st.StatusType ?? s?.status_type ?? ''),
-        instructions: String(st.Instructions ?? s?.instructions ?? ''),
-        location: String(st.StatusLocation ?? s?.location ?? ''),
-        at: String(st.StatusDateTime ?? s?.status_datetime ?? ''),
-        code: String(s?.NSLCode ?? st.StatusCode ?? ''),
-        expectedDate: null,
-        scans: [],
-      };
-      await this.applyTracking(shipment.id, tracked);
-      applied++;
+      try {
+        const s = item?.Shipment ?? item?.shipment ?? item;
+        const awb = String(s?.AWB ?? s?.awb ?? s?.waybill ?? '');
+        if (!awb) continue;
+        const st = s?.Status ?? {};
+        const shipment = await this.prisma.shipment.findFirst({ where: { awbNumber: awb }, select: { id: true } });
+        if (!shipment) continue;
+        const tracked: TrackedShipment = {
+          awb,
+          status: String(st.Status ?? s?.status ?? ''),
+          statusType: String(st.StatusType ?? s?.status_type ?? ''),
+          instructions: String(st.Instructions ?? s?.instructions ?? ''),
+          location: String(st.StatusLocation ?? s?.location ?? ''),
+          at: String(st.StatusDateTime ?? s?.status_datetime ?? ''),
+          code: String(s?.NSLCode ?? st.StatusCode ?? ''),
+          expectedDate: null,
+          scans: [],
+        };
+        await this.applyTracking(shipment.id, tracked);
+        applied++;
+      } catch (err) {
+        failed++;
+        console.error('webhook item failed', err);
+      }
     }
-    return { received: list.length, applied };
+    return { received: list.length, applied, failed };
   }
 
   // ------------------------------------------------------------------ actions

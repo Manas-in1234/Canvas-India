@@ -78,6 +78,18 @@ export default function ShipmentsPage() {
     { header: "AWB", cell: (row) => <span className="font-mono text-xs">{row.awbNumber ?? "—"}</span> },
     { header: "Amount", cell: (row) => formatCurrency(row.order.total) },
     { header: "Status", cell: (row) => <StatusBadge status={row.status} /> },
+    {
+      header: "COD",
+      cell: (row) => {
+        const cod = row.order.payments?.find((p) => p.provider === "COD");
+        if (!cod) return <span className="text-xs text-muted-foreground">Prepaid</span>;
+        return cod.codCollectionStatus === "COLLECTED" ? (
+          <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">Collected</span>
+        ) : (
+          <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Pending</span>
+        );
+      },
+    },
     { header: "Booked", cell: (row) => formatDate(row.createdAt) },
     { header: "Last update", cell: (row) => formatDate(row.updatedAt) },
   ];

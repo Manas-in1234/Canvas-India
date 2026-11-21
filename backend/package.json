@@ -22,6 +22,7 @@
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
     "prisma:seed": "tsx prisma/seed.ts",
     "sync-permissions": "tsx prisma/sync-permissions.ts",
+    "sync-storefront-category-names": "tsx prisma/sync-storefront-category-names.ts",
     "deploy:worker": "prisma migrate deploy --config prisma7.config.ts && prisma generate --config prisma7.config.ts && npx wrangler deploy --keep-vars"
   },
   "prisma": {

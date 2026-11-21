@@ -26,6 +26,7 @@ import {
   BadgePercent,
   Mail,
   MessageSquareQuote,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 export interface NavLink {
@@ -98,6 +99,12 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Delivery problems",
         icon: PackageX,
         permissions: ["ndr.view"],
+      },
+      {
+        href: "/cod",
+        label: "COD Financial Dashboard",
+        icon: Wallet,
+        permissions: ["cod.view"],
       },
       {
         href: "/delivery-settings",
