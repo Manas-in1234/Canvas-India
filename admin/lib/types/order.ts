@@ -49,7 +49,14 @@ export interface OrderItem {
   // Immutable snapshots (scope §89/§114) — always render these, never re-fetch
   // live product/variant data for a historical order.
   productNameSnapshot: string;
-  variantSnapshot: { sku: string; options: { group: string; value: string }[] };
+  variantSnapshot: {
+    sku: string;
+    options: { group: string; value: string }[];
+    // The customer's own uploaded photo / the listing image, and (orders placed after previews were
+    // captured) a render of their finished customized design.
+    imageUrl?: string | null;
+    previewImage?: string | null;
+  };
   priceSnapshot: string;
   configurationSnapshot: Record<string, unknown> | null;
   designVersionSnapshot: Record<string, unknown> | null;

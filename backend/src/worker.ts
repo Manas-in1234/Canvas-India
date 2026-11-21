@@ -1935,7 +1935,11 @@ export default {
                   const itemTitle = item.title || item.product?.name || `Item ${idx + 1}`;
                   const itemPrice = Number(item.price) || 0;
                   const itemQty = Number(item.quantity) || 1;
-                  const custDetails = item.customizationDetails || {};
+                  // The rendered preview of the customer's finished design travels inside customizationDetails;
+                  // keep it on the variant snapshot (for the admin order page) and out of the two config snapshots.
+                  const { previewImage: rawPreview, ...custDetails } = (item.customizationDetails || {}) as Record<string, unknown>;
+                  const previewImage = typeof rawPreview === 'string' && /^data:image\/(jpeg|png|webp);base64,/.test(rawPreview) && rawPreview.length <= 600_000
+                    ? rawPreview : null;
                   const itemSlug = typeof item.productSlug === 'string' && item.productSlug.trim() ? item.productSlug.trim() : null;
                   return {
                     productNameSnapshot: itemTitle,
@@ -1947,6 +1951,7 @@ export default {
                         { group: 'Style', value: custDetails.wrap || custDetails.style || custDetails.frame || 'Standard' },
                       ],
                       imageUrl: item.imageUrl || null,
+                      previewImage,
                     },
                     priceSnapshot: itemPrice,
                     configurationSnapshot: custDetails,

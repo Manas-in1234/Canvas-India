@@ -79,7 +79,8 @@ function formatConfigLabel(key: string): string {
 function getConfigEntries(configurationSnapshot: Record<string, unknown> | null): [string, string][] {
   if (!configurationSnapshot) return [];
   return Object.entries(configurationSnapshot)
-    .filter(([, value]) => {
+    .filter(([key, value]) => {
+      if (key === "previewImage") return false;
       if (value === null || value === undefined || value === "") return false;
       if (Array.isArray(value)) return value.length > 0 && value.every((v) => typeof v === "string" || typeof v === "number");
       return typeof value !== "object";
@@ -361,9 +362,25 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
             {order.items.map((item) => (
               <div
                 key={item.id}
-                className="flex items-start justify-between border-b pb-3 last:border-0"
+                className="flex items-start justify-between gap-3 border-b pb-3 last:border-0"
               >
-                <div>
+                {(item.variantSnapshot.previewImage || item.variantSnapshot.imageUrl) && (
+                  <a
+                    href={item.variantSnapshot.previewImage || item.variantSnapshot.imageUrl || undefined}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={item.variantSnapshot.previewImage ? "Customer's customized design" : "Customer's photo / listing image"}
+                    className="shrink-0"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.variantSnapshot.previewImage || item.variantSnapshot.imageUrl || ""}
+                      alt={item.productNameSnapshot}
+                      className="h-24 w-24 rounded-md border bg-muted object-contain"
+                    />
+                  </a>
+                )}
+                <div className="min-w-0 flex-1">
                   {/* Always render snapshot fields — never re-fetch live product data
                       for a historical order (scope §89/§114). */}
                   <div className="font-medium">{item.productNameSnapshot}</div>
