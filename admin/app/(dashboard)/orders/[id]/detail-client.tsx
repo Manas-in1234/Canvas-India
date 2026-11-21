@@ -69,14 +69,43 @@ const CONFIG_LABEL_OVERRIDES: Record<string, string> = {
   lyricLayout: "Lyric Layout",
 };
 
-// Link to the product page on the live storefront that the customer started from (customized or not).
-// Orders placed after the customizer began recording its source product use that; older orders use the
-// product reference saved with the order; with neither, fall back to a storefront search on the base name.
-function storeItemLink(item: OrderDetail["items"][number]): { href: string; label: string } {
+// Public storefront catalogue entry - only the fields needed to find a product's page.
+interface StorefrontProduct {
+  storefront?: { slug?: string; image?: string | null; images?: string[]; categorySlug?: string };
+}
+
+const imageFileName = (url: unknown): string =>
+  typeof url === "string" ? (url.split("?")[0].split("/").pop() ?? "").toLowerCase() : "";
+
+// Link to the product page on the live storefront that the order line is for.
+// 1. The source product the customizer recorded (orders placed after that was added).
+// 2. The catalogue product whose image file matches the line's image. Every catalogue product carries a
+//    unique code in its image file name (e.g. L-A_024), and the customizer loads that product's image as
+//    the customer's photo, so this finds the right product for customized and older orders too. Where the
+//    same image is shared by a canvas and an acrylic listing, the one matching the order's material wins.
+// 3. For plain catalogue items, the product reference saved with the order.
+// 4. Otherwise a storefront search on the product's base name.
+// A customized order's saved product id/slug is deliberately not used: the customizer substitutes an
+// arbitrary catalogue product when it is opened without one.
+function storeItemLink(
+  item: OrderDetail["items"][number],
+  catalogue: StorefrontProduct[] | undefined,
+): { href: string; label: string } {
   const config = item.configurationSnapshot ?? {};
-  const source = [config.sourceProductSlug, config.sourceProductId, item.variantSnapshot.productSlug, item.variantSnapshot.productId]
-    .find((v): v is string => typeof v === "string" && v.length > 0);
-  if (source) return { href: `https://canvassindia.com/products/${encodeURIComponent(source)}`, label: "View product on store ↗" };
+  const open = (slug: string) => ({ href: `https://canvassindia.com/products/${encodeURIComponent(slug)}`, label: "View product on store ↗" });
+  const source = [config.sourceProductSlug, config.sourceProductId].find((v): v is string => typeof v === "string" && v.length > 0);
+  if (source) return open(source);
+  const file = imageFileName(item.variantSnapshot.imageUrl);
+  if (file && catalogue) {
+    const matches = catalogue.filter((p) =>
+      [p.storefront?.image, ...(p.storefront?.images ?? [])].some((img) => imageFileName(img) === file) && p.storefront?.slug);
+    const material = typeof config.material === "string" ? config.material : null;
+    const best = matches.find((p) => material && p.storefront?.categorySlug === material) ?? matches[0];
+    if (best?.storefront?.slug) return open(best.storefront.slug);
+  }
+  const isCustomized = typeof config.productTypeId === "string";
+  const ref = item.variantSnapshot.productSlug || item.variantSnapshot.productId;
+  if (ref && !isCustomized) return open(ref);
   const baseName = item.productNameSnapshot.split(" - ")[0].trim();
   return { href: `https://canvassindia.com/search?q=${encodeURIComponent(baseName)}`, label: "Find product on store ↗" };
 }
@@ -235,6 +264,13 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
   });
 
   const order = isQaDummy ? QA_DUMMY_ORDER : fetchedOrder;
+
+  // Public catalogue, used to resolve each order line to its storefront product page.
+  const { data: catalogue } = useQuery({
+    queryKey: ["storefront-catalogue"],
+    staleTime: 10 * 60 * 1000,
+    queryFn: () => apiClient.get<StorefrontProduct[]>("/products"),
+  });
 
   const cancelMutation = useMutation({
     mutationFn: () => apiClient.post(`/orders/${id}/cancel`),
@@ -397,7 +433,7 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
                       for a historical order (scope §89/§114). */}
                   <div className="font-medium">{item.productNameSnapshot}</div>
                   {(() => {
-                    const link = storeItemLink(item);
+                    const link = storeItemLink(item, catalogue);
                     return (
                       <a
                         href={link.href}
