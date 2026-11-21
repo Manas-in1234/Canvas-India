@@ -6,6 +6,7 @@ import {
   getProductSupportedShapes
 } from '../data/productSizeShapeConfig';
 import { bulkUnitPriceFor, MIN_BULK_QTY } from '../pages/BulkOrdersPage';
+import { fetchPricingRates, SHAPE_AREA_RATE_FALLBACK } from '../api/pricingSettingsApi';
 
 export interface SelectSizeShapeModalProps {
   isOpen: boolean;
@@ -1076,14 +1077,30 @@ const SelectSizeShapeModalContent: React.FC<SelectSizeShapeModalProps> = ({
     return currentCategoryOptions.find((o) => o.id === selectedOptionId) || currentCategoryOptions[0];
   }, [currentCategoryOptions, selectedOptionId]);
 
+  // A custom size that equals a catalog size (either orientation) costs exactly that size's price, so
+  // typing 16 x 16 never differs from the 16" x 16" card. Other sizes use the per-sq-inch rate.
+  const [canvasAreaRate, setCanvasAreaRate] = useState<number>(SHAPE_AREA_RATE_FALLBACK);
+  useEffect(() => {
+    let cancelled = false;
+    fetchPricingRates().then((rates) => { if (!cancelled) setCanvasAreaRate(rates.shapeAreaRates.canvas); });
+    return () => { cancelled = true; };
+  }, []);
+  const customSizePriceFor = (rawW: number, rawH: number): number => {
+    const w = Math.max(8, rawW);
+    const h = Math.max(8, rawH);
+    const catalog = isSinglePrint ? Object.values(singlePrintSizes).flat() : shapedProductOptions;
+    const match = catalog.find((o) => o.widthInches && o.heightInches
+      && ((o.widthInches === w && o.heightInches === h) || (o.widthInches === h && o.heightInches === w)));
+    if (match) return match.price;
+    return Math.round(w * h * (material === 'acrylic' ? 4.5 : canvasAreaRate));
+  };
+
   // Confirmation handler
   const handleApply = () => {
     if (showCustomSize) {
       const w = Math.max(8, Math.min(48, Number(localCustomW) || 10));
       const h = Math.max(8, Math.min(48, Number(localCustomH) || 10));
-      const sqInches = w * h;
-      const rate = material === 'acrylic' ? 4.5 : 2.5;
-      const calculatedPrice = Math.round(sqInches * rate);
+      const calculatedPrice = customSizePriceFor(w, h);
 
       onSelectSizeAndShape({
         shapeId: currentShapeId || (w === h ? 'shape-square' : 'shape-rectangle'),
@@ -1450,9 +1467,7 @@ const SelectSizeShapeModalContent: React.FC<SelectSizeShapeModalProps> = ({
                 {showCustomSize && (
                   <span className="text-xs font-bold text-[#0E4A93]">
                     ₹
-                    {Math.round(
-                      Math.max(8, Number(localCustomW) || 0) * Math.max(8, Number(localCustomH) || 0) * (material === 'acrylic' ? 4.5 : 2.5)
-                    ).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    {customSizePriceFor(Number(localCustomW) || 0, Number(localCustomH) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                 )}
               </div>
@@ -1530,9 +1545,7 @@ const SelectSizeShapeModalContent: React.FC<SelectSizeShapeModalProps> = ({
               ₹
               {showCustomSize
                 ? displayPrice(
-                    Math.round(
-                      Math.max(8, Number(localCustomW) || 0) * Math.max(8, Number(localCustomH) || 0) * (material === 'acrylic' ? 4.5 : 2.5)
-                    )
+                    customSizePriceFor(Number(localCustomW) || 0, Number(localCustomH) || 0)
                   ).toLocaleString('en-IN', { minimumFractionDigits: 2 })
                 : currentSelectedOption && displayPrice(currentSelectedOption.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </span>
