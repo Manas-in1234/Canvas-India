@@ -69,6 +69,15 @@ const CONFIG_LABEL_OVERRIDES: Record<string, string> = {
   lyricLayout: "Lyric Layout",
 };
 
+// Link to the product on the live storefront. Orders placed before product ids were saved have neither a
+// slug nor an id, so they fall back to a storefront search on the product's base name.
+function storeProductUrl(item: OrderDetail["items"][number]): string {
+  const ref = item.variantSnapshot.productSlug || item.variantSnapshot.productId;
+  if (ref) return `https://canvassindia.com/products/${encodeURIComponent(ref)}`;
+  const baseName = item.productNameSnapshot.split(" - ")[0].trim();
+  return `https://canvassindia.com/search?q=${encodeURIComponent(baseName)}`;
+}
+
 function formatConfigLabel(key: string): string {
   if (CONFIG_LABEL_OVERRIDES[key]) return CONFIG_LABEL_OVERRIDES[key];
   return key
@@ -384,16 +393,16 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
                   {/* Always render snapshot fields — never re-fetch live product data
                       for a historical order (scope §89/§114). */}
                   <div className="font-medium">{item.productNameSnapshot}</div>
-                  {(item.variantSnapshot.productSlug || item.variantSnapshot.productId) && (
-                    <a
-                      href={`https://canvassindia.com/products/${encodeURIComponent((item.variantSnapshot.productSlug || item.variantSnapshot.productId) as string)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs font-medium text-primary underline-offset-2 hover:underline"
-                    >
-                      View product on store ↗
-                    </a>
-                  )}
+                  <a
+                    href={storeProductUrl(item)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                  >
+                    {item.variantSnapshot.productSlug || item.variantSnapshot.productId
+                      ? "View product on store ↗"
+                      : "Find product on store ↗"}
+                  </a>
                   <div className="text-sm text-muted-foreground">
                     SKU: {item.variantSnapshot.sku}
                   </div>
