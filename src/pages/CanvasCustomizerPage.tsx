@@ -7305,7 +7305,33 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   };
 
   // Add to Cart Action
-  const handleAddToCart = () => {
+  // Renders the live preview (frame, wrap, text, layout, every panel's photo as the shopper arranged it)
+  // into a small JPEG that is saved with the order, so admins see exactly what was customized.
+  // Best effort: any failure (e.g. a photo host that blocks cross-origin reads) just means no preview.
+  const captureDesignPreview = async (): Promise<string | undefined> => {
+    const node = stageRef.current;
+    if (!node) return undefined;
+    try {
+      const { toJpeg } = await import('html-to-image');
+      const rect = node.getBoundingClientRect();
+      if (!rect.width || !rect.height) return undefined;
+      const pixelRatio = Math.min(1, 720 / Math.max(rect.width, rect.height));
+      const keep = (el: Node): boolean => {
+        if (!(el instanceof HTMLElement)) return !(el.nodeType === 3 && /^s*[d.]+s*inch/.test(el.textContent || ''));
+        if (el.tagName === 'BUTTON' || el.dataset.noCapture !== undefined) return false;
+        return !(el.children.length === 0 && /^s*[d.]+s*inch/.test(el.textContent || ''));
+      };
+      for (const quality of [0.82, 0.6, 0.4]) {
+        const url = await toJpeg(node, { quality, pixelRatio, backgroundColor: '#ffffff', filter: keep });
+        if (url.length <= 550_000) return url;
+      }
+    } catch (error) {
+      console.warn('Could not capture a design preview for the order:', error);
+    }
+    return undefined;
+  };
+
+  const handleAddToCart = async () => {
     // The live preview always needs a real size/thickness/wrap/etc. selected
     // internally to render - but a shopper who never touched any picker
     // shouldn't be charged for whichever option happened to be cheapest by
@@ -7328,6 +7354,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
     const firstImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || catalogProduct.image;
     const retouchLabels = RETOUCH_CHECKS.filter((r) => retouchChecks[r.id]).map((r) => r.label);
+    const previewImage = await captureDesignPreview();
 
     onAddToCartCustomized({
       product: {
@@ -7391,6 +7418,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             return hw?.name || hw?.label || 'No Hooks';
           })(),
       customizationDetails: {
+        previewImage,
         material: activeMaterial,
         productTypeId: selectedProductTypeId,
         sizeId: activeStyleLayout?.id ?? selectedSizeId,
