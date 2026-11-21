@@ -6142,13 +6142,27 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       selectedMaterialId !== baseline.selectedMaterialId ||
       selectedLaminationId !== baseline.selectedLaminationId ||
       selectedDisplayOptionId !== baseline.selectedDisplayOptionId ||
-      selectedBorderWidthId !== baseline.selectedBorderWidthId;
+      selectedBorderWidthId !== baseline.selectedBorderWidthId ||
+      isCustomSize;
     if (changed) setHasCustomized(true);
   }, [
     hasCustomized, selectedSizeId, selectedShapeId, selectedWrapId, selectedThicknessId,
     selectedHardwareId, selectedFrameId, selectedBackingId, selectedFinishId,
-    selectedMaterialId, selectedLaminationId, selectedDisplayOptionId, selectedBorderWidthId,
+    selectedMaterialId, selectedLaminationId, selectedDisplayOptionId, selectedBorderWidthId, isCustomSize,
   ]);
+
+  // "Set size" button beside the custom size fields: applies whatever is typed and marks the size as
+  // chosen, so the price appears in the header total.
+  const confirmCustomSize = () => {
+    const [lo, hi] = [customSizeSteps[0], customSizeSteps[customSizeSteps.length - 1]];
+    const clamp = (raw: string, fallback: number) => Math.max(lo, Math.min(hi, Number(raw) || fallback));
+    const w = clamp(customWidthDraft, customWidth);
+    const h = selectedProductTypeId === 'canvas-round' ? w : clamp(customHeightDraft, customHeight);
+    setCustomWidth(w);
+    setCustomHeight(h);
+    setIsCustomSize(true);
+    setHasCustomized(true);
+  };
 
   const totalPrice = hasCustomized ? unitPrice * quantity : 0;
   const acrylicHardwarePrice = selectedHardwareId === 'acrylic-standoffs'
@@ -10883,6 +10897,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       <div className="text-xs font-black text-[#0E4A93] ml-2">
                         ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(customSizePrice, quantity) : customSizePrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
+                      <button
+                        type="button"
+                        onClick={confirmCustomSize}
+                        className="px-3 py-1.5 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                      >
+                        Set size
+                      </button>
                     </div>
                   </div>
 
@@ -10982,6 +11003,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         <div className="text-xs font-black text-[#0E4A93] ml-2">
                           ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(customSizePrice, quantity) : customSizePrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
+                        <button
+                          type="button"
+                          onClick={confirmCustomSize}
+                          className="px-3 py-1.5 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                        >
+                          Set size
+                        </button>
                       </div>
                     ) : (
                       <div className="flex items-center justify-center gap-2 flex-wrap">
@@ -11013,6 +11041,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         <div className="text-xs font-black text-[#0E4A93] ml-2">
                           ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(customSizePrice, quantity) : customSizePrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
+                        <button
+                          type="button"
+                          onClick={confirmCustomSize}
+                          className="px-3 py-1.5 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                        >
+                          Set size
+                        </button>
                       </div>
                     )}
                   </div>
