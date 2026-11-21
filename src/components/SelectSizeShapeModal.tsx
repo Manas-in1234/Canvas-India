@@ -1085,13 +1085,17 @@ const SelectSizeShapeModalContent: React.FC<SelectSizeShapeModalProps> = ({
     fetchPricingRates().then((rates) => { if (!cancelled) setCanvasAreaRate(rates.shapeAreaRates.canvas); });
     return () => { cancelled = true; };
   }, []);
+  // Plain canvas prints are priced as width x height x the admin canvas rate, matching the customizer.
+  const isAreaPricedCanvas = material === 'canvas' && ['canvas-single', 'canvas-classic'].includes(productId.toLowerCase());
+  const optionPrice = (o: { price: number; widthInches?: number; heightInches?: number }): number =>
+    isAreaPricedCanvas && o.widthInches && o.heightInches ? Math.round(o.widthInches * o.heightInches * canvasAreaRate) : o.price;
   const customSizePriceFor = (rawW: number, rawH: number): number => {
     const w = Math.max(8, rawW);
     const h = Math.max(8, rawH);
     const catalog = isSinglePrint ? Object.values(singlePrintSizes).flat() : shapedProductOptions;
     const match = catalog.find((o) => o.widthInches && o.heightInches
       && ((o.widthInches === w && o.heightInches === h) || (o.widthInches === h && o.heightInches === w)));
-    if (match) return match.price;
+    if (match && !isAreaPricedCanvas) return match.price;
     return Math.round(w * h * (material === 'acrylic' ? 4.5 : canvasAreaRate));
   };
 
@@ -1121,7 +1125,7 @@ const SelectSizeShapeModalContent: React.FC<SelectSizeShapeModalProps> = ({
         sizeId: currentSelectedOption.id,
         widthInches: currentSelectedOption.widthInches,
         heightInches: currentSelectedOption.heightInches,
-        price: currentSelectedOption.price,
+        price: optionPrice(currentSelectedOption),
         label: currentSelectedOption.label,
         isCustom: false,
         arrangement: currentSelectedOption.arrangement,
@@ -1145,7 +1149,7 @@ const SelectSizeShapeModalContent: React.FC<SelectSizeShapeModalProps> = ({
       sizeId: option.id,
       widthInches: option.widthInches,
       heightInches: option.heightInches,
-      price: option.price,
+      price: optionPrice(option),
       label: option.label,
       isCustom: false,
       arrangement: option.arrangement,
@@ -1427,7 +1431,7 @@ const SelectSizeShapeModalContent: React.FC<SelectSizeShapeModalProps> = ({
                       {opt.label}
                     </span>
                     <span className="text-sm font-extrabold text-[#0E4A93]">
-                      ₹{displayPrice(opt.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      ₹{displayPrice(optionPrice(opt)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
@@ -1547,7 +1551,7 @@ const SelectSizeShapeModalContent: React.FC<SelectSizeShapeModalProps> = ({
                 ? displayPrice(
                     customSizePriceFor(Number(localCustomW) || 0, Number(localCustomH) || 0)
                   ).toLocaleString('en-IN', { minimumFractionDigits: 2 })
-                : currentSelectedOption && displayPrice(currentSelectedOption.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                : currentSelectedOption && displayPrice(optionPrice(currentSelectedOption)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </span>
           </div>
           <div className="flex items-center justify-end gap-2.5">

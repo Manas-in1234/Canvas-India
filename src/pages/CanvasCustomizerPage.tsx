@@ -4561,20 +4561,24 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Client pricing sheet: acrylic is billed per sq inch by thickness (3mm 5.50, 5mm 6.50, 6mm 7.75,
   // 8mm 9.50) and canvas at 1.65 per sq inch. Studs are 50 each, minimum 4.
   const acrylicSizeRate = activeMaterial === 'acrylic' ? acrylicThicknessRates[selectedThicknessId] : undefined;
+  // Plain canvas prints are priced the same way from the admin dashboard's canvas rate, so every
+  // size (preset cards and custom) is width x height x rate.
+  const canvasAreaRate = activeMaterial === 'canvas' && isSinglePrintCanvas ? shapeAreaRates.canvas : undefined;
+  const sizeAreaRate = acrylicSizeRate ?? canvasAreaRate;
   const areaPriced = (width: number | undefined, height: number | undefined, fallback: number): number =>
-    acrylicSizeRate && width && height ? Math.round(width * height * acrylicSizeRate) : fallback;
+    sizeAreaRate && width && height ? Math.round(width * height * sizeAreaRate) : fallback;
   // A custom size that equals a size in the catalog (either orientation) must cost exactly what that
   // catalog size costs, so typing 16 x 16 never differs from tapping the 16" x 16" card. Only sizes
   // with no catalog entry fall back to the per-sq-inch rate.
   const customSizePrice = useMemo(() => {
-    if (!acrylicSizeRate) {
+    if (!sizeAreaRate) {
       const match = availableSizeOptions.find((opt) => opt.panels.length === 1 && opt.widthInches && opt.heightInches
         && ((opt.widthInches === customWidth && opt.heightInches === customHeight)
           || (opt.widthInches === customHeight && opt.heightInches === customWidth)));
       if (match) return match.price;
     }
-    return Math.round(customWidth * customHeight * (acrylicSizeRate ?? shapeAreaRates.canvas));
-  }, [customWidth, customHeight, acrylicSizeRate, shapeAreaRates, availableSizeOptions]);
+    return Math.round(customWidth * customHeight * (sizeAreaRate ?? shapeAreaRates.canvas));
+  }, [customWidth, customHeight, sizeAreaRate, shapeAreaRates, availableSizeOptions]);
   const studsPrice = (count: number): number => Math.max(4, count) * 50;
   const [selectedDisplayOptionId, setSelectedDisplayOptionId] = useState<string>('open-back');
 
