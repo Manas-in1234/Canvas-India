@@ -480,8 +480,18 @@ export class DelhiveryClient {
       }),
     });
     if (!res.ok || data?.error || data?.success === false) {
-      const why = [data?.error, data?.message, data?.rmk].find((v) => typeof v === 'string' && v.trim());
-      throw new DelhiveryError(`Delhivery did not schedule the pickup${why ? `: ${why}` : '.'}`, res.status >= 500 ? 502 : 422, data);
+      // Delhivery nests its reason in different places (error.message, data.message, errors[]...), so dig for text.
+      const pick = (v: any, depth = 0): string | undefined => {
+        if (typeof v === 'string') return v.trim() || undefined;
+        if (!v || typeof v !== 'object' || depth > 3) return undefined;
+        for (const k of ['error', 'message', 'rmk', 'remark', 'detail', 'errors', 'data']) {
+          const found = Array.isArray(v[k]) ? v[k].map((x: any) => pick(x, depth + 1)).find(Boolean) : pick(v[k], depth + 1);
+          if (found) return found;
+        }
+        return undefined;
+      };
+      const why = pick(data) ?? (typeof data?.raw === 'string' ? data.raw.slice(0, 200) : undefined);
+      throw new DelhiveryError(`Delhivery did not schedule the pickup (HTTP ${res.status})${why ? `: ${why}` : '.'}`, res.status >= 500 ? 502 : 422, data);
     }
     const id = data?.pickup_id ?? data?.pickup_request_id ?? data?.id ?? null;
     return { pickupId: id === null || id === undefined ? null : String(id), raw: data };
