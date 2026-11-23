@@ -7430,7 +7430,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         sourceProductSlug: sourceProduct?.slug,
         material: activeMaterial,
         productTypeId: selectedProductTypeId,
-        sizeId: activeStyleLayout?.id ?? selectedSizeId,
+        // A custom size is not the preset that happened to be selected underneath it, so record the real dimensions.
+        sizeId: activeStyleLayout?.id ?? (isCustomSize && canUseCustomSize ? `custom-${customWidth}x${customHeight}` : selectedSizeId),
         customLayout: activeStyleLayout ? {
           id: activeStyleLayout.id, name: activeStyleLayout.name, outline: activeStyleLayout.outline,
           shapeId: activeStyleLayout.shapeId, width: activeStyleLayout.overallWidthInches,
