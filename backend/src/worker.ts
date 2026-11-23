@@ -343,6 +343,38 @@ function isPubliclyVisible(product: { status?: string; productType?: { isActive?
   return product.status === 'ACTIVE' && product.productType?.isActive !== false;
 }
 
+const GENERIC_CUSTOM_STYLE_REGEX = /^(canvas|acrylic)-(single|classic|round|triangle|heart|oval|wall-art|collage|hexagon|split|mosaic|lyric|digital-painting|quotes|bus-roll|banner|pop-art|word-art|square|panoramic|print)$/i;
+
+function isPersonalizedCustomItem(item: any): boolean {
+  if (!item) return false;
+  const details = item.customizationDetails || item.customization_details;
+  if (!details) return false;
+
+  // 1. Explicit flags from customizer
+  if (details.hasUserUploadedPhoto === true) return true;
+  if (details.hasUserUploadedPhoto === false || details.isReadyMadeCatalogue === true) return false;
+
+  // 2. Source product from catalogue
+  const source = String(details.sourceProductId || details.sourceProductSlug || '').toLowerCase();
+  if (source && !GENERIC_CUSTOM_STYLE_REGEX.test(source) && source !== 'canvas' && source !== 'acrylic' && source !== 'single') {
+    return false; // Ready-made catalogue design customized for size/frame!
+  }
+
+  // 3. Virtual or workbench product IDs
+  const productId = String(item.productId || item.product_id || '').toLowerCase();
+  const title = String(item.title || item.name || '').toLowerCase();
+  if (productId.startsWith('custom-') || productId.startsWith('bench-')) return true;
+
+  // 4. Generic customizer names
+  const genericPrefixes = ['single print', 'classic canvas', 'wall display', 'round canvas', 'heart canvas', 'split canvas', 'canvas collage', 'acrylic print'];
+  if (genericPrefixes.some(g => title.startsWith(g) || productId.startsWith(g))) {
+    return true;
+  }
+
+  // 5. If no catalogue source, it's a personalized item
+  return !source;
+}
+
 async function findPublicProductTypes(prisma: PrismaClient) {
   try {
     return await prisma.productType.findMany({ where: { isActive: true }, orderBy: { name: 'asc' } });
@@ -847,7 +879,9 @@ export default {
       // single admin endpoint to read/update the whole set.
       // -------------------------------------------------------------
       if (pathname === '/api/v1/store-settings' && method === 'GET') {
-        const settings = await prisma.storeSetting.findMany({ select: { key: true, value: true } });
+        const settings = prisma.storeSetting
+          ? await prisma.storeSetting.findMany({ select: { key: true, value: true } }).catch(() => [])
+          : [];
         return jsonResponse(Object.fromEntries(settings.map(s => [s.key, s.value])), 200, request);
       }
       if (pathname === '/api/v1/admin/store-settings') {
@@ -1778,11 +1812,11 @@ export default {
           const existing = await findCodOrder();
           if (existing) return jsonResponse(codReceipt(existing), 200, request);
 
-          const hasCustomizedItem = items.some(item => item.customizationDetails || item.customization_details);
-          if (hasCustomizedItem) {
+          const hasPersonalizedItem = items.some(isPersonalizedCustomItem);
+          if (hasPersonalizedItem) {
             const codSetting = await prisma.storeSetting?.findUnique({ where: { key: 'cod_enabled_for_customizer' } }).catch(() => null);
             if (codSetting?.value !== '1') {
-              return jsonResponse({ message: 'Cash on Delivery is not available for customized products. Please pay online to check out.' }, 422, request);
+              return jsonResponse({ message: 'Cash on Delivery is not available for custom prints created with personal photos. Please pay online to complete your order.' }, 422, request);
             }
           }
 
@@ -2992,9 +3026,7 @@ export default {
       if (status >= 500) {
         console.error('API request failed', { method, pathname, status, code: err?.code, ray: request.headers.get('cf-ray') });
       }
-      const message = status >= 500 && env.NODE_ENV !== 'development'
-        ? status === 503 ? 'The service is temporarily unavailable. Try again shortly.' : 'The server could not complete the request.'
-        : err?.message || 'Internal server error';
+      const message = status >= 503 ? 'The service is temporarily unavailable. Try again shortly.' : (err?.message || 'The server could not complete the request.');
       return jsonResponse({ statusCode: status, message, stack: env.NODE_ENV === 'development' ? err?.stack : undefined }, status, request);
     } finally {
       if (requestPrisma) {

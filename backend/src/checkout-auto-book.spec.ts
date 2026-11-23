@@ -21,7 +21,7 @@ function basePrisma(overrides: Record<string, unknown> = {}) {
 }
 
 const address = { name: 'Test Customer', phone: '9000000000', street_address: 'Test address', city: 'Hyderabad', state: 'Telangana', postal_code: '500001' };
-const place = (prisma: unknown, total = 599) =>
+const place = (prisma: unknown, total = 689) =>
   worker.fetch(
     new Request('https://test.invalid/api/v1/storefront/orders', {
       method: 'POST',

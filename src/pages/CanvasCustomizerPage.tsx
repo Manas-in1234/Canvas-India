@@ -168,6 +168,7 @@ import { CustomizerPreloader, PRELOADER_MIN_MS } from '../components/CustomizerP
 import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
 import { AcrylicRoomViewModal, RoomPlacementState } from '../components/AcrylicRoomViewModal';
 import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
+import { isGenericCustomStyleId } from '../utils/codEligibility';
 import { SelectLayoutModal, LayoutModalOption } from '../components/SelectLayoutModal';
 import { fetchStyleLayouts } from '../api/styleLayoutsApi';
 import { EmptyLayoutPanel, ShapedLayoutWorkspace } from '../components/ShapedLayoutWorkspace';
@@ -7369,6 +7370,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const sourceProduct = sourceKey
       ? (Array.isArray(allProducts) ? allProducts : []).find((p) => p.id === sourceKey || p.slug === sourceKey)
       : undefined;
+    const isReadyMadeCatalogue = isPrefillMode || Boolean(sourceProduct && !isGenericCustomStyleId(sourceProduct.id) && !isGenericCustomStyleId(sourceProduct.slug));
+    const hasUserUploadedPhoto = !isReadyMadeCatalogue;
+    const prefillTitle = searchParams.get('prefillName');
 
     onAddToCartCustomized({
       product: {
@@ -7389,6 +7393,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           ? `${selectedProductType.name} (${(POP_ART_STYLES.find((style) => style.id === popArtConfig.selectedStyleId) ?? getPopArtStyle(popArtConfig.selectedStyleId)).name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
           : isLyricProduct
           ? `${selectedProductType.name} (${selectedLyricTemplate.name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
+          : isPrefillMode && prefillTitle
+          ? prefillTitle
+          : (sourceProduct && !isGenericCustomStyleId(sourceProduct.id) && !isGenericCustomStyleId(sourceProduct.slug))
+          ? sourceProduct.name
           : `${selectedProductType.name} - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
       },
       size: isWordArtProduct
@@ -7435,6 +7443,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         previewImage,
         sourceProductId: sourceProduct?.id,
         sourceProductSlug: sourceProduct?.slug,
+        isReadyMadeCatalogue,
+        hasUserUploadedPhoto,
         material: activeMaterial,
         productTypeId: selectedProductTypeId,
         // A custom size is not the preset that happened to be selected underneath it, so record the real dimensions.

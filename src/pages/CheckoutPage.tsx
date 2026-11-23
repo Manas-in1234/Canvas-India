@@ -10,6 +10,7 @@ import { paymentService } from '../services/paymentService';
 import { delhiveryService, PincodeServiceabilityResult } from '../services/delhiveryService';
 import { validateDiscountCode, DiscountValidationError } from '../api/discountsApi';
 import { fetchStoreSettings, type StoreSettings } from '../api/storeSettingsApi';
+import { isUserPersonalizedItem } from '../utils/codEligibility';
 import { Address } from '../types/auth';
 import {
   ShieldCheck,
@@ -339,16 +340,15 @@ export const CheckoutPage: React.FC = () => {
 
   const checkoutPin = getEffectiveShippingAddress().postal_code;
   const isPinCodBlocked = codAvailability?.pin === checkoutPin && codAvailability.available === false;
-  const hasCustomizedItem = cartItems.some((item) => item.customizationDetails);
-  const isCodBlockedForCustomizer = hasCustomizedItem && !storeSettings.cod_enabled_for_customizer;
+  const hasPersonalizedItem = cartItems.some(isUserPersonalizedItem);
+  const isCodBlockedForCustomizer = hasPersonalizedItem && !storeSettings.cod_enabled_for_customizer;
   const codAvailable = !isPinCodBlocked && !isCodBlockedForCustomizer;
   const isCod = shippingMethod === 'cod';
 
   useEffect(() => {
-    // If the cart changes to include a customized item (or the admin
-    // disables COD for customized orders) while COD is already selected,
-    // fall back to online payment instead of letting checkout proceed with
-    // a now-invalid shipping method.
+    // If the cart changes to include a personalized custom item with personal photo
+    // while COD is already selected, fall back to online payment instead of letting
+    // checkout proceed with a now-invalid payment method.
     if (isCod && isCodBlockedForCustomizer) setShippingMethod('standard');
   }, [isCod, isCodBlockedForCustomizer]);
 
@@ -994,42 +994,51 @@ export const CheckoutPage: React.FC = () => {
                       </div>
                       <span className="text-xs font-bold text-[#002B49]">₹199</span>
                     </label>
-                    {!isCodBlockedForCustomizer && (
-                      <label
-                        onClick={() => {
-                          if (!processing && !isPinCodBlocked) setShippingMethod('cod');
-                        }}
-                        className={`flex items-center justify-between gap-3 p-4 rounded-xl border transition ${
-                          isPinCodBlocked
-                            ? 'border-gray-200 opacity-60 cursor-not-allowed bg-gray-50/50'
-                            : isCod
-                            ? 'border-[#002B49] ring-2 ring-[#002B49] bg-blue-50/30 cursor-pointer'
-                            : 'border-gray-200 hover:border-gray-300 cursor-pointer'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="radio"
-                            name="shipping_method"
-                            checked={isCod}
-                            disabled={processing || isPinCodBlocked}
-                            onChange={() => setShippingMethod('cod')}
-                            className="text-[#002B49] focus:ring-[#002B49] cursor-pointer"
-                          />
-                          <div>
-                            <p className="text-xs font-bold text-gray-900">Cash on Delivery</p>
-                            <p className="text-[11px] text-gray-500">
-                              {isPinCodBlocked
-                                ? 'Unavailable for this PIN code.'
-                                : 'Standard delivery (3–5 business days). Pay when your order arrives.'}
-                            </p>
-                          </div>
+                    <label
+                      onClick={() => {
+                        if (!processing && !isPinCodBlocked && !isCodBlockedForCustomizer) setShippingMethod('cod');
+                      }}
+                      className={`flex items-center justify-between gap-3 p-4 rounded-xl border transition ${
+                        isPinCodBlocked || isCodBlockedForCustomizer
+                          ? 'border-gray-200 opacity-60 cursor-not-allowed bg-gray-50/50'
+                          : isCod
+                          ? 'border-[#002B49] ring-2 ring-[#002B49] bg-blue-50/30 cursor-pointer'
+                          : 'border-gray-200 hover:border-gray-300 cursor-pointer'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="shipping_method"
+                          checked={isCod && !isCodBlockedForCustomizer}
+                          disabled={processing || isPinCodBlocked || isCodBlockedForCustomizer}
+                          onChange={() => {
+                            if (!isCodBlockedForCustomizer) setShippingMethod('cod');
+                          }}
+                          className="text-[#002B49] focus:ring-[#002B49] cursor-pointer disabled:cursor-not-allowed"
+                        />
+                        <div>
+                          <p className="text-xs font-bold text-gray-900 flex items-center gap-2">
+                            <span>Cash on Delivery</span>
+                            {isCodBlockedForCustomizer && (
+                              <span className="text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded">
+                                Online Payment Only
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-[11px] text-gray-500">
+                            {isCodBlockedForCustomizer
+                              ? 'Unavailable for custom prints created with personal photos. Please pay securely online.'
+                              : isPinCodBlocked
+                              ? 'Unavailable for this PIN code.'
+                              : 'Standard delivery (3–5 business days). Pay when your order arrives.'}
+                          </p>
                         </div>
-                        <span className="text-xs font-bold text-[#002B49]">
-                          {subtotal >= 999 ? 'FREE' : '₹99'}{storeSettings.cod_surcharge > 0 ? ` + ₹${storeSettings.cod_surcharge} COD fee` : ''}
-                        </span>
-                      </label>
-                    )}
+                      </div>
+                      <span className="text-xs font-bold text-[#002B49]">
+                        {subtotal >= 999 ? 'FREE' : '₹99'}{storeSettings.cod_surcharge > 0 ? ` + ₹${storeSettings.cod_surcharge} COD fee` : ''}
+                      </span>
+                    </label>
                   </div>
                 </div>
 

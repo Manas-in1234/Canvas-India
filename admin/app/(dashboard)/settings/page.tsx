@@ -83,10 +83,10 @@ function StorePoliciesCard() {
               onChange={(e) => setCodEnabledForCustomizer(e.target.checked)}
               className="h-4 w-4 rounded border-input"
             />
-            Allow Cash on Delivery for customized products
+            Allow Cash on Delivery for custom photo prints
           </label>
           <p className="text-xs text-muted-foreground">
-            Off by default: an order containing a product built in the customizer must be paid online. Turn this on to let customers pay by COD for those too.
+            Off by default: orders with personalized custom prints (customer&apos;s own photos) must be paid online to protect against non-delivery losses. Ready-made catalogue designs always allow Cash on Delivery.
           </p>
         </div>
         <div className="space-y-2">
