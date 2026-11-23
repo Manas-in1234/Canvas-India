@@ -119,8 +119,15 @@ function formatConfigLabel(key: string): string {
 
 // sizeId is an internal id ("single-16x16", "custom-12x18"); show the actual dimensions instead.
 // Multi-panel layout ids (e.g. "wd-3p-12x18-10x8") are left as they are.
-function formatConfigValue(key: string, value: string): string {
+function formatConfigValue(key: string, value: string, itemName = ""): string {
   if (key !== "sizeId") return value;
+  // Orders placed before custom sizes were recorded correctly hold the preset that was selected
+  // underneath the custom size. The item title always carries the size the customer was charged for.
+  const titleSize = itemName.match(/(\d+(?:\.\d+)?)\s*"?\s*[x×]\s*(\d+(?:\.\d+)?)\s*"?\s*(?:\(|$)/i);
+  const presetDims = value.match(/^[a-z]+-(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)$/i);
+  if (titleSize && presetDims && (titleSize[1] !== presetDims[1] || titleSize[2] !== presetDims[2])) {
+    return `${titleSize[1]}" × ${titleSize[2]}" (custom)`;
+  }
   const custom = value.match(/^custom-(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)$/);
   if (custom) return `${custom[1]}" × ${custom[2]}" (custom)`;
   const preset = value.match(/^[a-z]+-(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)$/i);
@@ -128,7 +135,7 @@ function formatConfigValue(key: string, value: string): string {
   return value;
 }
 
-function getConfigEntries(configurationSnapshot: Record<string, unknown> | null): [string, string][] {
+function getConfigEntries(configurationSnapshot: Record<string, unknown> | null, itemName = ""): [string, string][] {
   if (!configurationSnapshot) return [];
   return Object.entries(configurationSnapshot)
     .filter(([key, value]) => {
@@ -142,6 +149,7 @@ function getConfigEntries(configurationSnapshot: Record<string, unknown> | null)
       formatConfigValue(
         key,
         Array.isArray(value) ? value.join(", ") : typeof value === "boolean" ? (value ? "Yes" : "No") : String(value),
+        itemName,
       ),
     ]);
 }
@@ -470,9 +478,9 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
                   <div className="text-sm text-muted-foreground">
                     Qty: {item.quantity}
                   </div>
-                  {getConfigEntries(item.configurationSnapshot).length > 0 && (
+                  {getConfigEntries(item.configurationSnapshot, item.productNameSnapshot).length > 0 && (
                     <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                      {getConfigEntries(item.configurationSnapshot).map(([label, value]) => (
+                      {getConfigEntries(item.configurationSnapshot, item.productNameSnapshot).map(([label, value]) => (
                         <span key={label}>
                           <span className="font-medium text-foreground/80">{label}:</span> {value}
                         </span>

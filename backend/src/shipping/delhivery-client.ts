@@ -151,7 +151,8 @@ export function estimatePackage(
   let sized = false;
   for (const item of items) {
     const qty = Math.max(1, Number(item.quantity) || 1);
-    const size = parsePrintSize(item.config);
+    // Older orders have no size in the config; the item title still carries the size that was bought.
+    const size = parsePrintSize(item.config) ?? parsePrintSize({ size: item.name });
     const isAcrylic = /acrylic/i.test(`${item.name ?? ''} ${item.config?.material ?? ''} ${item.config?.type ?? ''}`);
     const w = size?.w ?? 12;
     const h = size?.h ?? 12;
