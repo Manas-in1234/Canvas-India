@@ -141,7 +141,6 @@ export function fromGlobalItem(item: OptionCategoryItem): EditableItem {
 type SeedItem = { label: string; description: string; flatPrice: string; extras: Record<string, unknown> };
 
 export const CANVAS_THICKNESS_SEED_ITEMS: SeedItem[] = [
-  { label: "No Wrap", description: "Flat-mounted canvas with no wraparound edge depth", flatPrice: "0.00", extras: { id: "no-wrap-thickness", name: "No Wrap", thicknessInches: 0, depthPx: 4, badge: "" } },
   { label: "Canvas Lite", description: "Ultra slim & lightweight, economical mount", flatPrice: "148.50", extras: { id: "canvas-lite", name: "Canvas Lite", thicknessInches: 0.5, depthPx: 12, badge: "" } },
   { label: "Thin Gallery Wrap", description: "Standard modern gallery profile", flatPrice: "193.05", extras: { id: "thin-gallery", name: "Thin Gallery Wrap", thicknessInches: 0.75, depthPx: 18, badge: "Recommended" } },
   { label: "Thick Gallery Wrap", description: "Museum-grade premium deep projection", flatPrice: "231.66", extras: { id: "thick-gallery", name: "Thick Gallery Wrap", thicknessInches: 1.5, depthPx: 30, badge: "Museum Quality" } },

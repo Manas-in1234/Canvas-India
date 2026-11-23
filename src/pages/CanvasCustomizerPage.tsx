@@ -4294,28 +4294,29 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Thickness cards are admin-managed (name, price, icon, badge, order, hidden/deleted).
   // Until the team sets them up, the built-in lists below are used unchanged.
   const CANVAS_THICKNESS_OPTIONS = useMemo(() => {
-    let list = BASE_CANVAS_THICKNESS_OPTIONS;
-    if (liveCanvasThickness.length > 0 || overriddenKeys.has('canvas_thickness')) {
-      const liveList = liveCanvasThickness.map((item) => {
+    if (liveCanvasThickness.length === 0 && !overriddenKeys.has('canvas_thickness')) return BASE_CANVAS_THICKNESS_OPTIONS;
+    return liveCanvasThickness
+      .filter((item) => {
         const extras = item.extras ?? {};
         const id = (extras.id as string) ?? item.id;
-        const inches = Number(extras.thicknessInches) || (id === 'no-wrap-thickness' || id === 'no-wrap' ? 0 : 1);
+        return id !== 'no-wrap-thickness' && id !== 'no-wrap' && item.label !== 'No Wrap';
+      })
+      .map((item) => {
+        const extras = item.extras ?? {};
+        const id = (extras.id as string) ?? item.id;
+        const inches = Number(extras.thicknessInches) || 1;
         return {
           id,
           name: ((extras.name as string) || item.label) as string,
-          label: id === 'custom-thickness' ? item.label : (id === 'no-wrap-thickness' || id === 'no-wrap') ? 'No Wrap (0.00")' : `${item.label} (${inches.toFixed(2)}")`,
+          label: id === 'custom-thickness' ? item.label : `${item.label} (${inches.toFixed(2)}")`,
           thicknessInches: inches,
           price: Number(item.flatPrice),
-          depthPx: Number(extras.depthPx) || (id === 'no-wrap-thickness' || id === 'no-wrap' ? 4 : 18),
+          depthPx: Number(extras.depthPx) || 18,
           description: item.description ?? '',
           badge: ((extras.badge as string) || undefined) as string | undefined,
           image: item.imageUrl ?? '',
         };
       });
-      const hasNoWrap = liveList.some((t) => t.id === 'no-wrap-thickness' || t.id === 'no-wrap');
-      list = hasNoWrap ? liveList : [BASE_CANVAS_THICKNESS_OPTIONS[0], ...liveList];
-    }
-    return list;
   }, [liveCanvasThickness, overriddenKeys]);
   const THICKNESS_OPTIONS = CANVAS_THICKNESS_OPTIONS;
   const ACRYLIC_THICKNESS_OPTIONS = useMemo(() => {
@@ -11465,14 +11466,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       {activeMaterial === 'acrylic' ? 'Thickness' : 'Wrap'}
                     </span>
                     <span className="text-[11px] font-semibold text-stone-200">
-                      {activeMaterial === 'acrylic' ? `${ACRYLIC_THICKNESS_OPTIONS.length} options` : `${CANVAS_THICKNESS_OPTIONS.filter((t) => t.id !== 'custom-thickness' && t.id !== 'hanging-canvas').length} options`}
+                      {activeMaterial === 'acrylic' ? `${ACRYLIC_THICKNESS_OPTIONS.length} options` : `${CANVAS_THICKNESS_OPTIONS.filter((t) => t.id !== 'custom-thickness' && t.id !== 'hanging-canvas' && t.id !== 'no-wrap-thickness' && t.id !== 'no-wrap').length} options`}
                     </span>
                   </div>
 
                   <div className="p-3 space-y-3">
                     {/* Thickness Options Grid */}
-                    <div className="grid gap-2 grid-cols-2 sm:grid-cols-4">
-                      {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS.filter((t) => t.id !== 'custom-thickness' && t.id !== 'hanging-canvas')).map((th: any) => {
+                    <div className={`grid gap-2 ${activeMaterial === 'acrylic' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
+                      {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS.filter((t) => t.id !== 'custom-thickness' && t.id !== 'hanging-canvas' && t.id !== 'no-wrap-thickness' && t.id !== 'no-wrap')).map((th: any) => {
                         // Don't show a card as "selected" until the shopper has actually
                         // clicked one - selectedThicknessId silently holds the cheapest
                         // option by default so pricing/preview math never breaks, but
@@ -11884,10 +11885,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
                       {activeMaterial === 'acrylic' ? '1. Acrylic Thickness' : '1. Canvas Stretcher Thickness'}
                     </label>
-                    <span className="text-[11px] font-bold text-[#0E4A93]">{(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS).length} options</span>
+                    <span className="text-[11px] font-bold text-[#0E4A93]">{(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS.filter((t) => t.id !== 'no-wrap-thickness' && t.id !== 'no-wrap')).length} options</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS).map((th: any) => {
+                    {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS.filter((t) => t.id !== 'no-wrap-thickness' && t.id !== 'no-wrap')).map((th: any) => {
                       // Same as the other thickness grid - stay unchecked until actually clicked.
                       const isSelected = thicknessTouched && selectedThicknessId === th.id;
                       const cardTitle = activeMaterial === 'canvas' && th.id === 'custom-thickness' && selectedThicknessId === 'custom-thickness'

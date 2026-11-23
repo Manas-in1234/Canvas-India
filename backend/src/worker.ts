@@ -685,41 +685,15 @@ export default {
         });
         if (baseKey === 'canvas_thickness') {
           for (const cat of categories) {
-            const hasNoWrap = cat.items.some((it: any) => it.extras?.id === 'no-wrap-thickness' || it.label === 'No Wrap');
-            if (!hasNoWrap) {
-              const noWrapSpec = {
-                categoryId: cat.id,
-                label: 'No Wrap',
-                description: 'Flat-mounted canvas with no wraparound edge depth',
-                imageUrl: null,
-                sortOrder: -1,
-                isActive: true,
-                priceMode: 'FLAT' as const,
-                flatPrice: '0',
-                areaRatePerSqIn: null,
-                extras: { id: 'no-wrap-thickness', name: 'No Wrap', thicknessInches: 0, depthPx: 4, badge: '' },
-              };
+            const toDelete = cat.items.filter((it: any) => it.extras?.id === 'no-wrap-thickness' || it.label === 'No Wrap');
+            cat.items = cat.items.filter((it: any) => it.extras?.id !== 'no-wrap-thickness' && it.label !== 'No Wrap');
+            if (toDelete.length > 0) {
               try {
-                const created = await prisma.optionCategoryItem.create({
-                  data: {
-                    categoryId: cat.id,
-                    label: noWrapSpec.label,
-                    description: noWrapSpec.description,
-                    sortOrder: -1,
-                    isActive: true,
-                    priceMode: 'FLAT',
-                    flatPrice: 0,
-                    extras: noWrapSpec.extras,
-                  },
+                await prisma.optionCategoryItem.deleteMany({
+                  where: { id: { in: toDelete.map((i: any) => i.id) } },
                 });
-                cat.items.unshift(created);
               } catch {
-                cat.items.unshift({
-                  ...noWrapSpec,
-                  id: 'no-wrap-thickness',
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                } as any);
+                // Ignore DB delete error
               }
             }
           }
