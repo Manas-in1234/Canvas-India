@@ -12747,30 +12747,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               </div>
             }
           >
-            {/* Until the shopper has picked a real size (or any other priced
-                option), the preview shows a blank placeholder instead of
-                artwork sized to a default canvas nobody chose - the
-                underlying size/thickness/etc. state stays technically
-                "selected" so none of this page's width/height math breaks,
-                but nothing about what's shown implies a real choice was
-                made. Covers the whole stage; disappears the instant
-                hasCustomized flips true. */}
-            {!hasCustomized && (
-              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-stone-50/95 backdrop-blur-sm text-center px-6">
-                <Grid className="w-10 h-10 text-stone-300" />
-                <div>
-                  <p className="text-sm font-bold text-stone-700">Pick a size to start your design</p>
-                  <p className="text-xs text-stone-500 mt-1">Your preview and price will appear here once you choose a size.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('SELECT SIZE')}
-                  className="px-4 py-2 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
-                >
-                  Select Size
-                </button>
-              </div>
-            )}
             {/* Stage: everything the customer designs on (frames + movable text/clipart) */}
             <div ref={stageRef} className="relative w-full flex flex-col items-center" onPointerDown={() => setSelectedElement(null)}>
               {/* WALL DISPLAY (Physical Multi-Panel Gallery Wall Layout) */}
