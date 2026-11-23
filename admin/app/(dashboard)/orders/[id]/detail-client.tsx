@@ -117,6 +117,17 @@ function formatConfigLabel(key: string): string {
     .replace(/^./, (c) => c.toUpperCase());
 }
 
+// sizeId is an internal id ("single-16x16", "custom-12x18"); show the actual dimensions instead.
+// Multi-panel layout ids (e.g. "wd-3p-12x18-10x8") are left as they are.
+function formatConfigValue(key: string, value: string): string {
+  if (key !== "sizeId") return value;
+  const custom = value.match(/^custom-(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)$/);
+  if (custom) return `${custom[1]}" × ${custom[2]}" (custom)`;
+  const preset = value.match(/^[a-z]+-(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)$/i);
+  if (preset) return `${preset[1]}" × ${preset[2]}"`;
+  return value;
+}
+
 function getConfigEntries(configurationSnapshot: Record<string, unknown> | null): [string, string][] {
   if (!configurationSnapshot) return [];
   return Object.entries(configurationSnapshot)
@@ -128,7 +139,10 @@ function getConfigEntries(configurationSnapshot: Record<string, unknown> | null)
     })
     .map(([key, value]): [string, string] => [
       formatConfigLabel(key),
-      Array.isArray(value) ? value.join(", ") : typeof value === "boolean" ? (value ? "Yes" : "No") : String(value),
+      formatConfigValue(
+        key,
+        Array.isArray(value) ? value.join(", ") : typeof value === "boolean" ? (value ? "Yes" : "No") : String(value),
+      ),
     ]);
 }
 
