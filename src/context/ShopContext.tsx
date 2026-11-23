@@ -21,6 +21,18 @@ const HIDEABLE_CATEGORY_SLUGS = new Set([
   'cork-art-patterns',
 ]);
 
+/** Cork products are bought as-is; only canvas and acrylic go through the customizer first. */
+export const isCorkCatalogProduct = (product: Product): boolean =>
+  product.categorySlug === 'cork' ||
+  product.categorySlug === 'cork-art-patterns' ||
+  product.categorySlug === 'yoga-fitness' ||
+  product.category === 'Cork' ||
+  product.category === 'Cork Art Patterns' ||
+  product.material === 'cork' ||
+  String(product.id ?? '').includes('cork') ||
+  String(product.slug ?? '').includes('cork') ||
+  String(product.name ?? '').toLowerCase().includes('cork');
+
 interface ShopContextType {
   cartItems: CartItem[];
   addToCartConfirmation: AddToCartConfirmationState;
@@ -250,9 +262,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     paper?: string,
     customizationDetails?: any
   ) => {
-    // Every product must be customized before it can be bought: a plain "add to cart" with no
-    // customization sends the shopper to that product's customizer instead of adding it as-is.
-    if (!customizationDetails) {
+    // Canvas and acrylic must be customized before they can be bought: a plain "add to cart" with no
+    // customization sends the shopper to that product's customizer. Cork products add straight to the cart.
+    if (!customizationDetails && !isCorkCatalogProduct(product)) {
       handleOpenCustomize(product);
       return;
     }

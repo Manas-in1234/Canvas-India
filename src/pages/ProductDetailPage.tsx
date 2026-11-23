@@ -395,9 +395,19 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     setActiveImageIndex((idx) => (idx + 1) % galleryImages.length);
   };
 
-  // A product must be customized before it can be bought, so "Add to cart" opens its customizer.
+  // Canvas and acrylic must be customized before they can be bought, so "Add to cart" opens the
+  // customizer. Cork products are plain catalog items and go straight into the cart.
   const handleAddToCartWithVariants = () => {
-    handleCustomizeFirst();
+    if (!product) return;
+    if (!isCorkProduct) {
+      handleCustomizeFirst();
+      return;
+    }
+    const cartProduct = quantity >= MIN_BULK_QTY
+      ? { ...product, price: bulkUnitPriceFor(unitPrice, quantity) }
+      : { ...product, price: unitPrice };
+    // customizationDetails stays unset: this is a buy-as-is catalog purchase (keeps COD and price checks).
+    onAddToCart(cartProduct, selectedSize, selectedFinish, quantity, customText, uploadedFile || undefined, selectedMaterial, undefined, undefined, undefined, undefined, undefined);
   };
 
   const handleCustomizeFirst = () => {
