@@ -683,6 +683,47 @@ export default {
           },
           include: { items: { where: { isActive: true }, orderBy: { sortOrder: 'asc' } } },
         });
+        if (baseKey === 'canvas_thickness') {
+          for (const cat of categories) {
+            const hasNoWrap = cat.items.some((it: any) => it.extras?.id === 'no-wrap-thickness' || it.label === 'No Wrap');
+            if (!hasNoWrap) {
+              const noWrapSpec = {
+                categoryId: cat.id,
+                label: 'No Wrap',
+                description: 'Flat-mounted canvas with no wraparound edge depth',
+                imageUrl: null,
+                sortOrder: -1,
+                isActive: true,
+                priceMode: 'FLAT' as const,
+                flatPrice: '0',
+                areaRatePerSqIn: null,
+                extras: { id: 'no-wrap-thickness', name: 'No Wrap', thicknessInches: 0, depthPx: 4, badge: '' },
+              };
+              try {
+                const created = await prisma.optionCategoryItem.create({
+                  data: {
+                    categoryId: cat.id,
+                    label: noWrapSpec.label,
+                    description: noWrapSpec.description,
+                    sortOrder: -1,
+                    isActive: true,
+                    priceMode: 'FLAT',
+                    flatPrice: 0,
+                    extras: noWrapSpec.extras,
+                  },
+                });
+                cat.items.unshift(created);
+              } catch {
+                cat.items.unshift({
+                  ...noWrapSpec,
+                  id: 'no-wrap-thickness',
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                } as any);
+              }
+            }
+          }
+        }
         return jsonResponse(categories, 200, request);
       }
       if (pathname === '/api/v1/admin/option-categories' || pathname.startsWith('/api/v1/admin/option-categories/')) {

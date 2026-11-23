@@ -121,6 +121,7 @@ import {
 } from '../data/lyricCanvasData';
 import { fetchApprovedCustomShapes, filterToUnknownShapes, toShapeOption, type CustomShapeDto } from '../api/customShapesApi';
 import { fetchPricingRates, SHAPE_AREA_RATE_FALLBACK, ACRYLIC_THICKNESS_RATE_FALLBACKS } from '../api/pricingSettingsApi';
+import { applyControls, applyLayoutOverrides, controlLabel, KNOWN_TAB_IDS, useCustomizerControls } from '../api/customizerControls';
 import { fetchOptionCategoryItems, type OptionCategoryItemDto } from '../api/optionCategoriesApi';
 import {
   fetchCustomizerProductTypes,
@@ -130,13 +131,13 @@ import {
 import type { AcrylicProductType } from '../data/acrylicCustomizerData';
 import { fetchSizePresets, SHAPE_GENERIC_PRODUCT_TYPE_ID, type SizePresetDto } from '../api/sizePresetsApi';
 import {
-  getCanvasThicknessPrice,
+  getCanvasThicknessPrice as baseCanvasThicknessPrice,
   CANVAS_SHAPES,
   CanvasShapeOption,
   CANVAS_PRODUCT_TYPES,
   CanvasProductType,
   CANVAS_WRAP_OPTIONS,
-  CANVAS_THICKNESS_OPTIONS,
+  CANVAS_THICKNESS_OPTIONS as BASE_CANVAS_THICKNESS_OPTIONS,
   CANVAS_HARDWARE_OPTIONS,
   CANVAS_DISPLAY_OPTIONS,
   CANVAS_FINISH_OPTIONS,
@@ -160,14 +161,17 @@ import {
   LAYOUT_PRESETS as STANDARD_LAYOUT_PRESETS,
   ACRYLIC_PRODUCT_TYPES,
   HARDWARE_OPTIONS as ACRYLIC_HARDWARE_OPTIONS,
-  THICKNESS_OPTIONS as ACRYLIC_THICKNESS_OPTIONS
+  THICKNESS_OPTIONS as BASE_ACRYLIC_THICKNESS_OPTIONS
 } from '../data/acrylicCustomizerData';
 import { CustomizerProductSelector } from '../components/CustomizerProductSelector';
 import { CustomizerPreloader, PRELOADER_MIN_MS } from '../components/CustomizerPreloader';
 import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
 import { AcrylicRoomViewModal, RoomPlacementState } from '../components/AcrylicRoomViewModal';
 import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
+import { isGenericCustomStyleId } from '../utils/codEligibility';
 import { SelectLayoutModal, LayoutModalOption } from '../components/SelectLayoutModal';
+import { fetchStyleLayouts } from '../api/styleLayoutsApi';
+import { EmptyLayoutPanel, ShapedLayoutWorkspace } from '../components/ShapedLayoutWorkspace';
 import { AcrylicLiveTextEditor, TextElement } from '../components/AcrylicLiveTextEditor';
 import { AcrylicClipartModal, ClipartElement } from '../components/AcrylicClipartModal';
 import { getProductSizeShapeOptions, getSizesForProductAndShape } from '../data/productSizeShapeConfig';
@@ -1991,7 +1995,7 @@ interface DesignTemplate {
   swatchClass: string;
 }
 
-const DESIGN_TEMPLATE_CATEGORIES = [
+const BASE_DESIGN_TEMPLATE_CATEGORIES = [
   "Father's Day",
   "Mother's Day",
   "Summer Day",
@@ -2001,7 +2005,7 @@ const DESIGN_TEMPLATE_CATEGORIES = [
   'Anniversary'
 ];
 
-const DESIGN_TEMPLATES: DesignTemplate[] = [
+const BASE_DESIGN_TEMPLATES: DesignTemplate[] = [
   // Father's Day
   { id: 'tpl-fd-1', category: "Father's Day", name: 'Love You Dad', textPreset: 'Love You Dad', decor: 'necktie', accent: '#0f172a', swatchClass: 'bg-stone-900 text-white' },
   { id: 'tpl-fd-2', category: "Father's Day", name: "Happy Father's Day", textPreset: "Happy Father's Day", decor: 'ribbon', accent: '#0284c7', swatchClass: 'bg-sky-100 text-sky-900' },
@@ -2123,7 +2127,7 @@ const renderDecorSvg = (decor: DecorType, accent: string, className = 'absolute 
 };
 
 const WRAP_OPTIONS = CANVAS_WRAP_OPTIONS;
-const THICKNESS_OPTIONS = CANVAS_THICKNESS_OPTIONS;
+const THICKNESS_OPTIONS = BASE_CANVAS_THICKNESS_OPTIONS;
 
 const HARDWARE_OPTIONS = [
   { id: 'no-hooks', label: 'No Hooks', price: 0 },
@@ -2139,7 +2143,7 @@ const DISPLAY_OPTIONS = [
   { id: 'dust-cover', label: 'Dust Cover', price: 49 }
 ];
 
-const COLOR_FINISH_OPTIONS: { id: ColorFilterType; label: string }[] = [
+const BASE_COLOR_FINISH_OPTIONS: { id: ColorFilterType; label: string }[] = [
   { id: 'original', label: 'Original' },
   { id: 'sepia', label: 'Sepia' },
   { id: 'grayscale', label: 'GrayScale' }
@@ -2151,7 +2155,7 @@ const LAMINATION_OPTIONS = [
   { id: 'premium', label: 'Premium', price: 249 }
 ];
 
-const RETOUCH_CHECKS = [
+const BASE_RETOUCH_CHECKS = [
   { id: 'red-eye', label: 'Red Eye Removal' },
   { id: 'dust-scratch', label: 'Dust/Scratch Removal' },
   { id: 'enhance-color', label: 'Enhance Color' },
@@ -2302,7 +2306,7 @@ const createDefaultPanel = (): PanelImageState => ({
 });
 
 // Helper renderers for 3D isometric wraps (CanvasChamp style) & hardware icons
-const renderWrapPreview = (id: string) => {
+const renderWrapPreview = (id: string, info?: { inches?: number; depthPx?: number }) => {
   if (id === 'hanging-canvas') {
     return (
       <div className="w-16 h-14 mx-auto relative flex flex-col items-center justify-center">
@@ -2340,8 +2344,25 @@ const renderWrapPreview = (id: string) => {
     );
   }
 
-  const depthValue = id === 'canvas-lite' ? '0.50"' : id === 'thin-gallery' ? '0.75"' : id === 'thick-gallery' ? '1.50"' : 'Custom';
-  const sideWidth = id === 'canvas-lite' ? 12 : id === 'thin-gallery' ? 20 : id === 'thick-gallery' ? 30 : 24;
+  if (id === 'no-wrap-thickness' || id === 'no-wrap') {
+    return (
+      <div className="w-20 h-16 mx-auto relative flex items-center justify-center">
+        <svg viewBox="0 0 120 90" className="w-full h-full drop-shadow-xs">
+          <rect x="4" y="4" width="112" height="82" fill="#f8fafc" rx="6" stroke="#e2e8f0" strokeWidth="1" />
+          <g transform="translate(26, 12)">
+            <rect x="6" y="8" width="56" height="42" rx="2" fill="#fed7aa" stroke="#ea580c" strokeWidth="1.5" />
+            <rect x="10" y="12" width="48" height="34" rx="1" fill="#ea580c" opacity="0.8" />
+            <text x="34" y="68" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#64748b">
+              0.00"
+            </text>
+          </g>
+        </svg>
+      </div>
+    );
+  }
+
+  const depthValue = id === 'canvas-lite' ? '0.50"' : id === 'thin-gallery' ? '0.75"' : id === 'thick-gallery' ? '1.50"' : info?.inches ? `${info.inches.toFixed(2)}"` : 'Custom';
+  const sideWidth = id === 'canvas-lite' ? 12 : id === 'thin-gallery' ? 20 : id === 'thick-gallery' ? 30 : info?.depthPx ? Math.max(8, Math.min(36, info.depthPx)) : 24;
 
   return (
     <div className="w-20 h-16 mx-auto relative flex items-center justify-center">
@@ -2416,6 +2437,14 @@ const renderFloatingFrameContainer = (
     aspectRatio?: number;
     isMultiPanel?: boolean;
     scale?: number;
+    // Pass the canvas shape's own clip-path when the frame should follow a
+    // heart/triangle shape instead of the default rectangle.
+    shapeClipPath?: string;
+    // Round/oval shapes use CSS border-radius instead of clip-path - clip-path
+    // combined with the drop-shadow filter rasterizes circles/ellipses as a
+    // visibly faceted polygon at small sizes (e.g. Room View), while
+    // border-radius stays smooth at any size.
+    shapeBorderRadius?: string;
   }
 ) => {
   const frame = FRAME_OPTIONS.find((f) => f.id === opts.frameId);
@@ -2454,6 +2483,81 @@ const renderFloatingFrameContainer = (
 
   const mouldingPadding = opts.scale ? Math.max(8, Math.round(18 * opts.scale)) : 18;
   const gapPadding = opts.scale ? Math.max(3, Math.round(7 * opts.scale)) : 7;
+
+  // Round/oval/heart/triangle canvases: the moulding, recess gap and content
+  // all re-apply the same (percentage/objectBoundingBox-based) shape clip-path
+  // at each nested, padded layer, so each layer traces a smaller copy of the
+  // same shape and the padding between them reads as a shape-following ring
+  // instead of a rectangular frame around a round print. A shaped ring reads
+  // much thicker than the same padding does on a rectangular frame (it's
+  // visible along the whole curve, not just 4 straight edges), so this ring
+  // is noticeably thinner than the rectangular default below.
+  const shapeMouldingPadding = opts.scale ? Math.max(5, Math.round(9 * opts.scale)) : 9;
+  const shapeGapPadding = opts.scale ? Math.max(2, Math.round(4 * opts.scale)) : 4;
+
+  if (opts.shapeBorderRadius) {
+    const radius = opts.shapeBorderRadius;
+    return (
+      <div
+        className="relative select-none"
+        style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.42)) drop-shadow(0 6px 14px rgba(0,0,0,0.26))' }}
+      >
+        <div
+          className="relative"
+          style={{
+            padding: `${shapeMouldingPadding}px`,
+            background: mouldingGradient,
+            borderRadius: radius
+          }}
+        >
+          <div
+            className="relative bg-[#0b0c0e] overflow-hidden"
+            style={{
+              padding: `${shapeGapPadding}px`,
+              borderRadius: radius
+            }}
+          >
+            <div className="relative overflow-hidden" style={{ borderRadius: radius }}>
+              {content}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (opts.shapeClipPath) {
+    const clip = opts.shapeClipPath;
+    return (
+      <div
+        className="relative select-none"
+        style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.42)) drop-shadow(0 6px 14px rgba(0,0,0,0.26))' }}
+      >
+        <div
+          className="relative"
+          style={{
+            padding: `${shapeMouldingPadding}px`,
+            background: mouldingGradient,
+            clipPath: clip,
+            WebkitClipPath: clip
+          }}
+        >
+          <div
+            className="relative bg-[#0b0c0e] overflow-hidden"
+            style={{
+              padding: `${shapeGapPadding}px`,
+              clipPath: clip,
+              WebkitClipPath: clip
+            }}
+          >
+            <div className="relative" style={{ clipPath: clip, WebkitClipPath: clip }}>
+              {content}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -2649,12 +2753,33 @@ export interface CanvasCustomizerPageProps {
   materialProp?: 'canvas' | 'acrylic';
 }
 
+/** A product's own saved list, in the same shape the shared lists arrive in. Hidden options are dropped. */
+function productListToDtos(items: any[]): OptionCategoryItemDto[] {
+  return items
+    .filter((i) => i && !i.hidden)
+    .map((i, index) => ({
+      id: String(i.id),
+      label: String(i.label ?? ''),
+      description: i.description ? String(i.description) : null,
+      imageUrl: i.imageUrl ? String(i.imageUrl) : null,
+      sortOrder: index,
+      priceMode: i.priceMode === 'AREA_RATE' ? ('AREA_RATE' as const) : ('FLAT' as const),
+      flatPrice: String(i.flatPrice ?? 0),
+      areaRatePerSqIn: i.areaRatePerSqIn !== null && i.areaRatePerSqIn !== undefined ? String(i.areaRatePerSqIn) : null,
+      extras: i.extras && typeof i.extras === 'object' ? i.extras : null,
+    }));
+}
+
 export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ materialProp }) => {
   const { productId } = useParams<{ productId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { allProducts, onAddToCartCustomized } = useShop();
+
+  useEffect(() => {
+    document.title = 'Customize Your Canvas | Canvas India';
+  }, []);
 
   // Arrived from a catalogue design's "Customize this Product" button — the
   // artwork is fixed, so there's nothing to upload: the Upload tab is
@@ -2691,6 +2816,38 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const wordArtColorSchemes = useCatalogOptions('word_art_colors', DEFAULT_WORD_ART_COLOR_SCHEMES);
   const WORD_ART_SIZE_CATALOG = useMemo(() => Object.fromEntries(Object.keys(DEFAULT_WORD_ART_SIZE_CATALOG).map((key) => [key, wordArtSizes.filter((size) => size.ratioTab === key)])) as typeof DEFAULT_WORD_ART_SIZE_CATALOG, [wordArtSizes]);
   const [activeMaterial, setActiveMaterial] = useState<'canvas' | 'acrylic'>(routeMaterial);
+  const [publishedLayouts, setPublishedLayouts] = useState<{ material: string; layouts: LayoutModalOption[] }>();
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchStyleLayouts(activeMaterial, AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]))
+      .then(layouts => { if (!controller.signal.aborted) setPublishedLayouts({ material: activeMaterial, layouts }); })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [activeMaterial]);
+
+  // Options this specific product has customized in the admin. Each product keeps its own
+  // independent copy, so nothing here ever mixes with another product's options or prices.
+  const productOverrides = useMemo<Record<string, { items?: any[] }> | null>(() => {
+    const key = searchParams.get('product') || productId;
+    const list: any[] = Array.isArray(allProducts) ? (allProducts as any[]) : [];
+    const match = key ? list.find((p) => p.id === key || p.slug === key) : null;
+    // Per-product customization is switched off: every canvas / acrylic product uses the
+    // shared options for its material (managed in the admin Customization page).
+    void match;
+    return null as Record<string, any> | null;
+  }, [allProducts, productId, searchParams]);
+  const overriddenKeys = useMemo(
+    () => new Set(Object.keys(productOverrides ?? {}).filter((k) => Array.isArray(productOverrides?.[k]?.items))),
+    [productOverrides],
+  );
+  const loadOptions = useCallback(
+    (baseKey: string, material?: 'ACRYLIC' | 'CANVAS') => {
+      const own = productOverrides?.[baseKey];
+      if (own && Array.isArray(own.items)) return Promise.resolve(productListToDtos(own.items));
+      return fetchOptionCategoryItems(baseKey, material);
+    },
+    [productOverrides],
+  );
 
   useEffect(() => {
     if (routeMaterial !== activeMaterial) {
@@ -2726,7 +2883,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     );
   }, [allProducts, productId, activeMaterial]);
 
+  // Styles managed from the admin dashboard, loaded from the backend (see the fetch further down).
+  const [liveCanvasStyles, setLiveCanvasStyles] = useState<CanvasProductType[] | null>(null);
+  const [liveAcrylicStyles, setLiveAcrylicStyles] = useState<AcrylicProductType[] | null>(null);
+
   const resolveCurrentProductId = (mat: 'canvas' | 'acrylic', id?: string) => {
+    // A style added from the admin has its own slug. Keep it, instead of letting the
+    // resolver below fall back to Single Print and drop the style's own shapes and settings.
+    if (id && !BUILT_IN_STYLE_IDS.has(id)) {
+      const live = mat === 'acrylic' ? liveAcrylicStyles : liveCanvasStyles;
+      if (live?.some((p) => p.id === id)) return id;
+    }
     if (mat === 'acrylic') {
       return resolveAcrylicProductTypeId(id, catalogProduct);
     }
@@ -2740,12 +2907,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (requestedTab === 'UPLOAD') return 'UPLOAD';
     if (requestedTab === 'SIZE' || requestedTab === 'SELECT SIZE') return 'SELECT SIZE';
     const initialPt = resolveCurrentProductId(routeMaterial, productId);
-    if (initialPt.includes('digital') || initialPt.includes('painting')) return 'EFFECTS & OPTIONS';
     if (initialPt.includes('bus')) return 'CREATE BUS ROLL';
     if (initialPt.includes('banner')) return 'UPLOAD';
     if (searchParams.get('prefillImage')) return 'SELECT SIZE';
     return 'UPLOAD';
   });
+
+  // Temporarily dismisses the mobile overlay (View Preview / the X button)
+  // WITHOUT changing activeTab, so the customer stays on whatever section
+  // they were in (Select Size, Layouts, etc) instead of being bounced to
+  // Upload - reopening it (any tab tap) lands back where they actually were.
+  const [isPanelHiddenMobile, setIsPanelHiddenMobile] = useState(false);
 
   useEffect(() => {
     const requestedTab = searchParams.get('tab')?.toUpperCase();
@@ -2762,24 +2934,28 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // long that actually takes, plus a short minimum so the brief, instant
   // section switches still get a visible (but not artificially stretched) beat.
   const [preloaderActive, setPreloaderActive] = useState(false);
-  const preloaderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const preloaderPendingRef = useRef(0);
 
   const beginPreloader = () => {
     preloaderPendingRef.current += 1;
-    if (preloaderTimerRef.current) {
-      clearTimeout(preloaderTimerRef.current);
-      preloaderTimerRef.current = null;
-    }
     setPreloaderActive(true);
   };
   const endPreloader = (minMs: number = 0) => {
+    // Each begin/end pair owns its own release - every begin() increments
+    // the counter and every matching end() must decrement it exactly once.
+    // A previous version cancelled the PENDING release timer here (via a
+    // single shared timer ref) whenever a new begin() fired, e.g. when
+    // handleStepNav's begin+end wrapped a handleSelectTab call that itself
+    // also begins+ends. That discarded the earlier release's decrement
+    // permanently, leaving the counter stuck above 0 forever - the
+    // preloader then never hides again. Let every scheduled release fire
+    // independently instead of cancelling earlier ones.
     const release = () => {
       preloaderPendingRef.current = Math.max(0, preloaderPendingRef.current - 1);
       if (preloaderPendingRef.current === 0) setPreloaderActive(false);
     };
     if (minMs > 0) {
-      preloaderTimerRef.current = setTimeout(release, minMs);
+      setTimeout(release, minMs);
     } else {
       release();
     }
@@ -2787,6 +2963,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   const handleSelectTab = (tabId: ToolbarTab) => {
     setActiveTab(tabId);
+    setIsPanelHiddenMobile(false);
+    // Desktop keeps the branded preloader beat on tab switches (the panel
+    // is always visible there, so it's a deliberate transition, not a
+    // blocking interruption). Mobile skips it - the panel is a full-screen
+    // overlay there, so the same beat would blackout the whole screen.
+    if (window.innerWidth >= 768) {
+      beginPreloader();
+      endPreloader(PRELOADER_MIN_MS);
+    }
     if (tabId === 'POP ART STYLE') {
       setIsPopArtStyleModalOpen(true);
       return;
@@ -2796,12 +2981,25 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       return;
     }
     if (tabId === 'LAYOUTS & DESIGNS') {
+      if (usesStyleLayouts) {
+        setIsLayoutModalOpen(true);
+        setActiveTab('UPLOAD');
+        return;
+      }
       if (isLayoutProduct) {
         setLayoutSubTab('LAYOUTS');
       }
     }
+  };
+
+  // Back/Continue (panel footer and canvas view alike) always show the
+  // preloader beat on every device, including mobile - unlike a plain
+  // sidebar tab tap, these are a deliberate "move to the next/previous
+  // step" action the customer explicitly asked to feel more substantial.
+  const handleStepNav = (tabId: ToolbarTab) => {
     beginPreloader();
     endPreloader(PRELOADER_MIN_MS);
+    handleSelectTab(tabId);
   };
 
   const [selectedProductTypeId, setSelectedProductTypeId] = useState<string>(() =>
@@ -2814,20 +3012,32 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedProductTypeId(resolved);
       switchProductSession(activeMaterial, resolved);
     }
-  }, [productId, activeMaterial]);
+  }, [productId, activeMaterial, liveCanvasStyles, liveAcrylicStyles]);
 
-  const isHexagonProduct = activeMaterial === 'canvas' && selectedProductTypeId.includes('hexagon');
-  const isWallArtProduct = selectedProductTypeId.includes('wall') || selectedProductTypeId.includes('display');
-  const isCollageProduct = selectedProductTypeId.includes('collage');
-  const isSplitProduct = selectedProductTypeId.includes('split');
-  const isMosaicProduct = selectedProductTypeId.includes('mosaic');
-  const isLyricProduct = selectedProductTypeId.includes('lyric');
-  const isDigitalPaintingProduct = selectedProductTypeId.includes('digital') || selectedProductTypeId.includes('painting');
-  const isQuotesProduct = selectedProductTypeId.includes('quote');
-  const isBusRollProduct = selectedProductTypeId.includes('bus');
-  const isWordArtProduct = selectedProductTypeId.includes('word');
-  const isPopArtProduct = selectedProductTypeId.includes('pop');
-  const isBannerProduct = selectedProductTypeId.includes('banner');
+  const styleLayouts = useMemo(() => publishedLayouts?.material === activeMaterial
+    ? publishedLayouts.layouts.filter(layout => layout.productTypeId === selectedProductTypeId) : [],
+  [publishedLayouts, activeMaterial, selectedProductTypeId]);
+  const usesStyleLayouts = styleLayouts.length > 0;
+  const isHexagonProduct = activeMaterial === 'canvas' && selectedProductTypeId === 'canvas-hexagon';
+  const isWallArtProduct = !usesStyleLayouts && selectedProductTypeId.includes('wall') || (!usesStyleLayouts && selectedProductTypeId.includes('display'));
+  const isCollageProduct = !usesStyleLayouts && selectedProductTypeId.includes('collage');
+  const isSplitProduct = !usesStyleLayouts && selectedProductTypeId.includes('split');
+  const isMosaicProduct = !usesStyleLayouts && selectedProductTypeId.includes('mosaic');
+  const isLyricProduct = !usesStyleLayouts && selectedProductTypeId.includes('lyric');
+  const isDigitalPaintingProduct = !usesStyleLayouts && selectedProductTypeId.includes('digital') || (!usesStyleLayouts && selectedProductTypeId.includes('painting'));
+  const isQuotesProduct = !usesStyleLayouts && selectedProductTypeId.includes('quote');
+  const isBusRollProduct = !usesStyleLayouts && selectedProductTypeId.includes('bus');
+  // The tab the mobile config panel treats as "home" - rendered inline after
+  // the canvas instead of as a closeable overlay. Upload is disabled/hidden
+  // entirely for prefilled/readymade products (there's nothing to upload),
+  // so Select Size has to be their home tab instead, or the close (X)
+  // button on any overlay would target a tab that doesn't exist and get
+  // bounced straight into another overlay (Products) by the
+  // invalid-tab-fallback effect further down - looking like it never closes.
+  const mobileRestingTab: ToolbarTab = isBusRollProduct ? 'CREATE BUS ROLL' : isPrefillMode ? 'SELECT SIZE' : 'UPLOAD';
+  const isWordArtProduct = !usesStyleLayouts && selectedProductTypeId.includes('word');
+  const isPopArtProduct = !usesStyleLayouts && selectedProductTypeId.includes('pop');
+  const isBannerProduct = !usesStyleLayouts && selectedProductTypeId.includes('banner');
   // A style added from the admin dashboard has no special editor, so it uses
   // the standard single-panel one, same as Single Print.
   const isAdminAddedStyle = Boolean(selectedProductTypeId) && !BUILT_IN_STYLE_IDS.has(selectedProductTypeId);
@@ -2839,8 +3049,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Product styles (the PRODUCTS tab cards) managed from the admin dashboard.
   // The built-in lists stay as the fallback, so the picker is never empty if
   // the fetch fails or the table has no rows yet.
-  const [liveCanvasStyles, setLiveCanvasStyles] = useState<CanvasProductType[] | null>(null);
-  const [liveAcrylicStyles, setLiveAcrylicStyles] = useState<AcrylicProductType[] | null>(null);
   useEffect(() => {
     let cancelled = false;
     Promise.all([fetchCustomizerProductTypes('CANVAS'), fetchCustomizerProductTypes('ACRYLIC')]).then(
@@ -2924,7 +3132,44 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Primary Toolbar items: dynamically filtered by selected product capabilities
   // EXACT ORDER: 1. PRODUCTS, 2. UPLOAD, 3. SELECT SIZE, 4. LAYOUTS & DESIGNS, 5. WRAP & BORDER, 6. HARDWARE & FINISH, 7. OPTIONS
-  const toolbarItems = useMemo<{ id: ToolbarTab; label: string; icon: React.ElementType }[]>(() => {
+  const customizerControls = useCustomizerControls();
+
+  // Inch steps offered in the Custom Size boxes, as set in the admin (Customization → Select size).
+  // Kept in ascending order whatever order they were added in; falls back to the built-in list.
+  const [liveCustomSizeSteps, setLiveCustomSizeSteps] = useState<number[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void fetchOptionCategoryItems('custom_size_steps').then((items) => {
+      if (cancelled) return;
+      const steps = items
+        .map((item) => Number(String(item.label).replace(/[^0-9.]/g, '')))
+        .filter((n) => Number.isFinite(n) && n >= 1 && n <= 200);
+      setLiveCustomSizeSteps(steps.length > 0 ? steps : null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  // Layout names, prices, cover images, visibility and order from the admin (Customization → Layouts & designs).
+  const [liveLayoutItems, setLiveLayoutItems] = useState<OptionCategoryItemDto[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void fetchOptionCategoryItems('layouts').then((items) => {
+      if (!cancelled) setLiveLayoutItems(items.length > 0 ? items : null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const getManagedLayouts = useCallback(
+    (productTypeId: string) => applyLayoutOverrides(getProductLayouts(productTypeId), liveLayoutItems),
+    [liveLayoutItems],
+  );
+  const customSizeSteps = useMemo(
+    () => (liveCustomSizeSteps ? Array.from(new Set(liveCustomSizeSteps)).sort((a, b) => a - b) : CUSTOM_SIZE_STEPS),
+    [liveCustomSizeSteps],
+  );
+  const baseToolbarItems = useMemo<{ id: ToolbarTab; label: string; icon: React.ElementType }[]>(() => {
     if (isBusRollProduct) {
       return [
         { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
@@ -2981,7 +3226,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       // the moment the product is picked, and "Change Size"/"Change
       // Layout" buttons elsewhere still open the same modals either way;
       // this only hides the redundant sidebar entry, not the feature.
-      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: isSinglePrintCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct || isWordArtProduct || isBannerProduct },
+      { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: !usesStyleLayouts && (isSingleOrShapedCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct || isWordArtProduct || isBannerProduct) },
       { id: 'EFFECTS & OPTIONS', label: 'EFFECTS & OPTIONS', icon: Palette, enabled: productCapabilities.effects === true },
       { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: (isSinglePrintCanvas || isPopArtProduct || isLyricProduct) && !isQuotesProduct && !isWordArtProduct && !isDigitalPaintingProduct },
       { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
@@ -2989,7 +3234,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false && !isDigitalPaintingProduct }
     ];
     return items.filter((item) => item.enabled);
-  }, [activeMaterial, productCapabilities, isSingleOrShapedCanvas, isBusRollProduct, isPopArtProduct, isLyricProduct, isWordArtProduct, isQuotesProduct, isPrefillMode, isSinglePrintCanvas, isDigitalPaintingProduct]);
+  }, [activeMaterial, productCapabilities, isSingleOrShapedCanvas, isBusRollProduct, isPopArtProduct, isLyricProduct, isWordArtProduct, isQuotesProduct, isPrefillMode, isSinglePrintCanvas, isDigitalPaintingProduct, usesStyleLayouts]);
+
+  // Names, visibility and order of the left-hand tabs, as set in the admin (Customization → Tabs & buttons).
+  const toolbarItems = useMemo(() => {
+    const shown = applyControls(baseToolbarItems, customizerControls.tabs, (item) => item.id, KNOWN_TAB_IDS);
+    // Never leave the customer with no tabs at all.
+    const safe = shown.length > 0 ? shown : baseToolbarItems;
+    return safe.map((item) => ({ ...item, label: controlLabel(customizerControls.tabs, item.id, item.label) }));
+  }, [baseToolbarItems, customizerControls.tabs]);
 
   // Product tabs supported check
 
@@ -3056,7 +3309,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // untouched whenever the fetch returns nothing (unmigrated product,
   // network hiccup, etc.) so a gap in seeded data degrades to "same as
   // today" rather than a broken size picker.
+  // A style built around exactly one uploaded shape has that shape's own sizes (set in the admin).
+  const customShapeKey = (() => {
+    if (!isAdminAddedStyle) return null;
+    const ids = selectedProductType.supportedShapeIds;
+    return ids && ids.length === 1 && ids[0].startsWith('custom-') ? ids[0] : null;
+  })();
+
   const sizePresetQuery = useMemo((): { productTypeId: string; shapeId?: string } | null => {
+    if (customShapeKey) {
+      return { productTypeId: SHAPE_GENERIC_PRODUCT_TYPE_ID, shapeId: customShapeKey };
+    }
     if (isSinglePrintCanvas) {
       return activeMaterial === 'acrylic' ? { productTypeId: 'acrylic-print' } : { productTypeId: 'canvas-single' };
     }
@@ -3080,6 +3343,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
     return { productTypeId: SHAPE_GENERIC_PRODUCT_TYPE_ID, shapeId: selectedShapeId };
   }, [
+    customShapeKey,
     isSinglePrintCanvas,
     isQuotesProduct,
     isDigitalPaintingProduct,
@@ -3244,7 +3508,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
 
     if (isLayoutProduct) {
-      const layouts = getProductLayouts(selectedProductTypeId);
+      const layouts = getManagedLayouts(selectedProductTypeId);
       return layouts.map((layout) => ({
         id: layout.id,
         productTypeId: selectedProductTypeId,
@@ -3285,7 +3549,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       ? configOptions.filter((opt) => !(opt.widthInches === 9 && opt.heightInches === 9) && !(opt.widthInches === 16 && opt.heightInches === 16))
       : configOptions;
     return filteredOptions.length > 0 ? filteredOptions : SIZE_OPTIONS.filter((s) => s.productTypeId === selectedProductTypeId);
-  }, [activeMaterial, selectedProductTypeId, selectedShapeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isWordArtProduct, isLyricProduct, isWallArtProduct, isCollageProduct, isHexagonProduct, isSplitProduct, isMosaicProduct, liveSizeOptions, CANVAS_BANNER_SIZE_OPTIONS, POP_ART_SIZE_OPTIONS, WORD_ART_SIZE_CATALOG, LYRIC_CANVAS_SIZE_OPTIONS]);
+  }, [activeMaterial, selectedProductTypeId, selectedShapeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isWordArtProduct, isLyricProduct, isWallArtProduct, isCollageProduct, isHexagonProduct, isSplitProduct, isMosaicProduct, liveSizeOptions, getManagedLayouts, CANVAS_BANNER_SIZE_OPTIONS, POP_ART_SIZE_OPTIONS, WORD_ART_SIZE_CATALOG, LYRIC_CANVAS_SIZE_OPTIONS]);
 
   // Category filter state for single prints: 'RECOMMENDED' | 'SQUARE' | 'PANORAMIC' | 'LARGE' | 'SMALL' (Default: 'RECOMMENDED')
   // A '?category=PANORAMIC' URL param (used by the Panoramic Canvas Prints
@@ -3342,6 +3606,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   });
 
   useEffect(() => {
+    if (usesStyleLayouts) return;
     if (!availableSizeOptions.some((s) => s.id === selectedSizeId)) {
       if (isSinglePrintCanvas || isQuotesProduct || isDigitalPaintingProduct || isBusRollProduct || isBannerProduct || isPopArtProduct || isLyricProduct) {
         const matchingInCat = availableSizeOptions.filter((opt) => opt.categories.includes(sizeCategoryFilter));
@@ -3363,26 +3628,59 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         setSelectedSizeId(availableSizeOptions[0]?.id || (activeMaterial === 'acrylic' ? 'rec-10x10' : 'single-10x10'));
       }
     }
-  }, [availableSizeOptions, selectedSizeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isLyricProduct, sizeCategoryFilter, activeMaterial]);
+  }, [availableSizeOptions, selectedSizeId, isSinglePrintCanvas, isQuotesProduct, isDigitalPaintingProduct, isBusRollProduct, isBannerProduct, isPopArtProduct, isLyricProduct, sizeCategoryFilter, activeMaterial, usesStyleLayouts]);
 
   const currentSizeOption = useMemo(() => {
+    const layout = styleLayouts.find(row => row.id === selectedSizeId) ?? styleLayouts[0];
+    if (layout) return {
+      id: layout.id, productTypeId: layout.productTypeId, label: layout.name,
+      dimensionsSummary: layout.dimensionsSummary, price: layout.price,
+      categories: ['RECOMMENDED'] as SizeCategory[],
+      widthInches: layout.overallWidthInches, heightInches: layout.overallHeightInches,
+      panelsCount: layout.panelsCount, diagramType: undefined, arrangement: undefined,
+      panels: layout.panels.map(panel => ({ ...panel, dimension: panel.dimension ?? '',
+        widthRatio: panel.widthRatio ?? 1, heightRatio: panel.heightRatio ?? 1 })),
+    };
     return availableSizeOptions.find((s) => s.id === selectedSizeId) || availableSizeOptions[0] || SIZE_OPTIONS[0];
-  }, [availableSizeOptions, selectedSizeId]);
+  }, [availableSizeOptions, selectedSizeId, styleLayouts]);
+  const activeStyleLayout = styleLayouts.find(layout => layout.id === currentSizeOption.id);
 
   // Custom Size (only meaningful for single-panel products)
   const [isCustomSize, setIsCustomSize] = useState<boolean>(false);
   const [customWidth, setCustomWidth] = useState<number>(8);
   const [customHeight, setCustomHeight] = useState<number>(8);
-  const customSizePrice = useMemo(() => Math.max(99, Math.round(customWidth * customHeight * 4.2)), [customWidth, customHeight]);
 
-  const canUseCustomSize = currentSizeOption.panels.length === 1;
+  // Raw typed text for the Select Size tab's custom-size inputs, kept
+  // separate from the committed customWidth/customHeight numbers so the
+  // field can actually be cleared and retyped (coercing every keystroke to
+  // a number and snapping an empty field back to a fallback makes manual
+  // entry impossible - the field could never be backspaced and retyped).
+  // Resyncs whenever the committed value changes for any other reason
+  // (picking a preset, resetting size, switching product, our own blur
+  // commit below).
+  const [customWidthDraft, setCustomWidthDraft] = useState<string>(String(customWidth));
+  const [customHeightDraft, setCustomHeightDraft] = useState<string>(String(customHeight));
+  useEffect(() => { setCustomWidthDraft(String(customWidth)); }, [customWidth]);
+  useEffect(() => { setCustomHeightDraft(String(customHeight)); }, [customHeight]);
+
+  const canUseCustomSize = !usesStyleLayouts && currentSizeOption.panels.length === 1;
+
+  // Apply a typed custom dimension straight away once it is a valid size, so the price shown beside
+  // the fields (and the total) update as the shopper types instead of only after leaving the field.
+  // Partial entries such as "1" on the way to "16" are ignored until they are in range.
+  const commitLiveCustomSize = (raw: string, apply: (value: number) => void) => {
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < customSizeSteps[0] || value > customSizeSteps[customSizeSteps.length - 1]) return;
+    setIsCustomSize(true);
+    apply(value);
+  };
 
   // Panels for the current size layout
   const panels = currentSizeOption.panels;
 
   // Shapes, borders and outer frames only apply to single-panel canvases
   // (multi-panel collage / split / wall-art layouts stay rectangular slots).
-  const shapeApplies = panels.length === 1 && selectedProductTypeId !== 'canvas-banner' && selectedProductTypeId !== 'canvas-bus-roll';
+  const shapeApplies = !usesStyleLayouts && panels.length === 1 && selectedProductTypeId !== 'canvas-banner' && selectedProductTypeId !== 'canvas-bus-roll';
 
   // Product-specific customization session store (Requirement 5)
   // Maintains per-product panel images, uploaded photos, and active panel indices
@@ -3791,7 +4089,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // LAYOUTS & DESIGNS tab
   const [layoutSubTab, setLayoutSubTab] = useState<'DESIGNS' | 'LAYOUTS'>('LAYOUTS');
-  const [designCategory, setDesignCategory] = useState<string>(DESIGN_TEMPLATE_CATEGORIES[0]);
+  const [designCategory, setDesignCategory] = useState<string>(BASE_DESIGN_TEMPLATE_CATEGORIES[0]);
   const [expandedDesignCategory, setExpandedDesignCategory] = useState<string | null>("Valentine's Day");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [expandedLayoutId, setExpandedLayoutId] = useState<string | null>('layout-1');
@@ -3862,11 +4160,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [liveFonts, setLiveFonts] = useState<OptionCategoryItemDto[]>([]);
   const [liveTextColors, setLiveTextColors] = useState<OptionCategoryItemDto[]>([]);
   const [liveClipart, setLiveClipart] = useState<OptionCategoryItemDto[]>([]);
+  const [liveColorFinish, setLiveColorFinish] = useState<OptionCategoryItemDto[]>([]);
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      fetchOptionCategoryItems('border_width'),
-      fetchOptionCategoryItems('border_color'),
+      loadOptions('border_width'),
+      loadOptions('border_color'),
       fetchOptionCategoryItems('font'),
       fetchOptionCategoryItems('text_color'),
       fetchOptionCategoryItems('clipart'),
@@ -3881,10 +4180,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadOptions]);
 
   const liveOrFallbackBorderWidths = useMemo(() => {
-    if (liveBorderWidths.length === 0) return ACRYLIC_BORDER_WIDTHS;
+    if (liveBorderWidths.length === 0 && !overriddenKeys.has('border_width')) return ACRYLIC_BORDER_WIDTHS;
     return liveBorderWidths.map((item) => ({
       id: (item.extras?.id as string) ?? item.id,
       label: item.label,
@@ -3893,7 +4192,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveBorderWidths]);
 
   const liveOrFallbackBorderColors = useMemo(() => {
-    if (liveBorderColors.length === 0) return ACRYLIC_BORDER_COLORS;
+    if (liveBorderColors.length === 0 && !overriddenKeys.has('border_color')) return ACRYLIC_BORDER_COLORS;
     return liveBorderColors.map((item) => ({
       name: item.label,
       hex: (item.extras?.hex as string) ?? '#000000',
@@ -3901,7 +4200,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveBorderColors]);
 
   const liveBorderWidthPrices = useMemo(() => {
-    if (liveBorderWidths.length === 0) return CANVAS_BORDER_WIDTH_PRICES;
+    if (liveBorderWidths.length === 0 && !overriddenKeys.has('border_width')) return CANVAS_BORDER_WIDTH_PRICES;
     const prices: Record<string, number> = {};
     for (const item of liveBorderWidths) {
       const id = (item.extras?.id as string) ?? item.id;
@@ -3934,6 +4233,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // re-fetches whenever activeMaterial changes; the rest are BOTH-scoped and
   // just refetch harmlessly alongside it.
   const [liveWrapStyles, setLiveWrapStyles] = useState<OptionCategoryItemDto[]>([]);
+  const [liveDesignTemplates, setLiveDesignTemplates] = useState<OptionCategoryItemDto[]>([]);
+  const [liveRetouch, setLiveRetouch] = useState<OptionCategoryItemDto[]>([]);
+  const [liveCanvasThickness, setLiveCanvasThickness] = useState<OptionCategoryItemDto[]>([]);
+  const [liveAcrylicThickness, setLiveAcrylicThickness] = useState<OptionCategoryItemDto[]>([]);
   const [liveHardware, setLiveHardware] = useState<OptionCategoryItemDto[]>([]);
   const [liveDisplayOptions, setLiveDisplayOptions] = useState<OptionCategoryItemDto[]>([]);
   const [liveMaterialGrades, setLiveMaterialGrades] = useState<OptionCategoryItemDto[]>([]);
@@ -3951,16 +4254,26 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     let cancelled = false;
     const material = activeMaterial === 'acrylic' ? 'ACRYLIC' : 'CANVAS';
     Promise.all([
-      fetchOptionCategoryItems('wrap_style'),
-      fetchOptionCategoryItems('hardware', material),
-      fetchOptionCategoryItems('display_option'),
-      fetchOptionCategoryItems('material_grade'),
-      fetchOptionCategoryItems('lamination'),
-      fetchOptionCategoryItems('frame'),
-      fetchOptionCategoryItems('backgrounds', 'ACRYLIC'),
-      fetchOptionCategoryItems('finish', 'ACRYLIC'),
-    ]).then(([wrapStyles, hardware, displayOptions, materialGrades, laminations, frames, backing, finish]) => {
+      loadOptions('wrap_style'),
+      loadOptions('hardware', material),
+      loadOptions('display_option'),
+      loadOptions('material_grade'),
+      loadOptions('lamination'),
+      loadOptions('frame'),
+      loadOptions('backgrounds', 'ACRYLIC'),
+      loadOptions('finish', 'ACRYLIC'),
+      loadOptions('canvas_thickness', 'CANVAS'),
+      loadOptions('acrylic_thickness', 'ACRYLIC'),
+      loadOptions('design_templates'),
+      loadOptions('color_finishing'),
+      loadOptions('retouching'),
+    ]).then(([wrapStyles, hardware, displayOptions, materialGrades, laminations, frames, backing, finish, canvasThickness, acrylicThickness, designTemplates, colorFinishing, retouching]) => {
       if (cancelled) return;
+      setLiveDesignTemplates(designTemplates);
+      setLiveColorFinish(colorFinishing);
+      setLiveRetouch(retouching);
+      setLiveCanvasThickness(canvasThickness);
+      setLiveAcrylicThickness(acrylicThickness);
       setLiveWrapStyles(wrapStyles);
       setLiveHardware(hardware);
       setLiveDisplayOptions(displayOptions);
@@ -3976,10 +4289,105 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return () => {
       cancelled = true;
     };
-  }, [activeMaterial]);
+  }, [activeMaterial, loadOptions]);
+
+  // Thickness cards are admin-managed (name, price, icon, badge, order, hidden/deleted).
+  // Until the team sets them up, the built-in lists below are used unchanged.
+  const CANVAS_THICKNESS_OPTIONS = useMemo(() => {
+    let list = BASE_CANVAS_THICKNESS_OPTIONS;
+    if (liveCanvasThickness.length > 0 || overriddenKeys.has('canvas_thickness')) {
+      const liveList = liveCanvasThickness.map((item) => {
+        const extras = item.extras ?? {};
+        const id = (extras.id as string) ?? item.id;
+        const inches = Number(extras.thicknessInches) || (id === 'no-wrap-thickness' || id === 'no-wrap' ? 0 : 1);
+        return {
+          id,
+          name: ((extras.name as string) || item.label) as string,
+          label: id === 'custom-thickness' ? item.label : (id === 'no-wrap-thickness' || id === 'no-wrap') ? 'No Wrap (0.00")' : `${item.label} (${inches.toFixed(2)}")`,
+          thicknessInches: inches,
+          price: Number(item.flatPrice),
+          depthPx: Number(extras.depthPx) || (id === 'no-wrap-thickness' || id === 'no-wrap' ? 4 : 18),
+          description: item.description ?? '',
+          badge: ((extras.badge as string) || undefined) as string | undefined,
+          image: item.imageUrl ?? '',
+        };
+      });
+      const hasNoWrap = liveList.some((t) => t.id === 'no-wrap-thickness' || t.id === 'no-wrap');
+      list = hasNoWrap ? liveList : [BASE_CANVAS_THICKNESS_OPTIONS[0], ...liveList];
+    }
+    return list;
+  }, [liveCanvasThickness, overriddenKeys]);
+  const THICKNESS_OPTIONS = CANVAS_THICKNESS_OPTIONS;
+  const ACRYLIC_THICKNESS_OPTIONS = useMemo(() => {
+    if (liveAcrylicThickness.length === 0 && !overriddenKeys.has('acrylic_thickness')) return BASE_ACRYLIC_THICKNESS_OPTIONS;
+    return liveAcrylicThickness.map((item) => {
+      const extras = item.extras ?? {};
+      return {
+        id: ((extras.id as string) ?? item.id) as string,
+        label: item.label,
+        name: ((extras.name as string) || undefined) as string | undefined,
+        thicknessMm: Number(extras.thicknessMm) || undefined,
+        price: Number(item.flatPrice),
+        ratePerSqIn: item.areaRatePerSqIn ? Number(item.areaRatePerSqIn) : undefined,
+        badge: ((extras.badge as string) || undefined) as string | undefined,
+        image: item.imageUrl ?? '',
+      } as (typeof BASE_ACRYLIC_THICKNESS_OPTIONS)[number] & { image?: string };
+    });
+  }, [liveAcrylicThickness]);
+  const getCanvasThicknessPrice = (thicknessId: string, customMm: number = 25): number => {
+    const opt = CANVAS_THICKNESS_OPTIONS.find((t) => t.id === thicknessId);
+    if (!opt) return 0;
+    if (thicknessId === 'custom-thickness') {
+      return Math.round((opt.price + Math.max(0, customMm - 25) * 2) * 100) / 100;
+    }
+    return opt.price;
+  };
+
+  // Design templates, color finishing and retouching are admin-managed too (shared or per product).
+  const DESIGN_TEMPLATES = useMemo<(DesignTemplate & { bgColor?: string; textColor?: string; imageUrl?: string })[]>(() => {
+    if (liveDesignTemplates.length === 0 && !overriddenKeys.has('design_templates')) return BASE_DESIGN_TEMPLATES;
+    return liveDesignTemplates.map((item) => {
+      const x = item.extras ?? {};
+      return {
+        id: String((x.id as string) || item.id),
+        category: String((x.category as string) || 'Other'),
+        name: item.label,
+        textPreset: String((x.textPreset as string) || item.label),
+        decor: (['confetti', 'ribbon', 'floral', 'hearts', 'necktie', 'balloons'].includes(x.decor as string) ? x.decor : 'confetti') as DecorType,
+        accent: String((x.accent as string) || '#e11d48'),
+        swatchClass: '',
+        bgColor: (x.bgColor as string) || '#fff1f2',
+        textColor: (x.textColor as string) || '#881337',
+        imageUrl: item.imageUrl || undefined,
+      };
+    });
+  }, [liveDesignTemplates, overriddenKeys]);
+  const DESIGN_TEMPLATE_CATEGORIES = useMemo(() => {
+    if (liveDesignTemplates.length === 0 && !overriddenKeys.has('design_templates')) return BASE_DESIGN_TEMPLATE_CATEGORIES;
+    return Array.from(new Set(DESIGN_TEMPLATES.map((t) => t.category)));
+  }, [DESIGN_TEMPLATES, liveDesignTemplates, overriddenKeys]);
+  const COLOR_FINISH_OPTIONS = useMemo(() => {
+    const own = overriddenKeys.has('color_finishing');
+    if (liveColorFinish.length === 0 && !own) return BASE_COLOR_FINISH_OPTIONS;
+    const known = new Set(['original', 'sepia', 'grayscale']);
+    const mapped = liveColorFinish
+      .map((item) => ({
+        id: String((item.extras?.id as string) ?? item.label).toLowerCase().replace(/[^a-z]/g, '') as ColorFilterType,
+        label: item.label,
+      }))
+      .filter((o) => known.has(o.id));
+    return mapped.length === 0 && !own ? BASE_COLOR_FINISH_OPTIONS : mapped;
+  }, [liveColorFinish, overriddenKeys]);
+  const RETOUCH_CHECKS = useMemo(() => {
+    if (liveRetouch.length === 0 && !overriddenKeys.has('retouching')) return BASE_RETOUCH_CHECKS;
+    return liveRetouch.map((item) => ({
+      id: String((item.extras?.id as string) || item.id),
+      label: item.label,
+    }));
+  }, [liveRetouch, overriddenKeys]);
 
   const liveOrFallbackWrapStyles = useMemo(() => {
-    if (liveWrapStyles.length === 0) return WRAP_OPTIONS;
+    if (liveWrapStyles.length === 0 && !overriddenKeys.has('wrap_style')) return WRAP_OPTIONS;
     return liveWrapStyles.map((item) => ({
       id: (item.extras?.id as string) ?? item.id,
       name: item.label,
@@ -3993,7 +4401,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveWrapStyles]);
 
   const liveOrFallbackHardware = useMemo(() => {
-    if (liveHardware.length === 0) {
+    if (liveHardware.length === 0 && !overriddenKeys.has('hardware')) {
       return activeMaterial === 'acrylic' ? ACRYLIC_HARDWARE_OPTIONS : HARDWARE_OPTIONS;
     }
     return liveHardware.map((item) => ({
@@ -4007,7 +4415,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveHardware, activeMaterial]);
 
   const liveOrFallbackDisplayOptions = useMemo(() => {
-    if (liveDisplayOptions.length === 0) return DISPLAY_OPTIONS;
+    if (liveDisplayOptions.length === 0 && !overriddenKeys.has('display_option')) return DISPLAY_OPTIONS;
     return liveDisplayOptions.map((item) => ({
       id: (item.extras?.id as string) ?? item.id,
       label: item.label,
@@ -4016,7 +4424,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveDisplayOptions]);
 
   const liveOrFallbackMaterialGrades = useMemo(() => {
-    if (liveMaterialGrades.length === 0) return MATERIAL_VARIANTS;
+    if (liveMaterialGrades.length === 0 && !overriddenKeys.has('material_grade')) return MATERIAL_VARIANTS;
     return liveMaterialGrades.map((item) => ({
       id: (item.extras?.id as string) ?? item.id,
       name: item.label,
@@ -4026,7 +4434,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveMaterialGrades]);
 
   const liveOrFallbackLaminations = useMemo(() => {
-    if (liveLaminations.length === 0) return LAMINATION_OPTIONS;
+    if (liveLaminations.length === 0 && !overriddenKeys.has('lamination')) return LAMINATION_OPTIONS;
     return liveLaminations.map((item) => ({
       id: (item.extras?.id as string) ?? item.id,
       label: item.label,
@@ -4035,8 +4443,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveLaminations]);
 
   const liveOrFallbackFrames = useMemo(() => {
-    if (liveFrames.length === 0) return FRAME_OPTIONS;
+    if (liveFrames.length === 0 && !overriddenKeys.has('frame')) return FRAME_OPTIONS.map((f) => ({ ...f, group: 'floating' }));
     return liveFrames.map((item) => ({
+      group: String((item.extras?.group as string) || 'Floating').trim().toLowerCase(),
       id: (item.extras?.id as string) ?? item.id,
       name: item.label,
       price: Number(item.flatPrice),
@@ -4046,10 +4455,22 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }));
   }, [liveFrames]);
 
+  const frameGroups = useMemo(() => {
+    const builtIn = [
+      { key: 'standard', label: 'Standard', note: 'Standard gallery frames are available in single canvas formats. Select Floating for museum-grade floating shadow gap frames.', builtIn: true },
+      { key: 'premium', label: 'Premium', note: 'Premium artisanal framing with solid hardwoods.', builtIn: true },
+      { key: 'floating', label: 'Floating', note: '', builtIn: true },
+    ];
+    const extra = Array.from(new Set(liveOrFallbackFrames.map((f) => f.group)))
+      .filter((g) => g && !builtIn.some((b) => b.key === g))
+      .map((g) => ({ key: g, label: g.replace(/\w/g, (c) => c.toUpperCase()), note: '', builtIn: false }));
+    return [...builtIn, ...extra];
+  }, [liveOrFallbackFrames]);
+
   // Inline fallback for the two brand-new acrylic categories — matches the
   // real seeded admin data, used only if the live fetch comes back empty.
   const liveOrFallbackBacking = useMemo(() => {
-    if (liveBacking.length === 0) {
+    if (liveBacking.length === 0 && !overriddenKeys.has('backgrounds')) {
       return [
         { id: 'transparent', label: 'Transparent (Clear Optical)', hex: 'transparent', price: 0 },
         { id: 'white', label: 'Solid White Opaque Backing', hex: '#FFFFFF', price: 0 },
@@ -4066,7 +4487,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveBacking]);
 
   const liveOrFallbackFinish = useMemo(() => {
-    if (liveFinish.length === 0) {
+    if (liveFinish.length === 0 && !overriddenKeys.has('finish')) {
       return [
         { id: 'high-gloss', label: 'High Gloss Clear', price: 0 },
         { id: 'anti-glare', label: 'Anti-Glare Matte', price: 180 },
@@ -4099,14 +4520,40 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [selectedBorderColor, setSelectedBorderColor] = useState<string>('#FFFFFF');
   const [borderHexInput, setBorderHexInput] = useState<string>('#FFFFFF');
   const [selectedFrameId, setSelectedFrameId] = useState<string>('no-frame');
-  const [expandedFrameCategory, setExpandedFrameCategory] = useState<'standard' | 'premium' | 'floating'>('floating');
+  const [expandedFrameCategory, setExpandedFrameCategory] = useState<string>('floating');
 
   // Acrylic-only: backing color behind the clear sheet, and surface finish.
   const [selectedBackingId, setSelectedBackingId] = useState<string>('transparent');
   const [selectedFinishId, setSelectedFinishId] = useState<string>('high-gloss');
 
   // Thickness & Physical Depth Options (Canvas Stretcher & Acrylic Cast Depth)
-  const [selectedThicknessId, setSelectedThicknessId] = useState<string>('thin-gallery');
+  // Every thickness option has a real price (there's no free one - it's a
+  // physical attribute of the product, not an add-on), so the customizer
+  // should open on the cheapest one rather than the admin's "Recommended"
+  // pick, so the price shown before the shopper touches anything is as low
+  // as it can genuinely be.
+  const cheapestOption = <T extends { id: string; price: number }>(list: T[]): T | undefined =>
+    list.length === 0 ? undefined : list.reduce((min, opt) => (opt.price < min.price ? opt : min), list[0]);
+  const [selectedThicknessId, setSelectedThicknessId] = useState<string>(
+    () => cheapestOption(routeMaterial === 'acrylic' ? BASE_ACRYLIC_THICKNESS_OPTIONS : BASE_CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery',
+  );
+  // selectedThicknessId always holds a real id (defaults to the cheapest
+  // option so the preview has something valid to render), but the shopper
+  // hasn't necessarily chosen a thickness yet - only the 3 actual thickness
+  // picker cards should count as a real choice. Everything else that writes
+  // selectedThicknessId is a programmatic default/sync and must NOT flip
+  // this, so the price only reflects thickness once they've genuinely
+  // picked one.
+  const [thicknessTouched, setThicknessTouched] = useState(false);
+  // If the selected thickness was hidden or deleted in the admin (or isn't
+  // valid yet for this material), fall back to the cheapest one shown.
+  useEffect(() => {
+    const list: { id: string; price: number }[] = activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS;
+    if (list.length > 0 && !list.some((t) => t.id === selectedThicknessId)) {
+      const preferred = cheapestOption(list) ?? list[0];
+      setSelectedThicknessId(preferred.id);
+    }
+  }, [activeMaterial, ACRYLIC_THICKNESS_OPTIONS, CANVAS_THICKNESS_OPTIONS, selectedThicknessId]);
   const [customThicknessInches, setCustomThicknessInches] = useState<number>(1.0);
   const [customThicknessMm, setCustomThicknessMm] = useState<number>(25);
   const [customThicknessInput, setCustomThicknessInput] = useState<string>('25');
@@ -4114,6 +4561,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [customAcrylicThicknessMm, setCustomAcrylicThicknessMm] = useState<number>(6.0);
 
   const effectiveThicknessInches = useMemo(() => {
+    if (selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap') return 0;
     if (selectedThicknessId === 'canvas-lite') return 0.5;
     if (selectedThicknessId === 'thin-gallery') return 0.75;
     if (selectedThicknessId === 'thick-gallery') return 1.5;
@@ -4129,23 +4577,55 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (selectedThicknessId === '8mm') return 8;
     return 5;
   }, [selectedThicknessId]);
-  const [selectedHardwareId, setSelectedHardwareId] = useState<string>(routeMaterial === 'acrylic' ? 'acrylic-standoffs' : 'no-hooks');
+  // Both materials have a free "no hooks / no base" option - default to it
+  // rather than acrylic's paid Standoffs mount, so hardware never adds to
+  // the starting price before the shopper has chosen anything.
+  const [selectedHardwareId, setSelectedHardwareId] = useState<string>('no-hooks');
   const [acrylicStudQuantity, setAcrylicStudQuantity] = useState<number>(4);
+  // Client pricing sheet: acrylic is billed per sq inch by thickness (3mm 5.50, 5mm 6.50, 6mm 7.75,
+  // 8mm 9.50) and canvas at 1.65 per sq inch. Studs are 50 each, minimum 4.
+  const acrylicSizeRate = activeMaterial === 'acrylic' ? acrylicThicknessRates[selectedThicknessId] : undefined;
+  // Plain canvas prints are priced the same way from the admin dashboard's canvas rate, so every
+  // size (preset cards and custom) is width x height x rate.
+  const canvasAreaRate = activeMaterial === 'canvas' && isSinglePrintCanvas ? shapeAreaRates.canvas : undefined;
+  const sizeAreaRate = acrylicSizeRate ?? canvasAreaRate;
+  const areaPriced = (width: number | undefined, height: number | undefined, fallback: number): number =>
+    sizeAreaRate && width && height ? Math.round(width * height * sizeAreaRate) : fallback;
+  // A custom size that equals a size in the catalog (either orientation) must cost exactly what that
+  // catalog size costs, so typing 16 x 16 never differs from tapping the 16" x 16" card. Only sizes
+  // with no catalog entry fall back to the per-sq-inch rate.
+  const customSizePrice = useMemo(() => {
+    if (!sizeAreaRate) {
+      const match = availableSizeOptions.find((opt) => opt.panels.length === 1 && opt.widthInches && opt.heightInches
+        && ((opt.widthInches === customWidth && opt.heightInches === customHeight)
+          || (opt.widthInches === customHeight && opt.heightInches === customWidth)));
+      if (match) return match.price;
+    }
+    return Math.round(customWidth * customHeight * (sizeAreaRate ?? shapeAreaRates.canvas));
+  }, [customWidth, customHeight, sizeAreaRate, shapeAreaRates, availableSizeOptions]);
+  const studsPrice = (count: number): number => Math.max(4, count) * 50;
   const [selectedDisplayOptionId, setSelectedDisplayOptionId] = useState<string>('open-back');
 
   // Select Size & Shape Modal State
   const [isSizeShapeModalOpen, setIsSizeShapeModalOpen] = useState<boolean>(false);
   const [isLayoutModalOpen, setIsLayoutModalOpen] = useState<boolean>(false);
 
+  useEffect(() => {
+    if (usesStyleLayouts && isSizeShapeModalOpen) {
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(true);
+    }
+  }, [usesStyleLayouts, isSizeShapeModalOpen]);
+
   // The Select Layout modal only makes sense for products with real, distinct multi-panel
   // arrangements. Everything else falls back to a single generic layout internally, which
   // would just show up as a pointless 4-option "Single Full Image" picker — close it if open.
   useEffect(() => {
-    const hasRealLayouts = isLayoutProduct;
+    const hasRealLayouts = isLayoutProduct || usesStyleLayouts;
     if (!hasRealLayouts) {
       setIsLayoutModalOpen(false);
     }
-  }, [isLayoutProduct]);
+  }, [isLayoutProduct, usesStyleLayouts]);
 
   // Word Art Flow State (Size + Ratio -> Details / Personalization -> Product Workspace)
   const [isWordArtSizeModalOpen, setIsWordArtSizeModalOpen] = useState<boolean>(false);
@@ -4502,7 +4982,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       0: {
         ...createDefaultPanel(),
         imageUrl: tmpl.image,
-        fitMode: 'contain',
+        fitMode: 'cover',
         scale: 1,
         rotation: 0,
         panX: 0,
@@ -4675,19 +5155,26 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
     if (!productChanged && !materialChanged) return;
 
-    if (activeMaterial === 'acrylic') {
-      setSelectedHardwareId('acrylic-standoffs');
-    }
-
     const pt = productTypeList.find((p) => p.id === selectedProductTypeId);
     if (pt) {
       if (pt.defaultShape) setSelectedShapeId(pt.defaultShape);
-      if (pt.defaultHardwareId) setSelectedHardwareId(pt.defaultHardwareId);
-      if (pt.defaultThicknessId) setSelectedThicknessId(pt.defaultThicknessId);
+      // Defaults to the free "no hooks / no base" option rather than acrylic's
+      // paid Standoffs mount, unless this product type has its own explicit
+      // default, so switching material never adds a hardware charge the
+      // shopper hasn't chosen.
+      setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
+      // Every catalog product type sets its own "recommended" thickness
+      // (almost always Thin Gallery Wrap, +₹193.05), which would silently
+      // re-apply a real charge on top of the cheapest default the instant
+      // this effect ran - same reasoning as the other five thickness
+      // defaults in this file: always start at the cheapest real option,
+      // never a priced "recommended" pick.
+      setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
       if (pt.supportedShapeIds && !pt.supportedShapeIds.includes(selectedShapeId)) {
         setSelectedShapeId(pt.defaultShape || 'shape-rectangle');
       }
     }
+    if (usesStyleLayouts) return;
     const layouts = getProductLayouts(selectedProductTypeId);
     if (!layouts.some((l) => l.id === selectedLayoutId)) {
       if (layouts[0]) {
@@ -4703,6 +5190,25 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (!pt) return;
     switchProductSession(activeMaterial, productId);
 
+    const layouts = publishedLayouts?.material === activeMaterial
+      ? publishedLayouts.layouts.filter(layout => layout.productTypeId === productId) : [];
+    if (layouts.length) {
+      setSelectedProductTypeId(productId);
+      setSelectedShapeId(layouts[0].shapeId ?? 'shape-square');
+      setSelectedSizeId(layouts[0].id);
+      setSelectedLayoutId(layouts[0].id);
+      setActivePanelIndex(0);
+      setIsCustomSize(false);
+      setViewerMode(null);
+      setSelectedFrameId('no-frame');
+      setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
+      setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
+      setIsSizeShapeModalOpen(false);
+      setIsLayoutModalOpen(true);
+      navigate(`/customize/${activeMaterial}/${productId}${location.search}`, { replace: true });
+      return;
+    }
+
     if (productId.includes('word')) {
       setSelectedProductTypeId(productId);
       setIsCustomSize(true);
@@ -4710,8 +5216,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setCustomHeight(wordArtSizeOption.heightInches);
       setActivePanelIndex(0);
       setSelectedShapeId('shape-square');
-      setSelectedHardwareId(activeMaterial === 'acrylic' ? 'acrylic-standoffs' : 'no-hooks');
-      setSelectedThicknessId('thin-gallery');
+      setSelectedHardwareId('no-hooks');
+      setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setIsWordArtSizeModalOpen(true);
@@ -4728,7 +5234,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedSizeId('quotes-8x8');
       setSizeCategoryFilter('SQUARE');
       setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
-      setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
+      setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
       const tmpl = getQuoteTemplate(selectedQuoteTemplateId) || getQuoteTemplate('quote-inspire-01');
       if (tmpl && quotesPreference === 'collection') {
         setPanelImages((prev) => ({
@@ -4765,10 +5271,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedSizeId('painting-10x10');
       setSizeCategoryFilter('SQUARE');
       setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
-      setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
+      setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
-      setActiveTab('EFFECTS & OPTIONS');
+      setActiveTab('UPLOAD');
       navigate(`/customize/${activeMaterial}/${productId}`, { replace: true });
       return;
     }
@@ -4780,7 +5286,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedShapeId('shape-square');
       setSelectedSizeId('bus-21x32');
       setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
-      setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
+      setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setActiveTab('CREATE BUS ROLL');
@@ -4810,7 +5316,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedShapeId('shape-square');
       setSelectedSizeId('pop-12x12');
       setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
-      setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
+      setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setIsPopArtStyleModalOpen(true);
@@ -4826,7 +5332,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedShapeId('shape-square');
       setSelectedSizeId('lyric-8x8');
       setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
-      setSelectedThicknessId(pt.defaultThicknessId || 'thin-gallery');
+      setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
       setIsLyricTemplateModalOpen(true);
@@ -4847,7 +5353,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     setActivePanelIndex(0);
 
     const isSingle = productId === 'canvas-single' || productId === 'canvas-classic' || productId === 'acrylic-print' || productId === 'acrylic-single' || productId === 'acrylic-photo-panel';
-    const isSingleOrShaped = [
+    // A style added from the admin uses the standard single-panel editor, so it opens
+    // the same Select Size popup as Single Print instead of dropping straight to Upload.
+    const isAdminStyle = !BUILT_IN_STYLE_IDS.has(productId);
+    const isSingleOrShaped = isAdminStyle || [
       'canvas-single',
       'canvas-classic',
       'canvas-round',
@@ -4886,7 +5395,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       if (pt.defaultShape) {
         setSelectedShapeId(pt.defaultShape);
       }
-      if (pt.defaultSizeOptionId) {
+      if (isAdminStyle && !pt.defaultSizeOptionId) {
+        setSizeCategoryFilter('RECOMMENDED');
+        setSelectedSizeId(activeMaterial === 'acrylic' ? 'rec-10x10' : 'single-10x10');
+      } else if (pt.defaultSizeOptionId) {
         setSelectedSizeId(pt.defaultSizeOptionId);
       } else {
         const matchingSizes = SIZE_OPTIONS.filter((s) => s.productTypeId === productId);
@@ -4897,9 +5409,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
 
     setSelectedHardwareId(pt.defaultHardwareId || 'no-hooks');
-    if (pt.defaultThicknessId) {
-      setSelectedThicknessId(pt.defaultThicknessId);
-    }
+    setSelectedThicknessId(cheapestOption(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS)?.id ?? 'thin-gallery');
 
     if (pt.defaultLayoutId && !isLayoutProduct) {
       setExpandedLayoutId(pt.defaultLayoutId);
@@ -4912,25 +5422,21 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       searchParams.get('prefillImage') ||
       '';
 
+    // Picking a style opens its Select Size / Layout popup. Don't jump to Upload
+    // here: closing the popup (X or Cancel) must leave the customer on the tab
+    // they were on. Confirming a size or layout moves them on by itself
+    // (handleApplySizeAndShape / handleApplyLayoutFromModal).
     if (isSingleOrShaped) {
       setIsSizeShapeModalOpen(true);
       setIsLayoutModalOpen(false);
-      if (!currentActiveImage) {
-        setActiveTab('UPLOAD');
-      }
     } else if (isLayoutProduct) {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(true);
       setLayoutSubTab('LAYOUTS');
-      if (!currentActiveImage) {
-        setActiveTab('UPLOAD');
-      }
     } else {
       setIsSizeShapeModalOpen(false);
       setIsLayoutModalOpen(false);
-      if (productId.includes('digital') || productId.includes('painting')) {
-        setActiveTab('EFFECTS & OPTIONS');
-      } else if (productId.includes('bus')) {
+      if (productId.includes('bus')) {
         setActiveTab('CREATE BUS ROLL');
       } else if (!currentActiveImage) {
         setActiveTab('UPLOAD');
@@ -5134,7 +5640,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const handleApplyLayoutFromModal = (layout: LayoutModalOption) => {
     setSelectedLayoutId(layout.id);
     setExpandedLayoutId(layout.id);
-    if (!isSinglePrintCanvas) {
+    if (!isSinglePrintCanvas || layout.outline) {
       setSelectedSizeId(layout.id);
       const targetShape = layout.shapeId || (layout.aspectRatio === 1 ? 'shape-square' : 'shape-rectangle');
       setSelectedShapeId(targetShape);
@@ -5143,6 +5649,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       }
     }
     setIsLayoutModalOpen(false);
+    if (layout.outline) {
+      setActiveTab('UPLOAD');
+      return;
+    }
 
     const activeImg =
       panelImages[0]?.imageUrl ||
@@ -5195,7 +5705,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   };
 
   // OPTIONS tab
-  const [selectedLaminationId, setSelectedLaminationId] = useState<string>('standard');
+  const [selectedLaminationId, setSelectedLaminationId] = useState<string>('none');
   const [retouchChecks, setRetouchChecks] = useState<Record<string, boolean>>({});
   const [majorRetouchText, setMajorRetouchText] = useState<string>('');
   const [proofRequested, setProofRequested] = useState<boolean>(false);
@@ -5267,6 +5777,22 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     height: 420
   });
   const itemDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number; w: number; h: number } | null>(null);
+  // Multi-touch tracking for pinch-to-resize on text/clipart items: a second
+  // finger landing on the same element switches from drag to pinch-scale.
+  // Named distinctly from the panel-image pinch-zoom refs below, which track
+  // a separate gesture on the uploaded photo itself.
+  const itemPointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const itemPinchStateRef = useRef<{
+    initialDistance: number;
+    initialFontSize: number;
+    initialScale: number;
+    initialAngle: number;
+    initialRotation: number;
+  } | null>(null);
+  // Tracks whether the current pointer-down actually dragged the item any
+  // meaningful distance, so the click handler can tell a tap (open the
+  // editor) apart from a drag (just move it, don't also pop the editor open).
+  const hasDraggedItemRef = useRef(false);
 
   const activeTextElement = useMemo(() => {
     if (selectedElement?.type === 'text' && selectedElement.id) {
@@ -5431,6 +5957,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       }
       if (saved?.selectedThicknessId) {
         setSelectedThicknessId(saved.selectedThicknessId);
+        setThicknessTouched(true);
       }
       if (saved?.selectedBackingId) {
         setSelectedBackingId(saved.selectedBackingId);
@@ -5465,7 +5992,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const selectedPopStyle = (POP_ART_STYLES.find((style) => style.id === popArtConfig.selectedStyleId) ?? getPopArtStyle(popArtConfig.selectedStyleId));
   const popStyleAdjustment = isPopArtProduct ? (selectedPopStyle?.priceAdjustment || 0) : 0;
   const lyricPriceAdjustment = isLyricProduct ? (selectedLyricTemplate?.priceAdjustment || 0) : 0;
-  const sizePrice = isWordArtProduct
+  const sizePrice = activeStyleLayout ? activeStyleLayout.price : isWordArtProduct
     ? (isCustomSize && canUseCustomSize ? customSizePrice : wordArtSizeOption.price)
     : isBannerProduct
     ? (bannerConfig.isCustom
@@ -5475,20 +6002,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     ? ((isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price) + popStyleAdjustment)
     : isLyricProduct
     ? ((isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price) + lyricPriceAdjustment)
-    : (isCustomSize && canUseCustomSize ? customSizePrice : currentSizeOption.price);
+    : (isCustomSize && canUseCustomSize ? customSizePrice : areaPriced(currentSizeOption.widthInches, currentSizeOption.heightInches, currentSizeOption.price));
 
   const unitPrice = useMemo(() => {
     let price = sizePrice;
 
     if (shapeApplies) {
-      if (NON_RECTANGULAR_SHAPE_TYPES.has(currentShape.shapeType)) {
-        // Client-specified pricing: a non-rectangular shape (heart, hexagon,
-        // custom admin-traced outlines, ...) is billed by its bounding
-        // rectangle's area, not its actual silhouette area.
-        const boundingWidth = isCustomSize && canUseCustomSize ? customWidth : (currentSizeOption.widthInches ?? customWidth);
-        const boundingHeight = isCustomSize && canUseCustomSize ? customHeight : (currentSizeOption.heightInches ?? customHeight);
-        price += Math.round(boundingWidth * boundingHeight * shapeAreaRate);
-      } else if (currentShape.priceAddon) {
+      // Non-rectangular shapes (circle, oval, heart, hexagon, custom admin-traced
+      // outlines, ...) are the product itself at the size the shopper picked -
+      // no extra surcharge gets added just for picking a shape.
+      if (!NON_RECTANGULAR_SHAPE_TYPES.has(currentShape.shapeType) && currentShape.priceAddon) {
         price += currentShape.priceAddon;
       }
     }
@@ -5505,16 +6028,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       const acrylicThickness = ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId);
       const liveRate = acrylicThickness ? acrylicThicknessRates[acrylicThickness.id] : undefined;
       if (liveRate) {
-        const boundingWidth = isCustomSize && canUseCustomSize ? customWidth : (currentSizeOption.widthInches ?? customWidth);
-        const boundingHeight = isCustomSize && canUseCustomSize ? customHeight : (currentSizeOption.heightInches ?? customHeight);
-        price += Math.round(boundingWidth * boundingHeight * liveRate);
+        // Already included in the base size price above (area x thickness rate).
       } else if (acrylicThickness) {
         price += acrylicThickness.price;
       }
-    } else {
+    } else if (thicknessTouched) {
       // getCanvasThicknessPrice handles the 'custom-thickness' option's
       // per-mm extra charge beyond the 25mm baseline; every other canvas
-      // thickness id just returns its flat price.
+      // thickness id just returns its flat price. selectedThicknessId
+      // always holds a real (cheapest-default) id even before the shopper
+      // has touched the thickness picker, so this only charges for it once
+      // they've actually made that choice - otherwise a bare size pick
+      // would silently add a thickness charge they never selected.
       price += getCanvasThicknessPrice(selectedThicknessId, customThicknessMm);
     }
 
@@ -5527,7 +6052,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     // Rs.199 base for 4 studs + Rs.50/extra stud beyond 4 (client pricing
     // sheet) — real quantity-aware pricing, acrylic-standoffs only.
     const acrylicHardwarePrice = selectedHardwareId === 'acrylic-standoffs'
-      ? (199 + Math.max(0, acrylicStudQuantity - 4) * 50)
+      ? studsPrice(acrylicStudQuantity)
       : 0;
 
     // liveOrFallbackHardware already resolves to the right list for the
@@ -5570,6 +6095,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return price;
   }, [
     sizePrice,
+    acrylicSizeRate,
     shapeApplies,
     currentShape,
     isCustomSize,
@@ -5590,6 +6116,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     activeMaterial,
     selectedWrapId,
     selectedThicknessId,
+    thicknessTouched,
     selectedBorderWidthId,
     selectedFrameId,
     selectedHardwareId,
@@ -5603,9 +6130,92 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     quantity
   ]);
 
-  const totalPrice = unitPrice * quantity;
+  // The customizer always has *something* selected internally (size, wrap,
+  // thickness, etc. default to the cheapest real option) so the live preview
+  // always has valid dimensions to render — but showing that priced default
+  // the instant the page opens, before the shopper has chosen anything,
+  // reads as if they're being charged for a choice they never made. So the
+  // displayed price (and every option's "selected" highlight) stays at ₹0 /
+  // unselected until they've actually touched a picker, even though the
+  // real underlying state is already valid and the preview renders normally
+  // throughout. The very first value each of these takes on page load is
+  // captured once as the "untouched" baseline; any later change away from
+  // that baseline (a real click) flips hasCustomized permanently on.
+  const initialSelectionSnapshot = useRef({
+    selectedSizeId, selectedShapeId, selectedWrapId, selectedThicknessId,
+    selectedHardwareId, selectedFrameId, selectedBackingId, selectedFinishId,
+    selectedMaterialId, selectedLaminationId, selectedDisplayOptionId, selectedBorderWidthId,
+  });
+  const [hasCustomized, setHasCustomized] = useState(false);
+  useEffect(() => {
+    if (hasCustomized) return;
+    const baseline = initialSelectionSnapshot.current;
+    const changed =
+      selectedSizeId !== baseline.selectedSizeId ||
+      selectedShapeId !== baseline.selectedShapeId ||
+      selectedWrapId !== baseline.selectedWrapId ||
+      selectedThicknessId !== baseline.selectedThicknessId ||
+      selectedHardwareId !== baseline.selectedHardwareId ||
+      selectedFrameId !== baseline.selectedFrameId ||
+      selectedBackingId !== baseline.selectedBackingId ||
+      selectedFinishId !== baseline.selectedFinishId ||
+      selectedMaterialId !== baseline.selectedMaterialId ||
+      selectedLaminationId !== baseline.selectedLaminationId ||
+      selectedDisplayOptionId !== baseline.selectedDisplayOptionId ||
+      selectedBorderWidthId !== baseline.selectedBorderWidthId ||
+      isCustomSize;
+    if (changed) setHasCustomized(true);
+  }, [
+    hasCustomized, selectedSizeId, selectedShapeId, selectedWrapId, selectedThicknessId,
+    selectedHardwareId, selectedFrameId, selectedBackingId, selectedFinishId,
+    selectedMaterialId, selectedLaminationId, selectedDisplayOptionId, selectedBorderWidthId, isCustomSize,
+  ]);
+
+  // Whole-inch choices for the custom size dropdowns, covering the allowed range (plus the current
+  // value, in case it is not a whole inch).
+  const customSizeDropdownValues = (current: number): number[] => {
+    const lo = Math.ceil(customSizeSteps[0]);
+    const hi = Math.floor(customSizeSteps[customSizeSteps.length - 1]);
+    const values: number[] = [];
+    for (let inches = lo; inches <= hi; inches++) values.push(inches);
+    return values.includes(current) ? values : [...values, current].sort((a, b) => a - b);
+  };
+  const chooseCustomHeight = (val: number) => {
+    setIsCustomSize(true);
+    setCustomHeight(val);
+    if (isWordArtProduct) {
+      setWordArtSizeOption((prev) => ({ ...prev, heightInches: val, label: `${prev.widthInches}" × ${val}"`, aspectRatio: prev.widthInches / val }));
+    }
+  };
+  const chooseCustomWidth = (val: number) => {
+    setIsCustomSize(true);
+    setCustomWidth(val);
+    if (isWordArtProduct) {
+      setWordArtSizeOption((prev) => ({ ...prev, widthInches: val, label: `${val}" × ${prev.heightInches}"`, aspectRatio: val / prev.heightInches }));
+    }
+  };
+  const chooseCustomRoundSize = (val: number) => {
+    setIsCustomSize(true);
+    setCustomWidth(val);
+    setCustomHeight(val);
+  };
+
+  // "Set size" button beside the custom size fields: applies whatever is typed and marks the size as
+  // chosen, so the price appears in the header total.
+  const confirmCustomSize = () => {
+    const [lo, hi] = [customSizeSteps[0], customSizeSteps[customSizeSteps.length - 1]];
+    const clamp = (raw: string, fallback: number) => Math.max(lo, Math.min(hi, Number(raw) || fallback));
+    const w = clamp(customWidthDraft, customWidth);
+    const h = selectedProductTypeId === 'canvas-round' ? w : clamp(customHeightDraft, customHeight);
+    setCustomWidth(w);
+    setCustomHeight(h);
+    setIsCustomSize(true);
+    setHasCustomized(true);
+  };
+
+  const totalPrice = hasCustomized ? unitPrice * quantity : 0;
   const acrylicHardwarePrice = selectedHardwareId === 'acrylic-standoffs'
-    ? (199 + Math.max(0, acrylicStudQuantity - 4) * 50)
+    ? studsPrice(acrylicStudQuantity)
     : 0;
 
   // Single source of truth for whether at least ONE valid customer image is currently uploaded
@@ -5627,7 +6237,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return panels.filter((_, idx) => Boolean(panelImages[idx]?.imageUrl)).length;
   }, [panels, panelImages]);
 
-  const isComplete = hasUploadedImage || filledPanelsCount >= 1;
+  const isComplete = activeStyleLayout ? filledPanelsCount === panels.length : hasUploadedImage || filledPanelsCount >= 1;
 
   // If all uploaded images are removed, automatically close 3D / 360 / Room View
   useEffect(() => {
@@ -5644,16 +6254,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     setUploadedPhotos(nextUploaded);
 
     if (!stillHasUrl) {
-      const fallbackUrl = nextUploaded[0] || null;
+      // Just clear the slot — don't auto-fill it with whatever photo happens
+      // to be left in the tray. That silently re-applied an unrelated photo
+      // (and carried it into the next product selected) instead of actually
+      // clearing it.
       setPanelImages((prev) => {
         const next: Record<number, PanelImageState> = { ...prev };
         Object.keys(next).forEach((k) => {
           const slotIdx = Number(k);
           if (next[slotIdx]?.imageUrl === photoUrl) {
-            next[slotIdx] = {
-              ...createDefaultPanel(),
-              imageUrl: slotIdx === 0 && nextUploaded.length === 1 ? fallbackUrl : null
-            };
+            next[slotIdx] = { ...createDefaultPanel(), imageUrl: null };
           }
         });
         return next;
@@ -5984,13 +6594,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 e.stopPropagation();
                 setSelectedElement({ type: 'text', id: txt.id });
                 setActivePanelIndex(slotIdx);
-                setShowTextModal(true);
+                // Only open the editor on a genuine tap — not after the
+                // pointer actually dragged the text, which also fires a
+                // click once released.
+                if (!hasDraggedItemRef.current) {
+                  setShowTextModal(true);
+                }
               }}
               style={{
                 position: 'absolute',
                 left: `${txt.x}%`,
                 top: `${txt.y}%`,
-                transform: 'translate(-50%, -50%)',
+                transform: `translate(-50%, -50%) rotate(${txt.rotation || 0}deg)`,
                 fontFamily: txt.fontFamily,
                 fontSize: `${txt.fontSize}px`,
                 fontWeight: txt.fontWeight === 'bold' ? 700 : 400,
@@ -6101,23 +6716,67 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const startItemDrag = (e: React.PointerEvent, type: 'text' | 'clipart', id: string, x: number, y: number) => {
     e.stopPropagation();
     setSelectedElement({ type, id });
-    if (type === 'text') {
-      setShowTextModal(true);
-      setShowClipartModal(false);
-    }
+    hasDraggedItemRef.current = false;
     const targetEl = e.currentTarget as HTMLElement;
+    targetEl.setPointerCapture(e.pointerId);
+    itemPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    // A second finger landing on the same element starts a combined
+    // pinch-to-resize + twist-to-rotate instead of a drag — grab the two
+    // most recent touch points as the baseline and cancel any in-progress
+    // single-finger drag.
+    if (itemPointersRef.current.size >= 2) {
+      const pts = Array.from(itemPointersRef.current.values()).slice(-2);
+      const dist = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
+      const angle = Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x) * (180 / Math.PI);
+      itemPinchStateRef.current = {
+        initialDistance: dist,
+        initialFontSize: type === 'text' ? (textElements.find((t) => t.id === id)?.fontSize || 32) : 32,
+        initialScale: type === 'clipart' ? (clipartElements.find((c) => c.id === id)?.scale || 1) : 1,
+        initialAngle: angle,
+        initialRotation: type === 'text'
+          ? (textElements.find((t) => t.id === id)?.rotation || 0)
+          : (clipartElements.find((c) => c.id === id)?.rotation || 0)
+      };
+      itemDragRef.current = null;
+      return;
+    }
+
     const parentContainer = targetEl.closest('.ci-slot-container') || stageRef.current;
     const rect = parentContainer?.getBoundingClientRect() || stageRef.current?.getBoundingClientRect();
     if (!rect) return;
     itemDragRef.current = { startX: e.clientX, startY: e.clientY, origX: x, origY: y, w: rect.width, h: rect.height };
-    targetEl.setPointerCapture(e.pointerId);
   };
 
   const moveItemDrag = (e: React.PointerEvent, type: 'text' | 'clipart', id: string) => {
+    if (itemPointersRef.current.has(e.pointerId)) {
+      itemPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+
+    if (itemPinchStateRef.current && itemPointersRef.current.size >= 2) {
+      const pts = Array.from(itemPointersRef.current.values()).slice(-2);
+      const dist = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
+      const ratio = dist / itemPinchStateRef.current.initialDistance;
+      const angle = Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x) * (180 / Math.PI);
+      // Full, unrestricted rotation — any angle in either direction.
+      const newRotation = itemPinchStateRef.current.initialRotation + (angle - itemPinchStateRef.current.initialAngle);
+      if (type === 'text') {
+        const newSize = Math.round(Math.max(10, Math.min(120, itemPinchStateRef.current.initialFontSize * ratio)));
+        handleUpdateActiveText({ fontSize: newSize, rotation: newRotation });
+      } else {
+        const newScale = Math.max(0.2, Math.min(4, itemPinchStateRef.current.initialScale * ratio));
+        handleUpdateActiveClipart({ scale: newScale, rotation: newRotation });
+      }
+      return;
+    }
+
     const d = itemDragRef.current;
     if (!d) return;
-    const nx = Math.max(5, Math.min(95, d.origX + ((e.clientX - d.startX) / d.w) * 100));
-    const ny = Math.max(5, Math.min(95, d.origY + ((e.clientY - d.startY) / d.h) * 100));
+    if (Math.hypot(e.clientX - d.startX, e.clientY - d.startY) > 6) {
+      hasDraggedItemRef.current = true;
+    }
+    const nx = Math.max(1, Math.min(99, d.origX + ((e.clientX - d.startX) / d.w) * 100));
+    const ny = Math.max(1, Math.min(99, d.origY + ((e.clientY - d.startY) / d.h) * 100));
     if (type === 'text') {
       handleUpdateActiveText({ x: nx, y: ny });
     } else {
@@ -6125,8 +6784,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
   };
 
-  const endItemDrag = () => {
-    itemDragRef.current = null;
+  const endItemDrag = (e?: React.PointerEvent) => {
+    if (e) itemPointersRef.current.delete(e.pointerId);
+    if (itemPointersRef.current.size < 2) {
+      itemPinchStateRef.current = null;
+    }
+    if (itemPointersRef.current.size === 0) {
+      itemDragRef.current = null;
+    }
   };
 
   const updateActivePanelTransform = (updater: (curr: PanelImageState) => Partial<PanelImageState>) => {
@@ -6555,6 +7220,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     panels
   ]);
 
+  // The oval shape's clip-path (ellipse(50% 38%)) was authored for a
+  // landscape (wider-than-tall) box - its fixed percentages don't adapt to
+  // orientation, so picking a vertical/portrait oval size (height > width)
+  // makes the 38%-of-height radius come out almost equal to the 50%-of-width
+  // radius, rendering as a near-perfect circle instead of a tall oval. Swap
+  // which axis gets 50% vs 38% based on the actual print's orientation.
+  const effectiveShapeClipPath =
+    currentShape.id === 'shape-oval'
+      ? (printAspect >= 1 ? 'ellipse(50% 38% at 50% 50%)' : 'ellipse(38% 50% at 50% 50%)')
+      : currentShape.clipPathStyle;
+
   // Continuously track physical workspace canvas dimensions for pixel-perfect edge wrap synchronization
   useEffect(() => {
     const el = workspaceCanvasBoxRef.current;
@@ -6649,16 +7325,82 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   };
 
   // Add to Cart Action
-  const handleAddToCart = () => {
+  // Renders the live preview (frame, wrap, text, layout, every panel's photo as the shopper arranged it)
+  // into a small JPEG that is saved with the order, so admins see exactly what was customized.
+  // Best effort: any failure (e.g. a photo host that blocks cross-origin reads) just means no preview.
+  const captureDesignPreview = async (): Promise<string | undefined> => {
+    const node = stageRef.current;
+    if (!node) return undefined;
+    try {
+      const { toJpeg } = await import('html-to-image');
+      const rect = node.getBoundingClientRect();
+      if (!rect.width || !rect.height) return undefined;
+      const pixelRatio = Math.min(1, 720 / Math.max(rect.width, rect.height));
+      const keep = (el: Node): boolean => {
+        if (!(el instanceof HTMLElement)) return !(el.nodeType === 3 && /^s*[d.]+s*inch/.test(el.textContent || ''));
+        if (el.tagName === 'BUTTON' || el.dataset.noCapture !== undefined) return false;
+        const text = el.textContent || '';
+        return !(text.length < 60 && /^s*[d.]+s*inch/.test(text));
+      };
+      for (const quality of [0.82, 0.6, 0.4]) {
+        const url = await toJpeg(node, { quality, pixelRatio, backgroundColor: '#ffffff', filter: keep });
+        if (url.length <= 550_000) return url;
+      }
+    } catch (error) {
+      console.warn('Could not capture a design preview for the order:', error);
+    }
+    return undefined;
+  };
+
+  const handleAddToCart = async () => {
+    // The live preview always needs a real size/thickness/wrap/etc. selected
+    // internally to render - but a shopper who never touched any picker
+    // shouldn't be charged for whichever option happened to be cheapest by
+    // default. Block checkout entirely until they've made at least one real
+    // choice, rather than silently adding an unrequested default to cart.
+    if (!hasCustomized) {
+      setValidationWarning('Choose a size and your other options before adding this to your cart.');
+      setTimeout(() => setValidationWarning(null), 4000);
+      setActiveTab('SELECT SIZE');
+      return;
+    }
+
     if (!isComplete) {
-      setValidationWarning('Please upload or select at least one photograph to customize your canvas print.');
+      setValidationWarning(activeStyleLayout ? 'Add a photo to every panel before adding the layout to your cart.' :
+        'Please upload or select at least one photograph to customize your canvas print.');
       setTimeout(() => setValidationWarning(null), 4000);
       setActiveTab('UPLOAD');
       return;
     }
 
+    // selectedThicknessId always holds a real id (see its useState above),
+    // but a product that shows the Wrap & Border thickness picker must have
+    // one actually picked, not just some other option touched, before it
+    // can be priced.
+    if (!thicknessTouched && !isBannerProduct && selectedThicknessId !== 'no-wrap-thickness' && selectedThicknessId !== 'no-wrap') {
+      setValidationWarning('Please select a thickness in Wrap & Border before adding this to your cart.');
+      setTimeout(() => setValidationWarning(null), 4000);
+      setActiveTab('WRAP & BORDER');
+      return;
+    }
+
     const firstImage = panelImages[0]?.imageUrl || uploadedPhotos[0] || catalogProduct.image;
     const retouchLabels = RETOUCH_CHECKS.filter((r) => retouchChecks[r.id]).map((r) => r.label);
+    const previewImage = await captureDesignPreview();
+    // The storefront product page the shopper came from (if any), so admins can open exactly that page.
+    // Strict match only: catalogProduct itself falls back to an arbitrary product when there is no match.
+    const sourceKey = searchParams.get('product') || productId;
+    const sourceProduct = sourceKey
+      ? (Array.isArray(allProducts) ? allProducts : []).find((p) => p.id === sourceKey || p.slug === sourceKey)
+      : undefined;
+    const isReadyMadeCatalogue = isPrefillMode || Boolean(sourceProduct && !isGenericCustomStyleId(sourceProduct.id) && !isGenericCustomStyleId(sourceProduct.slug));
+    // A catalogue design opened for customizing stays "ready-made" only while its own artwork is the only photo
+    // and no text was added; the customer's own photo or text makes it a personalized print.
+    const catalogueArt = searchParams.get('prefillImage');
+    const photosInDesign = [...uploadedPhotos, ...Object.values(panelImages).map((panel) => panel?.imageUrl)].filter(Boolean) as string[];
+    const catalogueArtReplaced = Boolean(catalogueArt) && (photosInDesign.some((url) => url !== catalogueArt) || Boolean(customText));
+    const hasUserUploadedPhoto = !isReadyMadeCatalogue || catalogueArtReplaced;
+    const prefillTitle = searchParams.get('prefillName');
 
     onAddToCartCustomized({
       product: {
@@ -6679,6 +7421,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           ? `${selectedProductType.name} (${(POP_ART_STYLES.find((style) => style.id === popArtConfig.selectedStyleId) ?? getPopArtStyle(popArtConfig.selectedStyleId)).name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
           : isLyricProduct
           ? `${selectedProductType.name} (${selectedLyricTemplate.name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
+          : isPrefillMode && prefillTitle
+          ? prefillTitle
+          : (sourceProduct && !isGenericCustomStyleId(sourceProduct.id) && !isGenericCustomStyleId(sourceProduct.slug))
+          ? sourceProduct.name
           : `${selectedProductType.name} - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
       },
       size: isWordArtProduct
@@ -6690,6 +7436,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         : isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary,
       finish: activeMaterial === 'acrylic'
         ? (ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || `${selectedThicknessId.toUpperCase()} Optical Acrylic`)
+        : (selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap')
+        ? 'No Wrap (0.00")'
+        : !thicknessTouched
+        ? undefined
         : selectedThicknessId === 'custom-thickness'
         ? `Custom Thickness (${customThicknessMm}mm)`
         : (CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Thin Gallery Wrap (0.75")'),
@@ -6720,17 +7470,32 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             return hw?.name || hw?.label || 'No Hooks';
           })(),
       customizationDetails: {
+        previewImage,
+        sourceProductId: sourceProduct?.id,
+        sourceProductSlug: sourceProduct?.slug,
+        isReadyMadeCatalogue,
+        hasUserUploadedPhoto,
         material: activeMaterial,
         productTypeId: selectedProductTypeId,
-        sizeId: selectedSizeId,
+        // A custom size is not the preset that happened to be selected underneath it, so record the real dimensions.
+        sizeId: activeStyleLayout?.id ?? (isCustomSize && canUseCustomSize ? `custom-${customWidth}x${customHeight}` : selectedSizeId),
+        customLayout: activeStyleLayout ? {
+          id: activeStyleLayout.id, name: activeStyleLayout.name, outline: activeStyleLayout.outline,
+          shapeId: activeStyleLayout.shapeId, width: activeStyleLayout.overallWidthInches,
+          height: activeStyleLayout.overallHeightInches, panels: activeStyleLayout.panels,
+        } : undefined,
         shape: shapeApplies ? currentShape.name : undefined,
         thickness: activeMaterial === 'acrylic'
           ? (ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || `${selectedThicknessId.toUpperCase()} Optical Acrylic`)
+          : (selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap')
+          ? 'No Wrap (0.00")'
+          : !thicknessTouched
+          ? undefined
           : selectedThicknessId === 'custom-thickness'
           ? `Custom Thickness (${customThicknessMm}mm)`
           : (CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Thin Gallery Wrap (0.75")'),
-        customThicknessMm: activeMaterial === 'canvas' && selectedThicknessId === 'custom-thickness' ? customThicknessMm : undefined,
-        customThicknessInches: activeMaterial === 'canvas' && selectedThicknessId === 'custom-thickness' ? customThicknessInches : undefined,
+        customThicknessMm: activeMaterial === 'canvas' && thicknessTouched && selectedThicknessId === 'custom-thickness' ? customThicknessMm : undefined,
+        customThicknessInches: activeMaterial === 'canvas' && thicknessTouched && selectedThicknessId === 'custom-thickness' ? customThicknessInches : undefined,
         wrap: activeMaterial === 'canvas' ? liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.label : undefined,
         borderWidth: shapeApplies ? liveOrFallbackBorderWidths.find((b) => b.id === selectedBorderWidthId)?.label : undefined,
         borderColor: shapeApplies && selectedBorderWidthId !== 'none' ? selectedBorderColor : undefined,
@@ -9089,7 +9854,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   };
 
   return (
-    <div className="w-full h-screen flex flex-col bg-[#F1F5F9] text-stone-900 font-manrope overflow-hidden select-none">
+    <div className="w-full min-h-screen md:h-screen flex flex-col bg-[#F1F5F9] text-stone-900 font-manrope overflow-y-auto md:overflow-hidden select-none">
       <CustomizerPreloader active={preloaderActive} />
       {/* SVG ClipPath Mask Definitions for non-rectangular canvas shapes */}
       <svg width="0" height="0" className="absolute pointer-events-none opacity-0" aria-hidden="true">
@@ -9177,6 +9942,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
+            {!hasCustomized ? (
+              <p className="py-2.5 text-stone-500">Choose a size and your other options to see pricing.</p>
+            ) : (
             <div className="space-y-1.5 py-2.5 text-stone-600">
               <div className="flex justify-between">
                 <span>Base ({selectedProductTypeId === 'canvas-banner' ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}` : isCustomSize && canUseCustomSize ? `${customWidth}"×${customHeight}"` : currentSizeOption.dimensionsSummary}):</span>
@@ -9188,6 +9956,48 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <span className="font-bold text-stone-900">+₹{(() => { const p = liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.price || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
                 </div>
               )}
+              {activeMaterial !== 'acrylic' && selectedProductTypeId !== 'canvas-banner' && thicknessTouched && getCanvasThicknessPrice(selectedThicknessId, customThicknessMm) > 0 && (
+                <div className="flex justify-between">
+                  <span>Thickness ({CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.name ?? 'Frame depth'}):</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = getCanvasThicknessPrice(selectedThicknessId, customThicknessMm); return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(2); })()}</span>
+                </div>
+              )}
+              {shapeApplies && !NON_RECTANGULAR_SHAPE_TYPES.has(currentShape.shapeType) && currentShape.priceAddon > 0 && (
+                <div className="flex justify-between">
+                  <span>Shape ({currentShape.name ?? currentShape.shapeType}):</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = currentShape.priceAddon; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
+                </div>
+              )}
+              {shapeApplies && (liveBorderWidthPrices[selectedBorderWidthId] || 0) > 0 && (
+                <div className="flex justify-between">
+                  <span>Border:</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = liveBorderWidthPrices[selectedBorderWidthId] || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
+                </div>
+              )}
+              {shapeApplies && (() => { const frame = liveOrFallbackFrames.find((f) => f.id === selectedFrameId); return frame && frame.price > 0; })() && (
+                <div className="flex justify-between">
+                  <span>Frame:</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = liveOrFallbackFrames.find((f) => f.id === selectedFrameId)?.price || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
+                </div>
+              )}
+              {activeMaterial === 'acrylic' && (() => { const backing = liveOrFallbackBacking.find((b) => b.id === selectedBackingId); return backing && backing.price > 0; })() && (
+                <div className="flex justify-between">
+                  <span>Backing:</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = liveOrFallbackBacking.find((b) => b.id === selectedBackingId)?.price || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
+                </div>
+              )}
+              {activeMaterial === 'acrylic' && (() => { const finish = liveOrFallbackFinish.find((f) => f.id === selectedFinishId); return finish && finish.price > 0; })() && (
+                <div className="flex justify-between">
+                  <span>Finish:</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = liveOrFallbackFinish.find((f) => f.id === selectedFinishId)?.price || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
+                </div>
+              )}
+              {(selectedMaterialId === 'premium-cotton' || selectedMaterialId === 'archival-cotton') && (
+                <div className="flex justify-between">
+                  <span>Material ({selectedMaterialId === 'premium-cotton' ? 'Premium Cotton' : 'Archival Cotton'}):</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = selectedMaterialId === 'premium-cotton' ? 250 : 450; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
+                </div>
+              )}
               {(selectedHardwareId !== 'no-hooks' || activeMaterial === 'acrylic') && (
                 <div className="flex justify-between">
                   <span>{activeMaterial === 'acrylic' ? `Hardware (${acrylicStudQuantity} studs):` : 'Hardware:'}</span>
@@ -9196,7 +10006,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       const p = selectedProductTypeId === 'canvas-banner'
                         ? (CANVAS_BANNER_HARDWARE_OPTIONS.find((h) => h.id === selectedHardwareId)?.price || 0)
                         : activeMaterial === 'acrylic' && selectedHardwareId === 'acrylic-standoffs'
-                        ? (199 + Math.max(0, acrylicStudQuantity - 4) * 50)
+                        ? studsPrice(acrylicStudQuantity)
                         : (liveOrFallbackHardware.find((h) => h.id === selectedHardwareId)?.price || 0);
                       return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0);
                     })()}
@@ -9220,6 +10030,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 <span className="text-[#0E4A93]">₹{totalPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
             </div>
+            )}
           </div>
         )}
       </div>
@@ -9227,7 +10038,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       {/* ===================================================================== */}
       {/* 2. BODY CONTAINER: 3-COLUMN LAYOUT (Shared with Acrylic Customizer)   */}
       {/* ===================================================================== */}
-      <div className="flex-1 min-w-0 flex flex-col md:flex-row overflow-hidden relative">
+      <div className="flex-1 min-w-0 flex flex-col md:flex-row md:overflow-hidden relative">
         {/* COLUMN 1: LEFT VERTICAL SIDEBAR */}
         <CustomizerSidebar
           items={toolbarItems}
@@ -9289,6 +10100,24 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               ? `${liveOrFallbackHardware.length} Hardware`
               : 'Specifications'
           }
+          mobileMode={isPanelHiddenMobile ? 'hidden' : activeTab === mobileRestingTab ? 'inline' : 'overlay'}
+          onCloseMobile={() => setIsPanelHiddenMobile(true)}
+          prevStep={{
+            label: prevTab.label,
+            disabled: activeTabIndex === 0,
+            onClick: () => handleStepNav(prevTab.id)
+          }}
+          nextStep={{
+            label: nextTab.label,
+            disabled: activeTabIndex === toolbarItems.length - 1,
+            onClick: () => handleStepNav(nextTab.id)
+          }}
+          previewAction={
+            (activeTab === 'SELECT SIZE' || activeTab === 'LAYOUTS & DESIGNS' || activeTab === 'WRAP & BORDER' || activeTab === 'HARDWARE & FINISH')
+              ? { label: 'View Preview', onClick: () => setIsPanelHiddenMobile(true) }
+              : undefined
+          }
+          onAddToCart={handleAddToCart}
         >
           {/* ---------------------------- PRODUCTS ---------------------------- */}
           {activeTab === 'PRODUCTS' && (
@@ -9412,7 +10241,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 />
               )
             ) : (
-            <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto">
+            <div className="flex-1 min-h-0 p-3 sm:p-4 space-y-2.5 sm:space-y-4 overflow-y-auto">
               <div>
                 <h3 className="text-xs font-black text-stone-800 uppercase tracking-wider mb-1">
                   Upload Photos
@@ -9595,7 +10424,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 <button
                   type="button"
                   onClick={() => setUploadMode('computer')}
-                  className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 py-1.5 sm:py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     uploadMode === 'computer'
                       ? 'bg-white text-[#0E4A93] shadow-xs'
                       : 'text-stone-600 hover:text-stone-900'
@@ -9607,7 +10436,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 <button
                   type="button"
                   onClick={() => setUploadMode('mobile')}
-                  className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 py-1.5 sm:py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     uploadMode === 'mobile'
                       ? 'bg-white text-[#0E4A93] shadow-xs'
                       : 'text-stone-600 hover:text-stone-900'
@@ -9634,7 +10463,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       uploadTargetRef.current = (isSplitProduct || isMosaicProduct) ? 0 : -1;
                       fileInputRef.current?.click();
                     }}
-                    className="w-full py-3 px-4 bg-[#0E4A93] hover:bg-[#0B3A75] active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
+                    className="w-full py-2.5 sm:py-3 px-4 bg-[#0E4A93] hover:bg-[#0B3A75] active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <UploadCloud className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
                     <span>{isMobile ? 'Select Photo from Device' : 'Browse Photos to Upload'}</span>
@@ -9650,10 +10479,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       e.preventDefault();
                       handleFilesUpload(e.dataTransfer.files, (isSplitProduct || isMosaicProduct) ? 0 : -1);
                     }}
-                    className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-4 sm:p-6 text-center cursor-pointer transition-all group"
+                    className="border-2 border-dashed border-[#0E4A93]/40 hover:border-[#0E4A93] bg-blue-50/40 hover:bg-blue-50/80 rounded-2xl p-3 sm:p-6 text-center cursor-pointer transition-all group"
                   >
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white text-[#0E4A93] shadow-sm flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
-                      <UploadCloud className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+                    <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-white text-[#0E4A93] shadow-sm flex items-center justify-center mx-auto mb-1.5 sm:mb-3 group-hover:scale-110 transition-transform">
+                      <UploadCloud className="w-4 h-4 sm:w-6 sm:h-6 stroke-[2.5]" />
                     </div>
                     <div className="text-xs font-bold text-stone-900">
                       {isMobile ? 'Or tap here to choose from Gallery / Camera' : 'Click to Browse or Drag Photos'}
@@ -9794,17 +10623,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             className="w-full h-full object-cover pointer-events-none" 
                           />
                           {/* Move / Drag Indicator Icon */}
-                          <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-xs text-white p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                          <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-xs text-white p-0.5 rounded opacity-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block">
                             <Move className="w-2.5 h-2.5" />
                           </div>
-                          {/* Remove Photo Button */}
+                          {/* Remove Photo Button — always visible on mobile
+                              (there's no hover state on touch), hover-reveal
+                              only on larger pointer-driven screens. */}
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleRemoveUploadedPhoto(photo, pIdx);
                             }}
-                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-rose-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10"
+                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-rose-600 text-white flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all cursor-pointer z-10"
                             title="Remove photo"
                             aria-label="Remove photo"
                           >
@@ -9918,6 +10749,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             <div className="p-4 space-y-4">
               {isSinglePrintCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct || isWordArtProduct ? (
                 <>
+                  {/* Shown only when arriving from a catalogue design's fixed "preview"
+                      price — explains why the price here differs from the one the
+                      shopper already saw, instead of looking like a pricing error. */}
+                  {isPrefillMode && (
+                    <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-xl border border-amber-200 mb-3">
+                      <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-900 leading-relaxed">
+                        The price you saw on the product page is the starting price for this design. Pick your size and finish below to see the price for your actual order.
+                      </p>
+                    </div>
+                  )}
                   {/* Selected Size Summary Card */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 sm:p-3.5 bg-blue-50/70 rounded-2xl border border-blue-100 mb-3">
                     <div>
@@ -9926,7 +10768,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         {isCustomSize ? `${customWidth}" × ${customHeight}" (Custom)` : currentSizeOption?.label || selectedSizeId}
                       </div>
                       <div className="text-xs font-black text-[#0E4A93]">
-                        ₹{sizePrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        {hasCustomized ? `₹${sizePrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'Select a size to see price'}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
@@ -9986,7 +10828,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                               }
                             }
                           }}
-                          className={`flex-1 min-w-[62px] py-1.5 px-1.5 text-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${
+                          className={`py-1.5 px-3 text-center text-[11px] font-extrabold rounded-lg whitespace-nowrap transition-all cursor-pointer ${
                             isActive
                               ? 'bg-[#0E4A93] text-white shadow-xs'
                               : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
@@ -10092,7 +10934,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                             {/* Price text */}
                             <div className="text-[11px] text-[#0E4A93] text-center font-extrabold">
-                              ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(opt.price + popStyleAdjustment, quantity) : opt.price + popStyleAdjustment).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              ₹{(() => { const shown = areaPriced(opt.widthInches, opt.heightInches, opt.price) + popStyleAdjustment; return quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(shown, quantity) : shown; })().toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                           </div>
                         );
@@ -10105,64 +10947,38 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       Custom Size (Height × Width inches)
                     </div>
                     <div className="flex items-center justify-center gap-2 flex-wrap">
-                      <div className="relative">
-                        <select
-                          value={customHeight}
-                          onChange={(e) => {
-                            setIsCustomSize(true);
-                            const val = Number(e.target.value);
-                            setCustomHeight(val);
-                            if (isWordArtProduct) {
-                              setWordArtSizeOption((prev) => ({
-                                ...prev,
-                                heightInches: val,
-                                label: `${prev.widthInches}" × ${val}"`,
-                                aspectRatio: prev.widthInches / val
-                              }));
-                            }
-                          }}
-                          className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] appearance-none pr-6 cursor-pointer"
+                      <select
+                        value={customHeight}
+                        onChange={(e) => chooseCustomHeight(Number(e.target.value))}
+                        className="w-24 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] cursor-pointer"
                         >
-                          {/* Current value merged in — a prefilled aspect-matched
-                              size (or any other exact value) renders as a real
-                              selection even when it isn't one of the coarse steps. */}
-                          {Array.from(new Set([...CUSTOM_SIZE_STEPS, customHeight])).sort((a, b) => a - b).map((n) => (
-                            <option key={n} value={n}>{n}&quot;</option>
+                          {customSizeDropdownValues(customHeight).map((inches) => (
+                            <option key={inches} value={inches}>{inches}"</option>
                           ))}
                         </select>
-                        <ChevronDown className="w-3.5 h-3.5 text-stone-500 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
 
                       <span className="text-xs text-stone-400 font-bold px-1">×</span>
 
-                      <div className="relative">
-                        <select
-                          value={customWidth}
-                          onChange={(e) => {
-                            setIsCustomSize(true);
-                            const val = Number(e.target.value);
-                            setCustomWidth(val);
-                            if (isWordArtProduct) {
-                              setWordArtSizeOption((prev) => ({
-                                ...prev,
-                                widthInches: val,
-                                label: `${val}" × ${prev.heightInches}"`,
-                                aspectRatio: val / prev.heightInches
-                              }));
-                            }
-                          }}
-                          className="w-20 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] appearance-none pr-6 cursor-pointer"
+                      <select
+                        value={customWidth}
+                        onChange={(e) => chooseCustomWidth(Number(e.target.value))}
+                        className="w-24 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] cursor-pointer"
                         >
-                          {Array.from(new Set([...CUSTOM_SIZE_STEPS, customWidth])).sort((a, b) => a - b).map((n) => (
-                            <option key={n} value={n}>{n}&quot;</option>
+                          {customSizeDropdownValues(customWidth).map((inches) => (
+                            <option key={inches} value={inches}>{inches}"</option>
                           ))}
                         </select>
-                        <ChevronDown className="w-3.5 h-3.5 text-stone-500 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
 
                       <div className="text-xs font-black text-[#0E4A93] ml-2">
                         ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(customSizePrice, quantity) : customSizePrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
+                      <button
+                        type="button"
+                        onClick={confirmCustomSize}
+                        className="px-3 py-1.5 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                      >
+                        Set size
+                      </button>
                     </div>
                   </div>
 
@@ -10224,12 +11040,76 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           }}
                           title={opt.label}
                           subtitle={opt.dimensionsSummary}
-                          priceText={`₹${(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(opt.price, quantity) : opt.price).toLocaleString('en-IN')}`}
+                          priceText={`₹${(() => { const shown = areaPriced(opt.widthInches, opt.heightInches, opt.price); return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(shown, quantity) : shown); })().toLocaleString('en-IN')}`}
                           previewHeightClass="h-16 p-1.5"
                           preview={renderSizePreview(opt, isSelected)}
                         />
                       );
                     })}
+                  </div>
+
+                  {/* Custom Size Box for shaped canvases - a single synced
+                      diameter for round (it has to stay a circle), or the
+                      usual independent Height x Width pair otherwise. */}
+                  <div className="mt-4 p-3 bg-stone-50 rounded-xl border border-stone-200">
+                    <div className="text-center text-[11px] font-bold text-stone-700 mb-2">
+                      {selectedProductTypeId === 'canvas-round' ? 'Custom Diameter (inches)' : 'Custom Size (Height × Width inches)'}
+                    </div>
+                    {selectedProductTypeId === 'canvas-round' ? (
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <select
+                          value={customWidth}
+                          onChange={(e) => chooseCustomRoundSize(Number(e.target.value))}
+                          className="w-24 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] cursor-pointer"
+                          >
+                            {customSizeDropdownValues(customWidth).map((inches) => (
+                              <option key={inches} value={inches}>{inches}"</option>
+                            ))}
+                          </select>
+                        <div className="text-xs font-black text-[#0E4A93] ml-2">
+                          ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(customSizePrice, quantity) : customSizePrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={confirmCustomSize}
+                          className="px-3 py-1.5 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                        >
+                          Set size
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <select
+                          value={customHeight}
+                          onChange={(e) => chooseCustomHeight(Number(e.target.value))}
+                          className="w-24 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] cursor-pointer"
+                          >
+                            {customSizeDropdownValues(customHeight).map((inches) => (
+                              <option key={inches} value={inches}>{inches}"</option>
+                            ))}
+                          </select>
+                        <span className="text-xs text-stone-400 font-bold px-1">×</span>
+                        <select
+                          value={customWidth}
+                          onChange={(e) => chooseCustomWidth(Number(e.target.value))}
+                          className="w-24 px-2 py-1.5 border border-stone-300 bg-white text-xs font-bold text-stone-800 rounded-lg focus:outline-none focus:border-[#0E4A93] cursor-pointer"
+                          >
+                            {customSizeDropdownValues(customWidth).map((inches) => (
+                              <option key={inches} value={inches}>{inches}"</option>
+                            ))}
+                          </select>
+                        <div className="text-xs font-black text-[#0E4A93] ml-2">
+                          ₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(customSizePrice, quantity) : customSizePrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={confirmCustomSize}
+                          className="px-3 py-1.5 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                        >
+                          Set size
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -10425,13 +11305,19 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                           </div>
                                         )}
 
-                                        <div className={`relative w-full h-24 flex items-center justify-center p-2.5 ${tpl.swatchClass}`}>
-                                          {renderDecorSvg(tpl.decor, tpl.accent, 'absolute inset-0 w-full h-full pointer-events-none')}
-                                          <div className="relative w-12 h-14 rounded bg-white/90 border border-black/10 shadow-xs flex items-center justify-center text-center p-1">
-                                            <span className="text-[8px] font-black leading-tight text-stone-800 line-clamp-2">
-                                              {tpl.textPreset}
-                                            </span>
-                                          </div>
+                                        <div className={`relative w-full h-24 flex items-center justify-center p-2.5 ${tpl.swatchClass}`} style={tpl.bgColor ? { backgroundColor: tpl.bgColor, color: tpl.textColor } : undefined}>
+                                          {tpl.imageUrl ? (
+                                            <img src={tpl.imageUrl} alt={tpl.name} className="absolute inset-0 w-full h-full object-cover" />
+                                          ) : (
+                                            <>
+                                              {renderDecorSvg(tpl.decor, tpl.accent, 'absolute inset-0 w-full h-full pointer-events-none')}
+                                              <div className="relative w-12 h-14 rounded bg-white/90 border border-black/10 shadow-xs flex items-center justify-center text-center p-1">
+                                                <span className="text-[8px] font-black leading-tight text-stone-800 line-clamp-2">
+                                                  {tpl.textPreset}
+                                                </span>
+                                              </div>
+                                            </>
+                                          )}
                                         </div>
 
                                         <div className="p-1.5 bg-white text-center border-t border-stone-100">
@@ -10453,7 +11339,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                   {/* ==================== LAYOUTS TAB ==================== */}
                   {layoutSubTab === 'LAYOUTS' && (() => {
-                    const currentProductLayouts = getProductLayouts(selectedProductTypeId);
+                    const currentProductLayouts = getManagedLayouts(selectedProductTypeId);
                     const activeLayout = currentProductLayouts.find((l) => l.id === selectedLayoutId) || currentProductLayouts[0];
                     return (
                       <div className="space-y-3">
@@ -10543,7 +11429,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                                 <div className="w-full h-24 bg-stone-50 border-b border-stone-100 p-2 flex items-center justify-center">
                                   <div className="w-full h-full flex items-center justify-center group-hover:scale-105 transition-transform">
-                                    {renderProductLayoutDiagram(layout, isSelected)}
+                                    {layout.coverImage ? <img src={layout.coverImage} alt={layout.name} className="max-h-full max-w-full object-contain" /> : renderProductLayoutDiagram(layout, isSelected)}
                                   </div>
                                 </div>
 
@@ -10579,28 +11465,40 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       {activeMaterial === 'acrylic' ? 'Thickness' : 'Wrap'}
                     </span>
                     <span className="text-[11px] font-semibold text-stone-200">
-                      {activeMaterial === 'acrylic' ? `${ACRYLIC_THICKNESS_OPTIONS.length} options` : '3 options'}
+                      {activeMaterial === 'acrylic' ? `${ACRYLIC_THICKNESS_OPTIONS.length} options` : `${CANVAS_THICKNESS_OPTIONS.filter((t) => t.id !== 'custom-thickness' && t.id !== 'hanging-canvas').length} options`}
                     </span>
                   </div>
 
                   <div className="p-3 space-y-3">
                     {/* Thickness Options Grid */}
-                    <div className={`grid gap-2 ${activeMaterial === 'acrylic' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
-                      {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS.slice(0, 3)).map((th: any) => {
-                        const isSelected = selectedThicknessId === th.id;
+                    <div className="grid gap-2 grid-cols-2 sm:grid-cols-4">
+                      {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS.filter((t) => t.id !== 'custom-thickness' && t.id !== 'hanging-canvas')).map((th: any) => {
+                        // Don't show a card as "selected" until the shopper has actually
+                        // clicked one - selectedThicknessId silently holds the cheapest
+                        // option by default so pricing/preview math never breaks, but
+                        // that default must stay invisible in the UI until touched.
+                        const isSelected = thicknessTouched && selectedThicknessId === th.id;
                         const displayTitle = th.name || th.label.split('(')[0].trim();
-                        const displaySub = th.thicknessInches ? `(${th.thicknessInches.toFixed(2)}")` : th.thicknessMm ? `(${th.thicknessMm}mm)` : '';
+                        const displaySub = th.thicknessInches !== undefined ? `(${th.thicknessInches.toFixed(2)}")` : th.thicknessMm ? `(${th.thicknessMm}mm)` : '';
                         return (
                           <CustomizerOptionCard
                             key={th.id}
                             selected={isSelected}
-                            onClick={() => setSelectedThicknessId(th.id)}
+                            onClick={() => {
+                              if (thicknessTouched && selectedThicknessId === th.id) {
+                                setSelectedThicknessId('no-wrap-thickness');
+                                setThicknessTouched(false);
+                              } else {
+                                setSelectedThicknessId(th.id);
+                                setThicknessTouched(true);
+                              }
+                            }}
                             badge={th.badge}
                             title={displayTitle}
                             subtitle={displaySub}
                             priceText={th.price === 0 ? 'Included' : `+₹${th.price.toFixed(2)}`}
                             previewHeightClass="h-16 p-1"
-                            preview={renderWrapPreview(th.id)}
+                            preview={th.image ? <img src={th.image} alt={th.name || th.label} className="mx-auto h-full max-h-14 w-auto object-contain" /> : renderWrapPreview(th.id, { inches: th.thicknessInches, depthPx: th.depthPx })}
                           />
                         );
                       })}
@@ -10611,7 +11509,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       <div className="pt-2 border-t border-stone-100">
                         <button
                           type="button"
-                          onClick={() => setSelectedThicknessId(selectedThicknessId === 'custom-thickness' ? 'thin-gallery' : 'custom-thickness')}
+                          onClick={() => {
+                            if (selectedThicknessId === 'custom-thickness') {
+                              setSelectedThicknessId('no-wrap-thickness');
+                              setThicknessTouched(false);
+                            } else {
+                              setSelectedThicknessId('custom-thickness');
+                              setThicknessTouched(true);
+                            }
+                          }}
                           className={`w-full py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-between border transition-all ${
                             selectedThicknessId === 'custom-thickness'
                               ? 'border-[#0E4A93] bg-blue-50/50 text-[#0E4A93]'
@@ -10669,59 +11575,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         )}
                       </div>
                     )}
-                  </div>
-                </div>
-              )}
-
-              {/* ==================== EDGE WRAP (admin-managed via wrap_style, canvas only) ==================== */}
-              {activeMaterial === 'canvas' && selectedProductTypeId !== 'canvas-banner' && (
-                <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
-                  <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider">Edge Wrap</span>
-                    <span className="text-[11px] font-semibold text-stone-200">{liveOrFallbackWrapStyles.length} options</span>
-                  </div>
-                  <div className="p-3">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {liveOrFallbackWrapStyles.map((w) => (
-                        <CustomizerOptionCard
-                          key={w.id}
-                          selected={selectedWrapId === w.id}
-                          onClick={() => setSelectedWrapId(w.id)}
-                          title={w.name}
-                          priceText={w.price === 0 ? 'Included' : `+₹${w.price}`}
-                          previewHeightClass="h-16 p-1.5"
-                          preview={
-                            <div className="w-12 h-12 mx-auto relative flex items-center justify-center">
-                              <div className="w-10 h-10 rounded border border-stone-300 relative overflow-hidden bg-stone-100 flex items-center justify-center">
-                                {w.id === 'full-bleed' && (
-                                  <div className="w-full h-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500" />
-                                )}
-                                {w.id === 'clear-edge' && (
-                                  <div className="w-full h-full p-1 bg-stone-200">
-                                    <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 rounded-xs border border-dashed border-white" />
-                                  </div>
-                                )}
-                                {w.id === 'white-border' && (
-                                  <div className="w-full h-full p-1.5 bg-white border border-stone-300">
-                                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
-                                  </div>
-                                )}
-                                {w.id === 'black-border' && (
-                                  <div className="w-full h-full p-1.5 bg-[#0F172A]">
-                                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
-                                  </div>
-                                )}
-                                {w.id === 'no-wrap' && (
-                                  <div className="w-full h-full p-1 bg-stone-300">
-                                    <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xs" />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          }
-                        />
-                      ))}
-                    </div>
                   </div>
                 </div>
               )}
@@ -10885,6 +11738,72 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </div>
               </div>
 
+              {/* ==================== EDGE WRAP (admin-managed via wrap_style, canvas only) ==================== */}
+              {activeMaterial === 'canvas' && selectedProductTypeId !== 'canvas-banner' && (
+                <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
+                  <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider">Edge Wrap</span>
+                    <span className="text-[11px] font-semibold text-stone-200">{liveOrFallbackWrapStyles.length} options</span>
+                  </div>
+                  <div className="p-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {liveOrFallbackWrapStyles.map((w) => (
+                        <CustomizerOptionCard
+                          key={w.id}
+                          selected={selectedWrapId === w.id}
+                          onClick={() => {
+                            setSelectedWrapId(w.id);
+                            // Keep the Border section's own color swatch in
+                            // sync with Black/White Border Wrap, but only when
+                            // a border is already active - otherwise this would
+                            // visually turn a border on the user never chose.
+                            if (selectedBorderWidthId !== 'none') {
+                              if (w.id === 'black-border') {
+                                setSelectedBorderColor('#000000');
+                              } else if (w.id === 'white-border') {
+                                setSelectedBorderColor('#FFFFFF');
+                              }
+                            }
+                          }}
+                          title={w.name}
+                          priceText={w.price === 0 ? 'Included' : `+₹${w.price}`}
+                          previewHeightClass="h-16 p-1.5"
+                          preview={
+                            <div className="w-12 h-12 mx-auto relative flex items-center justify-center">
+                              <div className="w-10 h-10 rounded border border-stone-300 relative overflow-hidden bg-stone-100 flex items-center justify-center">
+                                {w.id === 'full-bleed' && (
+                                  <div className="w-full h-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500" />
+                                )}
+                                {w.id === 'clear-edge' && (
+                                  <div className="w-full h-full p-1 bg-stone-200">
+                                    <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 rounded-xs border border-dashed border-white" />
+                                  </div>
+                                )}
+                                {w.id === 'white-border' && (
+                                  <div className="w-full h-full p-1.5 bg-white border border-stone-300">
+                                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
+                                  </div>
+                                )}
+                                {w.id === 'black-border' && (
+                                  <div className="w-full h-full p-1.5 bg-[#0F172A]">
+                                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
+                                  </div>
+                                )}
+                                {w.id === 'no-wrap' && (
+                                  <div className="w-full h-full p-1 bg-stone-300">
+                                    <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xs" />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          }
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* ==================== 3. FRAMES SECTION (Matching Screenshot 3) ==================== */}
               {!isMultiFrameProduct && (
                 <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
@@ -10897,97 +11816,59 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   </div>
 
                   <div className="divide-y divide-stone-100">
-                    {/* Accordion 1: Standard */}
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => setExpandedFrameCategory(expandedFrameCategory === 'standard' ? 'floating' : 'standard')}
-                        className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
-                      >
-                        <span>Standard</span>
-                        {expandedFrameCategory === 'standard' ? (
-                          <ChevronDown className="w-4 h-4 text-stone-500" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4 text-stone-400" />
-                        )}
-                      </button>
-                      {expandedFrameCategory === 'standard' && (
-                        <div className="p-3 bg-stone-50/50 text-xs text-stone-500 italic">
-                          Standard gallery frames are available in single canvas formats. Select Floating for museum-grade floating shadow gap frames.
-                        </div>
-                      )}
-                    </div>
+                    {/* Frame groups: Standard / Premium / Floating plus any group added in the admin */}
+                    {frameGroups.map((group) => {
+                      const groupFrames = liveOrFallbackFrames.filter((ff) => ff.id !== 'no-frame' && ff.group === group.key);
+                      if (groupFrames.length === 0 && !group.builtIn) return null;
+                      const isOpen = expandedFrameCategory === group.key;
+                      return (
+                        <div key={group.key}>
+                          <button
+                            type="button"
+                            onClick={() => setExpandedFrameCategory(isOpen ? 'floating' : group.key)}
+                            className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
+                          >
+                            <span>{group.label}</span>
+                            {isOpen ? <ChevronDown className="w-4 h-4 text-stone-500" /> : <ChevronRight className="w-4 h-4 text-stone-400" />}
+                          </button>
+                          {isOpen && groupFrames.length === 0 && (
+                            <div className="p-3 bg-stone-50/50 text-xs text-stone-500 italic">{group.note}</div>
+                          )}
+                          {isOpen && groupFrames.length > 0 && (
+                            <div className="p-3 space-y-2.5">
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                {groupFrames.map((ff) => {
+                                  const isSelected = selectedFrameId === ff.id;
+                                  return (
+                                    <CustomizerOptionCard
+                                      key={ff.id}
+                                      selected={isSelected}
+                                      onClick={() => setSelectedFrameId(isSelected ? 'no-frame' : ff.id)}
+                                      title={ff.name}
+                                      priceText={ff.price === 0 ? 'Free' : `₹${ff.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                      previewHeightClass="h-16 p-1.5"
+                                      preview={ff.image && ff.id.length > 20 ? <img src={ff.image} alt={ff.name} className="mx-auto h-full max-h-14 w-auto object-contain" /> : renderFloatingFrameThumbnail(ff.id)}
+                                    />
+                                  );
+                                })}
+                              </div>
 
-                    {/* Accordion 2: Premium */}
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => setExpandedFrameCategory(expandedFrameCategory === 'premium' ? 'floating' : 'premium')}
-                        className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
-                      >
-                        <span>Premium</span>
-                        {expandedFrameCategory === 'premium' ? (
-                          <ChevronDown className="w-4 h-4 text-stone-500" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4 text-stone-400" />
-                        )}
-                      </button>
-                      {expandedFrameCategory === 'premium' && (
-                        <div className="p-3 bg-stone-50/50 text-xs text-stone-500 italic">
-                          Premium artisanal framing with solid hardwoods.
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Accordion 3: Floating (Expanded as shown in Screenshot 3) */}
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => setExpandedFrameCategory(expandedFrameCategory === 'floating' ? 'standard' : 'floating')}
-                        className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
-                      >
-                        <span>Floating</span>
-                        {expandedFrameCategory === 'floating' ? (
-                          <ChevronDown className="w-4 h-4 text-stone-500" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4 text-stone-400" />
-                        )}
-                      </button>
-
-                      {expandedFrameCategory === 'floating' && (
-                        <div className="p-3 space-y-2.5">
-                          {/* Admin-managed via the 'frame' option category */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                            {liveOrFallbackFrames.filter((ff) => ff.id !== 'no-frame').map((ff) => {
-                              const isSelected = selectedFrameId === ff.id;
-                              return (
-                                <CustomizerOptionCard
-                                  key={ff.id}
-                                  selected={isSelected}
-                                  onClick={() => setSelectedFrameId(isSelected ? 'no-frame' : ff.id)}
-                                  title={ff.name}
-                                  priceText={`₹${ff.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                                  previewHeightClass="h-16 p-1.5"
-                                  preview={renderFloatingFrameThumbnail(ff.id)}
-                                />
-                              );
-                            })}
-                          </div>
-
-                          {selectedFrameId !== 'no-frame' && (
-                            <div className="flex justify-end pt-1">
-                              <button
-                                type="button"
-                                onClick={() => setSelectedFrameId('no-frame')}
-                                className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
-                              >
-                                Remove Frame (Frameless)
-                              </button>
+                              {selectedFrameId !== 'no-frame' && (
+                                <div className="flex justify-end pt-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedFrameId('no-frame')}
+                                    className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                                  >
+                                    Remove Frame (Frameless)
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
-                      )}
-                    </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -11007,7 +11888,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS).map((th: any) => {
-                      const isSelected = selectedThicknessId === th.id;
+                      // Same as the other thickness grid - stay unchecked until actually clicked.
+                      const isSelected = thicknessTouched && selectedThicknessId === th.id;
                       const cardTitle = activeMaterial === 'canvas' && th.id === 'custom-thickness' && selectedThicknessId === 'custom-thickness'
                         ? `Custom (${customThicknessMm}mm)`
                         : th.label;
@@ -11018,12 +11900,20 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         <CustomizerOptionCard
                           key={th.id}
                           selected={isSelected}
-                          onClick={() => setSelectedThicknessId(th.id)}
+                          onClick={() => {
+                            if (thicknessTouched && selectedThicknessId === th.id) {
+                              setSelectedThicknessId('no-wrap-thickness');
+                              setThicknessTouched(false);
+                            } else {
+                              setSelectedThicknessId(th.id);
+                              setThicknessTouched(true);
+                            }
+                          }}
                           badge={th.badge}
                           title={cardTitle}
                           priceText={cardPrice}
                           previewHeightClass="h-16 p-1.5"
-                          preview={renderWrapPreview(th.id)}
+                          preview={th.image ? <img src={th.image} alt={th.name || th.label} className="mx-auto h-full max-h-14 w-auto object-contain" /> : renderWrapPreview(th.id, { inches: th.thicknessInches, depthPx: th.depthPx })}
                         />
                       );
                     })}
@@ -11213,7 +12103,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           </span>
                         </div>
                         <span className="text-xs sm:text-sm font-bold text-[#0E4A93]">
-                          ₹199 for 4 studs
+                          ₹50 per stud (min 4)
                         </span>
                       </div>
 
@@ -11234,7 +12124,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                               Set of 4 studs (Included)
                             </div>
                             <div className="text-[11px] font-semibold text-[#0E4A93]">
-                              ₹199 for 4 studs
+                              ₹50 per stud (min 4)
                             </div>
                           </div>
                         </div>
@@ -11329,8 +12219,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     <div className="p-3 bg-[#EBF5FE] border border-blue-200/80 rounded-xl flex items-start gap-2.5 text-[11px] text-stone-700 leading-relaxed shadow-2xs">
                       <Info className="w-4 h-4 text-[#0E4A93] shrink-0 mt-0.5" />
                       <div className="space-y-0.5 font-medium">
-                        <div>• 4 studs are included in the base price of ₹199.</div>
-                        <div>• Each additional stud costs ₹50.</div>
+                        <div>• Each stud is ₹50, with a minimum of 4 studs.</div>
+                        <div>• Studs are priced per stud.</div>
                       </div>
                     </div>
                   </div>
@@ -11556,7 +12446,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         {/* ------------------------------------------------------------------- */}
         {/* COLUMN 3: MAIN RIGHT LIVE CANVAS PREVIEW WORKSPACE                  */}
         {/* ------------------------------------------------------------------- */}
-        <main className="order-1 md:order-3 w-full min-w-0 h-[38vh] min-h-[230px] max-h-[42vh] md:h-full md:max-h-none md:flex-1 shrink-0 md:shrink flex flex-col bg-[#E2E8F0]/60 relative overflow-hidden">
+        <main className="order-1 md:order-3 w-full min-w-0 min-h-[420px] md:min-h-0 md:h-full md:max-h-none md:flex-1 flex flex-col bg-[#E2E8F0]/60 relative overflow-hidden">
           {/* Top Action Bar for Workspace */}
           {isBusRollProduct ? (
             <BusRollTopToolbar
@@ -11593,7 +12483,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               }}
               isRoomViewActive={viewerMode === 'room'}
               isRoomViewDisabled={!hasUploadedImage}
-              onToggleRoomView={productCapabilities.roomView ? () => {
+              onToggleRoomView={!usesStyleLayouts && productCapabilities.roomView ? () => {
                 if (!hasUploadedImage || !productCapabilities.roomView) return;
                 setViewerRotation(0);
                 setViewerTiltX(0);
@@ -11601,7 +12491,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 setViewerMode('room');
               } : undefined}
               is3DViewActive={viewerMode === '3d'}
-              onOpen3DView={activeMaterial !== 'acrylic' && productCapabilities.view3D ? () => {
+              onOpen3DView={!usesStyleLayouts && activeMaterial !== 'acrylic' && productCapabilities.view3D ? () => {
                 if (!hasUploadedImage || !productCapabilities.view3D) return;
                 setPreset3DAngle('top-left');
                 setViewerRotation(35);
@@ -11610,7 +12500,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 setViewerMode('3d');
               } : undefined}
               is360ViewActive={viewerMode === '360'}
-              onOpen360View={activeMaterial !== 'acrylic' && productCapabilities.view360 ? () => {
+              onOpen360View={!usesStyleLayouts && activeMaterial !== 'acrylic' && productCapabilities.view360 ? () => {
                 if (!hasUploadedImage || !productCapabilities.view360) return;
                 setViewerRotation(36);
                 setViewerTiltX(-18);
@@ -11778,17 +12668,30 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             prevStep={{
               label: prevTab.label,
               disabled: activeTabIndex === 0,
-              onClick: () => handleSelectTab(prevTab.id)
+              onClick: () => handleStepNav(prevTab.id)
             }}
             nextStep={{
               label: nextTab.label,
               disabled: activeTabIndex === toolbarItems.length - 1,
-              onClick: () => handleSelectTab(nextTab.id)
+              onClick: () => handleStepNav(nextTab.id)
             }}
+            reselectAction={
+              activeTab === 'LAYOUTS & DESIGNS'
+                ? { label: 'Select Layouts & Design', onClick: () => handleSelectTab('LAYOUTS & DESIGNS') }
+                : activeTab === 'WRAP & BORDER'
+                ? { label: 'Select Another Wrap or Border', onClick: () => handleSelectTab('WRAP & BORDER') }
+                : activeTab === 'HARDWARE & FINISH'
+                ? { label: 'Select Another Hardware or Finish', onClick: () => handleSelectTab('HARDWARE & FINISH') }
+                : toolbarItems.some((t) => t.id === 'SELECT SIZE')
+                ? { label: 'Select Another Size', onClick: () => handleSelectTab('SELECT SIZE') }
+                : toolbarItems.some((t) => t.id === 'LAYOUTS & DESIGNS')
+                ? { label: 'Select Layouts & Design', onClick: () => handleSelectTab('LAYOUTS & DESIGNS') }
+                : undefined
+            }
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             bottomSlot={
-              <div className="hidden md:flex flex-wrap items-center justify-center gap-2.5 text-[11px] font-bold text-stone-600 bg-white/90 backdrop-blur-xs px-4 py-1.5 rounded-full shadow-xs border border-stone-200/80">
+              <div className="flex flex-wrap items-center justify-center gap-1.5 md:gap-2.5 text-[9px] md:text-[11px] font-bold text-stone-600 bg-white/90 backdrop-blur-xs px-2.5 md:px-4 py-1 md:py-1.5 rounded-xl md:rounded-full shadow-xs border border-stone-200/80">
                 {activeMaterial === 'acrylic' ? (
                   <>
                     <span>
@@ -11845,14 +12748,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       </>
                     ) : (
                       <>
-                        <span>•</span>
-                        <span>
-                          Thickness: <strong className="text-stone-900">
-                            {selectedThicknessId === 'custom-thickness'
-                              ? `Custom (${customThicknessMm}mm / ${(customThicknessMm / 25.4).toFixed(2)}")`
-                              : (THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Thin Gallery Wrap (0.75")')}
-                          </strong>
-                        </span>
+                        {thicknessTouched && (
+                          <>
+                            <span>•</span>
+                            <span>
+                              Thickness: <strong className="text-stone-900">
+                                {selectedThicknessId === 'custom-thickness'
+                                  ? `Custom (${customThicknessMm}mm / ${(customThicknessMm / 25.4).toFixed(2)}")`
+                                  : (THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Thin Gallery Wrap (0.75")')}
+                              </strong>
+                            </span>
+                          </>
+                        )}
                         <span>•</span>
                         <span>
                           Wrap: <strong className="text-stone-900">{liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.name}</strong>
@@ -11900,10 +12807,31 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               {isMosaicProduct && renderMosaicCanvas()}
 
               {/* HEXAGON PRINTS (1 or Multi-piece Hexagon Bundles) */}
-              {isHexagonProduct && renderHexagonCluster()}
+              {isHexagonProduct && !usesStyleLayouts && renderHexagonCluster()}
+              {activeStyleLayout && <button type="button" className="my-2 rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold text-[#0E4A93]"
+                onClick={() => setIsLayoutModalOpen(true)}>Change layout</button>}
+              {activeStyleLayout && <ShapedLayoutWorkspace layout={activeStyleLayout} mobile={isMobile}>
+                {index => {
+                  const photo = panelImages[index];
+                  return <div className={`relative h-full w-full overflow-hidden bg-slate-100 ${activePanelIndex === index ? 'opacity-100' : 'opacity-95'}`}
+                    {...panelHandlers(index)} ref={registerWheelRef(index)}>
+                    {photo?.imageUrl ? <img src={photo.imageUrl} alt={`Photo in panel ${index + 1}`} draggable={false}
+                      className="pointer-events-none h-full w-full" style={{
+                        objectFit: photo.fitMode === 'contain' ? 'contain' : 'cover',
+                        transform: `translate(${photo.panX}px, ${photo.panY}px) scale(${photo.scale}) rotate(${photo.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
+                        filter: getFilterCss(photo.filter),
+                      }} /> : <EmptyLayoutPanel index={index} onUpload={() => {
+                      setActivePanelIndex(index);
+                      uploadTargetRef.current = index;
+                      fileInputRef.current?.click();
+                    }} />}
+                    {renderPanelTextItems(index)}
+                  </div>;
+                }}
+              </ShapedLayoutWorkspace>}
 
               {/* SINGLE PANEL LAYOUTS (Single Print, Round, Triangle, Heart, Oval, etc.) */}
-              {!isWallArtProduct &&
+              {!usesStyleLayouts && !isWallArtProduct &&
                 !isCollageProduct &&
                 !isMosaicProduct &&
                 !isSplitProduct &&
@@ -11915,7 +12843,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 const thicknessOption = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId) || THICKNESS_OPTIONS[1];
                 const wrapDepthPx = (thicknessOption as any)?.depthPx || 26;
                 const visibleDepthPx =
-                  selectedThicknessId === 'canvas-lite'
+                  selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap'
+                    ? 0
+                    : selectedThicknessId === 'canvas-lite'
                     ? 10
                     : selectedThicknessId === 'thin-gallery'
                     ? 18
@@ -12013,7 +12943,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           }}
                         >
                           {(() => {
-                            const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges) && !hasFraming;
+                            // The physical gallery-wrap edge strips simulate a
+                            // rectangular stretcher-bar canvas's wrapped side
+                            // depth - they're simple flat bars along the 4
+                            // sides of the bounding box, so on a die-cut shape
+                            // (round/triangle/heart/oval) they drew a square
+                            // frame around the shaped print instead of
+                            // following its outline. Rectangular shapes only.
+                            const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges) && !hasFraming && visibleDepthPx > 0 &&
+                              ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
                           const isWhiteEdge = selectedWrapId === 'white-border';
                           const isImageWrapped = (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && panelImages[0]?.fitMode === 'cover';
                           const imgMeta = panelImages[0]?.uploadedImage;
@@ -12236,6 +13174,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                 </>
                               )}
 
+
                               {/* 2. FRONT CANVAS SURFACE */}
                               <div
                                 {...panelHandlers(0)}
@@ -12261,10 +13200,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                                     : (selectedProductTypeId === 'canvas-banner' ? bannerConfig.backgroundColor : '#FFFFFF'),
                                   clipPath: (showPhysicalEdges || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? undefined
-                                    : currentShape.clipPathStyle,
+                                    : effectiveShapeClipPath,
                                   WebkitClipPath: (showPhysicalEdges || selectedProductTypeId === 'canvas-banner' || ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id))
                                     ? undefined
-                                    : currentShape.clipPathStyle,
+                                    : effectiveShapeClipPath,
                                   touchAction: 'none'
                                 }}
                               >
@@ -12478,10 +13417,20 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                                 {borderWidthPx > 0 && (
                                   <div
-                                    className="absolute inset-0 pointer-events-none z-25"
+                                    className="absolute pointer-events-none z-25"
                                     style={{
+                                      // Inset by half the border width instead of sitting flush
+                                      // at inset-0: on a shaped canvas (round/oval/heart/
+                                      // triangle), this box is clipped to that exact same
+                                      // outline, so a border drawn right at that boundary gets
+                                      // mostly cut away by the clip-path and looks invisible.
+                                      // Pulling it in guarantees the stroke stays inside the
+                                      // visible clip region.
+                                      inset: `${borderWidthPx / 2}px`,
                                       border: `${borderWidthPx}px solid ${selectedBorderColor}`,
-                                      borderRadius: currentShape.id === 'shape-circle' ? '9999px' : undefined
+                                      borderRadius: currentShape.id === 'shape-circle' ? '9999px' : undefined,
+                                      clipPath: ['shape-oval', 'shape-heart', 'shape-triangle'].includes(currentShape.id) ? effectiveShapeClipPath : undefined,
+                                      WebkitClipPath: ['shape-oval', 'shape-heart', 'shape-triangle'].includes(currentShape.id) ? effectiveShapeClipPath : undefined
                                     }}
                                   />
                                 )}
@@ -12583,7 +13532,20 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         frameId: selectedFrameId,
                         displayWidthInches,
                         displayHeightInches,
-                        aspectRatio: printAspect
+                        aspectRatio: printAspect,
+                        // Circle's real shape (circle(50% at 50% 50%)) touches
+                        // all 4 box edges, so border-radius: 9999px reproduces
+                        // it exactly. Oval's real shape (ellipse(50% 38%)) is
+                        // INSET within its box (38% < 50%, margin top/bottom) -
+                        // border-radius can only round a box's own edges, never
+                        // draw a shape smaller than the box, so it can't match
+                        // that inset and leaves a gap. Oval keeps clip-path.
+                        shapeBorderRadius: !isRectangularShape && currentShape.id === 'shape-circle'
+                          ? '9999px'
+                          : undefined,
+                        shapeClipPath: !isRectangularShape && currentShape.id !== 'shape-circle'
+                          ? effectiveShapeClipPath
+                          : undefined
                       }
                     )}
                   </div>
@@ -12722,13 +13684,24 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
         const isHexagonCluster = isHexagonProduct && panels.length > 1;
         const isRectShape = !geom.clipPath && ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
-        const activeClipPath = shapeApplies && currentShape.shapeType === 'custom'
-          ? currentShape.clipPathStyle
+        // productGeometry's own oval clip-path (ellipse(50% 50%)) is a
+        // separate, non-orientation-aware duplicate of the shape catalog's
+        // real oval clip-path - always prefer effectiveShapeClipPath for
+        // oval so this matches the main customizer stage exactly.
+        const activeClipPath = currentShape.id === 'shape-oval'
+          ? effectiveShapeClipPath
+          : shapeApplies && currentShape.shapeType === 'custom'
+          ? effectiveShapeClipPath
           : isHexagonProduct
           ? (geom.clipPath || HEXAGON_HORIZONTAL_CLIP_PATH)
           : isRectShape
           ? undefined
-          : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined));
+          : (geom.clipPath || (shapeApplies ? effectiveShapeClipPath : undefined));
+
+        const isRectangularShape =
+          !activeClipPath &&
+          (!shapeApplies ||
+            ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id));
 
         const frameOption = liveOrFallbackFrames.find((f) => f.id === selectedFrameId);
         const hasOuterFrame = Boolean(shapeApplies && frameOption && frameOption.id !== 'no-frame');
@@ -12736,10 +13709,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         const borderWidthPx = shapeApplies
           ? liveOrFallbackBorderWidths.find((b) => b.id === selectedBorderWidthId)?.widthPx || 0
           : 0;
-        const isRectangularShape =
-          !activeClipPath &&
-          (!shapeApplies ||
-            ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id));
 
         // Render the exact shape-following border for both rectangular and curved/custom shapes
         const renderPreviewShapeBorder = (scaledBorderPx: number) => {
@@ -14059,18 +15028,37 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 }
 
                 // 4. Single Non-Rectangular or Rectangular Canvas & Acrylic on Room Wall
-                const clipStyle = shapeApplies && currentShape.shapeType === 'custom'
-                  ? currentShape.clipPathStyle
-                  : isHexagonProduct ? HEXAGON_CLIP_PATH : (isRectangularShape ? undefined : (geom.clipPath || (shapeApplies ? currentShape.clipPathStyle : undefined)));
+                // productGeometry's own oval clip-path (ellipse(50% 50%)) is a
+                // separate, non-orientation-aware duplicate of the shape
+                // catalog's real oval clip-path - always prefer
+                // effectiveShapeClipPath for oval so Room View matches the
+                // main customizer stage exactly.
+                const clipStyle = currentShape.id === 'shape-oval'
+                  ? effectiveShapeClipPath
+                  : shapeApplies && currentShape.shapeType === 'custom'
+                  ? effectiveShapeClipPath
+                  : isHexagonProduct ? HEXAGON_CLIP_PATH : (isRectangularShape ? undefined : (geom.clipPath || (shapeApplies ? effectiveShapeClipPath : undefined)));
                 const hasClip = Boolean(clipStyle);
-                const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges);
+                // Same shape-aware exclusion as the main canvas stage: the
+                // physical edge-wrap styling is a flat rectangular effect,
+                // wrong on a die-cut shape.
+                const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges) && !hasClip;
 
                 const singleCanvasContent = (
                   <div
-                    className={`relative w-full h-full overflow-hidden bg-white pointer-events-none select-none ${
+                    className={`relative overflow-hidden bg-white pointer-events-none select-none ${
                       !hasClip ? (shapeApplies ? currentShape.borderRadiusClass : 'rounded-xs') : ''
                     }`}
                     style={{
+                      // Explicit pixel size instead of w-full/h-full: when this
+                      // is wrapped in a floating frame, the frame's moulding/gap
+                      // divs have no size of their own (they shrink-wrap to
+                      // their content), so a percentage width/height here has
+                      // no definite ancestor to resolve against and the photo
+                      // inside falls back to its own full natural resolution
+                      // instead of the locked Room View scale.
+                      width: `${productPixelSize?.width || roomProductWidth}px`,
+                      height: `${productPixelSize?.height || roomProductWidth}px`,
                       clipPath: clipStyle,
                       WebkitClipPath: clipStyle,
                       boxShadow: !hasClip && !hasOuterFrame
@@ -14088,22 +15076,43 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     {activeMaterial === 'acrylic' && (
                       <>
                         {/* 4 corner metallic standoff mounts when standoff mounting is selected */}
-                        {(selectedHardwareId === 'acrylic-standoffs' || selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && !hasClip && (
-                          <>
-                            <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
-                              <div className="w-1 h-1 rounded-full bg-stone-700/60" />
-                            </div>
-                            <div className="absolute top-2 right-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
-                              <div className="w-1 h-1 rounded-full bg-stone-700/60" />
-                            </div>
-                            <div className="absolute bottom-2 left-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
-                              <div className="w-1 h-1 rounded-full bg-stone-700/60" />
-                            </div>
-                            <div className="absolute bottom-2 right-2 w-3 h-3 rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center">
-                              <div className="w-1 h-1 rounded-full bg-stone-700/60" />
-                            </div>
-                          </>
-                        )}
+                        {(selectedHardwareId === 'acrylic-standoffs' || selectedHardwareId === 'standoff-mounts' || selectedHardwareId === 'display-standoff') && !hasClip && (() => {
+                          // Fixed pixel bolts looked fine on the normal-size customizer
+                          // canvas, but Room View renders the product true-to-scale -
+                          // often much smaller - so the same fixed size/offset made them
+                          // look oversized and bunched together near one corner instead
+                          // of small corner mounts. Scale both with the panel's actual
+                          // rendered width instead.
+                          const boltSize = Math.max(5, Math.min(14, roomProductWidth * 0.05));
+                          const boltOffset = Math.max(3, Math.min(10, roomProductWidth * 0.035));
+                          const dotSize = Math.max(2, boltSize * 0.35);
+                          const corners: Array<{ top?: number; bottom?: number; left?: number; right?: number }> = [
+                            { top: boltOffset, left: boltOffset },
+                            { top: boltOffset, right: boltOffset },
+                            { bottom: boltOffset, left: boltOffset },
+                            { bottom: boltOffset, right: boltOffset }
+                          ];
+                          return (
+                            <>
+                              {corners.map((pos, i) => (
+                                <div
+                                  key={i}
+                                  className="absolute rounded-full bg-gradient-to-br from-stone-200 via-stone-400 to-stone-600 shadow-md border border-stone-400/80 z-30 pointer-events-none flex items-center justify-center"
+                                  style={{
+                                    width: `${boltSize}px`,
+                                    height: `${boltSize}px`,
+                                    top: pos.top !== undefined ? `${pos.top}px` : undefined,
+                                    bottom: pos.bottom !== undefined ? `${pos.bottom}px` : undefined,
+                                    left: pos.left !== undefined ? `${pos.left}px` : undefined,
+                                    right: pos.right !== undefined ? `${pos.right}px` : undefined
+                                  }}
+                                >
+                                  <div className="rounded-full bg-stone-700/60" style={{ width: `${dotSize}px`, height: `${dotSize}px` }} />
+                                </div>
+                              ))}
+                            </>
+                          );
+                        })()}
                         {/* Crystal optical acrylic glass gloss sheen */}
                         <div
                           className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-white/0 via-white/5 to-white/20"
@@ -14129,7 +15138,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           scale: 0.65,
                           displayWidthInches: geom.widthInches,
                           displayHeightInches: geom.heightInches,
-                          aspectRatio: previewAspect
+                          aspectRatio: previewAspect,
+                          // Oval's real shape is inset within its box (ellipse
+                          // 50% 38%, margin top/bottom) - border-radius can't
+                          // reproduce a shape smaller than its own box, so oval
+                          // keeps clip-path; only circle (which touches all 4
+                          // edges) maps exactly onto border-radius: 9999px.
+                          shapeBorderRadius: currentShape.id === 'shape-circle' ? '9999px' : undefined,
+                          shapeClipPath: currentShape.id !== 'shape-circle' ? clipStyle : undefined
                         })
                       : singleCanvasContent}
                   </div>
@@ -14229,11 +15245,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 const activeRotY = is360 ? viewerRotation : currentPreset.rotY;
                 const activeTiltX = is360 ? viewerTiltX : currentPreset.tiltX;
 
-                // Physical thickness based on selected Canvas thickness option & frame (ONLY for 7 edge products)
-                const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges);
+                // Physical thickness based on selected Canvas thickness option & frame (ONLY for 7 edge products).
+                // Excludes die-cut shapes (round/triangle/heart/oval) - the
+                // depth/edge effect is a flat rectangular extrusion, wrong
+                // on anything that isn't actually rectangular.
+                const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges) &&
+                  ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
                 const thicknessOption = (activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS).find((t: any) => t.id === selectedThicknessId) || THICKNESS_OPTIONS[0];
                 const baseDepthPx = showPhysicalEdges
-                  ? (selectedThicknessId === 'canvas-lite' ? 14 : selectedThicknessId === 'thin-gallery' ? 20 : selectedThicknessId === 'thick-gallery' ? 34 : selectedThicknessId === 'custom-thickness' ? Math.round((effectiveThicknessInches * 20) / 0.75) : ((thicknessOption as any)?.depthPx || 20))
+                  ? (selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap' ? 4 : selectedThicknessId === 'canvas-lite' ? 14 : selectedThicknessId === 'thin-gallery' ? 20 : selectedThicknessId === 'thick-gallery' ? 34 : selectedThicknessId === 'custom-thickness' ? Math.round((effectiveThicknessInches * 20) / 0.75) : ((thicknessOption as any)?.depthPx || 20))
                   : 0;
                 const depthPx = showPhysicalEdges ? (hasOuterFrame ? Math.max(baseDepthPx, 34) : baseDepthPx) : 0;
 
@@ -15524,11 +16544,48 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
       {/* Select Size & Shape Modal */}
       <SelectSizeShapeModal
+        key={selectedProductTypeId}
         isOpen={isSizeShapeModalOpen}
         onClose={() => setIsSizeShapeModalOpen(false)}
         material={activeMaterial}
         productId={selectedProductTypeId}
         productName={selectedProductType.name}
+        singlePrintMode={isAdminAddedStyle}
+        shapeSizes={
+          customShapeKey && liveSizeOptions.length > 0
+            ? liveSizeOptions.map((o) => ({
+                id: o.id,
+                shapeId: customShapeKey,
+                shapeName: selectedProductType.name,
+                label: o.dimensionsSummary || o.label,
+                dimensionsSummary: o.dimensionsSummary || o.label,
+                widthInches: o.widthInches ?? 0,
+                heightInches: o.heightInches ?? 0,
+                price: o.price,
+                aspectRatio: (o.widthInches ?? 1) / (o.heightInches || 1),
+                category: 'SPECIAL' as const,
+                panelsCount: 1,
+                diagramType: 'single-shape',
+              }))
+            : null
+        }
+        shapeChoices={(() => {
+          // A style added from the admin offers the shapes ticked for it. Uploaded shapes
+          // (id 'custom-<id>') carry their traced outline; built-in ones are drawn by name.
+          if (!isAdminAddedStyle) return null;
+          const ids = selectedProductType.supportedShapeIds ?? [];
+          const choices = ids
+            .map((id) => {
+              if (id.startsWith('custom-')) {
+                const c = customShapes.find((x) => `custom-${x.id}` === id);
+                return c ? { id, name: c.name, clipPathType: c.clipPathType as string, clipPathValue: c.clipPathValue } : null;
+              }
+              const built = CANVAS_SHAPES.find((x) => x.id === id);
+              return built ? { id, name: built.name, clipPathType: 'CSS_FUNCTION', clipPathValue: '' } : null;
+            })
+            .filter((x): x is { id: string; name: string; clipPathType: string; clipPathValue: string } => x !== null);
+          return choices.length > 0 ? choices : null;
+        })()}
         currentShapeId={selectedShapeId}
         currentSizeId={selectedSizeId}
         isCustomSize={isCustomSize}
@@ -15545,9 +16602,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         material={activeMaterial}
         productId={selectedProductTypeId}
         productName={selectedProductType.name}
-        currentLayoutId={selectedLayoutId}
+        currentLayoutId={activeStyleLayout?.id ?? selectedLayoutId}
+        layouts={usesStyleLayouts ? styleLayouts : undefined}
         onSelectLayout={handleApplyLayoutFromModal}
-        onHighlightLayout={handleHighlightLayoutFromModal}
+        onHighlightLayout={usesStyleLayouts ? undefined : handleHighlightLayoutFromModal}
         bulkQuantity={quantity}
       />
 

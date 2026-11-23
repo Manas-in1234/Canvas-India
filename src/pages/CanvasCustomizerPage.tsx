@@ -2344,6 +2344,23 @@ const renderWrapPreview = (id: string, info?: { inches?: number; depthPx?: numbe
     );
   }
 
+  if (id === 'no-wrap-thickness' || id === 'no-wrap') {
+    return (
+      <div className="w-20 h-16 mx-auto relative flex items-center justify-center">
+        <svg viewBox="0 0 120 90" className="w-full h-full drop-shadow-xs">
+          <rect x="4" y="4" width="112" height="82" fill="#f8fafc" rx="6" stroke="#e2e8f0" strokeWidth="1" />
+          <g transform="translate(26, 12)">
+            <rect x="6" y="8" width="56" height="42" rx="2" fill="#fed7aa" stroke="#ea580c" strokeWidth="1.5" />
+            <rect x="10" y="12" width="48" height="34" rx="1" fill="#ea580c" opacity="0.8" />
+            <text x="34" y="68" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#64748b">
+              0.00"
+            </text>
+          </g>
+        </svg>
+      </div>
+    );
+  }
+
   const depthValue = id === 'canvas-lite' ? '0.50"' : id === 'thin-gallery' ? '0.75"' : id === 'thick-gallery' ? '1.50"' : info?.inches ? `${info.inches.toFixed(2)}"` : 'Custom';
   const sideWidth = id === 'canvas-lite' ? 12 : id === 'thin-gallery' ? 20 : id === 'thick-gallery' ? 30 : info?.depthPx ? Math.max(8, Math.min(36, info.depthPx)) : 24;
 
@@ -4277,24 +4294,29 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Thickness cards are admin-managed (name, price, icon, badge, order, hidden/deleted).
   // Until the team sets them up, the built-in lists below are used unchanged.
   const CANVAS_THICKNESS_OPTIONS = useMemo(() => {
-    if (liveCanvasThickness.length === 0 && !overriddenKeys.has('canvas_thickness')) return BASE_CANVAS_THICKNESS_OPTIONS;
-    return liveCanvasThickness.map((item) => {
-      const extras = item.extras ?? {};
-      const id = (extras.id as string) ?? item.id;
-      const inches = Number(extras.thicknessInches) || 1;
-      return {
-        id,
-        name: ((extras.name as string) || item.label) as string,
-        label: id === 'custom-thickness' ? item.label : `${item.label} (${inches.toFixed(2)}")`,
-        thicknessInches: inches,
-        price: Number(item.flatPrice),
-        depthPx: Number(extras.depthPx) || 18,
-        description: item.description ?? '',
-        badge: ((extras.badge as string) || undefined) as string | undefined,
-        image: item.imageUrl ?? '',
-      };
-    });
-  }, [liveCanvasThickness]);
+    let list = BASE_CANVAS_THICKNESS_OPTIONS;
+    if (liveCanvasThickness.length > 0 || overriddenKeys.has('canvas_thickness')) {
+      const liveList = liveCanvasThickness.map((item) => {
+        const extras = item.extras ?? {};
+        const id = (extras.id as string) ?? item.id;
+        const inches = Number(extras.thicknessInches) || (id === 'no-wrap-thickness' || id === 'no-wrap' ? 0 : 1);
+        return {
+          id,
+          name: ((extras.name as string) || item.label) as string,
+          label: id === 'custom-thickness' ? item.label : (id === 'no-wrap-thickness' || id === 'no-wrap') ? 'No Wrap (0.00")' : `${item.label} (${inches.toFixed(2)}")`,
+          thicknessInches: inches,
+          price: Number(item.flatPrice),
+          depthPx: Number(extras.depthPx) || (id === 'no-wrap-thickness' || id === 'no-wrap' ? 4 : 18),
+          description: item.description ?? '',
+          badge: ((extras.badge as string) || undefined) as string | undefined,
+          image: item.imageUrl ?? '',
+        };
+      });
+      const hasNoWrap = liveList.some((t) => t.id === 'no-wrap-thickness' || t.id === 'no-wrap');
+      list = hasNoWrap ? liveList : [BASE_CANVAS_THICKNESS_OPTIONS[0], ...liveList];
+    }
+    return list;
+  }, [liveCanvasThickness, overriddenKeys]);
   const THICKNESS_OPTIONS = CANVAS_THICKNESS_OPTIONS;
   const ACRYLIC_THICKNESS_OPTIONS = useMemo(() => {
     if (liveAcrylicThickness.length === 0 && !overriddenKeys.has('acrylic_thickness')) return BASE_ACRYLIC_THICKNESS_OPTIONS;
@@ -4539,6 +4561,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [customAcrylicThicknessMm, setCustomAcrylicThicknessMm] = useState<number>(6.0);
 
   const effectiveThicknessInches = useMemo(() => {
+    if (selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap') return 0;
     if (selectedThicknessId === 'canvas-lite') return 0.5;
     if (selectedThicknessId === 'thin-gallery') return 0.75;
     if (selectedThicknessId === 'thick-gallery') return 1.5;
@@ -7354,7 +7377,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     // but a product that shows the Wrap & Border thickness picker must have
     // one actually picked, not just some other option touched, before it
     // can be priced.
-    if (!thicknessTouched && !isBannerProduct) {
+    if (!thicknessTouched && !isBannerProduct && selectedThicknessId !== 'no-wrap-thickness' && selectedThicknessId !== 'no-wrap') {
       setValidationWarning('Please select a thickness in Wrap & Border before adding this to your cart.');
       setTimeout(() => setValidationWarning(null), 4000);
       setActiveTab('WRAP & BORDER');
@@ -7413,6 +7436,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         : isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary,
       finish: activeMaterial === 'acrylic'
         ? (ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || `${selectedThicknessId.toUpperCase()} Optical Acrylic`)
+        : (selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap')
+        ? 'No Wrap (0.00")'
         : !thicknessTouched
         ? undefined
         : selectedThicknessId === 'custom-thickness'
@@ -7462,6 +7487,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         shape: shapeApplies ? currentShape.name : undefined,
         thickness: activeMaterial === 'acrylic'
           ? (ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || `${selectedThicknessId.toUpperCase()} Optical Acrylic`)
+          : (selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap')
+          ? 'No Wrap (0.00")'
           : !thicknessTouched
           ? undefined
           : selectedThicknessId === 'custom-thickness'
@@ -11444,7 +11471,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                   <div className="p-3 space-y-3">
                     {/* Thickness Options Grid */}
-                    <div className={`grid gap-2 ${activeMaterial === 'acrylic' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
+                    <div className="grid gap-2 grid-cols-2 sm:grid-cols-4">
                       {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS.filter((t) => t.id !== 'custom-thickness' && t.id !== 'hanging-canvas')).map((th: any) => {
                         // Don't show a card as "selected" until the shopper has actually
                         // clicked one - selectedThicknessId silently holds the cheapest
@@ -11452,12 +11479,20 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         // that default must stay invisible in the UI until touched.
                         const isSelected = thicknessTouched && selectedThicknessId === th.id;
                         const displayTitle = th.name || th.label.split('(')[0].trim();
-                        const displaySub = th.thicknessInches ? `(${th.thicknessInches.toFixed(2)}")` : th.thicknessMm ? `(${th.thicknessMm}mm)` : '';
+                        const displaySub = th.thicknessInches !== undefined ? `(${th.thicknessInches.toFixed(2)}")` : th.thicknessMm ? `(${th.thicknessMm}mm)` : '';
                         return (
                           <CustomizerOptionCard
                             key={th.id}
                             selected={isSelected}
-                            onClick={() => { setSelectedThicknessId(th.id); setThicknessTouched(true); }}
+                            onClick={() => {
+                              if (thicknessTouched && selectedThicknessId === th.id) {
+                                setSelectedThicknessId('no-wrap-thickness');
+                                setThicknessTouched(false);
+                              } else {
+                                setSelectedThicknessId(th.id);
+                                setThicknessTouched(true);
+                              }
+                            }}
                             badge={th.badge}
                             title={displayTitle}
                             subtitle={displaySub}
@@ -11474,7 +11509,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       <div className="pt-2 border-t border-stone-100">
                         <button
                           type="button"
-                          onClick={() => { setSelectedThicknessId(selectedThicknessId === 'custom-thickness' ? 'thin-gallery' : 'custom-thickness'); setThicknessTouched(true); }}
+                          onClick={() => {
+                            if (selectedThicknessId === 'custom-thickness') {
+                              setSelectedThicknessId('no-wrap-thickness');
+                              setThicknessTouched(false);
+                            } else {
+                              setSelectedThicknessId('custom-thickness');
+                              setThicknessTouched(true);
+                            }
+                          }}
                           className={`w-full py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-between border transition-all ${
                             selectedThicknessId === 'custom-thickness'
                               ? 'border-[#0E4A93] bg-blue-50/50 text-[#0E4A93]'
@@ -11857,7 +11900,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         <CustomizerOptionCard
                           key={th.id}
                           selected={isSelected}
-                          onClick={() => { setSelectedThicknessId(th.id); setThicknessTouched(true); }}
+                          onClick={() => {
+                            if (thicknessTouched && selectedThicknessId === th.id) {
+                              setSelectedThicknessId('no-wrap-thickness');
+                              setThicknessTouched(false);
+                            } else {
+                              setSelectedThicknessId(th.id);
+                              setThicknessTouched(true);
+                            }
+                          }}
                           badge={th.badge}
                           title={cardTitle}
                           priceText={cardPrice}
@@ -12792,7 +12843,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 const thicknessOption = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId) || THICKNESS_OPTIONS[1];
                 const wrapDepthPx = (thicknessOption as any)?.depthPx || 26;
                 const visibleDepthPx =
-                  selectedThicknessId === 'canvas-lite'
+                  selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap'
+                    ? 0
+                    : selectedThicknessId === 'canvas-lite'
                     ? 10
                     : selectedThicknessId === 'thin-gallery'
                     ? 18
@@ -12897,7 +12950,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             // (round/triangle/heart/oval) they drew a square
                             // frame around the shaped print instead of
                             // following its outline. Rectangular shapes only.
-                            const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges) && !hasFraming &&
+                            const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges) && !hasFraming && visibleDepthPx > 0 &&
                               ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
                           const isWhiteEdge = selectedWrapId === 'white-border';
                           const isImageWrapped = (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && panelImages[0]?.fitMode === 'cover';
@@ -15200,7 +15253,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
                 const thicknessOption = (activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS).find((t: any) => t.id === selectedThicknessId) || THICKNESS_OPTIONS[0];
                 const baseDepthPx = showPhysicalEdges
-                  ? (selectedThicknessId === 'canvas-lite' ? 14 : selectedThicknessId === 'thin-gallery' ? 20 : selectedThicknessId === 'thick-gallery' ? 34 : selectedThicknessId === 'custom-thickness' ? Math.round((effectiveThicknessInches * 20) / 0.75) : ((thicknessOption as any)?.depthPx || 20))
+                  ? (selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap' ? 4 : selectedThicknessId === 'canvas-lite' ? 14 : selectedThicknessId === 'thin-gallery' ? 20 : selectedThicknessId === 'thick-gallery' ? 34 : selectedThicknessId === 'custom-thickness' ? Math.round((effectiveThicknessInches * 20) / 0.75) : ((thicknessOption as any)?.depthPx || 20))
                   : 0;
                 const depthPx = showPhysicalEdges ? (hasOuterFrame ? Math.max(baseDepthPx, 34) : baseDepthPx) : 0;
 

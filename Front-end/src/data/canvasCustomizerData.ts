@@ -78,17 +78,10 @@ const swapMaterialWord = (text: string): string =>
 export type CanvasShapeOption = AcrylicShapeOption;
 
 export const CANVAS_SHAPES: CanvasShapeOption[] = [
-  ...ACRYLIC_SHAPES.map((shape) => {
-    let clip = shape.clipPathStyle;
-    if (shape.id === 'shape-oval') {
-      clip = 'ellipse(50% 50% at 50% 50%)';
-    }
-    return {
-      ...shape,
-      clipPathStyle: clip,
-      description: swapMaterialWord(shape.description)
-    };
-  }),
+  ...ACRYLIC_SHAPES.map((shape) => ({
+    ...shape,
+    description: swapMaterialWord(shape.description)
+  })),
   {
     id: 'shape-triangle',
     shapeType: 'triangle' as any,
@@ -989,6 +982,7 @@ export interface CanvasThicknessOption {
 }
 
 export const CANVAS_THICKNESS_OPTIONS: CanvasThicknessOption[] = [
+  { id: 'no-wrap-thickness', label: 'No Wrap (0.00")', name: 'No Wrap', thicknessInches: 0, price: 0, depthPx: 4, description: 'Flat-mounted canvas with no wraparound edge depth' },
   { id: 'canvas-lite', label: 'Canvas Lite (0.50")', name: 'Canvas Lite', thicknessInches: 0.5, price: 148.50, depthPx: 12, description: 'Ultra slim & lightweight, economical mount' },
   { id: 'thin-gallery', label: 'Thin Gallery Wrap (0.75")', name: 'Thin Gallery Wrap', thicknessInches: 0.75, price: 193.05, depthPx: 18, description: 'Standard modern gallery profile', badge: 'Recommended' },
   { id: 'thick-gallery', label: 'Thick Gallery Wrap (1.5")', name: 'Thick Gallery Wrap', thicknessInches: 1.5, price: 231.66, depthPx: 30, description: 'Museum-grade premium deep projection', badge: 'Museum Quality' },
