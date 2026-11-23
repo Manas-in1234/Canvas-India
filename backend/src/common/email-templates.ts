@@ -69,12 +69,24 @@ function addressBlock(order: EmailOrder): string {
 
 const isCod = (order: EmailOrder) => order.payments.some((p) => p.provider === 'COD');
 const firstName = (order: EmailOrder) => (order.customer?.name || 'there').trim().split(/\s+/)[0];
+const billText = (order: EmailOrder) => {
+  const d = Number(order.discount ?? 0);
+  return [
+    ...order.items.map((i) => `- ${i.productNameSnapshot} x ${i.quantity}: ${rupees(Number(i.priceSnapshot) * i.quantity)}`),
+    '',
+    `Subtotal: ${rupees(order.subtotal)}`,
+    ...(d > 0 ? [`Discount: - ${rupees(d)}`] : []),
+    `Delivery: ${Number(order.shipping ?? 0) > 0 ? rupees(order.shipping) : 'Free'}`,
+    ...(Number(order.tax ?? 0) > 0 ? [`Tax: ${rupees(order.tax)}`] : []),
+    `Total: ${rupees(order.total)}`,
+  ].join('\n');
+};
 const itemsText = (order: EmailOrder) => order.items.map((i) => `- ${i.productNameSnapshot} x ${i.quantity}`).join('\n');
 
 export function orderConfirmed(order: EmailOrder, brand: EmailBrand = DEFAULT_BRAND): MailMessage & { to: string } {
   const cod = isCod(order);
   const body = `<p style="margin:0 0 8px;font-size:14px">Hi ${esc(firstName(order))}, thank you for your order. We have received it and will start making it right away.</p>
-<p style="margin:0;font-size:14px"><strong>Order number:</strong> ${esc(order.orderNumber)}</p>${itemsTable(order)}${cod ? `<p style="background:#fff7e6;border:1px solid #f5d28a;padding:10px;border-radius:6px;font-size:14px">Payment: <strong>Cash on Delivery</strong>. Please keep ${rupees(order.total)} ready when the parcel arrives.</p>` : '<p style="font-size:14px;color:#047857"><strong>Payment received.</strong></p>'}${addressBlock(order)}<p style="margin-top:16px;font-size:14px">We will email you again when your order ships.</p>`;
+<p style="margin:0;font-size:14px"><strong>Order number:</strong> ${esc(order.orderNumber)}</p><p style="margin:16px 0 0;color:#6b7280;font-size:12px;font-weight:bold">YOUR BILL</p>${itemsTable(order)}${cod ? `<p style="background:#fff7e6;border:1px solid #f5d28a;padding:10px;border-radius:6px;font-size:14px">Payment: <strong>Cash on Delivery</strong>. Please keep ${rupees(order.total)} ready when the parcel arrives.</p>` : '<p style="font-size:14px;color:#047857"><strong>Payment received.</strong></p>'}${addressBlock(order)}<p style="margin-top:16px;font-size:14px">We will email you again when your order ships.</p>`;
   return {
     to: order.customer?.email ?? '',
     subject: `Order confirmed: ${order.orderNumber}`,
