@@ -465,10 +465,12 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   // stay at the flat base price here — any real pricing happens once the
   // shopper is in the customizer.
   const unitPrice = useMemo(() => {
-    if (isCatalogueDesign) return product.price;
+    // Non-cork canvas products no longer have a size picker here: show the product's starting price
+    // (the customizer prices the final size). Cork keeps size-based pricing.
+    if (isCatalogueDesign || !isCorkProduct) return product.price;
     const size = isCustomSize ? `${customWidth}x${customHeight} inch` : selectedSize;
     return priceForSize(product, size, areaRate);
-  }, [product, selectedSize, isCustomSize, customWidth, customHeight, areaRate, isCatalogueDesign]);
+  }, [product, selectedSize, isCustomSize, customWidth, customHeight, areaRate, isCatalogueDesign, isCorkProduct]);
 
   // The struck-through price and the % off both come from the two prices set in the
   // admin, so they always agree. No discount is shown when there isn't one.
@@ -748,177 +750,6 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                 </div>
               ) : (
                 <>
-              {/* Size / Shape / Frame / Hook Tabs */}
-              {((product.sizes && product.sizes.length > 0) || availableShapes.length > 0) && (
-                <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
-                  <div className="flex items-center gap-6 border-b border-stone-200 mb-4 overflow-x-auto">
-                    <button
-                      type="button"
-                      onClick={() => setSizeShapeTab('size')}
-                      className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'size' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
-                    >
-                      Size
-                    </button>
-                    {availableShapes.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setSizeShapeTab('shape')}
-                        className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'shape' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
-                      >
-                        Shape
-                      </button>
-                    )}
-                    {frameOptions.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setSizeShapeTab('frame')}
-                        className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'frame' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
-                      >
-                        Frame
-                      </button>
-                    )}
-                    {showHookTab && (
-                      <button
-                        type="button"
-                        onClick={() => setSizeShapeTab('hook')}
-                        className={`shrink-0 pb-2.5 text-sm font-bold cursor-pointer transition-colors ${sizeShapeTab === 'hook' ? 'text-stone-900 border-b-2 border-emerald-600' : 'text-stone-400'}`}
-                      >
-                        Hook
-                      </button>
-                    )}
-                  </div>
-
-                  {sizeShapeTab === 'size' && product.sizes && product.sizes.length > 0 && (
-                    <div className="grid grid-cols-4 gap-2">
-                      {product.sizes.map((size) => (
-                        <button
-                          key={size}
-                          type="button"
-                          onClick={() => { setIsCustomSize(false); setSelectedSize(size); }}
-                          className={`px-1.5 py-2 text-[11px] leading-tight font-semibold rounded-lg border-2 text-center transition-all cursor-pointer ${
-                            selectedSize === size && !isCustomSize
-                              ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93]'
-                              : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
-                          }`}
-                        >
-                          {size.replace(' inch', '')}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {sizeShapeTab === 'size' && showCustomSize && (
-                    <div className="mt-3">
-                      <button
-                        type="button"
-                        onClick={() => setCustomSizeOpen((v) => !v)}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-700 cursor-pointer"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                        <span>Need a Custom Size?</span>
-                      </button>
-                      {customSizeOpen && (
-                        <div className="flex items-center gap-2 mt-2">
-                          <input
-                            type="number"
-                            min={4}
-                            value={customSizeW}
-                            onChange={(e) => setCustomSizeW(e.target.value)}
-                            placeholder="Width [W] in"
-                            className="w-0 flex-1 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
-                          />
-                          <input
-                            type="number"
-                            min={4}
-                            value={customSizeH}
-                            onChange={(e) => setCustomSizeH(e.target.value)}
-                            placeholder="Height [H] in"
-                            className="w-0 flex-1 px-2.5 py-2 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93]"
-                          />
-                          <button
-                            type="button"
-                            onClick={applyCustomSize}
-                            className="shrink-0 px-4 py-2 text-xs font-bold rounded-full border-2 border-stone-300 text-stone-700 hover:border-stone-400 transition-colors cursor-pointer"
-                          >
-                            Apply
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {availableShapes.length > 0 && sizeShapeTab === 'shape' && (
-                    <div className="grid grid-cols-4 gap-2">
-                      {availableShapes.map((shapeOpt) => (
-                        <button
-                          key={shapeOpt}
-                          type="button"
-                          onClick={() => setSelectedShape(shapeOpt)}
-                          className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
-                            selectedShape === shapeOpt
-                              ? 'border-[#0E4A93] bg-blue-50/60'
-                              : 'border-stone-200 bg-white hover:border-stone-400'
-                          }`}
-                        >
-                          <ShapeIcon shape={shapeOpt} active={selectedShape === shapeOpt} />
-                          <span className={`text-[10px] font-semibold ${selectedShape === shapeOpt ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{shapeOpt}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {frameOptions.length > 0 && sizeShapeTab === 'frame' && (
-                    <div className="grid grid-cols-3 gap-2">
-                      {frameOptions.map((opt) => {
-                        const isSelected = selectedFrame === opt.label;
-                        return (
-                          <button
-                            key={opt.label}
-                            type="button"
-                            onClick={() => {
-                              setSelectedFrame(opt.label);
-                              setSelectedFinish(opt.value);
-                              // Switch active image to artwork if on room view so the frame is directly visible on the artwork
-                              if (galleryImages[activeImageIndex] === ROOM_VIEW_SENTINEL) {
-                                const artIdx = galleryImages.findIndex((img) => img !== ROOM_VIEW_SENTINEL);
-                                if (artIdx !== -1) setActiveImageIndex(artIdx);
-                              }
-                            }}
-                            className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
-                              isSelected
-                                ? 'border-[#0E4A93] bg-blue-50/60 text-[#0E4A93] ring-2 ring-[#0E4A93]/20 shadow-xs font-bold'
-                                : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
-                            }`}
-                          >
-                            <FrameSwatch category={opt.label} />
-                            <span className="text-[10px] font-semibold text-center leading-tight">{opt.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {showHookTab && sizeShapeTab === 'hook' && (
-                    <div className="grid grid-cols-4 gap-2">
-                      {HOOK_OPTIONS.map((hookOpt) => (
-                        <button
-                          key={hookOpt}
-                          type="button"
-                          onClick={() => setSelectedHook(hookOpt)}
-                          className={`flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-lg border-2 transition-all cursor-pointer ${
-                            selectedHook === hookOpt
-                              ? 'border-[#0E4A93] bg-blue-50/60'
-                              : 'border-stone-200 bg-white hover:border-stone-400'
-                          }`}
-                        >
-                          <HookIcon type={hookOpt} active={selectedHook === hookOpt} />
-                          <span className={`text-[10px] font-semibold leading-tight text-center ${selectedHook === hookOpt ? 'text-[#0E4A93]' : 'text-stone-600'}`}>{hookOpt}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
 
               <div className="flex items-center gap-4">
                 <span className="font-bold text-xs text-stone-800">Quantity:</span>

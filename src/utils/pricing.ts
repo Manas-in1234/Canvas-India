@@ -115,6 +115,12 @@ const ACRYLIC_FALLBACK_BASES = ['Without Base', 'Acrylic Base', 'Solid Wood Base
  * should show too, so the two never mismatch.
  */
 export function acrylicDefaultSelectionPrice(product: Product): number {
+  // Product pages no longer offer size/thickness pickers (sizing happens in the customizer), so the
+  // listing shows the product's own starting price instead of the largest-size price.
+  return product.price;
+}
+
+function legacyAcrylicDefaultSelectionPrice(product: Product): number {
   if (isCatalogueDesign(product)) return product.price;
   if (product.material !== 'acrylic' && product.categorySlug !== 'acrylic') return product.price;
   const sizes = product.availableSizes?.length ? product.availableSizes : product.sizes?.length ? product.sizes : ACRYLIC_FALLBACK_SIZES;
