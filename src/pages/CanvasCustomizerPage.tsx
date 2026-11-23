@@ -168,6 +168,7 @@ import { CustomizerPreloader, PRELOADER_MIN_MS } from '../components/CustomizerP
 import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
 import { AcrylicRoomViewModal, RoomPlacementState } from '../components/AcrylicRoomViewModal';
 import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
+import { isGenericCustomStyleId } from '../utils/codEligibility';
 import { SelectLayoutModal, LayoutModalOption } from '../components/SelectLayoutModal';
 import { fetchStyleLayouts } from '../api/styleLayoutsApi';
 import { EmptyLayoutPanel, ShapedLayoutWorkspace } from '../components/ShapedLayoutWorkspace';
@@ -7369,13 +7370,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const sourceProduct = sourceKey
       ? (Array.isArray(allProducts) ? allProducts : []).find((p) => p.id === sourceKey || p.slug === sourceKey)
       : undefined;
-
-    // An "original print" is a design from the site bought as it is: its own artwork, nothing of the customer's.
-    // Such orders are treated like ordinary catalogue orders (Cash on Delivery allowed). Anything with the
-    // customer's own photo or text counts as customized.
+    const isReadyMadeCatalogue = isPrefillMode || Boolean(sourceProduct && !isGenericCustomStyleId(sourceProduct.id) && !isGenericCustomStyleId(sourceProduct.slug));
+    // A catalogue design opened for customizing stays "ready-made" only while its own artwork is the only photo
+    // and no text was added; the customer's own photo or text makes it a personalized print.
     const catalogueArt = searchParams.get('prefillImage');
-    const usedPhotos = [...uploadedPhotos, ...Object.values(panelImages).map((panel) => panel?.imageUrl)].filter(Boolean) as string[];
-    const isOriginalPrint = Boolean(catalogueArt) && usedPhotos.length > 0 && usedPhotos.every((url) => url === catalogueArt) && !customText;
+    const photosInDesign = [...uploadedPhotos, ...Object.values(panelImages).map((panel) => panel?.imageUrl)].filter(Boolean) as string[];
+    const catalogueArtReplaced = Boolean(catalogueArt) && (photosInDesign.some((url) => url !== catalogueArt) || Boolean(customText));
+    const hasUserUploadedPhoto = !isReadyMadeCatalogue || catalogueArtReplaced;
+    const prefillTitle = searchParams.get('prefillName');
 
     onAddToCartCustomized({
       product: {
@@ -7396,6 +7398,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           ? `${selectedProductType.name} (${(POP_ART_STYLES.find((style) => style.id === popArtConfig.selectedStyleId) ?? getPopArtStyle(popArtConfig.selectedStyleId)).name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
           : isLyricProduct
           ? `${selectedProductType.name} (${selectedLyricTemplate.name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
+          : isPrefillMode && prefillTitle
+          ? prefillTitle
+          : (sourceProduct && !isGenericCustomStyleId(sourceProduct.id) && !isGenericCustomStyleId(sourceProduct.slug))
+          ? sourceProduct.name
           : `${selectedProductType.name} - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
       },
       size: isWordArtProduct
@@ -7440,9 +7446,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           })(),
       customizationDetails: {
         previewImage,
-        originalPrint: isOriginalPrint || undefined,
         sourceProductId: sourceProduct?.id,
         sourceProductSlug: sourceProduct?.slug,
+        isReadyMadeCatalogue,
+        hasUserUploadedPhoto,
         material: activeMaterial,
         productTypeId: selectedProductTypeId,
         // A custom size is not the preset that happened to be selected underneath it, so record the real dimensions.

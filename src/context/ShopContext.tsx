@@ -454,6 +454,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         finish: customItem.finish,
         customText: customItem.text,
         photoUrl: customItem.image,
+        customizationDetails: {
+          hasUserUploadedPhoto: true,
+          isReadyMadeCatalogue: false,
+          isWorkbench: true,
+          dimensions: customItem.size,
+        },
       },
     ]);
     setCartDrawerOpen(true);

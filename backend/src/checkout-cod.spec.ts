@@ -19,7 +19,7 @@ it('prices COD from the catalog, leaves payment pending and reuses the same orde
     paymentMethod: 'COD', requestId: id, customerEmail: 'checkout@example.test',
     shippingAddress: { name: 'Test Customer', phone: '9000000000', street_address: 'Test address', city: 'Hyderabad', state: 'Telangana', postal_code: '500001' },
     items: [{ productId: 'canvas-1', price: 500, quantity: 1 }],
-    total: 599,
+    total: 689,
     payment: { status: 'captured' },
   };
   const place = (body: unknown) => worker.fetch(new Request('https://test.invalid/api/v1/storefront/orders', {
@@ -30,9 +30,9 @@ it('prices COD from the catalog, leaves payment pending and reuses the same orde
   expect(create).not.toHaveBeenCalled();
   expect((await place(payload)).status).toBe(201);
   expect(create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({
-    id, total: 599, paymentStatus: 'PENDING', payments: { create: [{ provider: 'COD', status: 'PENDING', amount: 599, currency: 'INR', providerRef: null }] },
+    id, total: 689, paymentStatus: 'PENDING', payments: { create: [{ provider: 'COD', status: 'PENDING', amount: 689, currency: 'INR', providerRef: null }] },
   }) }));
-  findFirst.mockResolvedValue({ id, orderNumber: 'CC-COD-test', total: 599 });
+  findFirst.mockResolvedValue({ id, orderNumber: 'CC-COD-test', total: 689 });
   expect((await place(payload)).status).toBe(200);
   expect(create).toHaveBeenCalledTimes(1);
 });

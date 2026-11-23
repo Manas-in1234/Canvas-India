@@ -3,7 +3,7 @@ import worker from './worker.js';
 
 afterEach(() => vi.unstubAllGlobals());
 
-it('blocks COD for a customized item unless the admin has enabled it, and allows catalog-only COD regardless', async () => {
+it('blocks COD for a customized personal photo item unless admin enabled, but allows ready-made customized items regardless', async () => {
   vi.stubGlobal('fetch', vi.fn(async () => Response.json({ delivery_codes: [{ postal_code: { cod: 'Y' } }] })));
   const create = vi.fn(async ({ data }: { data: Record<string, unknown> }) => ({ id: 'order-1', ...data }));
   let codEnabledForCustomizer = false;
@@ -25,14 +25,21 @@ it('blocks COD for a customized item unless the admin has enabled it, and allows
     }),
   }), { _prisma: prisma, _services: {}, DATABASE_URL: '', JWT_ACCESS_SECRET: 'test', DELHIVERY_API_TOKEN: 'test' } as never);
 
-  const customizedItem = [{ price: 500, quantity: 1, customizationDetails: { shapeName: 'Square' } }];
-
-  const blocked = await place(customizedItem, 599);
+  // 1. Personalized custom photo item (Single Print) - COD is blocked by default
+  const personalCustomItem = [{ price: 500, quantity: 1, title: 'Single Print - 16" x 16"', customizationDetails: { shapeName: 'Square', hasUserUploadedPhoto: true } }];
+  // 500 subtotal + 90 tax (18%) + 99 shipping = 689
+  const blocked = await place(personalCustomItem, 689);
   expect(blocked.status).toBe(422);
   expect(create).not.toHaveBeenCalled();
 
+  // 2. Ready-made customized catalogue item (e.g. Scenery Art Print with custom size/frame) - COD is allowed!
+  const readyMadeCustomItem = [{ price: 500, quantity: 1, title: 'Scenery Art Print 043 - Canvas', customizationDetails: { sourceProductId: 'scenery-art-print-043', isReadyMadeCatalogue: true } }];
+  const allowedReadyMade = await place(readyMadeCustomItem, 689);
+  expect(allowedReadyMade.status).toBe(201);
+
+  // 3. Admin turns on toggle -> personal custom item is allowed
   codEnabledForCustomizer = true;
-  const allowed = await place(customizedItem, 599);
+  const allowed = await place(personalCustomItem, 689);
   expect(allowed.status).toBe(201);
 });
 
@@ -57,8 +64,8 @@ it('adds the admin-configured COD surcharge to the expected total', async () => 
     }),
   }), { _prisma: prisma, _services: {}, DATABASE_URL: '', JWT_ACCESS_SECRET: 'test', DELHIVERY_API_TOKEN: 'test' } as never);
 
-  // Without the surcharge included, the total no longer matches what the server expects.
-  expect((await place(599)).status).toBe(409);
-  // 500 subtotal + 99 shipping (under 999) + 25 COD surcharge = 624.
-  expect((await place(624)).status).toBe(201);
+  // Without the surcharge included (689 instead of 714), the total no longer matches what the server expects.
+  expect((await place(689)).status).toBe(409);
+  // 500 subtotal + 90 tax + 99 shipping (under 999) + 25 COD surcharge = 714.
+  expect((await place(714)).status).toBe(201);
 });
