@@ -1818,8 +1818,20 @@ export default {
           const expectedShipping = expectedSubtotal >= 999 ? 0 : 99;
           const codSurchargeSetting = await prisma.storeSetting?.findUnique({ where: { key: 'cod_surcharge' } }).catch(() => null);
           const codSurcharge = Number(codSurchargeSetting?.value) || 0;
-          const expectedTax = Math.round(expectedSubtotal * 0.18);
-          const expectedTotal = Math.round((expectedSubtotal + expectedTax + expectedShipping + codSurcharge) * 100) / 100;
+          // The customer may have applied a coupon: re-check it here and take the discount from the coupon itself,
+          // never from the browser, then tax what is left after the discount (same rule the checkout page shows).
+          let expectedDiscount = 0;
+          if (typeof body.couponCode === 'string' && body.couponCode.trim()) {
+            try {
+              const checked = await services.discounts.validateDiscount({ code: body.couponCode, subtotal: expectedSubtotal });
+              expectedDiscount = Math.round(Number(checked?.discountAmount ?? 0) * 100) / 100;
+            } catch (err: any) {
+              return jsonResponse({ message: err?.message || 'This coupon could not be applied. Remove it and try again.' }, 409, request);
+            }
+          }
+          const expectedTaxable = Math.max(0, Math.round((expectedSubtotal - expectedDiscount) * 100) / 100);
+          const expectedTax = Math.round(expectedTaxable * 0.18);
+          const expectedTotal = Math.round((expectedTaxable + expectedTax + expectedShipping + codSurcharge) * 100) / 100;
           if (Math.round(Number(body.total) * 100) !== Math.round(expectedTotal * 100)) {
             return jsonResponse({ message: 'The order total changed. Review your cart and try again.' }, 409, request);
           }

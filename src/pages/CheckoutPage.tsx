@@ -391,6 +391,7 @@ export const CheckoutPage: React.FC = () => {
         })),
         subtotal,
         discount: totalDiscount,
+        couponCode: appliedCode,
         shippingFee,
         tax,
         total,

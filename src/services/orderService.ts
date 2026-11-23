@@ -32,6 +32,8 @@ export interface CreateOrderParams {
   shippingAddress: any;
   shippingMethod: 'standard' | 'express';
   paymentMethod?: 'COD';
+  /** The coupon the customer applied, so the server can re-check the discount on Cash on Delivery orders. */
+  couponCode?: string | null;
   notes?: string;
 }
 
