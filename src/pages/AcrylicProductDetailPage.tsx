@@ -18,7 +18,8 @@ import {
   PackageCheck,
   Package,
   Info,
-  Pencil
+  Pencil,
+  X
 } from 'lucide-react';
 import { Product } from '../types';
 import { useShop } from '../context/ShopContext';
@@ -169,6 +170,10 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   const [customSizeW, setCustomSizeW] = useState<string>('');
   const [customSizeH, setCustomSizeH] = useState<string>('');
   const [selectedHook, setSelectedHook] = useState<string>('Sawtooth Hanger');
+  // Catalogue art has no Size/Shape/Hook picker of its own - prompt the
+  // shopper into the customizer instead of letting "Add to cart" add the
+  // fixed-price artwork as-is (same as the Canvas product page).
+  const [showCustomizeRequiredModal, setShowCustomizeRequiredModal] = useState(false);
 
   // The Bulk & Corporate Orders catalogue keys its items by material+slug —
   // matches this exact style when it has one, so "Order this item in bulk"
@@ -177,19 +182,18 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   const bulkItem = useMemo(() => getBulkItem('acrylic', product.categorySlug), [product.categorySlug]);
 
   // Pre-designed Print World catalogue art (Devotional Art, Line Art, etc.),
-  // re-offered here as a plain Acrylic product, used to have no real
-  // Size/Shape/Hook variants of its own. Admins can (and do) set real sizes
-  // on these now, so the no-picker flow only applies when a product
-  // genuinely has none — same rule as the Canvas product page.
-  const isCatalogueDesign =
-    [
-      'devotional-art',
-      'line-art',
-      'motivational-posters',
-      'scenery-landscape-art',
-      'tribal-ethnic-art'
-    ].some((slug) => product.id.includes(slug)) &&
-    !((product.availableSizes && product.availableSizes.length > 0) || (product.sizes && product.sizes.length > 0));
+  // re-offered here as a plain Acrylic product, always sends the shopper
+  // straight into the customizer with the design preloaded instead of a
+  // Size/Shape/Hook picker — these are fixed artwork designs, not products
+  // with real variants, regardless of any sizes/finishes set on the record.
+  // Same rule as the Canvas product page.
+  const isCatalogueDesign = [
+    'devotional-art',
+    'line-art',
+    'motivational-posters',
+    'scenery-landscape-art',
+    'tribal-ethnic-art'
+  ].some((slug) => product.id.includes(slug));
 
   // Bottom Tabs State ('description' | 'specifications' | 'shipping' | 'reviews')
   const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'shipping' | 'reviews'>('description');
@@ -319,8 +323,9 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
   };
 
   return (
+    <>
     <div className="w-full bg-[#FFFDF9] text-stone-900 font-manrope min-h-screen">
-      
+
       {/* ========================================================================= */}
       {/* MAIN PRODUCT SECTION — mirrors the Canvas product page's layout exactly */}
       {/* ========================================================================= */}
@@ -530,7 +535,7 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={handleAddToCart}
+                    onClick={() => setShowCustomizeRequiredModal(true)}
                     className="py-3 px-3 sm:px-4 rounded-xl border-2 border-[#0E4A93] bg-white hover:bg-blue-50 text-[#0E4A93] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
                   >
                     <ShoppingCart className="w-4 h-4 shrink-0 text-[#0E4A93]" />
@@ -1028,6 +1033,51 @@ export const AcrylicProductDetailPage: React.FC<AcrylicProductDetailPageProps> =
       )}
 
     </div>
+
+    {showCustomizeRequiredModal && (
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="customize-required-title"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+        onClick={() => setShowCustomizeRequiredModal(false)}
+      >
+        <div
+          className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-stone-200 p-5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => setShowCustomizeRequiredModal(false)}
+            className="absolute top-3 right-3 w-7 h-7 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-3">
+            <Sparkles className="w-5 h-5 text-[#0E4A93]" />
+          </div>
+          <h3 id="customize-required-title" className="text-sm font-extrabold text-stone-900 mb-1.5">
+            Customize this product first
+          </h3>
+          <p className="text-xs text-stone-600 mb-4">
+            This artwork needs to be customized - choose a shape, size, or any other option - before it can be added to your cart.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setShowCustomizeRequiredModal(false);
+              navigate(`/customize/acrylic/single?prefillImage=${encodeURIComponent(product.image)}&prefillName=${encodeURIComponent(product.name)}&product=${encodeURIComponent(product.slug || product.id)}`);
+            }}
+            className="w-full py-3 px-4 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+          >
+            <Pencil className="w-4 h-4" />
+            <span>Customize this Product</span>
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 export default AcrylicProductDetailPage;

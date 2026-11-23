@@ -15,7 +15,8 @@ import {
   Package,
   ShoppingCart,
   ChevronDown,
-  Sparkles
+  Sparkles,
+  X
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
@@ -119,6 +120,12 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   const [customSizeW, setCustomSizeW] = useState<string>('');
   const [customSizeH, setCustomSizeH] = useState<string>('');
   const [selectedHook, setSelectedHook] = useState<string>('Sawtooth Hanger');
+  // Catalogue art (Devotional Art, Line Art, Scenery/Landscape, ...) has no
+  // Size/Shape/Frame/Hook picker of its own - "Add to cart" there used to add
+  // the fixed flat-price artwork as-is. Instead, prompt the shopper into the
+  // customizer (shape, size, etc.) rather than letting them buy it unpriced
+  // and uncustomized.
+  const [showCustomizeRequiredModal, setShowCustomizeRequiredModal] = useState(false);
 
   // Same ₹-per-sq.inch rate the full customizer bills by, fetched once so a
   // size picked here and the identical size picked in the customizer always
@@ -142,13 +149,10 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
   );
 
   // Pre-designed Print World catalogue art (Devotional Art, Line Art, etc.)
-  // used to have no real Size/Shape/Frame/Hook variants of its own, so
-  // instead of a buy-as-is flow it sent the shopper straight into the
-  // customizer with the design preloaded. That's no longer always true —
-  // admins can (and do) set real sizes/finishes on these products — so the
-  // no-picker flow now only applies when a product genuinely has none,
-  // regardless of its category. A product with its own sizes always gets
-  // the normal picker, even inside these categories.
+  // always sends the shopper straight into the customizer with the design
+  // preloaded, instead of a Size/Shape/Frame/Hook picker - these are fixed
+  // artwork designs, not products with real variants, regardless of whether
+  // an admin has also set sizes/finishes on the record.
   const CATALOGUE_DESIGN_SLUGS = [
     'devotional-art',
     'line-art',
@@ -156,11 +160,9 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
     'scenery-landscape-art',
     'tribal-ethnic-art'
   ];
-  const hasOwnSizes = (product.availableSizes && product.availableSizes.length > 0) || (product.sizes && product.sizes.length > 0);
   const isCatalogueDesign =
-    (CATALOGUE_DESIGN_SLUGS.includes(product.categorySlug) ||
-      CATALOGUE_DESIGN_SLUGS.some((slug) => product.id.includes(slug))) &&
-    !hasOwnSizes;
+    CATALOGUE_DESIGN_SLUGS.includes(product.categorySlug) ||
+    CATALOGUE_DESIGN_SLUGS.some((slug) => product.id.includes(slug));
 
   const isCorkPattern =
     product.categorySlug === 'cork-art-patterns' ||
@@ -731,7 +733,7 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={handleAddToCartWithVariants}
+                      onClick={() => setShowCustomizeRequiredModal(true)}
                       className="py-3 px-3 sm:px-4 rounded-xl border-2 border-[#0E4A93] bg-white hover:bg-blue-50 text-[#0E4A93] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
                     >
                       <ShoppingCart className="w-4 h-4 shrink-0 text-[#0E4A93]" />
@@ -1095,6 +1097,50 @@ const StandardProductDetailPage: React.FC<StandardProductDetailPageProps> = ({ p
         )}
 
       </div>
+
+      {showCustomizeRequiredModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="customize-required-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+          onClick={() => setShowCustomizeRequiredModal(false)}
+        >
+          <div
+            className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-stone-200 p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setShowCustomizeRequiredModal(false)}
+              className="absolute top-3 right-3 w-7 h-7 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-3">
+              <Sparkles className="w-5 h-5 text-[#0E4A93]" />
+            </div>
+            <h3 id="customize-required-title" className="text-sm font-extrabold text-stone-900 mb-1.5">
+              Customize this product first
+            </h3>
+            <p className="text-xs text-stone-600 mb-4">
+              This artwork needs to be customized - choose a shape, size, or any other option - before it can be added to your cart.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setShowCustomizeRequiredModal(false);
+                handleCustomizeFirst();
+              }}
+              className="w-full py-3 px-4 rounded-xl bg-[#0E4A93] hover:bg-[#09356A] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+            >
+              <Pencil className="w-4 h-4" />
+              <span>Customize this Product</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -5984,14 +5984,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     let price = sizePrice;
 
     if (shapeApplies) {
-      if (NON_RECTANGULAR_SHAPE_TYPES.has(currentShape.shapeType)) {
-        // Client-specified pricing: a non-rectangular shape (heart, hexagon,
-        // custom admin-traced outlines, ...) is billed by its bounding
-        // rectangle's area, not its actual silhouette area.
-        const boundingWidth = isCustomSize && canUseCustomSize ? customWidth : (currentSizeOption.widthInches ?? customWidth);
-        const boundingHeight = isCustomSize && canUseCustomSize ? customHeight : (currentSizeOption.heightInches ?? customHeight);
-        price += Math.round(boundingWidth * boundingHeight * shapeAreaRate);
-      } else if (currentShape.priceAddon) {
+      // Non-rectangular shapes (circle, oval, heart, hexagon, custom admin-traced
+      // outlines, ...) are the product itself at the size the shopper picked -
+      // no extra surcharge gets added just for picking a shape.
+      if (!NON_RECTANGULAR_SHAPE_TYPES.has(currentShape.shapeType) && currentShape.priceAddon) {
         price += currentShape.priceAddon;
       }
     }
@@ -7350,6 +7346,17 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         'Please upload or select at least one photograph to customize your canvas print.');
       setTimeout(() => setValidationWarning(null), 4000);
       setActiveTab('UPLOAD');
+      return;
+    }
+
+    // selectedThicknessId always holds a real id (see its useState above),
+    // but a product that shows the Wrap & Border thickness picker must have
+    // one actually picked, not just some other option touched, before it
+    // can be priced.
+    if (!thicknessTouched && !isBannerProduct) {
+      setValidationWarning('Please select a thickness in Wrap & Border before adding this to your cart.');
+      setTimeout(() => setValidationWarning(null), 4000);
+      setActiveTab('WRAP & BORDER');
       return;
     }
 
@@ -9919,23 +9926,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <span className="font-bold text-stone-900">+₹{(() => { const p = currentShape.priceAddon; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
                 </div>
               )}
-              {shapeApplies && NON_RECTANGULAR_SHAPE_TYPES.has(currentShape.shapeType) && (() => {
-                // Circle/oval/heart/hexagon/custom shapes are billed by
-                // their bounding rectangle's area at shapeAreaRate, not a
-                // flat priceAddon - this used to never appear as its own
-                // line, so the total included a charge the breakdown never
-                // itemized (looked identical to an unrequested default).
-                const boundingWidth = isCustomSize && canUseCustomSize ? customWidth : (currentSizeOption.widthInches ?? customWidth);
-                const boundingHeight = isCustomSize && canUseCustomSize ? customHeight : (currentSizeOption.heightInches ?? customHeight);
-                const p = Math.round(boundingWidth * boundingHeight * shapeAreaRate);
-                if (p <= 0) return null;
-                return (
-                  <div className="flex justify-between">
-                    <span>Shape ({currentShape.name ?? currentShape.shapeType}):</span>
-                    <span className="font-bold text-stone-900">+₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0)}</span>
-                  </div>
-                );
-              })()}
               {shapeApplies && (liveBorderWidthPrices[selectedBorderWidthId] || 0) > 0 && (
                 <div className="flex justify-between">
                   <span>Border:</span>
@@ -11441,7 +11431,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     {/* Thickness Options Grid */}
                     <div className={`grid gap-2 ${activeMaterial === 'acrylic' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
                       {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS.filter((t) => t.id !== 'custom-thickness' && t.id !== 'hanging-canvas')).map((th: any) => {
-                        const isSelected = selectedThicknessId === th.id;
+                        // Don't show a card as "selected" until the shopper has actually
+                        // clicked one - selectedThicknessId silently holds the cheapest
+                        // option by default so pricing/preview math never breaks, but
+                        // that default must stay invisible in the UI until touched.
+                        const isSelected = thicknessTouched && selectedThicknessId === th.id;
                         const displayTitle = th.name || th.label.split('(')[0].trim();
                         const displaySub = th.thicknessInches ? `(${th.thicknessInches.toFixed(2)}")` : th.thicknessMm ? `(${th.thicknessMm}mm)` : '';
                         return (
@@ -11836,7 +11830,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS).map((th: any) => {
-                      const isSelected = selectedThicknessId === th.id;
+                      // Same as the other thickness grid - stay unchecked until actually clicked.
+                      const isSelected = thicknessTouched && selectedThicknessId === th.id;
                       const cardTitle = activeMaterial === 'canvas' && th.id === 'custom-thickness' && selectedThicknessId === 'custom-thickness'
                         ? `Custom (${customThicknessMm}mm)`
                         : th.label;
