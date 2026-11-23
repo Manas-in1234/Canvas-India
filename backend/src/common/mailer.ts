@@ -9,6 +9,8 @@ export interface MailerEnv {
   RESEND_API_KEY?: string;
   /** "Canvas India <orders@canvassindia.com>" - the domain must be verified in Resend. */
   MAIL_FROM?: string;
+  /** Alias used by the admin welcome email and broadcasts; accepted so one sender setting works everywhere. */
+  RESEND_FROM_EMAIL?: string;
   MAIL_REPLY_TO?: string;
 }
 
@@ -35,8 +37,12 @@ export function maskEmail(email: string): string {
   return `${name.slice(0, 1)}***@${domain}`;
 }
 
+function fromAddress(env: MailerEnv): string {
+  return (env.MAIL_FROM?.trim() || env.RESEND_FROM_EMAIL?.trim() || '');
+}
+
 export function mailConfigured(env: MailerEnv): boolean {
-  return Boolean(env.RESEND_API_KEY?.trim() && env.MAIL_FROM?.trim());
+  return Boolean(env.RESEND_API_KEY?.trim() && fromAddress(env));
 }
 
 export async function sendMail(env: MailerEnv, message: MailMessage, fetchFn: FetchLike = (i, o) => fetch(i, o)): Promise<MailResult> {
@@ -52,7 +58,7 @@ export async function sendMail(env: MailerEnv, message: MailMessage, fetchFn: Fe
       signal: controller.signal,
       headers: { Authorization: `Bearer ${env.RESEND_API_KEY!.trim()}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: env.MAIL_FROM!.trim(),
+        from: fromAddress(env),
         to: recipients,
         subject: message.subject,
         html: message.html,
