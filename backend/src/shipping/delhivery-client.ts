@@ -490,7 +490,7 @@ export class DelhiveryClient {
         }
         return undefined;
       };
-      const why = pick(data) ?? (typeof data?.raw === 'string' ? data.raw.slice(0, 200) : undefined);
+      const why = pick(data) ?? (typeof data?.raw === 'string' ? data.raw.slice(0, 200) : (Object.keys(data ?? {}).length ? JSON.stringify(data).slice(0, 300) : undefined));
       throw new DelhiveryError(`Delhivery did not schedule the pickup (HTTP ${res.status})${why ? `: ${why}` : '.'}`, res.status >= 500 ? 502 : 422, data);
     }
     const id = data?.pickup_id ?? data?.pickup_request_id ?? data?.id ?? null;
