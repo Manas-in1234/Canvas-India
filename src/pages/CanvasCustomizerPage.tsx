@@ -7370,6 +7370,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       ? (Array.isArray(allProducts) ? allProducts : []).find((p) => p.id === sourceKey || p.slug === sourceKey)
       : undefined;
 
+    // An "original print" is a design from the site bought as it is: its own artwork, nothing of the customer's.
+    // Such orders are treated like ordinary catalogue orders (Cash on Delivery allowed). Anything with the
+    // customer's own photo or text counts as customized.
+    const catalogueArt = searchParams.get('prefillImage');
+    const usedPhotos = [...uploadedPhotos, ...Object.values(panelImages).map((panel) => panel?.imageUrl)].filter(Boolean) as string[];
+    const isOriginalPrint = Boolean(catalogueArt) && usedPhotos.length > 0 && usedPhotos.every((url) => url === catalogueArt) && !customText;
+
     onAddToCartCustomized({
       product: {
         ...catalogProduct,
@@ -7433,6 +7440,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           })(),
       customizationDetails: {
         previewImage,
+        originalPrint: isOriginalPrint || undefined,
         sourceProductId: sourceProduct?.id,
         sourceProductSlug: sourceProduct?.slug,
         material: activeMaterial,

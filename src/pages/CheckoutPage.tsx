@@ -339,7 +339,8 @@ export const CheckoutPage: React.FC = () => {
 
   const checkoutPin = getEffectiveShippingAddress().postal_code;
   const isPinCodBlocked = codAvailability?.pin === checkoutPin && codAvailability.available === false;
-  const hasCustomizedItem = cartItems.some((item) => item.customizationDetails);
+  // An unmodified print from the site (customizationDetails.originalPrint) is not "customized": COD stays available.
+  const hasCustomizedItem = cartItems.some((item) => item.customizationDetails && !item.customizationDetails.originalPrint);
   const isCodBlockedForCustomizer = hasCustomizedItem && !storeSettings.cod_enabled_for_customizer;
   const codAvailable = !isPinCodBlocked && !isCodBlockedForCustomizer;
   const isCod = shippingMethod === 'cod';

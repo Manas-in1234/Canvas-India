@@ -1778,7 +1778,8 @@ export default {
           const existing = await findCodOrder();
           if (existing) return jsonResponse(codReceipt(existing), 200, request);
 
-          const hasCustomizedItem = items.some(item => item.customizationDetails || item.customization_details);
+          // An unmodified print from the site (originalPrint) counts as an ordinary catalogue order for COD.
+          const hasCustomizedItem = items.some(item => { const d = item.customizationDetails || item.customization_details; return d && !d.originalPrint; });
           if (hasCustomizedItem) {
             const codSetting = await prisma.storeSetting?.findUnique({ where: { key: 'cod_enabled_for_customizer' } }).catch(() => null);
             if (codSetting?.value !== '1') {
