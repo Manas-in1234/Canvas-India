@@ -7422,9 +7422,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           ? `${selectedProductType.name} (${(POP_ART_STYLES.find((style) => style.id === popArtConfig.selectedStyleId) ?? getPopArtStyle(popArtConfig.selectedStyleId)).name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
           : isLyricProduct
           ? `${selectedProductType.name} (${selectedLyricTemplate.name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
-          : isPrefillMode && prefillTitle
+          : isPrefillMode && prefillTitle && !catalogueArtReplaced
           ? prefillTitle
-          : (sourceProduct && !isGenericCustomStyleId(sourceProduct.id) && !isGenericCustomStyleId(sourceProduct.slug))
+          : (sourceProduct && !isGenericCustomStyleId(sourceProduct.id) && !isGenericCustomStyleId(sourceProduct.slug) && !catalogueArtReplaced)
           ? sourceProduct.name
           : `${selectedProductType.name} - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
       },
