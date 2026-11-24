@@ -11557,6 +11557,61 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       </div>
                     );
                   })()}
+
+                  {/* Optional Color Finishing - moved here from Hardware & Finish */}
+                  <div className="space-y-2.5 pt-3 border-t border-stone-200">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">Optional Color Finishing</label>
+                      <span className="text-[10px] font-bold text-stone-400">Free</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2.5">
+                      {COLOR_FINISH_OPTIONS.map((cf) => {
+                        const activePanelFilter = panelImages[activePanelIndex]?.filter || 'original';
+                        const isSelected = activePanelFilter === cf.id;
+                        const previewImage = panelImages[activePanelIndex]?.imageUrl || panelImages[0]?.imageUrl || uploadedPhotos[0];
+                        return (
+                          <CustomizerOptionCard
+                            key={cf.id}
+                            selected={isSelected}
+                            onClick={() => handleApplyFilter(cf.id)}
+                            title={cf.label}
+                            previewHeightClass="h-20 p-0"
+                            preview={
+                              previewImage ? (
+                                <img src={previewImage} alt={cf.label} style={{ filter: getFilterCss(cf.id) }} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-stone-300">
+                                  <ImageIcon className="w-5 h-5" />
+                                </div>
+                              )
+                            }
+                          />
+                        );
+                      })}
+                    </div>
+                    <div className="text-[11px] text-stone-400">Applies to the active photo panel.</div>
+                  </div>
+
+                  {/* Digital Proof Request (Email option) - moved here from Options, right after Color Finishing */}
+                  <div className="space-y-2 pt-3 border-t border-stone-200">
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">Digital Proof Request</label>
+                    <label className="flex items-start gap-2.5 p-3 rounded-xl border border-stone-200 bg-stone-50 text-xs text-stone-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={proofRequested}
+                        onChange={(e) => setProofRequested(e.target.checked)}
+                        className="accent-[#0E4A93] w-4 h-4 mt-0.5 shrink-0"
+                      />
+                      <span>
+                        Email with link to the design proof will be sent within 24 hours and has to be approved online. Approve your
+                        proof promptly to avoid production and shipping delays.
+                      </span>
+                    </label>
+                    <p className="text-[11px] text-stone-400">
+                      <strong>Note:</strong> All prints manufactured by Canvas India are handmade and might have a ± 1 inch variation
+                      from the size ordered.
+                    </p>
+                  </div>
                 </>
               </div>
             )
@@ -12298,39 +12353,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </div>
               )}
 
-              {/* 4. Optional Color Finishing */}
-              <div className="space-y-2.5 pt-3 border-t border-stone-200">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">4. Optional Color Finishing</label>
-                  <span className="text-[10px] font-bold text-stone-400">Free</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  {COLOR_FINISH_OPTIONS.map((cf) => {
-                    const activePanelFilter = panelImages[activePanelIndex]?.filter || 'original';
-                    const isSelected = activePanelFilter === cf.id;
-                    const previewImage = panelImages[activePanelIndex]?.imageUrl || panelImages[0]?.imageUrl || uploadedPhotos[0];
-                    return (
-                      <CustomizerOptionCard
-                        key={cf.id}
-                        selected={isSelected}
-                        onClick={() => handleApplyFilter(cf.id)}
-                        title={cf.label}
-                        previewHeightClass="h-20 p-0"
-                        preview={
-                          previewImage ? (
-                            <img src={previewImage} alt={cf.label} style={{ filter: getFilterCss(cf.id) }} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-stone-300">
-                              <ImageIcon className="w-5 h-5" />
-                            </div>
-                          )
-                        }
-                      />
-                    );
-                  })}
-                </div>
-                <div className="text-[11px] text-stone-400">Applies to the active photo panel.</div>
-              </div>
             </div>
           )}
 
@@ -12397,30 +12419,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 />
               </div>
 
-              {/* 4. Proof Request */}
+              {/* 4. Order Quantity */}
               <div className="space-y-2 pt-3 border-t border-stone-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">4. Digital Proof Request</label>
-                <label className="flex items-start gap-2.5 p-3 rounded-xl border border-stone-200 bg-stone-50 text-xs text-stone-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={proofRequested}
-                    onChange={(e) => setProofRequested(e.target.checked)}
-                    className="accent-[#0E4A93] w-4 h-4 mt-0.5 shrink-0"
-                  />
-                  <span>
-                    Email with link to the design proof will be sent within 24 hours and has to be approved online. Approve your
-                    proof promptly to avoid production and shipping delays.
-                  </span>
-                </label>
-                <p className="text-[11px] text-stone-400">
-                  <strong>Note:</strong> All prints manufactured by Canvas India are handmade and might have a ± 1 inch variation
-                  from the size ordered.
-                </p>
-              </div>
-
-              {/* 5. Order Quantity */}
-              <div className="space-y-2 pt-3 border-t border-stone-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">5. Order Quantity</label>
+                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">4. Order Quantity</label>
                 <div className="flex items-center justify-between bg-stone-50 p-3 rounded-xl border border-stone-200">
                   <div className="inline-flex items-center border border-stone-300 rounded-xl bg-white shadow-xs">
                     <button
