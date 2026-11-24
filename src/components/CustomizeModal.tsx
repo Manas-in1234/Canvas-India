@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, UploadCloud, Check, ShoppingCart, SlidersHorizontal, Sparkles, Layers, Box, CheckCircle2, ZoomIn, ZoomOut, RotateCw, RefreshCw, AlignStartVertical, AlignCenterVertical, AlignEndVertical } from 'lucide-react';
 import { Product } from '../types';
 import { FRAME_LOOK, getFrameCategory } from './FrameHookVisuals';
+import { convertHeicFileIfNeeded } from '../utils/heicConvert';
 
 type TextPosition = 'top' | 'center' | 'bottom';
 
@@ -78,14 +79,16 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
     }
   }, [product]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate type
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-    if (!validTypes.includes(file.type)) {
-      setUploadError('Please select a valid JPG, PNG or WebP image file.');
+    // Validate type - iPhones save Camera Roll photos as HEIC/HEIF by
+    // default, so accept that too and convert it to JPEG below instead of
+    // rejecting the one format an iOS camera-roll pick is most likely to be.
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/heic', 'image/heif'];
+    if (!validTypes.includes(file.type) && !/\.(heic|heif)$/i.test(file.name)) {
+      setUploadError('Please select a valid JPG, PNG, WebP or HEIC image file.');
       return;
     }
 
@@ -96,7 +99,8 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
     }
 
     setUploadError(null);
-    const url = URL.createObjectURL(file);
+    const converted = await convertHeicFileIfNeeded(file);
+    const url = URL.createObjectURL(converted);
     setPhotoPreview(url);
     setZoom(1);
     setRotation(0);

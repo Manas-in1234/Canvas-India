@@ -12,6 +12,7 @@ import {
   Check
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { convertHeicFileIfNeeded } from '../utils/heicConvert';
 
 const createCompressedBase64 = (file: File, maxDim = 1280, quality = 0.8): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -66,7 +67,7 @@ export const MobileUploadPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (file: File) => {
+  const handleFileChange = async (file: File) => {
     setErrorMessage(null);
 
     // Validate size (25MB max)
@@ -75,15 +76,18 @@ export const MobileUploadPage: React.FC = () => {
       return;
     }
 
-    // Validate type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!validTypes.includes(file.type.toLowerCase())) {
-      setErrorMessage('Only JPG, PNG, and WEBP formats are supported.');
+    // Validate type - iPhones save Camera Roll photos as HEIC/HEIF by
+    // default, so accept that too and convert it to JPEG below, rather than
+    // rejecting the one format an iOS camera-roll pick is most likely to be.
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+    if (!validTypes.includes(file.type.toLowerCase()) && !/\.(heic|heif)$/i.test(file.name)) {
+      setErrorMessage('Only JPG, PNG, WEBP, and HEIC formats are supported.');
       return;
     }
 
-    setSelectedFile(file);
-    const objectUrl = URL.createObjectURL(file);
+    const converted = await convertHeicFileIfNeeded(file);
+    setSelectedFile(converted);
+    const objectUrl = URL.createObjectURL(converted);
     setPreviewUrl(objectUrl);
   };
 
@@ -236,7 +240,7 @@ export const MobileUploadPage: React.FC = () => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/jpg,image/png,image/webp"
+        accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif"
         className="hidden"
         onChange={(e) => {
           if (e.target.files && e.target.files[0]) {
@@ -247,7 +251,7 @@ export const MobileUploadPage: React.FC = () => {
       <input
         ref={cameraInputRef}
         type="file"
-        accept="image/jpeg,image/jpg,image/png,image/webp"
+        accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif"
         capture="environment"
         className="hidden"
         onChange={(e) => {

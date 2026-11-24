@@ -169,6 +169,7 @@ import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
 import { AcrylicRoomViewModal, RoomPlacementState } from '../components/AcrylicRoomViewModal';
 import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
 import { isGenericCustomStyleId } from '../utils/codEligibility';
+import { convertHeicFileIfNeeded } from '../utils/heicConvert';
 import { SelectLayoutModal, LayoutModalOption } from '../components/SelectLayoutModal';
 import { fetchStyleLayouts } from '../api/styleLayoutsApi';
 import { EmptyLayoutPanel, ShapedLayoutWorkspace } from '../components/ShapedLayoutWorkspace';
@@ -6333,14 +6334,20 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Files go to the frame that asked for them; extra files fill the following frames, the rest just join the uploads tray.
   const handleFilesUpload = (files: FileList | File[] | null, explicitPanelIdx: number = uploadTargetRef.current) => {
     if (!files || files.length === 0) return;
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/bmp'];
+    // iPhones save photos as HEIC/HEIF by default, so an iOS camera-roll pick
+    // can hand over a file with that type (or no recognizable type at all, if
+    // the browser doesn't know the MIME string) instead of auto-converting to
+    // JPEG first. Accept it here too - Safari/WebKit can decode HEIC natively
+    // via <img>/canvas, so rejecting it before ever trying was the actual bug,
+    // not a real lack of browser support.
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/bmp', 'image/heic', 'image/heif'];
     const validFiles = Array.from(files).filter((file) => {
       if (file.size > 40 * 1024 * 1024) {
         alert(`File ${file.name} exceeds the 40MB limit.`);
         return false;
       }
-      if (!validTypes.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png|webp|bmp)$/i)) {
-        alert(`File ${file.name} is not a supported format (JPG, PNG, WEBP, BMP).`);
+      if (!validTypes.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png|webp|bmp|heic|heif)$/i)) {
+        alert(`File ${file.name} is not a supported format (JPG, PNG, WEBP, BMP, HEIC).`);
         return false;
       }
       return true;
@@ -6353,7 +6360,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       .map((_, idx) => idx)
       .filter((idx) => !panelImages[idx]?.imageUrl);
 
-    validFiles.forEach((file, i) => {
+    validFiles.forEach((originalFile, i) => {
       let target: number;
       if (isContinuous) {
         target = 0;
@@ -6365,69 +6372,77 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         target = (activePanelIndex + i) % panels.length;
       }
 
-      const reader = new FileReader();
-      // Preloader stays visible for exactly as long as this real read takes
+      // Preloader stays visible for exactly as long as this real read (plus
+      // any HEIC conversion) takes
       beginPreloader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        if (result) {
-          const img = new Image();
-          img.onload = () => {
-            const width = img.naturalWidth || img.width || 1200;
-            const height = img.naturalHeight || img.height || 1200;
-            const meta = {
-              originalSrc: result,
-              width,
-              height,
-              aspectRatio: width / height,
-              name: file.name
-            };
+      (async () => {
+        // iPhone Camera Roll photos are usually HEIC - no browser, including
+        // Safari itself, reliably decodes that through <img>/<canvas> the way
+        // the customizer needs to, so convert to JPEG first. Any other type
+        // (or a failed conversion) passes through untouched.
+        const file = await convertHeicFileIfNeeded(originalFile);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          if (result) {
+            const img = new Image();
+            img.onload = () => {
+              const width = img.naturalWidth || img.width || 1200;
+              const height = img.naturalHeight || img.height || 1200;
+              const meta = {
+                originalSrc: result,
+                width,
+                height,
+                aspectRatio: width / height,
+                name: file.name
+              };
 
-            setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
-            setPanelImages((prev) => ({
-              ...prev,
-              [target]: {
-                ...createDefaultPanel(),
-                imageUrl: result,
-                uploadedImage: meta,
-                scale: 1,
-                rotation: 0,
-                panX: 0,
-                panY: 0,
-                fitMode: 'cover'
+              setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
+              setPanelImages((prev) => ({
+                ...prev,
+                [target]: {
+                  ...createDefaultPanel(),
+                  imageUrl: result,
+                  uploadedImage: meta,
+                  scale: 1,
+                  rotation: 0,
+                  panX: 0,
+                  panY: 0,
+                  fitMode: 'cover'
+                }
+              }));
+              if (isQuotesProduct && quotesPreference === 'create-own') {
+                setQuoteBgImage(result);
               }
-            }));
-            if (isQuotesProduct && quotesPreference === 'create-own') {
-              setQuoteBgImage(result);
-            }
-            setActivePanelIndex(target);
-            setValidationWarning(null);
-            endPreloader(PRELOADER_MIN_MS);
-          };
-          img.onerror = () => {
-            setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
-            setPanelImages((prev) => ({
-              ...prev,
-              [target]: {
-                ...createDefaultPanel(),
-                imageUrl: result,
-                fitMode: 'cover'
+              setActivePanelIndex(target);
+              setValidationWarning(null);
+              endPreloader(PRELOADER_MIN_MS);
+            };
+            img.onerror = () => {
+              setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
+              setPanelImages((prev) => ({
+                ...prev,
+                [target]: {
+                  ...createDefaultPanel(),
+                  imageUrl: result,
+                  fitMode: 'cover'
+                }
+              }));
+              if (isQuotesProduct && quotesPreference === 'create-own') {
+                setQuoteBgImage(result);
               }
-            }));
-            if (isQuotesProduct && quotesPreference === 'create-own') {
-              setQuoteBgImage(result);
-            }
-            setActivePanelIndex(target);
-            setValidationWarning(null);
-            endPreloader(PRELOADER_MIN_MS);
-          };
-          img.src = result;
-        } else {
-          endPreloader();
-        }
-      };
-      reader.onerror = () => endPreloader();
-      reader.readAsDataURL(file);
+              setActivePanelIndex(target);
+              setValidationWarning(null);
+              endPreloader(PRELOADER_MIN_MS);
+            };
+            img.src = result;
+          } else {
+            endPreloader();
+          }
+        };
+        reader.onerror = () => endPreloader();
+        reader.readAsDataURL(file);
+      })();
     });
   };
 
@@ -9902,7 +9917,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/png, image/jpeg, image/jpg, image/webp, image/bmp"
+        accept="image/png, image/jpeg, image/jpg, image/webp, image/bmp, image/heic, image/heif"
         multiple
         className="hidden"
         onChange={(e) => {
