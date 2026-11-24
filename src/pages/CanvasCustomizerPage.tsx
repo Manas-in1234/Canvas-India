@@ -2888,6 +2888,33 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [liveCanvasStyles, setLiveCanvasStyles] = useState<CanvasProductType[] | null>(null);
   const [liveAcrylicStyles, setLiveAcrylicStyles] = useState<AcrylicProductType[] | null>(null);
 
+  // A catalogue art print's own slug (e.g. "canvas-scenery-landscape-art-s-a-047") can end up
+  // directly in the URL path - a bare/typed link, or an older button - leaving the address bar
+  // implying this personalized print IS that catalogue design even once the shopper replaces
+  // the artwork entirely. Normalize it to the generic /single URL every other entry point
+  // already uses, carrying the catalogue product as a ?product= query param instead. Only
+  // these known catalogue design categories qualify - a real admin style/product keeps its own
+  // path, since resolveCurrentProductId needs it to pick the right shape/layout.
+  useEffect(() => {
+    if (!productId || BUILT_IN_STYLE_IDS.has(productId)) return;
+    const liveStyles = routeMaterial === 'acrylic' ? liveAcrylicStyles : liveCanvasStyles;
+    if (liveStyles === null) return; // still loading - decide once we know it isn't a real style
+    if (liveStyles.some((p) => p.id === productId)) return;
+    const matched = (Array.isArray(allProducts) ? allProducts : []).find((p) => p.id === productId || p.slug === productId);
+    if (!matched) return;
+    const isCatalogueDesignCategory = [
+      'devotional-art',
+      'line-art',
+      'motivational-posters',
+      'scenery-landscape-art',
+      'tribal-ethnic-art',
+    ].some((slug) => matched.id.includes(slug) || matched.categorySlug === slug);
+    if (!isCatalogueDesignCategory) return;
+    const params = new URLSearchParams(searchParams);
+    if (!params.get('product')) params.set('product', matched.slug || matched.id);
+    navigate(`/customize/${routeMaterial}/single?${params.toString()}`, { replace: true });
+  }, [productId, routeMaterial, liveCanvasStyles, liveAcrylicStyles, allProducts]);
+
   const resolveCurrentProductId = (mat: 'canvas' | 'acrylic', id?: string) => {
     // A style added from the admin has its own slug. Keep it, instead of letting the
     // resolver below fall back to Single Print and drop the style's own shapes and settings.
