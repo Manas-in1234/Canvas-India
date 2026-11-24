@@ -4320,18 +4320,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Thickness cards are admin-managed (name, price, icon, badge, order, hidden/deleted).
   // Until the team sets them up, the built-in lists below are used unchanged.
-  //
-  // The Small/Medium/Large rename, flat pricing and size caps for these three
-  // specific ids are a fixed business rule, not something that should keep
-  // reverting to whatever name/price an admin previously saved under the old
-  // Canvas Lite / Thin Gallery Wrap / Thick Gallery Wrap naming - so they're
-  // forced here regardless of what the live catalog row says, the same way
-  // the no-wrap/custom-thickness ids are already filtered out below.
-  const WRAP_SIZE_OVERRIDES: Record<string, { name: string; label: string; price: number; maxDimensionInches: number }> = {
-    'canvas-lite': { name: 'Small Size', label: 'Small Size (upto 20"x20")', price: 99, maxDimensionInches: 20 },
-    'thin-gallery': { name: 'Medium Size', label: 'Medium Size (upto 30"x30")', price: 149, maxDimensionInches: 30 },
-    'thick-gallery': { name: 'Large Size', label: 'Large Size (upto 44"x44")', price: 249, maxDimensionInches: 44 },
-  };
   const CANVAS_THICKNESS_OPTIONS = useMemo(() => {
     if (liveCanvasThickness.length === 0 && !overriddenKeys.has('canvas_thickness')) return BASE_CANVAS_THICKNESS_OPTIONS;
     return liveCanvasThickness
@@ -4344,18 +4332,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         const extras = item.extras ?? {};
         const id = (extras.id as string) ?? item.id;
         const inches = Number(extras.thicknessInches) || 1;
-        const override = WRAP_SIZE_OVERRIDES[id];
         return {
           id,
-          name: override?.name ?? (((extras.name as string) || item.label) as string),
-          label: override?.label ?? (id === 'custom-thickness' ? item.label : `${item.label} (${inches.toFixed(2)}")`),
+          name: ((extras.name as string) || item.label) as string,
+          label: id === 'custom-thickness' ? item.label : `${item.label} (${inches.toFixed(2)}")`,
           thicknessInches: inches,
-          price: override?.price ?? Number(item.flatPrice),
+          price: Number(item.flatPrice),
           depthPx: Number(extras.depthPx) || 18,
           description: item.description ?? '',
           badge: ((extras.badge as string) || undefined) as string | undefined,
           image: item.imageUrl ?? '',
-          maxDimensionInches: override?.maxDimensionInches ?? Number(extras.maxDimensionInches),
         };
       });
   }, [liveCanvasThickness, overriddenKeys]);
@@ -4597,20 +4583,33 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
   }, [activeMaterial, ACRYLIC_THICKNESS_OPTIONS, CANVAS_THICKNESS_OPTIONS, selectedThicknessId]);
 
-  // Effective print dimensions right now, used to check whether the selected
-  // wrap size tier (Small/Medium/Large) is actually rated for a canvas this
-  // big - each tier has a maximum width/height.
-  const effectivePrintWidthInches = isCustomSize && canUseCustomSize ? customWidth : (currentSizeOption.widthInches ?? 0);
-  const effectivePrintHeightInches = isCustomSize && canUseCustomSize ? customHeight : (currentSizeOption.heightInches ?? 0);
-  const isThicknessAllowedForSize = (thicknessId: string) => {
-    if (activeMaterial !== 'canvas') return true;
-    const opt = CANVAS_THICKNESS_OPTIONS.find((t) => t.id === thicknessId);
-    if (!opt?.maxDimensionInches) return true;
-    return effectivePrintWidthInches <= opt.maxDimensionInches && effectivePrintHeightInches <= opt.maxDimensionInches;
-  };
   const [customThicknessInches, setCustomThicknessInches] = useState<number>(1.0);
   const [customThicknessMm, setCustomThicknessMm] = useState<number>(25);
   const [customAcrylicThicknessMm, setCustomAcrylicThicknessMm] = useState<number>(6.0);
+
+  // Wrap Size (canvas only) - a separate, independent add-on from Canvas
+  // Thickness above. Each tier is a flat fee capped to a maximum print
+  // width/height; picking a tier too small for the chosen size is blocked.
+  const WRAP_SIZE_OPTIONS = [
+    { id: 'wrap-small', name: 'Small Size', label: 'Small Size (upto 20"x20")', price: 99, maxDimensionInches: 20, thicknessInches: 0.5, depthPx: 12 },
+    { id: 'wrap-medium', name: 'Medium Size', label: 'Medium Size (upto 30"x30")', price: 149, maxDimensionInches: 30, thicknessInches: 0.75, depthPx: 18, badge: 'Recommended' },
+    { id: 'wrap-large', name: 'Large Size', label: 'Large Size (upto 44"x44")', price: 249, maxDimensionInches: 44, thicknessInches: 1.5, depthPx: 30, badge: 'Museum Quality' },
+  ];
+  const [selectedWrapSizeId, setSelectedWrapSizeId] = useState<string>('');
+  // Not touched by default - stays unselected/unpriced until the shopper
+  // actually picks a tier, same reasoning as thicknessTouched above.
+  const [wrapSizeTouched, setWrapSizeTouched] = useState(false);
+
+  // Effective print dimensions right now, used to check whether the selected
+  // Wrap Size tier (Small/Medium/Large) is actually rated for a canvas this
+  // big - each tier has a maximum width/height.
+  const effectivePrintWidthInches = isCustomSize && canUseCustomSize ? customWidth : (currentSizeOption.widthInches ?? 0);
+  const effectivePrintHeightInches = isCustomSize && canUseCustomSize ? customHeight : (currentSizeOption.heightInches ?? 0);
+  const isWrapSizeAllowedForSize = (wrapSizeId: string) => {
+    const opt = WRAP_SIZE_OPTIONS.find((t) => t.id === wrapSizeId);
+    if (!opt?.maxDimensionInches) return true;
+    return effectivePrintWidthInches <= opt.maxDimensionInches && effectivePrintHeightInches <= opt.maxDimensionInches;
+  };
 
   const effectiveThicknessInches = useMemo(() => {
     if (selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap') return 0;
@@ -6095,6 +6094,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       price += getCanvasThicknessPrice(selectedThicknessId, customThicknessMm);
     }
 
+    if (activeMaterial === 'canvas' && wrapSizeTouched) {
+      price += WRAP_SIZE_OPTIONS.find((w) => w.id === selectedWrapSizeId)?.price || 0;
+    }
+
     if (shapeApplies) {
       price += liveBorderWidthPrices[selectedBorderWidthId] || 0;
       const frame = liveOrFallbackFrames.find((f) => f.id === selectedFrameId);
@@ -6146,6 +6149,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
     return price;
   }, [
+    wrapSizeTouched,
+    selectedWrapSizeId,
     sizePrice,
     acrylicSizeRate,
     shapeApplies,
@@ -7448,22 +7453,21 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
 
     // selectedThicknessId always holds a real id (see its useState above),
-    // but a product that shows the Wrap & Border thickness picker must have
-    // one actually picked, not just some other option touched, before it
-    // can be priced.
+    // but a product that shows the thickness picker must have one actually
+    // picked, not just some other option touched, before it can be priced.
     if (!thicknessTouched && !isBannerProduct && selectedThicknessId !== 'no-wrap-thickness' && selectedThicknessId !== 'no-wrap') {
-      setValidationWarning('Please select a wrap size in Hardware & Finish before adding this to your cart.');
+      setValidationWarning('Please select a thickness in Hardware & Finish before adding this to your cart.');
       setTimeout(() => setValidationWarning(null), 4000);
       setActiveTab('HARDWARE & FINISH');
       return;
     }
 
-    // Small/Medium/Large wrap sizes are each only rated up to a maximum
+    // Small/Medium/Large Wrap Size tiers are each only rated up to a maximum
     // width/height - a canvas bigger than that on either side needs the
     // next tier up, so block checkout rather than silently shipping a wrap
     // size that doesn't fit this print.
-    if (thicknessTouched && !isThicknessAllowedForSize(selectedThicknessId)) {
-      const opt = CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId);
+    if (activeMaterial === 'canvas' && wrapSizeTouched && !isWrapSizeAllowedForSize(selectedWrapSizeId)) {
+      const opt = WRAP_SIZE_OPTIONS.find((t) => t.id === selectedWrapSizeId);
       setValidationWarning(`${opt?.name || 'This'} wrap is not allowed for sizes more than ${opt?.maxDimensionInches}x${opt?.maxDimensionInches}.`);
       setTimeout(() => setValidationWarning(null), 4000);
       setActiveTab('HARDWARE & FINISH');
@@ -7586,6 +7590,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           : (CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Medium Size (upto 30"x30")'),
         customThicknessMm: activeMaterial === 'canvas' && thicknessTouched && selectedThicknessId === 'custom-thickness' ? customThicknessMm : undefined,
         customThicknessInches: activeMaterial === 'canvas' && thicknessTouched && selectedThicknessId === 'custom-thickness' ? customThicknessInches : undefined,
+        wrapSize: activeMaterial === 'canvas' && wrapSizeTouched ? WRAP_SIZE_OPTIONS.find((w) => w.id === selectedWrapSizeId)?.label : undefined,
         wrap: activeMaterial === 'canvas' ? liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.label : undefined,
         borderWidth: shapeApplies ? liveOrFallbackBorderWidths.find((b) => b.id === selectedBorderWidthId)?.label : undefined,
         borderColor: shapeApplies && selectedBorderWidthId !== 'none' ? selectedBorderColor : undefined,
@@ -10052,6 +10057,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <span className="font-bold text-stone-900">+₹{(() => { const p = getCanvasThicknessPrice(selectedThicknessId, customThicknessMm); return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(2); })()}</span>
                 </div>
               )}
+              {activeMaterial === 'canvas' && wrapSizeTouched && (
+                <div className="flex justify-between">
+                  <span>Wrap Size ({WRAP_SIZE_OPTIONS.find((w) => w.id === selectedWrapSizeId)?.name ?? ''}):</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = WRAP_SIZE_OPTIONS.find((w) => w.id === selectedWrapSizeId)?.price || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
+                </div>
+              )}
               {shapeApplies && !NON_RECTANGULAR_SHAPE_TYPES.has(currentShape.shapeType) && currentShape.priceAddon > 0 && (
                 <div className="flex justify-between">
                   <span>Shape ({currentShape.name ?? currentShape.shapeType}):</span>
@@ -11778,6 +11789,117 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           {/* -------------------------- HARDWARE & FINISH ------------------------- */}
           {activeTab === 'HARDWARE & FINISH' && (
             <div className="p-4 space-y-5">
+              {/* 1. Canvas Thickness / Stretcher Bar Depth (Excludes Canvas Banner) */}
+              {selectedProductTypeId !== 'canvas-banner' && (
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
+                      {activeMaterial === 'acrylic' ? '1. Acrylic Thickness' : '1. Canvas Stretcher Thickness'}
+                    </label>
+                    <span className="text-[11px] font-bold text-[#0E4A93]">{(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS.filter((t) => t.id !== 'no-wrap-thickness' && t.id !== 'no-wrap')).length} options</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS.filter((t) => t.id !== 'no-wrap-thickness' && t.id !== 'no-wrap')).map((th: any) => {
+                      // Same as the other thickness grid - stay unchecked until actually clicked.
+                      const isSelected = thicknessTouched && selectedThicknessId === th.id;
+                      const cardTitle = activeMaterial === 'canvas' && th.id === 'custom-thickness' && selectedThicknessId === 'custom-thickness'
+                        ? `Custom (${customThicknessMm}mm)`
+                        : th.label;
+                      const cardPrice = activeMaterial === 'canvas' && th.id === 'custom-thickness'
+                        ? (getCanvasThicknessPrice('custom-thickness', customThicknessMm) === 0 ? 'Included' : `+₹${getCanvasThicknessPrice('custom-thickness', customThicknessMm).toFixed(2)}`)
+                        : (th.price === 0 ? 'Included' : `+₹${th.price}`);
+                      return (
+                        <CustomizerOptionCard
+                          key={th.id}
+                          selected={isSelected}
+                          onClick={() => {
+                            if (thicknessTouched && selectedThicknessId === th.id) {
+                              setSelectedThicknessId('no-wrap-thickness');
+                              setThicknessTouched(false);
+                            } else {
+                              setSelectedThicknessId(th.id);
+                              setThicknessTouched(true);
+                            }
+                          }}
+                          badge={th.badge}
+                          title={cardTitle}
+                          priceText={cardPrice}
+                          previewHeightClass="h-16 p-1.5"
+                          preview={th.image ? <img src={th.image} alt={th.name || th.label} className="mx-auto h-full max-h-14 w-auto object-contain" /> : renderWrapPreview(th.id, { inches: th.thicknessInches, depthPx: th.depthPx })}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  {/* Canvas Custom Thickness Input Panel */}
+                  {activeMaterial === 'canvas' && selectedThicknessId === 'custom-thickness' && (
+                    <div className="p-3.5 bg-blue-50/50 rounded-xl border-2 border-[#0E4A93]/40 space-y-3 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-stone-900">Specify Custom Canvas Thickness:</span>
+                        <span className="text-[11px] font-semibold text-[#0E4A93] bg-white px-2 py-0.5 rounded border border-blue-200">
+                          {customThicknessMm} mm (≈ {(customThicknessMm / 25.4).toFixed(2)}″)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min={15}
+                              max={100}
+                              step={1}
+                              value={customThicknessMm}
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value);
+                                if (!isNaN(val)) {
+                                  const clamped = Math.max(15, Math.min(100, Math.round(val)));
+                                  setCustomThicknessMm(clamped);
+                                  setCustomThicknessInches(Number((clamped / 25.4).toFixed(2)));
+                                }
+                              }}
+                              placeholder="25"
+                              className="w-full pl-3 pr-10 py-2 text-sm font-bold rounded-lg border border-stone-300 focus:outline-none focus:border-[#0E4A93] bg-white text-stone-900"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400">
+                              mm
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-blue-100">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 mr-1">Quick Presets:</span>
+                        {[
+                          { mm: 20, label: '20mm (~0.75″)' },
+                          { mm: 25, label: '25mm (1.0″)' },
+                          { mm: 38, label: '38mm (~1.5″)' },
+                          { mm: 50, label: '50mm (2.0″)' },
+                          { mm: 75, label: '75mm (3.0″)' },
+                        ].map((p) => (
+                          <button
+                            key={p.mm}
+                            type="button"
+                            onClick={() => {
+                              setCustomThicknessMm(p.mm);
+                              setCustomThicknessInches(Number((p.mm / 25.4).toFixed(2)));
+                            }}
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
+                              customThicknessMm === p.mm
+                                ? 'bg-[#0E4A93] text-white border-[#0E4A93]'
+                                : 'bg-white text-stone-700 border-stone-200 hover:border-stone-400'
+                            }`}
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-stone-500 leading-relaxed">
+                        Solid pine stretcher frame made to your exact depth. Sensible range: 15 mm to 100 mm.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* 2. Acrylic Backing & Surface Finish (admin-managed) */}
               {activeMaterial === 'acrylic' && (
                 <div className="space-y-2.5 pt-3 border-t border-stone-200">
@@ -12064,44 +12186,39 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </div>
               )}
 
-              {/* Wrap Size (Canvas) / Thickness (Acrylic) - moved here, below Back Display Option */}
-              {selectedProductTypeId !== 'canvas-banner' && (
+              {/* Wrap Size (canvas only) - a separate add-on from Canvas Thickness above, moved here below Back Display Option */}
+              {activeMaterial === 'canvas' && selectedProductTypeId !== 'canvas-banner' && (
                 <div className="space-y-2.5 pt-3 border-t border-stone-200">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
-                      {activeMaterial === 'acrylic' ? 'Acrylic Thickness' : 'Wrap Size'}
-                    </label>
-                    <span className="text-[11px] font-bold text-[#0E4A93]">
-                      {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS.filter((t) => t.id !== 'custom-thickness' && t.id !== 'hanging-canvas' && t.id !== 'no-wrap-thickness' && t.id !== 'no-wrap')).length} options
-                    </span>
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">Wrap Size</label>
+                    <span className="text-[11px] font-bold text-[#0E4A93]">{WRAP_SIZE_OPTIONS.length} options</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS.filter((t) => t.id !== 'custom-thickness' && t.id !== 'hanging-canvas' && t.id !== 'no-wrap-thickness' && t.id !== 'no-wrap')).map((th: any) => {
-                      // Same as every other thickness/wrap grid - stay unchecked until actually clicked.
-                      const isSelected = thicknessTouched && selectedThicknessId === th.id;
+                    {WRAP_SIZE_OPTIONS.map((th) => {
+                      const isSelected = wrapSizeTouched && selectedWrapSizeId === th.id;
                       return (
                         <CustomizerOptionCard
                           key={th.id}
                           selected={isSelected}
                           onClick={() => {
-                            if (activeMaterial === 'canvas' && !isThicknessAllowedForSize(th.id)) {
-                              setValidationWarning(`${th.name || th.label} wrap is not allowed for sizes more than ${th.maxDimensionInches}x${th.maxDimensionInches}.`);
+                            if (!isWrapSizeAllowedForSize(th.id)) {
+                              setValidationWarning(`${th.name} wrap is not allowed for sizes more than ${th.maxDimensionInches}x${th.maxDimensionInches}.`);
                               setTimeout(() => setValidationWarning(null), 4000);
                               return;
                             }
-                            if (thicknessTouched && selectedThicknessId === th.id) {
-                              setSelectedThicknessId('no-wrap-thickness');
-                              setThicknessTouched(false);
+                            if (wrapSizeTouched && selectedWrapSizeId === th.id) {
+                              setSelectedWrapSizeId('');
+                              setWrapSizeTouched(false);
                             } else {
-                              setSelectedThicknessId(th.id);
-                              setThicknessTouched(true);
+                              setSelectedWrapSizeId(th.id);
+                              setWrapSizeTouched(true);
                             }
                           }}
                           badge={th.badge}
                           title={th.label}
-                          priceText={th.price === 0 ? 'Included' : `+₹${th.price}`}
+                          priceText={`+₹${th.price}`}
                           previewHeightClass="h-16 p-1.5"
-                          preview={th.image ? <img src={th.image} alt={th.name || th.label} className="mx-auto h-full max-h-14 w-auto object-contain" /> : renderWrapPreview(th.id, { inches: th.thicknessInches, depthPx: th.depthPx })}
+                          preview={renderWrapPreview(th.id, { inches: th.thicknessInches, depthPx: th.depthPx })}
                         />
                       );
                     })}

@@ -206,6 +206,11 @@ export const AddToCartConfirmationModal: React.FC = () => {
                     Wrap: <strong>{details.wrap}</strong>
                   </span>
                 )}
+                {details.wrapSize && (
+                  <span className="px-2 py-0.5 rounded bg-white border border-stone-200 text-stone-700 font-semibold">
+                    Wrap Size: <strong>{details.wrapSize}</strong>
+                  </span>
+                )}
                 {borderPill && (
                   <span className="px-2 py-0.5 rounded bg-white border border-stone-200 text-stone-700 font-semibold">
                     Border: <strong>{borderPill}</strong>
