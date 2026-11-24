@@ -7411,10 +7411,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       : undefined;
     const isReadyMadeCatalogue = isPrefillMode || Boolean(sourceProduct && !isGenericCustomStyleId(sourceProduct.id) && !isGenericCustomStyleId(sourceProduct.slug));
     // A catalogue design opened for customizing stays "ready-made" only while its own artwork is the only photo
-    // and no text was added; the customer's own photo or text makes it a personalized print.
-    const catalogueArt = searchParams.get('prefillImage');
+    // and no text was added; the customer's own photo or text makes it a personalized print. The reference
+    // artwork to compare against is whichever one this design was actually opened with - the ?prefillImage=
+    // link's photo, or (when entering straight at /customize/canvas/<catalogue-slug> with no prefill at all,
+    // e.g. a bare "Customize" link) the catalogue product's own listing image - never just "some id happened
+    // to be in the URL", or every photo the shopper uploads here would wrongly keep that product's name.
+    const catalogueArt = searchParams.get('prefillImage') || (isReadyMadeCatalogue ? sourceProduct?.image : undefined);
     const photosInDesign = [...uploadedPhotos, ...Object.values(panelImages).map((panel) => panel?.imageUrl)].filter(Boolean) as string[];
-    const catalogueArtReplaced = Boolean(catalogueArt) && (photosInDesign.some((url) => url !== catalogueArt) || Boolean(customText));
+    const catalogueArtReplaced = Boolean(customText) || (catalogueArt ? photosInDesign.some((url) => url !== catalogueArt) : photosInDesign.length > 0);
     const hasUserUploadedPhoto = !isReadyMadeCatalogue || catalogueArtReplaced;
     const prefillTitle = searchParams.get('prefillName');
 
