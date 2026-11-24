@@ -6443,6 +6443,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               }
               setActivePanelIndex(target);
               setValidationWarning(null);
+              // A real uploaded photo is unambiguous customizing - the shopper
+              // shouldn't have to also tap an already-selected size/option
+              // card just to make the price (still showing ₹0 otherwise)
+              // appear now that there's an actual photo ready to print.
+              setHasCustomized(true);
               endPreloader(PRELOADER_MIN_MS);
             };
             img.onerror = () => {
@@ -6460,6 +6465,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               }
               setActivePanelIndex(target);
               setValidationWarning(null);
+              setHasCustomized(true);
               endPreloader(PRELOADER_MIN_MS);
             };
             img.src = result;
@@ -6496,12 +6502,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           fitMode: 'cover'
         }
       }));
+      setHasCustomized(true);
     };
     img.onerror = () => {
       setPanelImages((prev) => ({
         ...prev,
         [panelIdx]: { ...createDefaultPanel(), imageUrl: photoUrl }
       }));
+      setHasCustomized(true);
     };
     img.src = photoUrl;
     setUploadedPhotos((prev) => (prev.includes(photoUrl) ? prev : [photoUrl, ...prev]));
@@ -9982,7 +9990,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         />
 
         {pricePopoverOpen && (
-          <div className="absolute right-36 top-full mt-2 w-64 bg-white text-stone-900 rounded-xl shadow-xl border border-stone-200 p-4 text-xs z-50 animate-in fade-in zoom-in-95">
+          <div className="absolute right-2 sm:right-36 top-full mt-2 w-64 max-w-[calc(100vw-1rem)] bg-white text-stone-900 rounded-xl shadow-xl border border-stone-200 p-4 text-xs z-50 animate-in fade-in zoom-in-95">
             <div className="font-extrabold pb-2 border-b border-stone-100 flex justify-between text-stone-900">
               <span>Price Breakdown</span>
               <button onClick={() => setPricePopoverOpen(false)} className="text-stone-400 hover:text-stone-700 cursor-pointer">
