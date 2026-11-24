@@ -979,16 +979,17 @@ export interface CanvasThicknessOption {
   depthPx: number;
   description?: string;
   badge?: string;
+  image?: string;
   // The largest width/height (inches) this wrap size is allowed on. A canvas
   // bigger than this on either side needs the next tier up.
   maxDimensionInches?: number;
 }
 
 export const CANVAS_THICKNESS_OPTIONS: CanvasThicknessOption[] = [
-  { id: 'canvas-lite', label: 'Canvas Lite (0.50")', name: 'Canvas Lite', thicknessInches: 0.5, price: 148.50, depthPx: 12, description: 'Ultra slim & lightweight, economical mount' },
-  { id: 'thin-gallery', label: 'Thin Gallery Wrap (0.75")', name: 'Thin Gallery Wrap', thicknessInches: 0.75, price: 193.05, depthPx: 18, description: 'Standard modern gallery profile', badge: 'Recommended' },
-  { id: 'thick-gallery', label: 'Thick Gallery Wrap (1.5")', name: 'Thick Gallery Wrap', thicknessInches: 1.5, price: 231.66, depthPx: 30, description: 'Museum-grade premium deep projection', badge: 'Museum Quality' },
-  { id: 'custom-thickness', label: 'Custom Thickness', name: 'Custom Thickness', thicknessInches: 1.0, price: 193.05, depthPx: 22, description: 'Specify custom canvas frame depth' },
+  { id: 'canvas-lite', label: 'Canvas Lite (0.50")', name: 'Canvas Lite', thicknessInches: 0.5, price: 148.50, depthPx: 12, description: 'Ultra slim & lightweight, economical mount', image: '/assets/customizer/canvas/thickness/canvas-lite.png' },
+  { id: 'thin-gallery', label: 'Thin Gallery Wrap (0.75")', name: 'Thin Gallery Wrap', thicknessInches: 0.75, price: 193.05, depthPx: 18, description: 'Standard modern gallery profile', badge: 'Recommended', image: '/assets/customizer/canvas/thickness/thin-gallery-wrap.png' },
+  { id: 'thick-gallery', label: 'Thick Gallery Wrap (1.5")', name: 'Thick Gallery Wrap', thicknessInches: 1.5, price: 231.66, depthPx: 30, description: 'Museum-grade premium deep projection', badge: 'Museum Quality', image: '/assets/customizer/canvas/thickness/thick-gallery-wrap.png' },
+  { id: 'custom-thickness', label: 'Custom Thickness', name: 'Custom Thickness', thicknessInches: 1.0, price: 193.05, depthPx: 22, description: 'Specify custom canvas frame depth', image: '/assets/customizer/canvas/thickness/custom-thickness.png' },
   { id: 'hanging-canvas', label: 'Unframed Rolled Canvas', name: 'Unframed Rolled Canvas', thicknessInches: 0.25, price: 85.0, depthPx: 8, description: 'Flexible unmounted rolled canvas or hanging bar' }
 ];
 

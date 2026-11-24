@@ -4341,7 +4341,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           depthPx: Number(extras.depthPx) || 18,
           description: item.description ?? '',
           badge: ((extras.badge as string) || undefined) as string | undefined,
-          image: item.imageUrl ?? '',
+          // Real product photos for these 4 known ids - always use them even
+          // if the live catalog row has no imageUrl (or a stale one) saved,
+          // same reasoning as the Wrap Size name/price override above.
+          image: item.imageUrl || ({
+            'canvas-lite': '/assets/customizer/canvas/thickness/canvas-lite.png',
+            'thin-gallery': '/assets/customizer/canvas/thickness/thin-gallery-wrap.png',
+            'thick-gallery': '/assets/customizer/canvas/thickness/thick-gallery-wrap.png',
+            'custom-thickness': '/assets/customizer/canvas/thickness/custom-thickness.png',
+          } as Record<string, string>)[id] || '',
         };
       });
   }, [liveCanvasThickness, overriddenKeys]);
