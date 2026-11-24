@@ -571,6 +571,11 @@ export class WorkerShipping {
     const waiting = await this.prisma.shipment.count({ where: { status: 'READY', awbNumber: { not: null } } });
     const count = Number(body?.count) > 0 ? Math.round(Number(body.count)) : waiting;
     if (count < 1) fail(409, 'There are no booked shipments waiting for pickup.');
+    // Delhivery keeps one open pickup per warehouse, so a second request would silently replace or hide the first.
+    const open = (await this.recentPickups()).find((p: any) => p.status === 'OPEN');
+    if (open && body?.replace !== true) {
+      fail(409, `A pickup is already open for ${open.date} ${open.time} (id ${open.pickupId ?? 'n/a'}). Delhivery keeps only one open pickup, so a new request may replace it. Confirm the replacement to continue.`);
+    }
     const result = await this.client.requestPickup({ date, time: time.length === 5 ? `${time}:00` : time, count });
     await this.prisma.auditLog.create({ data: { adminUserId: userId, action: 'DELHIVERY_PICKUP_REQUESTED', entityType: 'DelhiveryPickup', entityId: result.pickupId ?? `${date}T${time}`, changes: { date, time, count, pickupId: result.pickupId, location: this.client.cfg.pickup.name } } });
     return { pickupId: result.pickupId, date, time, count, location: this.client.cfg.pickup.name };
@@ -578,7 +583,19 @@ export class WorkerShipping {
 
   async recentPickups() {
     const rows = await this.prisma.auditLog.findMany({ where: { action: 'DELHIVERY_PICKUP_REQUESTED' }, orderBy: { createdAt: 'desc' }, take: 10 });
-    return rows.map((r: any) => ({ id: r.id, createdAt: r.createdAt, ...(r.changes ?? {}) }));
+    // Newest request still in the future is the one Delhivery holds open; older ones were replaced or have passed.
+    let openSeen = false;
+    return rows.map((r: any) => {
+      const c: any = r.changes ?? {};
+      const t = String(c.time ?? '');
+      const when = new Date(`${c.date}T${t.length === 5 ? `${t}:00` : t}+05:30`).getTime();
+      let status: 'OPEN' | 'SUPERSEDED' | 'PAST' = 'PAST';
+      if (Number.isFinite(when) && when > Date.now()) {
+        status = openSeen ? 'SUPERSEDED' : 'OPEN';
+        openSeen = true;
+      }
+      return { id: r.id, createdAt: r.createdAt, ...c, status };
+    });
   }
 
   async ndrAction(id: string, body: any, userId: string) {

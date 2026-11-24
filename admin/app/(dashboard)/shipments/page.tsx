@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { AlertTriangle, PackageCheck, RefreshCw, Settings2, Truck } from "lucide-react";
 import { apiClient, ApiError } from "@/lib/api-client";
 import type { DeliveryConfig, DeliverySummary, PickupRecord, ShipmentListItem } from "@/lib/types/shipping";
-import { SHIPMENT_STATUS_LABEL } from "@/lib/types/shipping";
+import { SHIPMENT_STATUS_LABEL, PICKUP_STATUS_LABEL } from "@/lib/types/shipping";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { StatusBadge } from "@/components/status-badge";
 import { usePermission } from "@/lib/auth/use-permission";
@@ -216,9 +216,11 @@ function PickupForm({ waiting, onClose, onDone }: { waiting: number; onClose: ()
   const [date, setDate] = useState(todayPlus(0));
   const [time, setTime] = useState("16:00");
   const [count, setCount] = useState(String(Math.max(waiting, 1)));
+  const [replace, setReplace] = useState(false);
   const recent = useQuery({ queryKey: ["delivery-pickups"], queryFn: () => apiClient.get<PickupRecord[]>("/shipping/pickups") });
+  const open = (recent.data ?? []).find((p) => p.status === "OPEN");
   const request = useMutation({
-    mutationFn: () => apiClient.post<{ pickupId: string | null; count: number; date: string; time: string }>("/shipping/pickups", { date, time, count: Number(count) }),
+    mutationFn: () => apiClient.post<{ pickupId: string | null; count: number; date: string; time: string }>("/shipping/pickups", { date, time, count: Number(count), replace }),
     onSuccess: (r) => {
       toast.success(`Pickup requested for ${r.date} ${r.time}${r.pickupId ? ` (id ${r.pickupId})` : ""}`);
       onDone();
@@ -249,12 +251,23 @@ function PickupForm({ waiting, onClose, onDone }: { waiting: number; onClose: ()
         </div>
       </div>
       <p className="text-xs text-muted-foreground">{waiting} booked parcel(s) are waiting for pickup right now.</p>
+      {open && (
+        <div className="space-y-1.5 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900">
+          <p>
+            A pickup is already open for {open.date} {open.time}. Delhivery keeps only one open pickup per warehouse, so a new request may replace it.
+          </p>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={replace} onChange={(e) => setReplace(e.target.checked)} />
+            Replace the open pickup with this one
+          </label>
+        </div>
+      )}
       {(recent.data ?? []).length > 0 && (
         <div className="space-y-1 text-xs">
-          <div className="font-medium">Recent requests</div>
+          <div className="font-medium">Requests sent (Delhivery keeps only the open one)</div>
           {(recent.data ?? []).slice(0, 4).map((p) => (
             <div key={p.id} className="flex justify-between text-muted-foreground">
-              <span>{p.date} {p.time} · {p.count} parcel(s)</span>
+              <span>{p.date} {p.time} · {p.count} parcel(s){p.status ? ` · ${PICKUP_STATUS_LABEL[p.status]}` : ""}</span>
               <span>{p.pickupId ? `id ${p.pickupId}` : ""}</span>
             </div>
           ))}
@@ -262,7 +275,7 @@ function PickupForm({ waiting, onClose, onDone }: { waiting: number; onClose: ()
       )}
       <DialogFooter>
         <Button variant="outline" onClick={onClose}>Cancel</Button>
-        <Button disabled={request.isPending || !date || !time || Number(count) < 1} onClick={() => request.mutate()}>
+        <Button disabled={request.isPending || !date || !time || Number(count) < 1 || (!!open && !replace)} onClick={() => request.mutate()}>
           {request.isPending ? "Requesting…" : "Request pickup"}
         </Button>
       </DialogFooter>

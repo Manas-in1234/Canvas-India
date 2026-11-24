@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { CheckCircle2, CircleAlert, CircleDashed, Wifi } from "lucide-react";
 import { apiClient, ApiError } from "@/lib/api-client";
 import type { DeliveryConfig, PickupRecord } from "@/lib/types/shipping";
+import { PICKUP_STATUS_LABEL } from "@/lib/types/shipping";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -152,7 +153,7 @@ export default function DeliverySettingsPage() {
           ) : (
             (pickups.data ?? []).map((p) => (
               <div key={p.id} className="flex flex-wrap justify-between gap-2 border-b pb-1 last:border-0">
-                <span>{p.date} {p.time} · {p.count} parcel(s)</span>
+                <span>{p.date} {p.time} · {p.count} parcel(s){p.status ? ` · ${PICKUP_STATUS_LABEL[p.status]}` : ""}</span>
                 <span className="text-muted-foreground">{p.pickupId ? `Pickup id ${p.pickupId} · ` : ""}requested {formatDate(p.createdAt)}</span>
               </div>
             ))

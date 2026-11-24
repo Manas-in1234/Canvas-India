@@ -124,7 +124,11 @@ export interface PickupRecord {
   count?: number;
   pickupId?: string | null;
   location?: string;
+  /** OPEN = the one pickup Delhivery holds; SUPERSEDED = replaced by a newer request; PAST = date has gone. */
+  status?: "OPEN" | "SUPERSEDED" | "PAST";
 }
+
+export const PICKUP_STATUS_LABEL: Record<string, string> = { OPEN: "Open", SUPERSEDED: "Replaced", PAST: "Past" };
 
 /** Friendly wording for the shipping statuses. */
 export const SHIPMENT_STATUS_LABEL: Record<string, string> = {
