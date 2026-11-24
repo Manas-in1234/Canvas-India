@@ -4320,6 +4320,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Thickness cards are admin-managed (name, price, icon, badge, order, hidden/deleted).
   // Until the team sets them up, the built-in lists below are used unchanged.
+  //
+  // The Small/Medium/Large rename, flat pricing and size caps for these three
+  // specific ids are a fixed business rule, not something that should keep
+  // reverting to whatever name/price an admin previously saved under the old
+  // Canvas Lite / Thin Gallery Wrap / Thick Gallery Wrap naming - so they're
+  // forced here regardless of what the live catalog row says, the same way
+  // the no-wrap/custom-thickness ids are already filtered out below.
+  const WRAP_SIZE_OVERRIDES: Record<string, { name: string; label: string; price: number; maxDimensionInches: number }> = {
+    'canvas-lite': { name: 'Small Size', label: 'Small Size (upto 20"x20")', price: 99, maxDimensionInches: 20 },
+    'thin-gallery': { name: 'Medium Size', label: 'Medium Size (upto 30"x30")', price: 149, maxDimensionInches: 30 },
+    'thick-gallery': { name: 'Large Size', label: 'Large Size (upto 44"x44")', price: 249, maxDimensionInches: 44 },
+  };
   const CANVAS_THICKNESS_OPTIONS = useMemo(() => {
     if (liveCanvasThickness.length === 0 && !overriddenKeys.has('canvas_thickness')) return BASE_CANVAS_THICKNESS_OPTIONS;
     return liveCanvasThickness
@@ -4332,17 +4344,18 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         const extras = item.extras ?? {};
         const id = (extras.id as string) ?? item.id;
         const inches = Number(extras.thicknessInches) || 1;
+        const override = WRAP_SIZE_OVERRIDES[id];
         return {
           id,
-          name: ((extras.name as string) || item.label) as string,
-          label: id === 'custom-thickness' ? item.label : `${item.label} (${inches.toFixed(2)}")`,
+          name: override?.name ?? (((extras.name as string) || item.label) as string),
+          label: override?.label ?? (id === 'custom-thickness' ? item.label : `${item.label} (${inches.toFixed(2)}")`),
           thicknessInches: inches,
-          price: Number(item.flatPrice),
+          price: override?.price ?? Number(item.flatPrice),
           depthPx: Number(extras.depthPx) || 18,
           description: item.description ?? '',
           badge: ((extras.badge as string) || undefined) as string | undefined,
           image: item.imageUrl ?? '',
-          maxDimensionInches: Number(extras.maxDimensionInches) || ({ 'canvas-lite': 20, 'thin-gallery': 30, 'thick-gallery': 44 } as Record<string, number>)[id],
+          maxDimensionInches: override?.maxDimensionInches ?? Number(extras.maxDimensionInches),
         };
       });
   }, [liveCanvasThickness, overriddenKeys]);
