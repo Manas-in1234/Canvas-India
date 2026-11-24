@@ -979,12 +979,15 @@ export interface CanvasThicknessOption {
   depthPx: number;
   description?: string;
   badge?: string;
+  // The largest width/height (inches) this wrap size is allowed on. A canvas
+  // bigger than this on either side needs the next tier up.
+  maxDimensionInches?: number;
 }
 
 export const CANVAS_THICKNESS_OPTIONS: CanvasThicknessOption[] = [
-  { id: 'canvas-lite', label: 'Canvas Lite (0.50")', name: 'Canvas Lite', thicknessInches: 0.5, price: 148.50, depthPx: 12, description: 'Ultra slim & lightweight, economical mount' },
-  { id: 'thin-gallery', label: 'Thin Gallery Wrap (0.75")', name: 'Thin Gallery Wrap', thicknessInches: 0.75, price: 193.05, depthPx: 18, description: 'Standard modern gallery profile', badge: 'Recommended' },
-  { id: 'thick-gallery', label: 'Thick Gallery Wrap (1.5")', name: 'Thick Gallery Wrap', thicknessInches: 1.5, price: 231.66, depthPx: 30, description: 'Museum-grade premium deep projection', badge: 'Museum Quality' },
+  { id: 'canvas-lite', label: 'Small Size (upto 20"x20")', name: 'Small Size', thicknessInches: 0.5, price: 99, depthPx: 12, description: 'For prints up to 20" x 20"', maxDimensionInches: 20 },
+  { id: 'thin-gallery', label: 'Medium Size (upto 30"x30")', name: 'Medium Size', thicknessInches: 0.75, price: 149, depthPx: 18, description: 'For prints up to 30" x 30"', badge: 'Recommended', maxDimensionInches: 30 },
+  { id: 'thick-gallery', label: 'Large Size (upto 44"x44")', name: 'Large Size', thicknessInches: 1.5, price: 249, depthPx: 30, description: 'For prints up to 44" x 44"', maxDimensionInches: 44 },
   { id: 'custom-thickness', label: 'Custom Thickness', name: 'Custom Thickness', thicknessInches: 1.0, price: 193.05, depthPx: 22, description: 'Specify custom canvas frame depth' },
   { id: 'hanging-canvas', label: 'Unframed Rolled Canvas', name: 'Unframed Rolled Canvas', thicknessInches: 0.25, price: 85.0, depthPx: 8, description: 'Flexible unmounted rolled canvas or hanging bar' }
 ];
