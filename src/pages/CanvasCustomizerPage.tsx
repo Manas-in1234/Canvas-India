@@ -11980,7 +11980,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
                   {/* Dark Section Header Bar */}
                   <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider">Border</span>
+                    <span className="text-xs font-bold uppercase tracking-wider">{activeMaterial === 'acrylic' ? '4. Border' : '3. Border'}</span>
                     <span className="text-[11px] font-semibold text-stone-200">
                       {selectedBorderWidthId === 'none' ? 'No Border' : 'Border Active'}
                     </span>
@@ -12142,7 +12142,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
                     {/* Dark Section Header Bar */}
                     <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider">Frames</span>
+                      <span className="text-xs font-bold uppercase tracking-wider">{activeMaterial === 'acrylic' ? '5. Frames' : '4. Frames'}</span>
                       <span className="text-[11px] font-semibold text-stone-200">
                         {liveOrFallbackFrames.find((f) => f.id === selectedFrameId)?.name || 'No Frame'}
                       </span>
@@ -12210,7 +12210,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               {/* 3. Display Option (Canvas only; Excludes Acrylic & Canvas Banner) */}
               {selectedProductTypeId !== 'canvas-banner' && activeMaterial === 'canvas' && (
                 <div className="space-y-2.5 pt-3 border-t border-stone-200">
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">3. Back Display Option</label>
+                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">5. Back Display Option</label>
                   <div className="space-y-2">
                     {liveOrFallbackDisplayOptions.map((opt) => {
                       const isSelected = selectedDisplayOptionId === opt.id;
@@ -12246,7 +12246,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               {activeMaterial === 'canvas' && selectedProductTypeId !== 'canvas-banner' && (
                 <div className="space-y-2.5 pt-3 border-t border-stone-200">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">Wrap Size</label>
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">6. Wrap Size</label>
                     <span className="text-[11px] font-bold text-[#0E4A93]">{WRAP_SIZE_OPTIONS.length} options</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -12286,7 +12286,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               {activeMaterial === 'canvas' && selectedProductTypeId !== 'canvas-banner' && (
                 <div className="space-y-2.5 pt-3 border-t border-stone-200">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">Edge Wrap</label>
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">7. Edge Wrap</label>
                     <span className="text-[11px] font-bold text-[#0E4A93]">{liveOrFallbackWrapStyles.length} options</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
