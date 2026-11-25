@@ -4264,6 +4264,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [liveMaterialGrades, setLiveMaterialGrades] = useState<OptionCategoryItemDto[]>([]);
   const [liveLaminations, setLiveLaminations] = useState<OptionCategoryItemDto[]>([]);
   const [liveFrames, setLiveFrames] = useState<OptionCategoryItemDto[]>([]);
+  const [liveWrapSizes, setLiveWrapSizes] = useState<OptionCategoryItemDto[]>([]);
   // Acrylic-only: backing color behind the clear sheet, and surface finish
   // (gloss/matte) coating — admin-managed via the "Backgrounds"/"Finish"
   // option categories. "Frosted Backing" and "Diamond Beveled Edge" rows
@@ -4289,8 +4290,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       loadOptions('design_templates'),
       loadOptions('color_finishing'),
       loadOptions('retouching'),
-    ]).then(([wrapStyles, hardware, displayOptions, materialGrades, laminations, frames, backing, finish, canvasThickness, acrylicThickness, designTemplates, colorFinishing, retouching]) => {
+      loadOptions('wrap_size', 'CANVAS'),
+    ]).then(([wrapStyles, hardware, displayOptions, materialGrades, laminations, frames, backing, finish, canvasThickness, acrylicThickness, designTemplates, colorFinishing, retouching, wrapSizes]) => {
       if (cancelled) return;
+      setLiveWrapSizes(wrapSizes);
       setLiveDesignTemplates(designTemplates);
       setLiveColorFinish(colorFinishing);
       setLiveRetouch(retouching);
@@ -4593,11 +4596,32 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Wrap Size (canvas only) - a separate, independent add-on from Canvas
   // Thickness above. Each tier is a flat fee capped to a maximum print
   // width/height; picking a tier too small for the chosen size is blocked.
-  const WRAP_SIZE_OPTIONS = [
-    { id: 'wrap-small', name: 'Small Size', label: 'Small Size (upto 20"x20")', price: 99, maxDimensionInches: 20, thicknessInches: 0.5, depthPx: 12 },
-    { id: 'wrap-medium', name: 'Medium Size', label: 'Medium Size (upto 30"x30")', price: 149, maxDimensionInches: 30, thicknessInches: 0.75, depthPx: 18, badge: 'Recommended' },
-    { id: 'wrap-large', name: 'Large Size', label: 'Large Size (upto 44"x44")', price: 249, maxDimensionInches: 44, thicknessInches: 1.5, depthPx: 30, badge: 'Museum Quality' },
-  ];
+  // Admin-managed via the "wrap_size" list (name, price, max size, badge, order, hidden);
+  // the built-in tiers are used until the team sets that list up.
+  const WRAP_SIZE_OPTIONS = useMemo(() => {
+    const base: Array<{ id: string; name: string; label: string; price: number; maxDimensionInches?: number; thicknessInches: number; depthPx: number; badge?: string }> = [
+      { id: 'wrap-small', name: 'Small Size', label: 'Small Size (upto 20"x20")', price: 99, maxDimensionInches: 20, thicknessInches: 0.5, depthPx: 12 },
+      { id: 'wrap-medium', name: 'Medium Size', label: 'Medium Size (upto 30"x30")', price: 149, maxDimensionInches: 30, thicknessInches: 0.75, depthPx: 18, badge: 'Recommended' },
+      { id: 'wrap-large', name: 'Large Size', label: 'Large Size (upto 44"x44")', price: 249, maxDimensionInches: 44, thicknessInches: 1.5, depthPx: 30, badge: 'Museum Quality' },
+    ];
+    if (liveWrapSizes.length === 0 && !overriddenKeys.has('wrap_size')) return base;
+    return liveWrapSizes.map((item) => {
+      const extras = item.extras ?? {};
+      const id = (extras.id as string) ?? item.id;
+      const fallback = base.find((b) => b.id === id);
+      const maxDim = Number(extras.maxDimensionInches) || fallback?.maxDimensionInches;
+      return {
+        id,
+        name: (extras.name as string) || item.label,
+        label: maxDim ? `${item.label} (upto ${maxDim}"x${maxDim}")` : item.label,
+        price: Number(item.flatPrice) || 0,
+        maxDimensionInches: maxDim,
+        thicknessInches: Number(extras.thicknessInches) || fallback?.thicknessInches || 0.75,
+        depthPx: Number(extras.depthPx) || fallback?.depthPx || 18,
+        badge: ((extras.badge as string) || undefined) as string | undefined,
+      };
+    });
+  }, [liveWrapSizes, overriddenKeys]);
   const [selectedWrapSizeId, setSelectedWrapSizeId] = useState<string>('');
   // Not touched by default - stays unselected/unpriced until the shopper
   // actually picks a tier, same reasoning as thicknessTouched above.

@@ -52,6 +52,11 @@ export const SECTION_EXTRAS: Record<string, ExtraField[]> = {
     { key: "depthPx", label: "Preview depth (px)", kind: "number" },
     { key: "id", label: "Internal id", kind: "text", hint: "Leave blank to create automatically" },
   ],
+  wrap_size: [
+    { key: "maxDimensionInches", label: "Largest print it covers (inches)", kind: "number", hint: "A canvas bigger than this on either side needs the next size up." },
+    { key: "badge", label: "Badge", kind: "text", hint: "e.g. Recommended" },
+    { key: "id", label: "Internal id", kind: "text", hint: "Leave blank to create automatically" },
+  ],
   acrylic_thickness: [
     { key: "badge", label: "Badge", kind: "text", hint: "e.g. Recommended" },
     { key: "thicknessMm", label: "Thickness (mm)", kind: "number" },
@@ -92,6 +97,7 @@ export const PRODUCT_SECTIONS: SectionDef[] = [
   { baseKey: "border_color", title: "Border colors", hint: "Color swatches for the border.", tab: "HARDWARE & FINISH", materials: ["canvas", "acrylic"] },
   { baseKey: "frame", title: "Frames", hint: "Standard, premium and floating frames.", tab: "HARDWARE & FINISH", materials: ["canvas", "acrylic"] },
   { baseKey: "display_option", title: "Back display", hint: "Open back or dust cover.", tab: "HARDWARE & FINISH", materials: ["canvas"] },
+  { baseKey: "wrap_size", title: "Wrap size", hint: "Small, Medium and Large wrap add-on, each with the largest print it covers.", tab: "HARDWARE & FINISH", materials: ["canvas"] },
   { baseKey: "wrap_style", title: "Edge wrap", hint: "How the picture wraps around the edge.", tab: "HARDWARE & FINISH", materials: ["canvas"] },
   { baseKey: "lamination", title: "Lamination", hint: "No, standard or premium lamination.", tab: "OPTIONS", materials: ["canvas", "acrylic"] },
   { baseKey: "retouching", title: "Minor photo retouching", hint: "Red eye, dust removal and similar.", tab: "OPTIONS", materials: ["canvas", "acrylic"] },
@@ -148,6 +154,12 @@ export const CANVAS_THICKNESS_SEED_ITEMS: SeedItem[] = [
   { label: "Unframed Rolled Canvas", description: "Flexible unmounted rolled canvas or hanging bar", flatPrice: "85.00", extras: { id: "hanging-canvas", name: "Unframed Rolled Canvas", thicknessInches: 0.25, depthPx: 8, badge: "" } },
 ];
 
+export const WRAP_SIZE_SEED_ITEMS: SeedItem[] = [
+  { label: "Small Size", description: "", flatPrice: "99", extras: { id: "wrap-small", name: "Small Size", maxDimensionInches: 20, thicknessInches: 0.5, depthPx: 12, badge: "" } },
+  { label: "Medium Size", description: "", flatPrice: "149", extras: { id: "wrap-medium", name: "Medium Size", maxDimensionInches: 30, thicknessInches: 0.75, depthPx: 18, badge: "Recommended" } },
+  { label: "Large Size", description: "", flatPrice: "249", extras: { id: "wrap-large", name: "Large Size", maxDimensionInches: 44, thicknessInches: 1.5, depthPx: 30, badge: "Museum Quality" } },
+];
+
 export const ACRYLIC_THICKNESS_SEED_ITEMS: SeedItem[] = [
   { label: "3MM Lightweight Cast Acrylic", description: "", flatPrice: "0.00", extras: { id: "3mm", name: "3MM Cast Acrylic", thicknessMm: 3, badge: "" } },
   { label: "5MM Standard Studio Acrylic", description: "", flatPrice: "150.00", extras: { id: "5mm", name: "5MM Studio Acrylic", thicknessMm: 5, badge: "Recommended" } },
@@ -186,6 +198,7 @@ export const DESIGN_TEMPLATE_SEED_ITEMS: SeedItem[] = [
 export function builtInDefaults(baseKey: string): SeedItem[] | null {
   if (baseKey === "canvas_thickness") return CANVAS_THICKNESS_SEED_ITEMS;
   if (baseKey === "acrylic_thickness") return ACRYLIC_THICKNESS_SEED_ITEMS;
+  if (baseKey === "wrap_size") return WRAP_SIZE_SEED_ITEMS;
   if (baseKey === "design_templates") return DESIGN_TEMPLATE_SEED_ITEMS;
   return null;
 }
@@ -248,7 +261,7 @@ export const NO_ADD_KEYS = new Set(["sidebar_tabs", "toolbar_buttons", "layouts"
 export function customizationTabFor(baseKey: string): string {
   if (baseKey === "custom_size_steps") return "sizes";
   if (baseKey === "design_templates" || baseKey === "layouts" || baseKey === "color_finishing") return "layouts";
-  if (["canvas_thickness", "wrap_style", "border_width", "border_color", "frame", "acrylic_thickness", "backgrounds", "finish", "hardware", "display_option"].includes(baseKey)) return "hardware";
+  if (["canvas_thickness", "wrap_style", "border_width", "border_color", "frame", "wrap_size", "acrylic_thickness", "backgrounds", "finish", "hardware", "display_option"].includes(baseKey)) return "hardware";
   if (baseKey === "sidebar_tabs" || baseKey === "toolbar_buttons") return "controls";
   return "options";
 }

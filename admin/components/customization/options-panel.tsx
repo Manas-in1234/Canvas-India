@@ -52,6 +52,16 @@ const CANVAS_THICKNESS_SEED: SeedSpec = {
   ],
 };
 
+const WRAP_SIZE_SEED: SeedSpec = {
+  scope: 'CANVAS',
+  name: 'Wrap size',
+  items: [
+    { label: 'Small Size', description: '', flatPrice: '99', extras: { id: 'wrap-small', name: 'Small Size', maxDimensionInches: 20, thicknessInches: 0.5, depthPx: 12, badge: '' } },
+    { label: 'Medium Size', description: '', flatPrice: '149', extras: { id: 'wrap-medium', name: 'Medium Size', maxDimensionInches: 30, thicknessInches: 0.75, depthPx: 18, badge: 'Recommended' } },
+    { label: 'Large Size', description: '', flatPrice: '249', extras: { id: 'wrap-large', name: 'Large Size', maxDimensionInches: 44, thicknessInches: 1.5, depthPx: 30, badge: 'Museum Quality' } },
+  ],
+};
+
 const ACRYLIC_THICKNESS_SEED: SeedSpec = {
   scope: 'ACRYLIC',
   name: 'Acrylic thickness',
@@ -222,9 +232,10 @@ const TABS: TabBlock[] = [
         scope: 'Canvas',
         entries: [
           {
-            kind: 'fixed',
-            title: 'Small / Medium / Large wrap size',
-            note: 'A separate add-on from Canvas Thickness: Small (up to 20"x20") +₹99, Medium (up to 30"x30") +₹149, Large (up to 44"x44") +₹249. The storefront keeps these names, prices and size caps in code, so they cannot be edited here yet.',
+            kind: 'category',
+            baseKey: 'wrap_size',
+            title: 'Wrap size tiers (Small / Medium / Large): name, price and the largest print each one covers',
+            seed: WRAP_SIZE_SEED,
           },
         ],
       },
