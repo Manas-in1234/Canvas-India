@@ -4654,12 +4654,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         depthPx: Number(extras.depthPx) || 18,
         badge: ((extras.badge as string) || undefined) as string | undefined,
         // Real product photos for these 3 known ids - always use them even
-        // if the live catalog row has no imageUrl saved.
+        // if the live catalog row has no imageUrl saved. Any other tier the
+        // admin adds (e.g. "Extra Large") falls back to the Large wrap photo
+        // rather than a broken image icon.
         image: item.imageUrl || ({
           'wrap-small': '/assets/customizer/canvas/wrap-size/small.png',
           'wrap-medium': '/assets/customizer/canvas/wrap-size/medium.png',
           'wrap-large': '/assets/customizer/canvas/wrap-size/large.png',
-        } as Record<string, string>)[id] || '',
+        } as Record<string, string>)[id] || '/assets/customizer/canvas/wrap-size/large.png',
       };
     });
   }, [liveWrapSize, overriddenKeys]);
