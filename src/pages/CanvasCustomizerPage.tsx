@@ -121,7 +121,7 @@ import {
 } from '../data/lyricCanvasData';
 import { fetchApprovedCustomShapes, filterToUnknownShapes, toShapeOption, type CustomShapeDto } from '../api/customShapesApi';
 import { fetchPricingRates, SHAPE_AREA_RATE_FALLBACK, ACRYLIC_THICKNESS_RATE_FALLBACKS } from '../api/pricingSettingsApi';
-import { applyControls, applyLayoutOverrides, controlLabel, KNOWN_TAB_IDS, useCustomizerControls } from '../api/customizerControls';
+import { applyControls, applyLayoutOverrides, controlLabel, KNOWN_TAB_IDS, sectionHelpers, useCustomizerControls, useSectionNumbering } from '../api/customizerControls';
 import { fetchOptionCategoryItems, type OptionCategoryItemDto } from '../api/optionCategoriesApi';
 import {
   fetchCustomizerProductTypes,
@@ -3159,6 +3159,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Primary Toolbar items: dynamically filtered by selected product capabilities
   // EXACT ORDER: 1. PRODUCTS, 2. UPLOAD, 3. SELECT SIZE, 4. LAYOUTS & DESIGNS, 5. HARDWARE & FINISH, 6. OPTIONS
   const customizerControls = useCustomizerControls();
+  const sec = sectionHelpers(customizerControls.sections);
+  useSectionNumbering();
 
   // Inch steps offered in the Custom Size boxes, as set in the admin (Customization → Select size).
   // Kept in ascending order whatever order they were added in; falls back to the built-in list.
@@ -11306,7 +11308,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 />
               </div>
             ) : (
-              <div className="p-4 space-y-3.5">
+              <div className="p-4 flex flex-col gap-3.5" data-sec-list>
                 <>
                   {/* Remove Design/Template Header Action Tile (Requirement 2) */}
                   <div className="pb-2 border-b border-stone-200 space-y-2">
@@ -11576,9 +11578,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   })()}
 
                   {/* Optional Color Finishing - moved here from Hardware & Finish */}
-                  <div className="space-y-2.5 pt-3 border-t border-stone-200">
+                  <div className="space-y-2.5 pt-3 border-t border-stone-200" {...sec.p('layouts', 'color_finishing')}>
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">Optional Color Finishing</label>
+                      <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">{sec.t('layouts', 'color_finishing', 'Optional Color Finishing')}</label>
                       <span className="text-[10px] font-bold text-stone-400">Free</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2.5">
@@ -11610,8 +11612,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   </div>
 
                   {/* Digital Proof Request (Email option) - moved here from Options, right after Color Finishing */}
-                  <div className="space-y-2 pt-3 border-t border-stone-200">
-                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">Digital Proof Request</label>
+                  <div className="space-y-2 pt-3 border-t border-stone-200" {...sec.p('layouts', 'digital_proof')}>
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">{sec.t('layouts', 'digital_proof', 'Digital Proof Request')}</label>
                     <label className="flex items-start gap-2.5 p-3 rounded-xl border border-stone-200 bg-stone-50 text-xs text-stone-700 cursor-pointer">
                       <input
                         type="checkbox"
@@ -11636,13 +11638,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
           {/* -------------------------- HARDWARE & FINISH ------------------------- */}
           {activeTab === 'HARDWARE & FINISH' && (
-            <div className="p-4 space-y-5">
+            <div className="p-4 flex flex-col gap-5" data-sec-list>
               {/* 1. Canvas Thickness / Stretcher Bar Depth (Excludes Canvas Banner) */}
               {selectedProductTypeId !== 'canvas-banner' && (
-                <div className="space-y-2.5">
+                <div className="space-y-2.5" {...sec.p('hardware', 'thickness')}>
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
-                      {activeMaterial === 'acrylic' ? '1. Acrylic Thickness' : '1. Canvas Stretcher Thickness'}
+                      <span data-sec-num />{sec.t('hardware', 'thickness', activeMaterial === 'acrylic' ? 'Acrylic Thickness' : 'Canvas Stretcher Thickness')}
                     </label>
                     <span className="text-[11px] font-bold text-[#0E4A93]">{(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS.filter((t) => t.id !== 'no-wrap-thickness' && t.id !== 'no-wrap')).length} options</span>
                   </div>
@@ -11750,9 +11752,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
               {/* 2. Acrylic Backing & Surface Finish (admin-managed) */}
               {activeMaterial === 'acrylic' && (
-                <div className="space-y-2.5 pt-3 border-t border-stone-200">
+                <div className="space-y-2.5 pt-3 border-t border-stone-200" {...sec.p('hardware', 'backing')}>
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">2. Backing</label>
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block"><span data-sec-num />{sec.t('hardware', 'backing', 'Backing')}</label>
                     <span className="text-[11px] font-bold text-[#0E4A93]">{liveOrFallbackBacking.length} options</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -11809,10 +11811,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               )}
 
               {/* 3. Hardware Option & Style */}
-              <div className={`space-y-2.5 ${selectedProductTypeId !== 'canvas-banner' ? 'pt-3 border-t border-stone-200' : ''}`}>
+              <div className={`space-y-2.5 ${selectedProductTypeId !== 'canvas-banner' ? 'pt-3 border-t border-stone-200' : ''}`} {...sec.p('hardware', 'hardware')}>
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">
-                    {selectedProductTypeId === 'canvas-banner' ? 'Hardware & Mounting Options' : activeMaterial === 'acrylic' ? '3. HARDWARE OPTION & STYLE' : '2. HARDWARE OPTION & STYLE'}
+                    {selectedProductTypeId === 'canvas-banner' ? 'Hardware & Mounting Options' : <><span data-sec-num />{sec.t('hardware', 'hardware', 'HARDWARE OPTION & STYLE')}</>}
                   </label>
                   {selectedProductTypeId === 'canvas-banner' && (
                     <span className="text-[11px] font-bold text-[#0E4A93]">{CANVAS_BANNER_HARDWARE_OPTIONS.length} options</span>
@@ -12000,11 +12002,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               </div>
 
               {/* Border - moved here, right after Hardware Option & Style */}
-              <div className="pt-3 border-t border-stone-200">
+              <div className="pt-3 border-t border-stone-200" {...sec.p('hardware', 'border')}>
                 <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
                   {/* Dark Section Header Bar */}
                   <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider">{activeMaterial === 'acrylic' ? '4. Border' : '3. Border'}</span>
+                    <span className="text-xs font-bold uppercase tracking-wider"><span data-sec-num />{sec.t('hardware', 'border', 'Border')}</span>
                     <span className="text-[11px] font-semibold text-stone-200">
                       {selectedBorderWidthId === 'none' ? 'No Border' : 'Border Active'}
                     </span>
@@ -12162,11 +12164,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
               {/* Frames - moved here, right after Border */}
               {!isMultiFrameProduct && (
-                <div className="pt-3 border-t border-stone-200">
+                <div className="pt-3 border-t border-stone-200" {...sec.p('hardware', 'frames')}>
                   <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
                     {/* Dark Section Header Bar */}
                     <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider">{activeMaterial === 'acrylic' ? '5. Frames' : '4. Frames'}</span>
+                      <span className="text-xs font-bold uppercase tracking-wider"><span data-sec-num />{sec.t('hardware', 'frames', 'Frames')}</span>
                       <span className="text-[11px] font-semibold text-stone-200">
                         {liveOrFallbackFrames.find((f) => f.id === selectedFrameId)?.name || 'No Frame'}
                       </span>
@@ -12233,8 +12235,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
               {/* 3. Display Option (Canvas only; Excludes Acrylic & Canvas Banner) */}
               {selectedProductTypeId !== 'canvas-banner' && activeMaterial === 'canvas' && (
-                <div className="space-y-2.5 pt-3 border-t border-stone-200">
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">5. Back Display Option</label>
+                <div className="space-y-2.5 pt-3 border-t border-stone-200" {...sec.p('hardware', 'display')}>
+                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block"><span data-sec-num />{sec.t('hardware', 'display', 'Back Display Option')}</label>
                   <div className="space-y-2">
                     {liveOrFallbackDisplayOptions.map((opt) => {
                       const isSelected = selectedDisplayOptionId === opt.id;
@@ -12268,9 +12270,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
               {/* Wrap Size (canvas only) - a separate add-on from Canvas Thickness above, moved here below Back Display Option */}
               {activeMaterial === 'canvas' && selectedProductTypeId !== 'canvas-banner' && (
-                <div className="space-y-2.5 pt-3 border-t border-stone-200">
+                <div className="space-y-2.5 pt-3 border-t border-stone-200" {...sec.p('hardware', 'wrapsize')}>
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">6. Wrap Size</label>
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800"><span data-sec-num />{sec.t('hardware', 'wrapsize', 'Wrap Size')}</label>
                     <span className="text-[11px] font-bold text-[#0E4A93]">{WRAP_SIZE_OPTIONS.length} options</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -12308,9 +12310,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
               {/* Edge Wrap (admin-managed via wrap_style, canvas only) - moved here, below Back Display Option */}
               {activeMaterial === 'canvas' && selectedProductTypeId !== 'canvas-banner' && (
-                <div className="space-y-2.5 pt-3 border-t border-stone-200">
+                <div className="space-y-2.5 pt-3 border-t border-stone-200" {...sec.p('hardware', 'edgewrap')}>
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">7. Edge Wrap</label>
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800"><span data-sec-num />{sec.t('hardware', 'edgewrap', 'Edge Wrap')}</label>
                     <span className="text-[11px] font-bold text-[#0E4A93]">{liveOrFallbackWrapStyles.length} options</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -12375,10 +12377,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
           {/* ------------------------------ OPTIONS ------------------------------ */}
           {activeTab === 'OPTIONS' && (
-            <div className="p-4 space-y-5">
+            <div className="p-4 flex flex-col gap-5" data-sec-list>
               {/* 1. Lamination Options */}
-              <div className="space-y-2.5">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">1. Lamination Options</label>
+              <div className="space-y-2.5" {...sec.p('options', 'lamination')}>
+                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block"><span data-sec-num />{sec.t('options', 'lamination', 'Lamination Options')}</label>
                 <div className="space-y-2">
                   {liveOrFallbackLaminations.map((lam) => {
                     const isSelected = selectedLaminationId === lam.id;
@@ -12407,8 +12409,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               </div>
 
               {/* 2. Minor Photo Retouching */}
-              <div className="space-y-2.5 pt-3 border-t border-stone-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">2. Minor Photo Retouching</label>
+              <div className="space-y-2.5 pt-3 border-t border-stone-200" {...sec.p('options', 'retouching')}>
+                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block"><span data-sec-num />{sec.t('options', 'retouching', 'Minor Photo Retouching')}</label>
                 <div className="grid grid-cols-2 gap-2.5 bg-stone-50 p-3 rounded-xl border border-stone-200">
                   {RETOUCH_CHECKS.map((rc) => (
                     <label key={rc.id} className="flex items-center gap-2 text-xs font-bold text-stone-700 cursor-pointer">
@@ -12425,8 +12427,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               </div>
 
               {/* 3. Major Retouching */}
-              <div className="space-y-2 pt-3 border-t border-stone-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">3. Major Retouching Notes</label>
+              <div className="space-y-2 pt-3 border-t border-stone-200" {...sec.p('options', 'major_retouching')}>
+                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block"><span data-sec-num />{sec.t('options', 'major_retouching', 'Major Retouching Notes')}</label>
                 <textarea
                   value={majorRetouchText}
                   onChange={(e) => setMajorRetouchText(e.target.value)}
@@ -12437,8 +12439,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               </div>
 
               {/* 4. Order Quantity */}
-              <div className="space-y-2 pt-3 border-t border-stone-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">4. Order Quantity</label>
+              <div className="space-y-2 pt-3 border-t border-stone-200" {...sec.p('options', 'quantity')}>
+                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block"><span data-sec-num />{sec.t('options', 'quantity', 'Order Quantity')}</label>
                 <div className="flex items-center justify-between bg-stone-50 p-3 rounded-xl border border-stone-200">
                   <div className="inline-flex items-center border border-stone-300 rounded-xl bg-white shadow-xs">
                     <button

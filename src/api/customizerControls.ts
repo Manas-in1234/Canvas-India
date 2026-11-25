@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { fetchOptionCategoryItems, type OptionCategoryItemDto } from './optionCategoriesApi';
 import layoutSeed from '../data/layoutSeed.json';
 
@@ -33,10 +33,39 @@ const DEFAULT_LABELS: Record<string, string> = {
 export const KNOWN_TAB_IDS = new Set(['PRODUCTS', 'UPLOAD', 'SELECT SIZE', 'LAYOUTS & DESIGNS', 'WRAP & BORDER', 'HARDWARE & FINISH', 'OPTIONS']);
 export const KNOWN_TOOLBAR_IDS = new Set(['save', 'add_text', 'add_clipart', 'room_view', 'view_3d', 'view_360']);
 
+/** Sections inside a tab whose name, position and visibility the admin can manage (Customization → Page layout). */
+export type SectionTab = 'hardware' | 'options' | 'layouts';
+export const SECTION_DEFAULT_LABELS: Record<SectionTab, Record<string, string>> = {
+  hardware: {
+    thickness: 'Thickness',
+    backing: 'Backing & surface finish',
+    hardware: 'Hardware Option & Style',
+    border: 'Border',
+    frames: 'Frames',
+    display: 'Back Display Option',
+    wrapsize: 'Wrap Size',
+    edgewrap: 'Edge Wrap',
+  },
+  options: {
+    lamination: 'Lamination Options',
+    retouching: 'Minor Photo Retouching',
+    major_retouching: 'Major Retouching Notes',
+    quantity: 'Order Quantity',
+  },
+  layouts: {
+    color_finishing: 'Optional Color Finishing',
+    digital_proof: 'Digital Proof Request',
+  },
+};
+const SECTION_TABS = Object.keys(SECTION_DEFAULT_LABELS) as SectionTab[];
+
 interface Controls {
   tabs: ControlMap;
   toolbar: ControlMap;
+  sections: Record<SectionTab, ControlMap>;
 }
+
+const NO_SECTIONS: Controls['sections'] = { hardware: null, options: null, layouts: null };
 
 const toMap = (items: Awaited<ReturnType<typeof fetchOptionCategoryItems>>): ControlMap => {
   if (!items.length) return null;
@@ -52,15 +81,23 @@ let cached: Promise<Controls> | null = null;
 
 function loadControls(): Promise<Controls> {
   if (!cached) {
-    cached = Promise.all([fetchOptionCategoryItems('sidebar_tabs'), fetchOptionCategoryItems('toolbar_buttons')])
-      .then(([tabs, toolbar]) => ({ tabs: toMap(tabs), toolbar: toMap(toolbar) }))
-      .catch(() => ({ tabs: null, toolbar: null }));
+    cached = Promise.all([
+      fetchOptionCategoryItems('sidebar_tabs'),
+      fetchOptionCategoryItems('toolbar_buttons'),
+      ...SECTION_TABS.map((tab) => fetchOptionCategoryItems(`section_order_${tab}`)),
+    ])
+      .then(([tabs, toolbar, ...sectionLists]) => ({
+        tabs: toMap(tabs),
+        toolbar: toMap(toolbar),
+        sections: Object.fromEntries(SECTION_TABS.map((tab, i) => [tab, toMap(sectionLists[i])])) as Controls['sections'],
+      }))
+      .catch(() => ({ tabs: null, toolbar: null, sections: NO_SECTIONS }));
   }
   return cached;
 }
 
 export function useCustomizerControls(): Controls {
-  const [controls, setControls] = useState<Controls>({ tabs: null, toolbar: null });
+  const [controls, setControls] = useState<Controls>({ tabs: null, toolbar: null, sections: NO_SECTIONS });
   useEffect(() => {
     let cancelled = false;
     void loadControls().then((value) => {
@@ -145,5 +182,55 @@ export function applyLayoutOverrides<T extends LayoutLike>(layouts: T[], items: 
       acrylicPrice: Number.isFinite(acrylic) && item.extras?.acrylicPrice !== '' && item.extras?.acrylicPrice != null ? acrylic : layout.acrylicPrice,
       coverImage: item.imageUrl || undefined,
     };
+  });
+}
+
+/**
+ * Helpers for the sections inside a tab. `p` spreads onto a section's root element (position and
+ * hide), `t` gives the section's title. Hidden means the admin list exists and no longer holds the section.
+ */
+export function sectionHelpers(sections: Controls['sections']) {
+  const entry = (tab: SectionTab, id: string) => sections[tab]?.get(id);
+  const hidden = (tab: SectionTab, id: string) => Boolean(sections[tab]) && !entry(tab, id);
+  return {
+    hidden,
+    p: (tab: SectionTab, id: string) => {
+      const e = entry(tab, id);
+      return {
+        'data-sec': '',
+        'data-sec-id': id,
+        'data-sec-order': e ? e.order + 1 : 0,
+        ...(hidden(tab, id) ? { 'data-sec-hidden': '' } : {}),
+        style: { order: e ? e.order + 1 : 0, ...(hidden(tab, id) ? { display: 'none' } : {}) },
+      };
+    },
+    t: (tab: SectionTab, id: string, builtIn: string) => {
+      const label = entry(tab, id)?.label?.trim();
+      if (!label) return builtIn;
+      const seeded = SECTION_DEFAULT_LABELS[tab][id];
+      return seeded && label.toLowerCase() === seeded.toLowerCase() ? builtIn : label;
+    },
+  };
+}
+
+/**
+ * Numbers the visible sections of every `[data-sec-list]` container 1, 2, 3... in the order they appear,
+ * writing into each section's `[data-sec-num]` element, and marks the first visible one so it has no top rule.
+ * Runs after every render, so numbers follow admin reordering and hiding.
+ */
+export function useSectionNumbering() {
+  useLayoutEffect(() => {
+    document.querySelectorAll<HTMLElement>('[data-sec-list]').forEach((list) => {
+      const secs = Array.from(list.querySelectorAll<HTMLElement>(':scope > [data-sec]:not([data-sec-hidden])'));
+      const hasOtherChildren = Boolean(list.querySelector(':scope > :not([data-sec])'));
+      secs.sort((a, b) => Number(a.dataset.secOrder) - Number(b.dataset.secOrder));
+      secs.forEach((sec, index) => {
+        const num = sec.querySelector<HTMLElement>('[data-sec-num]');
+        const text = `${index + 1}. `;
+        if (num && num.textContent !== text) num.textContent = text;
+        if (index === 0 && !hasOtherChildren) sec.setAttribute('data-sec-first', '');
+        else sec.removeAttribute('data-sec-first');
+      });
+    });
   });
 }

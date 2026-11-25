@@ -249,19 +249,19 @@ export function imageToIconDataUrl(file: File, maxSize = 192): Promise<string> {
 }
 
 /** Lists where a price makes no sense (they only hold a name, a number or a visibility switch). */
-export const NO_PRICE_KEYS = new Set(["custom_size_steps", "sidebar_tabs", "toolbar_buttons"]);
+export const NO_PRICE_KEYS = new Set(["custom_size_steps", "sidebar_tabs", "toolbar_buttons", "section_order_hardware", "section_order_options", "section_order_layouts"]);
 
 /** Lists made of things that already exist in the storefront: they can be renamed, hidden and reordered, not added or deleted. */
-export const FIXED_LIST_KEYS = new Set(["sidebar_tabs", "toolbar_buttons"]);
+export const FIXED_LIST_KEYS = new Set(["sidebar_tabs", "toolbar_buttons", "section_order_hardware", "section_order_options", "section_order_layouts"]);
 
 /** Lists where a brand-new item would have nothing behind it in the storefront, so only existing ones can be managed. */
-export const NO_ADD_KEYS = new Set(["sidebar_tabs", "toolbar_buttons", "layouts"]);
+export const NO_ADD_KEYS = new Set(["sidebar_tabs", "toolbar_buttons", "layouts", "section_order_hardware", "section_order_options", "section_order_layouts"]);
 
 /** The Customization-page tab each list belongs to (used for "Back" links). */
 export function customizationTabFor(baseKey: string): string {
   if (baseKey === "custom_size_steps") return "sizes";
   if (baseKey === "design_templates" || baseKey === "layouts" || baseKey === "color_finishing") return "layouts";
   if (["canvas_thickness", "wrap_style", "border_width", "border_color", "frame", "wrap_size", "acrylic_thickness", "backgrounds", "finish", "hardware", "display_option"].includes(baseKey)) return "hardware";
-  if (baseKey === "sidebar_tabs" || baseKey === "toolbar_buttons") return "controls";
+  if (baseKey === "sidebar_tabs" || baseKey === "toolbar_buttons" || baseKey.startsWith("section_order_")) return "controls";
   return "options";
 }

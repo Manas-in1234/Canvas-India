@@ -165,3 +165,6 @@
 }
 
 
+
+/* First visible admin-orderable customizer section: no top rule or padding */
+[data-sec][data-sec-first] { border-top-width: 0; padding-top: 0; }

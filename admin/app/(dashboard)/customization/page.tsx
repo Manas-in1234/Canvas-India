@@ -8,7 +8,7 @@ import { SizesPanel } from '@/components/customization/sizes-panel';
 import { OptionsPanel } from '@/components/customization/options-panel';
 
 type Material = 'CANVAS' | 'ACRYLIC';
-type Tab = 'styles' | 'sizes' | 'layouts' | 'hardware' | 'options';
+type Tab = 'styles' | 'sizes' | 'layouts' | 'hardware' | 'options' | 'controls';
 
 const TABS: { key: Tab; label: string; hint: string; permission: string; blocks?: string[] }[] = [
   { key: 'styles', label: 'Products', hint: 'The style cards a customer picks first: name, price, cover image and the shapes each style offers, including shape detection.', permission: 'option_catalog.view' },
@@ -16,6 +16,7 @@ const TABS: { key: Tab; label: string; hint: string; permission: string; blocks?
   { key: 'layouts', label: 'Layouts & designs', hint: 'Design templates grouped by day or occasion, color finishing and the digital proof option.', permission: 'option_catalog.view', blocks: ['LAYOUTS & DESIGNS'] },
   { key: 'hardware', label: 'Hardware & finish', hint: 'Thickness, backing, hardware, border, frames, back display, wrap size and edge wrap.', permission: 'option_catalog.view', blocks: ['HARDWARE & FINISH'] },
   { key: 'options', label: 'Options', hint: 'Lamination, photo retouching, material variants and special products.', permission: 'option_catalog.view', blocks: ['OPTIONS', 'SELECT CANVAS MATERIAL VARIANT', 'SPECIALTY PRODUCTS'] },
+  { key: 'controls', label: 'Tabs & sections', hint: 'Rename, reorder or hide the customizer tabs and the sections inside them.', permission: 'option_catalog.view', blocks: ['CUSTOMIZER TABS & BUTTONS'] },
 ];
 
 function CustomizationInner() {
