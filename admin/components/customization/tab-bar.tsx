@@ -46,7 +46,13 @@ export function TabBar({
     queryFn: () => apiClient.get<OptionCategoryListItem[]>('/admin/option-categories'),
   });
   const list = data?.find((c) => c.baseKey === BASE_KEY && c.materialScope === 'BOTH' && c.isActive);
-  const stored = list ? [...list.items].sort((a, b) => a.sortOrder - b.sortOrder) : null;
+  // The overview only carries item ids, so load the list itself for names, order and visibility.
+  const { data: detail } = useQuery({
+    queryKey: ['option-categories', list?.id],
+    enabled: Boolean(list?.id),
+    queryFn: () => apiClient.get<OptionCategoryListItem>('/admin/option-categories/' + list!.id),
+  });
+  const stored = detail ? [...detail.items].sort((a, b) => a.sortOrder - b.sortOrder) : null;
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['option-categories'] });
   const run = async (work: () => Promise<unknown>, done?: string) => {
