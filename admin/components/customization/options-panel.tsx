@@ -34,7 +34,7 @@ type Entry = (
   | { kind: 'category'; baseKey: string; title?: string; seed?: SeedSpec }
   | { kind: 'link'; title: string; href: string; note: string }
   | { kind: 'fixed'; title: string; note: string }
-) & { scope?: string };
+) & { scope?: string; part?: string };
 
 interface SeedSpec {
   scope: 'CANVAS' | 'ACRYLIC' | 'BOTH';
@@ -156,6 +156,13 @@ const HARDWARE_PARTS = [
   { id: 'wrapsize', label: 'Wrap Size' },
   { id: 'edgewrap', label: 'Edge Wrap' },
 ];
+/** The four parts of the storefront Options tab. */
+const OPTIONS_PARTS = [
+  { id: 'lamination', label: 'Lamination Options' },
+  { id: 'retouching', label: 'Minor Photo Retouching' },
+  { id: 'major_retouching', label: 'Major Retouching Notes' },
+  { id: 'quantity', label: 'Order Quantity' },
+];
 /** Which managed part a card belongs to. */
 const PART_FOR_LIST: Record<string, string> = {
   design_templates: 'design_templates',
@@ -171,6 +178,8 @@ const PART_FOR_LIST: Record<string, string> = {
   display_option: 'display',
   wrap_size: 'wrapsize',
   wrap_style: 'edgewrap',
+  lamination: 'lamination',
+  retouching: 'retouching',
 };
 /** Cards that have no controls of their own but stay next to the card they belong with. */
 const STAYS_WITH: Record<string, string> = { finish: 'backgrounds', 'Acrylic thickness rates': 'acrylic_thickness' };
@@ -208,6 +217,13 @@ function ManagedBlock({ tab, material, canManage, children }: { tab: string; mat
       </ManagedOrderProvider>
     );
   }
+  if (tab === 'OPTIONS') {
+    return (
+      <ManagedOrderProvider baseKey="section_order_options" listName="Options parts" boxes={OPTIONS_PARTS} canManage={canManage}>
+        {children}
+      </ManagedOrderProvider>
+    );
+  }
   return <>{children}</>;
 }
 
@@ -217,7 +233,7 @@ function ManagedGrid({ entries, render }: { entries: Entry[]; render: (entry: En
   const keyOf = (e: Entry): number => {
     if (!positions) return 0;
     const name = e.kind === 'category' ? e.baseKey : e.kind === 'link' ? e.title : '';
-    const own = e.kind === 'category' ? PART_FOR_LIST[name] : undefined;
+    const own = e.kind === 'category' ? PART_FOR_LIST[name] : e.part;
     if (own !== undefined && positions[own] !== undefined) return positions[own];
     const buddy = STAYS_WITH[name];
     if (buddy && PART_FOR_LIST[buddy] !== undefined && positions[PART_FOR_LIST[buddy]] !== undefined) return positions[PART_FOR_LIST[buddy]] + 0.5;
@@ -317,12 +333,18 @@ const TABS: TabBlock[] = [
   },
   {
     tab: 'OPTIONS',
+    note: 'Each card below is one part of the storefront Options tab. Use its number, arrows, name field and Hide switch to move, rename or hide the whole part.',
     sections: [
-      { heading: 'Lamination Options', entries: [{ kind: 'category', baseKey: 'lamination' }] },
-      { heading: 'Minor Photo Retouching', entries: [{ kind: 'category', baseKey: 'retouching' }] },
+      {
+        heading: 'Options',
+        entries: [
+          { kind: 'category', baseKey: 'lamination', title: 'Lamination Options' },
+          { kind: 'category', baseKey: 'retouching', title: 'Minor Photo Retouching' },
+          { kind: 'fixed', part: 'major_retouching', title: 'Major Retouching Notes', note: 'A built-in notes box for the customer. You can rename, move or hide it, but there are no items to edit.' },
+          { kind: 'fixed', part: 'quantity', title: 'Order Quantity', note: 'A built-in quantity selector. You can rename, move or hide it, but there are no items to edit.' },
+        ],
+      },
     ],
-    footnote:
-      'Major Retouching Notes and Order Quantity are built-in form fields, so there is nothing to edit.',
   },
   {
     tab: 'SELECT CANVAS MATERIAL VARIANT',
@@ -531,7 +553,7 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
         </Link>
       );
     }
-    return (
+    const fixedCard = (
       <Card key={entry.title} className="border-dashed bg-muted/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-sm">
@@ -542,6 +564,7 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
         </CardHeader>
       </Card>
     );
+    return entry.part ? <ManagedCard key={entry.title} id={entry.part}>{fixedCard}</ManagedCard> : fixedCard;
   };
 
   return (
