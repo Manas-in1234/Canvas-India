@@ -18,8 +18,15 @@ export interface OptionCategoryDto {
   id: string;
   baseKey: string;
   materialScope: 'ACRYLIC' | 'CANVAS' | 'BOTH';
+  isActive: boolean;
   items: OptionCategoryItemDto[];
 }
+
+/** An items array the admin has explicitly hidden (isActive: false on the
+ * category) - as opposed to a plain empty array, which means nothing has
+ * been configured for this category yet. Callers should show nothing for a
+ * hidden category, not fall back to a built-in default list. */
+export type OptionCategoryItems = OptionCategoryItemDto[] & { hidden?: boolean };
 
 /**
  * Admin-managed customizer option content (see backend
@@ -33,7 +40,7 @@ export async function fetchOptionCategoryItems(
   baseKey: string,
   material?: 'ACRYLIC' | 'CANVAS',
   strict = false,
-): Promise<OptionCategoryItemDto[]> {
+): Promise<OptionCategoryItems> {
   try {
     const params = new URLSearchParams({ baseKey });
     if (material) params.set('material', material);
@@ -44,6 +51,11 @@ export async function fetchOptionCategoryItems(
     // material-scoped categories: prefer the exact material match over BOTH
     const exact = categories.find((c) => c.materialScope === material);
     const chosen = exact ?? categories[0];
+    if (chosen.isActive === false) {
+      const hiddenResult: OptionCategoryItems = [];
+      hiddenResult.hidden = true;
+      return hiddenResult;
+    }
     return [...chosen.items].sort((a, b) => a.sortOrder - b.sortOrder);
   } catch (error) {
     if (strict) throw error;

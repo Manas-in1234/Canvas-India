@@ -122,7 +122,7 @@ import {
 import { fetchApprovedCustomShapes, filterToUnknownShapes, toShapeOption, type CustomShapeDto } from '../api/customShapesApi';
 import { fetchPricingRates, SHAPE_AREA_RATE_FALLBACK, ACRYLIC_THICKNESS_RATE_FALLBACKS } from '../api/pricingSettingsApi';
 import { applyControls, applyLayoutOverrides, controlLabel, KNOWN_TAB_IDS, useCustomizerControls } from '../api/customizerControls';
-import { fetchOptionCategoryItems, type OptionCategoryItemDto } from '../api/optionCategoriesApi';
+import { fetchOptionCategoryItems, type OptionCategoryItemDto, type OptionCategoryItems } from '../api/optionCategoriesApi';
 import {
   fetchCustomizerProductTypes,
   toAcrylicProductType,
@@ -4262,7 +4262,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [liveHardware, setLiveHardware] = useState<OptionCategoryItemDto[]>([]);
   const [liveDisplayOptions, setLiveDisplayOptions] = useState<OptionCategoryItemDto[]>([]);
   const [liveMaterialGrades, setLiveMaterialGrades] = useState<OptionCategoryItemDto[]>([]);
-  const [liveLaminations, setLiveLaminations] = useState<OptionCategoryItemDto[]>([]);
+  const [liveLaminations, setLiveLaminations] = useState<OptionCategoryItems>([]);
   const [liveFrames, setLiveFrames] = useState<OptionCategoryItemDto[]>([]);
   // Acrylic-only: backing color behind the clear sheet, and surface finish
   // (gloss/matte) coating — admin-managed via the "Backgrounds"/"Finish"
@@ -4465,6 +4465,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   }, [liveMaterialGrades]);
 
   const liveOrFallbackLaminations = useMemo(() => {
+    if (liveLaminations.hidden) return [];
     if (liveLaminations.length === 0 && !overriddenKeys.has('lamination')) return LAMINATION_OPTIONS;
     return liveLaminations.map((item) => ({
       id: (item.extras?.id as string) ?? item.id,
@@ -12387,7 +12388,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           {/* ------------------------------ OPTIONS ------------------------------ */}
           {activeTab === 'OPTIONS' && (
             <div className="p-4 space-y-5">
-              {/* 1. Lamination Options */}
+              {/* 1. Lamination Options - admin can hide the whole section (isActive: false on the category); nothing to fall back to in that case, unlike the "not configured yet" empty state. */}
+              {liveOrFallbackLaminations.length > 0 && (
               <div className="space-y-2.5">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">1. Lamination Options</label>
                 <div className="space-y-2">
@@ -12416,6 +12418,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   })}
                 </div>
               </div>
+              )}
 
               {/* 2. Minor Photo Retouching */}
               <div className="space-y-2.5 pt-3 border-t border-stone-200">

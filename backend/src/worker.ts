@@ -675,10 +675,14 @@ export default {
         const baseKey = query.baseKey;
         const materialScope = query.material as 'ACRYLIC' | 'CANVAS' | undefined;
         if (!baseKey) return jsonResponse({ statusCode: 400, message: 'baseKey is required' }, 400, request);
+        // isActive is returned (not filtered here) so the storefront can
+        // tell "admin hid this whole section" (a real row with
+        // isActive: false) apart from "nothing configured yet" (no row at
+        // all) - those need different behavior: hidden means show nothing,
+        // not-configured-yet means fall back to the built-in defaults.
         const categories = await prisma.optionCategory.findMany({
           where: {
             baseKey,
-            isActive: true,
             ...(materialScope ? { materialScope: { in: [materialScope, 'BOTH'] } } : {}),
           },
           include: { items: { where: { isActive: true }, orderBy: { sortOrder: 'asc' } } },
