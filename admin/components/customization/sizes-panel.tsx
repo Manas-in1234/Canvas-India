@@ -110,7 +110,7 @@ export function SizesPanel({ material }: { material: 'CANVAS' | 'ACRYLIC' }) {
             {
               id: 'custom_size_limits',
               label: 'Custom size limits',
-              onOpen: () => document.getElementById('custom-size-limits')?.scrollIntoView({ behavior: 'smooth' }),
+              onOpen: () => document.getElementById('section-custom-size-limits')?.scrollIntoView({ behavior: 'smooth' }),
               body: <p className="text-xs text-muted-foreground">The inch steps in the Custom Size boxes. Hiding this removes the Custom Size box from the storefront. Edit the steps below.</p>,
             },
           ]}

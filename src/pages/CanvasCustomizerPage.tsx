@@ -4115,6 +4115,11 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // LAYOUTS & DESIGNS tab
   const [layoutSubTab, setLayoutSubTab] = useState<'DESIGNS' | 'LAYOUTS'>('LAYOUTS');
+  // Admin can hide the Designs or Layouts part of this tab; the one still shown is used.
+  const designsHiddenByAdmin = sec.hidden('layouts', 'design_templates');
+  const layoutsHiddenByAdmin = sec.hidden('layouts', 'layouts');
+  const effectiveLayoutSubTab: 'DESIGNS' | 'LAYOUTS' =
+    designsHiddenByAdmin && !layoutsHiddenByAdmin ? 'LAYOUTS' : layoutsHiddenByAdmin && !designsHiddenByAdmin ? 'DESIGNS' : layoutSubTab;
   const [designCategory, setDesignCategory] = useState<string>(BASE_DESIGN_TEMPLATE_CATEGORIES[0]);
   const [expandedDesignCategory, setExpandedDesignCategory] = useState<string | null>("Valentine's Day");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
@@ -11364,34 +11369,33 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     </div>
                   </div>
 
-                  {/* DESIGNS vs LAYOUTS Tabs (Matching Screenshot 1) */}
+                  <div className="flex flex-col gap-3.5" {...sec.group('layouts', ['design_templates', 'layouts'])}>
+                  {/* DESIGNS vs LAYOUTS Tabs - admin can rename, reorder or hide each */}
                   <div className="flex border border-stone-200 rounded-xl overflow-hidden bg-stone-100 p-1 gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setLayoutSubTab('DESIGNS')}
-                      className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
-                        layoutSubTab === 'DESIGNS'
-                          ? 'bg-[#0E4A93] text-white shadow-xs'
-                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
-                      }`}
-                    >
-                      DESIGNS
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setLayoutSubTab('LAYOUTS')}
-                      className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
-                        layoutSubTab === 'LAYOUTS'
-                          ? 'bg-[#0E4A93] text-white shadow-xs'
-                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
-                      }`}
-                    >
-                      LAYOUTS
-                    </button>
+                    {([
+                      { id: 'DESIGNS' as const, key: 'design_templates', label: 'DESIGNS' },
+                      { id: 'LAYOUTS' as const, key: 'layouts', label: 'LAYOUTS' },
+                    ])
+                      .filter((tabDef) => !sec.hidden('layouts', tabDef.key))
+                      .sort((x, y) => sec.order('layouts', x.key) - sec.order('layouts', y.key))
+                      .map((tabDef) => (
+                        <button
+                          key={tabDef.id}
+                          type="button"
+                          onClick={() => setLayoutSubTab(tabDef.id)}
+                          className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                            effectiveLayoutSubTab === tabDef.id
+                              ? 'bg-[#0E4A93] text-white shadow-xs'
+                              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
+                          }`}
+                        >
+                          {sec.t('layouts', tabDef.key, tabDef.label)}
+                        </button>
+                      ))}
                   </div>
 
                   {/* ==================== DESIGNS TAB ==================== */}
-                  {layoutSubTab === 'DESIGNS' && (
+                  {effectiveLayoutSubTab === 'DESIGNS' && (
                     <div className="space-y-2 pt-1">
                       {DESIGN_TEMPLATE_CATEGORIES.map((cat) => {
                         const isExpanded = expandedDesignCategory === cat;
@@ -11468,7 +11472,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   )}
 
                   {/* ==================== LAYOUTS TAB ==================== */}
-                  {layoutSubTab === 'LAYOUTS' && (() => {
+                  {effectiveLayoutSubTab === 'LAYOUTS' && (() => {
                     const currentProductLayouts = getManagedLayouts(selectedProductTypeId);
                     const activeLayout = currentProductLayouts.find((l) => l.id === selectedLayoutId) || currentProductLayouts[0];
                     return (
@@ -11578,6 +11582,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       </div>
                     );
                   })()}
+                  </div>
 
                   {/* Optional Color Finishing - moved here from Hardware & Finish */}
                   <div className="space-y-2.5 pt-3 border-t border-stone-200" {...sec.p('layouts', 'color_finishing')}>
@@ -11614,8 +11619,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   </div>
 
                   {/* Digital Proof Request (Email option) - moved here from Options, right after Color Finishing */}
-                  <div className="space-y-2 pt-3 border-t border-stone-200" {...sec.p('layouts', 'digital_proof')}>
-                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">{sec.t('layouts', 'digital_proof', 'Digital Proof Request')}</label>
+                  <div className="space-y-2 pt-3 border-t border-stone-200" {...sec.after('layouts', 'color_finishing')}>
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">Digital Proof Request</label>
                     <label className="flex items-start gap-2.5 p-3 rounded-xl border border-stone-200 bg-stone-50 text-xs text-stone-700 cursor-pointer">
                       <input
                         type="checkbox"

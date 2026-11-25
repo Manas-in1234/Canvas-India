@@ -53,6 +53,8 @@ export const SECTION_DEFAULT_LABELS: Record<SectionTab, Record<string, string>> 
     quantity: 'Order Quantity',
   },
   layouts: {
+    design_templates: 'Design templates',
+    layouts: 'Layout arrangements',
     color_finishing: 'Optional Color Finishing',
     digital_proof: 'Digital Proof Request',
   },
@@ -203,10 +205,31 @@ export function sectionHelpers(sections: Controls['sections']) {
       return {
         'data-sec': '',
         'data-sec-id': id,
-        'data-sec-order': e ? e.order + 1 : 0,
+        'data-sec-order': e ? (e.order + 1) * 2 : 0,
         ...(hidden(tab, id) ? { 'data-sec-hidden': '' } : {}),
-        style: { order: e ? e.order + 1 : 0, ...(hidden(tab, id) ? { display: 'none' } : {}) },
+        style: { order: e ? (e.order + 1) * 2 : 0, ...(hidden(tab, id) ? { display: 'none' } : {}) },
       };
+    },
+    /** Position of a section in the admin's order (0 when the admin has not set one). */
+    order: (tab: SectionTab, id: string) => entry(tab, id)?.order ?? 0,
+    /** Props for one wrapper holding several sections: placed at the earliest of them, hidden only when all are hidden. */
+    group: (tab: SectionTab, ids: string[]) => {
+      const shown = ids.filter((id) => !hidden(tab, id));
+      const orders = ids.map((id) => entry(tab, id)).filter(Boolean).map((e) => (e!.order + 1) * 2);
+      const order = orders.length ? Math.min(...orders) : 0;
+      const hide = shown.length === 0;
+      return {
+        'data-sec': '',
+        'data-sec-order': order,
+        ...(hide ? { 'data-sec-hidden': '' } : {}),
+        style: { order, ...(hide ? { display: 'none' } : {}) },
+      };
+    },
+    /** Props for a built-in section that has no admin box of its own: it stays right after another section. */
+    after: (tab: SectionTab, id: string) => {
+      const e = entry(tab, id);
+      const order = e ? (e.order + 1) * 2 + 1 : 0;
+      return { 'data-sec': '', 'data-sec-order': order, style: { order } };
     },
     t: (tab: SectionTab, id: string, builtIn: string) => {
       const label = entry(tab, id)?.label?.trim();

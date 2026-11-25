@@ -121,6 +121,18 @@ const CUSTOM_SIZE_SEED: SeedSpec = {
   })),
 };
 
+// The three finishes the storefront offers today. Their effects are built into the storefront, so they
+// can be renamed, reordered, hidden or deleted here, but new finishes need a developer.
+const COLOR_FINISHING_SEED: SeedSpec = {
+  scope: 'BOTH',
+  name: 'Color finishing',
+  items: [
+    { label: 'Original', description: '', flatPrice: '0', extras: { id: 'original' } },
+    { label: 'Sepia', description: '', flatPrice: '0', extras: { id: 'sepia' } },
+    { label: 'GrayScale', description: '', flatPrice: '0', extras: { id: 'grayscale' } },
+  ],
+};
+
 const TABS: TabBlock[] = [
   {
     tab: 'SPECIALTY PRODUCTS',
@@ -168,7 +180,7 @@ const TABS: TabBlock[] = [
           },
         ],
       },
-      { heading: 'Optional Color Finishing', entries: [{ kind: 'category', baseKey: 'color_finishing' }] },
+      { heading: 'Optional Color Finishing', entries: [{ kind: 'category', baseKey: 'color_finishing', title: 'Color finishes shown to the customer (Original, Sepia, GrayScale)', seed: COLOR_FINISHING_SEED }] },
       {
         heading: 'Digital Proof Request',
         entries: [
@@ -490,7 +502,7 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
                 </div>
               )}
               {block.sections.map((section) => (
-                <div key={section.heading} id={section.heading === 'Custom size limits' ? 'custom-size-limits' : undefined} className="space-y-2">
+                <div key={section.heading} id={'section-' + section.heading.toLowerCase().replace(/[^a-z0-9]+/g, '-')} className="space-y-2">
                   <h3 className="flex items-center gap-2 text-sm font-semibold">
                     {section.heading}
                     {section.scope && <Badge variant="outline">{section.scope} only</Badge>}
