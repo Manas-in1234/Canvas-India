@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
 import { apiClient, ApiError } from '@/lib/api-client';
 import type { SizePresetListItem } from '@/lib/types/size-preset';
 import { usePermission } from '@/lib/auth/use-permission';
@@ -103,6 +103,26 @@ export function SizesDetailClient({ productTypeId: initialProductTypeId }: { pro
     onError: (err: unknown) => toast.error(err instanceof ApiError ? err.message : 'Failed to delete size'),
   });
 
+  // Show or hide a size in the storefront without deleting it.
+  const visibilityMutation = useMutation({
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => apiClient.patch(`/admin/size-presets/${id}`, { isActive }),
+    onSuccess: (_data, vars) => {
+      toast.success(vars.isActive ? 'Size shown' : 'Size hidden');
+      invalidate();
+    },
+    onError: (err: unknown) => toast.error(err instanceof ApiError ? err.message : 'Failed to change visibility'),
+  });
+
+  // Move a size one place up or down; the order is the one the storefront lists them in.
+  const moveMutation = useMutation({
+    mutationFn: (itemIds: string[]) => apiClient.put('/admin/size-presets/reorder', { productTypeId, itemIds }),
+    onSuccess: () => {
+      toast.success('Position saved');
+      invalidate();
+    },
+    onError: (err: unknown) => toast.error(err instanceof ApiError ? err.message : 'Failed to move size'),
+  });
+
   const startEdit = (preset: SizePresetListItem) => {
     setEditingId(preset.id);
     setForm({
@@ -131,6 +151,13 @@ export function SizesDetailClient({ productTypeId: initialProductTypeId }: { pro
   }
 
   const presets = [...allPresets].sort((a, b) => a.sortOrder - b.sortOrder);
+  const moveBy = (index: number, by: number) => {
+    const target = index + by;
+    if (target < 0 || target >= presets.length) return;
+    const ids = presets.map((p) => p.id);
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    moveMutation.mutate(ids);
+  };
 
   return (
     <div className="space-y-6">
@@ -177,8 +204,8 @@ export function SizesDetailClient({ productTypeId: initialProductTypeId }: { pro
         {presets.length === 0 ? (
           <p className="text-sm text-muted-foreground">No sizes for this product type yet.</p>
         ) : (
-          presets.map((preset) => (
-            <Card key={preset.id}>
+          presets.map((preset, index) => (
+            <Card key={preset.id} className={preset.isActive ? '' : 'opacity-60'}>
               <CardContent className="space-y-3 p-4">
                 {editingId === preset.id ? (
                   <>
@@ -198,9 +225,14 @@ export function SizesDetailClient({ productTypeId: initialProductTypeId }: { pro
                   </>
                 ) : (
                   <div className="flex items-center justify-between">
+                    <div className="flex items-start gap-3">
+                      <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold ${preset.isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`} title="Position">
+                        {index + 1}
+                      </span>
                     <div>
                       <div className="flex items-center gap-2 font-medium">
                         {preset.label}
+                        {!preset.isActive && <Badge variant="outline">Hidden</Badge>}
                         {preset.shapeId && <Badge variant="outline">{preset.shapeId}</Badge>}
                         {preset.category && <Badge variant="outline">{preset.category}</Badge>}
                         {preset.panelsCount && preset.panelsCount > 1 && <Badge variant="outline">{preset.panelsCount} panels</Badge>}
@@ -210,8 +242,25 @@ export function SizesDetailClient({ productTypeId: initialProductTypeId }: { pro
                         Acrylic Rs.{preset.acrylicPrice} · Canvas Rs.{preset.canvasPrice}
                       </div>
                     </div>
+                    </div>
                     {canManage && (
                       <div className="flex items-center gap-1">
+                        <Button size="sm" variant="ghost" disabled={index === 0 || moveMutation.isPending} onClick={() => moveBy(index, -1)} title="Move up">
+                          <ArrowUp className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" disabled={index === presets.length - 1 || moveMutation.isPending} onClick={() => moveBy(index, 1)} title="Move down">
+                          <ArrowDown className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={visibilityMutation.isPending}
+                          onClick={() => visibilityMutation.mutate({ id: preset.id, isActive: !preset.isActive })}
+                          title={preset.isActive ? 'Hide from the storefront' : 'Show in the storefront'}
+                        >
+                          {preset.isActive ? <Eye className="mr-1 h-4 w-4" /> : <EyeOff className="mr-1 h-4 w-4" />}
+                          {preset.isActive ? 'Hide' : 'Hidden'}
+                        </Button>
                         <Button size="sm" variant="ghost" onClick={() => startEdit(preset)}>
                           Edit
                         </Button>
