@@ -4257,6 +4257,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [liveWrapStyles, setLiveWrapStyles] = useState<OptionCategoryItemDto[]>([]);
   const [liveDesignTemplates, setLiveDesignTemplates] = useState<OptionCategoryItemDto[]>([]);
   const [liveRetouch, setLiveRetouch] = useState<OptionCategoryItemDto[]>([]);
+  // Admin-managed visibility/order/naming for the OPTIONS tab's 4 sections
+  // (Lamination/Minor Retouching/Major Retouching/Order Quantity) - each is
+  // tracked as its own item (extras.id: 'lamination' | 'retouching' |
+  // 'major_retouching' | 'quantity') in a shared "section_order_options"
+  // category. The backend only returns active items, so a part's id simply
+  // not being present means the admin hid that whole section.
+  const [liveOptionsSectionOrder, setLiveOptionsSectionOrder] = useState<OptionCategoryItemDto[]>([]);
+  const isOptionsPartVisible = (partId: string) =>
+    liveOptionsSectionOrder.length === 0 || liveOptionsSectionOrder.some((item) => item.extras?.id === partId);
   const [liveCanvasThickness, setLiveCanvasThickness] = useState<OptionCategoryItemDto[]>([]);
   const [liveAcrylicThickness, setLiveAcrylicThickness] = useState<OptionCategoryItemDto[]>([]);
   const [liveHardware, setLiveHardware] = useState<OptionCategoryItemDto[]>([]);
@@ -4289,11 +4298,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       loadOptions('design_templates'),
       loadOptions('color_finishing'),
       loadOptions('retouching'),
-    ]).then(([wrapStyles, hardware, displayOptions, materialGrades, laminations, frames, backing, finish, canvasThickness, acrylicThickness, designTemplates, colorFinishing, retouching]) => {
+      loadOptions('section_order_options'),
+    ]).then(([wrapStyles, hardware, displayOptions, materialGrades, laminations, frames, backing, finish, canvasThickness, acrylicThickness, designTemplates, colorFinishing, retouching, optionsSectionOrder]) => {
       if (cancelled) return;
       setLiveDesignTemplates(designTemplates);
       setLiveColorFinish(colorFinishing);
       setLiveRetouch(retouching);
+      setLiveOptionsSectionOrder(optionsSectionOrder);
       setLiveCanvasThickness(canvasThickness);
       setLiveAcrylicThickness(acrylicThickness);
       setLiveWrapStyles(wrapStyles);
@@ -12388,8 +12399,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           {/* ------------------------------ OPTIONS ------------------------------ */}
           {activeTab === 'OPTIONS' && (
             <div className="p-4 space-y-5">
-              {/* 1. Lamination Options - admin can hide the whole section (isActive: false on the category); nothing to fall back to in that case, unlike the "not configured yet" empty state. */}
-              {liveOrFallbackLaminations.length > 0 && (
+              {/* 1. Lamination Options - admin can hide this whole section via its own entry (extras.id: 'lamination') in the section_order_options category. */}
+              {isOptionsPartVisible('lamination') && liveOrFallbackLaminations.length > 0 && (
               <div className="space-y-2.5">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">1. Lamination Options</label>
                 <div className="space-y-2">
@@ -12420,7 +12431,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               </div>
               )}
 
-              {/* 2. Minor Photo Retouching */}
+              {/* 2. Minor Photo Retouching - extras.id: 'retouching' */}
+              {isOptionsPartVisible('retouching') && (
               <div className="space-y-2.5 pt-3 border-t border-stone-200">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">2. Minor Photo Retouching</label>
                 <div className="grid grid-cols-2 gap-2.5 bg-stone-50 p-3 rounded-xl border border-stone-200">
@@ -12437,8 +12449,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   ))}
                 </div>
               </div>
+              )}
 
-              {/* 3. Major Retouching */}
+              {/* 3. Major Retouching - extras.id: 'major_retouching' */}
+              {isOptionsPartVisible('major_retouching') && (
               <div className="space-y-2 pt-3 border-t border-stone-200">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">3. Major Retouching Notes</label>
                 <textarea
@@ -12449,8 +12463,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   className="w-full px-3 py-2 border border-stone-300 bg-white rounded-xl text-xs focus:outline-none focus:border-[#0E4A93]"
                 />
               </div>
+              )}
 
-              {/* 4. Order Quantity */}
+              {/* 4. Order Quantity - extras.id: 'quantity' */}
+              {isOptionsPartVisible('quantity') && (
               <div className="space-y-2 pt-3 border-t border-stone-200">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">4. Order Quantity</label>
                 <div className="flex items-center justify-between bg-stone-50 p-3 rounded-xl border border-stone-200">
@@ -12477,6 +12493,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   </div>
                 </div>
               </div>
+              )}
             </div>
           )}
         </CustomizerPanel>
