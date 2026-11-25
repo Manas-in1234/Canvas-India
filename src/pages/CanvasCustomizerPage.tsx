@@ -4281,6 +4281,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // in the admin catalog for now, just not surfaced in this picker.
   const [liveBacking, setLiveBacking] = useState<OptionCategoryItemDto[]>([]);
   const [liveFinish, setLiveFinish] = useState<OptionCategoryItemDto[]>([]);
+  const [liveWrapSize, setLiveWrapSize] = useState<OptionCategoryItemDto[]>([]);
   useEffect(() => {
     let cancelled = false;
     const material = activeMaterial === 'acrylic' ? 'ACRYLIC' : 'CANVAS';
@@ -4299,7 +4300,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       loadOptions('color_finishing'),
       loadOptions('retouching'),
       loadOptions('section_order_options'),
-    ]).then(([wrapStyles, hardware, displayOptions, materialGrades, laminations, frames, backing, finish, canvasThickness, acrylicThickness, designTemplates, colorFinishing, retouching, optionsSectionOrder]) => {
+      loadOptions('wrap_size', 'CANVAS'),
+    ]).then(([wrapStyles, hardware, displayOptions, materialGrades, laminations, frames, backing, finish, canvasThickness, acrylicThickness, designTemplates, colorFinishing, retouching, optionsSectionOrder, wrapSize]) => {
       if (cancelled) return;
       setLiveDesignTemplates(designTemplates);
       setLiveColorFinish(colorFinishing);
@@ -4314,6 +4316,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setLiveLaminations(laminations);
       setLiveFrames(frames);
       setLiveBacking(backing);
+      setLiveWrapSize(wrapSize);
       setLiveFinish(finish.filter((item) => {
         const extraId = item.extras?.id as string | undefined;
         return extraId !== 'frosted-backing' && extraId !== 'diamond-bevel';
@@ -4627,11 +4630,39 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Wrap Size (canvas only) - a separate, independent add-on from Canvas
   // Thickness above. Each tier is a flat fee capped to a maximum print
   // width/height; picking a tier too small for the chosen size is blocked.
-  const WRAP_SIZE_OPTIONS = [
+  const BASE_WRAP_SIZE_OPTIONS = [
     { id: 'wrap-small', name: 'Small Size', label: 'Small Size (upto 20"x20")', price: 99, maxDimensionInches: 20, thicknessInches: 0.5, depthPx: 12, image: '/assets/customizer/canvas/wrap-size/small.png' },
     { id: 'wrap-medium', name: 'Medium Size', label: 'Medium Size (upto 30"x30")', price: 149, maxDimensionInches: 30, thicknessInches: 0.75, depthPx: 18, badge: 'Recommended', image: '/assets/customizer/canvas/wrap-size/medium.png' },
     { id: 'wrap-large', name: 'Large Size', label: 'Large Size (upto 44"x44")', price: 249, maxDimensionInches: 44, thicknessInches: 1.5, depthPx: 30, badge: 'Museum Quality', image: '/assets/customizer/canvas/wrap-size/large.png' },
   ];
+  // Admin-managed (name/price/order/hidden/deleted via the "Wrap size"
+  // catalog page). Falls back to the built-in 3 tiers until the team adds
+  // any live rows for this category.
+  const WRAP_SIZE_OPTIONS = useMemo(() => {
+    if (liveWrapSize.length === 0 && !overriddenKeys.has('wrap_size')) return BASE_WRAP_SIZE_OPTIONS;
+    return liveWrapSize.map((item) => {
+      const extras = item.extras ?? {};
+      const id = (extras.id as string) ?? item.id;
+      const maxDimensionInches = Number(extras.maxDimensionInches) || 9999;
+      return {
+        id,
+        name: ((extras.name as string) || item.label) as string,
+        label: `${item.label} (upto ${maxDimensionInches}"x${maxDimensionInches}")`,
+        price: Number(item.flatPrice),
+        maxDimensionInches,
+        thicknessInches: Number(extras.thicknessInches) || 0.75,
+        depthPx: Number(extras.depthPx) || 18,
+        badge: ((extras.badge as string) || undefined) as string | undefined,
+        // Real product photos for these 3 known ids - always use them even
+        // if the live catalog row has no imageUrl saved.
+        image: item.imageUrl || ({
+          'wrap-small': '/assets/customizer/canvas/wrap-size/small.png',
+          'wrap-medium': '/assets/customizer/canvas/wrap-size/medium.png',
+          'wrap-large': '/assets/customizer/canvas/wrap-size/large.png',
+        } as Record<string, string>)[id] || '',
+      };
+    });
+  }, [liveWrapSize, overriddenKeys]);
   const [selectedWrapSizeId, setSelectedWrapSizeId] = useState<string>('');
   // Not touched by default - stays unselected/unpriced until the shopper
   // actually picks a tier, same reasoning as thicknessTouched above. Once a
