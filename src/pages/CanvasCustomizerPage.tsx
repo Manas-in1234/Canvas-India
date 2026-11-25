@@ -4594,13 +4594,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Thickness above. Each tier is a flat fee capped to a maximum print
   // width/height; picking a tier too small for the chosen size is blocked.
   const WRAP_SIZE_OPTIONS = [
-    { id: 'wrap-small', name: 'Small Size', label: 'Small Size (upto 20"x20")', price: 99, maxDimensionInches: 20, thicknessInches: 0.5, depthPx: 12 },
-    { id: 'wrap-medium', name: 'Medium Size', label: 'Medium Size (upto 30"x30")', price: 149, maxDimensionInches: 30, thicknessInches: 0.75, depthPx: 18, badge: 'Recommended' },
-    { id: 'wrap-large', name: 'Large Size', label: 'Large Size (upto 44"x44")', price: 249, maxDimensionInches: 44, thicknessInches: 1.5, depthPx: 30, badge: 'Museum Quality' },
+    { id: 'wrap-small', name: 'Small Size', label: 'Small Size (upto 20"x20")', price: 99, maxDimensionInches: 20, thicknessInches: 0.5, depthPx: 12, image: '/assets/customizer/canvas/wrap-size/small.png' },
+    { id: 'wrap-medium', name: 'Medium Size', label: 'Medium Size (upto 30"x30")', price: 149, maxDimensionInches: 30, thicknessInches: 0.75, depthPx: 18, badge: 'Recommended', image: '/assets/customizer/canvas/wrap-size/medium.png' },
+    { id: 'wrap-large', name: 'Large Size', label: 'Large Size (upto 44"x44")', price: 249, maxDimensionInches: 44, thicknessInches: 1.5, depthPx: 30, badge: 'Museum Quality', image: '/assets/customizer/canvas/wrap-size/large.png' },
   ];
   const [selectedWrapSizeId, setSelectedWrapSizeId] = useState<string>('');
   // Not touched by default - stays unselected/unpriced until the shopper
-  // actually picks a tier, same reasoning as thicknessTouched above.
+  // actually picks a tier, same reasoning as thicknessTouched above. Once a
+  // real canvas size is chosen, the matching tier is auto-picked below (see
+  // the effect right after isWrapSizeAllowedForSize), which does flip this
+  // on - the shopper is still free to change tiers manually afterwards.
   const [wrapSizeTouched, setWrapSizeTouched] = useState(false);
 
   // Effective print dimensions right now, used to check whether the selected
@@ -6230,6 +6233,26 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     selectedHardwareId, selectedFrameId, selectedBackingId, selectedFinishId,
     selectedMaterialId, selectedLaminationId, selectedDisplayOptionId, selectedBorderWidthId, isCustomSize,
   ]);
+
+  // Auto-pick the Wrap Size tier that actually fits once the shopper has
+  // made a real choice (hasCustomized) and whenever the canvas size changes
+  // after that - the smallest tier whose cap covers both dimensions, or the
+  // largest tier available if even that isn't big enough (Add to Cart still
+  // blocks that case). Gated on hasCustomized so this never silently prices
+  // a wrap size before the shopper has actually started customizing. The
+  // shopper can still switch tiers manually afterwards; changing the size
+  // again re-syncs it.
+  useEffect(() => {
+    if (activeMaterial !== 'canvas' || !hasCustomized) return;
+    if (!effectivePrintWidthInches && !effectivePrintHeightInches) return;
+    const fitting = WRAP_SIZE_OPTIONS.find(
+      (opt) => effectivePrintWidthInches <= opt.maxDimensionInches && effectivePrintHeightInches <= opt.maxDimensionInches,
+    ) ?? WRAP_SIZE_OPTIONS[WRAP_SIZE_OPTIONS.length - 1];
+    if (fitting.id !== selectedWrapSizeId) {
+      setSelectedWrapSizeId(fitting.id);
+      setWrapSizeTouched(true);
+    }
+  }, [activeMaterial, hasCustomized, effectivePrintWidthInches, effectivePrintHeightInches]);
 
   // Whole-inch choices for the custom size dropdowns, covering the allowed range (plus the current
   // value, in case it is not a whole inch).
@@ -12274,7 +12297,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           title={th.label}
                           priceText={`+₹${th.price}`}
                           previewHeightClass="h-16 p-1.5"
-                          preview={renderWrapPreview(th.id, { inches: th.thicknessInches, depthPx: th.depthPx })}
+                          preview={<img src={th.image} alt={th.name} className="mx-auto h-full max-h-14 w-auto object-contain" />}
                         />
                       );
                     })}
