@@ -201,25 +201,34 @@ export const OccasionPage: React.FC = () => {
       <div className="relative mt-4 mx-auto max-w-[1680px] px-4 sm:px-8 lg:px-12 xl:px-14">
         <section
           className="relative w-full overflow-hidden rounded-3xl h-[280px] sm:h-[320px] lg:h-[360px]"
-          style={{ backgroundColor: occasion.bannerColor ?? occasion.accent, color: bannerTextColor(occasion.bannerColor) }}
+          style={{ color: bannerTextColor(occasion.bannerColor) }}
         >
-          {/* The occasion photo, full-bleed on the right, fading into the
-              solid color on the left so the headline stays readable */}
+          {/* Desktop/tablet (sm+) only: the solid accent color backdrop the
+              photo fades into on the left, giving the headline room to
+              breathe. Mobile has no room for this, so the photo goes
+              full-bleed with no color backdrop instead (see below). */}
+          <div
+            className="hidden sm:block absolute inset-0"
+            style={{ backgroundColor: occasion.bannerColor ?? occasion.accent }}
+          />
+
+          {/* The occasion photo - full-bleed with no fade on mobile so it's
+              actually visible, fading into the accent color on the right
+              on sm+ where there's room for both photo and text. */}
           <img
             src={occasion.bannerImage}
             alt={occasion.name}
-            className="block absolute right-0 top-0 h-full w-[42%] sm:w-[55%] object-cover"
-            style={{
-              maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 10%, #000 35%, #000 100%)',
-              WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 10%, #000 35%, #000 100%)',
-            }}
+            className="block absolute inset-0 sm:inset-auto sm:right-0 sm:top-0 h-full w-full sm:w-[55%] object-cover sm:[mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.5)_10%,#000_35%,#000_100%)] sm:[-webkit-mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.5)_10%,#000_35%,#000_100%)]"
           />
 
-          <div className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-10 lg:px-14 max-w-[64%] sm:max-w-xl">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight drop-shadow-sm" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+          {/* Dark gradient for text legibility over the full-bleed mobile photo only */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/25 to-transparent sm:hidden" />
+
+          <div className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-10 lg:px-14 max-w-[80%] sm:max-w-xl">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight drop-shadow-sm text-white sm:text-current" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
               {heroTitle}
             </h1>
-            <p className={`text-sm sm:text-base max-w-xl mt-3 leading-relaxed drop-shadow-sm ${occasion.bannerColor ? '' : 'text-white/90'}`}>
+            <p className="text-sm sm:text-base max-w-xl mt-3 leading-relaxed drop-shadow-sm text-white/90 sm:text-current">
               {occasion.tagline}
             </p>
           </div>
