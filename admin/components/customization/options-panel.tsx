@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import { ArrowRight } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
@@ -11,6 +11,7 @@ import type { OptionCategoryListItem } from '@/lib/types/option-category';
 import { usePermission } from '@/lib/auth/use-permission';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ManagedOrderProvider, useManagedBox, useManagedPositions } from '@/components/customization/managed-boxes';
 import { DESIGN_TEMPLATE_SEED_ITEMS } from '@/lib/customizer-options';
 import layoutSeed from '@/lib/layout-seed.json';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -133,6 +134,49 @@ const COLOR_FINISHING_SEED: SeedSpec = {
   ],
 };
 
+/** Parts of the Layouts & designs tab whose position, name and visibility the admin manages (saved as section_order_layouts). */
+const MANAGED_LAYOUT_PARTS = [
+  { id: 'design_templates', label: 'Design templates' },
+  { id: 'layouts', label: 'Layout arrangements' },
+  { id: 'color_finishing', label: 'Optional Color Finishing' },
+];
+const MANAGED_IDS = new Set(MANAGED_LAYOUT_PARTS.map((p) => p.id));
+
+/** Puts the number / rename / hide / move controls on a card, when the card is one of the managed parts. */
+function ManagedCard({ id, children }: { id: string; children: ReactNode }) {
+  const box = useManagedBox(id);
+  if (!box) return <>{children}</>;
+  return (
+    <div className={`space-y-3 rounded-xl border bg-muted/20 p-3 ${box.hidden ? 'opacity-60' : ''}`}>
+      {box.controls}
+      {children}
+    </div>
+  );
+}
+
+/** Wraps a tab's content in the shared position list when that tab has managed parts. */
+function ManagedBlock({ tab, canManage, children }: { tab: string; canManage: boolean; children: ReactNode }) {
+  if (tab !== 'LAYOUTS & DESIGNS') return <>{children}</>;
+  return (
+    <ManagedOrderProvider baseKey="section_order_layouts" listName="Layouts & designs parts" boxes={MANAGED_LAYOUT_PARTS} canManage={canManage}>
+      {children}
+    </ManagedOrderProvider>
+  );
+}
+
+/** A grid of cards, shown in the managed position order when the cards are managed parts. */
+function ManagedGrid({ entries, render }: { entries: Entry[]; render: (entry: Entry) => ReactNode }) {
+  const positions = useManagedPositions();
+  const sorted = positions
+    ? [...entries].sort((a, b) => {
+        const pa = a.kind === 'category' ? positions[a.baseKey] : undefined;
+        const pb = b.kind === 'category' ? positions[b.baseKey] : undefined;
+        return (pa ?? 99) - (pb ?? 99);
+      })
+    : entries;
+  return <>{sorted.map(render)}</>;
+}
+
 const TABS: TabBlock[] = [
   {
     tab: 'SPECIALTY PRODUCTS',
@@ -178,9 +222,14 @@ const TABS: TabBlock[] = [
             title: 'Layout arrangements (Single Full Image, Landscape, Wall Display, Collage, ...). Rename, re-price, hide, reorder or add a cover image. New layout shapes need a developer, because each one defines how the photo is cut into panels.',
             seed: LAYOUTS_SEED,
           },
+          {
+            kind: 'category',
+            baseKey: 'color_finishing',
+            title: 'Optional Color Finishing: the color finishes shown to the customer (Original, Sepia, GrayScale). Rename, reorder or hide them; the effects themselves are built in.',
+            seed: COLOR_FINISHING_SEED,
+          },
         ],
       },
-      { heading: 'Optional Color Finishing', entries: [{ kind: 'category', baseKey: 'color_finishing', title: 'Color finishes shown to the customer (Original, Sepia, GrayScale)', seed: COLOR_FINISHING_SEED }] },
       {
         heading: 'Digital Proof Request',
         entries: [
@@ -441,7 +490,7 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
 
   const renderEntry = (entry: Entry, single: boolean) => {
     if (entry.kind === 'category') {
-      return (
+      const card = (
         <Card key={entry.baseKey}>
           {!single && entry.title && (
             <CardHeader>
@@ -453,6 +502,7 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
           </CardContent>
         </Card>
       );
+      return MANAGED_IDS.has(entry.baseKey) ? <ManagedCard key={entry.baseKey} id={entry.baseKey}>{card}</ManagedCard> : card;
     }
     if (entry.kind === 'link') {
       return (
@@ -494,7 +544,8 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
       ) : (
         <>
           {visibleTabs.map((block) => (
-            <section key={block.tab} className="space-y-5">
+            <ManagedBlock key={block.tab} tab={block.tab} canManage={hasPermission('option_catalog.manage')}>
+            <section className="space-y-5">
               {(visibleTabs.length > 1 || block.note) && (
                 <div className="border-b pb-2">
                   {visibleTabs.length > 1 && <h2 className="text-lg font-semibold tracking-wide">{block.tab}</h2>}
@@ -508,12 +559,13 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
                     {section.scope && <Badge variant="outline">{section.scope} only</Badge>}
                   </h3>
                   <div className="grid gap-4 md:grid-cols-2">
-                    {section.entries.map((entry) => renderEntry(entry, section.entries.length === 1))}
+                    <ManagedGrid entries={section.entries} render={(entry) => renderEntry(entry, section.entries.length === 1)} />
                   </div>
                 </div>
               ))}
               {block.footnote && <p className="text-xs text-muted-foreground">{block.footnote}</p>}
             </section>
+            </ManagedBlock>
           ))}
 
           {tabs.includes('OPTIONS') && <section className="space-y-5">

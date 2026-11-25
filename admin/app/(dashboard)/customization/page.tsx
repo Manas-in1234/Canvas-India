@@ -7,7 +7,6 @@ import { StylesPanel } from '@/components/customization/styles-panel';
 import { SizesPanel } from '@/components/customization/sizes-panel';
 import { OptionsPanel } from '@/components/customization/options-panel';
 import { TabBar } from '@/components/customization/tab-bar';
-import { LayoutBoxes } from '@/components/customization/layout-boxes';
 
 type Material = 'CANVAS' | 'ACRYLIC';
 type Tab = 'styles' | 'upload' | 'sizes' | 'layouts' | 'hardware' | 'options';
@@ -96,7 +95,6 @@ function CustomizationInner() {
               <OptionsPanel material={material} tabs={current.blocks ?? []} />
             </div>
           )}
-          {tab === 'layouts' && <LayoutBoxes canManage={hasPermission('option_catalog.manage')} />}
           {tab !== 'styles' && tab !== 'upload' && tab !== 'sizes' && <OptionsPanel material={material} tabs={current.blocks ?? []} />}
         </>
       )}
