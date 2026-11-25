@@ -4546,6 +4546,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
   // Edge Wrap / Border / Frames (Hardware & Finish tab)
   const [selectedWrapId, setSelectedWrapId] = useState<string>('full-bleed');
+  // Same "not shown as selected until actually clicked" pattern as the
+  // other Hardware & Finish pickers - selectedWrapId silently holds a real
+  // default (full-bleed / Image Wrap) so the preview always has something
+  // valid to render, but no card shows checked until the shopper clicks
+  // one, and clicking the active card again unchecks it (reverting to the
+  // same silent default) rather than being stuck always-checked.
+  const [wrapTouched, setWrapTouched] = useState(false);
   const [mirrorImage, setMirrorImage] = useState<boolean>(false);
   const [selectedBorderWidthId, setSelectedBorderWidthId] = useState<string>('none');
   const [selectedBorderColor, setSelectedBorderColor] = useState<string>('#FFFFFF');
@@ -7617,7 +7624,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         customThicknessMm: activeMaterial === 'canvas' && thicknessTouched && selectedThicknessId === 'custom-thickness' ? customThicknessMm : undefined,
         customThicknessInches: activeMaterial === 'canvas' && thicknessTouched && selectedThicknessId === 'custom-thickness' ? customThicknessInches : undefined,
         wrapSize: activeMaterial === 'canvas' && wrapSizeTouched ? WRAP_SIZE_OPTIONS.find((w) => w.id === selectedWrapSizeId)?.label : undefined,
-        wrap: activeMaterial === 'canvas' ? liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.label : undefined,
+        wrap: activeMaterial === 'canvas' && wrapTouched ? liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.label : undefined,
         borderWidth: shapeApplies ? liveOrFallbackBorderWidths.find((b) => b.id === selectedBorderWidthId)?.label : undefined,
         borderColor: shapeApplies && selectedBorderWidthId !== 'none' ? selectedBorderColor : undefined,
         frame: shapeApplies && activeMaterial === 'canvas' ? liveOrFallbackFrames.find((f) => f.id === selectedFrameId)?.name : undefined,
@@ -12316,9 +12323,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     {liveOrFallbackWrapStyles.map((w) => (
                       <CustomizerOptionCard
                         key={w.id}
-                        selected={selectedWrapId === w.id}
+                        selected={wrapTouched && selectedWrapId === w.id}
                         onClick={() => {
+                          if (wrapTouched && selectedWrapId === w.id) {
+                            setWrapTouched(false);
+                            return;
+                          }
                           setSelectedWrapId(w.id);
+                          setWrapTouched(true);
                           // Keep the Border section's own color swatch in
                           // sync with Black/White Border Wrap, but only when
                           // a border is already active - otherwise this would
@@ -12781,10 +12793,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             </span>
                           </>
                         )}
-                        <span>•</span>
-                        <span>
-                          Wrap: <strong className="text-stone-900">{liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.name}</strong>
-                        </span>
+                        {wrapTouched && (
+                          <>
+                            <span>•</span>
+                            <span>
+                              Wrap: <strong className="text-stone-900">{liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.name}</strong>
+                            </span>
+                          </>
+                        )}
                         <span>•</span>
                         <span>
                           Hardware: <strong className="text-stone-900">
