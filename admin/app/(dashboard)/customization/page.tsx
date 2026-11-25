@@ -6,18 +6,29 @@ import { usePermission } from '@/lib/auth/use-permission';
 import { StylesPanel } from '@/components/customization/styles-panel';
 import { SizesPanel } from '@/components/customization/sizes-panel';
 import { OptionsPanel } from '@/components/customization/options-panel';
+import { TabBar } from '@/components/customization/tab-bar';
 
 type Material = 'CANVAS' | 'ACRYLIC';
-type Tab = 'styles' | 'sizes' | 'layouts' | 'hardware' | 'options' | 'controls';
+type Tab = 'styles' | 'upload' | 'sizes' | 'layouts' | 'hardware' | 'options';
 
 const TABS: { key: Tab; label: string; hint: string; permission: string; blocks?: string[] }[] = [
   { key: 'styles', label: 'Products', hint: 'The style cards a customer picks first: name, price, cover image and the shapes each style offers, including shape detection.', permission: 'option_catalog.view' },
+  { key: 'upload', label: 'Upload', hint: 'The photo upload step. Nothing to edit here, but you can rename it, move it or hide it above.', permission: 'option_catalog.view' },
   { key: 'sizes', label: 'Select size', hint: 'Every size and its price, plus the inch limits for custom sizes.', permission: 'size_presets.view', blocks: ['SELECT SIZE'] },
   { key: 'layouts', label: 'Layouts & designs', hint: 'Design templates grouped by day or occasion, color finishing and the digital proof option.', permission: 'option_catalog.view', blocks: ['LAYOUTS & DESIGNS'] },
   { key: 'hardware', label: 'Hardware & finish', hint: 'Thickness, backing, hardware, border, frames, back display, wrap size and edge wrap.', permission: 'option_catalog.view', blocks: ['HARDWARE & FINISH'] },
   { key: 'options', label: 'Options', hint: 'Lamination, photo retouching, material variants and special products.', permission: 'option_catalog.view', blocks: ['OPTIONS', 'SELECT CANVAS MATERIAL VARIANT', 'SPECIALTY PRODUCTS'] },
-  { key: 'controls', label: 'Tabs & sections', hint: 'Rename, reorder or hide the customizer tabs and the sections inside them.', permission: 'option_catalog.view', blocks: ['CUSTOMIZER TABS & BUTTONS'] },
 ];
+
+/** The storefront sidebar tab each admin tab controls. */
+const STOREFRONT_IDS: Record<Tab, string> = {
+  styles: 'PRODUCTS',
+  upload: 'UPLOAD',
+  sizes: 'SELECT SIZE',
+  layouts: 'LAYOUTS & DESIGNS',
+  hardware: 'HARDWARE & FINISH',
+  options: 'OPTIONS',
+};
 
 function CustomizationInner() {
   const router = useRouter();
@@ -64,21 +75,13 @@ function CustomizationInner() {
         ))}
       </div>
 
-      <div className="flex gap-1 overflow-x-auto border-b" role="tablist">
-        {allowed.map((t) => (
-          <button
-            key={t.key}
-            role="tab"
-            aria-selected={tab === t.key}
-            onClick={() => setTab(t.key)}
-            className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium ${
-              tab === t.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <TabBar
+        tabs={allowed.map((t) => ({ key: t.key, label: t.label, storefrontId: STOREFRONT_IDS[t.key] }))}
+        active={tab}
+        onSelect={(key) => setTab(key as Tab)}
+        canManage={hasPermission('option_catalog.manage')}
+        seedTabs={TABS.map((t) => ({ key: t.key, label: t.label, storefrontId: STOREFRONT_IDS[t.key] }))}
+      />
 
       {allowed.length === 0 ? (
         <p className="text-sm text-muted-foreground">You do not have access to customization settings.</p>
@@ -92,7 +95,7 @@ function CustomizationInner() {
               <OptionsPanel material={material} tabs={current.blocks ?? []} />
             </div>
           )}
-          {tab !== 'styles' && tab !== 'sizes' && <OptionsPanel material={material} tabs={current.blocks ?? []} />}
+          {tab !== 'styles' && tab !== 'upload' && tab !== 'sizes' && <OptionsPanel material={material} tabs={current.blocks ?? []} />}
         </>
       )}
     </div>

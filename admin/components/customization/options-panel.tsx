@@ -121,43 +121,7 @@ const CUSTOM_SIZE_SEED: SeedSpec = {
   })),
 };
 
-const idSeed = (name: string, pairs: string[][]): SeedSpec => ({
-  scope: 'BOTH',
-  name,
-  items: pairs.map(([id, label]) => ({ label, description: '', flatPrice: '0', extras: { id } })),
-});
-
-const SIDEBAR_TABS_SEED = idSeed('Customizer sidebar tabs', [
-  ['PRODUCTS', 'Products'], ['UPLOAD', 'Upload'], ['SELECT SIZE', 'Select size'], ['LAYOUTS & DESIGNS', 'Layouts & designs'],
-  ['HARDWARE & FINISH', 'Hardware & finish'], ['OPTIONS', 'Options'],
-]);
-const TOOLBAR_SEED = idSeed('Customizer top buttons', [
-  ['save', 'Save'], ['add_text', 'Add text'], ['add_clipart', 'Add clipart'],
-  ['room_view', 'Room view'], ['view_3d', '3D view'], ['view_360', '360° view'],
-]);
-const HARDWARE_SECTIONS_SEED = idSeed('Hardware & finish sections', [
-  ['thickness', 'Thickness'], ['backing', 'Backing & surface finish'], ['hardware', 'Hardware Option & Style'], ['border', 'Border'],
-  ['frames', 'Frames'], ['display', 'Back Display Option'], ['wrapsize', 'Wrap Size'], ['edgewrap', 'Edge Wrap'],
-]);
-const OPTIONS_SECTIONS_SEED = idSeed('Options sections', [
-  ['lamination', 'Lamination Options'], ['retouching', 'Minor Photo Retouching'], ['major_retouching', 'Major Retouching Notes'], ['quantity', 'Order Quantity'],
-]);
-const LAYOUTS_SECTIONS_SEED = idSeed('Layouts & designs sections', [
-  ['color_finishing', 'Optional Color Finishing'], ['digital_proof', 'Digital Proof Request'],
-]);
-
 const TABS: TabBlock[] = [
-  {
-    tab: 'CUSTOMIZER TABS & BUTTONS',
-    note: 'Rename, reorder or hide the left-hand tabs and the sections inside them. Hiding (or deleting) an item removes it from the storefront; switch it back on to restore it. Numbers on sections follow the order you set.',
-    sections: [
-      { heading: 'Left-hand tabs', entries: [{ kind: 'category', baseKey: 'sidebar_tabs', title: 'Tabs', seed: SIDEBAR_TABS_SEED }] },
-      { heading: 'Hardware & finish sections', entries: [{ kind: 'category', baseKey: 'section_order_hardware', title: 'Sections', seed: HARDWARE_SECTIONS_SEED }] },
-      { heading: 'Options sections', entries: [{ kind: 'category', baseKey: 'section_order_options', title: 'Sections', seed: OPTIONS_SECTIONS_SEED }] },
-      { heading: 'Layouts & designs sections', entries: [{ kind: 'category', baseKey: 'section_order_layouts', title: 'Sections (shown after the layout picker)', seed: LAYOUTS_SECTIONS_SEED }] },
-      { heading: 'Top buttons', entries: [{ kind: 'category', baseKey: 'toolbar_buttons', title: 'Buttons', seed: TOOLBAR_SEED }] },
-    ],
-  },
   {
     tab: 'SPECIALTY PRODUCTS',
     note: 'Existing Lyric Canvas, Word Art, Canvas Banner and Pop Art pickers.',
@@ -327,6 +291,8 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
 
   const groups = groupByBaseKey(data ?? []);
   const placed = new Set<string>([
+    // Managed from the tab bar at the top of the Customization page, not from this panel.
+    'sidebar_tabs', 'toolbar_buttons', 'section_order_hardware', 'section_order_options', 'section_order_layouts',
     ...TABS.flatMap((t) => t.sections.flatMap((s) => s.entries)).flatMap((e) => (e.kind === 'category' ? [e.baseKey] : [])),
     ...NOT_CONNECTED.map((n) => n.baseKey),
   ]);
