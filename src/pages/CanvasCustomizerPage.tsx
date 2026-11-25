@@ -2932,6 +2932,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     if (requestedTab === 'PRODUCTS') return 'PRODUCTS';
     if (requestedTab === 'UPLOAD') return 'UPLOAD';
     if (requestedTab === 'SIZE' || requestedTab === 'SELECT SIZE') return 'SELECT SIZE';
+    // Switching Canvas/Acrylic from the PRODUCTS tab reloads this page; stay on PRODUCTS.
+    if ((location.state as { openTab?: string } | null)?.openTab === 'PRODUCTS') return 'PRODUCTS';
     const initialPt = resolveCurrentProductId(routeMaterial, productId);
     if (initialPt.includes('bus')) return 'CREATE BUS ROLL';
     if (initialPt.includes('banner')) return 'UPLOAD';
@@ -5537,7 +5539,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const handleSwitchMaterial = () => {
     const nextMaterial = activeMaterial === 'canvas' ? 'acrylic' : 'canvas';
     setActiveMaterial(nextMaterial);
+    // Canvas and acrylic are separate pages, so switching reloads the customizer, which opens on Upload.
+    // When the shopper switches from the PRODUCTS tab, keep them there to pick a product.
     const searchString = location.search ? location.search : '';
+    const switchState = activeTab === 'PRODUCTS' ? { openTab: 'PRODUCTS' } : undefined;
     let counterpartId = 'acrylic-print';
     if (nextMaterial === 'acrylic') {
       if (selectedProductTypeId === 'canvas-single' || selectedProductTypeId === 'canvas-classic') counterpartId = 'acrylic-print';
@@ -5552,7 +5557,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       else if (selectedProductTypeId.includes('word')) counterpartId = 'acrylic-word-art';
       else counterpartId = 'acrylic-print';
       switchProductSession('acrylic', counterpartId);
-      navigate(`/customize/acrylic/${counterpartId}${searchString}`, { replace: true });
+      navigate(`/customize/acrylic/${counterpartId}${searchString}`, { replace: true, state: switchState });
     } else {
       if (selectedProductTypeId === 'acrylic-print' || selectedProductTypeId === 'acrylic-single' || selectedProductTypeId === 'acrylic-photo-panel') counterpartId = 'canvas-single';
       else if (selectedProductTypeId.includes('wall') || selectedProductTypeId.includes('display')) counterpartId = 'canvas-wall-art';
@@ -5566,7 +5571,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       else if (selectedProductTypeId.includes('word')) counterpartId = 'canvas-word-art';
       else counterpartId = 'canvas-single';
       switchProductSession('canvas', counterpartId);
-      navigate(`/customize/canvas/${counterpartId}${searchString}`, { replace: true });
+      navigate(`/customize/canvas/${counterpartId}${searchString}`, { replace: true, state: switchState });
     }
   };
 
