@@ -4485,6 +4485,21 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }));
   }, [liveLaminations]);
 
+  // Sequential display numbers for the OPTIONS tab's sections - recomputed
+  // so that hiding/showing a part via the admin renumbers the rest instead
+  // of leaving a gap (e.g. hiding "1. Lamination" makes Retouching "1.").
+  const optionsPartNumbers = useMemo(() => {
+    const visibleParts = [
+      isOptionsPartVisible('lamination') && liveOrFallbackLaminations.length > 0,
+      isOptionsPartVisible('retouching'),
+      isOptionsPartVisible('major_retouching'),
+      isOptionsPartVisible('quantity'),
+    ];
+    let n = 0;
+    return visibleParts.map((visible) => (visible ? ++n : null));
+  }, [liveOptionsSectionOrder, liveOrFallbackLaminations]);
+  const [laminationNumber, retouchingNumber, majorRetouchingNumber, quantityNumber] = optionsPartNumbers;
+
   const liveOrFallbackFrames = useMemo(() => {
     if (liveFrames.length === 0 && !overriddenKeys.has('frame')) return FRAME_OPTIONS.map((f) => ({ ...f, group: 'floating' }));
     return liveFrames.map((item) => ({
@@ -12402,7 +12417,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               {/* 1. Lamination Options - admin can hide this whole section via its own entry (extras.id: 'lamination') in the section_order_options category. */}
               {isOptionsPartVisible('lamination') && liveOrFallbackLaminations.length > 0 && (
               <div className="space-y-2.5">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">1. Lamination Options</label>
+                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">{laminationNumber}. Lamination Options</label>
                 <div className="space-y-2">
                   {liveOrFallbackLaminations.map((lam) => {
                     const isSelected = selectedLaminationId === lam.id;
@@ -12434,7 +12449,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               {/* 2. Minor Photo Retouching - extras.id: 'retouching' */}
               {isOptionsPartVisible('retouching') && (
               <div className="space-y-2.5 pt-3 border-t border-stone-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">2. Minor Photo Retouching</label>
+                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">{retouchingNumber}. Minor Photo Retouching</label>
                 <div className="grid grid-cols-2 gap-2.5 bg-stone-50 p-3 rounded-xl border border-stone-200">
                   {RETOUCH_CHECKS.map((rc) => (
                     <label key={rc.id} className="flex items-center gap-2 text-xs font-bold text-stone-700 cursor-pointer">
@@ -12454,7 +12469,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               {/* 3. Major Retouching - extras.id: 'major_retouching' */}
               {isOptionsPartVisible('major_retouching') && (
               <div className="space-y-2 pt-3 border-t border-stone-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">3. Major Retouching Notes</label>
+                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">{majorRetouchingNumber}. Major Retouching Notes</label>
                 <textarea
                   value={majorRetouchText}
                   onChange={(e) => setMajorRetouchText(e.target.value)}
@@ -12468,7 +12483,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               {/* 4. Order Quantity - extras.id: 'quantity' */}
               {isOptionsPartVisible('quantity') && (
               <div className="space-y-2 pt-3 border-t border-stone-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">4. Order Quantity</label>
+                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">{quantityNumber}. Order Quantity</label>
                 <div className="flex items-center justify-between bg-stone-50 p-3 rounded-xl border border-stone-200">
                   <div className="inline-flex items-center border border-stone-300 rounded-xl bg-white shadow-xs">
                     <button
