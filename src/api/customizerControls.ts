@@ -41,6 +41,7 @@ export const SECTION_DEFAULT_LABELS: Record<SectionTab, Record<string, string>> 
     backing: 'Backing & surface finish',
     hardware: 'Hardware Option & Style',
     border: 'Border',
+    border_color: 'Border Color',
     frames: 'Frames',
     display: 'Back Display Option',
     wrapsize: 'Wrap Size',

@@ -12009,7 +12009,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               </div>
 
               {/* Border - moved here, right after Hardware Option & Style */}
-              <div className="pt-3 border-t border-stone-200" {...sec.p('hardware', 'border')}>
+              <div className="pt-3 border-t border-stone-200" {...sec.group('hardware', ['border', 'border_color'])}>
                 <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
                   {/* Dark Section Header Bar */}
                   <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
@@ -12065,7 +12065,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     </div>
 
                     {/* Border Width Selection (admin-managed via border_width) */}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2" style={sec.hidden('hardware', 'border') ? { display: 'none' } : undefined}>
                       {liveOrFallbackBorderWidths.map((bw) => {
                         const price = liveBorderWidthPrices[bw.id] || 0;
                         return (
@@ -12097,9 +12097,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
                     {/* Flexible Custom Color Selection: Native Picker + Hex + Swatches */}
                     {selectedBorderWidthId !== 'none' && (
-                      <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 space-y-2.5">
+                      <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 space-y-2.5" style={sec.hidden('hardware', 'border_color') ? { display: 'none' } : undefined}>
                         <div className="flex items-center justify-between flex-wrap gap-2">
-                          <span className="text-xs font-bold text-stone-800">Border Color:</span>
+                          <span className="text-xs font-bold text-stone-800">{sec.t('hardware', 'border_color', 'Border Color')}:</span>
                           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                             {/* Live Color Swatch */}
                             <div

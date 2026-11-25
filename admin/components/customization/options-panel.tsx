@@ -30,10 +30,11 @@ import { Skeleton } from '@/components/ui/skeleton';
  *  - fixed:    a real storefront section whose content still lives in code, so
  *              it is listed here to make the map complete, with no editor yet
  */
-type Entry =
+type Entry = (
   | { kind: 'category'; baseKey: string; title?: string; seed?: SeedSpec }
   | { kind: 'link'; title: string; href: string; note: string }
-  | { kind: 'fixed'; title: string; note: string };
+  | { kind: 'fixed'; title: string; note: string }
+) & { scope?: string };
 
 interface SeedSpec {
   scope: 'CANVAS' | 'ACRYLIC' | 'BOTH';
@@ -134,13 +135,49 @@ const COLOR_FINISHING_SEED: SeedSpec = {
   ],
 };
 
-/** Parts of the Layouts & designs tab whose position, name and visibility the admin manages (saved as section_order_layouts). */
-const MANAGED_LAYOUT_PARTS = [
+/**
+ * Parts of a tab whose position, name and visibility the admin manages. Each is saved in an option
+ * list (section_order_layouts / section_order_hardware) that the storefront reads.
+ */
+const LAYOUT_PARTS = [
   { id: 'design_templates', label: 'Design templates' },
   { id: 'layouts', label: 'Layout arrangements' },
   { id: 'color_finishing', label: 'Optional Color Finishing' },
 ];
-const MANAGED_IDS = new Set(MANAGED_LAYOUT_PARTS.map((p) => p.id));
+/** Every Hardware & finish part, so the saved list always holds all of them whichever material is open. */
+const HARDWARE_PARTS = [
+  { id: 'thickness', label: 'Thickness' },
+  { id: 'backing', label: 'Backing & surface finish' },
+  { id: 'hardware', label: 'Hardware Option & Style' },
+  { id: 'border', label: 'Border' },
+  { id: 'border_color', label: 'Border Color' },
+  { id: 'frames', label: 'Frames' },
+  { id: 'display', label: 'Back Display Option' },
+  { id: 'wrapsize', label: 'Wrap Size' },
+  { id: 'edgewrap', label: 'Edge Wrap' },
+];
+/** Which managed part a card belongs to. */
+const PART_FOR_LIST: Record<string, string> = {
+  design_templates: 'design_templates',
+  layouts: 'layouts',
+  color_finishing: 'color_finishing',
+  canvas_thickness: 'thickness',
+  acrylic_thickness: 'thickness',
+  backgrounds: 'backing',
+  hardware: 'hardware',
+  border_width: 'border',
+  border_color: 'border_color',
+  frame: 'frames',
+  display_option: 'display',
+  wrap_size: 'wrapsize',
+  wrap_style: 'edgewrap',
+};
+/** Cards that have no controls of their own but stay next to the card they belong with. */
+const STAYS_WITH: Record<string, string> = { finish: 'backgrounds', 'Acrylic thickness rates': 'acrylic_thickness' };
+const HARDWARE_PARTS_BY_MATERIAL: Record<'CANVAS' | 'ACRYLIC', string[]> = {
+  CANVAS: ['thickness', 'hardware', 'border', 'border_color', 'frames', 'display', 'wrapsize', 'edgewrap'],
+  ACRYLIC: ['thickness', 'backing', 'hardware', 'border', 'border_color', 'frames'],
+};
 
 /** Puts the number / rename / hide / move controls on a card, when the card is one of the managed parts. */
 function ManagedCard({ id, children }: { id: string; children: ReactNode }) {
@@ -155,25 +192,38 @@ function ManagedCard({ id, children }: { id: string; children: ReactNode }) {
 }
 
 /** Wraps a tab's content in the shared position list when that tab has managed parts. */
-function ManagedBlock({ tab, canManage, children }: { tab: string; canManage: boolean; children: ReactNode }) {
-  if (tab !== 'LAYOUTS & DESIGNS') return <>{children}</>;
-  return (
-    <ManagedOrderProvider baseKey="section_order_layouts" listName="Layouts & designs parts" boxes={MANAGED_LAYOUT_PARTS} canManage={canManage}>
-      {children}
-    </ManagedOrderProvider>
-  );
+function ManagedBlock({ tab, material, canManage, children }: { tab: string; material: 'CANVAS' | 'ACRYLIC'; canManage: boolean; children: ReactNode }) {
+  if (tab === 'LAYOUTS & DESIGNS') {
+    return (
+      <ManagedOrderProvider baseKey="section_order_layouts" listName="Layouts & designs parts" boxes={LAYOUT_PARTS} canManage={canManage}>
+        {children}
+      </ManagedOrderProvider>
+    );
+  }
+  if (tab === 'HARDWARE & FINISH') {
+    const shown = HARDWARE_PARTS.filter((p) => HARDWARE_PARTS_BY_MATERIAL[material].includes(p.id));
+    return (
+      <ManagedOrderProvider baseKey="section_order_hardware" listName="Hardware & finish parts" boxes={shown} seed={HARDWARE_PARTS} canManage={canManage}>
+        {children}
+      </ManagedOrderProvider>
+    );
+  }
+  return <>{children}</>;
 }
 
 /** A grid of cards, shown in the managed position order when the cards are managed parts. */
 function ManagedGrid({ entries, render }: { entries: Entry[]; render: (entry: Entry) => ReactNode }) {
   const positions = useManagedPositions();
-  const sorted = positions
-    ? [...entries].sort((a, b) => {
-        const pa = a.kind === 'category' ? positions[a.baseKey] : undefined;
-        const pb = b.kind === 'category' ? positions[b.baseKey] : undefined;
-        return (pa ?? 99) - (pb ?? 99);
-      })
-    : entries;
+  const keyOf = (e: Entry): number => {
+    if (!positions) return 0;
+    const name = e.kind === 'category' ? e.baseKey : e.kind === 'link' ? e.title : '';
+    const own = e.kind === 'category' ? PART_FOR_LIST[name] : undefined;
+    if (own !== undefined && positions[own] !== undefined) return positions[own];
+    const buddy = STAYS_WITH[name];
+    if (buddy && PART_FOR_LIST[buddy] !== undefined && positions[PART_FOR_LIST[buddy]] !== undefined) return positions[PART_FOR_LIST[buddy]] + 0.5;
+    return 99;
+  };
+  const sorted = positions ? [...entries].sort((x, y) => keyOf(x) - keyOf(y)) : entries;
   return <>{sorted.map(render)}</>;
 }
 
@@ -244,63 +294,25 @@ const TABS: TabBlock[] = [
   },
   {
     tab: 'HARDWARE & FINISH',
-    note: 'The Wrap & Border tab no longer exists in the storefront: its thickness, border, frame and edge wrap sections now live here, numbered in the order below.',
+    note: 'Each card below is one part of the storefront Hardware & finish tab. Use its number, arrows, name field and Hide switch to move, rename or hide the whole part. The items inside are edited in the card.',
     sections: [
       {
-        heading: '1. Acrylic Thickness',
-        scope: 'Acrylic',
+        heading: 'Hardware & finish',
         entries: [
-          {
-            kind: 'category',
-            baseKey: 'acrylic_thickness',
-            title: 'Acrylic thickness cards (3, 5, 6, 8 mm ...)',
-            seed: ACRYLIC_THICKNESS_SEED,
-          },
-          {
-            kind: 'link',
-            title: 'Acrylic thickness rates',
-            href: '/pricing',
-            note: 'The per-sq-inch price of each acrylic thickness is set under Pricing.',
-          },
-        ],
-      },
-      {
-        heading: '1. Canvas Thickness',
-        scope: 'Canvas',
-        entries: [
-          {
-            kind: 'category',
-            baseKey: 'canvas_thickness',
-            title: 'Canvas thickness cards (Canvas Lite, Thin / Thick Gallery Wrap, Custom Thickness, ...)',
-            seed: CANVAS_THICKNESS_SEED,
-          },
-        ],
-      },
-      { heading: '2. Backing', scope: 'Acrylic', entries: [{ kind: 'category', baseKey: 'backgrounds' }] },
-      { heading: 'Surface Finish', scope: 'Acrylic', entries: [{ kind: 'category', baseKey: 'finish' }] },
-      { heading: 'Hardware Option & Style (2 for canvas, 3 for acrylic)', entries: [{ kind: 'category', baseKey: 'hardware' }] },
-      {
-        heading: 'Border (3 for canvas, 4 for acrylic)',
-        entries: [
+          { kind: 'category', scope: 'Acrylic', baseKey: 'acrylic_thickness', title: 'Acrylic thickness cards (3, 5, 6, 8 mm ...)', seed: ACRYLIC_THICKNESS_SEED },
+          { kind: 'link', scope: 'Acrylic', title: 'Acrylic thickness rates', href: '/pricing', note: 'The per-sq-inch price of each acrylic thickness is set under Pricing.' },
+          { kind: 'category', scope: 'Canvas', baseKey: 'canvas_thickness', title: 'Canvas thickness cards (Canvas Lite, Thin / Thick Gallery Wrap, Custom Thickness, ...)', seed: CANVAS_THICKNESS_SEED },
+          { kind: 'category', scope: 'Acrylic', baseKey: 'backgrounds', title: 'Backing' },
+          { kind: 'category', scope: 'Acrylic', baseKey: 'finish', title: 'Surface Finish (shown with Backing)' },
+          { kind: 'category', baseKey: 'hardware', title: 'Hardware Option & Style' },
           { kind: 'category', baseKey: 'border_width', title: 'Border widths' },
           { kind: 'category', baseKey: 'border_color', title: 'Border Color swatches' },
+          { kind: 'category', baseKey: 'frame', title: 'Frames' },
+          { kind: 'category', scope: 'Canvas', baseKey: 'display_option', title: 'Back Display Option' },
+          { kind: 'category', scope: 'Canvas', baseKey: 'wrap_size', title: 'Wrap size tiers (Small / Medium / Large): name, price and the largest print each one covers', seed: WRAP_SIZE_SEED },
+          { kind: 'category', scope: 'Canvas', baseKey: 'wrap_style', title: 'Edge Wrap' },
         ],
       },
-      { heading: 'Frames (4 for canvas, 5 for acrylic)', entries: [{ kind: 'category', baseKey: 'frame' }] },
-      { heading: '5. Back Display Option', scope: 'Canvas', entries: [{ kind: 'category', baseKey: 'display_option' }] },
-      {
-        heading: '6. Wrap Size',
-        scope: 'Canvas',
-        entries: [
-          {
-            kind: 'category',
-            baseKey: 'wrap_size',
-            title: 'Wrap size tiers (Small / Medium / Large): name, price and the largest print each one covers',
-            seed: WRAP_SIZE_SEED,
-          },
-        ],
-      },
-      { heading: '7. Edge Wrap', scope: 'Canvas', entries: [{ kind: 'category', baseKey: 'wrap_style' }] },
     ],
   },
   {
@@ -365,7 +377,7 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
       .filter((section) => matches(section.scope))
       .map((section) => ({
         ...section,
-        entries: section.entries.filter((e) => e.kind !== 'category' || !e.seed || matches(e.seed.scope)),
+        entries: section.entries.filter((e) => matches(e.scope) && (e.kind !== 'category' || !e.seed || matches(e.seed.scope))),
       }))
       .filter((section) => section.entries.length > 0),
   })).filter((block) => block.sections.length > 0);
@@ -502,7 +514,7 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
           </CardContent>
         </Card>
       );
-      return MANAGED_IDS.has(entry.baseKey) ? <ManagedCard key={entry.baseKey} id={entry.baseKey}>{card}</ManagedCard> : card;
+      return PART_FOR_LIST[entry.baseKey] ? <ManagedCard key={entry.baseKey} id={PART_FOR_LIST[entry.baseKey]}>{card}</ManagedCard> : card;
     }
     if (entry.kind === 'link') {
       return (
@@ -544,7 +556,7 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
       ) : (
         <>
           {visibleTabs.map((block) => (
-            <ManagedBlock key={block.tab} tab={block.tab} canManage={hasPermission('option_catalog.manage')}>
+            <ManagedBlock key={block.tab} tab={block.tab} material={material} canManage={hasPermission('option_catalog.manage')}>
             <section className="space-y-5">
               {(visibleTabs.length > 1 || block.note) && (
                 <div className="border-b pb-2">

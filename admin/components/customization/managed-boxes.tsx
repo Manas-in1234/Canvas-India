@@ -23,7 +23,14 @@ export interface ManagedBox {
  * Position, name and visibility for a set of boxes, kept in one option list (`baseKey`) so the
  * storefront can read them. The list is created the first time anything is changed.
  */
-function useManagedOrder<T extends { id: string; label: string }>(baseKey: string, listName: string, boxes: T[], canManage: boolean) {
+function useManagedOrder<T extends { id: string; label: string }>(
+  baseKey: string,
+  listName: string,
+  boxes: T[],
+  canManage: boolean,
+  /** Every box the list should hold (even ones not on screen, e.g. the other material's), so none looks hidden to the storefront. */
+  seed: { id: string; label: string }[] = boxes,
+) {
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -74,7 +81,7 @@ function useManagedOrder<T extends { id: string; label: string }>(baseKey: strin
       listId = created.id;
     }
     const have = new Set(items.map((i) => String(i.extras?.id ?? '')));
-    for (const { box } of ordered) {
+    for (const box of seed) {
       if (have.has(box.id)) continue;
       await apiClient.post(`/admin/option-categories/${listId}/items`, {
         label: box.label,
@@ -254,16 +261,18 @@ export function ManagedOrderProvider({
   baseKey,
   listName,
   boxes,
+  seed,
   canManage,
   children,
 }: {
   baseKey: string;
   listName: string;
   boxes: { id: string; label: string }[];
+  seed?: { id: string; label: string }[];
   canManage: boolean;
   children: ReactNode;
 }) {
-  const order = useManagedOrder(baseKey, listName, boxes, canManage);
+  const order = useManagedOrder(baseKey, listName, boxes, canManage, seed);
   const labels = Object.fromEntries(boxes.map((b) => [b.id, b.label]));
   return <OrderContext.Provider value={{ order, labels }}>{children}</OrderContext.Provider>;
 }
