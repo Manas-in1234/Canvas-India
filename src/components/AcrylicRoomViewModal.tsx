@@ -6,6 +6,7 @@ import {
   Eye,
   Move
 } from 'lucide-react';
+import { convertHeicFileIfNeeded } from '../utils/heicConvert';
 
 export type BuiltInRoomPreset = 'office' | 'living';
 
@@ -380,19 +381,23 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
   const activeRoomBg = customRoomUrl || currentPreset.image;
 
   // Custom Room Image Upload Handler (JPG, JPEG, PNG, WEBP)
-  const handleRoomImageUpload = (file: File | null) => {
+  const handleRoomImageUpload = async (file: File | null) => {
     if (!file) return;
+    // iPhones save Camera Roll photos as HEIC/HEIF by default - accept that
+    // too and convert it to JPEG below instead of rejecting the one format
+    // an iOS camera-roll pick is most likely to be.
     const isValidType =
-      ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type.toLowerCase()) ||
-      /\.(jpe?g|png|webp)$/i.test(file.name);
+      ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif'].includes(file.type.toLowerCase()) ||
+      /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name);
     if (!isValidType) {
-      alert('Please upload a valid JPG, JPEG, PNG, or WEBP room image.');
+      alert('Please upload a valid JPG, JPEG, PNG, WEBP, or HEIC room image.');
       return;
     }
     if (file.size > 20 * 1024 * 1024) {
       alert('Room image exceeds 20MB limit.');
       return;
     }
+    const converted = await convertHeicFileIfNeeded(file);
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
@@ -408,7 +413,7 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
         setPosition(CUSTOM_ROOM_BOUNDS.defaultPosition);
       }
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(converted);
   };
 
   // Reset Product Position to default wall position for active room
@@ -467,7 +472,7 @@ export const AcrylicRoomViewModal: React.FC<AcrylicRoomViewModalProps> = ({
       <input
         ref={roomFileInputRef}
         type="file"
-        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+        accept=".jpg,.jpeg,.png,.webp,.heic,.heif,image/jpeg,image/png,image/webp,image/heic,image/heif"
         className="hidden"
         onChange={(e) => {
           if (e.target.files && e.target.files[0]) {

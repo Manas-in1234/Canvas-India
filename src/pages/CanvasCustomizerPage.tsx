@@ -169,6 +169,7 @@ import { AcrylicShapePreview } from '../components/AcrylicShapePreview';
 import { AcrylicRoomViewModal, RoomPlacementState } from '../components/AcrylicRoomViewModal';
 import { SelectSizeShapeModal } from '../components/SelectSizeShapeModal';
 import { isGenericCustomStyleId } from '../utils/codEligibility';
+import { convertHeicFileIfNeeded } from '../utils/heicConvert';
 import { SelectLayoutModal, LayoutModalOption } from '../components/SelectLayoutModal';
 import { fetchStyleLayouts } from '../api/styleLayoutsApi';
 import { EmptyLayoutPanel, ShapedLayoutWorkspace } from '../components/ShapedLayoutWorkspace';
@@ -224,7 +225,6 @@ const TOOLBAR_ITEMS: { id: ToolbarTab; label: string; icon: React.ElementType }[
   { id: 'BACKGROUND', label: 'BACKGROUND', icon: Palette },
   { id: 'TEMPLATE', label: 'TEMPLATE', icon: LayoutTemplate },
   { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers },
-  { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop },
   { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
   { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
 ];
@@ -2344,6 +2344,23 @@ const renderWrapPreview = (id: string, info?: { inches?: number; depthPx?: numbe
     );
   }
 
+  if (id === 'no-wrap-thickness' || id === 'no-wrap') {
+    return (
+      <div className="w-20 h-16 mx-auto relative flex items-center justify-center">
+        <svg viewBox="0 0 120 90" className="w-full h-full drop-shadow-xs">
+          <rect x="4" y="4" width="112" height="82" fill="#f8fafc" rx="6" stroke="#e2e8f0" strokeWidth="1" />
+          <g transform="translate(26, 12)">
+            <rect x="6" y="8" width="56" height="42" rx="2" fill="#fed7aa" stroke="#ea580c" strokeWidth="1.5" />
+            <rect x="10" y="12" width="48" height="34" rx="1" fill="#ea580c" opacity="0.8" />
+            <text x="34" y="68" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#64748b">
+              0.00"
+            </text>
+          </g>
+        </svg>
+      </div>
+    );
+  }
+
   const depthValue = id === 'canvas-lite' ? '0.50"' : id === 'thin-gallery' ? '0.75"' : id === 'thick-gallery' ? '1.50"' : info?.inches ? `${info.inches.toFixed(2)}"` : 'Custom';
   const sideWidth = id === 'canvas-lite' ? 12 : id === 'thin-gallery' ? 20 : id === 'thick-gallery' ? 30 : info?.depthPx ? Math.max(8, Math.min(36, info.depthPx)) : 24;
 
@@ -2870,6 +2887,32 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const [liveCanvasStyles, setLiveCanvasStyles] = useState<CanvasProductType[] | null>(null);
   const [liveAcrylicStyles, setLiveAcrylicStyles] = useState<AcrylicProductType[] | null>(null);
 
+  // A catalogue art print's own slug (e.g. "canvas-scenery-landscape-art-s-a-047") can end up
+  // directly in the URL path - a bare/typed link, or an older button - leaving the address bar
+  // implying this personalized print IS that catalogue design even once the shopper replaces
+  // the artwork entirely. Normalize it to a bare, fully generic /single URL with no trace of
+  // that product at all - this entry has no prefill/source tracking to begin with (the shopper
+  // uploads their own photo from a blank canvas either way), so there's nothing worth keeping
+  // in the query string either. A real admin style/product keeps its own path, since
+  // resolveCurrentProductId needs it to pick the right shape/layout.
+  useEffect(() => {
+    if (!productId || BUILT_IN_STYLE_IDS.has(productId)) return;
+    const liveStyles = routeMaterial === 'acrylic' ? liveAcrylicStyles : liveCanvasStyles;
+    if (liveStyles === null) return; // still loading - decide once we know it isn't a real style
+    if (liveStyles.some((p) => p.id === productId)) return;
+    const matched = (Array.isArray(allProducts) ? allProducts : []).find((p) => p.id === productId || p.slug === productId);
+    if (!matched) return;
+    const isCatalogueDesignCategory = [
+      'devotional-art',
+      'line-art',
+      'motivational-posters',
+      'scenery-landscape-art',
+      'tribal-ethnic-art',
+    ].some((slug) => matched.id.includes(slug) || matched.categorySlug === slug);
+    if (!isCatalogueDesignCategory) return;
+    navigate(`/customize/${routeMaterial}/single`, { replace: true });
+  }, [productId, routeMaterial, liveCanvasStyles, liveAcrylicStyles, allProducts]);
+
   const resolveCurrentProductId = (mat: 'canvas' | 'acrylic', id?: string) => {
     // A style added from the admin has its own slug. Keep it, instead of letting the
     // resolver below fall back to Single Print and drop the style's own shapes and settings.
@@ -3114,7 +3157,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   isWordArtProduct;
 
   // Primary Toolbar items: dynamically filtered by selected product capabilities
-  // EXACT ORDER: 1. PRODUCTS, 2. UPLOAD, 3. SELECT SIZE, 4. LAYOUTS & DESIGNS, 5. WRAP & BORDER, 6. HARDWARE & FINISH, 7. OPTIONS
+  // EXACT ORDER: 1. PRODUCTS, 2. UPLOAD, 3. SELECT SIZE, 4. LAYOUTS & DESIGNS, 5. HARDWARE & FINISH, 6. OPTIONS
   const customizerControls = useCustomizerControls();
 
   // Inch steps offered in the Custom Size boxes, as set in the admin (Customization → Select size).
@@ -3159,7 +3202,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         { id: 'CREATE BUS ROLL', label: 'CREATE BUS ROLL', icon: Type },
         { id: 'BACKGROUND', label: 'BACKGROUND', icon: Palette },
         { id: 'TEMPLATE', label: 'TEMPLATE', icon: LayoutTemplate },
-        { id: 'WRAP & BORDER' as ToolbarTab, label: 'WRAP & BORDER', icon: Crop },
         { id: 'HARDWARE & FINISH', label: 'HARDWARE OPTION & STYLE', icon: SlidersHorizontal },
         { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
       ];
@@ -3170,7 +3212,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         { id: 'POP ART STYLE', label: 'POP ART STYLE', icon: Sparkles },
         { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud },
         { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
-        { id: 'WRAP & BORDER' as ToolbarTab, label: 'WRAP & BORDER', icon: Crop },
         { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
         { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
       ];
@@ -3182,7 +3223,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         { id: 'UPLOAD', label: 'UPLOAD PHOTO', icon: UploadCloud },
         { id: 'LAYOUTS & DESIGNS', label: 'LYRIC STUDIO', icon: Type },
         { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
-        { id: 'WRAP & BORDER' as ToolbarTab, label: 'WRAP & BORDER', icon: Crop },
         { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
         { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
       ];
@@ -3212,7 +3252,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid, enabled: !usesStyleLayouts && (isSingleOrShapedCanvas || isQuotesProduct || isDigitalPaintingProduct || isPopArtProduct || isLyricProduct || isWordArtProduct || isBannerProduct) },
       { id: 'EFFECTS & OPTIONS', label: 'EFFECTS & OPTIONS', icon: Palette, enabled: productCapabilities.effects === true },
       { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers, enabled: (isSinglePrintCanvas || isPopArtProduct || isLyricProduct) && !isQuotesProduct && !isWordArtProduct && !isDigitalPaintingProduct },
-      { id: 'WRAP & BORDER', label: 'WRAP & BORDER', icon: Crop, enabled: productCapabilities.wrap !== false },
       { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal, enabled: productCapabilities.hardware !== false },
       { id: 'OPTIONS', label: 'OPTIONS', icon: Menu, enabled: productCapabilities.options !== false && !isDigitalPaintingProduct }
     ];
@@ -4278,23 +4317,37 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Until the team sets them up, the built-in lists below are used unchanged.
   const CANVAS_THICKNESS_OPTIONS = useMemo(() => {
     if (liveCanvasThickness.length === 0 && !overriddenKeys.has('canvas_thickness')) return BASE_CANVAS_THICKNESS_OPTIONS;
-    return liveCanvasThickness.map((item) => {
-      const extras = item.extras ?? {};
-      const id = (extras.id as string) ?? item.id;
-      const inches = Number(extras.thicknessInches) || 1;
-      return {
-        id,
-        name: ((extras.name as string) || item.label) as string,
-        label: id === 'custom-thickness' ? item.label : `${item.label} (${inches.toFixed(2)}")`,
-        thicknessInches: inches,
-        price: Number(item.flatPrice),
-        depthPx: Number(extras.depthPx) || 18,
-        description: item.description ?? '',
-        badge: ((extras.badge as string) || undefined) as string | undefined,
-        image: item.imageUrl ?? '',
-      };
-    });
-  }, [liveCanvasThickness]);
+    return liveCanvasThickness
+      .filter((item) => {
+        const extras = item.extras ?? {};
+        const id = (extras.id as string) ?? item.id;
+        return id !== 'no-wrap-thickness' && id !== 'no-wrap' && item.label !== 'No Wrap';
+      })
+      .map((item) => {
+        const extras = item.extras ?? {};
+        const id = (extras.id as string) ?? item.id;
+        const inches = Number(extras.thicknessInches) || 1;
+        return {
+          id,
+          name: ((extras.name as string) || item.label) as string,
+          label: id === 'custom-thickness' ? item.label : `${item.label} (${inches.toFixed(2)}")`,
+          thicknessInches: inches,
+          price: Number(item.flatPrice),
+          depthPx: Number(extras.depthPx) || 18,
+          description: item.description ?? '',
+          badge: ((extras.badge as string) || undefined) as string | undefined,
+          // Real product photos for these 4 known ids - always use them even
+          // if the live catalog row has no imageUrl (or a stale one) saved,
+          // same reasoning as the Wrap Size name/price override above.
+          image: item.imageUrl || ({
+            'canvas-lite': '/assets/customizer/canvas/thickness/canvas-lite.png',
+            'thin-gallery': '/assets/customizer/canvas/thickness/thin-gallery-wrap.png',
+            'thick-gallery': '/assets/customizer/canvas/thickness/thick-gallery-wrap.png',
+            'custom-thickness': '/assets/customizer/canvas/thickness/custom-thickness.png',
+          } as Record<string, string>)[id] || '',
+        };
+      });
+  }, [liveCanvasThickness, overriddenKeys]);
   const THICKNESS_OPTIONS = CANVAS_THICKNESS_OPTIONS;
   const ACRYLIC_THICKNESS_OPTIONS = useMemo(() => {
     if (liveAcrylicThickness.length === 0 && !overriddenKeys.has('acrylic_thickness')) return BASE_ACRYLIC_THICKNESS_OPTIONS;
@@ -4491,7 +4544,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     return list.filter((s) => s.category.toUpperCase() === shapeFilterCategory);
   }, [shapeFilterCategory, selectedProductType, customShapeOptions]);
 
-  // WRAP & BORDER tab
+  // Edge Wrap / Border / Frames (Hardware & Finish tab)
   const [selectedWrapId, setSelectedWrapId] = useState<string>('full-bleed');
   const [mirrorImage, setMirrorImage] = useState<boolean>(false);
   const [selectedBorderWidthId, setSelectedBorderWidthId] = useState<string>('none');
@@ -4532,13 +4585,37 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       setSelectedThicknessId(preferred.id);
     }
   }, [activeMaterial, ACRYLIC_THICKNESS_OPTIONS, CANVAS_THICKNESS_OPTIONS, selectedThicknessId]);
+
   const [customThicknessInches, setCustomThicknessInches] = useState<number>(1.0);
   const [customThicknessMm, setCustomThicknessMm] = useState<number>(25);
-  const [customThicknessInput, setCustomThicknessInput] = useState<string>('25');
-  const [customThicknessError, setCustomThicknessError] = useState<string>('');
   const [customAcrylicThicknessMm, setCustomAcrylicThicknessMm] = useState<number>(6.0);
 
+  // Wrap Size (canvas only) - a separate, independent add-on from Canvas
+  // Thickness above. Each tier is a flat fee capped to a maximum print
+  // width/height; picking a tier too small for the chosen size is blocked.
+  const WRAP_SIZE_OPTIONS = [
+    { id: 'wrap-small', name: 'Small Size', label: 'Small Size (upto 20"x20")', price: 99, maxDimensionInches: 20, thicknessInches: 0.5, depthPx: 12 },
+    { id: 'wrap-medium', name: 'Medium Size', label: 'Medium Size (upto 30"x30")', price: 149, maxDimensionInches: 30, thicknessInches: 0.75, depthPx: 18, badge: 'Recommended' },
+    { id: 'wrap-large', name: 'Large Size', label: 'Large Size (upto 44"x44")', price: 249, maxDimensionInches: 44, thicknessInches: 1.5, depthPx: 30, badge: 'Museum Quality' },
+  ];
+  const [selectedWrapSizeId, setSelectedWrapSizeId] = useState<string>('');
+  // Not touched by default - stays unselected/unpriced until the shopper
+  // actually picks a tier, same reasoning as thicknessTouched above.
+  const [wrapSizeTouched, setWrapSizeTouched] = useState(false);
+
+  // Effective print dimensions right now, used to check whether the selected
+  // Wrap Size tier (Small/Medium/Large) is actually rated for a canvas this
+  // big - each tier has a maximum width/height.
+  const effectivePrintWidthInches = isCustomSize && canUseCustomSize ? customWidth : (currentSizeOption.widthInches ?? 0);
+  const effectivePrintHeightInches = isCustomSize && canUseCustomSize ? customHeight : (currentSizeOption.heightInches ?? 0);
+  const isWrapSizeAllowedForSize = (wrapSizeId: string) => {
+    const opt = WRAP_SIZE_OPTIONS.find((t) => t.id === wrapSizeId);
+    if (!opt?.maxDimensionInches) return true;
+    return effectivePrintWidthInches <= opt.maxDimensionInches && effectivePrintHeightInches <= opt.maxDimensionInches;
+  };
+
   const effectiveThicknessInches = useMemo(() => {
+    if (selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap') return 0;
     if (selectedThicknessId === 'canvas-lite') return 0.5;
     if (selectedThicknessId === 'thin-gallery') return 0.75;
     if (selectedThicknessId === 'thick-gallery') return 1.5;
@@ -5548,8 +5625,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       '';
     if (!activeImg) {
       setActiveTab('UPLOAD');
-    } else if (toolbarItems.some((t) => t.id === 'WRAP & BORDER')) {
-      setActiveTab('WRAP & BORDER');
+    } else if (toolbarItems.some((t) => t.id === 'HARDWARE & FINISH')) {
+      setActiveTab('HARDWARE & FINISH');
     } else {
       setActiveTab('SELECT SIZE');
     }
@@ -5671,8 +5748,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       if (uploadedPhotos.length === 0) {
         setUploadedPhotos([activeImg]);
       }
-      if (toolbarItems.some((t) => t.id === 'WRAP & BORDER')) {
-        setActiveTab('WRAP & BORDER');
+      if (toolbarItems.some((t) => t.id === 'HARDWARE & FINISH')) {
+        setActiveTab('HARDWARE & FINISH');
       } else if (toolbarItems.some((t) => t.id === 'SELECT SIZE')) {
         setActiveTab('SELECT SIZE');
       }
@@ -6020,6 +6097,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       price += getCanvasThicknessPrice(selectedThicknessId, customThicknessMm);
     }
 
+    if (activeMaterial === 'canvas' && wrapSizeTouched) {
+      price += WRAP_SIZE_OPTIONS.find((w) => w.id === selectedWrapSizeId)?.price || 0;
+    }
+
     if (shapeApplies) {
       price += liveBorderWidthPrices[selectedBorderWidthId] || 0;
       const frame = liveOrFallbackFrames.find((f) => f.id === selectedFrameId);
@@ -6071,6 +6152,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
 
     return price;
   }, [
+    wrapSizeTouched,
+    selectedWrapSizeId,
     sizePrice,
     acrylicSizeRate,
     shapeApplies,
@@ -6309,14 +6392,20 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // Files go to the frame that asked for them; extra files fill the following frames, the rest just join the uploads tray.
   const handleFilesUpload = (files: FileList | File[] | null, explicitPanelIdx: number = uploadTargetRef.current) => {
     if (!files || files.length === 0) return;
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/bmp'];
+    // iPhones save photos as HEIC/HEIF by default, so an iOS camera-roll pick
+    // can hand over a file with that type (or no recognizable type at all, if
+    // the browser doesn't know the MIME string) instead of auto-converting to
+    // JPEG first. Accept it here too - Safari/WebKit can decode HEIC natively
+    // via <img>/canvas, so rejecting it before ever trying was the actual bug,
+    // not a real lack of browser support.
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/bmp', 'image/heic', 'image/heif'];
     const validFiles = Array.from(files).filter((file) => {
       if (file.size > 40 * 1024 * 1024) {
         alert(`File ${file.name} exceeds the 40MB limit.`);
         return false;
       }
-      if (!validTypes.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png|webp|bmp)$/i)) {
-        alert(`File ${file.name} is not a supported format (JPG, PNG, WEBP, BMP).`);
+      if (!validTypes.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png|webp|bmp|heic|heif)$/i)) {
+        alert(`File ${file.name} is not a supported format (JPG, PNG, WEBP, BMP, HEIC).`);
         return false;
       }
       return true;
@@ -6329,7 +6418,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       .map((_, idx) => idx)
       .filter((idx) => !panelImages[idx]?.imageUrl);
 
-    validFiles.forEach((file, i) => {
+    validFiles.forEach((originalFile, i) => {
       let target: number;
       if (isContinuous) {
         target = 0;
@@ -6341,69 +6430,83 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         target = (activePanelIndex + i) % panels.length;
       }
 
-      const reader = new FileReader();
-      // Preloader stays visible for exactly as long as this real read takes
+      // Preloader stays visible for exactly as long as this real read (plus
+      // any HEIC conversion) takes
       beginPreloader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        if (result) {
-          const img = new Image();
-          img.onload = () => {
-            const width = img.naturalWidth || img.width || 1200;
-            const height = img.naturalHeight || img.height || 1200;
-            const meta = {
-              originalSrc: result,
-              width,
-              height,
-              aspectRatio: width / height,
-              name: file.name
-            };
+      (async () => {
+        // iPhone Camera Roll photos are usually HEIC - no browser, including
+        // Safari itself, reliably decodes that through <img>/<canvas> the way
+        // the customizer needs to, so convert to JPEG first. Any other type
+        // (or a failed conversion) passes through untouched.
+        const file = await convertHeicFileIfNeeded(originalFile);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          if (result) {
+            const img = new Image();
+            img.onload = () => {
+              const width = img.naturalWidth || img.width || 1200;
+              const height = img.naturalHeight || img.height || 1200;
+              const meta = {
+                originalSrc: result,
+                width,
+                height,
+                aspectRatio: width / height,
+                name: file.name
+              };
 
-            setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
-            setPanelImages((prev) => ({
-              ...prev,
-              [target]: {
-                ...createDefaultPanel(),
-                imageUrl: result,
-                uploadedImage: meta,
-                scale: 1,
-                rotation: 0,
-                panX: 0,
-                panY: 0,
-                fitMode: 'cover'
+              setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
+              setPanelImages((prev) => ({
+                ...prev,
+                [target]: {
+                  ...createDefaultPanel(),
+                  imageUrl: result,
+                  uploadedImage: meta,
+                  scale: 1,
+                  rotation: 0,
+                  panX: 0,
+                  panY: 0,
+                  fitMode: 'cover'
+                }
+              }));
+              if (isQuotesProduct && quotesPreference === 'create-own') {
+                setQuoteBgImage(result);
               }
-            }));
-            if (isQuotesProduct && quotesPreference === 'create-own') {
-              setQuoteBgImage(result);
-            }
-            setActivePanelIndex(target);
-            setValidationWarning(null);
-            endPreloader(PRELOADER_MIN_MS);
-          };
-          img.onerror = () => {
-            setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
-            setPanelImages((prev) => ({
-              ...prev,
-              [target]: {
-                ...createDefaultPanel(),
-                imageUrl: result,
-                fitMode: 'cover'
+              setActivePanelIndex(target);
+              setValidationWarning(null);
+              // A real uploaded photo is unambiguous customizing - the shopper
+              // shouldn't have to also tap an already-selected size/option
+              // card just to make the price (still showing ₹0 otherwise)
+              // appear now that there's an actual photo ready to print.
+              setHasCustomized(true);
+              endPreloader(PRELOADER_MIN_MS);
+            };
+            img.onerror = () => {
+              setUploadedPhotos((prev) => (prev.includes(result) ? prev : [result, ...prev]));
+              setPanelImages((prev) => ({
+                ...prev,
+                [target]: {
+                  ...createDefaultPanel(),
+                  imageUrl: result,
+                  fitMode: 'cover'
+                }
+              }));
+              if (isQuotesProduct && quotesPreference === 'create-own') {
+                setQuoteBgImage(result);
               }
-            }));
-            if (isQuotesProduct && quotesPreference === 'create-own') {
-              setQuoteBgImage(result);
-            }
-            setActivePanelIndex(target);
-            setValidationWarning(null);
-            endPreloader(PRELOADER_MIN_MS);
-          };
-          img.src = result;
-        } else {
-          endPreloader();
-        }
-      };
-      reader.onerror = () => endPreloader();
-      reader.readAsDataURL(file);
+              setActivePanelIndex(target);
+              setValidationWarning(null);
+              setHasCustomized(true);
+              endPreloader(PRELOADER_MIN_MS);
+            };
+            img.src = result;
+          } else {
+            endPreloader();
+          }
+        };
+        reader.onerror = () => endPreloader();
+        reader.readAsDataURL(file);
+      })();
     });
   };
 
@@ -6430,12 +6533,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           fitMode: 'cover'
         }
       }));
+      setHasCustomized(true);
     };
     img.onerror = () => {
       setPanelImages((prev) => ({
         ...prev,
         [panelIdx]: { ...createDefaultPanel(), imageUrl: photoUrl }
       }));
+      setHasCustomized(true);
     };
     img.src = photoUrl;
     setUploadedPhotos((prev) => (prev.includes(photoUrl) ? prev : [photoUrl, ...prev]));
@@ -7351,13 +7456,24 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     }
 
     // selectedThicknessId always holds a real id (see its useState above),
-    // but a product that shows the Wrap & Border thickness picker must have
-    // one actually picked, not just some other option touched, before it
-    // can be priced.
-    if (!thicknessTouched && !isBannerProduct) {
-      setValidationWarning('Please select a thickness in Wrap & Border before adding this to your cart.');
+    // but a product that shows the thickness picker must have one actually
+    // picked, not just some other option touched, before it can be priced.
+    if (!thicknessTouched && !isBannerProduct && selectedThicknessId !== 'no-wrap-thickness' && selectedThicknessId !== 'no-wrap') {
+      setValidationWarning('Please select a thickness in Hardware & Finish before adding this to your cart.');
       setTimeout(() => setValidationWarning(null), 4000);
-      setActiveTab('WRAP & BORDER');
+      setActiveTab('HARDWARE & FINISH');
+      return;
+    }
+
+    // Small/Medium/Large Wrap Size tiers are each only rated up to a maximum
+    // width/height - a canvas bigger than that on either side needs the
+    // next tier up, so block checkout rather than silently shipping a wrap
+    // size that doesn't fit this print.
+    if (activeMaterial === 'canvas' && wrapSizeTouched && !isWrapSizeAllowedForSize(selectedWrapSizeId)) {
+      const opt = WRAP_SIZE_OPTIONS.find((t) => t.id === selectedWrapSizeId);
+      setValidationWarning(`${opt?.name || 'This'} wrap is not allowed for sizes more than ${opt?.maxDimensionInches}x${opt?.maxDimensionInches}.`);
+      setTimeout(() => setValidationWarning(null), 4000);
+      setActiveTab('HARDWARE & FINISH');
       return;
     }
 
@@ -7372,10 +7488,14 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       : undefined;
     const isReadyMadeCatalogue = isPrefillMode || Boolean(sourceProduct && !isGenericCustomStyleId(sourceProduct.id) && !isGenericCustomStyleId(sourceProduct.slug));
     // A catalogue design opened for customizing stays "ready-made" only while its own artwork is the only photo
-    // and no text was added; the customer's own photo or text makes it a personalized print.
-    const catalogueArt = searchParams.get('prefillImage');
+    // and no text was added; the customer's own photo or text makes it a personalized print. The reference
+    // artwork to compare against is whichever one this design was actually opened with - the ?prefillImage=
+    // link's photo, or (when entering straight at /customize/canvas/<catalogue-slug> with no prefill at all,
+    // e.g. a bare "Customize" link) the catalogue product's own listing image - never just "some id happened
+    // to be in the URL", or every photo the shopper uploads here would wrongly keep that product's name.
+    const catalogueArt = searchParams.get('prefillImage') || (isReadyMadeCatalogue ? sourceProduct?.image : undefined);
     const photosInDesign = [...uploadedPhotos, ...Object.values(panelImages).map((panel) => panel?.imageUrl)].filter(Boolean) as string[];
-    const catalogueArtReplaced = Boolean(catalogueArt) && (photosInDesign.some((url) => url !== catalogueArt) || Boolean(customText));
+    const catalogueArtReplaced = Boolean(customText) || (catalogueArt ? photosInDesign.some((url) => url !== catalogueArt) : photosInDesign.length > 0);
     const hasUserUploadedPhoto = !isReadyMadeCatalogue || catalogueArtReplaced;
     const prefillTitle = searchParams.get('prefillName');
 
@@ -7398,9 +7518,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
           ? `${selectedProductType.name} (${(POP_ART_STYLES.find((style) => style.id === popArtConfig.selectedStyleId) ?? getPopArtStyle(popArtConfig.selectedStyleId)).name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
           : isLyricProduct
           ? `${selectedProductType.name} (${selectedLyricTemplate.name}) - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
-          : isPrefillMode && prefillTitle
+          : isPrefillMode && prefillTitle && !catalogueArtReplaced
           ? prefillTitle
-          : (sourceProduct && !isGenericCustomStyleId(sourceProduct.id) && !isGenericCustomStyleId(sourceProduct.slug))
+          : (sourceProduct && !isGenericCustomStyleId(sourceProduct.id) && !isGenericCustomStyleId(sourceProduct.slug) && !catalogueArtReplaced)
           ? sourceProduct.name
           : `${selectedProductType.name} - ${isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.label}`
       },
@@ -7413,11 +7533,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         : isCustomSize && canUseCustomSize ? `${customWidth}" × ${customHeight}"` : currentSizeOption.dimensionsSummary,
       finish: activeMaterial === 'acrylic'
         ? (ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || `${selectedThicknessId.toUpperCase()} Optical Acrylic`)
+        : (selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap')
+        ? 'No Wrap (0.00")'
         : !thicknessTouched
         ? undefined
         : selectedThicknessId === 'custom-thickness'
         ? `Custom Thickness (${customThicknessMm}mm)`
-        : (CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Thin Gallery Wrap (0.75")'),
+        : (CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Medium Size (upto 30"x30")'),
       quantity,
       customText: customText || undefined,
       photoUrl: (isPopArtProduct && popArtConfig.processedImageUrl)
@@ -7462,13 +7584,16 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         shape: shapeApplies ? currentShape.name : undefined,
         thickness: activeMaterial === 'acrylic'
           ? (ACRYLIC_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || `${selectedThicknessId.toUpperCase()} Optical Acrylic`)
+          : (selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap')
+          ? 'No Wrap (0.00")'
           : !thicknessTouched
           ? undefined
           : selectedThicknessId === 'custom-thickness'
           ? `Custom Thickness (${customThicknessMm}mm)`
-          : (CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Thin Gallery Wrap (0.75")'),
+          : (CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Medium Size (upto 30"x30")'),
         customThicknessMm: activeMaterial === 'canvas' && thicknessTouched && selectedThicknessId === 'custom-thickness' ? customThicknessMm : undefined,
         customThicknessInches: activeMaterial === 'canvas' && thicknessTouched && selectedThicknessId === 'custom-thickness' ? customThicknessInches : undefined,
+        wrapSize: activeMaterial === 'canvas' && wrapSizeTouched ? WRAP_SIZE_OPTIONS.find((w) => w.id === selectedWrapSizeId)?.label : undefined,
         wrap: activeMaterial === 'canvas' ? liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.label : undefined,
         borderWidth: shapeApplies ? liveOrFallbackBorderWidths.find((b) => b.id === selectedBorderWidthId)?.label : undefined,
         borderColor: shapeApplies && selectedBorderWidthId !== 'none' ? selectedBorderColor : undefined,
@@ -9874,7 +9999,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/png, image/jpeg, image/jpg, image/webp, image/bmp"
+        accept="image/png, image/jpeg, image/jpg, image/webp, image/bmp, image/heic, image/heif"
         multiple
         className="hidden"
         onChange={(e) => {
@@ -9908,7 +10033,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
         />
 
         {pricePopoverOpen && (
-          <div className="absolute right-36 top-full mt-2 w-64 bg-white text-stone-900 rounded-xl shadow-xl border border-stone-200 p-4 text-xs z-50 animate-in fade-in zoom-in-95">
+          <div className="absolute right-2 sm:right-36 top-full mt-2 w-64 max-w-[calc(100vw-1rem)] bg-white text-stone-900 rounded-xl shadow-xl border border-stone-200 p-4 text-xs z-50 animate-in fade-in zoom-in-95">
             <div className="font-extrabold pb-2 border-b border-stone-100 flex justify-between text-stone-900">
               <span>Price Breakdown</span>
               <button onClick={() => setPricePopoverOpen(false)} className="text-stone-400 hover:text-stone-700 cursor-pointer">
@@ -9933,6 +10058,12 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 <div className="flex justify-between">
                   <span>Thickness ({CANVAS_THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.name ?? 'Frame depth'}):</span>
                   <span className="font-bold text-stone-900">+₹{(() => { const p = getCanvasThicknessPrice(selectedThicknessId, customThicknessMm); return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(2); })()}</span>
+                </div>
+              )}
+              {activeMaterial === 'canvas' && wrapSizeTouched && (
+                <div className="flex justify-between">
+                  <span>Wrap Size ({WRAP_SIZE_OPTIONS.find((w) => w.id === selectedWrapSizeId)?.name ?? ''}):</span>
+                  <span className="font-bold text-stone-900">+₹{(() => { const p = WRAP_SIZE_OPTIONS.find((w) => w.id === selectedWrapSizeId)?.price || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
                 </div>
               )}
               {shapeApplies && !NON_RECTANGULAR_SHAPE_TYPES.has(currentShape.shapeType) && currentShape.priceAddon > 0 && (
@@ -10065,8 +10196,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 : layoutSubTab === 'LAYOUTS'
                 ? `${filteredLayoutPresets.length} Layouts`
                 : `${DESIGN_TEMPLATE_CATEGORIES.length} Categories`
-              : activeTab === 'WRAP & BORDER'
-              ? `${liveOrFallbackWrapStyles.length} Options`
               : activeTab === 'HARDWARE & FINISH' && isBannerProduct
               ? `${CANVAS_BANNER_HARDWARE_OPTIONS.length} Options`
               : activeTab === 'HARDWARE & FINISH'
@@ -10086,7 +10215,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             onClick: () => handleStepNav(nextTab.id)
           }}
           previewAction={
-            (activeTab === 'SELECT SIZE' || activeTab === 'LAYOUTS & DESIGNS' || activeTab === 'WRAP & BORDER' || activeTab === 'HARDWARE & FINISH')
+            (activeTab === 'SELECT SIZE' || activeTab === 'LAYOUTS & DESIGNS' || activeTab === 'HARDWARE & FINISH')
               ? { label: 'View Preview', onClick: () => setIsPanelHiddenMobile(true) }
               : undefined
           }
@@ -11421,416 +11550,66 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                       </div>
                     );
                   })()}
+
+                  {/* Optional Color Finishing - moved here from Hardware & Finish */}
+                  <div className="space-y-2.5 pt-3 border-t border-stone-200">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">Optional Color Finishing</label>
+                      <span className="text-[10px] font-bold text-stone-400">Free</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2.5">
+                      {COLOR_FINISH_OPTIONS.map((cf) => {
+                        const activePanelFilter = panelImages[activePanelIndex]?.filter || 'original';
+                        const isSelected = activePanelFilter === cf.id;
+                        const previewImage = panelImages[activePanelIndex]?.imageUrl || panelImages[0]?.imageUrl || uploadedPhotos[0];
+                        return (
+                          <CustomizerOptionCard
+                            key={cf.id}
+                            selected={isSelected}
+                            onClick={() => handleApplyFilter(cf.id)}
+                            title={cf.label}
+                            previewHeightClass="h-20 p-0"
+                            preview={
+                              previewImage ? (
+                                <img src={previewImage} alt={cf.label} style={{ filter: getFilterCss(cf.id) }} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-stone-300">
+                                  <ImageIcon className="w-5 h-5" />
+                                </div>
+                              )
+                            }
+                          />
+                        );
+                      })}
+                    </div>
+                    <div className="text-[11px] text-stone-400">Applies to the active photo panel.</div>
+                  </div>
+
+                  {/* Digital Proof Request (Email option) - moved here from Options, right after Color Finishing */}
+                  <div className="space-y-2 pt-3 border-t border-stone-200">
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">Digital Proof Request</label>
+                    <label className="flex items-start gap-2.5 p-3 rounded-xl border border-stone-200 bg-stone-50 text-xs text-stone-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={proofRequested}
+                        onChange={(e) => setProofRequested(e.target.checked)}
+                        className="accent-[#0E4A93] w-4 h-4 mt-0.5 shrink-0"
+                      />
+                      <span>
+                        Email with link to the design proof will be sent within 24 hours and has to be approved online. Approve your
+                        proof promptly to avoid production and shipping delays.
+                      </span>
+                    </label>
+                    <p className="text-[11px] text-stone-400">
+                      <strong>Note:</strong> All prints manufactured by Canvas India are handmade and might have a ± 1 inch variation
+                      from the size ordered.
+                    </p>
+                  </div>
                 </>
               </div>
             )
           )}
 
-          {/* --------------------------- WRAP & BORDER --------------------------- */}
-          {activeTab === 'WRAP & BORDER' && (
-            <div className="p-3 sm:p-4 space-y-4">
-              {/* ==================== 1. WRAP SECTION (Matching Screenshot 1) ==================== */}
-              {selectedProductTypeId !== 'canvas-banner' && (
-                <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
-                  {/* Dark Section Header Bar */}
-                  <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider">
-                      {activeMaterial === 'acrylic' ? 'Thickness' : 'Wrap'}
-                    </span>
-                    <span className="text-[11px] font-semibold text-stone-200">
-                      {activeMaterial === 'acrylic' ? `${ACRYLIC_THICKNESS_OPTIONS.length} options` : `${CANVAS_THICKNESS_OPTIONS.filter((t) => t.id !== 'custom-thickness' && t.id !== 'hanging-canvas').length} options`}
-                    </span>
-                  </div>
-
-                  <div className="p-3 space-y-3">
-                    {/* Thickness Options Grid */}
-                    <div className={`grid gap-2 ${activeMaterial === 'acrylic' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
-                      {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : CANVAS_THICKNESS_OPTIONS.filter((t) => t.id !== 'custom-thickness' && t.id !== 'hanging-canvas')).map((th: any) => {
-                        // Don't show a card as "selected" until the shopper has actually
-                        // clicked one - selectedThicknessId silently holds the cheapest
-                        // option by default so pricing/preview math never breaks, but
-                        // that default must stay invisible in the UI until touched.
-                        const isSelected = thicknessTouched && selectedThicknessId === th.id;
-                        const displayTitle = th.name || th.label.split('(')[0].trim();
-                        const displaySub = th.thicknessInches ? `(${th.thicknessInches.toFixed(2)}")` : th.thicknessMm ? `(${th.thicknessMm}mm)` : '';
-                        return (
-                          <CustomizerOptionCard
-                            key={th.id}
-                            selected={isSelected}
-                            onClick={() => { setSelectedThicknessId(th.id); setThicknessTouched(true); }}
-                            badge={th.badge}
-                            title={displayTitle}
-                            subtitle={displaySub}
-                            priceText={th.price === 0 ? 'Included' : `+₹${th.price.toFixed(2)}`}
-                            previewHeightClass="h-16 p-1"
-                            preview={th.image ? <img src={th.image} alt={th.name || th.label} className="mx-auto h-full max-h-14 w-auto object-contain" /> : renderWrapPreview(th.id, { inches: th.thicknessInches, depthPx: th.depthPx })}
-                          />
-                        );
-                      })}
-                    </div>
-
-                    {/* Custom Thickness Toggle & Input */}
-                    {activeMaterial === 'canvas' && (
-                      <div className="pt-2 border-t border-stone-100">
-                        <button
-                          type="button"
-                          onClick={() => { setSelectedThicknessId(selectedThicknessId === 'custom-thickness' ? 'thin-gallery' : 'custom-thickness'); setThicknessTouched(true); }}
-                          className={`w-full py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-between border transition-all ${
-                            selectedThicknessId === 'custom-thickness'
-                              ? 'border-[#0E4A93] bg-blue-50/50 text-[#0E4A93]'
-                              : 'border-stone-200 hover:border-stone-300 text-stone-700 bg-stone-50/60'
-                          }`}
-                        >
-                          <span>Custom Thickness</span>
-                          <span className="text-[11px] font-semibold text-stone-500">
-                            {selectedThicknessId === 'custom-thickness' ? `${customThicknessMm}mm (≈ ${(customThicknessMm / 25.4).toFixed(2)}″)` : 'Specify custom'}
-                          </span>
-                        </button>
-
-                        {selectedThicknessId === 'custom-thickness' && (
-                          <div className="mt-2.5 p-3 bg-blue-50/40 rounded-xl border border-blue-200 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-stone-800">Specify Custom Depth (mm):</span>
-                              <div className="flex items-center gap-1.5 bg-white px-2 py-0.5 rounded-md border border-stone-300">
-                                <input
-                                  type="number"
-                                  min={15}
-                                  max={100}
-                                  step={1}
-                                  value={customThicknessInput}
-                                  onChange={(e) => {
-                                    const raw = e.target.value;
-                                    setCustomThicknessInput(raw);
-                                    const val = parseFloat(raw);
-                                    if (isNaN(val) || val <= 0) {
-                                      setCustomThicknessError('Please enter a valid positive number');
-                                    } else if (val < 15 || val > 100) {
-                                      setCustomThicknessError('Thickness must be between 15 mm and 100 mm');
-                                      const clamped = Math.max(15, Math.min(100, Math.round(val)));
-                                      setCustomThicknessMm(clamped);
-                                      setCustomThicknessInches(Number((clamped / 25.4).toFixed(2)));
-                                    } else {
-                                      setCustomThicknessError('');
-                                      const rounded = Math.round(val);
-                                      setCustomThicknessMm(rounded);
-                                      setCustomThicknessInches(Number((rounded / 25.4).toFixed(2)));
-                                    }
-                                  }}
-                                  className="w-14 text-right font-bold text-xs text-[#0E4A93] outline-hidden"
-                                />
-                                <span className="text-[11px] font-bold text-stone-500">mm</span>
-                              </div>
-                            </div>
-                            {customThicknessError && (
-                              <p className="text-[10px] text-rose-600 font-semibold">{customThicknessError}</p>
-                            )}
-                            <div className="flex items-center justify-between text-[11px] text-stone-500">
-                              <span>Converted depth:</span>
-                              <span className="font-bold text-[#0E4A93]">{(customThicknessMm / 25.4).toFixed(2)} inches</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* ==================== 2. BORDER SECTION (Matching Screenshot 1 & 3) ==================== */}
-              <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
-                {/* Dark Section Header Bar */}
-                <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider">Border</span>
-                  <span className="text-[11px] font-semibold text-stone-200">
-                    {selectedBorderWidthId === 'none' ? 'No Border' : 'Border Active'}
-                  </span>
-                </div>
-
-                <div className="p-3 space-y-3">
-                  {/* Top Feature Cards: Mirror Image & Border Color */}
-                  <div className="grid grid-cols-2 gap-2">
-                    {/* Mirror Image */}
-                    <CustomizerOptionCard
-                      selected={mirrorImage}
-                      onClick={() => setMirrorImage(!mirrorImage)}
-                      title="Mirror Image"
-                      subtitle="Folded Edge"
-                      priceText="Free"
-                      previewHeightClass="h-14 p-1.5"
-                      preview={
-                        <div className="w-10 h-10 rounded border border-stone-300 mx-auto overflow-hidden bg-stone-100 flex items-center justify-center">
-                          <FlipHorizontal2 className="w-5 h-5 text-[#0E4A93]" />
-                        </div>
-                      }
-                    />
-
-                    {/* Border Color */}
-                    <CustomizerOptionCard
-                      selected={selectedBorderWidthId !== 'none'}
-                      onClick={() => {
-                        if (selectedBorderWidthId === 'none') {
-                          setSelectedBorderWidthId('thin');
-                        } else {
-                          setSelectedBorderWidthId('none');
-                        }
-                      }}
-                      title="Border Color"
-                      subtitle={selectedBorderWidthId !== 'none' ? 'Active' : 'Click to Enable'}
-                      priceText="Free"
-                      previewHeightClass="h-14 p-1.5"
-                      preview={
-                        <div
-                          className="w-10 h-10 rounded mx-auto p-1 shadow-2xs transition-colors flex items-center justify-center"
-                          style={{ backgroundColor: selectedBorderWidthId !== 'none' ? selectedBorderColor : '#E2E8F0' }}
-                        >
-                          <div className="w-7 h-7 rounded-xs bg-white shadow-xs flex items-center justify-center">
-                            <Palette className="w-3.5 h-3.5 text-[#0E4A93]" />
-                          </div>
-                        </div>
-                      }
-                    />
-                  </div>
-
-                  {/* Border Width Selection (admin-managed via border_width) */}
-                  <div className="grid grid-cols-2 gap-2">
-                    {liveOrFallbackBorderWidths.map((bw) => {
-                      const price = liveBorderWidthPrices[bw.id] || 0;
-                      return (
-                        <CustomizerOptionCard
-                          key={bw.id}
-                          selected={selectedBorderWidthId === bw.id}
-                          onClick={() => setSelectedBorderWidthId(bw.id)}
-                          title={bw.label}
-                          priceText={price === 0 ? 'Free' : `+₹${price}`}
-                          previewHeightClass="h-12 p-1"
-                          preview={
-                            bw.id === 'none' ? (
-                              <div className="w-8 h-8 rounded border border-dashed border-stone-300 mx-auto bg-stone-50 flex items-center justify-center">
-                                <div className="w-6 h-6 rounded-2xs bg-stone-200" />
-                              </div>
-                            ) : (
-                              <div
-                                className="w-8 h-8 rounded mx-auto shadow-2xs"
-                                style={{ backgroundColor: selectedBorderColor, padding: Math.max(1, Math.min(4, bw.widthPx / 3)) }}
-                              >
-                                <div className="w-full h-full rounded-2xs bg-stone-200" />
-                              </div>
-                            )
-                          }
-                        />
-                      );
-                    })}
-                  </div>
-
-                  {/* Flexible Custom Color Selection: Native Picker + Hex + Swatches */}
-                  {selectedBorderWidthId !== 'none' && (
-                    <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 space-y-2.5">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <span className="text-xs font-bold text-stone-800">Border Color:</span>
-                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                          {/* Live Color Swatch */}
-                          <div
-                            className="w-6 h-6 rounded-md border border-stone-300 shadow-2xs transition-colors"
-                            style={{ backgroundColor: selectedBorderColor }}
-                            title={`Selected color: ${selectedBorderColor}`}
-                          />
-                          {/* Hex Input */}
-                          <div className="flex items-center bg-white px-2 py-0.5 rounded-md border border-stone-300 shadow-2xs text-xs font-mono font-bold text-stone-800">
-                            <span className="text-stone-400 mr-0.5">#</span>
-                            <input
-                              type="text"
-                              maxLength={6}
-                              value={borderHexInput.replace('#', '')}
-                              onChange={(e) => {
-                                const raw = e.target.value.replace(/[^0-9A-Fa-f]/g, '').slice(0, 6);
-                                setBorderHexInput('#' + raw);
-                                if (raw.length === 3 || raw.length === 6) {
-                                  setSelectedBorderColor('#' + raw);
-                                }
-                              }}
-                              placeholder="FFFFFF"
-                              className="w-16 uppercase outline-hidden font-bold"
-                            />
-                          </div>
-                          {/* Native Picker */}
-                          <label className="cursor-pointer px-2 py-1 rounded-md bg-white border border-stone-300 hover:border-stone-400 text-[#0E4A93] flex items-center gap-1 text-[11px] font-bold shadow-2xs">
-                            <Pipette className="w-3.5 h-3.5" />
-                            <span>Picker</span>
-                            <input
-                              type="color"
-                              value={selectedBorderColor.startsWith('#') && selectedBorderColor.length === 7 ? selectedBorderColor : '#FFFFFF'}
-                              onChange={(e) => {
-                                const col = e.target.value.toUpperCase();
-                                setSelectedBorderColor(col);
-                                setBorderHexInput(col);
-                              }}
-                              className="sr-only"
-                            />
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Quick Preset Swatches Palette (admin-managed via border_color) */}
-                      <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                        {liveOrFallbackBorderColors.map((c) => (
-                          <button
-                            key={c.hex}
-                            type="button"
-                            onClick={() => {
-                              setSelectedBorderColor(c.hex);
-                              setBorderHexInput(c.hex);
-                            }}
-                            title={c.name}
-                            style={{ backgroundColor: c.hex }}
-                            className={`w-6 h-6 rounded-full border transition-all cursor-pointer ${
-                              selectedBorderColor.toUpperCase() === c.hex.toUpperCase()
-                                ? 'ring-2 ring-[#0E4A93] ring-offset-1 scale-110 shadow-xs'
-                                : 'border-stone-300 hover:scale-105'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* ==================== EDGE WRAP (admin-managed via wrap_style, canvas only) ==================== */}
-              {activeMaterial === 'canvas' && selectedProductTypeId !== 'canvas-banner' && (
-                <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
-                  <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider">Edge Wrap</span>
-                    <span className="text-[11px] font-semibold text-stone-200">{liveOrFallbackWrapStyles.length} options</span>
-                  </div>
-                  <div className="p-3">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {liveOrFallbackWrapStyles.map((w) => (
-                        <CustomizerOptionCard
-                          key={w.id}
-                          selected={selectedWrapId === w.id}
-                          onClick={() => {
-                            setSelectedWrapId(w.id);
-                            // Keep the Border section's own color swatch in
-                            // sync with Black/White Border Wrap, but only when
-                            // a border is already active - otherwise this would
-                            // visually turn a border on the user never chose.
-                            if (selectedBorderWidthId !== 'none') {
-                              if (w.id === 'black-border') {
-                                setSelectedBorderColor('#000000');
-                              } else if (w.id === 'white-border') {
-                                setSelectedBorderColor('#FFFFFF');
-                              }
-                            }
-                          }}
-                          title={w.name}
-                          priceText={w.price === 0 ? 'Included' : `+₹${w.price}`}
-                          previewHeightClass="h-16 p-1.5"
-                          preview={
-                            <div className="w-12 h-12 mx-auto relative flex items-center justify-center">
-                              <div className="w-10 h-10 rounded border border-stone-300 relative overflow-hidden bg-stone-100 flex items-center justify-center">
-                                {w.id === 'full-bleed' && (
-                                  <div className="w-full h-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500" />
-                                )}
-                                {w.id === 'clear-edge' && (
-                                  <div className="w-full h-full p-1 bg-stone-200">
-                                    <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 rounded-xs border border-dashed border-white" />
-                                  </div>
-                                )}
-                                {w.id === 'white-border' && (
-                                  <div className="w-full h-full p-1.5 bg-white border border-stone-300">
-                                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
-                                  </div>
-                                )}
-                                {w.id === 'black-border' && (
-                                  <div className="w-full h-full p-1.5 bg-[#0F172A]">
-                                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
-                                  </div>
-                                )}
-                                {w.id === 'no-wrap' && (
-                                  <div className="w-full h-full p-1 bg-stone-300">
-                                    <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xs" />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          }
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ==================== 3. FRAMES SECTION (Matching Screenshot 3) ==================== */}
-              {!isMultiFrameProduct && (
-                <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
-                  {/* Dark Section Header Bar */}
-                  <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider">Frames</span>
-                    <span className="text-[11px] font-semibold text-stone-200">
-                      {liveOrFallbackFrames.find((f) => f.id === selectedFrameId)?.name || 'No Frame'}
-                    </span>
-                  </div>
-
-                  <div className="divide-y divide-stone-100">
-                    {/* Frame groups: Standard / Premium / Floating plus any group added in the admin */}
-                    {frameGroups.map((group) => {
-                      const groupFrames = liveOrFallbackFrames.filter((ff) => ff.id !== 'no-frame' && ff.group === group.key);
-                      if (groupFrames.length === 0 && !group.builtIn) return null;
-                      const isOpen = expandedFrameCategory === group.key;
-                      return (
-                        <div key={group.key}>
-                          <button
-                            type="button"
-                            onClick={() => setExpandedFrameCategory(isOpen ? 'floating' : group.key)}
-                            className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
-                          >
-                            <span>{group.label}</span>
-                            {isOpen ? <ChevronDown className="w-4 h-4 text-stone-500" /> : <ChevronRight className="w-4 h-4 text-stone-400" />}
-                          </button>
-                          {isOpen && groupFrames.length === 0 && (
-                            <div className="p-3 bg-stone-50/50 text-xs text-stone-500 italic">{group.note}</div>
-                          )}
-                          {isOpen && groupFrames.length > 0 && (
-                            <div className="p-3 space-y-2.5">
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                {groupFrames.map((ff) => {
-                                  const isSelected = selectedFrameId === ff.id;
-                                  return (
-                                    <CustomizerOptionCard
-                                      key={ff.id}
-                                      selected={isSelected}
-                                      onClick={() => setSelectedFrameId(isSelected ? 'no-frame' : ff.id)}
-                                      title={ff.name}
-                                      priceText={ff.price === 0 ? 'Free' : `₹${ff.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                                      previewHeightClass="h-16 p-1.5"
-                                      preview={ff.image && ff.id.length > 20 ? <img src={ff.image} alt={ff.name} className="mx-auto h-full max-h-14 w-auto object-contain" /> : renderFloatingFrameThumbnail(ff.id)}
-                                    />
-                                  );
-                                })}
-                              </div>
-
-                              {selectedFrameId !== 'no-frame' && (
-                                <div className="flex justify-end pt-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => setSelectedFrameId('no-frame')}
-                                    className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
-                                  >
-                                    Remove Frame (Frameless)
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
           {/* -------------------------- HARDWARE & FINISH ------------------------- */}
           {activeTab === 'HARDWARE & FINISH' && (
             <div className="p-4 space-y-5">
@@ -11841,10 +11620,10 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                     <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">
                       {activeMaterial === 'acrylic' ? '1. Acrylic Thickness' : '1. Canvas Stretcher Thickness'}
                     </label>
-                    <span className="text-[11px] font-bold text-[#0E4A93]">{(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS).length} options</span>
+                    <span className="text-[11px] font-bold text-[#0E4A93]">{(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS.filter((t) => t.id !== 'no-wrap-thickness' && t.id !== 'no-wrap')).length} options</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS).map((th: any) => {
+                    {(activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS.filter((t) => t.id !== 'no-wrap-thickness' && t.id !== 'no-wrap')).map((th: any) => {
                       // Same as the other thickness grid - stay unchecked until actually clicked.
                       const isSelected = thicknessTouched && selectedThicknessId === th.id;
                       const cardTitle = activeMaterial === 'canvas' && th.id === 'custom-thickness' && selectedThicknessId === 'custom-thickness'
@@ -11857,7 +11636,15 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                         <CustomizerOptionCard
                           key={th.id}
                           selected={isSelected}
-                          onClick={() => { setSelectedThicknessId(th.id); setThicknessTouched(true); }}
+                          onClick={() => {
+                            if (thicknessTouched && selectedThicknessId === th.id) {
+                              setSelectedThicknessId('no-wrap-thickness');
+                              setThicknessTouched(false);
+                            } else {
+                              setSelectedThicknessId(th.id);
+                              setThicknessTouched(true);
+                            }
+                          }}
                           badge={th.badge}
                           title={cardTitle}
                           priceText={cardPrice}
@@ -11885,23 +11672,13 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                               min={15}
                               max={100}
                               step={1}
-                              value={customThicknessInput}
+                              value={customThicknessMm}
                               onChange={(e) => {
-                                const raw = e.target.value;
-                                setCustomThicknessInput(raw);
-                                const val = parseFloat(raw);
-                                if (isNaN(val) || val <= 0) {
-                                  setCustomThicknessError('Please enter a valid positive number');
-                                } else if (val < 15 || val > 100) {
-                                  setCustomThicknessError('Thickness must be between 15 mm and 100 mm');
+                                const val = parseFloat(e.target.value);
+                                if (!isNaN(val)) {
                                   const clamped = Math.max(15, Math.min(100, Math.round(val)));
                                   setCustomThicknessMm(clamped);
                                   setCustomThicknessInches(Number((clamped / 25.4).toFixed(2)));
-                                } else {
-                                  setCustomThicknessError('');
-                                  const rounded = Math.round(val);
-                                  setCustomThicknessMm(rounded);
-                                  setCustomThicknessInches(Number((rounded / 25.4).toFixed(2)));
                                 }
                               }}
                               placeholder="25"
@@ -11913,12 +11690,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                           </div>
                         </div>
                       </div>
-                      {customThicknessError && (
-                        <div className="text-[11px] font-bold text-rose-600 flex items-center gap-1">
-                          <span>•</span>
-                          <span>{customThicknessError}</span>
-                        </div>
-                      )}
                       <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-blue-100">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 mr-1">Quick Presets:</span>
                         {[
@@ -11933,9 +11704,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             type="button"
                             onClick={() => {
                               setCustomThicknessMm(p.mm);
-                              setCustomThicknessInput(String(p.mm));
                               setCustomThicknessInches(Number((p.mm / 25.4).toFixed(2)));
-                              setCustomThicknessError('');
                             }}
                             className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
                               customThicknessMm === p.mm
@@ -12206,10 +11975,242 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 )}
               </div>
 
+              {/* Border - moved here, right after Hardware Option & Style */}
+              <div className="pt-3 border-t border-stone-200">
+                <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
+                  {/* Dark Section Header Bar */}
+                  <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider">{activeMaterial === 'acrylic' ? '4. Border' : '3. Border'}</span>
+                    <span className="text-[11px] font-semibold text-stone-200">
+                      {selectedBorderWidthId === 'none' ? 'No Border' : 'Border Active'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 space-y-3">
+                    {/* Top Feature Cards: Mirror Image & Border Color */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* Mirror Image */}
+                      <CustomizerOptionCard
+                        selected={mirrorImage}
+                        onClick={() => setMirrorImage(!mirrorImage)}
+                        title="Mirror Image"
+                        subtitle="Folded Edge"
+                        priceText="Free"
+                        previewHeightClass="h-14 p-1.5"
+                        preview={
+                          <div className="w-10 h-10 rounded border border-stone-300 mx-auto overflow-hidden bg-stone-100 flex items-center justify-center">
+                            <FlipHorizontal2 className="w-5 h-5 text-[#0E4A93]" />
+                          </div>
+                        }
+                      />
+
+                      {/* Border Color */}
+                      <CustomizerOptionCard
+                        selected={selectedBorderWidthId !== 'none'}
+                        onClick={() => {
+                          if (selectedBorderWidthId === 'none') {
+                            setSelectedBorderWidthId('thin');
+                          } else {
+                            setSelectedBorderWidthId('none');
+                          }
+                        }}
+                        title="Border Color"
+                        subtitle={selectedBorderWidthId !== 'none' ? 'Active' : 'Click to Enable'}
+                        priceText="Free"
+                        previewHeightClass="h-14 p-1.5"
+                        preview={
+                          <div
+                            className="w-10 h-10 rounded mx-auto p-1 shadow-2xs transition-colors flex items-center justify-center"
+                            style={{ backgroundColor: selectedBorderWidthId !== 'none' ? selectedBorderColor : '#E2E8F0' }}
+                          >
+                            <div className="w-7 h-7 rounded-xs bg-white shadow-xs flex items-center justify-center">
+                              <Palette className="w-3.5 h-3.5 text-[#0E4A93]" />
+                            </div>
+                          </div>
+                        }
+                      />
+                    </div>
+
+                    {/* Border Width Selection (admin-managed via border_width) */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {liveOrFallbackBorderWidths.map((bw) => {
+                        const price = liveBorderWidthPrices[bw.id] || 0;
+                        return (
+                          <CustomizerOptionCard
+                            key={bw.id}
+                            selected={selectedBorderWidthId === bw.id}
+                            onClick={() => setSelectedBorderWidthId(bw.id)}
+                            title={bw.label}
+                            priceText={price === 0 ? 'Free' : `+₹${price}`}
+                            previewHeightClass="h-12 p-1"
+                            preview={
+                              bw.id === 'none' ? (
+                                <div className="w-8 h-8 rounded border border-dashed border-stone-300 mx-auto bg-stone-50 flex items-center justify-center">
+                                  <div className="w-6 h-6 rounded-2xs bg-stone-200" />
+                                </div>
+                              ) : (
+                                <div
+                                  className="w-8 h-8 rounded mx-auto shadow-2xs"
+                                  style={{ backgroundColor: selectedBorderColor, padding: Math.max(1, Math.min(4, bw.widthPx / 3)) }}
+                                >
+                                  <div className="w-full h-full rounded-2xs bg-stone-200" />
+                                </div>
+                              )
+                            }
+                          />
+                        );
+                      })}
+                    </div>
+
+                    {/* Flexible Custom Color Selection: Native Picker + Hex + Swatches */}
+                    {selectedBorderWidthId !== 'none' && (
+                      <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 space-y-2.5">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <span className="text-xs font-bold text-stone-800">Border Color:</span>
+                          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            {/* Live Color Swatch */}
+                            <div
+                              className="w-6 h-6 rounded-md border border-stone-300 shadow-2xs transition-colors"
+                              style={{ backgroundColor: selectedBorderColor }}
+                              title={`Selected color: ${selectedBorderColor}`}
+                            />
+                            {/* Hex Input */}
+                            <div className="flex items-center bg-white px-2 py-0.5 rounded-md border border-stone-300 shadow-2xs text-xs font-mono font-bold text-stone-800">
+                              <span className="text-stone-400 mr-0.5">#</span>
+                              <input
+                                type="text"
+                                maxLength={6}
+                                value={borderHexInput.replace('#', '')}
+                                onChange={(e) => {
+                                  const raw = e.target.value.replace(/[^0-9A-Fa-f]/g, '').slice(0, 6);
+                                  setBorderHexInput('#' + raw);
+                                  if (raw.length === 3 || raw.length === 6) {
+                                    setSelectedBorderColor('#' + raw);
+                                  }
+                                }}
+                                placeholder="FFFFFF"
+                                className="w-16 uppercase outline-hidden font-bold"
+                              />
+                            </div>
+                            {/* Native Picker */}
+                            <label className="cursor-pointer px-2 py-1 rounded-md bg-white border border-stone-300 hover:border-stone-400 text-[#0E4A93] flex items-center gap-1 text-[11px] font-bold shadow-2xs">
+                              <Pipette className="w-3.5 h-3.5" />
+                              <span>Picker</span>
+                              <input
+                                type="color"
+                                value={selectedBorderColor.startsWith('#') && selectedBorderColor.length === 7 ? selectedBorderColor : '#FFFFFF'}
+                                onChange={(e) => {
+                                  const col = e.target.value.toUpperCase();
+                                  setSelectedBorderColor(col);
+                                  setBorderHexInput(col);
+                                }}
+                                className="sr-only"
+                              />
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Quick Preset Swatches Palette (admin-managed via border_color) */}
+                        <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                          {liveOrFallbackBorderColors.map((c) => (
+                            <button
+                              key={c.hex}
+                              type="button"
+                              onClick={() => {
+                                setSelectedBorderColor(c.hex);
+                                setBorderHexInput(c.hex);
+                              }}
+                              title={c.name}
+                              style={{ backgroundColor: c.hex }}
+                              className={`w-6 h-6 rounded-full border transition-all cursor-pointer ${
+                                selectedBorderColor.toUpperCase() === c.hex.toUpperCase()
+                                  ? 'ring-2 ring-[#0E4A93] ring-offset-1 scale-110 shadow-xs'
+                                  : 'border-stone-300 hover:scale-105'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Frames - moved here, right after Border */}
+              {!isMultiFrameProduct && (
+                <div className="pt-3 border-t border-stone-200">
+                  <div className="rounded-xl border border-stone-200 overflow-hidden shadow-2xs bg-white">
+                    {/* Dark Section Header Bar */}
+                    <div className="bg-[#4a4a4a] text-white px-3.5 py-2 flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider">{activeMaterial === 'acrylic' ? '5. Frames' : '4. Frames'}</span>
+                      <span className="text-[11px] font-semibold text-stone-200">
+                        {liveOrFallbackFrames.find((f) => f.id === selectedFrameId)?.name || 'No Frame'}
+                      </span>
+                    </div>
+
+                    <div className="divide-y divide-stone-100">
+                      {/* Frame groups: Standard / Premium / Floating plus any group added in the admin */}
+                      {frameGroups.map((group) => {
+                        const groupFrames = liveOrFallbackFrames.filter((ff) => ff.id !== 'no-frame' && ff.group === group.key);
+                        if (groupFrames.length === 0 && !group.builtIn) return null;
+                        const isOpen = expandedFrameCategory === group.key;
+                        return (
+                          <div key={group.key}>
+                            <button
+                              type="button"
+                              onClick={() => setExpandedFrameCategory(isOpen ? 'floating' : group.key)}
+                              className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
+                            >
+                              <span>{group.label}</span>
+                              {isOpen ? <ChevronDown className="w-4 h-4 text-stone-500" /> : <ChevronRight className="w-4 h-4 text-stone-400" />}
+                            </button>
+                            {isOpen && groupFrames.length === 0 && (
+                              <div className="p-3 bg-stone-50/50 text-xs text-stone-500 italic">{group.note}</div>
+                            )}
+                            {isOpen && groupFrames.length > 0 && (
+                              <div className="p-3 space-y-2.5">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                  {groupFrames.map((ff) => {
+                                    const isSelected = selectedFrameId === ff.id;
+                                    return (
+                                      <CustomizerOptionCard
+                                        key={ff.id}
+                                        selected={isSelected}
+                                        onClick={() => setSelectedFrameId(isSelected ? 'no-frame' : ff.id)}
+                                        title={ff.name}
+                                        priceText={ff.price === 0 ? 'Free' : `₹${ff.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                        previewHeightClass="h-16 p-1.5"
+                                        preview={ff.image && ff.id.length > 20 ? <img src={ff.image} alt={ff.name} className="mx-auto h-full max-h-14 w-auto object-contain" /> : renderFloatingFrameThumbnail(ff.id)}
+                                      />
+                                    );
+                                  })}
+                                </div>
+
+                                {selectedFrameId !== 'no-frame' && (
+                                  <div className="flex justify-end pt-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedFrameId('no-frame')}
+                                      className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                                    >
+                                      Remove Frame (Frameless)
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* 3. Display Option (Canvas only; Excludes Acrylic & Canvas Banner) */}
               {selectedProductTypeId !== 'canvas-banner' && activeMaterial === 'canvas' && (
                 <div className="space-y-2.5 pt-3 border-t border-stone-200">
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">3. Back Display Option</label>
+                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">5. Back Display Option</label>
                   <div className="space-y-2">
                     {liveOrFallbackDisplayOptions.map((opt) => {
                       const isSelected = selectedDisplayOptionId === opt.id;
@@ -12241,39 +12242,110 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 </div>
               )}
 
-              {/* 4. Optional Color Finishing */}
-              <div className="space-y-2.5 pt-3 border-t border-stone-200">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">4. Optional Color Finishing</label>
-                  <span className="text-[10px] font-bold text-stone-400">Free</span>
+              {/* Wrap Size (canvas only) - a separate add-on from Canvas Thickness above, moved here below Back Display Option */}
+              {activeMaterial === 'canvas' && selectedProductTypeId !== 'canvas-banner' && (
+                <div className="space-y-2.5 pt-3 border-t border-stone-200">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">6. Wrap Size</label>
+                    <span className="text-[11px] font-bold text-[#0E4A93]">{WRAP_SIZE_OPTIONS.length} options</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {WRAP_SIZE_OPTIONS.map((th) => {
+                      const isSelected = wrapSizeTouched && selectedWrapSizeId === th.id;
+                      return (
+                        <CustomizerOptionCard
+                          key={th.id}
+                          selected={isSelected}
+                          onClick={() => {
+                            if (!isWrapSizeAllowedForSize(th.id)) {
+                              setValidationWarning(`${th.name} wrap is not allowed for sizes more than ${th.maxDimensionInches}x${th.maxDimensionInches}.`);
+                              setTimeout(() => setValidationWarning(null), 4000);
+                              return;
+                            }
+                            if (wrapSizeTouched && selectedWrapSizeId === th.id) {
+                              setSelectedWrapSizeId('');
+                              setWrapSizeTouched(false);
+                            } else {
+                              setSelectedWrapSizeId(th.id);
+                              setWrapSizeTouched(true);
+                            }
+                          }}
+                          badge={th.badge}
+                          title={th.label}
+                          priceText={`+₹${th.price}`}
+                          previewHeightClass="h-16 p-1.5"
+                          preview={renderWrapPreview(th.id, { inches: th.thicknessInches, depthPx: th.depthPx })}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  {COLOR_FINISH_OPTIONS.map((cf) => {
-                    const activePanelFilter = panelImages[activePanelIndex]?.filter || 'original';
-                    const isSelected = activePanelFilter === cf.id;
-                    const previewImage = panelImages[activePanelIndex]?.imageUrl || panelImages[0]?.imageUrl || uploadedPhotos[0];
-                    return (
+              )}
+
+              {/* Edge Wrap (admin-managed via wrap_style, canvas only) - moved here, below Back Display Option */}
+              {activeMaterial === 'canvas' && selectedProductTypeId !== 'canvas-banner' && (
+                <div className="space-y-2.5 pt-3 border-t border-stone-200">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800">7. Edge Wrap</label>
+                    <span className="text-[11px] font-bold text-[#0E4A93]">{liveOrFallbackWrapStyles.length} options</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {liveOrFallbackWrapStyles.map((w) => (
                       <CustomizerOptionCard
-                        key={cf.id}
-                        selected={isSelected}
-                        onClick={() => handleApplyFilter(cf.id)}
-                        title={cf.label}
-                        previewHeightClass="h-20 p-0"
+                        key={w.id}
+                        selected={selectedWrapId === w.id}
+                        onClick={() => {
+                          setSelectedWrapId(w.id);
+                          // Keep the Border section's own color swatch in
+                          // sync with Black/White Border Wrap, but only when
+                          // a border is already active - otherwise this would
+                          // visually turn a border on the user never chose.
+                          if (selectedBorderWidthId !== 'none') {
+                            if (w.id === 'black-border') {
+                              setSelectedBorderColor('#000000');
+                            } else if (w.id === 'white-border') {
+                              setSelectedBorderColor('#FFFFFF');
+                            }
+                          }
+                        }}
+                        title={w.name}
+                        priceText={w.price === 0 ? 'Included' : `+₹${w.price}`}
+                        previewHeightClass="h-16 p-1.5"
                         preview={
-                          previewImage ? (
-                            <img src={previewImage} alt={cf.label} style={{ filter: getFilterCss(cf.id) }} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-stone-300">
-                              <ImageIcon className="w-5 h-5" />
+                          <div className="w-12 h-12 mx-auto relative flex items-center justify-center">
+                            <div className="w-10 h-10 rounded border border-stone-300 relative overflow-hidden bg-stone-100 flex items-center justify-center">
+                              {w.id === 'full-bleed' && (
+                                <div className="w-full h-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500" />
+                              )}
+                              {w.id === 'clear-edge' && (
+                                <div className="w-full h-full p-1 bg-stone-200">
+                                  <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 rounded-xs border border-dashed border-white" />
+                                </div>
+                              )}
+                              {w.id === 'white-border' && (
+                                <div className="w-full h-full p-1.5 bg-white border border-stone-300">
+                                  <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
+                                </div>
+                              )}
+                              {w.id === 'black-border' && (
+                                <div className="w-full h-full p-1.5 bg-[#0F172A]">
+                                  <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 rounded-xs" />
+                                </div>
+                              )}
+                              {w.id === 'no-wrap' && (
+                                <div className="w-full h-full p-1 bg-stone-300">
+                                  <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xs" />
+                                </div>
+                              )}
                             </div>
-                          )
+                          </div>
                         }
                       />
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-                <div className="text-[11px] text-stone-400">Applies to the active photo panel.</div>
-              </div>
+              )}
+
             </div>
           )}
 
@@ -12340,30 +12412,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 />
               </div>
 
-              {/* 4. Proof Request */}
+              {/* 4. Order Quantity */}
               <div className="space-y-2 pt-3 border-t border-stone-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">4. Digital Proof Request</label>
-                <label className="flex items-start gap-2.5 p-3 rounded-xl border border-stone-200 bg-stone-50 text-xs text-stone-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={proofRequested}
-                    onChange={(e) => setProofRequested(e.target.checked)}
-                    className="accent-[#0E4A93] w-4 h-4 mt-0.5 shrink-0"
-                  />
-                  <span>
-                    Email with link to the design proof will be sent within 24 hours and has to be approved online. Approve your
-                    proof promptly to avoid production and shipping delays.
-                  </span>
-                </label>
-                <p className="text-[11px] text-stone-400">
-                  <strong>Note:</strong> All prints manufactured by Canvas India are handmade and might have a ± 1 inch variation
-                  from the size ordered.
-                </p>
-              </div>
-
-              {/* 5. Order Quantity */}
-              <div className="space-y-2 pt-3 border-t border-stone-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">5. Order Quantity</label>
+                <label className="text-xs font-extrabold uppercase tracking-wider text-stone-800 block">4. Order Quantity</label>
                 <div className="flex items-center justify-between bg-stone-50 p-3 rounded-xl border border-stone-200">
                   <div className="inline-flex items-center border border-stone-300 rounded-xl bg-white shadow-xs">
                     <button
@@ -12627,8 +12678,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
             reselectAction={
               activeTab === 'LAYOUTS & DESIGNS'
                 ? { label: 'Select Layouts & Design', onClick: () => handleSelectTab('LAYOUTS & DESIGNS') }
-                : activeTab === 'WRAP & BORDER'
-                ? { label: 'Select Another Wrap or Border', onClick: () => handleSelectTab('WRAP & BORDER') }
                 : activeTab === 'HARDWARE & FINISH'
                 ? { label: 'Select Another Hardware or Finish', onClick: () => handleSelectTab('HARDWARE & FINISH') }
                 : toolbarItems.some((t) => t.id === 'SELECT SIZE')
@@ -12704,7 +12753,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                               Thickness: <strong className="text-stone-900">
                                 {selectedThicknessId === 'custom-thickness'
                                   ? `Custom (${customThicknessMm}mm / ${(customThicknessMm / 25.4).toFixed(2)}")`
-                                  : (THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Thin Gallery Wrap (0.75")')}
+                                  : (THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId)?.label || 'Medium Size (upto 30"x30")')}
                               </strong>
                             </span>
                           </>
@@ -12747,30 +12796,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
               </div>
             }
           >
-            {/* Until the shopper has picked a real size (or any other priced
-                option), the preview shows a blank placeholder instead of
-                artwork sized to a default canvas nobody chose - the
-                underlying size/thickness/etc. state stays technically
-                "selected" so none of this page's width/height math breaks,
-                but nothing about what's shown implies a real choice was
-                made. Covers the whole stage; disappears the instant
-                hasCustomized flips true. */}
-            {!hasCustomized && (
-              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-stone-50/95 backdrop-blur-sm text-center px-6">
-                <Grid className="w-10 h-10 text-stone-300" />
-                <div>
-                  <p className="text-sm font-bold text-stone-700">Pick a size to start your design</p>
-                  <p className="text-xs text-stone-500 mt-1">Your preview and price will appear here once you choose a size.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('SELECT SIZE')}
-                  className="px-4 py-2 bg-[#0E4A93] hover:bg-[#09356A] text-white text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
-                >
-                  Select Size
-                </button>
-              </div>
-            )}
             {/* Stage: everything the customer designs on (frames + movable text/clipart) */}
             <div ref={stageRef} className="relative w-full flex flex-col items-center" onPointerDown={() => setSelectedElement(null)}>
               {/* WALL DISPLAY (Physical Multi-Panel Gallery Wall Layout) */}
@@ -12816,7 +12841,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 const thicknessOption = THICKNESS_OPTIONS.find((t) => t.id === selectedThicknessId) || THICKNESS_OPTIONS[1];
                 const wrapDepthPx = (thicknessOption as any)?.depthPx || 26;
                 const visibleDepthPx =
-                  selectedThicknessId === 'canvas-lite'
+                  selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap'
+                    ? 0
+                    : selectedThicknessId === 'canvas-lite'
                     ? 10
                     : selectedThicknessId === 'thin-gallery'
                     ? 18
@@ -12921,7 +12948,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                             // (round/triangle/heart/oval) they drew a square
                             // frame around the shaped print instead of
                             // following its outline. Rectangular shapes only.
-                            const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges) && !hasFraming &&
+                            const showPhysicalEdges = Boolean(productCapabilities.showPhysicalEdges) && !hasFraming && visibleDepthPx > 0 &&
                               ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
                           const isWhiteEdge = selectedWrapId === 'white-border';
                           const isImageWrapped = (selectedWrapId === 'full-bleed' || selectedWrapId === 'clear-edge') && panelImages[0]?.fitMode === 'cover';
@@ -15224,7 +15251,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   ['shape-square', 'shape-rectangle', 'shape-landscape', 'shape-portrait'].includes(currentShape.id);
                 const thicknessOption = (activeMaterial === 'acrylic' ? ACRYLIC_THICKNESS_OPTIONS : THICKNESS_OPTIONS).find((t: any) => t.id === selectedThicknessId) || THICKNESS_OPTIONS[0];
                 const baseDepthPx = showPhysicalEdges
-                  ? (selectedThicknessId === 'canvas-lite' ? 14 : selectedThicknessId === 'thin-gallery' ? 20 : selectedThicknessId === 'thick-gallery' ? 34 : selectedThicknessId === 'custom-thickness' ? Math.round((effectiveThicknessInches * 20) / 0.75) : ((thicknessOption as any)?.depthPx || 20))
+                  ? (selectedThicknessId === 'no-wrap-thickness' || selectedThicknessId === 'no-wrap' ? 4 : selectedThicknessId === 'canvas-lite' ? 14 : selectedThicknessId === 'thin-gallery' ? 20 : selectedThicknessId === 'thick-gallery' ? 34 : selectedThicknessId === 'custom-thickness' ? Math.round((effectiveThicknessInches * 20) / 0.75) : ((thicknessOption as any)?.depthPx || 20))
                   : 0;
                 const depthPx = showPhysicalEdges ? (hasOuterFrame ? Math.max(baseDepthPx, 34) : baseDepthPx) : 0;
 

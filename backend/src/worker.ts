@@ -683,6 +683,21 @@ export default {
           },
           include: { items: { where: { isActive: true }, orderBy: { sortOrder: 'asc' } } },
         });
+        if (baseKey === 'canvas_thickness') {
+          for (const cat of categories) {
+            const toDelete = cat.items.filter((it: any) => it.extras?.id === 'no-wrap-thickness' || it.label === 'No Wrap');
+            cat.items = cat.items.filter((it: any) => it.extras?.id !== 'no-wrap-thickness' && it.label !== 'No Wrap');
+            if (toDelete.length > 0) {
+              try {
+                await prisma.optionCategoryItem.deleteMany({
+                  where: { id: { in: toDelete.map((i: any) => i.id) } },
+                });
+              } catch {
+                // Ignore DB delete error
+              }
+            }
+          }
+        }
         return jsonResponse(categories, 200, request);
       }
       if (pathname === '/api/v1/admin/option-categories' || pathname.startsWith('/api/v1/admin/option-categories/')) {
