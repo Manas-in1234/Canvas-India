@@ -1184,8 +1184,22 @@ export const ProductDetailPage: React.FC = () => {
     );
   }
 
+  // Catalogue art prints (Devotional Art, Line Art, Scenery/Landscape, Motivational
+  // Posters, Tribal/Ethnic Art) always use the same simple page as their Canvas
+  // sibling, regardless of material - these are fixed pre-designed artwork with no
+  // real acrylic-specific layout (thickness grid, room-view mockup, promotional
+  // sections) to show, so the dedicated Acrylic page's extra template would only
+  // make the same design look inconsistent between its Canvas and Acrylic listings.
+  const isCatalogueDesignProduct = [
+    'devotional-art',
+    'line-art',
+    'motivational-posters',
+    'scenery-landscape-art',
+    'tribal-ethnic-art'
+  ].some((slug) => product.categorySlug === slug || product.id.includes(slug));
+
   // Dedicated Acrylic Product Detail Page with Reference 1 layout & customizer drawer
-  if (product.categorySlug === 'acrylic') {
+  if (product.categorySlug === 'acrylic' && !isCatalogueDesignProduct) {
     return <AcrylicProductDetailPage key={product.id} product={product} />;
   }
 
