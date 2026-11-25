@@ -10071,7 +10071,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                 <span>Base ({selectedProductTypeId === 'canvas-banner' ? `${formatDimension(bannerConfig.widthInches, bannerConfig.unit)} × ${formatDimension(bannerConfig.heightInches, bannerConfig.unit)}` : isCustomSize && canUseCustomSize ? `${customWidth}"×${customHeight}"` : currentSizeOption.dimensionsSummary}):</span>
                 <span className="font-bold text-stone-900">₹{(quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(sizePrice, quantity) : sizePrice).toFixed(0)}</span>
               </div>
-              {selectedWrapId !== 'canvas-lite' && selectedProductTypeId !== 'canvas-banner' && (
+              {selectedProductTypeId !== 'canvas-banner' && (liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.price || 0) > 0 && (
                 <div className="flex justify-between">
                   <span>Wrap:</span>
                   <span className="font-bold text-stone-900">+₹{(() => { const p = liveOrFallbackWrapStyles.find((w) => w.id === selectedWrapId)?.price || 0; return (quantity >= MIN_BULK_QTY ? bulkUnitPriceFor(p, quantity) : p).toFixed(0); })()}</span>
