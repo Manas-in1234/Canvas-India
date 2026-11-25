@@ -8,14 +8,13 @@ import { SizesPanel } from '@/components/customization/sizes-panel';
 import { OptionsPanel } from '@/components/customization/options-panel';
 
 type Material = 'CANVAS' | 'ACRYLIC';
-type Tab = 'styles' | 'sizes' | 'layouts' | 'wrap' | 'hardware' | 'options';
+type Tab = 'styles' | 'sizes' | 'layouts' | 'hardware' | 'options';
 
 const TABS: { key: Tab; label: string; hint: string; permission: string; blocks?: string[] }[] = [
   { key: 'styles', label: 'Products', hint: 'The style cards a customer picks first: name, price, cover image and the shapes each style offers, including shape detection.', permission: 'option_catalog.view' },
   { key: 'sizes', label: 'Select size', hint: 'Every size and its price, plus the inch limits for custom sizes.', permission: 'size_presets.view', blocks: ['SELECT SIZE'] },
-  { key: 'layouts', label: 'Layouts & designs', hint: 'Design templates grouped by day or occasion.', permission: 'option_catalog.view', blocks: ['LAYOUTS & DESIGNS'] },
-  { key: 'wrap', label: 'Wrap & border', hint: 'Thickness, edge wrap, borders and frames.', permission: 'option_catalog.view', blocks: ['WRAP & BORDER'] },
-  { key: 'hardware', label: 'Hardware & finish', hint: 'Thickness, backing, hardware, back display and color finishing.', permission: 'option_catalog.view', blocks: ['HARDWARE & FINISH'] },
+  { key: 'layouts', label: 'Layouts & designs', hint: 'Design templates grouped by day or occasion, color finishing and the digital proof option.', permission: 'option_catalog.view', blocks: ['LAYOUTS & DESIGNS'] },
+  { key: 'hardware', label: 'Hardware & finish', hint: 'Thickness, backing, hardware, border, frames, back display, wrap size and edge wrap.', permission: 'option_catalog.view', blocks: ['HARDWARE & FINISH'] },
   { key: 'options', label: 'Options', hint: 'Lamination, photo retouching, material variants and special products.', permission: 'option_catalog.view', blocks: ['OPTIONS', 'SELECT CANVAS MATERIAL VARIANT', 'SPECIALTY PRODUCTS'] },
 ];
 
@@ -25,7 +24,9 @@ function CustomizationInner() {
   const { hasPermission } = usePermission();
   const [material, setMaterialState] = useState<Material>(params.get('material') === 'ACRYLIC' ? 'ACRYLIC' : 'CANVAS');
   const allowed = TABS.filter((t) => hasPermission(t.permission));
-  const wanted = params.get('tab');
+  // The old Wrap & border tab was folded into Hardware & finish.
+  const wantedRaw = params.get('tab');
+  const wanted = wantedRaw === 'wrap' ? 'hardware' : wantedRaw;
   const [tab, setTabState] = useState<Tab>(
     allowed.find((t) => t.key === wanted)?.key ?? allowed[0]?.key ?? 'styles',
   );

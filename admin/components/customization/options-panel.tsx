@@ -158,41 +158,25 @@ const TABS: TabBlock[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    tab: 'WRAP & BORDER',
-    note: 'Canvas only: this tab never shows for acrylic products.',
-    sections: [
+      { heading: 'Optional Color Finishing', entries: [{ kind: 'category', baseKey: 'color_finishing' }] },
       {
-        heading: 'Wrap',
-        scope: 'Canvas',
+        heading: 'Digital Proof Request',
         entries: [
           {
-            kind: 'category',
-            baseKey: 'canvas_thickness',
-            title: 'Canvas thickness cards (Canvas Lite, Thin / Thick Gallery Wrap, ...)',
-            seed: CANVAS_THICKNESS_SEED,
+            kind: 'fixed',
+            title: 'Email-approval (digital proof) checkbox',
+            note: 'Shown right after Color Finishing. It is a built-in form field, so there is nothing to edit.',
           },
         ],
       },
-      { heading: 'Edge Wrap', scope: 'Canvas', entries: [{ kind: 'category', baseKey: 'wrap_style' }] },
-      {
-        heading: 'Border',
-        scope: 'Canvas',
-        entries: [
-          { kind: 'category', baseKey: 'border_width', title: 'Border widths' },
-          { kind: 'category', baseKey: 'border_color', title: 'Border Color swatches' },
-        ],
-      },
-      { heading: 'Frames', scope: 'Canvas', entries: [{ kind: 'category', baseKey: 'frame' }] },
     ],
   },
   {
     tab: 'HARDWARE & FINISH',
+    note: 'The Wrap & Border tab no longer exists in the storefront: its thickness, border, frame and edge wrap sections now live here, numbered in the order below.',
     sections: [
       {
-        heading: 'Acrylic Thickness',
+        heading: '1. Acrylic Thickness',
         scope: 'Acrylic',
         entries: [
           {
@@ -210,25 +194,41 @@ const TABS: TabBlock[] = [
         ],
       },
       {
-        heading: 'Canvas Stretcher Thickness',
+        heading: '1. Canvas Thickness',
         scope: 'Canvas',
         entries: [
           {
             kind: 'category',
             baseKey: 'canvas_thickness',
-            title: 'Same list as the Wrap cards (Canvas thickness)',
+            title: 'Canvas thickness cards (Canvas Lite, Thin / Thick Gallery Wrap, Custom Thickness, ...)',
             seed: CANVAS_THICKNESS_SEED,
           },
         ],
       },
-      { heading: 'Backing', scope: 'Acrylic', entries: [{ kind: 'category', baseKey: 'backgrounds' }] },
+      { heading: '2. Backing', scope: 'Acrylic', entries: [{ kind: 'category', baseKey: 'backgrounds' }] },
       { heading: 'Surface Finish', scope: 'Acrylic', entries: [{ kind: 'category', baseKey: 'finish' }] },
-      { heading: 'Hardware Option & Style', entries: [{ kind: 'category', baseKey: 'hardware' }] },
-      { heading: 'Back Display Option', scope: 'Canvas', entries: [{ kind: 'category', baseKey: 'display_option' }] },
+      { heading: 'Hardware Option & Style (2 for canvas, 3 for acrylic)', entries: [{ kind: 'category', baseKey: 'hardware' }] },
       {
-        heading: 'Optional Color Finishing',
-        entries: [{ kind: 'category', baseKey: 'color_finishing' }],
+        heading: 'Border (3 for canvas, 4 for acrylic)',
+        entries: [
+          { kind: 'category', baseKey: 'border_width', title: 'Border widths' },
+          { kind: 'category', baseKey: 'border_color', title: 'Border Color swatches' },
+        ],
       },
+      { heading: 'Frames (4 for canvas, 5 for acrylic)', entries: [{ kind: 'category', baseKey: 'frame' }] },
+      { heading: '5. Back Display Option', scope: 'Canvas', entries: [{ kind: 'category', baseKey: 'display_option' }] },
+      {
+        heading: '6. Wrap Size',
+        scope: 'Canvas',
+        entries: [
+          {
+            kind: 'fixed',
+            title: 'Small / Medium / Large wrap size',
+            note: 'A separate add-on from Canvas Thickness: Small (up to 20"x20") +₹99, Medium (up to 30"x30") +₹149, Large (up to 44"x44") +₹249. The storefront keeps these names, prices and size caps in code, so they cannot be edited here yet.',
+          },
+        ],
+      },
+      { heading: '7. Edge Wrap', scope: 'Canvas', entries: [{ kind: 'category', baseKey: 'wrap_style' }] },
     ],
   },
   {
@@ -238,7 +238,7 @@ const TABS: TabBlock[] = [
       { heading: 'Minor Photo Retouching', entries: [{ kind: 'category', baseKey: 'retouching' }] },
     ],
     footnote:
-      'Major Retouching Notes, Digital Proof Request and Order Quantity are built-in form fields, so there is nothing to edit.',
+      'Major Retouching Notes and Order Quantity are built-in form fields, so there is nothing to edit.',
   },
   {
     tab: 'SELECT CANVAS MATERIAL VARIANT',

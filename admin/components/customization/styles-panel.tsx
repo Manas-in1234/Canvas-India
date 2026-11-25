@@ -51,7 +51,6 @@ const FEATURES: Array<{ key: string; label: string; canvasOnly?: boolean }> = [
   { key: 'upload', label: 'UPLOAD tab' },
   { key: 'sizes', label: 'SELECT SIZE tab' },
   { key: 'layouts', label: 'LAYOUTS & DESIGNS tab' },
-  { key: 'wrap', label: 'WRAP & BORDER tab', canvasOnly: true },
   { key: 'hardware', label: 'HARDWARE & FINISH tab' },
   { key: 'options', label: 'OPTIONS tab' },
   { key: 'roomView', label: 'Room view' },

@@ -68,7 +68,7 @@ export const SECTION_EXTRAS: Record<string, ExtraField[]> = {
   ],
 };
 
-export type CustomizerTab = "LAYOUTS & DESIGNS" | "WRAP & BORDER" | "HARDWARE & FINISH" | "OPTIONS";
+export type CustomizerTab = "LAYOUTS & DESIGNS" | "HARDWARE & FINISH" | "OPTIONS";
 export type Material = "canvas" | "acrylic";
 
 export interface SectionDef {
@@ -82,23 +82,23 @@ export interface SectionDef {
 /** Every list a single product can customize, grouped by the customizer tab the customer sees it in. */
 export const PRODUCT_SECTIONS: SectionDef[] = [
   { baseKey: "design_templates", title: "Design templates", hint: "Ready-made themes such as Birthday or Wedding.", tab: "LAYOUTS & DESIGNS", materials: ["canvas", "acrylic"] },
-  { baseKey: "canvas_thickness", title: "Wrap thickness", hint: "Canvas Lite, Thin and Thick Gallery Wrap and similar.", tab: "WRAP & BORDER", materials: ["canvas"] },
-  { baseKey: "wrap_style", title: "Edge wrap", hint: "How the picture wraps around the edge.", tab: "WRAP & BORDER", materials: ["canvas"] },
-  { baseKey: "border_width", title: "Border width", hint: "Thin, medium and thick borders.", tab: "WRAP & BORDER", materials: ["canvas"] },
-  { baseKey: "border_color", title: "Border colors", hint: "Color swatches for the border.", tab: "WRAP & BORDER", materials: ["canvas"] },
-  { baseKey: "frame", title: "Frames", hint: "Standard, premium and floating frames.", tab: "WRAP & BORDER", materials: ["canvas"] },
+  { baseKey: "color_finishing", title: "Color finishing", hint: "Original, sepia, grayscale.", tab: "LAYOUTS & DESIGNS", materials: ["canvas", "acrylic"] },
+  { baseKey: "canvas_thickness", title: "Wrap thickness", hint: "Canvas Lite, Thin and Thick Gallery Wrap and similar.", tab: "HARDWARE & FINISH", materials: ["canvas"] },
   { baseKey: "acrylic_thickness", title: "Acrylic thickness", hint: "3, 5, 6, 8 mm and so on.", tab: "HARDWARE & FINISH", materials: ["acrylic"] },
   { baseKey: "backgrounds", title: "Backing", hint: "What sits behind the acrylic.", tab: "HARDWARE & FINISH", materials: ["acrylic"] },
   { baseKey: "finish", title: "Surface finish", hint: "Gloss, matte and similar finishes.", tab: "HARDWARE & FINISH", materials: ["acrylic"] },
   { baseKey: "hardware", title: "Hardware & hanging", hint: "Hooks, hangers, stands and so on.", tab: "HARDWARE & FINISH", materials: ["canvas", "acrylic"] },
+  { baseKey: "border_width", title: "Border width", hint: "Thin, medium and thick borders.", tab: "HARDWARE & FINISH", materials: ["canvas", "acrylic"] },
+  { baseKey: "border_color", title: "Border colors", hint: "Color swatches for the border.", tab: "HARDWARE & FINISH", materials: ["canvas", "acrylic"] },
+  { baseKey: "frame", title: "Frames", hint: "Standard, premium and floating frames.", tab: "HARDWARE & FINISH", materials: ["canvas", "acrylic"] },
   { baseKey: "display_option", title: "Back display", hint: "Open back or dust cover.", tab: "HARDWARE & FINISH", materials: ["canvas"] },
-  { baseKey: "color_finishing", title: "Color finishing", hint: "Original, sepia, grayscale.", tab: "HARDWARE & FINISH", materials: ["canvas", "acrylic"] },
+  { baseKey: "wrap_style", title: "Edge wrap", hint: "How the picture wraps around the edge.", tab: "HARDWARE & FINISH", materials: ["canvas"] },
   { baseKey: "lamination", title: "Lamination", hint: "No, standard or premium lamination.", tab: "OPTIONS", materials: ["canvas", "acrylic"] },
   { baseKey: "retouching", title: "Minor photo retouching", hint: "Red eye, dust removal and similar.", tab: "OPTIONS", materials: ["canvas", "acrylic"] },
   { baseKey: "material_grade", title: "Canvas material variant", hint: "Standard, premium and archival canvas.", tab: "OPTIONS", materials: ["canvas"] },
 ];
 
-export const TAB_ORDER: CustomizerTab[] = ["LAYOUTS & DESIGNS", "WRAP & BORDER", "HARDWARE & FINISH", "OPTIONS"];
+export const TAB_ORDER: CustomizerTab[] = ["LAYOUTS & DESIGNS", "HARDWARE & FINISH", "OPTIONS"];
 
 export function newItemId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -247,9 +247,8 @@ export const NO_ADD_KEYS = new Set(["sidebar_tabs", "toolbar_buttons", "layouts"
 /** The Customization-page tab each list belongs to (used for "Back" links). */
 export function customizationTabFor(baseKey: string): string {
   if (baseKey === "custom_size_steps") return "sizes";
-  if (baseKey === "design_templates" || baseKey === "layouts") return "layouts";
-  if (["canvas_thickness", "wrap_style", "border_width", "border_color", "frame"].includes(baseKey)) return "wrap";
-  if (["acrylic_thickness", "backgrounds", "finish", "hardware", "display_option", "color_finishing"].includes(baseKey)) return "hardware";
+  if (baseKey === "design_templates" || baseKey === "layouts" || baseKey === "color_finishing") return "layouts";
+  if (["canvas_thickness", "wrap_style", "border_width", "border_color", "frame", "acrylic_thickness", "backgrounds", "finish", "hardware", "display_option"].includes(baseKey)) return "hardware";
   if (baseKey === "sidebar_tabs" || baseKey === "toolbar_buttons") return "controls";
   return "options";
 }
