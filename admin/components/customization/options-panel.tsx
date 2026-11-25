@@ -490,7 +490,7 @@ export function OptionsPanel({ material, tabs }: { material: 'CANVAS' | 'ACRYLIC
                 </div>
               )}
               {block.sections.map((section) => (
-                <div key={section.heading} className="space-y-2">
+                <div key={section.heading} id={section.heading === 'Custom size limits' ? 'custom-size-limits' : undefined} className="space-y-2">
                   <h3 className="flex items-center gap-2 text-sm font-semibold">
                     {section.heading}
                     {section.scope && <Badge variant="outline">{section.scope} only</Badge>}

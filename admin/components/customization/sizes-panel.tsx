@@ -8,7 +8,8 @@ import type { SizePresetListItem } from '@/lib/types/size-preset';
 import type { CustomizerProductType } from '@/lib/types/customizer-product-type';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ManagedBoxes } from '@/components/customization/managed-boxes';
+import { usePermission } from '@/lib/auth/use-permission';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const SHAPE_GENERIC_PRODUCT_TYPE_ID = '__shape_generic__';
@@ -34,6 +35,8 @@ function groupByProductType(presets: SizePresetListItem[]) {
 export function SizesPanel({ material }: { material: 'CANVAS' | 'ACRYLIC' }) {
   const router = useRouter();
   const [search, setSearch] = useState('');
+  const { hasPermission } = usePermission();
+  const canManage = hasPermission('option_catalog.manage');
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['size-presets'],
@@ -83,27 +86,35 @@ export function SizesPanel({ material }: { material: 'CANVAS' | 'ACRYLIC' }) {
       ) : filteredEntries.length === 0 ? (
         <p className="text-sm text-muted-foreground">No size presets found.</p>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredEntries.map(([productTypeId, presets]) => (
-            <Card
-              key={productTypeId}
-              className="cursor-pointer hover:bg-muted/50"
-              onClick={() => router.push(`/sizes/placeholder?id=${encodeURIComponent(productTypeId)}`)}
-            >
-              <CardHeader>
-                <CardTitle className="text-base">{labelFor(productTypeId)}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Badge variant="outline">{presets.length} sizes</Badge>
-                {productTypeId === SHAPE_GENERIC_PRODUCT_TYPE_ID && (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Applies across whichever shape is selected — scoped by shape, not by a specific product.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <ManagedBoxes
+          baseKey="size_groups"
+          listName="Select size groups"
+          canManage={canManage}
+          boxes={[
+            ...filteredEntries.map(([productTypeId, presets]) => ({
+              id: productTypeId,
+              label: labelFor(productTypeId),
+              onOpen: () => router.push(`/sizes/placeholder?id=${encodeURIComponent(productTypeId)}`),
+              body: (
+                <>
+                  <Badge variant="outline">{presets.length} sizes</Badge>
+                  {productTypeId === SHAPE_GENERIC_PRODUCT_TYPE_ID && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Applies across whichever shape is selected — scoped by shape, not by a specific product.
+                    </p>
+                  )}
+                  <p className="mt-2 text-xs text-primary">Click the box to edit its sizes</p>
+                </>
+              ),
+            })),
+            {
+              id: 'custom_size_limits',
+              label: 'Custom size limits',
+              onOpen: () => document.getElementById('custom-size-limits')?.scrollIntoView({ behavior: 'smooth' }),
+              body: <p className="text-xs text-muted-foreground">The inch steps in the Custom Size boxes. Hiding this removes the Custom Size box from the storefront. Edit the steps below.</p>,
+            },
+          ]}
+        />
       )}
     </div>
   );

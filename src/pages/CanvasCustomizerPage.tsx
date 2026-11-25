@@ -3161,6 +3161,8 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const customizerControls = useCustomizerControls();
   const sec = sectionHelpers(customizerControls.sections);
   useSectionNumbering();
+  // Hidden from admin (Customization → Select size → Custom size limits) removes the Custom Size boxes.
+  const customSizeBoxHidden = Boolean(customizerControls.sizeGroups) && !customizerControls.sizeGroups!.has('custom_size_limits');
 
   // Inch steps offered in the Custom Size boxes, as set in the admin (Customization → Select size).
   // Kept in ascending order whatever order they were added in; falls back to the built-in list.
@@ -11070,7 +11072,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   </div>
 
                   {/* Custom Size Box matching Canvas India styling */}
-                  <div className="mt-4 p-3 bg-stone-50 rounded-xl border border-stone-200">
+                  <div className={`mt-4 p-3 bg-stone-50 rounded-xl border border-stone-200 ${customSizeBoxHidden ? 'hidden' : ''}`}>
                     <div className="text-center text-[11px] font-bold text-stone-700 mb-2">
                       Custom Size (Height × Width inches)
                     </div>
@@ -11179,7 +11181,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
                   {/* Custom Size Box for shaped canvases - a single synced
                       diameter for round (it has to stay a circle), or the
                       usual independent Height x Width pair otherwise. */}
-                  <div className="mt-4 p-3 bg-stone-50 rounded-xl border border-stone-200">
+                  <div className={`mt-4 p-3 bg-stone-50 rounded-xl border border-stone-200 ${customSizeBoxHidden ? 'hidden' : ''}`}>
                     <div className="text-center text-[11px] font-bold text-stone-700 mb-2">
                       {selectedProductTypeId === 'canvas-round' ? 'Custom Diameter (inches)' : 'Custom Size (Height × Width inches)'}
                     </div>

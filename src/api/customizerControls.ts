@@ -63,6 +63,8 @@ interface Controls {
   tabs: ControlMap;
   toolbar: ControlMap;
   sections: Record<SectionTab, ControlMap>;
+  /** Admin's Select size boxes (Customization → Select size); only `custom_size_limits` changes the storefront. */
+  sizeGroups: ControlMap;
 }
 
 const NO_SECTIONS: Controls['sections'] = { hardware: null, options: null, layouts: null };
@@ -84,20 +86,22 @@ function loadControls(): Promise<Controls> {
     cached = Promise.all([
       fetchOptionCategoryItems('sidebar_tabs'),
       fetchOptionCategoryItems('toolbar_buttons'),
+      fetchOptionCategoryItems('size_groups'),
       ...SECTION_TABS.map((tab) => fetchOptionCategoryItems(`section_order_${tab}`)),
     ])
-      .then(([tabs, toolbar, ...sectionLists]) => ({
+      .then(([tabs, toolbar, sizeGroups, ...sectionLists]) => ({
+        sizeGroups: toMap(sizeGroups),
         tabs: toMap(tabs),
         toolbar: toMap(toolbar),
         sections: Object.fromEntries(SECTION_TABS.map((tab, i) => [tab, toMap(sectionLists[i])])) as Controls['sections'],
       }))
-      .catch(() => ({ tabs: null, toolbar: null, sections: NO_SECTIONS }));
+      .catch(() => ({ tabs: null, toolbar: null, sections: NO_SECTIONS, sizeGroups: null }));
   }
   return cached;
 }
 
 export function useCustomizerControls(): Controls {
-  const [controls, setControls] = useState<Controls>({ tabs: null, toolbar: null, sections: NO_SECTIONS });
+  const [controls, setControls] = useState<Controls>({ tabs: null, toolbar: null, sections: NO_SECTIONS, sizeGroups: null });
   useEffect(() => {
     let cancelled = false;
     void loadControls().then((value) => {
