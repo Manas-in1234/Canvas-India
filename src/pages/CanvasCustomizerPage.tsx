@@ -1859,34 +1859,6 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Word Art Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
   },
 
-  // 18. Classic Canvas Print (canvas-classic) - Starts at ₹99.00
-  {
-    id: 'classic-8x8',
-    productTypeId: 'canvas-classic',
-    label: 'Classic: 8" × 8"',
-    dimensionsSummary: '8" × 8"',
-    price: 99.0,
-    categories: ['RECOMMENDED', 'SQUARE'],
-    panels: [{ id: 'p0', label: 'Canvas', dimension: '8" × 8"', widthRatio: 8, heightRatio: 8 }]
-  },
-  {
-    id: 'classic-10x10',
-    productTypeId: 'canvas-classic',
-    label: 'Canvas: 10" × 10"',
-    dimensionsSummary: '10" × 10"',
-    price: 699.0,
-    categories: ['RECOMMENDED', 'SQUARE'],
-    panels: [{ id: 'p0', label: 'Canvas', dimension: '10" × 10"', widthRatio: 10, heightRatio: 10 }]
-  },
-  {
-    id: 'classic-16x16',
-    productTypeId: 'canvas-classic',
-    label: 'Canvas: 16" × 16"',
-    dimensionsSummary: '16" × 16"',
-    price: 1299.0,
-    categories: ['RECOMMENDED', 'SQUARE'],
-    panels: [{ id: 'p0', label: 'Canvas', dimension: '16" × 16"', widthRatio: 16, heightRatio: 16 }]
-  },
 
   // 18. Canvas Photo Block (canvas-photo-block) - Starts at ₹499.00
   {
@@ -3436,7 +3408,7 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       if (activeMaterial === 'acrylic') {
         return SIZE_OPTIONS.filter((s) => s.productTypeId === 'acrylic-print' || s.productTypeId === 'acrylic-photo-panel');
       }
-      return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-single' || s.productTypeId === 'canvas-classic');
+      return SIZE_OPTIONS.filter((s) => s.productTypeId === 'canvas-single');
     }
 
     if (isQuotesProduct) {
@@ -7430,37 +7402,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const layoutSlots = useMemo(() => {
     return getLayoutSlots(currentLayout.layoutType, printAspect);
   }, [currentLayout.layoutType, printAspect]);
-
-  // Select a layout preset: switches product type + size so panel count actually changes
-  const handleSelectLayoutPreset = (preset: LayoutPreset) => {
-    setExpandedLayoutId(preset.id);
-    setSelectedProductTypeId(preset.productTypeId);
-    setSelectedSizeId(preset.sizeId);
-    setIsCustomSize(false);
-    setActivePanelIndex(0);
-  };
-
-  // Small mockup thumbnail matching each layout's real panel arrangement (Acrylic card style)
-  const renderLayoutThumbnail = (arrangement: LayoutArrangement, isSelected = false) => {
-    const cellClass = `rounded-[2px] border-[1.5px] transition-colors ${
-      isSelected
-        ? 'border-[#0E4A93] bg-[#0E4A93]/20'
-        : 'border-[#0E4A93]/75 bg-[#0E4A93]/12 group-hover:border-[#0E4A93]'
-    }`;
-    const cell = <div className={cellClass} />;
-    if (arrangement === 'single') return <div className={`w-12 h-10 ${cellClass}`} />;
-    if (arrangement === 'grid2') return <div className="w-12 h-10 grid grid-cols-2 gap-1">{cell}{cell}</div>;
-    if (arrangement === 'grid3') return <div className="w-12 h-10 grid grid-cols-3 gap-1">{cell}{cell}{cell}</div>;
-    if (arrangement === 'grid4') return <div className="w-11 h-11 grid grid-cols-2 grid-rows-2 gap-1">{cell}{cell}{cell}{cell}</div>;
-    if (arrangement === 'split3') return <div className="w-12 h-10 grid grid-cols-3 gap-0.5">{cell}{cell}{cell}</div>;
-    // wall3: one wide panel on top, two smaller squares below
-    return (
-      <div className="w-12 h-11 flex flex-col gap-1">
-        <div className={`flex-[1.4] ${cellClass}`} />
-        <div className="flex-1 grid grid-cols-2 gap-1">{cell}{cell}</div>
-      </div>
-    );
-  };
 
   // Proportional visual preview for each Canvas SizeOption card (Acrylic size card style)
   const renderSizePreview = (opt: SizeOption, isSelected: boolean) => {
