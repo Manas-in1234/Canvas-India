@@ -156,9 +156,6 @@ import {
 // shapes, including roundedRectangle, keep the plain per-size price.
 const NON_RECTANGULAR_SHAPE_TYPES = new Set(['circle', 'oval', 'heart', 'hexagon', 'custom']);
 import {
-  getLayoutSlots,
-  LayoutSlotDefinition,
-  LAYOUT_PRESETS as STANDARD_LAYOUT_PRESETS,
   ACRYLIC_PRODUCT_TYPES,
   HARDWARE_OPTIONS as ACRYLIC_HARDWARE_OPTIONS,
   THICKNESS_OPTIONS as BASE_ACRYLIC_THICKNESS_OPTIONS
@@ -215,26 +212,6 @@ type ToolbarTab =
   | 'WRAP & BORDER'
   | 'HARDWARE & FINISH'
   | 'OPTIONS';
-
-const TOOLBAR_ITEMS: { id: ToolbarTab; label: string; icon: React.ElementType }[] = [
-  { id: 'PRODUCTS', label: 'PRODUCTS', icon: LayoutGrid },
-  { id: 'UPLOAD', label: 'UPLOAD', icon: UploadCloud },
-  { id: 'SELECT SIZE', label: 'SELECT SIZE', icon: Grid },
-  { id: 'EFFECTS & OPTIONS', label: 'EFFECTS & OPTIONS', icon: Palette },
-  { id: 'CREATE BUS ROLL', label: 'CREATE BUS ROLL', icon: Type },
-  { id: 'BACKGROUND', label: 'BACKGROUND', icon: Palette },
-  { id: 'TEMPLATE', label: 'TEMPLATE', icon: LayoutTemplate },
-  { id: 'LAYOUTS & DESIGNS', label: 'LAYOUTS & DESIGNS', icon: Layers },
-  { id: 'HARDWARE & FINISH', label: 'HARDWARE & FINISH', icon: SlidersHorizontal },
-  { id: 'OPTIONS', label: 'OPTIONS', icon: Menu }
-];
-
-const SHAPE_FILTER_TABS: { id: 'ALL' | 'BASIC' | 'SPECIAL' | 'DECORATIVE'; label: string }[] = [
-  { id: 'ALL', label: 'All' },
-  { id: 'BASIC', label: 'Basic' },
-  { id: 'SPECIAL', label: 'Special' },
-  { id: 'DECORATIVE', label: 'Decorative' }
-];
 
 const CANVAS_BORDER_WIDTH_PRICES: Record<string, number> = { none: 0, thin: 0, 'custom-color': 0, medium: 89, thick: 149 };
 
@@ -2166,88 +2143,7 @@ const FONT_OPTIONS_FALLBACK = [
 
 const TEXT_COLORS_FALLBACK = ['#FFFFFF', '#000000', '#D4AF37', '#0E4A93', '#E8752A', '#DC2626', '#059669', '#7C3AED'];
 
-interface TextItem {
-  id: string;
-  text: string;
-  fontId: string;
-  size: number;
-  color: string;
-  bold: boolean;
-  italic: boolean;
-  x: number; // % of the print area (0-100)
-  y: number;
-}
-
-interface ClipItem {
-  id: string;
-  emoji: string;
-  size: number;
-  x: number;
-  y: number;
-}
-
 type SelectedItem = { type: 'text' | 'clipart'; id: string } | null;
-
-// Gallery: sample photographs bundled with the site
-const GALLERY_PHOTOS = [
-  { url: '/assets/acrylic/acrylic-family-print.webp', label: 'Family' },
-  { url: '/assets/acrylic/acrylic-abstract-art.webp', label: 'Abstract' },
-  { url: '/assets/acrylic/acrylic-custom-wall-art.webp', label: 'Wall art' },
-  { url: '/assets/acrylic/acrylic-inspirational-print.webp', label: 'Quote' },
-  { url: '/assets/acrylic/acrylic-poster.webp', label: 'Poster' },
-  { url: '/assets/acrylic/acrylic-gift.webp', label: 'Gift' },
-  { url: '/assets/acrylic/acrylic-decorative-panel.webp', label: 'Decor' },
-  { url: '/assets/acrylic/acrylic-photo-panel.webp', label: 'Portrait' }
-];
-
-// Procedural artwork from a text prompt (deterministic: same words -> same art). Not an AI model.
-const generateArtwork = (prompt: string, variant: number): string => {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1200;
-  canvas.height = 900;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return '';
-  let h = 2166136261 + variant * 977;
-  for (let i = 0; i < prompt.length; i++) {
-    h ^= prompt.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  const rand = () => {
-    h ^= h << 13;
-    h ^= h >>> 17;
-    h ^= h << 5;
-    return ((h >>> 0) % 100000) / 100000;
-  };
-  const hue = Math.floor(rand() * 360);
-  const grad = ctx.createLinearGradient(0, 0, 1200, 900);
-  grad.addColorStop(0, `hsl(${hue}, 70%, 22%)`);
-  grad.addColorStop(0.55, `hsl(${(hue + 40) % 360}, 65%, 45%)`);
-  grad.addColorStop(1, `hsl(${(hue + 90) % 360}, 75%, 68%)`);
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 1200, 900);
-  for (let i = 0; i < 26; i++) {
-    const x = rand() * 1200;
-    const y = rand() * 900;
-    const r = 40 + rand() * 260;
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-    const hh = (hue + rand() * 140) % 360;
-    g.addColorStop(0, `hsla(${hh}, 85%, 65%, ${0.25 + rand() * 0.35})`);
-    g.addColorStop(1, `hsla(${hh}, 85%, 65%, 0)`);
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.lineWidth = 3;
-  for (let i = 0; i < 9; i++) {
-    ctx.strokeStyle = `hsla(${(hue + i * 25) % 360}, 90%, 85%, 0.35)`;
-    ctx.beginPath();
-    ctx.moveTo(0, rand() * 900);
-    ctx.bezierCurveTo(400, rand() * 900, 800, rand() * 900, 1200, rand() * 900);
-    ctx.stroke();
-  }
-  return canvas.toDataURL('image/jpeg', 0.9);
-};
 
 interface PanelImageState {
   imageUrl: string | null;
@@ -3283,7 +3179,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     const pt = list.find((p) => p.id === initialPt);
     return pt?.defaultShape || 'shape-square';
   });
-  const [shapeFilterCategory, setShapeFilterCategory] = useState<'ALL' | 'BASIC' | 'SPECIAL' | 'DECORATIVE'>('ALL');
 
   const currentShape = useMemo<CanvasShapeOption>(() => {
     const pt = productTypeList.find((p) => p.id === selectedProductTypeId);
@@ -3658,16 +3553,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   useEffect(() => { setCustomHeightDraft(String(customHeight)); }, [customHeight]);
 
   const canUseCustomSize = !usesStyleLayouts && currentSizeOption.panels.length === 1;
-
-  // Apply a typed custom dimension straight away once it is a valid size, so the price shown beside
-  // the fields (and the total) update as the shopper types instead of only after leaving the field.
-  // Partial entries such as "1" on the way to "16" are ignored until they are in range.
-  const commitLiveCustomSize = (raw: string, apply: (value: number) => void) => {
-    const value = Number(raw);
-    if (!Number.isFinite(value) || value < customSizeSteps[0] || value > customSizeSteps[customSizeSteps.length - 1]) return;
-    setIsCustomSize(true);
-    apply(value);
-  };
 
   // Panels for the current size layout
   const panels = currentSizeOption.panels;
@@ -4532,19 +4417,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       price: Number(item.flatPrice),
     }));
   }, [liveFinish]);
-
-  const filteredShapes = useMemo(() => {
-    let list = CANVAS_SHAPES;
-    if (selectedProductType?.supportedShapeIds && selectedProductType.supportedShapeIds.length > 0) {
-      list = list.filter((s) => selectedProductType.supportedShapeIds!.includes(s.id));
-    }
-    // Admin-uploaded custom shapes aren't in any product's static
-    // supportedShapeIds allowlist (it can't know about them ahead of time),
-    // so they're appended after that filter rather than excluded by it.
-    list = [...list, ...customShapeOptions];
-    if (shapeFilterCategory === 'ALL') return list;
-    return list.filter((s) => s.category.toUpperCase() === shapeFilterCategory);
-  }, [shapeFilterCategory, selectedProductType, customShapeOptions]);
 
   // Edge Wrap / Border / Frames (Hardware & Finish tab)
   const [selectedWrapId, setSelectedWrapId] = useState<string>('full-bleed');
@@ -5910,8 +5782,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const uploadTargetRef = useRef<number>(0);
   const [dragOverPanel, setDragOverPanel] = useState<number | null>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
-  const [aiPrompt, setAiPrompt] = useState<string>('');
-  const [aiResults, setAiResults] = useState<string[]>([]);
 
   // Modals & Drawers
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
@@ -6422,34 +6292,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     });
   };
 
-  // Multi-layout canvas products where one uploaded photo spans the whole grid,
-  // so the grid's own proportions should follow the photo instead of staying fixed.
-  const LAYOUT_PRODUCT_TYPE_IDS = [
-    'canvas-wall-art',
-    'canvas-collage',
-    'canvas-hexagon',
-    'canvas-split',
-    'canvas-mosaic',
-    'acrylic-wall-art',
-    'acrylic-collage',
-    'acrylic-split',
-    'acrylic-mosaic'
-  ];
-
-  // Among this product's available layouts, pick the one whose overall aspect ratio
-  // is closest to the uploaded photo's own aspect ratio (log-scale so a 2:1 landscape
-  // photo and a 1:2 portrait photo are equally "off" from a 1:1 square layout).
-  const pickBestMatchingLayout = (productTypeId: string, photoAspectRatio: number) => {
-    const layouts = getProductLayouts(productTypeId);
-    if (!layouts.length) return null;
-    return layouts.reduce((best, l) =>
-      Math.abs(Math.log(l.aspectRatio) - Math.log(photoAspectRatio)) <
-      Math.abs(Math.log(best.aspectRatio) - Math.log(photoAspectRatio))
-        ? l
-        : best
-    , layouts[0]);
-  };
-
   // File Upload Handler
   // Files go to the frame that asked for them; extra files fill the following frames, the rest just join the uploads tray.
   const handleFilesUpload = (files: FileList | File[] | null, explicitPanelIdx: number = uploadTargetRef.current) => {
@@ -6663,13 +6505,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
     onDragLeave: () => setDragOverPanel((cur) => (cur === panelIdx ? null : cur)),
     onDrop: (e: React.DragEvent) => handlePanelDrop(e, panelIdx)
   });
-
-  // AI-style art generator (procedural, runs in the browser)
-  const handleGenerateArt = () => {
-    const prompt = aiPrompt.trim() || 'abstract colour';
-    const results = [0, 1, 2, 3].map((v) => generateArtwork(prompt, v)).filter(Boolean);
-    setAiResults(results);
-  };
 
   // --- Text & Clipart Items (Shared with Acrylic Customizer) ---
   const getSlotIndex = (t: TextElement): number => {
@@ -7045,7 +6880,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   const handleRotateLeft = () => updateActivePanelTransform((curr) => ({ rotation: (curr.rotation - 90 + 360) % 360 }));
   const handleRotateRight = () => updateActivePanelTransform((curr) => ({ rotation: (curr.rotation + 90) % 360 }));
   const handleRotate90 = handleRotateRight;
-  const handleFit = () => updateActivePanelTransform(() => ({ scale: 1, panX: 0, panY: 0, fitMode: 'contain' }));
   const handleReset = () => updateActivePanelTransform(() => ({ scale: 1, panX: 0, panY: 0, rotation: 0, fitMode: 'cover' }));
 
   // Directional nudge for predictable, intentional horizontal and vertical image positioning
@@ -7111,12 +6945,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       // Zooming via mouse wheel is disabled per specification (zooming controlled solely by dedicated zoom buttons)
     };
     el.addEventListener('wheel', onNodeWheel, { passive: false });
-  };
-
-  // Mouse wheel zoom fallback - disabled per specification
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
   };
 
   // Smooth 60fps 360° auto-rotate loop using requestAnimationFrame
@@ -7394,14 +7222,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       window.removeEventListener('resize', updateSize);
     };
   }, [printAspect, selectedProductTypeId, selectedShapeId, selectedSizeId, selectedLayoutId]);
-
-  const currentLayout = useMemo(() => {
-    return STANDARD_LAYOUT_PRESETS.find((l) => l.id === selectedLayoutId) || STANDARD_LAYOUT_PRESETS[0];
-  }, [selectedLayoutId]);
-
-  const layoutSlots = useMemo(() => {
-    return getLayoutSlots(currentLayout.layoutType, printAspect);
-  }, [currentLayout.layoutType, printAspect]);
 
   // Proportional visual preview for each Canvas SizeOption card (Acrylic size card style)
   const renderSizePreview = (opt: SizeOption, isSelected: boolean) => {
@@ -7711,62 +7531,6 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
       }
     });
   };
-
-  // Renders a set of grid panels sharing a common column layout (used for split/collage/wall-art)
-  const renderGridPanels = (indices: number[], gridColsClass: string) => (
-    <div
-      className={`grid ${gridColsClass} gap-2.5 w-full max-w-lg`}
-      style={{
-        filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.2)) drop-shadow(0 8px 10px rgba(0, 0, 0, 0.1))'
-      }}
-    >
-      {indices.map((panelIdx) => {
-        const panel = panelImages[panelIdx] || createDefaultPanel();
-        const panelSpec = panels[panelIdx];
-        const slotAspect =
-          panelSpec && panelSpec.widthRatio && panelSpec.heightRatio
-            ? `${panelSpec.widthRatio} / ${panelSpec.heightRatio}`
-            : '1 / 1';
-        return (
-          <div
-            key={panelIdx}
-            {...panelHandlers(panelIdx)}
-            style={{ aspectRatio: slotAspect }}
-            className={`relative w-full bg-white rounded-xl overflow-hidden transition-all cursor-pointer group ${
-              activePanelIndex === panelIdx
-                ? 'ring-2 ring-inset ring-[#0E4A93] z-20'
-                : 'border border-stone-300/80 hover:border-stone-400'
-            }`}
-          >
-            {dragOverPanel === panelIdx && (
-              <div className="absolute inset-0 z-30 bg-blue-500/20 border-4 border-dashed border-[#0E4A93] pointer-events-none" />
-            )}
-            {panel.imageUrl ? (
-              <img
-                src={panel.imageUrl}
-                alt={`Slot ${panelIdx + 1}`}
-                style={{
-                  transform: `translate(${panel.panX}px, ${panel.panY}px) scale(${panel.scale}) rotate(${panel.rotation}deg) scaleX(${mirrorImage ? -1 : 1})`,
-                  filter: getFilterCss(panel.filter),
-                  transition: isDragging ? 'none' : 'transform 0.15s ease-out'
-                }}
-                className="w-full h-full object-cover pointer-events-none"
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50/80 hover:bg-stone-100/90 transition-colors p-2 text-center">
-                <div className="w-10 h-10 rounded-full bg-white shadow-xs border border-stone-200 flex items-center justify-center text-stone-400 group-hover:text-[#0E4A93] group-hover:border-[#0E4A93]/40 group-hover:scale-110 transition-all mb-1">
-                  <Upload className="w-4 h-4 stroke-[2.2]" />
-                </div>
-                <span className="text-[10px] font-bold text-stone-500 group-hover:text-[#0E4A93]">
-                  Slot {panelIdx + 1}
-                </span>
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
 
   // Split Product: Single continuous physical canvas surface sliced internally across panels
   const renderContinuousSplitCanvas = () => {
