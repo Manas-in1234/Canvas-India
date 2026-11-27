@@ -994,6 +994,34 @@ const SelectSizeShapeModalContent: React.FC<SelectSizeShapeModalProps> = ({
       }
     ];
 
+    // Canvas single print standard sizes: the four squares above plus these rectangles.
+    if (!isAcrylic) {
+      const rect = (w: number, h: number, price: number): SizeShapeOption => ({
+        id: `single-${w}x${h}`,
+        shapeId: 'shape-rectangle',
+        shapeName: w > h ? 'Landscape' : 'Portrait',
+        label: `${w}" × ${h}"`,
+        dimensionsSummary: `${w}" × ${h}"`,
+        widthInches: w,
+        heightInches: h,
+        price,
+        aspectRatio: w / h,
+        category: w > h ? 'LANDSCAPE' : 'PORTRAIT',
+        panelsCount: 1,
+        diagramType: 'single-shape',
+      });
+      const [sq10, sq16, sq18, sq20] = squareSizes;
+      const r12x8 = rect(12, 8, 299), r24x16 = rect(24, 16, 799), r24x18 = rect(24, 18, 899);
+      const r8x12 = rect(8, 12, 299), r18x24 = rect(18, 24, 899);
+      return {
+        RECOMMENDED: [sq10, sq16, sq18, r12x8, r24x16, r18x24],
+        SQUARE: squareSizes,
+        PANORAMIC: [r12x8, r24x16, r24x18, r8x12, r18x24],
+        LARGE: [sq18, sq20, r24x16, r24x18, r18x24],
+        SMALL: [sq10, r12x8, r8x12, sq16],
+      };
+    }
+
     const recommendedSizes: SizeShapeOption[] = [
       squareSizes[0], // 10x10
       squareSizes[1], // 16x16

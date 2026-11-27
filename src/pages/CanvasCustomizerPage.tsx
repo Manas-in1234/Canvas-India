@@ -344,58 +344,19 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Canvas', dimension: '20" × 20"', widthRatio: 20, heightRatio: 20 }]
   },
 
-  // PANORAMIC (8 rectangle/panoramic sizes)
+  // RECTANGLE standard sizes (landscape 12x8, 24x16, 24x18; portrait 8x12, 18x24)
   {
     id: 'single-12x8',
     productTypeId: 'canvas-single',
     label: '12" × 8"',
     dimensionsSummary: '12" × 8"',
     price: 299.0,
-    categories: ['PANORAMIC', 'SMALL'],
+    categories: ['PANORAMIC', 'RECOMMENDED', 'SMALL'],
     widthInches: 12,
     heightInches: 8,
     panelsCount: 1,
     diagramType: 'single-shape',
     panels: [{ id: 'p0', label: 'Canvas', dimension: '12" × 8"', widthRatio: 12, heightRatio: 8 }]
-  },
-  {
-    id: 'single-18x12',
-    productTypeId: 'canvas-single',
-    label: '18" × 12"',
-    dimensionsSummary: '18" × 12"',
-    price: 449.0,
-    categories: ['PANORAMIC', 'RECOMMENDED', 'SMALL'],
-    widthInches: 18,
-    heightInches: 12,
-    panelsCount: 1,
-    diagramType: 'single-shape',
-    panels: [{ id: 'p0', label: 'Canvas', dimension: '18" × 12"', widthRatio: 18, heightRatio: 12 }]
-  },
-  {
-    id: 'single-20x16',
-    productTypeId: 'canvas-single',
-    label: '20" × 16"',
-    dimensionsSummary: '20" × 16"',
-    price: 599.0,
-    categories: ['PANORAMIC'],
-    widthInches: 20,
-    heightInches: 16,
-    panelsCount: 1,
-    diagramType: 'single-shape',
-    panels: [{ id: 'p0', label: 'Canvas', dimension: '20" × 16"', widthRatio: 20, heightRatio: 16 }]
-  },
-  {
-    id: 'single-24x12',
-    productTypeId: 'canvas-single',
-    label: '24" × 12"',
-    dimensionsSummary: '24" × 12"',
-    price: 599.0,
-    categories: ['PANORAMIC'],
-    widthInches: 24,
-    heightInches: 12,
-    panelsCount: 1,
-    diagramType: 'single-shape',
-    panels: [{ id: 'p0', label: 'Canvas', dimension: '24" × 12"', widthRatio: 24, heightRatio: 12 }]
   },
   {
     id: 'single-24x16',
@@ -411,45 +372,44 @@ const SIZE_OPTIONS: SizeOption[] = [
     panels: [{ id: 'p0', label: 'Canvas', dimension: '24" × 16"', widthRatio: 24, heightRatio: 16 }]
   },
   {
-    id: 'single-32x16',
+    id: 'single-24x18',
     productTypeId: 'canvas-single',
-    label: '32" × 16"',
-    dimensionsSummary: '32" × 16"',
-    price: 999.0,
+    label: '24" × 18"',
+    dimensionsSummary: '24" × 18"',
+    price: 899.0,
     categories: ['PANORAMIC', 'LARGE'],
-    widthInches: 32,
-    heightInches: 16,
+    widthInches: 24,
+    heightInches: 18,
     panelsCount: 1,
     diagramType: 'single-shape',
-    panels: [{ id: 'p0', label: 'Canvas', dimension: '32" × 16"', widthRatio: 32, heightRatio: 16 }]
+    panels: [{ id: 'p0', label: 'Canvas', dimension: '24" × 18"', widthRatio: 24, heightRatio: 18 }]
   },
   {
-    id: 'single-30x20',
+    id: 'single-8x12',
     productTypeId: 'canvas-single',
-    label: '30" × 20"',
-    dimensionsSummary: '30" × 20"',
-    price: 1199.0,
+    label: '8" × 12"',
+    dimensionsSummary: '8" × 12"',
+    price: 299.0,
+    categories: ['PANORAMIC', 'SMALL'],
+    widthInches: 8,
+    heightInches: 12,
+    panelsCount: 1,
+    diagramType: 'single-shape',
+    panels: [{ id: 'p0', label: 'Canvas', dimension: '8" × 12"', widthRatio: 8, heightRatio: 12 }]
+  },
+  {
+    id: 'single-18x24',
+    productTypeId: 'canvas-single',
+    label: '18" × 24"',
+    dimensionsSummary: '18" × 24"',
+    price: 899.0,
     categories: ['PANORAMIC', 'RECOMMENDED', 'LARGE'],
-    widthInches: 30,
-    heightInches: 20,
-    panelsCount: 1,
-    diagramType: 'single-shape',
-    panels: [{ id: 'p0', label: 'Canvas', dimension: '30" × 20"', widthRatio: 30, heightRatio: 20 }]
-  },
-  {
-    id: 'single-36x24',
-    productTypeId: 'canvas-single',
-    label: '36" × 24"',
-    dimensionsSummary: '36" × 24"',
-    price: 1599.0,
-    categories: ['PANORAMIC', 'LARGE'],
-    widthInches: 36,
+    widthInches: 18,
     heightInches: 24,
     panelsCount: 1,
     diagramType: 'single-shape',
-    panels: [{ id: 'p0', label: 'Canvas', dimension: '36" × 24"', widthRatio: 36, heightRatio: 24 }]
+    panels: [{ id: 'p0', label: 'Canvas', dimension: '18" × 24"', widthRatio: 18, heightRatio: 24 }]
   },
-
   // Acrylic Single Print (acrylic-print)
   {
     id: 'rec-10x10',
@@ -4611,9 +4571,9 @@ export const CanvasCustomizerPage: React.FC<CanvasCustomizerPageProps> = ({ mate
   // the built-in tiers are used until the team sets that list up.
   const WRAP_SIZE_OPTIONS = useMemo(() => {
     const base: Array<{ id: string; name: string; label: string; price: number; maxDimensionInches?: number; thicknessInches: number; depthPx: number; badge?: string }> = [
-      { id: 'wrap-small', name: 'Small Size', label: 'Small Size (upto 20"x20")', price: 99, maxDimensionInches: 20, thicknessInches: 0.5, depthPx: 12 },
+      { id: 'wrap-small', name: 'Small Size', label: 'Small Size (upto 18"x18")', price: 99, maxDimensionInches: 18, thicknessInches: 0.5, depthPx: 12 },
       { id: 'wrap-medium', name: 'Medium Size', label: 'Medium Size (upto 30"x30")', price: 149, maxDimensionInches: 30, thicknessInches: 0.75, depthPx: 18, badge: 'Recommended' },
-      { id: 'wrap-large', name: 'Large Size', label: 'Large Size (upto 44"x44")', price: 249, maxDimensionInches: 44, thicknessInches: 1.5, depthPx: 30, badge: 'Museum Quality' },
+      { id: 'wrap-large', name: 'Large Size', label: 'Large Size (upto 44"x44")', price: 199, maxDimensionInches: 44, thicknessInches: 1.5, depthPx: 30, badge: 'Museum Quality' },
     ];
     if (liveWrapSizes.length === 0 && !overriddenKeys.has('wrap_size')) return base;
     return liveWrapSizes.map((item) => {

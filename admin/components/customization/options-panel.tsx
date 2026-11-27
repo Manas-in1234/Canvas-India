@@ -58,9 +58,9 @@ const WRAP_SIZE_SEED: SeedSpec = {
   scope: 'CANVAS',
   name: 'Wrap size',
   items: [
-    { label: 'Small Size', description: '', flatPrice: '99', extras: { id: 'wrap-small', name: 'Small Size', maxDimensionInches: 20, thicknessInches: 0.5, depthPx: 12, badge: '' } },
+    { label: 'Small Size', description: '', flatPrice: '99', extras: { id: 'wrap-small', name: 'Small Size', maxDimensionInches: 18, thicknessInches: 0.5, depthPx: 12, badge: '' } },
     { label: 'Medium Size', description: '', flatPrice: '149', extras: { id: 'wrap-medium', name: 'Medium Size', maxDimensionInches: 30, thicknessInches: 0.75, depthPx: 18, badge: 'Recommended' } },
-    { label: 'Large Size', description: '', flatPrice: '249', extras: { id: 'wrap-large', name: 'Large Size', maxDimensionInches: 44, thicknessInches: 1.5, depthPx: 30, badge: 'Museum Quality' } },
+    { label: 'Large Size', description: '', flatPrice: '199', extras: { id: 'wrap-large', name: 'Large Size', maxDimensionInches: 44, thicknessInches: 1.5, depthPx: 30, badge: 'Museum Quality' } },
   ],
 };
 

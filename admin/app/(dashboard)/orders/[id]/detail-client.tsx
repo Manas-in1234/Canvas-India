@@ -74,6 +74,10 @@ interface StorefrontProduct {
   storefront?: { slug?: string; image?: string | null; images?: string[]; categorySlug?: string };
 }
 
+// Catalogue artwork is saved as a storefront path (/assets/...), which only exists on the store's domain.
+const storeImageSrc = (url: string | null | undefined): string =>
+  !url ? "" : url.startsWith("/") && !url.startsWith("//") ? `https://canvassindia.com${url}` : url;
+
 const imageFileName = (url: unknown): string =>
   typeof url === "string" ? (url.split("?")[0].split("/").pop() ?? "").toLowerCase() : "";
 
@@ -436,7 +440,7 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
               >
                 {(item.variantSnapshot.previewImage || item.variantSnapshot.imageUrl) && (
                   <a
-                    href={item.variantSnapshot.previewImage || item.variantSnapshot.imageUrl || undefined}
+                    href={storeImageSrc(item.variantSnapshot.previewImage || item.variantSnapshot.imageUrl) || undefined}
                     target="_blank"
                     rel="noreferrer"
                     title={item.variantSnapshot.previewImage ? "Customer's customized design" : "Customer's photo / listing image"}
@@ -444,7 +448,7 @@ export function OrderDetailClient({ id: initialId }: { id: string }) {
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={item.variantSnapshot.previewImage || item.variantSnapshot.imageUrl || ""}
+                      src={storeImageSrc(item.variantSnapshot.previewImage || item.variantSnapshot.imageUrl)}
                       alt={item.productNameSnapshot}
                       className="h-24 w-24 rounded-md border bg-muted object-contain"
                     />
